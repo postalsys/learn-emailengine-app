@@ -693,15 +693,15 @@ Workers have execution time limits. For long processing:
 
 - Review [postal-mime documentation](https://www.npmjs.com/package/postal-mime)
 - Explore [Cloudflare Email Workers docs](https://developers.cloudflare.com/email-routing/email-workers/)
-- Learn about [EmailEngine integrations](/docs/integrations/index.md)
-- Compare with [EmailEngine receiving features](/docs/receiving/index.md)
+- Learn about [EmailEngine integrations](/docs/integrations)
+- Compare with [EmailEngine receiving features](/docs/receiving)
 
 ## See Also
 
-- [Receiving Emails with EmailEngine](/docs/receiving/index.md)
-- [Webhooks Configuration](/docs/usage/webhooks.md)
-- [Low-Code Integrations](/docs/integrations/low-code.md)
-- [API Reference](/docs/api-reference/index.md)
+- [Receiving Emails with EmailEngine](/docs/receiving)
+- [Webhooks Configuration](/docs/receiving/webhooks)
+- [Low-Code Integrations](/docs/integrations/low-code)
+- [API Reference](/docs/api-reference)
 
 ## Resources
 

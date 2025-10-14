@@ -816,7 +816,7 @@ For many concurrent users:
 
 ## See Also
 
-- [IMAP Proxy Configuration](/docs/configuration/imap-proxy)
-- [SMTP Proxy Configuration](/docs/configuration/smtp-proxy)
+- [IMAP Proxy Configuration](/docs/accounts/proxying-connections)
+- [SMTP Proxy Configuration](/docs/accounts/proxying-connections)
 - [API Reference: Create Token](/docs/api/post-v-1-token)
 - [API Reference: Delete Token](/docs/api/delete-v-1-token-token)

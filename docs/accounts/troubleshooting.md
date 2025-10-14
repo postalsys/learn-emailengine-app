@@ -773,7 +773,7 @@ journalctl -u emailengine -f
 - [Set up OAuth2 for better reliability](./oauth2-setup)
 - [Learn about performance tuning](/docs/advanced/performance-tuning)
 - [Configure monitoring and alerts](/docs/configuration/monitoring)
-- [Review security best practices](/docs/configuration/security)
+- [Review security best practices](/docs/deployment/security)
 
 ## See Also
 

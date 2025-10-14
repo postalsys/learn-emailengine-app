@@ -687,17 +687,17 @@ Maintain documentation of:
 
 ## Next Steps
 
-- Explore [Webhooks Configuration](/docs/usage/webhooks.md)
-- Learn about [CRM Integration](/docs/integrations/crm.md)
-- Review [API Reference](/docs/api-reference/index.md)
-- Set up [Monitoring](/docs/advanced/monitoring.md)
+- Explore [Webhooks Configuration](/docs/receiving/webhooks)
+- Learn about [CRM Integration](/docs/integrations/crm)
+- Review [API Reference](/docs/api-reference)
+- Set up [Monitoring](/docs/advanced/monitoring)
 
 ## See Also
 
-- [Webhooks](/docs/usage/webhooks.md)
-- [PHP Integration](/docs/integrations/php.md)
-- [AI Integration](/docs/integrations/ai-chatgpt.md)
-- [API Reference](/docs/api-reference/index.md)
+- [Webhooks](/docs/receiving/webhooks)
+- [PHP Integration](/docs/integrations/php)
+- [AI Integration](/docs/integrations/ai-chatgpt)
+- [API Reference](/docs/api-reference)
 
 ## Resources
 

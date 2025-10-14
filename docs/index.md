@@ -83,7 +83,7 @@ Search messages, organize mailboxes, manage flags, and download attachments.
 
 Get your first email working in 10 minutes:
 
-1. **[Install EmailEngine](/docs/getting-started/installation)** - Set up with Docker, npm, or on platforms like Render.com
+1. **[Install EmailEngine](/docs/installation)** - Set up with Docker, npm, or on platforms like Render.com
 2. **[Add Your First Account](/docs/getting-started/quick-start)** - Register an email account via API
 3. **[Send an Email](/docs/sending/basic-sending)** - Submit your first message
 4. **[Receive Webhooks](/docs/receiving/webhooks)** - Get notified of new emails
@@ -102,7 +102,7 @@ Automate email workflows:
 - Auto-respond to incoming emails
 - Forward emails based on rules
 - Track email threads and replies
-- [Learn about email threading →](/docs/receiving/threading)
+- [Learn about email threading →](/docs/sending/threading)
 
 ### Customer Support
 Integrate email into your support system:
@@ -139,7 +139,7 @@ Email Providers (IMAP/SMTP/Gmail API/Graph API)
 4. **Webhooks** - Real-time notifications are pushed to your application
 5. **Queue System** - Outbound emails are queued and retried automatically
 
-[Learn more about the architecture →](/docs/getting-started/architecture)
+[Learn more about the architecture →](/docs/getting-started/introduction)
 
 ## Popular Topics
 
@@ -157,7 +157,7 @@ Email Providers (IMAP/SMTP/Gmail API/Graph API)
 
 ### Receiving Emails
 - [Webhooks](/docs/receiving/webhooks) - Real-time email notifications
-- [Debugging Webhooks](/docs/receiving/debugging-webhooks) - Troubleshoot webhook delivery
+- [Debugging Webhooks](/docs/receiving/webhooks) - Troubleshoot webhook delivery
 - [Searching Messages](/docs/receiving/searching) - Find emails with queries
 - [Tracking Replies](/docs/receiving/tracking-replies) - Detect replies to sent emails
 
@@ -165,23 +165,23 @@ Email Providers (IMAP/SMTP/Gmail API/Graph API)
 - [Performance Tuning](/docs/advanced/performance-tuning) - Optimize for high volume
 - [OAuth2 Token Management](/docs/accounts/oauth2-token-management) - Use tokens for other APIs
 - [Secret Encryption](/docs/deployment/security) - Encrypt stored credentials
-- [Queue System](/docs/advanced/queue-system) - Understand email queues
+- [Queue System](/docs/sending/outbox-queue) - Understand email queues
 
 ## API Reference
 
 EmailEngine provides a comprehensive REST API:
 
 - **[API Overview](/docs/api-reference)** - Authentication, conventions, error handling
-- **[Account Management](/docs/api-reference/accounts)** - Register and manage accounts
-- **[Sending Emails](/docs/api-reference/sending)** - Submit endpoint and options
-- **[Message Operations](/docs/api-reference/messages)** - List, search, and manage emails
-- **[Complete API Docs](/docs/api)** - All 73 endpoints with schemas
+- **[Account Management](/docs/api-reference/accounts-api)** - Register and manage accounts
+- **[Sending Emails](/docs/api-reference/sending-api)** - Submit endpoint and options
+- **[Message Operations](/docs/api-reference/messages-api)** - List, search, and manage emails
+- **[Complete API Docs](/docs/api-reference)** - All 73 endpoints with schemas
 
 ## Get Help
 
 - **[Troubleshooting Guide](/docs/troubleshooting)** - Common issues and solutions
 - **[GitHub Issues](https://github.com/postalsys/emailengine/issues)** - Report bugs and request features
-- **[Support](/docs/support/getting-help)** - Get professional support
+- **[Support](/docs/support/license)** - Get professional support
 - **[Blog](/blog)** - Tutorials, guides, and use case examples
 
 ## System Requirements

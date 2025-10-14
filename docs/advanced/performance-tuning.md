@@ -441,7 +441,7 @@ Access metrics:
 curl http://localhost:9090/metrics
 ```
 
-**Read more**: [Monitoring](/docs/advanced/monitoring.md)
+**Read more**: [Monitoring](/docs/advanced/monitoring)
 
 ## Performance Troubleshooting
 
@@ -520,10 +520,10 @@ EENGINE_NOTIFY_QC=4
 
 ## See Also
 
-- [Monitoring](/docs/advanced/monitoring.md)
-- [Redis Configuration](/docs/configuration/redis.md)
-- [Deployment](/docs/deployment/index.md)
-- [Security](/docs/deployment/security.md)
+- [Monitoring](/docs/advanced/monitoring)
+- [Redis Configuration](/docs/configuration/redis)
+- [Deployment](/docs/deployment)
+- [Security](/docs/deployment/security)
 
 ## Resources
 

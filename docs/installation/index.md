@@ -653,7 +653,7 @@ If issues persist:
    [Troubleshooting documentation →](/docs/troubleshooting)
 
 4. **Get support:**
-   [Support page →](/docs/support)
+   [Support page →](/docs/support/license)
 
 ## Next Steps
 

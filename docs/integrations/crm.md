@@ -135,7 +135,7 @@ Using the special use flag `\Sent` allows EmailEngine to automatically determine
 - Only list folders you genuinely need for instant notifications
 - Don't include all folders "just in case"
 
-**Read more**: [Sub-connections and Virtual Lists](/docs/advanced/virtual-lists.md)
+**Read more**: [Sub-connections and Virtual Lists](/docs/advanced/virtual-lists)
 
 ## Listening for Webhooks
 
@@ -466,7 +466,7 @@ function sendEmailFromCRM($userId, $toEmail, $subject, $body) {
 - **Submit API**: Immediate sending (use for one-off emails)
 - **Outbox API**: Queued sending (use for bulk or scheduled sends)
 
-**Read more**: [Sending Emails](/docs/sending/index.md)
+**Read more**: [Sending Emails](/docs/sending)
 
 ## Handling Sent Mail Folder Detection
 
@@ -713,7 +713,7 @@ When going to production, review performance settings:
 - **Connection Delays**: Use `EENGINE_CONNECTION_SETUP_DELAY` for smooth startup
 - **Redis Optimization**: Configure Redis memory and persistence
 
-**Read more**: [Performance Tuning](/docs/advanced/performance-tuning.md)
+**Read more**: [Performance Tuning](/docs/advanced/performance-tuning)
 
 ### Data Compliance
 
@@ -737,7 +737,7 @@ Review what data is stored and your compliance obligations:
 - Shard accounts across multiple EmailEngine instances
 - Example: Accounts 0-999 → Instance A, 1000-1999 → Instance B
 
-**Read more**: [Horizontal Scaling](/docs/advanced/performance-tuning.md#horizontal-scaling)
+**Read more**: [Horizontal Scaling](/docs/advanced/performance-tuning#horizontal-scaling)
 
 ## Troubleshooting
 
@@ -792,15 +792,15 @@ Review what data is stored and your compliance obligations:
 
 ## Next Steps
 
-- Implement [Performance Tuning](/docs/advanced/performance-tuning.md)
-- Set up [Monitoring](/docs/advanced/monitoring.md)
-- Review [Security Best Practices](/docs/deployment/security.md)
-- Explore [Advanced Features](/docs/advanced/index.md)
+- Implement [Performance Tuning](/docs/advanced/performance-tuning)
+- Set up [Monitoring](/docs/advanced/monitoring)
+- Review [Security Best Practices](/docs/deployment/security)
+- Explore [Advanced Features](/docs/advanced/performance-tuning)
 
 ## See Also
 
-- [PHP Integration](/docs/integrations/php.md)
-- [Webhooks Configuration](/docs/usage/webhooks.md)
-- [Sending Emails](/docs/sending/index.md)
-- [API Reference](/docs/api-reference/index.md)
-- [Performance Tuning](/docs/advanced/performance-tuning.md)
+- [PHP Integration](/docs/integrations/php)
+- [Webhooks Configuration](/docs/receiving/webhooks)
+- [Sending Emails](/docs/sending)
+- [API Reference](/docs/api-reference)
+- [Performance Tuning](/docs/advanced/performance-tuning)

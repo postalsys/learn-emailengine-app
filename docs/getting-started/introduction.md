@@ -69,8 +69,8 @@ Get started with EmailEngine in just a few steps:
 1. **[Install EmailEngine](/docs/installation/set-up)** - Download and set up EmailEngine on your server
 2. **[Configure Redis](/docs/configuration/redis)** - Set up Redis for data storage
 3. **[Register an Account](/docs/api/post-v-1-account)** - Add your first email account via API
-4. **[Set up Webhooks](/docs/usage/webhooks)** - Configure webhooks to receive notifications
-5. **[Start Building](/docs/api)** - Explore the API reference and build your integration
+4. **[Set up Webhooks](/docs/receiving/webhooks)** - Configure webhooks to receive notifications
+5. **[Start Building](/docs/api-reference)** - Explore the API reference and build your integration
 
 ## System Requirements
 
@@ -83,7 +83,7 @@ Get started with EmailEngine in just a few steps:
 
 - **[Documentation](/docs/getting-started/introduction)** - Comprehensive guides and API reference
 - **[Blog](/blog)** - Tutorials and use case examples
-- **[Support](/docs/support)** - Get help from the EmailEngine team
+- **[Support](/docs/support/license)** - Get help from the EmailEngine team
 - **[GitHub](https://github.com/postalsys/emailengine)** - Report issues and contribute
 
 ## License

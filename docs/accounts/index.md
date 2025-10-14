@@ -404,7 +404,7 @@ For advanced use cases, you can delegate the OAuth2 flow to an external authenti
 4. **Rotate access tokens regularly** - Configure token policies
 5. **Use least-privilege scopes** - Only request necessary permissions
 
-[Learn about secret encryption →](/docs/configuration/secret-encryption)
+[Learn about secret encryption →](/docs/configuration)
 
 ### Performance
 

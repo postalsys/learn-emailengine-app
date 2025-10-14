@@ -830,20 +830,20 @@ Use AI to augment, not replace, traditional email processing:
 ## Next Steps
 
 - Review [API Reference](https://api.emailengine.app/) for Chat API details
-- Learn about [Webhooks Configuration](/docs/usage/webhooks.md)
-- Explore [ElasticSearch Integration](/docs/advanced/elasticsearch.md)
-- Set up [Monitoring](/docs/advanced/monitoring.md)
+- Learn about [Webhooks Configuration](/docs/receiving/webhooks)
+- Explore [ElasticSearch Integration](/docs/advanced/monitoring)
+- Set up [Monitoring](/docs/advanced/monitoring)
 
 ## See Also
 
-- [CRM Integration](/docs/integrations/crm.md)
-- [Webhooks](/docs/usage/webhooks.md)
-- [Performance Tuning](/docs/advanced/performance-tuning.md)
-- [API Reference](/docs/api-reference/index.md)
+- [CRM Integration](/docs/integrations/crm)
+- [Webhooks](/docs/receiving/webhooks)
+- [Performance Tuning](/docs/advanced/performance-tuning)
+- [API Reference](/docs/api-reference)
 
 ## Resources
 
 - **OpenAI API**: [platform.openai.com](https://platform.openai.com/)
 - **GPT-4 Access**: [OpenAI Waitlist](https://openai.com/waitlist/gpt-4-api)
 - **EmailEngine API**: [api.emailengine.app](https://api.emailengine.app/)
-- **Support**: [Get Help](/docs/support/index.md)
+- **Support**: [Get Help](/docs/support/license)

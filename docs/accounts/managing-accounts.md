@@ -174,7 +174,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 
 Direct user to this URL. After completing setup, they'll be redirected to your `redirectUrl`.
 
-[Learn more about hosted authentication →](/docs/usage/hosted-authentication)
+[Learn more about hosted authentication →](/docs/accounts/oauth2-setup)
 
 ### Via Web Dashboard
 
@@ -964,7 +964,7 @@ function validateAccountData(data) {
 - [Learn about troubleshooting accounts](./troubleshooting)
 - [Set up OAuth2 authentication](./oauth2-setup)
 - [Configure performance optimization](/docs/advanced/performance-tuning)
-- [Explore webhook configuration](/docs/usage/webhooks)
+- [Explore webhook configuration](/docs/receiving/webhooks)
 
 ## See Also
 

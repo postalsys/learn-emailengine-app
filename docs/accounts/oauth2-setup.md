@@ -617,6 +617,6 @@ Advanced topics:
 ## See Also
 
 - [OAuth2 Configuration Documentation](/docs/configuration/oauth2-configuration)
-- [Hosted Authentication](/docs/usage/hosted-authentication)
+- [Hosted Authentication](/docs/accounts/oauth2-setup)
 - [API Reference: Authentication Form](/docs/api/post-v-1-authentication-form)
 - [API Reference: Add Account](/docs/api/post-v-1-account)

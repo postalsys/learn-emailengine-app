@@ -655,5 +655,5 @@ No charge for key rotation due to security incident.
 
 - [Installation Guide](/docs/installation)
 - [Configuration Options](/docs/configuration)
-- [Support](/docs/support)
-- [Privacy Policy](/docs/support/privacy-policy)
+- [Support](/docs/support/license)
+- [Privacy Policy](/docs/support/license)

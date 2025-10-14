@@ -308,4 +308,4 @@ This section covers all aspects of receiving and processing emails:
 - [Sending Emails](/docs/sending) - Learn about sending emails
 - [Accounts](/docs/accounts) - Managing email accounts
 - [API Reference](/docs/api-reference) - Complete API documentation
-- [Webhooks Configuration](/docs/configuration/webhooks) - Advanced webhook settings
+- [Webhooks Configuration](/docs/receiving/webhooks) - Advanced webhook settings

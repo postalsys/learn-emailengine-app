@@ -613,20 +613,20 @@ $ee = new EmailEngine([
 ## Next Steps
 
 - Explore [API Reference](https://api.emailengine.app/) for all available endpoints
-- Learn about [Webhook Configuration](/docs/usage/webhooks.md)
-- Implement [Error Handling and Logging](/docs/advanced/logging.md)
-- Scale with [Performance Tuning](/docs/advanced/performance-tuning.md)
+- Learn about [Webhook Configuration](/docs/receiving/webhooks)
+- Implement [Error Handling and Logging](/docs/advanced/logging)
+- Scale with [Performance Tuning](/docs/advanced/performance-tuning)
 
 ## See Also
 
-- [CRM Integration Guide](/docs/integrations/crm.md)
-- [Sending Emails](/docs/sending/index.md)
-- [Receiving Emails](/docs/receiving/index.md)
-- [API Authentication](/docs/usage/authenticating-api-requests.md)
+- [CRM Integration Guide](/docs/integrations/crm)
+- [Sending Emails](/docs/sending)
+- [Receiving Emails](/docs/receiving)
+- [API Authentication](/docs/api-reference)
 
 ## Resources
 
 - **PHP SDK**: [packagist.org/packages/postalsys/emailengine-php](https://packagist.org/packages/postalsys/emailengine-php)
 - **API Documentation**: [api.emailengine.app](https://api.emailengine.app/)
 - **GitHub**: [EmailEngine on GitHub](https://github.com/postalsys/emailengine)
-- **Support**: [Get Help](/docs/support/index.md)
+- **Support**: [Get Help](/docs/support/license)

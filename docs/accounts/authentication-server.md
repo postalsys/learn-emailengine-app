@@ -90,7 +90,7 @@ Your application manages tokens, EmailEngine just uses them.
 - EmailEngine's built-in OAuth2 is sufficient
 
 :::tip Alternative Approach
-If you don't need external OAuth2 management, consider using [Hosted Authentication](/docs/usage/hosted-authentication) instead. It's simpler and handles everything automatically.
+If you don't need external OAuth2 management, consider using [Hosted Authentication](/docs/accounts/oauth2-setup) instead. It's simpler and handles everything automatically.
 :::
 
 ## How It Works
@@ -697,7 +697,7 @@ Monitor this endpoint to ensure authentication server is running.
 
 ## See Also
 
-- [Hosted Authentication](/docs/usage/hosted-authentication) - Alternative simpler approach
+- [Hosted Authentication](/docs/accounts/oauth2-setup) - Alternative simpler approach
 - [OAuth2 Configuration](/docs/configuration/oauth2-configuration)
 - [API Reference: Add Account](/docs/api/post-v-1-account)
 - [Example Authentication Server on GitHub](https://github.com/postalsys/emailengine/blob/master/examples/auth-server.js)

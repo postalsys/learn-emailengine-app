@@ -319,7 +319,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 
 Direct the user to the returned URL.
 
-[Learn more about hosted authentication →](/docs/usage/hosted-authentication)
+[Learn more about hosted authentication →](/docs/accounts/oauth2-setup)
 
 ### Direct API Account Registration
 
@@ -623,5 +623,5 @@ Set up alerts for:
 - [OAuth2 Configuration Documentation](/docs/configuration/oauth2-configuration)
 - [Setting Up Gmail OAuth2](./gmail-imap)
 - [Shared Mailboxes in MS365 Details](/docs/integrations/shared-mailboxes-in-ms-365)
-- [Hosted Authentication Guide](/docs/usage/hosted-authentication)
+- [Hosted Authentication Guide](/docs/accounts/oauth2-setup)
 - [API Reference: Add Account](/docs/api/post-v-1-account)

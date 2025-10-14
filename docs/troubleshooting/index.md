@@ -784,7 +784,7 @@ When requesting support, provide:
 - **Documentation:** [https://docs.emailengine.app](https://docs.emailengine.app)
 - **GitHub Issues:** [https://github.com/postalsys/emailengine/issues](https://github.com/postalsys/emailengine/issues)
 - **Email Support:** [support@emailengine.app](mailto:support@emailengine.app)
-- **Community Forum:** [https://emailengine.app/support](/docs/support)
+- **Community Forum:** [https://emailengine.app/support](/docs/support/license)
 
 ## See Also
 

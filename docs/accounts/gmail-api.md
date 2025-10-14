@@ -563,5 +563,5 @@ You can:
 - [OAuth2 Configuration Documentation](/docs/configuration/oauth2-configuration)
 - [Setting Up Outlook OAuth2](./outlook-365)
 - [Gmail IMAP Setup](./gmail-imap)
-- [Hosted Authentication Guide](/docs/usage/hosted-authentication)
+- [Hosted Authentication Guide](/docs/accounts/oauth2-setup)
 - [API Reference: Add Account](/docs/api/post-v-1-account)

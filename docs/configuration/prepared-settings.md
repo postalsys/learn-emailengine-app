@@ -784,6 +784,6 @@ echo $EENGINE_PREPARED_LICENSE
 
 - [Configuration Overview](./index.md)
 - [Environment Variables](./environment-variables.md)
-- [API Authentication](/docs/usage/authenticating-api-requests)
+- [API Authentication](/docs/api-reference)
 - [Docker Deployment](/docs/deployment/docker)
 - [Security Best Practices](/docs/deployment/security)

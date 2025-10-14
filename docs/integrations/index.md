@@ -19,7 +19,7 @@ Build custom integrations using EmailEngine's REST API:
 - **Real-time Events**: Receive webhooks for email events
 - **Webhook Processing**: Process incoming email notifications
 
-Learn more in the [API Reference](/docs/api-reference/index.md) section.
+Learn more in the [API Reference](/docs/api-reference) section.
 
 ### Webhook-Driven Architecture
 
@@ -61,7 +61,7 @@ Integrate email functionality directly into CRM systems:
 - Send emails as CRM users
 - Track email conversations
 
-**Read more**: [CRM Integration Guide](/docs/integrations/crm.md)
+**Read more**: [CRM Integration Guide](/docs/integrations/crm)
 
 ### AI and Email Processing
 
@@ -73,7 +73,7 @@ Enhance email workflows with artificial intelligence:
 - Smart email routing
 - Conversational search
 
-**Read more**: [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt.md)
+**Read more**: [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt)
 
 ### Marketing Automation
 
@@ -111,7 +111,7 @@ Embed email functionality in business apps:
 
 **Vertical Scaling**: Optimize worker threads, webhook processing, and Redis configuration.
 
-**Read more**: [Performance Tuning](/docs/advanced/performance-tuning.md)
+**Read more**: [Performance Tuning](/docs/advanced/performance-tuning)
 
 ### Security
 
@@ -120,7 +120,7 @@ Embed email functionality in business apps:
 - **Network Security**: Use HTTPS and secure network configurations
 - **Access Control**: Implement proper authentication and authorization
 
-**Read more**: [Security Best Practices](/docs/deployment/security.md)
+**Read more**: [Security Best Practices](/docs/deployment/security)
 
 ### Reliability
 
@@ -129,7 +129,7 @@ Embed email functionality in business apps:
 - **Error Handling**: Gracefully handle API errors and timeouts
 - **Monitoring**: Track system health and performance metrics
 
-**Read more**: [Monitoring](/docs/advanced/monitoring.md)
+**Read more**: [Monitoring](/docs/advanced/monitoring)
 
 ### Data Management
 
@@ -202,17 +202,17 @@ Embed email functionality in business apps:
 
 Choose your integration path:
 
-- **PHP Developers**: Start with [PHP Integration Guide](/docs/integrations/php.md)
-- **CRM Builders**: Follow the [CRM Integration Guide](/docs/integrations/crm.md)
-- **AI Enthusiasts**: Explore [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt.md)
-- **No-Code Users**: Check out [Low-Code Integrations](/docs/integrations/low-code.md)
-- **Edge Computing**: Learn about [Cloudflare Workers](/docs/integrations/cloudflare-workers.md)
+- **PHP Developers**: Start with [PHP Integration Guide](/docs/integrations/php)
+- **CRM Builders**: Follow the [CRM Integration Guide](/docs/integrations/crm)
+- **AI Enthusiasts**: Explore [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt)
+- **No-Code Users**: Check out [Low-Code Integrations](/docs/integrations/low-code)
+- **Edge Computing**: Learn about [Cloudflare Workers](/docs/integrations/cloudflare-workers)
 
 ## Support and Resources
 
 - **API Documentation**: [Complete API Reference](https://api.emailengine.app/)
 - **Community**: GitHub Issues and Discussions
-- **Professional Support**: [Contact Support](/docs/support/index.md)
+- **Professional Support**: [Contact Support](/docs/support/license)
 - **Examples**: GitHub repository with integration examples
 
 ## Next Steps
@@ -227,7 +227,7 @@ Choose your integration path:
 
 ## See Also
 
-- [Getting Started Guide](/docs/getting-started/index.md)
-- [API Reference](/docs/api-reference/index.md)
-- [Webhooks Configuration](/docs/usage/webhooks.md)
-- [Performance Tuning](/docs/advanced/performance-tuning.md)
+- [Getting Started Guide](/docs/getting-started/introduction)
+- [API Reference](/docs/api-reference)
+- [Webhooks Configuration](/docs/receiving/webhooks)
+- [Performance Tuning](/docs/advanced/performance-tuning)

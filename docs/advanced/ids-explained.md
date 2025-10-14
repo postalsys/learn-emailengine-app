@@ -670,10 +670,10 @@ if (message.messageId) {
 
 ## See Also
 
-- [Receiving Emails](/docs/receiving/index.md)
-- [Webhooks](/docs/usage/webhooks.md)
-- [CRM Integration](/docs/integrations/crm.md)
-- [API Reference](/docs/api-reference/index.md)
+- [Receiving Emails](/docs/receiving)
+- [Webhooks](/docs/receiving/webhooks)
+- [CRM Integration](/docs/integrations/crm)
+- [API Reference](/docs/api-reference)
 
 ## Resources
 

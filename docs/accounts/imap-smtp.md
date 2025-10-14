@@ -466,7 +466,7 @@ EmailEngine will generate a form URL where users can:
 
 EmailEngine can auto-detect settings for many common providers.
 
-[Learn more about hosted authentication →](/docs/usage/hosted-authentication)
+[Learn more about hosted authentication →](/docs/accounts/oauth2-setup)
 
 ## Testing Connection
 
@@ -651,7 +651,7 @@ Route connections through a proxy:
 - Avoid using main account passwords
 - Consider OAuth2 for Gmail and Outlook
 
-[Learn about secret encryption →](/docs/configuration/secret-encryption)
+[Learn about secret encryption →](/docs/configuration)
 
 ### Network Security
 
@@ -730,8 +730,8 @@ If migrating from OAuth2-based systems:
 
 ## See Also
 
-- [Supported Account Types](/docs/getting-started/supported-account-types)
+- [Supported Account Types](/docs/accounts)
 - [API Reference: Add Account](/docs/api/post-v-1-account)
 - [API Reference: Verify Account](/docs/api/post-v-1-verifyaccount)
-- [Hosted Authentication](/docs/usage/hosted-authentication)
+- [Hosted Authentication](/docs/accounts/oauth2-setup)
 - [Performance Tuning](/docs/advanced/performance-tuning)

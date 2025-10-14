@@ -391,7 +391,7 @@ You've successfully:
 - **[Send Replies and Forwards](/docs/sending/replies-forwards)** - Learn how to properly reply to emails
 - **[Mail Merge](/docs/sending/mail-merge)** - Send personalized bulk emails
 - **[Email Templates](/docs/sending/templates)** - Use Handlebars templates for emails
-- **[Debug Webhooks](/docs/receiving/debugging-webhooks)** - Troubleshoot webhook delivery
+- **[Debug Webhooks](/docs/receiving/webhooks)** - Troubleshoot webhook delivery
 
 ### Set Up OAuth2
 - **[Gmail OAuth2 Setup](/docs/accounts/gmail-imap)** - Complete guide with screenshots
@@ -462,7 +462,7 @@ Check the `syncTime` field to see progress.
 - **[Documentation](/docs)** - Complete guides and API reference
 - **[Troubleshooting Guide](/docs/troubleshooting)** - Common issues and solutions
 - **[GitHub Issues](https://github.com/postalsys/emailengine/issues)** - Report bugs
-- **[Support](/docs/support/getting-help)** - Get professional help
+- **[Support](/docs/support/license)** - Get professional help
 
 ## Common Provider-Specific Notes
 

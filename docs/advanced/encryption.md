@@ -597,10 +597,10 @@ If migration fails:
 
 ## See Also
 
-- [Security Best Practices](/docs/deployment/security.md)
-- [Configuration Options](/docs/configuration/index.md)
-- [Redis Configuration](/docs/configuration/redis.md)
-- [Deployment Guide](/docs/deployment/index.md)
+- [Security Best Practices](/docs/deployment/security)
+- [Configuration Options](/docs/configuration)
+- [Redis Configuration](/docs/configuration/redis)
+- [Deployment Guide](/docs/deployment)
 
 ## Resources
 

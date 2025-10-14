@@ -730,4 +730,4 @@ function isValidFolderPath(path) {
 - [Message Operations](./message-operations) - Working with messages
 - [Webhooks](./webhooks) - Real-time mailbox change notifications
 - [Searching](./searching) - Finding messages in folders
-- [Accounts: IMAP](/docs/accounts/imap-basic) - IMAP account setup
+- [Accounts: IMAP](/docs/accounts/imap-smtp) - IMAP account setup

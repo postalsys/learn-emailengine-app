@@ -615,7 +615,7 @@ Configure webhooks and event notifications.
 ### Full API Reference
 Complete auto-generated API documentation with all endpoints, parameters, and examples.
 
-[Browse full API reference](/docs/api)
+[Browse full API reference](/docs/api-reference)
 
 ## Next Steps
 
