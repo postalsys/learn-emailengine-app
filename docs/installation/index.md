@@ -19,7 +19,7 @@ sudo mv emailengine /usr/local/bin/
 # Docker: Run container
 docker run -p 3000:3000 --env EENGINE_REDIS="redis://host.docker.internal:6379" postalsys/emailengine:v2
 
-# Source: Production deployment (recommended - uses less RAM)
+# Source: Production deployment
 wget https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz
 tar xzf source-dist.tar.gz && cd emailengine
 node server.js
@@ -36,9 +36,10 @@ node server.js
 Install on Ubuntu, Debian, CentOS, or RHEL.
 
 **Methods:**
+
 - Automated installer (Ubuntu/Debian) - one-click setup
 - Binary installation - standalone executable
-- Source installation - production recommended
+- Source installation
 
 **Best for:** Servers, VPS hosting, production deployments
 
@@ -51,6 +52,7 @@ Install on Ubuntu, Debian, CentOS, or RHEL.
 Install on macOS (Intel or Apple Silicon).
 
 **Methods:**
+
 - PKG installer - signed macOS package
 - Homebrew + binary
 - Source installation
@@ -66,6 +68,7 @@ Install on macOS (Intel or Apple Silicon).
 Install on Windows 10+ (native or WSL2).
 
 **Methods:**
+
 - Windows executable - standalone .exe
 - WSL2 installation - recommended for production
 - Docker Desktop
@@ -85,6 +88,7 @@ Install on Windows 10+ (native or WSL2).
 Run in containers with Docker or Docker Compose.
 
 **Features:**
+
 - Isolated environment
 - Easy scaling
 - Quick updates
@@ -99,14 +103,6 @@ Run in containers with Docker or Docker Compose.
 #### [Source Installation](/docs/installation/source)
 
 Run from source code (Node.js 20+ required).
-
-**Advantages:**
-- **50% less RAM usage** (100-200MB vs 200-400MB binary)
-- Latest features
-- Full customization
-- Production recommended
-
-**Best for:** Production deployments, high-volume servers
 
 [View source guide →](/docs/installation/source)
 
@@ -133,6 +129,7 @@ Run from source code (Node.js 20+ required).
 All installation methods require:
 
 1. **Redis 6.0+**
+
    - Stand-alone mode (Cluster not supported)
    - Persistence enabled (RDB or AOF)
    - `noeviction` memory policy
@@ -180,13 +177,13 @@ Deploy via One-Click Apps in CapRover dashboard. Search for "EmailEngine".
 
 ## Installation Comparison
 
-| Method | Difficulty | RAM Usage | Best For | Update Process |
-|--------|-----------|-----------|----------|----------------|
-| **Automated Installer** | Easy | Medium | Linux servers | `/opt/upgrade-emailengine.sh` |
-| **Binary** | Easy | Medium | Quick setup | Download + replace |
-| **Source** | Medium | **Low** (50% less) | **Production** | Git pull or download |
-| **Docker** | Medium | Medium | Containers | `docker pull` |
-| **Cloud Platform** | Very Easy | Varies | Managed hosting | Platform-specific |
+| Method                  | Difficulty | RAM Usage          | Best For        | Update Process                |
+| ----------------------- | ---------- | ------------------ | --------------- | ----------------------------- |
+| **Automated Installer** | Easy       | Medium             | Linux servers   | `/opt/upgrade-emailengine.sh` |
+| **Binary**              | Easy       | Medium             | Quick setup     | Download + replace            |
+| **Source**              | Medium     | **Low** (50% less) | **Production**  | Git pull or download          |
+| **Docker**              | Medium     | Medium             | Containers      | `docker pull`                 |
+| **Cloud Platform**      | Very Easy  | Varies             | Managed hosting | Platform-specific             |
 
 **Production recommendation:** Source installation offers the best RAM efficiency (100-200MB vs 200-400MB for binary).
 
@@ -237,11 +234,13 @@ For production deployments, follow security best practices:
 ### Scenario 1: Development/Testing
 
 **Requirements:**
+
 - Local development machine
 - Testing EmailEngine features
 - Single account
 
 **Recommended:**
+
 - macOS: PKG installer
 - Windows: WSL2 + binary
 - Linux: Binary installation
@@ -251,11 +250,13 @@ For production deployments, follow security best practices:
 ### Scenario 2: Production Server (Small Scale)
 
 **Requirements:**
+
 - 10-100 email accounts
 - VPS or dedicated server
 - 4 GB RAM, 2 CPU cores
 
 **Recommended:**
+
 - Linux automated installer
 - Or source installation for better RAM efficiency
 
@@ -264,11 +265,13 @@ For production deployments, follow security best practices:
 ### Scenario 3: Production Server (Large Scale)
 
 **Requirements:**
+
 - 100+ email accounts
 - High-volume email processing
 - 8+ GB RAM, 4+ CPU cores
 
 **Recommended:**
+
 - Source installation (50% less RAM)
 - Multiple instances with load balancer
 - Dedicated Redis server
@@ -279,11 +282,13 @@ For production deployments, follow security best practices:
 ### Scenario 4: Containerized Infrastructure
 
 **Requirements:**
+
 - Kubernetes or Docker Swarm
 - Horizontal scaling
 - Container orchestration
 
 **Recommended:**
+
 - Docker with Docker Compose
 - Helm charts for Kubernetes
 
@@ -292,11 +297,13 @@ For production deployments, follow security best practices:
 ### Scenario 5: Managed Cloud Platform
 
 **Requirements:**
+
 - Zero infrastructure management
 - Quick deployment
 - Automatic scaling
 
 **Recommended:**
+
 - Render.com (easiest)
 - DigitalOcean Marketplace
 - Heroku (with caution)
@@ -308,6 +315,7 @@ For production deployments, follow security best practices:
 ### Installation Issues
 
 **Redis connection failed:**
+
 ```bash
 # Check Redis is running
 redis-cli ping  # Should return: PONG
@@ -318,6 +326,7 @@ brew services start redis   # macOS
 ```
 
 **Permission denied:**
+
 ```bash
 # Make binary executable
 chmod +x emailengine
@@ -327,6 +336,7 @@ sudo chown $USER:$USER emailengine
 ```
 
 **Port already in use:**
+
 ```bash
 # Find process using port 3000
 sudo lsof -i :3000
@@ -336,6 +346,7 @@ emailengine --api.port=3001
 ```
 
 **Node.js version too old:**
+
 ```bash
 # Install Node.js 20+
 # See platform-specific guides for instructions
