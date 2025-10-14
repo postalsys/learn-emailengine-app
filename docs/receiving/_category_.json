@@ -1,0 +1,8 @@
+{
+  "label": "Receiving",
+  "position": 6,
+  "link": {
+    "type": "generated-index",
+    "description": "Receive and process emails with webhooks, search, attachments, and continuous processing"
+  }
+}
