@@ -663,14 +663,14 @@ Workers have execution time limits. For long processing:
 
 | Feature | Cloudflare Workers | EmailEngine |
 |---------|-------------------|-------------|
-| **Inbound Processing** | ✅ Excellent | ✅ Excellent |
-| **Outbound Sending** | ❌ Limited | ✅ Full support |
-| **Account Management** | ❌ No | ✅ Full |
-| **IMAP Sync** | ❌ No | ✅ Full |
-| **Search** | ❌ Limited | ✅ Full |
-| **Edge Processing** | ✅ Yes | ❌ No |
-| **Webhooks** | ⚠️ Custom | ✅ Built-in |
-| **Deployment** | ✅ Serverless | ⚠️ Server required |
+| **Inbound Processing** | [YES] Excellent | [YES] Excellent |
+| **Outbound Sending** | [NO] Limited | [YES] Full support |
+| **Account Management** | [NO] No | [YES] Full |
+| **IMAP Sync** | [NO] No | [YES] Full |
+| **Search** | [NO] Limited | [YES] Full |
+| **Edge Processing** | [YES] Yes | [NO] No |
+| **Webhooks** | [WARNING] Custom | [YES] Built-in |
+| **Deployment** | [YES] Serverless | [WARNING] Server required |
 
 **When to Use Cloudflare Workers**:
 - Process inbound emails at edge

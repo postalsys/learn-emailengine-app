@@ -379,11 +379,11 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account/my-account/search" \
 ## Congratulations!
 
 You've successfully:
-- ✅ Installed and started EmailEngine
-- ✅ Added your first email account
-- ✅ Sent an email via API
-- ✅ Configured webhooks
-- ✅ Retrieved and searched messages
+- [YES] Installed and started EmailEngine
+- [YES] Added your first email account
+- [YES] Sent an email via API
+- [YES] Configured webhooks
+- [YES] Retrieved and searched messages
 
 ## Next Steps
 

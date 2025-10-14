@@ -638,26 +638,26 @@ async function getUnsubscribeRate(listId, days = 30) {
 ### CAN-SPAM Act (USA)
 
 Requirements:
-- ✅ Include unsubscribe mechanism (provided by virtual lists)
-- ✅ Honor unsubscribes within 10 business days (you must implement)
-- ✅ Include physical postal address in emails (you must add)
-- ✅ Identify message as advertisement (you must add if applicable)
+- [YES] Include unsubscribe mechanism (provided by virtual lists)
+- [YES] Honor unsubscribes within 10 business days (you must implement)
+- [YES] Include physical postal address in emails (you must add)
+- [YES] Identify message as advertisement (you must add if applicable)
 
 ### GDPR (EU)
 
 Requirements:
-- ✅ Obtain consent before sending (you must implement)
-- ✅ Provide easy unsubscribe method (provided by virtual lists)
-- ✅ Honor unsubscribes immediately (you must implement)
-- ✅ Keep records of consent and unsubscribes (you must implement)
+- [YES] Obtain consent before sending (you must implement)
+- [YES] Provide easy unsubscribe method (provided by virtual lists)
+- [YES] Honor unsubscribes immediately (you must implement)
+- [YES] Keep records of consent and unsubscribes (you must implement)
 
 ### CASL (Canada)
 
 Requirements:
-- ✅ Obtain express consent (you must implement)
-- ✅ Include unsubscribe mechanism (provided by virtual lists)
-- ✅ Honor unsubscribes within 10 days (you must implement)
-- ✅ Include sender information (you must add)
+- [YES] Obtain express consent (you must implement)
+- [YES] Include unsubscribe mechanism (provided by virtual lists)
+- [YES] Honor unsubscribes within 10 days (you must implement)
+- [YES] Include sender information (you must add)
 
 ## Troubleshooting
 
@@ -764,13 +764,13 @@ Virtual lists only work with Mail Merge (not regular submit):
 ### What Virtual Lists Don't Do
 
 **Not a full mailing list manager:**
-- ❌ No contact storage
-- ❌ No segmentation
-- ❌ No sending history
-- ❌ No bounce management
-- ❌ No analytics/reporting
-- ❌ No A/B testing
-- ❌ No email templates
+- [NO] No contact storage
+- [NO] No segmentation
+- [NO] No sending history
+- [NO] No bounce management
+- [NO] No analytics/reporting
+- [NO] No A/B testing
+- [NO] No email templates
 
 **You must implement:**
 - Subscriber database

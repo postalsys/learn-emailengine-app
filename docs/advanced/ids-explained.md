@@ -567,11 +567,11 @@ function isReliableMessageId(messageId) {
 ### 4. Use id for All API Calls
 
 ```javascript
-// ✅ Correct
+// CORRECT
 const message = await getByEmailId(emailId);
 await deleteMessage(account, message.id);  // Use id from API response
 
-// ❌ Wrong
+// WRONG
 await deleteMessage(account, emailId);  // emailId won't work
 ```
 
@@ -601,7 +601,7 @@ function handleWebhooks(webhook) {
 ### 1. Reusing Old IDs After Moves
 
 ```javascript
-// ❌ Wrong
+// WRONG
 const message = await getMessage(account, oldId);
 await moveMessage(account, oldId, 'Archive');
 
@@ -609,7 +609,7 @@ await moveMessage(account, oldId, 'Archive');
 await updateMessage(account, oldId, {seen: true});
 // Error: Message not found
 
-// ✅ Correct
+// CORRECT
 const moveResponse = await moveMessage(account, oldId, 'Archive');
 const newId = moveResponse.id;
 
@@ -619,7 +619,7 @@ await updateMessage(account, newId, {seen: true});
 ### 2. Assuming emailId is Always Available
 
 ```javascript
-// ❌ Wrong
+// WRONG
 function trackMessage(message) {
   db.save({
     id: message.emailId,  // undefined for most providers!
@@ -627,7 +627,7 @@ function trackMessage(message) {
   });
 }
 
-// ✅ Correct
+// CORRECT
 function trackMessage(message) {
   const trackingId = message.emailId || message.messageId || message.id;
   db.save({
@@ -640,10 +640,10 @@ function trackMessage(message) {
 ### 3. Not Validating messageId
 
 ```javascript
-// ❌ Wrong - spam emails might have no messageId
+// WRONG - spam emails might have no messageId
 processedIds.add(message.messageId);  // Adds 'undefined'!
 
-// ✅ Correct
+// CORRECT
 if (message.messageId) {
   processedIds.add(message.messageId);
 } else {

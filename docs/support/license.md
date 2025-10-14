@@ -18,15 +18,15 @@ Complete information about EmailEngine licenses, pricing, activation, and manage
 ### Development License (Free)
 
 **Features:**
-- ✓ Full API access
-- ✓ All email protocols (IMAP, SMTP, Gmail API, etc.)
-- ✓ OAuth2 authentication
-- ✓ Webhooks
-- ✓ Basic monitoring
-- ✗ Limited to 10 accounts
-- ✗ Development use only
-- ✗ No commercial use
-- ✗ Limited support
+- YES: Full API access
+- YES: All email protocols (IMAP, SMTP, Gmail API, etc.)
+- YES: OAuth2 authentication
+- YES: Webhooks
+- YES: Basic monitoring
+- NO: Limited to 10 accounts
+- NO: Development use only
+- NO: No commercial use
+- NO: Limited support
 
 **How to use:**
 ```bash
@@ -58,14 +58,14 @@ Development license is for testing only. Commercial use requires production lice
 ### Production License (Paid)
 
 **Features:**
-- ✓ **Unlimited accounts**
-- ✓ **Unlimited instances**
-- ✓ **Unlimited API calls**
-- ✓ All development features
-- ✓ Priority support
-- ✓ Commercial use allowed
-- ✓ Updates included
-- ✓ Source code access
+- YES: **Unlimited accounts**
+- YES: **Unlimited instances**
+- YES: **Unlimited API calls**
+- YES: All development features
+- YES: Priority support
+- YES: Commercial use allowed
+- YES: Updates included
+- YES: Source code access
 
 **Pricing:**
 - **$995 USD per year**
@@ -596,18 +596,18 @@ For enterprise support, contact sales@emailengine.app
 ### Protecting Your License Key
 
 **Do:**
-- ✓ Store in environment variables
-- ✓ Use secret management service (Vault, AWS Secrets Manager)
-- ✓ Restrict file permissions (600)
-- ✓ Rotate if exposed
-- ✓ Use different keys for different deployments (if multiple licenses)
+- YES: Store in environment variables
+- YES: Use secret management service (Vault, AWS Secrets Manager)
+- YES: Restrict file permissions (600)
+- YES: Rotate if exposed
+- YES: Use different keys for different deployments (if multiple licenses)
 
 **Don't:**
-- ✗ Commit to version control
-- ✗ Include in Docker images
-- ✗ Share publicly
-- ✗ Email unencrypted
-- ✗ Store in code
+- NO: Commit to version control
+- NO: Include in Docker images
+- NO: Share publicly
+- NO: Email unencrypted
+- NO: Store in code
 
 **Example secure setup:**
 

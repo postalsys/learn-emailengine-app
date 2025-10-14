@@ -202,7 +202,7 @@ return {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: `*New VIP Email* 📧\n*From:* ${payload.data.from.name || payload.data.from.address}\n*Subject:* ${payload.data.subject}\n*Account:* ${payload.account}`
+                text: `*New VIP Email* \n*From:* ${payload.data.from.name || payload.data.from.address}\n*Subject:* ${payload.data.subject}\n*Account:* ${payload.account}`
             }
         },
         {

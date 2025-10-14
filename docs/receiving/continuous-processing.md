@@ -177,10 +177,10 @@ curl -X PUT "https://your-emailengine.com/admin/config" \
 
 | Feature | Full | Fast |
 |---------|------|------|
-| New message webhooks | ✅ | ✅ |
-| Message update webhooks | ✅ | ❌ |
-| Message delete webhooks | ✅ | ❌ |
-| Flag change webhooks | ✅ | ❌ |
+| New message webhooks | [YES] | [YES] |
+| Message update webhooks | [YES] | [NO] |
+| Message delete webhooks | [YES] | [NO] |
+| Flag change webhooks | [YES] | [NO] |
 | Processing speed | Slower | Faster |
 | Use case | Full sync | Processing only |
 
@@ -231,9 +231,9 @@ async function processMessage(event) {
       hasAttachments: data.attachments && data.attachments.length > 0
     });
 
-    console.log('✓ Processed successfully');
+    console.log('SUCCESS: Processed successfully');
   } catch (err) {
-    console.error('✗ Processing failed:', err.message);
+    console.error('FAIL: Processing failed:', err.message);
   }
 }
 
@@ -467,11 +467,11 @@ processingQueue.process('process-email', async (job) => {
 
 // Monitor queue
 processingQueue.on('completed', (job, result) => {
-  console.log(`✓ Job ${job.id} completed: ${result.messageId}`);
+  console.log(`SUCCESS: Job ${job.id} completed: ${result.messageId}`);
 });
 
 processingQueue.on('failed', (job, err) => {
-  console.error(`✗ Job ${job.id} failed:`, err.message);
+  console.error(`FAIL: Job ${job.id} failed:`, err.message);
 });
 ```
 
@@ -526,9 +526,9 @@ async function processBatch() {
       );
     }
 
-    console.log(`✓ Batch processed successfully`);
+    console.log(`SUCCESS: Batch processed successfully`);
   } catch (err) {
-    console.error(`✗ Batch processing failed:`, err);
+    console.error(`FAIL: Batch processing failed:`, err);
   }
 }
 ```

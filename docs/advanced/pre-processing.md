@@ -753,7 +753,7 @@ for (const test of testCases) {
   const shouldSend = filterWebhook(test.data);
   console.log(`  Filter result: ${shouldSend}`);
   console.log(`  Expected: ${test.expectedFilter}`);
-  console.log(`  ${shouldSend === test.expectedFilter ? '✓ PASS' : '✗ FAIL'}`);
+  console.log(`  ${shouldSend === test.expectedFilter ? 'PASS' : 'FAIL'}`);
 
   if (shouldSend) {
     const mapped = mapWebhook(test.data);

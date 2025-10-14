@@ -330,23 +330,23 @@ EENGINE_SMTP_GATEWAY_TLS_CERT=/path/to/certificate.crt
 
 ### Supported Features
 
-- ✅ Standard SMTP protocol
-- ✅ Authentication (PLAIN, LOGIN)
-- ✅ TLS/STARTTLS encryption
-- ✅ Multiple recipients (TO, CC, BCC)
-- ✅ Attachments
-- ✅ Custom headers
-- ✅ HTML and plain text
-- ✅ Automatic queuing and retries
-- ✅ Webhook notifications
+- [YES] Standard SMTP protocol
+- [YES] Authentication (PLAIN, LOGIN)
+- [YES] TLS/STARTTLS encryption
+- [YES] Multiple recipients (TO, CC, BCC)
+- [YES] Attachments
+- [YES] Custom headers
+- [YES] HTML and plain text
+- [YES] Automatic queuing and retries
+- [YES] Webhook notifications
 
 ### Limitations
 
-- ❌ Cannot specify custom `sendAt` (scheduled sending)
-- ❌ Cannot use mail merge via SMTP
-- ❌ Cannot reference templates by ID
-- ❌ Cannot use reply/forward reference mode
-- ❌ Limited access to EmailEngine-specific features
+- [NO] Cannot specify custom `sendAt` (scheduled sending)
+- [NO] Cannot use mail merge via SMTP
+- [NO] Cannot reference templates by ID
+- [NO] Cannot use reply/forward reference mode
+- [NO] Limited access to EmailEngine-specific features
 
 For advanced features, use the [REST API](./basic-sending.md) instead.
 

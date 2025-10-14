@@ -294,16 +294,16 @@ pwgen -s 64 1
 ### 2. Secure Storage
 
 **Never**:
-- ❌ Commit to version control
-- ❌ Include in Docker images
-- ❌ Hard-code in configuration files
-- ❌ Share via unsecured channels (email, Slack, etc.)
+- [NO] Commit to version control
+- [NO] Include in Docker images
+- [NO] Hard-code in configuration files
+- [NO] Share via unsecured channels (email, Slack, etc.)
 
 **Instead**:
-- ✅ Use environment variables
-- ✅ Use secret management systems (Vault, AWS Secrets Manager, etc.)
-- ✅ Use orchestration secrets (Kubernetes Secrets, Docker Secrets)
-- ✅ Restrict access to authorized personnel only
+- [YES] Use environment variables
+- [YES] Use secret management systems (Vault, AWS Secrets Manager, etc.)
+- [YES] Use orchestration secrets (Kubernetes Secrets, Docker Secrets)
+- [YES] Restrict access to authorized personnel only
 
 ### 3. Secret Rotation
 
@@ -505,10 +505,10 @@ Consult with compliance team for specific requirements.
 
 Encryption at rest doesn't protect against:
 
-- ❌ Compromised EmailEngine process (credentials in memory)
-- ❌ Network sniffing (use TLS for network protection)
-- ❌ Application vulnerabilities (keep EmailEngine updated)
-- ❌ Stolen encryption secret (protect the secret itself)
+- [NO] Compromised EmailEngine process (credentials in memory)
+- [NO] Network sniffing (use TLS for network protection)
+- [NO] Application vulnerabilities (keep EmailEngine updated)
+- [NO] Stolen encryption secret (protect the secret itself)
 
 ## Migration Planning
 

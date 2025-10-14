@@ -149,12 +149,12 @@ New Email → Nylas Sync → Database → Webhook fired
 
 **Design pattern for EmailEngine:**
 ```javascript
-// ❌ Don't do this
+// WRONG: Don't do this
 for (const messageId of messageIds) {
   await fetch(`/v1/account/${account}/message/${messageId}`);
 }
 
-// ✓ Do this instead
+// CORRECT: Do this instead
 const response = await fetch(`/v1/account/${account}/messages`, {
   method: 'POST',
   body: JSON.stringify({ search: { uid: messageIds } })
@@ -167,29 +167,29 @@ const response = await fetch(`/v1/account/${account}/messages`, {
 
 | Feature | EmailEngine | Nylas |
 |---------|-------------|-------|
-| IMAP/SMTP | ✓ | ✓ |
-| Gmail API | ✓ | ✓ |
-| Outlook/Exchange | ✓ | ✓ |
-| OAuth2 | ✓ | ✓ |
-| Webhooks | ✓ | ✓ |
-| Send emails | ✓ | ✓ |
-| Attachments | ✓ | ✓ |
-| Search | ✓ (IMAP search) | ✓ (Advanced) |
-| Labels/Tags | ✓ | ✓ |
-| Threading | ✓ | ✓ |
+| IMAP/SMTP | Yes | Yes |
+| Gmail API | Yes | Yes |
+| Outlook/Exchange | Yes | Yes |
+| OAuth2 | Yes | Yes |
+| Webhooks | Yes | Yes |
+| Send emails | Yes | Yes |
+| Attachments | Yes | Yes |
+| Search | Yes (IMAP search) | Yes (Advanced) |
+| Labels/Tags | Yes | Yes |
+| Threading | Yes | Yes |
 
 ### Advanced Features
 
 | Feature | EmailEngine | Nylas |
 |---------|-------------|-------|
-| AI Sentiment Analysis | ✗ | ✓ |
-| Smart Categorization | ✗ | ✓ |
-| Contact enrichment | ✗ | ✓ |
-| Flight/Event detection | ✗ | ✓ |
-| Calendar integration | Limited | ✓ |
+| AI Sentiment Analysis | No | Yes |
+| Smart Categorization | No | Yes |
+| Contact enrichment | No | Yes |
+| Flight/Event detection | No | Yes |
+| Calendar integration | Limited | Yes |
 | Contacts API | Basic | Advanced |
-| Neural API | ✗ | ✓ |
-| Scheduler | ✗ | ✓ |
+| Neural API | No | Yes |
+| Scheduler | No | Yes |
 
 **When advanced features matter:**
 - **Choose Nylas:** Need built-in AI/ML features
@@ -201,11 +201,11 @@ const response = await fetch(`/v1/account/${account}/messages`, {
 
 | Feature | EmailEngine | Nylas |
 |---------|-------------|-------|
-| REST API | ✓ | ✓ |
-| Webhooks | ✓ | ✓ |
-| WebSocket | ✓ | ✓ |
-| Webhook retry | ✓ | ✓ |
-| Batch operations | ✓ | ✓ |
+| REST API | Yes | Yes |
+| Webhooks | Yes | Yes |
+| WebSocket | Yes | Yes |
+| Webhook retry | Yes | Yes |
+| Batch operations | Yes | Yes |
 | Rate limiting | Configure yourself | Built-in |
 | SDKs | Community | Official (multiple languages) |
 | API versioning | Single version | Versioned |
@@ -372,20 +372,20 @@ Max scale:         Hundreds of thousands of mailboxes
 ### Data Sovereignty and Compliance
 
 **EmailEngine:**
-- ✓ Data stays on your infrastructure
-- ✓ You control encryption keys
-- ✓ You control data retention
-- ✓ Easier GDPR compliance (no third-party)
-- ✓ Suitable for HIPAA (with proper setup)
-- ✗ You responsible for compliance implementation
+- YES: Data stays on your infrastructure
+- YES: You control encryption keys
+- YES: You control data retention
+- YES: Easier GDPR compliance (no third-party)
+- YES: Suitable for HIPAA (with proper setup)
+- NO: You responsible for compliance implementation
 
 **Nylas:**
-- ✓ SOC 2 Type II certified
-- ✓ ISO 27001 certified
-- ✓ GDPR compliant (with DPA)
-- ✓ BAA available for HIPAA
-- ✓ Professional compliance support
-- ✗ Data stored in Nylas cloud
+- YES: SOC 2 Type II certified
+- YES: ISO 27001 certified
+- YES: GDPR compliant (with DPA)
+- YES: BAA available for HIPAA
+- YES: Professional compliance support
+- NO: Data stored in Nylas cloud
 
 **Best for:**
 - **EmailEngine:** Strict data residency (banking, healthcare, EU)
@@ -395,27 +395,27 @@ Max scale:         Hundreds of thousands of mailboxes
 
 ### Choose EmailEngine If:
 
-✓ **You have DevOps capacity**
+**- You have DevOps capacity**
 - In-house infrastructure team
 - Comfortable with Docker/Kubernetes
 - Can monitor and maintain services
 
-✓ **Data sovereignty is critical**
+**- Data sovereignty is critical**
 - Banking, healthcare, legal
 - European companies with GDPR concerns
 - Government contracts
 
-✓ **Cost is a major factor**
+**- Cost is a major factor**
 - High mailbox count (500+)
 - Predictable flat pricing needed
 - Limited budget
 
-✓ **You need real-time webhooks**
+**- You need real-time webhooks**
 - Chat-like applications
 - Instant notification requirements
 - Time-critical workflows
 
-✓ **You prefer open source**
+**- You prefer open source**
 - Want to inspect code
 - May need customizations
 - Community-driven development
@@ -424,29 +424,29 @@ Max scale:         Hundreds of thousands of mailboxes
 
 ### Choose Nylas If:
 
-✓ **Zero DevOps overhead desired**
+**- Zero DevOps overhead desired**
 - Small team focused on product
 - No infrastructure expertise
 - Want fully managed solution
 
-✓ **You need advanced AI features**
+**- You need advanced AI features**
 - Sentiment analysis
 - Smart categorization
 - Contact enrichment
 - Event detection
 
-✓ **You need parallel performance**
+**- You need parallel performance**
 - High concurrent request volume
 - Multiple users per mailbox
 - Performance-critical application
 
-✓ **You want enterprise support**
+**- You want enterprise support**
 - SLA guarantees
 - Dedicated support team
 - Professional services
 - Compliance documentation
 
-✓ **You're building a calendar app**
+**- You're building a calendar app**
 - Calendar API needed
 - Scheduler integration
 - Complex meeting workflows
@@ -517,17 +517,17 @@ GET /messages/{id}
 
 | Priority | Choose EmailEngine | Choose Nylas |
 |----------|-------------------|--------------|
-| **Lowest cost** | ✓✓✓ | |
-| **Fastest setup** | | ✓✓✓ |
-| **Data privacy** | ✓✓✓ | |
-| **Zero maintenance** | | ✓✓✓ |
-| **Real-time webhooks** | ✓✓✓ | ✓ |
-| **Parallel performance** | ✓ | ✓✓✓ |
-| **AI features** | | ✓✓✓ |
-| **Calendar integration** | ✓ | ✓✓✓ |
-| **Compliance docs** | ✓ | ✓✓✓ |
-| **Customization** | ✓✓✓ | ✓ |
-| **Large scale (10k+)** | ✓ | ✓✓✓ |
+| **Lowest cost** | High | |
+| **Fastest setup** | | High |
+| **Data privacy** | High | |
+| **Zero maintenance** | | High |
+| **Real-time webhooks** | High | Yes |
+| **Parallel performance** | Yes | High |
+| **AI features** | | High |
+| **Calendar integration** | Yes | High |
+| **Compliance docs** | Yes | High |
+| **Customization** | High | Yes |
+| **Large scale (10k+)** | Yes | High |
 
 ## Real-World Examples
 

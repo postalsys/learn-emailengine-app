@@ -637,7 +637,7 @@ No action needed from you. If issues persist, check logs for specific errors.
 **Example mismatch:**
 - Provider: `https://ee.company.com/oauth`
 - EmailEngine: `https://ee.company.com:3000/oauth`
-- ❌ Port mismatch!
+- [NO] Port mismatch!
 
 ### Insufficient Permissions
 

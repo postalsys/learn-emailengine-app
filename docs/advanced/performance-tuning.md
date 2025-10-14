@@ -283,11 +283,11 @@ tcp-keepalive 300  # Default, recommended
 
 | Provider/Project | Compatible | Caveats |
 |-----------------|------------|---------|
-| **Upstash Redis** | ✅ Yes | 1 MB command size limit – large attachments cannot be queued. Locate EmailEngine in same GCP/AWS region. |
-| **AWS ElastiCache** | ⚠️ Technically | Treats itself as a cache; data loss on restarts. **Not recommended**. |
-| **Memurai** | ✅ Yes | Tested only in staging. |
-| **Dragonfly** | ✅ Yes | Start with `--default_lua_flags=allow-undeclared-keys`. |
-| **KeyDB** | ✅ Yes | Tested only in staging. |
+| **Upstash Redis** | [YES] Yes | 1 MB command size limit – large attachments cannot be queued. Locate EmailEngine in same GCP/AWS region. |
+| **AWS ElastiCache** | [WARNING] Technically | Treats itself as a cache; data loss on restarts. **Not recommended**. |
+| **Memurai** | [YES] Yes | Tested only in staging. |
+| **Dragonfly** | [YES] Yes | Start with `--default_lua_flags=allow-undeclared-keys`. |
+| **KeyDB** | [YES] Yes | Tested only in staging. |
 
 ## Complete Configuration Example
 

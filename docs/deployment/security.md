@@ -215,13 +215,13 @@ EENGINE_GMAIL_CLIENT_SECRET=GOCSPX-xxx
 
 ```
 Allowed redirect URIs:
-✓ https://emailengine.example.com/oauth
-✓ https://emailengine.example.com/oauth/callback
+YES: https://emailengine.example.com/oauth
+YES: https://emailengine.example.com/oauth/callback
 
 Not allowed:
-✗ http://emailengine.example.com/oauth  (no HTTPS)
-✗ https://*/oauth  (wildcard)
-✗ http://localhost/oauth  (except for development)
+NO: http://emailengine.example.com/oauth  (no HTTPS)
+NO: https://*/oauth  (wildcard)
+NO: http://localhost/oauth  (except for development)
 ```
 
 ## Encryption
@@ -560,15 +560,15 @@ curl https://emailengine.example.com/v1/account/user@example.com/export \
 **Requirements for HIPAA:**
 
 1. **Encryption:**
-   - ✓ TLS 1.2+ for all connections
-   - ✓ Encryption at rest (Redis persistence encrypted)
-   - ✓ Field-level encryption for sensitive data
+   - YES: TLS 1.2+ for all connections
+   - YES: Encryption at rest (Redis persistence encrypted)
+   - YES: Field-level encryption for sensitive data
 
 2. **Access Control:**
-   - ✓ Role-based access control
-   - ✓ API token authentication
-   - ✓ IP whitelisting
-   - ✓ Audit logging
+   - YES: Role-based access control
+   - YES: API token authentication
+   - YES: IP whitelisting
+   - YES: Audit logging
 
 3. **Audit Trail:**
    ```bash
