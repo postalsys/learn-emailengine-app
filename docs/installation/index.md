@@ -26,17 +26,17 @@ Before installing EmailEngine, ensure you have:
 
 ### System Requirements
 
-**Minimum:**
-- **CPU:** 1 core
-- **RAM:** 1 GB (2 GB recommended)
+**Minimum (testing/development):**
+- **CPU:** 1-2 cores
+- **RAM:** 2 GB
 - **Storage:** 10 GB
 - **Network:** Stable internet connection
 
 **Recommended for production:**
-- **CPU:** 2-4 cores
-- **RAM:** 2-4 GB
+- **CPU:** 4+ cores
+- **RAM:** 4-8 GB (or more for high-volume deployments)
 - **Storage:** 20+ GB SSD
-- **Network:** Low-latency connection
+- **Network:** Low-latency connection with high bandwidth
 
 ### Required Software
 
