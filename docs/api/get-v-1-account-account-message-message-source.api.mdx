@@ -1,0 +1,71 @@
+---
+id: get-v-1-account-account-message-message-source
+title: "Download raw message"
+description: "Fetches raw message as a stream"
+sidebar_label: "Download raw message"
+hide_title: true
+hide_table_of_contents: true
+api: eJy1V21v2zYQ/isEP7WAYuUFbQbBzea1auA1SdvY2VbUQcBIZ5modFT44sQz/N+HoyhbdtKiLVDlgxnx+Nzdw3vTkqsatLBS4TDnCS/A/n0wyDLl0IafczBGFBB+RsrpDHjEczCZljWd5Al/CzabgWFa3LOqkWTCMMGM1SAqHvFaaFGBBW148nnJUVTAE/6wB7BnZQXKWR5xSVgzEDloHnGTzaASPFlyu6hJWqKFwm9ta7+EOwfGsgDEJLJKlqU0kCnMDXum5qC1zMGwNL04HV6kN+Phefr+aswA51IrrAAtmwstxW0Jz3nEK4mychVP9iNeiYdmfXy4T8/ql+tfRWuGRHMLLTm1sLOnqDFWSyweMXOF8s4BkzmglVMJmk2VZnYGDCohS7ZBhwdR1SVBOQP64PCIe8fPAAs748nhi5cRf9jLFM5BW69Yy4onVjtYPSLk+9VquHNSQx6QNn6HKPpJv0O0suGbLdcG9HwcDF7j4JF7j5zYwtix8zriVhQUyq0YvyYhUys0YMjAHKbClbZZdnFHLsvAmKkrecQzhRbQSwWPYz3Nfjs8pDdf83ZFT8QrsDMVstZnGHnC4/lBHPiNl2GxilvwZVisYtNmsgE9b9PS6ZIy0No6ieP9nv9LXr48PubksoHMaWkXXvQWhAY9cKT083V3e0RmNyR0hdZeEHx7l/R/I8SjsHirdCUsT/hf/4wfXWyKFjRbKKcpiMAYZtUXQE58SJwqr0Zaf9spxVqKhURggw9DHnHys8E57L047u0/hu8cqbWa+5wV7DIdjaeuJBQfyZVAUUgstsPZRMwA5vQ+sGwiJjAnJDJ1cyAXVjCRaWUMq1xpZV2u9WnTm+AE+7OjE+KNMijzBbofz45OJjgoGzt0U3QMC6HJxJY0c16fQDZoeBoTTz32STmWCWQFIBV+8AZ6f6Ch1fNp2FSrymdsX7CZhumrCY9FXkmMG4EJZ1boAuyrCb+phQa0E37SN1YrLE66Ok0/Dm/7sThhtSjAezjErHR5VysVzrVbjf0KgakpGWKANQFvkgnusY8O9IKtu0rC+pnK4eT3JipuPN6rT++vLm/G79+lF/3Yb9NJYlVp+V9DU9Nt2uNbewn70wckewKmuaC28H9YX3C4pAm2TIxIBK0UZUcqWVPCLlt/rfJ0G1HtVEkmNLQhBDkza8ByQYcqIdEKiU1QZQqNNBYwW/TYeRtaRlKUCQTlzIbhe1mW7BbYnQMHea9r9bjpZKZj6JnCYk87RH8t7dRgWCUWLBPOtDgbfPKowemx1wqnsnAUpnWtVa0lxV7bMOeidNBeuQ86T/O/e2m6F0wJzIf7Ys92euzzddKcgrUEM7JCW8jDhRz0fiyQTzfpsZVAFMITPHwCrS0CT+MN8pygti62wTrqNaaySnwhu7dye8MIYF4ridawWyjVfWgdIvOtI/TMbvUaubpWmvrCpqabJI69BeBleqKuY7OW8zvUZJo3f+xI8lXES5kBGviKyrOw+y2VOczjs+Hr9GKU3qTng+FZMw/17IP1NbxWxlYCOxreqHsslci7s+Vu3V5u+uh3jKKhDVl4sHFdConkmjd5GZroZz4/4FFn9ko2y40JyWYZmul1xGfKWAJYLm+FgStdrlb0+o7KFTXKiLdjnu+iuTS0znkyFaWBb/j17DKMIM/Z949XT7oaXgpcUEuk1OMJ5xH/AovOwEmz2E9ZtzU3/YQBLaur61XUfgz8GFW/4HvgST8ae3e+Ydb+EIGNBBWQuru3M+rR8LQe5k7TMV+t/geedr7N
+sidebar_class_name: "get api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Download raw message"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/account/{account}/message/{message}/source"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Fetches raw message as a stream
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"},{"name":"account","in":"path","schema":{"type":"string","description":"Unique identifier for the email account","example":"user123","maxLength":256,"x-convert":{"trim":true}},"description":"Unique identifier for the email account","required":true},{"name":"message","in":"path","schema":{"type":"string","description":"Message ID","example":"AAAAAQAACnA","maxLength":256},"description":"Message ID","required":true}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"default":{"description":"Successful","content":{"message/rfc822":{"schema":{"type":"string"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

@@ -1,0 +1,71 @@
+---
+id: get-v-1-account-account-oauthtoken
+title: "Get OAuth2 access token"
+description: "Get the active OAuth2 access token for an account. NB! This endpoint is disabled by default and needs activation on the Service configuration page."
+sidebar_label: "Get OAuth2 access token"
+hide_title: true
+hide_table_of_contents: true
+api: eJzNV21v2zYQ/is3fmoB2UoctNmEJGtaeEG2NGljp1sRBwEtnWU2EqmQlBvP8H8fjqRsOTG69EOB2h8kkcd7ee6VC6Yq1NwKJU8zlrAc7afd4zRVtbThccFrO7XqDiWLWIYm1aIiepawE7Rgpwg8tWKGcHFc22kPeJqiMeCOwERp4JLWiFcXzt/+AsOpMIAyq5SQFoSBTBg+LjCD8RwynPC6sMBlBhIxM567UxGUdPIGqGciRUiVnIi89vpDxXPssohVXPMSLWrDkusFk7xElrCHDmLHihJVbVnEBOk/RZ6hZhEz6RRLzpIFs/OKqIW0mLutTYsv8b5GYyEwAiGhFEUhDKZKZgZeqBlqLTI00O+fn5ye92+Hp+/7F1dDQDkTWskSpYUZ14IsfskiVgopyrpkyU7ESv7g3/d7O/Rb/nD5y2iFUPBRA07F7XQbNMZqIfMnyFxJcV8jiAylFROB2rmevIUlFwWsueMDL6uCWNUG9W5vjznDz1DmdsqS3qvXEXvopErOUFsnWIuSJVbXuHwCyPPFaryvhcYscLqJmOU5hQgLgc5uiMhUSho0JLe3s0OPTYGD2oX3pC5YxFIlLUqnJK+qQqQuEuMvhkgXT7FT4y+YkjKVpryzwgtqlPx5QKZDz1DHoHbB81jem/DZTVX5RPAyYr5EDF1R+V8px76eDEMJWkviJ5/M+OTXPOv9Nh+ffDzcJqnSaiay5xgTqtfqQFtSTujSiqTkvF59u2eoRixiqraFUndOD1Fc1hRRVljHwrP/0HAnkNcRed1KPgf9JkQtM1ocQ9g6kssQt2xJv4iVaKcqFHRXEgkRFs924yAoXoSXZayowHeaCm9Qz5rSWeuCqqS1VRLHO133T16/3t9nlD4G01oLO3ekY+QaNdnIkuub9vaAksDHeZto5Q5i39QZ+vZELAovfyhdcssS9uffwyc+60uLGuaq1htdx6Er5EQ5MQGuPvmkL3MhEY4/nLKIkZ2eT6/7ar+785R960jwgAEOl/3BcFIXxMXlX8klz4XMN5PQRGBQZrReojE8RxO5rlZpRaquD2TccuCpVsZAWRdWVMVKnjbdkRzJg+neEeFGee+LzEE83TsayePC66F9YzAQggr4BjXUTh6X0M6mLnxWNaRcQo6SxgB0Cjp70MPq8DQw0ap0deaAw1Tj5HDEYp6VQsaeYMTAcp2jPRyx24prlHbEjg6M1UrmR22Z5iAOqwcxP/JNmyw8lWlRZ22p1NxWZnn9lURQE1LEIPgYN8lIduBjjXoOq86fwEGqMjz63UfFreN3+Pni6vJ2ePFX//wgdtt0klBVWvzrYfITQXN8Yy+Bty4gYQsb76CmOX9YOTg4aSQbJAZEIq3gRYsqWUECl429Vjm4DS8f1XbgGpsQwgzMimExp0MlF9JyIX1QpUoaYSzKdN6F901oGUFRxiWq2qwR/iqKAsYI9zXWmHXbWg/9tGFaip4pmXd0LaVzSzNDGij5HFJem4bPmj9Z5Pl04V0Y3BB4Ra1QC4q9ZqiZ8aLGxuUu6BzM/3T6/U5QJSAf/AUvHs1BL1dJc4LWEpuB5dpiFhyy2/2+QD5Zp8dGAlEIj2RvC7emCGznd5xlxGrDsZ7XXterCiW/I703cnuNSDM9Gxhjob6GUYSnrpWHea5dvQZ1VSnt2suqppskjp0G6Gi6vKpis6JzO9Qt/cqbR5RsGbFCpEg9Z7vIs7D7LZEZzuKz03f980H/tv/++PTMz6xd+2BdDa+UsSWXLQl05dhyz3hcuhfr0ewnvaWE7mfxwcZVwYUkRB1Si9Cur9ls1w8CYTJI1q/tnn0Tsakylg4sFmNu8EoXyyUt31NVpH4csWbid826sYQlE14Y/AZ2Ly7DjPISnj97bjUtLHI5p85LGc4SxiJ2h/PW3WN5s4yaa9n3afoDbmZb7fD6PrpNruyh65SnoDJRtfeeXBBoSFrNaSf9IVsu/wOUt3Gk
+sidebar_class_name: "get api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get OAuth2 access token"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/account/{account}/oauth-token"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Get the active OAuth2 access token for an account. NB! This endpoint is disabled by default and needs activation on the Service configuration page.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"},{"name":"account","in":"path","schema":{"type":"string","description":"Unique identifier for the email account","example":"user123","maxLength":256,"x-convert":{"trim":true}},"description":"Unique identifier for the email account","required":true}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Successful","content":{"application/json":{"schema":{"type":"object","properties":{"account":{"type":"string","description":"Unique identifier for the email account","example":"user123","maxLength":256,"x-convert":{"trim":true}},"user":{"type":"string","description":"Username","example":"user@example.com","maxLength":256},"accessToken":{"type":"string","description":"Access Token","example":"aGVsbG8gd29ybGQ=","maxLength":256},"provider":{"type":"string","description":"OAuth2 provider","example":"gmail","enum":["gmail","gmailService","outlook","mailRu"],"title":"OAuth2Provider"}},"required":["account","user","accessToken","provider"],"title":"AccountTokenResponse"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

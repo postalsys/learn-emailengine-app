@@ -1,0 +1,233 @@
+/v1/templates:
+  get:
+    summary: List account templates
+    operationId: getV1Templates
+    description: Lists stored templates for the account
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: query
+        schema:
+        type: string
+        description: Account ID to list the templates for
+        example: example
+        maxLength: 256
+        description: Account ID to list the templates for
+      -
+        name: page
+        in: query
+        schema:
+        type: integer
+        description: "Page number (zero indexed, so use 0 for first page)"
+        example: 0
+        default: 0
+        minimum: 0
+        maximum: 1048576
+        description: "Page number (zero indexed, so use 0 for first page)"
+      -
+        name: pageSize
+        in: query
+        schema:
+        type: integer
+        description: How many entries per page
+        example: 20
+        default: 20
+        minimum: 1
+        maximum: 1000
+        description: How many entries per page
+    tags:
+      - Templates
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountTemplatesResponse"
+"/v1/templates/template/{template}":
+  get:
+    summary: Get template information
+    operationId: getV1TemplatesTemplateTemplate
+    description: Retrieve template content and information
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: template
+        in: path
+        schema:
+        type: string
+        description: Template ID
+        example: example
+        maxLength: 256
+        description: Template ID
+        required: true
+    tags:
+      - Templates
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountTemplateResponse"
+  delete:
+    summary: Remove a template
+    operationId: deleteV1TemplatesTemplateTemplate
+    description: Delete a stored template
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: template
+        in: path
+        schema:
+        type: string
+        description: Template ID
+        example: example
+        maxLength: 256
+        description: Template ID
+        required: true
+    tags:
+      - Templates
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Model14"
+  put:
+    summary: Update a template
+    operationId: putV1TemplatesTemplateTemplate
+    description: Update a stored template.
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: template
+        in: path
+        schema:
+        type: string
+        description: Template ID
+        example: example
+        maxLength: 256
+        description: Template ID
+        required: true
+    tags:
+      - Templates
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UpdateTemplate"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTemplateResponse"
+/v1/templates/template:
+  post:
+    summary: Create template
+    operationId: postV1TemplatesTemplate
+    description: Create a new stored template. Templates can be used when sending emails as the content of the message.
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+    tags:
+      - Templates
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateTemplate"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTemplateResponse"
+"/v1/templates/account/{account}":
+  delete:
+    summary: Flush templates
+    operationId: deleteV1TemplatesAccountAccount
+    description: Delete all stored templates for an account
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: force
+        in: query
+        schema:
+        type: boolean
+        description: Must be true in order to flush templates
+        default: false
+        description: Must be true in order to flush templates
+    tags:
+      - Templates
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteTemplateRequestResponse"

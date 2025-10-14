@@ -1,0 +1,557 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no"><title>Webhooks</title><meta name="twitter:title" content="Webhooks"><meta name="description" content="Using webhooks with EmailEngine"><meta name="twitter:description" content="Using webhooks with EmailEngine"><meta name="twitter:card" content="summary_large_image"><meta property="og:image" content="https://emailengine.app/lib_pTNsKLAHHUZrxQKE/xwb20trbbhmhskes.png?w=1200&amp;h=630&amp;fit=crop"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:image" content="https://emailengine.app/lib_pTNsKLAHHUZrxQKE/xwb20trbbhmhskes.png?w=1200&amp;h=630&amp;fit=crop"><link rel="icon" href="https://emailengine.app/lib_pTNsKLAHHUZrxQKE/xwb20trbbhmhskes.png?w=64&amp;h=64"><link rel="canonical" href="https://emailengine.app/webhooks"><link rel="stylesheet" href="styles.css"><style type="text/css">body {
+    font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    --title-scale: 1;
+  }
+  
+  @media only screen and (max-width: 750px) {
+    body {
+      --title-scale: 0.7;
+    }
+  } .wr { max-width: 1200px; max-width: var(--wr-max); } .section:not(.dark) {
+  --color-1: #fff;
+  --color-2: #fff;
+  --color-1-inv: rgba(40,40,40,1);
+  --color-2-inv: rgba(40,40,40,1);
+  } .section.dark {
+  --color-1: rgba(40,40,40,1);
+  --color-2: rgba(40,40,40,1);
+  --color-1-inv: #fff;
+  --color-2-inv: #fff;
+  } .section:not(.dark), .theme--light, .section:not(.dark) .color-2, .theme--light .color-2 { 
+    color: #fff; 
+
+  } .section.dark, .theme--dark, .section.dark .color-2, .theme--dark .color-2 { 
+    color: rgba(40,40,40,1); 
+  } .section:not(.dark) .color-1, .theme--light .color-1 { 
+    color: #fff; 
+  } .section.dark .color-1, .theme--dark .color-1 { 
+    color: rgba(40,40,40,1); 
+  } .section:not(.dark) .color-2, .theme--light .color-2 { 
+    color: #fff; 
+  } .section.dark .color-2, .theme--light .color-2 { 
+    color: rgba(40,40,40,1); 
+  } a:not(.btn), .link { 
+    color: rgba(186,186,245,1); 
+    --link-hover-bg: rgba(186, 186, 245, 0.05); 
+    --link-hover: rgb(97, 97, 232);
+  } .dark a:not(.btn), .dark .link, .theme--dark .link, .theme--dark a:not(.btn) { 
+    color: rgb(64, 126, 201); 
+    --link-hover-bg: rgba(64, 126, 201, 0.05); 
+    --link-hover: rgb(36, 77, 127);
+  } mark { 
+      background-color: rgba(255,235,0,1); 
+    } .dark mark, .theme--dark mark { 
+      background-color: rgba(255,235,0,1); 
+    }  .weight-text { font-weight: 400; } .weight-text-m { font-weight: 500; } .weight-text-h { font-weight: 600; } .weight-title { font-weight: 400; } .weight-title-m { font-weight: 600; } .weight-title-h { font-weight: 600; } .font-title { font-family: 'Josefin Sans', sans-serif; } body { --btn-radius: 20px; } .btn {
+    display: inline-flex;
+    position: relative;
+    background: #eee;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    margin: 0;
+    padding: 0.7em 0.8em;
+    line-height: 1;
+    color: var(--color);
+    border: none;
+    border-radius: 3px;
+    font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;
+    font-size: 1.05em;
+    font-weight: 500;
+    outline: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    }
+    
+    .btn span {
+    text-decoration: none;
+    }
+    
+    .btn--large {
+    font-size: 1.2em;
+    }
+    
+    .btn svg:first-child {
+      margin-right: 0.4em;
+    }
+    
+    .btn svg:last-child {
+      margin-left: 0.4em;
+    }
+    
+    .btn:hover {
+    text-decoration: none;
+    }
+    
+    .btn:hover span { text-decoration: none; } .btn { color:var(--color-1);background:transparent;border-radius:20px;box-shadow:inset 0px 0px 0px 1px ; } .btn.primary { color:var(--color-1-inv);background:var(--color-1);box-shadow:none; } .btn:hover { background:transparent;box-shadow:inset 0px 0px 0px 2px ; } .btn.primary:hover { background:var(--color-1);box-shadow:0px 4px 10px 0px rgba(50,50,93,.226), 0px 1px 3px 0px rgba(0,0,0,.08); } 
+      a, .link { text-decoration: none; font-weight: 500; } 
+      a:not(.btn):hover { text-decoration: underline }</style><link href="https://fonts.googleapis.com/css?family=Josefin+Sans:400,600&amp;display=fallback" rel="stylesheet"><script data-cs-category="performance">!function(e,t,a,n){e[n]=e[n]||[],e[n].push({"gtm.start":(new Date).getTime(),event:"gtm.js"});var g=t.getElementsByTagName(a)[0],m=t.createElement(a);m.async=!0,m.src="https://www.googletagmanager.com/gtm.js?id=G-P0YM17Y8CE",g.parentNode.insertBefore(m,g)}(window,document,"script","dataLayer")</script><script defer="" data-domain="emailengine.app" src="https://plausible.emailengine.dev/js/script.js"></script>
+
+<script defer="" src="https://postalsys.com/frame.js"></script></head><body><script>!function(){const e=false;window.SendEvent=function(n){if(!n)return void console.error('error when sending event');const t=JSON.stringify({siteId:n.siteId,category:n.category,name:n.name,data:n.data,isPriorBlockingEnabled:e});if(n.asBeacon&&navigator.sendBeacon)return void navigator.sendBeacon('/api/event',t);let o=new XMLHttpRequest;o.open('POST','/api/event',!0),o.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8'),o.send(t)}}();</script><script>!function(){const e=false;window.PageView=function(){let n=new XMLHttpRequest;n.open('POST','/api/view',!0),n.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8'),n.send(JSON.stringify({referrer:document.referrer,path:window.location.pathname,isPriorBlockingEnabled:e}))}}();</script><div id="header" class="section header dark" style="--wr-max:1200px"><div class="wr color-1" style="margin-top:10px;margin-bottom:10px"><div id="headerNav"><a id="headerLogo" href="/" class="header__logoImg"><img src="lib_pTNsKLAHHUZrxQKE/xwb20trbbhmhskes.png?w=160" width="80" alt="Your Logo"></a><div class="spacer"></div><div class="headerNav__links"><a href="/#downloads">Download</a><div class="headerLink link">Using EmailEngine<div class="headerLink__dropdown"><div class="headerLink__children" style="background-color:#ffffff;--header-dd-bg:#ffffff"><a href="https://api.emailengine.app/" target="_blank" rel="noreferer noopener"><div class="headerLinkChild__meta">API reference</div></a><a href="/authenticating-api-requests"><div class="headerLinkChild__meta">Authenticating API requests</div></a><a href="/hosted-authentication"><div class="headerLinkChild__meta">Hosted authentication</div></a><a href="/webhooks"><div class="headerLinkChild__meta">Webhooks</div></a><a href="/sending-emails"><div class="headerLinkChild__meta">Sending emails</div></a><a href="/supported-account-types"><div class="headerLinkChild__meta">Supported Account Types</div></a><a href="/oauth2-configuration"><div class="headerLinkChild__meta">OAuth2 configuration</div></a><a href="/bounces"><div class="headerLinkChild__meta">Bounce detection</div></a><a href="/email-templates"><div class="headerLinkChild__meta">Email templates</div></a><a href="/shared-mailboxes-in-ms-365"><div class="headerLinkChild__meta">Shared Mailboxes in MS365</div></a><a href="/virtual-mailing-lists"><div class="headerLinkChild__meta">Virtual mailing lists and unsubscribe</div></a><a href="/pre-processing-functions"><div class="headerLinkChild__meta">Pre-processing functions</div></a></div></div></div><div class="headerLink link">Operating EmailEngine<div class="headerLink__dropdown"><div class="headerLink__children" style="background-color:#ffffff;--header-dd-bg:#ffffff"><a href="/set-up"><div class="headerLinkChild__meta">Installation instructions</div></a><a href="/redis"><div class="headerLinkChild__meta">Redis requirements</div></a><a href="/configuration"><div class="headerLinkChild__meta">Configuration options</div></a><a href="/reset-password"><div class="headerLinkChild__meta">Reset password</div></a><a href="/system-d-service"><div class="headerLinkChild__meta">Run as a SystemD service</div></a><a href="/docker"><div class="headerLinkChild__meta">Run as a Docker container</div></a><a href="/monitoring"><div class="headerLinkChild__meta">Monitoring</div></a><a href="/logging"><div class="headerLinkChild__meta">Log management</div></a><a href="/local-addresses"><div class="headerLinkChild__meta">Local IP-addresses</div></a><a href="/prepared-settings"><div class="headerLinkChild__meta">Prepared settings</div></a><a href="/prepared-access-token"><div class="headerLinkChild__meta">Prepared access token</div></a><a href="/prepared-license"><div class="headerLinkChild__meta">Prepared license key</div></a><a href="/troubleshooting"><div class="headerLinkChild__meta">Troubleshooting</div></a><a href="/expose-public-https"><div class="headerLinkChild__meta">Use Nginx as a proxy</div></a></div></div></div><a href="/#faq">FAQ</a><a href="https://docs.emailengine.app/" target="_blank" rel="noreferer noopener">Blog</a><a href="/support">Support</a></div><div class="header__navCtas"><a id="btn_x3lnh46mtq" class="btn primary" href="https://postalsys.com/plans" target="_blank" rel="noopener noreferrer"><span>Get a license key</span><svg width="1em" viewBox="0 0 15 12" xmlns="http://www.w3.org/2000/svg"><path d="M9.6 7H1a1 1 0 1 1 0-2h8.6L7 2.4A1 1 0 0 1 8.4 1l4.3 4.2c.2.3.3.5.3.8 0 .3-.1.5-.3.7L8.4 11A1 1 0 1 1 7 9.5L9.6 7z" fill="currentColor"></path></svg></a></div></div><div id="headerMenuButton" class="burger">Menu</div></div><div class="headerMenu"><div id="headerDrawerBackdrop" class="headerMenu__backdrop"></div><div class="headerMenu__wrapper" style="background-color:#ffffff"><ul class="headerMenu__links"><li><a href="/#downloads" class="drawerLink">Download</a></li><li><div class="drawerLinkParent"><span class="color-2 weight-text-m">Using EmailEngine</span><div class="drawerLinkChildren"><a href="https://api.emailengine.app/"><div class="headerLinkChild__meta">API reference<span class="description weight-text color-2"></span></div></a><a href="/authenticating-api-requests"><div class="headerLinkChild__meta">Authenticating API requests<span class="description weight-text color-2"></span></div></a><a href="/hosted-authentication"><div class="headerLinkChild__meta">Hosted authentication<span class="description weight-text color-2"></span></div></a><a href="/webhooks"><div class="headerLinkChild__meta">Webhooks<span class="description weight-text color-2"></span></div></a><a href="/sending-emails"><div class="headerLinkChild__meta">Sending emails<span class="description weight-text color-2"></span></div></a><a href="/supported-account-types"><div class="headerLinkChild__meta">Supported Account Types<span class="description weight-text color-2"></span></div></a><a href="/oauth2-configuration"><div class="headerLinkChild__meta">OAuth2 configuration<span class="description weight-text color-2"></span></div></a><a href="/bounces"><div class="headerLinkChild__meta">Bounce detection<span class="description weight-text color-2"></span></div></a><a href="/email-templates"><div class="headerLinkChild__meta">Email templates<span class="description weight-text color-2"></span></div></a><a href="/shared-mailboxes-in-ms-365"><div class="headerLinkChild__meta">Shared Mailboxes in MS365<span class="description weight-text color-2"></span></div></a><a href="/virtual-mailing-lists"><div class="headerLinkChild__meta">Virtual mailing lists and unsubscribe<span class="description weight-text color-2"></span></div></a><a href="/pre-processing-functions"><div class="headerLinkChild__meta">Pre-processing functions<span class="description weight-text color-2"></span></div></a></div></div></li><li><div class="drawerLinkParent"><span class="color-2 weight-text-m">Operating EmailEngine</span><div class="drawerLinkChildren"><a href="/set-up"><div class="headerLinkChild__meta">Installation instructions<span class="description weight-text color-2"></span></div></a><a href="/redis"><div class="headerLinkChild__meta">Redis requirements<span class="description weight-text color-2"></span></div></a><a href="/configuration"><div class="headerLinkChild__meta">Configuration options<span class="description weight-text color-2"></span></div></a><a href="/reset-password"><div class="headerLinkChild__meta">Reset password<span class="description weight-text color-2"></span></div></a><a href="/system-d-service"><div class="headerLinkChild__meta">Run as a SystemD service<span class="description weight-text color-2"></span></div></a><a href="/docker"><div class="headerLinkChild__meta">Run as a Docker container<span class="description weight-text color-2"></span></div></a><a href="/monitoring"><div class="headerLinkChild__meta">Monitoring<span class="description weight-text color-2"></span></div></a><a href="/logging"><div class="headerLinkChild__meta">Log management<span class="description weight-text color-2"></span></div></a><a href="/local-addresses"><div class="headerLinkChild__meta">Local IP-addresses<span class="description weight-text color-2"></span></div></a><a href="/prepared-settings"><div class="headerLinkChild__meta">Prepared settings<span class="description weight-text color-2"></span></div></a><a href="/prepared-access-token"><div class="headerLinkChild__meta">Prepared access token<span class="description weight-text color-2"></span></div></a><a href="/prepared-license"><div class="headerLinkChild__meta">Prepared license key<span class="description weight-text color-2"></span></div></a><a href="/troubleshooting"><div class="headerLinkChild__meta">Troubleshooting<span class="description weight-text color-2"></span></div></a><a href="/expose-public-https"><div class="headerLinkChild__meta">Use Nginx as a proxy<span class="description weight-text color-2"></span></div></a></div></div></li><li><a href="/#faq" class="drawerLink">FAQ</a></li><li><a href="https://docs.emailengine.app/" class="drawerLink">Blog</a></li><li><a href="/support" class="drawerLink">Support</a></li><li><div class="drawerButtonChildren"><a href="https://postalsys.com/plans"><div class="headerButtonChild__meta">Get a license key</div><svg width="13" height="12" xmlns="http://www.w3.org/2000/svg"><path d="M9.557 7H1a1 1 0 1 1 0-2h8.586L7.007 2.421a1 1 0 0 1 1.414-1.414l4.243 4.243c.203.202.3.47.292.736a.997.997 0 0 1-.292.735L8.42 10.964A1 1 0 1 1 7.007 9.55L9.557 7z" fill="currentColor"></path></svg></a></div></li></ul></div></div></div><div id="titles" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div id="headerSpacer" style="height:50px"></div><script>!function(){var e,t=document.getElementById("header"),n=document.getElementById("headerSpacer");t&&n&&(e=t.getBoundingClientRect().height,n.setAttribute("style","height:"+e+"px"))}()</script><div class="wr"><h1 class="color-1 weight-title-h font-title section__title center">Webhooks</h1><p class="weight-text section__subtitle center" style="margin-bottom:0">Using webhooks with EmailEngine</p></div></div><div id="event-list" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"><h2 class="color-1 weight-title-h font-title section__title center" style="margin-bottom:50px">Event list</h2></div><div class="color textBody mkd textBody-- textBody--dark"><p>EmailEngine can notify your application about mailbox, delivery, and tracking events by sending an HTTP POST request—called a <em>webhook</em>—to a URL you define. Each request contains a JSON payload that describes the event. Enable or disable individual events from <strong>Configuration → Webhooks</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#messageNew">messageNew</a></td>
+<td>New email</td>
+<td>A new email was detected in a folder.</td>
+</tr>
+<tr>
+<td><a href="#messageDeleted">messageDeleted</a></td>
+<td>Message deleted</td>
+<td>A previously present email was removed from a folder.</td>
+</tr>
+<tr>
+<td><a href="#messageUpdated">messageUpdated</a></td>
+<td>Flags updated</td>
+<td>Flags of an email were updated.</td>
+</tr>
+<tr>
+<td><code>messageMissing</code></td>
+<td>Message missing</td>
+<td>An expected message was not found; indicates a sync error.</td>
+</tr>
+<tr>
+<td><a href="#messageSent">messageSent</a></td>
+<td>Message accepted</td>
+<td>A queued email was accepted by the MTA.</td>
+</tr>
+<tr>
+<td><a href="#messageDeliveryError">messageDeliveryError</a></td>
+<td>SMTP error</td>
+<td>Delivery to the SMTP server failed; EmailEngine retries automatically.</td>
+</tr>
+<tr>
+<td><a href="#messageFailed">messageFailed</a></td>
+<td>Message bounced</td>
+<td>Delivery to the MTA failed permanently.</td>
+</tr>
+<tr>
+<td><a href="#messageBounce">messageBounce</a></td>
+<td>Bounce received</td>
+<td>A bounce email was received.</td>
+</tr>
+<tr>
+<td><a href="#messageComplaint">messageComplaint</a></td>
+<td>Complaint received</td>
+<td>A feedback‑loop complaint was detected.</td>
+</tr>
+<tr>
+<td><code>mailboxReset</code></td>
+<td>Mailbox reset</td>
+<td><strong>UIDValidity</strong> of a folder changed.</td>
+</tr>
+<tr>
+<td><code>mailboxDeleted</code></td>
+<td>Folder deleted</td>
+<td>A previously present folder was removed.</td>
+</tr>
+<tr>
+<td><code>mailboxNew</code></td>
+<td>New folder</td>
+<td>A new folder was detected.</td>
+</tr>
+<tr>
+<td><code>authenticationError</code></td>
+<td>Authentication failure</td>
+<td>Account authentication failed.</td>
+</tr>
+<tr>
+<td><code>authenticationSuccess</code></td>
+<td>Authentication success</td>
+<td>Account authenticated successfully.</td>
+</tr>
+<tr>
+<td><code>connectError</code></td>
+<td>Connection failure</td>
+<td>Connection to the email server failed.</td>
+</tr>
+<tr>
+<td><code>accountAdded</code></td>
+<td>Account added</td>
+<td>A new account was registered with EmailEngine.</td>
+</tr>
+<tr>
+<td><code>accountInitialized</code></td>
+<td>Account initialized</td>
+<td>Initial sync completed for an account.</td>
+</tr>
+<tr>
+<td><code>accountDeleted</code></td>
+<td>Account deleted</td>
+<td>An account was removed from EmailEngine.</td>
+</tr>
+<tr>
+<td><a href="#trackOpen">trackOpen</a></td>
+<td>Email opened</td>
+<td>A recipient opened an email.</td>
+</tr>
+<tr>
+<td><a href="#trackClick">trackClick</a></td>
+<td>Link clicked</td>
+<td>A recipient clicked a link in an email.</td>
+</tr>
+<tr>
+<td><a href="#listUnsubscribe">listUnsubscribe</a></td>
+<td>Unsubscribed</td>
+<td>A recipient unsubscribed from a list.</td>
+</tr>
+<tr>
+<td><code>listSubscribe</code></td>
+<td>Subscribed</td>
+<td>A recipient resubscribed to a list.</td>
+</tr>
+</tbody></table></div></div></div><div id="messageNew" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"></div><div class="color textBody mkd textBody-- textBody--dark"><h3 id="messagenew-webhook"><code>messageNew</code> webhook</h3>
+<p>Triggered whenever a message is <strong>added</strong> to a folder—whether by delivery, upload, copy, or move. IMAP itself does not distinguish between incoming messages and messages inserted by other means.</p>
+<blockquote>
+<p><strong>Note</strong><br>The example below has <strong>Text content</strong> enabled, therefore <code>data.text.plain</code> and <code>data.text.html</code> are present. By default these fields are omitted. Enable them via <strong>Configuration → Webhooks → Text content → Include text content in new email webhooks</strong>, or set <code>notifyText: true</code> via the <a href="https://api.emailengine.app/#operation/postV1Settings">Settings API</a>.</p>
+</blockquote>
+<pre><code class="language-json">{
+  &quot;serviceUrl&quot;: &quot;https://emailengine-dev.apps.srv.dev&quot;,
+  &quot;account&quot;: &quot;postalsys&quot;,
+  &quot;date&quot;: &quot;2023-03-14T11:13:10.609Z&quot;,
+  &quot;path&quot;: &quot;[Gmail]/All Mail&quot;,
+  &quot;specialUse&quot;: &quot;\\All&quot;,
+  &quot;event&quot;: &quot;messageNew&quot;,
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;AAAAAQABDFI&quot;,
+    &quot;uid&quot;: 68690,
+    &quot;path&quot;: &quot;[Gmail]/All Mail&quot;,
+    &quot;emailId&quot;: &quot;1760341395373354319&quot;,
+    &quot;threadId&quot;: &quot;1760341395373354319&quot;,
+    &quot;date&quot;: &quot;2023-03-14T11:12:45.000Z&quot;,
+    &quot;flags&quot;: [],
+    &quot;labels&quot;: [
+      &quot;\\Important&quot;,
+      &quot;\\Inbox&quot;
+    ],
+    &quot;unseen&quot;: true,
+    &quot;size&quot;: 8271,
+    &quot;subject&quot;: &quot;Impressed by the new features of EmailEngine!&quot;,
+    &quot;from&quot;: {
+      &quot;name&quot;: &quot;Andris Reinman&quot;,
+      &quot;address&quot;: &quot;andris.reinman@gmail.com&quot;
+    },
+    &quot;replyTo&quot;: [
+      {
+        &quot;name&quot;: &quot;Andris Reinman&quot;,
+        &quot;address&quot;: &quot;andris.reinman@gmail.com&quot;
+      }
+    ],
+    &quot;sender&quot;: {
+      &quot;name&quot;: &quot;Andris Reinman&quot;,
+      &quot;address&quot;: &quot;andris.reinman@gmail.com&quot;
+    },
+    &quot;to&quot;: [
+      {
+        &quot;name&quot;: &quot;&quot;,
+        &quot;address&quot;: &quot;andris@postalsys.com&quot;
+      }
+    ],
+    &quot;messageId&quot;: &quot;&lt;CAPacwgwKMETwvftKuQyieSKmp1C+NJcZtqjZ2pSALZkjB-CCbQ@mail.gmail.com&gt;&quot;,
+    &quot;text&quot;: {
+      &quot;id&quot;: &quot;AAAAAQABDFKTkaExkaEykA&quot;,
+      &quot;encodedSize&quot;: {
+        &quot;plain&quot;: 1535,
+        &quot;html&quot;: 1630
+      },
+      &quot;plain&quot;: &quot;Dear Postal Systems OÜ,\n\nI hope this email finds you well...\n&quot;,
+      &quot;html&quot;: &quot;&lt;div dir=\&quot;ltr\&quot;&gt;Dear Postal Systems OÜ,&lt;br&gt;&lt;br&gt;I hope this email finds you well...&lt;/div&gt;\n&quot;,
+      &quot;hasMore&quot;: false
+    },
+    &quot;category&quot;: &quot;primary&quot;,
+    &quot;isAutoReply&quot;: false,
+    &quot;seemsLikeNew&quot;: true,
+    &quot;messageSpecialUse&quot;: &quot;\\Inbox&quot;
+  },
+  &quot;_route&quot;: {
+    &quot;id&quot;: &quot;AAABhpMgNhsAAAAE&quot;
+  }
+}</code></pre>
+<h4 id="field-reference">Field reference</h4>
+<ul>
+<li><strong>_route</strong> – present when the event is delivered through a Webhook Router.</li>
+<li><strong>serviceUrl</strong> – base URL of the EmailEngine instance that generated the event.</li>
+<li><strong>account</strong> – EmailEngine account ID that owns the mailbox.</li>
+<li><strong>path</strong> – IMAP folder path that generated the event.</li>
+<li><strong>specialUse</strong> – special‑use flag of the folder. For Gmail this is almost always <code>\All</code>; see <code>data.messageSpecialUse</code> for the logical folder.</li>
+<li><strong>data.messageSpecialUse</strong> – special‑use flag that best classifies the message (for Gmail this is typically <code>\Inbox</code>). Prefer this over <code>specialUse</code>.</li>
+<li><strong>data.id</strong> – EmailEngine internal message ID.</li>
+<li><strong>data.uid</strong> – IMAP UID.</li>
+<li><strong>data.emailId / data.threadId</strong> – Gmail‑specific identifiers, when available.</li>
+<li><strong>data.messageId</strong> – RFC 5322 <code>Message‑ID</code> header value.</li>
+<li><strong>data.date</strong> – original message <code>Date</code> header, in ISO 8601.</li>
+<li><strong>data.flags</strong> – IMAP flags applied when the event was generated.</li>
+<li><strong>data.labels</strong> – Gmail labels applied when the event was generated.</li>
+<li><strong>data.unseen</strong> – <code>true</code> if the message <em>does not</em> have the <code>\Seen</code> flag.</li>
+<li><strong>data.size</strong> – full RFC 822 size in bytes.</li>
+<li><strong>data.category</strong> – Gmail inbox category tab (Primary, Social, etc.). Requires <strong>Labs → Resolve Gmail categories</strong>.</li>
+<li><strong>data.isAutoReply</strong> – <code>true</code> if EmailEngine detects an auto‑reply (vacation, bounce, etc.).</li>
+<li><strong>data.seemsLikeNew</strong> – <code>true</code> if EmailEngine has no prior record of this message (≈ 99 % accuracy).</li>
+<li><strong>data.text</strong> – object with parsed <code>plain</code> and <code>html</code> bodies. Included only when <strong>Text content</strong> is enabled.</li>
+</ul>
+<p>All other top‑level fields (<code>from</code>, <code>to</code>, <code>sender</code>, <code>subject</code>, …) mirror their respective RFC 5322 headers.</p></div></div></div><div id="categories" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"></div><div class="color textBody mkd textBody-- textBody--dark"><h4 id="gmail-tab-categories">Gmail tab categories</h4>
+<p>Gmail sorts incoming emails into different categories—<em>promotions</em>, <em>social</em>, <em>primary</em>, <em>updates</em>, and <em>forums</em>—and displays these emails under the corresponding category tabs. Over IMAP, all of these emails still appear in the <code>INBOX</code> folder. EmailEngine can resolve the category of incoming emails and include this information in the payload of the <code>messageNew</code> webhook.</p>
+<p>Category resolution is not enabled by default. To enable it, navigate to <em>Configuration</em> → <em>Service</em>, and then to the <em>Labs</em> section. Mark the <strong>Resolve Gmail categories</strong> checkbox and save the settings.</p>
+<p><img src="https://cldup.com/WXAO6j0uEU.png" alt=""></p>
+<p>Now, whenever an email lands in the inbox of an email account that EmailEngine tracks, the <code>messageNew</code> webhook for that email includes a property called <code>category</code>, whose value is one of the following: <em>social</em>, <em>promotions</em>, <em>updates</em>, <em>forums</em>, or <em>primary</em>.</p></div></div></div><div id="messageDeleted" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"></div><div class="color textBody mkd textBody-- textBody--dark"><h3 id="messagedeleted"><code>messageDeleted</code></h3>
+<p>Emitted when a message disappears from a folder—either permanently deleted or moved elsewhere.</p>
+<pre><code class="language-json">{
+  &quot;account&quot;: &quot;pangalink&quot;,
+  &quot;date&quot;: &quot;2022-01-17T11:54:02.089Z&quot;,
+  &quot;path&quot;: &quot;[Gmail]/All Mail&quot;,
+  &quot;specialUse&quot;: &quot;\\All&quot;,
+  &quot;event&quot;: &quot;messageDeleted&quot;,
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;AAAAAQAANJc&quot;,
+    &quot;uid&quot;: 13463
+  }
+}</code></pre></div></div></div><div id="messageUpdated" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"></div><div class="color textBody mkd textBody-- textBody--dark"><h3 id="messageupdated"><code>messageUpdated</code></h3>
+<p>Emitted whenever EmailEngine detects that an existing message has changed — most often when its flags are updated (for example, when the user marks the message <strong>read</strong> or <strong>unread</strong>).</p>
+<h4 id="payload">Payload</h4>
+<pre><code class="language-json">{
+  &quot;account&quot;: &quot;pangalink&quot;,
+  &quot;date&quot;: &quot;2022-01-17T11:56:13.146Z&quot;,
+  &quot;path&quot;: &quot;[Gmail]/All Mail&quot;,
+  &quot;specialUse&quot;: &quot;\\All&quot;,
+  &quot;event&quot;: &quot;messageUpdated&quot;,
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;AAAAAQAANJY&quot;,
+    &quot;uid&quot;: 13462,
+    &quot;changes&quot;: {
+      &quot;flags&quot;: {
+        &quot;added&quot;: [&quot;\\Seen&quot;],
+        &quot;removed&quot;: []
+      }
+    }
+  }
+}</code></pre>
+<p><code>changes.flags.added</code> and <code>changes.flags.removed</code> contain only the deltas: the flags added to or removed from the message since the previous state.</p></div></div></div><div id="messageSent" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"></div><div class="color textBody mkd textBody-- textBody--dark"><h3 id="messagesent"><code>messageSent</code></h3>
+<p>Emitted after <strong>EmailEngine</strong> has successfully handed the message off to the upstream mail server (MTA). The webhook is generated as soon as the server acknowledges acceptance.</p>
+<h4 id="payload">Payload</h4>
+<pre><code class="language-json">{
+  &quot;account&quot;: &quot;&lt;accountId&gt;&quot;,
+  &quot;date&quot;: &quot;&lt;ISO-8601 timestamp&gt;&quot;,
+  &quot;event&quot;: &quot;messageSent&quot;,
+  &quot;data&quot;: {
+    &quot;messageId&quot;: &quot;&lt;final Message-ID&gt;&quot;,
+    &quot;response&quot;: &quot;&lt;raw SMTP or API response&gt;&quot;,
+    &quot;envelope&quot;: {
+      &quot;from&quot;: &quot;&lt;sender address&gt;&quot;,
+      &quot;to&quot;: [&quot;&lt;recipient address&gt;&quot;]
+    }
+  }
+}</code></pre>
+<h4 id="messageid-rewriting">Message‑ID rewriting</h4>
+<p>Some MTAs (e.g. Amazon SES, AWS WorkMail, Microsoft Graph) replace the original <strong>Message‑ID</strong> header. When EmailEngine detects this, it adds <code>originalMessageId</code> to the payload while <code>messageId</code> is updated to the value returned by the server.</p>
+<pre><code class="language-json">{
+  &quot;account&quot;: &quot;&lt;accountId&gt;&quot;,
+  &quot;date&quot;: &quot;&lt;ISO-8601 timestamp&gt;&quot;,
+  &quot;event&quot;: &quot;messageSent&quot;,
+  &quot;data&quot;: {
+    &quot;messageId&quot;: &quot;&lt;rewritten Message-ID&gt;&quot;,
+    &quot;originalMessageId&quot;: &quot;&lt;Message-ID generated by EmailEngine&gt;&quot;,
+    &quot;response&quot;: &quot;&lt;raw SMTP or API response&gt;&quot;,
+    &quot;envelope&quot;: {
+      &quot;from&quot;: &quot;&lt;sender address&gt;&quot;,
+      &quot;to&quot;: [&quot;&lt;recipient address&gt;&quot;]
+    }
+  }
+}</code></pre>
+<p><code>messageId</code> always contains the final value stored on the message accepted by the remote server.</p></div></div></div><div id="messageFailed" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"></div><div class="color textBody mkd textBody-- textBody--dark"><h3 id="messagefailed">messageFailed</h3>
+<p>Emitted when EmailEngine abandons delivery after all retry attempts fail.<br>Because the message is retried in the background, this webhook can be delayed until the final attempt has completed.</p>
+<pre><code class="language-json">{
+  &quot;account&quot;: &quot;example&quot;,
+  &quot;date&quot;: &quot;2021-12-23T11:58:50.181Z&quot;,
+  &quot;event&quot;: &quot;messageFailed&quot;,
+  &quot;data&quot;: {
+    &quot;messageId&quot;: &quot;&lt;97ac5d9a-93c7-104b-8d26-6b25f8d644ec@ekiri.ee&gt;&quot;,
+    &quot;queueId&quot;: &quot;610c2c93e608bd37&quot;,
+    &quot;error&quot;: &quot;Error: Invalid login: 535 5.7.8 Error: authentication failed: &quot;
+  }
+}</code></pre></div></div></div><div id="messageComplaint" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"></div><div class="color textBody mkd textBody-- textBody--dark"><h3 id="messagecomplaint">messageComplaint</h3>
+<p>Emitted when EmailEngine detects an ARF‑formatted feedback loop (FBL) report in <strong>Inbox</strong>. The report is parsed and posted as a <code>messageComplaint</code> webhook.</p>
+<blockquote>
+<p><strong>Field coverage depends on the reporting provider. Headers such as <em>Message‑ID</em> may be missing.</strong></p>
+</blockquote>
+<pre><code class="language-json">{
+  &quot;serviceUrl&quot;: &quot;http://127.0.0.1:3000&quot;,
+  &quot;account&quot;: &quot;example&quot;,
+  &quot;date&quot;: &quot;2022-09-27T12:33:42.635Z&quot;,
+  &quot;event&quot;: &quot;messageComplaint&quot;,
+  &quot;data&quot;: {
+    &quot;complaintMessage&quot;: &quot;AAAAAQAABvE&quot;,
+    &quot;arf&quot;: {
+      &quot;source&quot;: &quot;Hotmail&quot;,
+      &quot;feedbackType&quot;: &quot;abuse&quot;,
+      &quot;abuseType&quot;: &quot;complaint&quot;,
+      &quot;originalRcptTo&quot;: [
+        &quot;recipient@hotmail.co.uk&quot;
+      ],
+      &quot;sourceIp&quot;: &quot;1.2.3.4&quot;,
+      &quot;arrivalDate&quot;: &quot;2021-10-22T13:04:36.017Z&quot;
+    },
+    &quot;headers&quot;: {
+      &quot;messageId&quot;: &quot;&lt;67d3846d-b819-9c54-5053-a81fdc432425@example.com&gt;&quot;,
+      &quot;from&quot;: &quot;user@example.com&quot;,
+      &quot;to&quot;: [
+        &quot;recipient@hotmail.co.uk&quot;
+      ],
+      &quot;subject&quot;: &quot;Hello world&quot;,
+      &quot;date&quot;: &quot;2021-10-22T16:04:33.000Z&quot;
+    }
+  }
+}</code></pre></div></div></div><div id="messageDeliveryError" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"></div><div class="color textBody mkd textBody-- textBody--dark"><h3 id="messagedeliveryerror">messageDeliveryError</h3>
+<p>Emitted after every failed delivery attempt. EmailEngine keeps retrying until either the message is delivered or the maximum number of attempts is reached. You receive one <code>messageDeliveryError</code> webhook per attempt.</p>
+<pre><code class="language-json">{
+  &quot;serviceUrl&quot;: &quot;http://127.0.0.1:3000&quot;,
+  &quot;account&quot;: &quot;example&quot;,
+  &quot;date&quot;: &quot;2022-09-14T15:07:35.832Z&quot;,
+  &quot;event&quot;: &quot;messageDeliveryError&quot;,
+  &quot;data&quot;: {
+    &quot;queueId&quot;: &quot;1833c8a88a86109a1bf&quot;,
+    &quot;envelope&quot;: {
+      &quot;from&quot;: &quot;andris@ekiri.ee&quot;,
+      &quot;to&quot;: [
+        &quot;andris@ethereal.email&quot;
+      ]
+    },
+    &quot;messageId&quot;: &quot;&lt;29e26263-7125-ff56-4f80-83a5cf737d5e@ekiri.ee&gt;&quot;,
+    &quot;error&quot;: &quot;400 Message Not Accepted&quot;,
+    &quot;errorCode&quot;: &quot;EPROTOCOL&quot;,
+    &quot;smtpResponseCode&quot;: 400,
+    &quot;job&quot;: {
+      &quot;attemptsMade&quot;: 1,
+      &quot;attempts&quot;: 10,
+      &quot;nextAttempt&quot;: &quot;2022-09-14T15:07:45.465Z&quot;
+    }
+  }
+}</code></pre></div></div></div><div id="messageBounce" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"></div><div class="color textBody mkd textBody-- textBody--dark"><h3 id="messagebounce">messageBounce</h3>
+<p>Emitted when EmailEngine receives a bounce (DSN) message.</p>
+<ul>
+<li>The payload includes <code>messageId</code> but no internal <code>id</code>. Use <em>Message‑ID</em> to correlate with the original email.</li>
+<li>If a message sent to multiple recipients bounces for several addresses, EmailEngine emits a separate <code>messageBounce</code> event for each recipient.</li>
+</ul>
+<blockquote>
+<p><strong>Field coverage depends on the bounce format and what EmailEngine can parse.</strong></p>
+</blockquote>
+<pre><code class="language-json">{
+  &quot;account&quot;: &quot;pangalink&quot;,
+  &quot;date&quot;: &quot;2021-11-28T10:17:29.728Z&quot;,
+  &quot;event&quot;: &quot;messageBounce&quot;,
+  &quot;data&quot;: {
+    &quot;bounceMessage&quot;: &quot;AAAAAQAABWw&quot;,
+    &quot;recipient&quot;: &quot;failed.recipient@example.com&quot;,
+    &quot;action&quot;: &quot;failed&quot;,
+    &quot;response&quot;: {
+      &quot;source&quot;: &quot;smtp&quot;,
+      &quot;message&quot;: &quot;550 5.1.1 &lt;failed.recipient@example.com&gt;: Recipient address rejected: User unknown in relay recipient table&quot;,
+      &quot;status&quot;: &quot;5.1.1&quot;
+    },
+    &quot;mta&quot;: &quot;mx.example.com&quot;,
+    &quot;queueId&quot;: &quot;BFC608226A&quot;,
+    &quot;messageId&quot;: &quot;&lt;4dbe4a40f37e9c2ba5b25912bc7c8997@example.com&gt;&quot;
+  }
+}</code></pre></div></div></div><div id="trackOpen" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"></div><div class="color textBody mkd textBody-- textBody--dark"><h3 id="trackopen">trackOpen</h3>
+<p>Emitted when the tracking pixel embedded in the email is requested.</p>
+<blockquote>
+<p>Requires <strong>Configuration → Service → Labs → Track opens and clicks</strong> to be enabled.</p>
+</blockquote>
+<p>False positives are possible, for example when a webmail client caches linked images.</p>
+<pre><code class="language-json">{
+  &quot;account&quot;: &quot;example&quot;,
+  &quot;date&quot;: &quot;2022-03-24T08:28:32.992Z&quot;,
+  &quot;event&quot;: &quot;trackOpen&quot;,
+  &quot;data&quot;: {
+    &quot;messageId&quot;: &quot;&lt;2d4696ea-cb47-7af4-0bc3-81ea7a8008be@example.com&gt;&quot;,
+    &quot;remoteAddress&quot;: &quot;1.2.3.4&quot;,
+    &quot;userAgent&quot;: &quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.83 Safari/537.36&quot;
+  }
+}</code></pre></div></div></div><div id="trackClick" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"></div><div class="color textBody mkd textBody-- textBody--dark"><h3 id="trackclick">trackClick</h3>
+<p>Emitted when a tracked link is requested.</p>
+<blockquote>
+<p>Requires <strong>Configuration → Service → Labs → Track opens and clicks</strong> to be enabled.</p>
+</blockquote>
+<p>False positives may occur when security software or link scanners pre‑fetch URLs.</p>
+<pre><code class="language-json">{
+  &quot;account&quot;: &quot;example&quot;,
+  &quot;date&quot;: &quot;2022-03-24T08:27:24.572Z&quot;,
+  &quot;event&quot;: &quot;trackClick&quot;,
+  &quot;data&quot;: {
+    &quot;messageId&quot;: &quot;&lt;49b6cdb1-5d43-e100-0833-bd61867b7bb3@example.com&gt;&quot;,
+    &quot;url&quot;: &quot;https://google.com/&quot;,
+    &quot;remoteAddress&quot;: &quot;1.2.3.4&quot;,
+    &quot;userAgent&quot;: &quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.83 Safari/537.36&quot;
+  }
+}</code></pre></div></div></div><div id="listUnsubscribe" class="section section--titles section--center dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"></div><div class="color textBody mkd textBody-- textBody--dark"><h3 id="listunsubscribe">listUnsubscribe</h3>
+<p>Emitted when a recipient clicks the <strong>List‑Unsubscribe</strong> link or when the email client issues a one‑click unsubscribe request.</p>
+<pre><code class="language-json">{
+  &quot;account&quot;: &quot;example&quot;,
+  &quot;date&quot;: &quot;2022-03-24T08:27:24.572Z&quot;,
+  &quot;event&quot;: &quot;listUnsubscribe&quot;,
+  &quot;data&quot;: {
+    &quot;recipient&quot;: &quot;recipient@example.com&quot;,
+    &quot;messageId&quot;: &quot;&lt;49b6cdb1-5d43-e100-0833-bd61867b7bb3@example.com&gt;&quot;,
+    &quot;listId&quot;: &quot;my-customers-list&quot;,
+    &quot;remoteAddress&quot;: &quot;1.2.3.4&quot;,
+    &quot;userAgent&quot;: &quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.83 Safari/537.36&quot;
+  }
+}</code></pre></div></div></div><div id="webhook-headers" class="section section--titles section--left dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"><h2 class="color-1 weight-title-h font-title section__title left" style="margin-bottom:50px">Webhook headers</h2></div><div class="color textBody mkd textBody--left textBody--dark"><p>Define additional HTTP headers for webhook requests with the <code>webhooksCustomHeaders</code> configuration option or via <strong>Configuration → Webhooks</strong> in the dashboard.</p>
+<p>EmailEngine also injects diagnostic headers into every request:</p>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Example value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>X‑EE‑Wh‑Event‑Id</strong></td>
+<td><code>af8435d9-ceee-4715-be71-08ac9d2dc04a</code></td>
+<td>UUID for the event. All retries share the same ID.</td>
+</tr>
+<tr>
+<td><strong>X‑EE‑Wh‑Custom‑Route</strong></td>
+<td><code>AAABiL8tBKsAAAAG</code></td>
+<td>Identifier of the custom webhook route.</td>
+</tr>
+<tr>
+<td><strong>X‑EE‑Wh‑Queued‑Time</strong></td>
+<td><code>0s</code></td>
+<td>Time the event spent in the queue before the POST.</td>
+</tr>
+<tr>
+<td><strong>X‑EE‑Wh‑Attempts‑Made</strong></td>
+<td><code>1</code></td>
+<td>Attempt counter. Values &gt; 1 indicate earlier delivery failures.</td>
+</tr>
+<tr>
+<td><strong>X‑EE‑Wh‑Id</strong></td>
+<td><code>907889</code></td>
+<td>ID of the queued webhook entry.</td>
+</tr>
+</tbody></table></div></div></div><div id="webhook-retries" class="section section--titles section--left dark" style="padding-bottom:60px;padding-top:60px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr titleAlign--"><div class="titleWrapper"><h2 class="color-1 weight-title-h font-title section__title left" style="margin-bottom:50px">Webhook retries</h2></div><div class="color textBody mkd textBody--left textBody--dark"><ul>
+<li><p>EmailEngine makes <strong>up to 10</strong> delivery attempts per webhook. After the 10th failure the payload is marked <strong>undeliverable</strong>.</p>
+</li>
+<li><p>Exponential back‑off, base delay <strong>5000 ms</strong>:</p>
+<pre><code class="language-text">delay = 5000 ms × 2^(attempt − 1)</code></pre>
+</li>
+<li><p>Jobs live in the <strong>notify</strong> queue (<strong>Tools → Bull Board → notify</strong>).</p>
+<ul>
+<li>Pending retries: <strong>Delayed</strong> section.</li>
+<li>Undeliverable: <strong>Failed</strong> section.</li>
+</ul>
+</li>
+<li><p>Retention limits for completed/failed jobs are set in <strong>Configuration → Service → Queue Settings</strong>.</p>
+</li>
+</ul></div></div></div><footer id="footer" class="section section--footer section--center dark" style="background-color:#fafafa;padding-bottom:15px;padding-top:15px;--pdx-min-height:0px;--wr-max:1200px"><div class="wr"><div class="footer footer--simple"><div class="footer__primary"><nav class="footer__linkRow"></nav><span>© 2021-2025 Postal Systems OÜ</span><nav class="footer__linkRow"><a href="https://postalsys.com/tos">Terms of Service</a><a href="/privacy-policy">Privacy Policy</a><a href="/about">About</a><a href="https://emailengine.dev/license.html">EmailEngine License</a></nav></div><ul class="footer__social"><li><a href="https://twitter.com/emailengine" target="_blank" rel="noreferer noopener" class="color-2"><svg width="378" height="387" viewBox="0 0 378 387" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M221.181 174.003L345.147 33H315.771L208.13 155.431L122.159 33H23L153.006 218.137L23 366H52.3775L166.048 236.709L256.841 366H356L221.173 174.003H221.18H221.181ZM180.943 219.768L167.771 201.332L62.9633 54.6399H108.086L192.667 173.026L205.839 191.462L315.785 345.345H270.662L180.943 219.775V219.768Z" fill="currentColor"></path></svg></a></li><li><a href="https://github.com/postalsys/emailengine" target="_blank" rel="noreferer noopener" class="color-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z" fill="currentColor"></path></svg></a></li></ul></div></div></footer><script>window.PageView()</script><script>!function(){function e(){window.innerWidth<s+u+m+60+(g?60:40)+10?d.classList.add("header--withDrawer"):d.classList.remove("header--withDrawer")}function t(){d.classList.toggle("header--drawerOpen")}var d=document.getElementById("header"),r=document.getElementById("headerMenuButton"),n=(document.getElementById("headerDrawer"),document.getElementById("headerDrawerBackdrop")),a=document.getElementById("headerLogo"),o=document.getElementById("headerNav"),c=document.querySelector("#header .headerMenu__wrapper"),i=document.querySelector("#headerNav .headerNav__links"),h=document.querySelector("#headerNav .header__navCtas"),l=document.querySelector("#headerNav .languagePicker"),s=a?a.offsetWidth:0,u=(i?i.offsetWidth:0)+(h?h.offsetWidth:0),m=l?l.offsetWidth:0,g=o.classList.contains("logoCenter");r&&(r.onclick=t),n&&(n.onclick=t),c&&(c.onclick=t),window.addEventListener("resize",e),e()}()</script><script>!function(e,t){"function"==typeof define&&define.amd?define([],function(){return t(e)}):"object"==typeof exports?module.exports=t(e):e.SmoothScroll=t(e)}("undefined"!=typeof global?global:"undefined"!=typeof window?window:this,function(I){"use strict";function C(){for(var n={},e=0;e<arguments.length;e++)!function(e){for(var t in e)e.hasOwnProperty(t)&&(n[t]=e[t])}(arguments[e]);return n}function c(t){var n;try{n=decodeURIComponent(t)}catch(e){n=t}return n}function s(e){"#"===e.charAt(0)&&(e=e.substr(1));for(var t,n,o=String(e),r=o.length,a=-1,i="",c=o.charCodeAt(0);++a<r;){if(0===(t=o.charCodeAt(a)))throw new InvalidCharacterError("Invalid character: the input contains U+0000.");i+=1<=t&&t<=31||127==t||0===a&&48<=t&&t<=57||1===a&&48<=t&&t<=57&&45===c?"\\"+t.toString(16)+" ":128<=t||45===t||95===t||48<=t&&t<=57||65<=t&&t<=90||97<=t&&t<=122?o.charAt(a):"\\"+o.charAt(a)}try{n=decodeURIComponent("#"+i)}catch(e){n="#"+i}return n}function w(){return Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,document.body.offsetHeight,document.documentElement.offsetHeight,document.body.clientHeight,document.documentElement.clientHeight)}function L(e){return e?(t=e,parseInt(I.getComputedStyle(t).height,10)+e.offsetTop):0;var t}function A(e,t,n,o){var r;t.emitEvents&&"function"==typeof I.CustomEvent&&(r=new CustomEvent(e,{bubbles:!0,detail:{anchor:n,toggle:o}}),document.dispatchEvent(r))}var H={ignore:"[data-scroll-ignore]",header:null,topOnEmptyHash:!0,speed:500,clip:!0,offset:0,easing:"easeInOutCubic",customEasing:null,updateURL:!0,popstate:!0,emitEvents:!0};return function(o,e){var v,r,S,E,t,b,O={cancelScroll:function(e){cancelAnimationFrame(b),b=null,e||A("scrollCancel",v)}};O.animateScroll=function(i,c,e){var s,u,r,a,l,d,m,f,h,p,t,n,g=C(v||H,e||{}),y="[object Number]"===Object.prototype.toString.call(i),o=y||!i.tagName?null:i;(y||o)&&(s=I.pageYOffset,g.header&&!S&&(S=document.querySelector(g.header)),E=E||L(S),l=y?i:function(e,t,n,o){var r=0;if(e.offsetParent)for(;r+=e.offsetTop,e=e.offsetParent;);return r=Math.max(r-t-n,0),o&&(r=Math.min(r,w()-I.innerHeight)),r}(o,E,parseInt("function"==typeof g.offset?g.offset(i,c):g.offset,10),g.clip),d=l-s,m=w(),h=function(e,t){var n,o,r,a=I.pageYOffset;if(e==t||a==t||(s<t&&I.innerHeight+a)>=m)return O.cancelScroll(!0),o=t,r=y,0===(n=i)&&document.body.focus(),r||(n.focus(),document.activeElement!==n&&(n.setAttribute("tabindex","-1"),n.focus(),n.style.outline="none"),I.scrollTo(0,o)),A("scrollStop",g,i,c),!(b=u=null)},p=function(e){var t,n,o;r=(f+=e-(u=u||e))/parseInt(g.speed,10),a=s+d*(n=r=1<r?1:r,"easeInQuad"===(t=g).easing&&(o=n*n),"easeOutQuad"===t.easing&&(o=n*(2-n)),"easeInOutQuad"===t.easing&&(o=n<.5?2*n*n:(4-2*n)*n-1),"easeInCubic"===t.easing&&(o=n*n*n),"easeOutCubic"===t.easing&&(o=--n*n*n+1),"easeInOutCubic"===t.easing&&(o=n<.5?4*n*n*n:(n-1)*(2*n-2)*(2*n-2)+1),"easeInQuart"===t.easing&&(o=n*n*n*n),"easeOutQuart"===t.easing&&(o=1- --n*n*n*n),"easeInOutQuart"===t.easing&&(o=n<.5?8*n*n*n*n:1-8*--n*n*n*n),"easeInQuint"===t.easing&&(o=n*n*n*n*n),"easeOutQuint"===t.easing&&(o=1+--n*n*n*n*n),"easeInOutQuint"===t.easing&&(o=n<.5?16*n*n*n*n*n:1+16*--n*n*n*n*n),t.customEasing&&(o=t.customEasing(n)),o||n),I.scrollTo(0,Math.floor(a)),h(a,l)||(b=I.requestAnimationFrame(p),u=e)},(f=0)===I.pageYOffset&&I.scrollTo(0,0),t=i,n=g,y||history.pushState&&n.updateURL&&history.pushState({smoothScroll:JSON.stringify(n),anchor:t.id},document.title,t===document.documentElement?"#top":"#"+t.id),A("scrollStart",g,i,c),O.cancelScroll(!0),I.requestAnimationFrame(p))};function n(e){var t,n;!("matchMedia"in I&&I.matchMedia("(prefers-reduced-motion)").matches||0!==e.button||e.metaKey||e.ctrlKey)&&"closest"in e.target&&(r=e.target.closest(o))&&"a"===r.tagName.toLowerCase()&&!e.target.closest(v.ignore)&&r.hostname===I.location.hostname&&r.pathname===I.location.pathname&&/#/.test(r.href)&&(t=s(c(r.hash)),(n=(n=v.topOnEmptyHash&&"#"===t?document.documentElement:document.querySelector(t))||"#top"!==t?n:document.documentElement)&&(e.preventDefault(),O.animateScroll(n,r)))}function a(e){var t;null!==history.state&&history.state.smoothScroll&&history.state.smoothScroll===JSON.stringify(v)&&history.state.anchor&&((t=document.querySelector(s(c(history.state.anchor))))&&O.animateScroll(t,null,{updateURL:!1}))}function i(e){t=t||setTimeout(function(){t=null,E=L(S)},66)}return O.destroy=function(){v&&(document.removeEventListener("click",n,!1),I.removeEventListener("resize",i,!1),I.removeEventListener("popstate",a,!1),O.cancelScroll(),b=t=E=S=r=v=null)},O.init=function(e){if(!("querySelector"in document&&"addEventListener"in I&&"requestAnimationFrame"in I&&"closest"in I.Element.prototype))throw"Smooth Scroll: This browser does not support the required JavaScript methods and browser APIs.";O.destroy(),v=C(H,e||{}),S=v.header?document.querySelector(v.header):null,E=L(S),document.addEventListener("click",n,!1),S&&I.addEventListener("resize",i,!1),v.updateURL&&v.popstate&&I.addEventListener("popstate",a,!1)},O.init(e),O}})</script><script data-version="2.0.25">!function(){var e=0;document.getElementsByClassName('header--fixed').length&&(e=document.getElementsByClassName('header--fixed')[0].clientHeight),new window.SmoothScroll('a[href*="#"]',{offset:e})}(),function(){const e=document.querySelectorAll('a');Array.prototype.forEach.call(e,(function(e,t){e.addEventListener('click',(function(e){window.SendEvent({siteId:'9wd0jqogbztm',category:'button',name:e.target.innerText,data:{url:e.target.href},asBeacon:!0})}))}))}();</script></body></html>

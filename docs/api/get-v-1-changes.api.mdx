@@ -1,0 +1,71 @@
+---
+id: get-v-1-changes
+title: "Stream state changes"
+description: "Stream account state changes as an EventSource"
+sidebar_label: "Stream state changes"
+hide_title: true
+hide_table_of_contents: true
+api: eJy1Vm1v2zYQ/isHfmoB2UparAEEN5tXaIG3NO1id1tRB8FFOstEpaPCo9x4hv/7QEryS5MV6Ic6XxTy+Nzdc68bZWqy6LThSa4SVZD76/TNErkgUZHKSTKra3+tEjV1lrACzDLTsANx6AiyVhhQABnSFbGbmsZmpCJVo8WKHFlRyaeNYqxIJephQDRwuiLTOBUp7aGXhDlZFSnJllShSjbKrWsvrdlREa6Ojbmm+4bEQQcEmqHSZamFMsO5wDOzImt1TgJpenUxuUpvZ5O36bsPMyBeaWu4InawQqvxrqTnKlKVZl01lUpOIlXhQ/t99uLE/7Y/XP/2JlIOC0+VGrcUq5tIWZLasJB4TnJaYFO69vMoNE2WkciiKVWkMsOOOEg5enAx+aAMJETPHz7iWJzVXKit/0WqIrc0XTKEILqlSlS8Oo2zXWII2VUf1saWPoLO1UkcnwzDX/Lq1dlZcEkoa6x26yB6R2jJjhuP+Onm8HrqbWqdPBTamejh+/Tw/7dCKuo+fjO2QqcS9fvfs0epkrIjC2vTWJ+7JALOfCZW3lnNCxPUaFd63LRCXaZcaCYYv5+oSHk/W5wXw5/OhieP4Q+e1NasQswRrtPpbNGUHgUWxkKFjIXmAsjL91UkEQhx7s8rEsGCJALk3CN5U/cPcnQImFkjAlVTOl2XO31WhnOe82j58tzzRux0Fop6FC9fns95XLZ22DZpJXxoS4BH0tAEfcgwbnmaeZ6G8NE0kCFDQeybBQUDgz/U0hr4FFhYU4FbEowQlpYWr+cqxrzSHLcCcwUObUHu9Vzd1miJ3Vydj8RZw8X5oU4Zxd3pKMZzqLGg4OGEs7LJD7X6wtu51dpvmMAsvCFC0GazJHMewJ8N2TXsulICo8zkdP5zmxW3Ae/1x3cfrm9n7/5Ir0ZxuPYvPavG6n9bmtpu1T8/ukvg15CQ8ARMG6C+cbzfBbgL0px7JqZehJ3G8kAq2VEC172/zgS6BSs6TitAS30KUQ6yAyzX/lGFmh1qbpMqMyxaHHG2HsLbPrVE+yxDJtPInuEvuizhjuC+oYby4aHVs7YTyoGhl4aLgW2YQ1j6SSNQ4RoybKTH2eN7j1qcIbwxvNBF49O0rq2prfa51zfcFZYN9SEPSRdo/meQpoPOlI75Ll7w7Kse/XxXNBfknIeZOrSO8i4gp8PvS+SLfXkcFZBP4Tm/eAKtbwJP443z3EMdBbbFejlsTYUKP3u7j2p7zwhxXhvNTuCOSvOlGw2YhdHQTePD7jVt6tpY3/T3PV2SOA4WUJAZYl3HspMLN36CtCe/fCWptpEqdUYs9D8qL7vbb6nMaRVfTt6kV9P0Nn07nly283ToHlzo4bURVyEfaOg2laMN5eu+vdnPye/fbLqpFMZrXaJm72nwYNMNzE9qdeoJ75TfRGppxPnzzeYOhT7Ycrv1x/e+KflxGKl+GQjDMeqXIj84cy3+IlfJAkuhb7jyA/aiJ539TOvHu1yoSZUotY02nYQvhPrw7vFK4veA3dJxkc7Udvsfn/+6XQ==
+sidebar_class_name: "get api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Stream state changes"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/changes"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Stream account state changes as an EventSource
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"default":{"description":"Successful","content":{"text/event-stream":{"schema":{"type":"string"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

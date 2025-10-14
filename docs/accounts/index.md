@@ -1,0 +1,480 @@
+---
+title: Account Management
+sidebar_position: 1
+description: Add and manage email accounts in EmailEngine
+---
+
+<!--
+Sources merged:
+- docs-unified/accounts/index.md (primary comprehensive guide)
+-->
+
+# Account Management
+
+EmailEngine connects to email accounts via IMAP/SMTP or native APIs (Gmail API, Microsoft Graph). This section covers everything you need to know about adding, configuring, and managing accounts.
+
+## Choosing Your Setup Method
+
+EmailEngine supports multiple ways to connect to email accounts, each with different trade-offs:
+
+### IMAP/SMTP (Standard Protocol)
+
+**Best for:** Any email provider, simple setup
+
+**Pros:**
+- Works with virtually any email provider
+- No OAuth2 configuration required
+- Immediate setup
+
+**Cons:**
+- Requires username and password
+- Some providers block IMAP access
+- Gmail and Outlook may require app-specific passwords
+
+**Supported Providers:**
+- Gmail (with app password)
+- Any IMAP/SMTP server
+- Self-hosted email
+
+[Learn more about IMAP/SMTP accounts →](./imap-smtp)
+
+### OAuth2 (Gmail IMAP/SMTP)
+
+**Best for:** Gmail and Google Workspace accounts at scale
+
+**Pros:**
+- No password storage
+- Automatic token refresh
+- Works with 2FA-enabled accounts
+- Better security and user experience
+
+**Cons:**
+- Requires Google Cloud Console setup
+- OAuth app verification needed for production
+
+**Use Cases:**
+- SaaS applications connecting user Gmail accounts
+- CRM systems syncing customer emails
+- Email automation tools
+
+[Gmail OAuth2 Setup Guide →](./gmail-imap)
+
+### Gmail API (Native)
+
+**Best for:** High-volume Gmail operations, advanced features
+
+**Pros:**
+- Faster than IMAP
+- Access to Gmail-specific features (labels, drafts)
+- Better threading support
+- No IMAP connection limits
+
+**Cons:**
+- Requires Cloud Pub/Sub setup
+- Only works with Gmail
+- More complex configuration
+
+**Use Cases:**
+- High-volume email processing
+- Applications needing Gmail-specific features
+- Systems requiring maximum performance
+
+[Gmail API Setup Guide →](./gmail-api)
+
+### OAuth2 (Outlook IMAP/SMTP)
+
+**Best for:** Microsoft 365 and Outlook.com accounts
+
+**Pros:**
+- No password storage
+- Automatic token refresh
+- Works with 2FA-enabled accounts
+- Supports shared mailboxes
+
+**Cons:**
+- Requires Azure AD setup
+- App verification for multi-tenant apps
+
+**Use Cases:**
+- Business applications using M365 accounts
+- CRM systems for Office 365 users
+- Email tools for enterprises
+
+[Outlook OAuth2 Setup Guide →](./outlook-365)
+
+### Microsoft Graph API (Native)
+
+**Best for:** Microsoft 365 advanced features
+
+**Pros:**
+- Faster than IMAP
+- Access to Microsoft 365 features
+- Better integration with Outlook features
+- Supports shared mailboxes natively
+
+**Cons:**
+- Requires Microsoft Graph subscription setup
+- Only works with Microsoft 365
+- More complex configuration
+
+**Use Cases:**
+- Enterprise applications on Microsoft stack
+- Shared mailbox management
+- Advanced Microsoft 365 integrations
+
+[Microsoft Graph Setup →](./outlook-365#ms-graph-api)
+
+## Decision Tree: Which Method Should I Use?
+
+```
+START: What email provider?
+│
+├─ Gmail / Google Workspace
+│  │
+│  ├─ Need maximum performance? → Gmail API
+│  ├─ Connecting user accounts (OAuth)? → Gmail OAuth2 (IMAP)
+│  └─ Quick testing? → IMAP with app password
+│
+├─ Microsoft 365 / Outlook
+│  │
+│  ├─ Need shared mailboxes? → Microsoft Graph API
+│  ├─ Enterprise features? → Microsoft Graph API
+│  ├─ Connecting user accounts (OAuth)? → Outlook OAuth2 (IMAP)
+│  └─ Quick testing? → IMAP with password
+│
+├─ Yahoo / AOL / Verizon
+│  └─ → IMAP/SMTP with app password
+│
+├─ iCloud
+│  └─ → IMAP/SMTP with app-specific password
+│
+└─ Other / Self-hosted
+   └─ → IMAP/SMTP with credentials
+```
+
+## Account Management Tasks
+
+### Adding Accounts
+
+**Via API (Programmatic):**
+```javascript
+// Add account via REST API
+const response = await fetch('https://your-ee.com/v1/account', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    account: 'user123',
+    name: 'John Doe',
+    email: 'john@example.com',
+    imap: { /* config */ },
+    smtp: { /* config */ }
+  })
+});
+```
+
+[Full API documentation →](/docs/api/post-v-1-account)
+
+**Via Hosted Authentication Form (User-Friendly):**
+
+Generate a form URL and redirect users to it. They enter their credentials, and EmailEngine handles the rest.
+
+```javascript
+// Generate authentication form URL
+const formResponse = await fetch('https://your-ee.com/v1/authentication/form', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    account: 'user123',
+    email: 'john@example.com',
+    redirectUrl: 'https://myapp.com/settings'
+  })
+});
+
+const { url } = await formResponse.json();
+// Redirect user to: url
+```
+
+[Learn about hosted authentication →](./authentication-server)
+
+**Via Web Interface:**
+
+Navigate to **Email Accounts** → **Add Account** in the EmailEngine dashboard.
+
+### Updating Accounts
+
+```javascript
+// Update account settings
+await fetch('https://your-ee.com/v1/account/user123', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'John Doe Updated',
+    subconnections: ['\\Sent']  // Enable instant Sent folder notifications
+  })
+});
+```
+
+### Account States
+
+| State | Description | Actions Available |
+|-------|-------------|-------------------|
+| `new` | Just added, not yet connected | Wait for initialization |
+| `connecting` | Establishing connection | Wait |
+| `connected` | Active and syncing | All operations available |
+| `authenticationError` | Invalid credentials | Update credentials |
+| `connectError` | Cannot reach server | Check connectivity, retry |
+| `disabled` | Manually disabled | Re-enable account |
+
+### Reconnecting Accounts
+
+If an account enters an error state, you can trigger a reconnection:
+
+```bash
+curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Deleting Accounts
+
+```bash
+curl -X DELETE https://your-ee.com/v1/account/user123 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+This removes the account from EmailEngine and closes all connections. Email data on the server remains unchanged.
+
+## Advanced Configuration
+
+### Sub-Connections
+
+By default, EmailEngine monitors the INBOX folder in real-time but polls other folders periodically. Sub-connections allow instant notifications for additional folders.
+
+```json
+{
+  "account": "user123",
+  "subconnections": [
+    "\\Sent",
+    "Important",
+    "Projects/Active"
+  ]
+}
+```
+
+**Benefits:**
+- Instant webhooks for sent emails
+- Real-time tracking of specific folders
+- Better CRM integration (know immediately when user sends email)
+
+**Trade-offs:**
+- Opens additional IMAP connections
+- Most servers limit parallel connections (typically 10-15)
+- Use sparingly
+
+[Learn more in performance tuning →](/docs/advanced/performance-tuning#sub-connections)
+
+### Path Filtering
+
+Limit which folders EmailEngine syncs to save resources:
+
+```json
+{
+  "account": "user123",
+  "path": [
+    "INBOX",
+    "\\Sent",
+    "\\Drafts"
+  ]
+}
+```
+
+EmailEngine will ignore all other folders.
+
+[Learn more in performance tuning →](/docs/advanced/performance-tuning#path-filtering)
+
+### Custom Sent Mail Path
+
+If EmailEngine doesn't correctly identify your Sent folder:
+
+```json
+{
+  "account": "user123",
+  "imap": {
+    "sentMailPath": "Sent Items"  // Custom path
+  }
+}
+```
+
+## OAuth2 Token Management
+
+For OAuth2 accounts, EmailEngine automatically refreshes access tokens in the background. You never need to handle token expiration.
+
+### Using Tokens for Other APIs
+
+You can retrieve valid access tokens for use in your own Google/Microsoft API calls:
+
+```javascript
+// Get current OAuth2 access token
+const tokenResponse = await fetch(
+  'https://your-ee.com/v1/account/user123/oauth-token',
+  {
+    headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
+  }
+);
+
+const { accessToken, expires } = await tokenResponse.json();
+
+// Use token with Google/Microsoft APIs
+const apiResponse = await fetch('https://www.googleapis.com/gmail/v1/users/me/profile', {
+  headers: { 'Authorization': `Bearer ${accessToken}` }
+});
+```
+
+[Learn more about OAuth2 token management →](./oauth2-token-management)
+
+## Service Accounts (Google Workspace)
+
+For Google Workspace domains, you can use service accounts with domain-wide delegation to access any user's mailbox without individual OAuth2 consent.
+
+**Benefits:**
+- No per-user OAuth2 flow
+- Centralized access management
+- Ideal for enterprise deployments
+
+**Requirements:**
+- Google Workspace (not free Gmail)
+- Super admin access
+- Domain-wide delegation setup
+
+[Service Accounts Setup Guide →](./google-service-accounts)
+
+## Shared Mailboxes (Microsoft 365)
+
+Microsoft 365 shared mailboxes can be accessed through the primary user's credentials:
+
+```json
+{
+  "account": "shared-support",
+  "email": "support@company.com",
+  "oauth2": {
+    "provider": "outlook",
+    "auth": {
+      "user": "admin@company.com"  // User with access to shared mailbox
+    }
+  }
+}
+```
+
+[Shared Mailboxes Guide →](./outlook-365#shared-mailboxes)
+
+## Authentication Server (Custom OAuth2 Flow)
+
+For advanced use cases, you can delegate the OAuth2 flow to an external authentication server:
+
+```json
+{
+  "account": "user123",
+  "oauth2": {
+    "provider": "gmail",
+    "auth": {
+      "authUrl": "https://your-auth-server.com/auth",
+      "tokenUrl": "https://your-auth-server.com/token"
+    }
+  }
+}
+```
+
+[Authentication Server Guide →](./authentication-server)
+
+## Best Practices
+
+### Security
+
+1. **Never log or expose access tokens** - Treat them like passwords
+2. **Use OAuth2 for user accounts** - More secure than storing passwords
+3. **Enable secret encryption** - Encrypts credentials in Redis
+4. **Rotate access tokens regularly** - Configure token policies
+5. **Use least-privilege scopes** - Only request necessary permissions
+
+[Learn about secret encryption →](/docs/configuration/secret-encryption)
+
+### Performance
+
+1. **Use sub-connections sparingly** - Only for critical folders
+2. **Implement path filtering** - Don't sync unnecessary folders
+3. **Monitor connection limits** - Stay within provider limits
+4. **Use Gmail/Graph API for high volume** - Better than IMAP at scale
+
+[Learn about performance tuning →](/docs/advanced/performance-tuning)
+
+### Reliability
+
+1. **Handle webhook failures gracefully** - Implement retries in your app
+2. **Monitor account states** - Alert on authentication errors
+3. **Test reconnection logic** - Ensure accounts recover from errors
+4. **Keep EmailEngine updated** - Benefit from bug fixes
+
+### User Experience
+
+1. **Use hosted authentication forms** - Users enter credentials directly
+2. **Show clear error messages** - Help users resolve auth issues
+3. **Verify accounts after adding** - Use `/v1/verifyaccount` endpoint
+4. **Provide setup guides** - Link to provider-specific instructions
+
+## Troubleshooting
+
+### Common Issues
+
+**Account stuck in "connecting" state:**
+- Check Redis connection
+- Verify IMAP/SMTP settings
+- Review EmailEngine logs
+
+**"authenticationError" for Gmail:**
+- Enable "Less secure app access" (not recommended)
+- Use OAuth2 instead
+- Generate app-specific password
+
+**"authenticationError" for Outlook:**
+- Verify OAuth2 app configuration
+- Check account type (common/consumers/organizations)
+- Ensure IMAP/SMTP is enabled in Microsoft 365 admin
+
+**Webhooks not firing:**
+- For API backends (Gmail API/Graph), check subscription status
+- Verify webhook URL is reachable
+- Check webhook queue in Bull Board
+
+[Full troubleshooting guide →](./troubleshooting)
+
+## API Reference
+
+- [POST /v1/account - Add Account](/docs/api/post-v-1-account)
+- [GET /v1/accounts - List Accounts](/docs/api/get-v-1-accounts)
+- [GET /v1/account/\{account\} - Get Account Details](/docs/api/get-v-1-account-account)
+- [PUT /v1/account/\{account\} - Update Account](/docs/api/put-v-1-account-account)
+- [DELETE /v1/account/\{account\} - Delete Account](/docs/api/delete-v-1-account-account)
+- [PUT /v1/account/\{account\}/reconnect - Reconnect](/docs/api/put-v-1-account-account-reconnect)
+- [POST /v1/verifyaccount - Verify Account](/docs/api/post-v-1-verifyaccount)
+- [GET /v1/account/\{account\}/oauthtoken - Get OAuth Token](/docs/api/get-v-1-account-account-oauthtoken)
+
+## Next Steps
+
+Choose your setup method:
+
+- [Gmail OAuth2 (IMAP) →](./gmail-imap)
+- [Gmail API →](./gmail-api)
+- [Outlook OAuth2 (IMAP) →](./outlook-365)
+- [Microsoft Graph API →](./outlook-365#ms-graph-api)
+- [IMAP/SMTP Generic →](./imap-smtp)
+- [Service Accounts (Google) →](./google-service-accounts)
+- [OAuth2 Setup Guide →](./oauth2-setup)
+- [OAuth2 Token Management →](./oauth2-token-management)

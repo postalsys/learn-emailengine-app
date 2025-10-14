@@ -1,0 +1,113 @@
+/v1/outbox:
+  get:
+    summary: List queued messages
+    operationId: getV1Outbox
+    description: Lists messages in the Outbox
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: page
+        in: query
+        schema:
+        type: integer
+        description: "Page number (zero indexed, so use 0 for first page)"
+        example: 0
+        default: 0
+        minimum: 0
+        maximum: 1048576
+        description: "Page number (zero indexed, so use 0 for first page)"
+      -
+        name: pageSize
+        in: query
+        schema:
+        type: integer
+        description: How many entries per page
+        example: 20
+        default: 20
+        minimum: 1
+        maximum: 1000
+        description: How many entries per page
+    tags:
+      - Outbox
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OutboxListResponse"
+"/v1/outbox/{queueId}":
+  get:
+    summary: Get queued message
+    operationId: getV1OutboxQueueid
+    description: Gets a queued message in the Outbox
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: queueId
+        in: path
+        schema:
+        type: string
+        description: Queue identifier for scheduled email
+        example: d41f0423195f271f
+        maxLength: 100
+        description: Queue identifier for scheduled email
+        required: true
+    tags:
+      - Outbox
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OutboxEntry"
+  delete:
+    summary: Remove a message
+    operationId: deleteV1OutboxQueueid
+    description: Remove a message from the outbox
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: queueId
+        in: path
+        schema:
+        type: string
+        description: Queue identifier for scheduled email
+        example: d41f0423195f271f
+        maxLength: 100
+        description: Queue identifier for scheduled email
+        required: true
+    tags:
+      - Outbox
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteOutboxEntryResponse"

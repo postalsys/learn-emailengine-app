@@ -1,0 +1,124 @@
+---
+id: emailengine-api
+title: "EmailEngine API"
+description: "EmailEngine provides a RESTful API for managing email accounts, sending messages, and processing email data across multiple providers."
+sidebar_label: Introduction
+sidebar_position: 0
+hide_title: true
+custom_edit_url: null
+---
+
+import ApiLogo from "@theme/ApiLogo";
+import Heading from "@theme/Heading";
+import SchemaTabs from "@theme/SchemaTabs";
+import TabItem from "@theme/TabItem";
+import Export from "@theme/ApiExplorer/Export";
+
+<span
+  className={"theme-doc-version-badge badge badge--secondary"}
+  children={"Version: 2.57.0"}
+>
+</span>
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"EmailEngine API"}
+>
+</Heading>
+
+
+
+EmailEngine provides a RESTful API for managing email accounts, sending messages, and processing email data across multiple providers.
+
+<h3>Authentication</h3>
+All API requests require authentication using an Access Token. You can generate and manage your tokens from the <a href="/admin/tokens" target="_parent"><strong>Access Tokens</strong></a> page.
+
+Include your token in requests using one of these methods:
+- Query parameter: <code>?access_token=YOUR_TOKEN</code>
+- Authorization header: <code>Authorization: Bearer YOUR_TOKEN</code>
+
+<h3>Request Processing</h3>
+
+<strong>Sequential Processing:</strong> Requests to the same email account are processed sequentially to maintain data consistency. Multiple simultaneous requests will be queued.
+
+<strong>Timeouts:</strong> Long-running operations may cause queued requests to timeout. Configure appropriate timeout values using the <code>X-EE-Timeout</code> header (in milliseconds).
+
+<h3>Getting Started</h3>
+1. <a href="/admin/tokens" target="_parent">Generate an Access Token</a>
+2. <a href="/admin/accounts" target="_parent">Add an email account</a>
+3. Start making API requests using the endpoints below
+
+<div
+  style={{"marginBottom":"2rem"}}
+>
+  <Heading
+    id={"authentication"}
+    as={"h2"}
+    className={"openapi-tabs__heading"}
+    children={"Authentication"}
+  >
+  </Heading><SchemaTabs
+    className={"openapi-tabs__security-schemes"}
+  >
+    <TabItem
+      label={"HTTP: Bearer Auth"}
+      value={"bearerAuth"}
+    >
+      
+      
+      Enter your access token
+      
+      <div>
+        <table>
+          <tbody>
+            <tr>
+              <th>
+                Security Scheme Type:
+              </th><td>
+                http
+              </td>
+            </tr><tr>
+              <th>
+                HTTP Authorization Scheme:
+              </th><td>
+                bearer
+              </td>
+            </tr><tr>
+              <th>
+                Bearer format:
+              </th><td>
+                JWT
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </TabItem>
+  </SchemaTabs>
+</div><div
+  style={{"display":"flex","flexDirection":"column","marginBottom":"var(--ifm-paragraph-margin-bottom)"}}
+>
+  <h3
+    style={{"marginBottom":"0.25rem"}}
+  >
+    Contact
+  </h3><span>
+    EmailEngine Support: [support@emailengine.app](mailto:support@emailengine.app)
+  </span><span>
+    URL: [https://emailengine.app/support](https://emailengine.app/support)
+  </span>
+</div><div
+  style={{"marginBottom":"var(--ifm-paragraph-margin-bottom)"}}
+>
+  <h3
+    style={{"marginBottom":"0.25rem"}}
+  >
+    License
+  </h3><a
+    href={"https://emailengine.dev/LICENSE_EMAILENGINE.txt"}
+  >
+    EmailEngine License
+  </a>
+</div>
+      

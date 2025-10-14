@@ -1,0 +1,71 @@
+---
+id: delete-v-1-gateway-gateway
+title: "Remove SMTP gateway"
+description: "Delete SMTP gateway data"
+sidebar_label: "Remove SMTP gateway"
+hide_title: true
+hide_table_of_contents: true
+api: eJy1Vttu20YQ/ZXFPiUALfqCxAChuHUT1lBrO6mlNA0swxiRI2oTcpbeXSpWBf17McuLKMsNkIdQDyK4s3M5c+aylrpEA05pGqUykinm6PDvowtw+A1WzZ8MZIo2MapkQRnJd15MjK8mH0RWy4gUHMhAlmCgQIfGyuh2LQkKlJF8PEA8cKpAXTkZSMVKFggpGhlImyywABmtpVuVLK3IYeaPds3e4EOF1olGkVAkCpXnymKiKbXihV6iMSpFK+L4+mJ0Hd9PRlfx+48TgbRURlOB5MQSjIJZji9lIAtFqqgKGR0GsoDH+v30+JCfzU+3vwk6hLIOag9OCW7xHDTWGUXZHjJNosTonQwkPkJR5izdvvnYLpEyt5DR8avXe5Ht3Df4UCmDqYycqXBzF0gHGadT+oS3pLhjSVtqsmjZw+PDQ/7bVTyukgStnVe5DGSiySE5loKyzFXiiRd+sSy63g9Wz75gwnwpDdPUqdpQC9VPQYWJnfZUz7TOEWhP9yewwi1wS//mJsvNocpdg96mj+dt5zuDqpx350qnmB+dyA0/gSzQLfS2Fn1JsYMyXB6FzfVw3bxsmCNolm25VSbnynKujMLwcOB/0evXp6eS02gxqYxyKy86QzBozivWfXvXPx5zHmqo+0IdJKy+5aaHyAvJoHn5XZsCnIzkH58me7DF5NCIla6MAM8M4fRXJMmRK5prb6YBJi5A5TFlilCcfxjJQHKctZ7jwavTweG++t6V0uilr0UQN/F4Mq9y1iLm2ogCCDJFmUCWZ090Rc4GwiKl/L1AayFDGwiglDWxq9sL3OsEJEZbK4oqd6rMO3vGDqY0peHi5IxxQ3INz4fh4uRsSud57Yepm4kVDT0E7EiLytsDEuc1ThPGaSA+60okQCJD4saN3kEfD9awejytmBtdeIIOQSwMzt9MZQhpoSisBaZSODAZujdTeV+CQXJTeTa0zmjKzvo27TBsvg5DOBMlZOgjHFGSV2nfKjfELqzaf00o9JwdsShqattoSgfirwrNSnTTIhLDRKd49kvNinuv783n9x9v7ifv/4yvh6E/5puMqjbq3xqmeoq013fOIvGbJ6R4Rk2doLahf+gS3CRpSi0SYxYhpyDvSUUdJOKmjddpD7eFAndpJcBgSyFMhe0U5iu+VIAiB4pqUiWarLIOKVkNxFVLLauYZUCoK7tF+JvKczFD8VBhhemg7/WknlC25+ilpuzAVEQ+Le3Ut6KAlUigsq2erX6OqNYzEG81zVVWMU1L7sZGMffaQbiEvMI25Z50HuZ/DuL4oHGlQb7Jl3jxZHa+7IrmAp1jNWMHxmHaJORo8GNEvtiWx04BMYWndPyMtrYJPK/vPE1Z1U5ia10ng9pVUcBX9nuntreIIKWlVuSsmGGuvzXTEBI/DZsdoN+9xlVZasPDb9vTbRSG3gP0MgMoy9B2cv6Eh2H95dcnknITyFwlSBb/x+Rlc/o9kykuw8vR2/h6HN/HV+ejy3rPGbhH53t4qa0rgHoWbrDQy91d8WnbXm83g++tls34cfjowjIHRRySd3XdzMhbuTySQW+XinrzdqGtY5H1egYWP5p8s+HPD9yIeAQGsl3M/HxMleX3VEZzyC1+x+UXN82Afyl2No5n/W0+ArF7vm5kJGUgv+KqtwVu7jZBuyD/mDM/YUd+No7a3yd7fRcPL7a1BBdf2T/b2/x49eiWnnfxZTyJ5WbzH3HdZTA=
+sidebar_class_name: "delete api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Remove SMTP gateway"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/v1/gateway/{gateway}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Delete SMTP gateway data
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"},{"name":"gateway","in":"path","schema":{"type":"string","description":"Gateway ID","example":"example","maxLength":256},"description":"Gateway ID","required":true}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Successful","content":{"application/json":{"schema":{"type":"object","properties":{"gateway":{"type":"string","description":"Gateway ID","example":"example","maxLength":256},"deleted":{"type":"boolean","description":"Was the gateway deleted","default":true}},"required":["gateway"],"title":"Model13"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

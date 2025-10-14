@@ -1,0 +1,71 @@
+---
+id: put-v-1-account-account-flush
+title: "Request account flush"
+description: "Deletes all email indexes from Redis and ElasticSearch and re-creates the index for that account. You can only run a single flush operation at a time, so you must wait until the previous flush has finished before initiating a new one."
+sidebar_label: "Request account flush"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "put api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Request account flush"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"put"}
+  path={"/v1/account/{account}/flush"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Deletes all email indexes from Redis and ElasticSearch and re-creates the index for that account. You can only run a single flush operation at a time, so you must wait until the previous flush has finished before initiating a new one.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"},{"name":"account","in":"path","schema":{"type":"string","description":"Unique identifier for the email account","example":"user123","maxLength":256,"x-convert":{"trim":true}},"description":"Unique identifier for the email account","required":true}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={{"content":{"application/json":{"schema":{"type":"object","properties":{"flush":{"type":"boolean","description":"Only flush the account if true","default":false},"notifyFrom":{"type":"string","format":"date-time","description":"Only send webhooks for messages received after this date. Defaults to account creation time. IMAP only.","example":"2021-07-08T07:06:34.336Z","default":"now","nullable":true},"imapIndexer":{"type":"string","description":"Override global IMAP indexing strategy for this account. \"full\" tracks all changes including deletions, \"fast\" only detects new messages.","example":"full","enum":["full","fast"],"nullable":true,"x-convert":{"trim":true},"title":"IMAPIndexer"}},"title":"RequestFlush"}}}}}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Successful","content":{"application/json":{"schema":{"type":"object","properties":{"flush":{"type":"boolean","description":"Flush status","default":false}},"title":"RequestFlushResponse"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

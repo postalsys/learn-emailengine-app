@@ -1,0 +1,71 @@
+---
+id: get-v-1-logs-account
+title: "Return IMAP logs for an account"
+description: "Output is a downloadable text file"
+sidebar_label: "Return IMAP logs for an account"
+hide_title: true
+hide_table_of_contents: true
+api: eJy1Vm1v20YM/isHfmoBxcoL2gCCm80rtMBbXrrE2VbUQXCRaPlQiafcixvP8H8feJJsOUmL9kOdL4qOekg+fI7kCnSNRjqlaZxDAgW6vw/OdGFHWaY9OYggR5sZVbMJJHDpXe2dUFZIkesvVGqZy/sShcNHJ2aqRIiglkZW6NBYSD6tgGSFkMDjHuKeUxVqz7iK4eYoczQQgc3mWElIVuCWNVsrcliEo90ArvDBo3WiBRKKRKXKUlnMNOVWvNILNEblaEWaXpyOL9K7yfg8vbyZCKSFMpoqJCcW0iiO+zVEUClSla8g2Y+gko/N8/HhPv/WP93/OtowJDekB3Jq6eYvUWOdUVQ8Y+aG1INHoXIkp2YKjZhpI9wcBVZSlWKLjo+yqkuG8hbNweERhMTPkAo3h+TwzdsIHvcyTQs0Ljg2qoLEGY/rZ4R8v1uDD14ZzFuk2wicLFgiwIqDW7awtSaLlp3mOJO+dM1j3+O1zzK0duZLiCDT5JCaKPHRxXUpmbzVV2lb8y+CCt1ct5IPkuXMIV4cxKUubLxqw15zAdAsOi17U7JsnauTON4fhL/k7dvjY+B8LGbeKLcMpvcoDZqRZ+BPt/3jaw6tSbJvtImU4bvC8/+NEUTtw+/aVNJBAn/8M3mmgpQcGrHU3jDzaK1w+jMScM6KZjq4US5UP+UCpVQoQjH6MIYIOM8G53Dw5niw/xy+90lt9CIIXYqr9Hoy8yWjhPJXkmShqNjVgI2ERcr5fYXWygJtJCTljMShbj/IpZNCZkZbKypfOlWXG3/GDqY0peH86IR5Y9lloYMN4/nRyZRGZROHaW6qFa3uhNyxFj74kyRGDU8T5mkgPmovMkmiQOLOiCHAkA82tAY+rZgZXQWZD6WYG5y9m0Is80pR3BhMQThpCnTvpnBXS4PkpnAytM5oKk76Pu0wbt8OY3kiallgyHBMWenzvlfuNpu0mvg1odAzDsSiaERtkyntib88mqXYtOJEDDOd48kvjSruAt67j5c3V3eTyz/Ti2EcjvlLZlUb9V9DU9Oiu893zhLxWxCkeAGmKVDXLT9sCtwWaUodE9dsQk7JsmeVbCgRV12+Tge6rayetBYhDXYSwlzYDWC55I8qqchJRY2oMk1WWYeULQfivJOWVawySai93TL8RZWluEfx4NFjPuhHPWnav+0Feqap2DOeKJSlG6tWVHIpMulth7PF54wanIF4r2mmCs8yrWuja6NYe92UWcjSY1fyILpA8797abrXhtIy39ZLvHoymF5vLs0pOscw104ah3lbkIPBjwn5dHs9di4QS3hKhy+gdU3gZbxRnjPUTmEbrKNBE6qo5GeOe+dubxlBymutyFlxj6X+0o4GmYXR0A7Yfve69nWtDff+bU+3SRyHCDDYDGRdx3ZjF054kDRvfn1iCesISpUhWfyKy7P29Fsuc1zEZ+P36cV1epeej8ZnzRIxcI8u9PBaW1dJ6nm4QucNifH56IPg2RUasKTe4N1p4avtyPy+ba4dSr3pum4TWLVj8xMsDiACdg4RJJ3j2wjm2jo+X63upcUbU67X/PqBexNPxQi6RSiMzFxZfs4hmcnS4jcif3XVLhOvxfcvIC9m0r6UtOT5x/cMEoAIPuOyt5Ktb9dRt63+WKQ/YWF9MY8m3idL9iYf3jIbC76sdf+sD3PbW4xO0wms1/8DWudBDA==
+sidebar_class_name: "get api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Return IMAP logs for an account"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/logs/{account}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Output is a downloadable text file
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"},{"name":"account","in":"path","schema":{"type":"string","description":"Unique identifier for the email account","example":"user123","maxLength":256,"x-convert":{"trim":true}},"description":"Unique identifier for the email account","required":true}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"default":{"description":"Successful","content":{"text/plain":{"schema":{"type":"string"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

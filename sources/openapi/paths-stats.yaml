@@ -1,0 +1,34 @@
+/v1/stats:
+  get:
+    summary: Return server stats
+    operationId: getV1Stats
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: seconds
+        in: query
+        schema:
+        type: integer
+        description: Duration for counters
+        example: 3600
+        default: 3600
+        minimum: 0
+        maximum: 604800
+        description: Duration for counters
+    tags:
+      - Stats
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsResponse"

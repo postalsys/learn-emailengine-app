@@ -1,0 +1,71 @@
+---
+id: delete-v-1-account-account
+title: "Remove account"
+description: "Stop processing and clear the account's cache"
+sidebar_label: "Remove account"
+hide_title: true
+hide_table_of_contents: true
+api: eJzNV1lv20YQ/iuLfWkCUKIPJAYIxa2asIFax0kluWlgGcaIHFHbkLv0HopVQf+9mOUhyhKC5CFApQcR3Nk5vvnm0IarEjVYoeQo5RFPMUeLf50Ok0Q5aesfHvAUTaJFSYI84hOrSlZqlaAxQmYMZMqSHEEzu0QG1a2fDEsgWSIPeAkaCrSoDY9uN1xCgTzijz3EnhUFKkcmBGleIqSoecBNssQCeLThdl2StJAWM3+078sYHxway2pFTEhWiDwXBhMlU8OeqRVqLVI0LI6v346u4/vp6F38/mbKUK6EVrJAadkKtIB5js95wAshReEKHp0EvIDH6vni7IQ+2x9ufxu0CEGLvwenBLs8Bo2xWsjsAJkbKR4cMpGitGIhULOFqjKEBYic7bTjIxRlTqqcQX16ds594FcoM7vk0dmLlwF/7CVKrlBbb1iLgkdWO9weAPLtZjU+OKExrTXdBdxCRhThDfHuSMiUSho0ZPfs5IR+nrDRJUTEhct5wBMlLUrvJJRlLhJP7vAfQ6KbQ+zU/B9MyJlSUylYURlqnPw/gUylmXY8miuVI8gDlz6C6dYha26S3AJcbndKdxm4bUOmNAjrHX3jb9YMH9eJ4Fv6BLxAu1S7puHLnALh4eo0rJWFm/phS7xFvWpagNM5Vbu1ZRSGJ33/jV6+vLjgRAODidPCrr3oHEGjHjrSfXvXPZ5QMqt8dYVagEh9Uy8eMC/Eg/rhN6ULsDziv3+cHoAYS4uarZXThCMaw6z6jJJT5EIulDdTwxRTpmOZCYls+GHEA05xVnrO+i8u+ieH6jtXSq1Wvj8AG8eT6cLlpMXzqAAJGXXYPTKZgBmUKb0v0BjI0AS+B3dacnUhBQsMEq2MYYXLrSjz1p42/ZmcycHy/JJwI/5WxTIIl+eXMznMKz90lX7DarIw2JNmrh4BbFjhNCWc+uyTciwByTKUNGHQO+jjwQpWj6dhC60KT9cBsKXGxasZDyEthAwrgRlnFnSG9tWM35egUdoZvxwYq5XMLrs2zSCs3w5CuGQlZOgjHMkkd2nXKjXpNqzKfyWRqQU5YpBV1DbRTPbYnw71mrUTLGKDRKV4+XPFinuv79Wn9zfj++n7P+LrQeiP6SahqrT4t4KpmmzN9b2ziP3qCcmOqKkS1AyZD22C6yTNZIPEhESkFZB3pKIWEjZu4rXKw22geNKjGGhsKIQpM63CfE2XChDSgpAVqRIljTAWZbLus3cNtYwgloFE5cwO4S8iz9kc2YNDh2m/6/W0mpqm4+iVkllPOyl9Wpr1xLAC1iwBZxo9O/0UUaWnz14ruRCZI5qW1NK1IO41w3kFucMm5Z50Hua/e3Hcq12pka/zxZ49mefP26J5i9aSmokFbTGtE3La/z4iv92Vx14BEYVn8uyItqYJHNc3TFNStZfYStd5v3KVFfCZ/N6r7R0iKNNSCWkNm2OuvtQjFRI/kuq9pNu9Jq4slaYBt+vpJgpD7wF6mT6UZWhaOX9CE7V688sTSb4NeC4SpFFz3ORVffo1kymuwqvR6/h6Et/H74ajq2r36ttH63t4qYwtQHYsjLFQK+wM7L2OvdltFt+9/tbjyOKjDcschKQQveubembe8tUpDzr7XtSZxktlLIlsNnMweKPz7ZZeP1BjopEY8GZ59PMyFYaeUx4tIDf4lTiejevx/5x9+xpzNJj6Jcg1DT8qMh5xHvDPuO6ssdu7bdBs+N/n6Q9Y8o/GUfn75I9JGw9t5pUEVWrZPTvYNWlPaTekN/FVPI35dvsf/3a2vw==
+sidebar_class_name: "delete api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Remove account"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/v1/account/{account}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Stop processing and clear the account's cache
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"},{"name":"account","in":"path","schema":{"type":"string","description":"Unique identifier for the email account","example":"user123","maxLength":256,"x-convert":{"trim":true}},"description":"Unique identifier for the email account","required":true}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Successful","content":{"application/json":{"schema":{"type":"object","properties":{"account":{"type":"string","description":"Unique identifier for the email account","example":"user123","maxLength":256,"x-convert":{"trim":true}},"deleted":{"type":"boolean","description":"Was the account deleted","default":true}},"required":["account"],"title":"DeleteRequestResponse"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

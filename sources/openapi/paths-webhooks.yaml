@@ -1,0 +1,80 @@
+/v1/webhookRoutes:
+  get:
+    summary: List webhook routes
+    operationId: getV1Webhookroutes
+    description: List custom webhook routes
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: page
+        in: query
+        schema:
+        type: integer
+        description: "Page number (zero indexed, so use 0 for first page)"
+        example: 0
+        default: 0
+        minimum: 0
+        maximum: 1048576
+        description: "Page number (zero indexed, so use 0 for first page)"
+      -
+        name: pageSize
+        in: query
+        schema:
+        type: integer
+        description: How many entries per page
+        example: 20
+        default: 20
+        minimum: 1
+        maximum: 1000
+        description: How many entries per page
+    tags:
+      - Webhooks
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookRoutesListResponse"
+"/v1/webhookRoutes/webhookRoute/{webhookRoute}":
+  get:
+    summary: Get webhook route information
+    operationId: getV1WebhookroutesWebhookrouteWebhookroute
+    description: Retrieve webhook route content and information
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: webhookRoute
+        in: path
+        schema:
+        type: string
+        description: Webhook ID
+        example: example
+        maxLength: 256
+        description: Webhook ID
+        required: true
+    tags:
+      - Webhooks
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookRouteResponse"

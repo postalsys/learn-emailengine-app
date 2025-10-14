@@ -1,0 +1,421 @@
+---
+title: Configuration Overview
+sidebar_position: 1
+---
+
+# EmailEngine Configuration
+
+EmailEngine provides flexible configuration options to adapt to various deployment scenarios. This guide covers the configuration methods, precedence, and best practices.
+
+## Configuration Types
+
+EmailEngine uses two distinct types of configuration:
+
+### 1. Application Configuration
+
+**Loaded at startup** and cannot be changed without restarting the application.
+
+**Examples:**
+- HTTP server port
+- Redis connection URL
+- Encryption secrets
+- Log levels
+
+**Configure via:**
+- Environment variables (recommended)
+- Command-line arguments
+- Configuration files
+
+### 2. Runtime Configuration
+
+**Can be updated** at any time via the Settings API or web interface.
+
+**Examples:**
+- Webhook URLs
+- Webhook event filters
+- OAuth2 application credentials
+- Email templates
+
+**Configure via:**
+- Web interface (Settings page)
+- Settings API endpoint
+- Prepared settings (environment variable)
+
+## Configuration Methods
+
+### Environment Variables
+
+**Recommended for production deployments.**
+
+```bash
+export EENGINE_HOST="0.0.0.0"
+export EENGINE_PORT="3000"
+export REDIS_URL="redis://localhost:6379"
+
+emailengine
+```
+
+**Docker Compose:**
+```yaml
+version: '3.8'
+services:
+  emailengine:
+    image: postalsys/emailengine:latest
+    environment:
+      - EENGINE_HOST=0.0.0.0
+      - EENGINE_PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - EENGINE_SECRET=my-secret-key
+```
+
+[Complete environment variables reference →](./environment-variables.md)
+
+### Command-Line Arguments
+
+**Useful for development and testing.**
+
+```bash
+emailengine \
+  --dbs.redis="redis://localhost:6379" \
+  --api.port=3000 \
+  --api.host="0.0.0.0" \
+  --log.level="trace"
+```
+
+### Settings API
+
+**For runtime configuration.**
+
+```bash
+curl -X POST http://localhost:3000/v1/settings \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhooks": "https://your-app.com/webhook",
+    "webhookEvents": ["messageNew", "messageSent"]
+  }'
+```
+
+### Web Interface
+
+**User-friendly configuration management.**
+
+1. Navigate to `http://localhost:3000`
+2. Log in with admin credentials
+3. Go to Settings
+4. Update configuration
+5. Click "Save"
+
+## Configuration Precedence
+
+When multiple configuration methods are used, they follow this precedence (highest to lowest):
+
+1. **Environment Variables** (highest priority)
+2. **Command-Line Arguments**
+3. **Configuration Files**
+4. **Default Values** (lowest priority)
+
+**Example:**
+```bash
+# Environment variable takes precedence
+export EENGINE_PORT=8080
+
+# This will be ignored
+emailengine --api.port=3000
+
+# EmailEngine starts on port 8080
+```
+
+## Configuration Best Practices
+
+### Production Deployments
+
+**Use environment variables:**
+```yaml
+environment:
+  - EENGINE_HOST=0.0.0.0
+  - EENGINE_PORT=3000
+  - REDIS_URL=redis://redis:6379
+  - EENGINE_SECRET=${SECRET_KEY}
+  - EENGINE_ENCRYPTION_SECRET=${ENCRYPTION_KEY}
+```
+
+**Keep secrets secure:**
+- Never commit secrets to version control
+- Use secret management systems (AWS Secrets Manager, HashiCorp Vault)
+- Use `.env` files only for development
+- Rotate secrets regularly
+
+**Document your configuration:**
+```bash
+# .env.example (commit this)
+EENGINE_HOST=0.0.0.0
+EENGINE_PORT=3000
+REDIS_URL=redis://localhost:6379
+EENGINE_SECRET=change-me-in-production
+```
+
+### Development Setup
+
+**Use command-line arguments for flexibility:**
+```bash
+emailengine \
+  --dbs.redis="redis://localhost:6379/8" \
+  --api.port=3001 \
+  --log.level="trace"
+```
+
+**Or local `.env` file:**
+```bash
+# .env (don't commit)
+EENGINE_PORT=3001
+REDIS_URL=redis://localhost:6379/8
+EENGINE_LOG_LEVEL=trace
+```
+
+### Docker Deployments
+
+**Use Docker Compose environment variables:**
+```yaml
+services:
+  emailengine:
+    image: postalsys/emailengine:latest
+    env_file:
+      - .env.production
+    environment:
+      - REDIS_URL=redis://redis:6379
+```
+
+**Multi-environment setup:**
+```
+.env.development
+.env.staging
+.env.production
+```
+
+### Kubernetes Deployments
+
+**Use ConfigMaps and Secrets:**
+
+```yaml
+# ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: emailengine-config
+data:
+  EENGINE_HOST: "0.0.0.0"
+  EENGINE_PORT: "3000"
+  REDIS_URL: "redis://redis-service:6379"
+
+---
+# Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: emailengine-secrets
+type: Opaque
+stringData:
+  EENGINE_SECRET: "your-secret-key"
+  EENGINE_ENCRYPTION_SECRET: "your-encryption-key"
+
+---
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emailengine
+spec:
+  template:
+    spec:
+      containers:
+      - name: emailengine
+        image: postalsys/emailengine:latest
+        envFrom:
+        - configMapRef:
+            name: emailengine-config
+        - secretRef:
+            name: emailengine-secrets
+```
+
+## Quick Reference
+
+### Essential Configuration
+
+**Minimal production setup:**
+
+| Setting | Environment Variable | Description |
+|---------|---------------------|-------------|
+| Redis URL | `REDIS_URL` | Redis connection string |
+| Server Host | `EENGINE_HOST` | Listen address (0.0.0.0) |
+| Server Port | `EENGINE_PORT` | HTTP port (default 3000) |
+| Secret Key | `EENGINE_SECRET` | Session encryption key |
+
+**Example:**
+```bash
+REDIS_URL=redis://localhost:6379
+EENGINE_HOST=0.0.0.0
+EENGINE_PORT=3000
+EENGINE_SECRET=random-secret-at-least-32-chars
+```
+
+### Common Configuration Scenarios
+
+**Behind Reverse Proxy:**
+```bash
+EENGINE_HOST=127.0.0.1
+EENGINE_PORT=3000
+EENGINE_BASE_URL=https://emailengine.yourdomain.com
+```
+
+**With Redis Cluster:**
+```bash
+REDIS_URL=redis://node1:6379,redis://node2:6379
+REDIS_CONF='{"enableAutoPipelining":true}'
+```
+
+**High Security:**
+```bash
+EENGINE_ENCRYPTION_SECRET=your-32-char-encryption-key-here
+EENGINE_ENCRYPTION_ALGO=aes-256-gcm
+EENGINE_SECRET=your-session-secret-key-here
+```
+
+**Development Mode:**
+```bash
+EENGINE_LOG_LEVEL=trace
+EENGINE_LOG_RAW=true
+NODE_ENV=development
+```
+
+## Configuration Categories
+
+### Server & Connection
+Configure HTTP server, base URL, and proxy settings.
+
+[View details →](./environment-variables.md#server--connection)
+
+### Redis
+Redis connection, clustering, and persistence.
+
+[View details →](./redis.md)
+
+### Email & IMAP
+Email handling, attachment size limits, timeouts.
+
+[View details →](./environment-variables.md#email--imap)
+
+### Features
+Workers, connections, chunking, payload limits.
+
+[View details →](./environment-variables.md#features)
+
+### Webhooks
+Default webhooks, timeouts, retry settings.
+
+[View details →](./environment-variables.md#webhooks)
+
+### OAuth2
+OAuth2 provider credentials and configuration.
+
+[View details →](./oauth2-configuration.md)
+
+### Security & Encryption
+Encryption keys, algorithms, session secrets.
+
+[View details →](./environment-variables.md#security--encryption)
+
+### Logging & Monitoring
+Log levels, metrics endpoints, monitoring.
+
+[View details →](./logging.md)
+
+### Prepared Configuration
+Pre-configured settings, tokens, and licenses.
+
+[View details →](./prepared-settings.md)
+
+## Validation
+
+### Check Configuration
+
+**View current settings via API:**
+```bash
+curl http://localhost:3000/v1/settings \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Check application config:**
+```bash
+# View logs for configuration issues
+docker logs emailengine | grep -i config
+```
+
+### Common Issues
+
+**Port already in use:**
+```
+Error: listen EADDRINUSE: address already in use :::3000
+```
+**Solution:** Change `EENGINE_PORT` to unused port.
+
+**Redis connection failed:**
+```
+Error: connect ECONNREFUSED 127.0.0.1:6379
+```
+**Solution:** Verify `REDIS_URL` is correct and Redis is running.
+
+**Invalid secret:**
+```
+Error: EENGINE_SECRET must be at least 32 characters
+```
+**Solution:** Generate longer secret key.
+
+### Generate Secrets
+
+**Random secret key:**
+```bash
+# Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# OpenSSL
+openssl rand -hex 32
+
+# /dev/urandom
+head -c 32 /dev/urandom | base64
+```
+
+## Migration & Updates
+
+### Version Upgrades
+
+When upgrading EmailEngine:
+
+1. **Review changelog** for breaking changes
+2. **Backup Redis** database
+3. **Test in staging** environment
+4. **Update configuration** if needed
+5. **Deploy to production**
+
+### Configuration Migration
+
+**From v1.x to v2.x:**
+- Update environment variable names (see changelog)
+- Migrate runtime settings via Settings API
+- Update OAuth2 configuration format
+
+## Next Steps
+
+- [Environment Variables Reference](./environment-variables.md) - Complete list of all variables
+- [Redis Configuration](./redis.md) - Redis setup and tuning
+- [OAuth2 Configuration](./oauth2-configuration.md) - OAuth2 provider setup
+- [Prepared Settings](./prepared-settings.md) - Pre-configured deployment
+- [Logging Configuration](./logging.md) - Logging and debugging
+- [Monitoring Configuration](./monitoring.md) - Metrics and monitoring
+
+## See Also
+
+- [Installation Guide](/docs/installation/set-up)
+- [Docker Deployment](/docs/deployment/docker)
+- [Production Security](/docs/deployment/security)
+- [Troubleshooting](/docs/troubleshooting)

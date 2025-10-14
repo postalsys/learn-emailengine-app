@@ -1,0 +1,71 @@
+---
+id: delete-v-1-license
+title: "Remove license"
+description: "Remove registered active license"
+sidebar_label: "Remove license"
+hide_title: true
+hide_table_of_contents: true
+api: eJy1VmFv2zYQ/SvEfWoB2XJSrAEEN1vWaYW3NO1id1tRB8FZOstsKVIhKTeu4f8+HCXZcpMNHbA5HyKQj3fHd493twVTkUUvjZ7kkEBOijz9fnIpM9KOIIKcXGZlxQhI4JpKsyZhqZDOk6VcYOblmoTaH6jQYkmerIPkwxY0lgQJ3A+IBl6WZGoPEUg2tiLMyUIELltRiZBswW8qRkvtqQhbX7u/q8l50RoSUotSKiUdZUbnTjwxa7JW5uREml69mlylt7PJ6/TNu5kgvZbW6JK0F2u0EheKnkIEpdSyrEtIRhGUeN98n52O+Lf73/3vbiLwWDBV0HF+E4ElVxntyDEnp6MR/zuOZFpnGTm3rBVEkBntSXtGYVUpmYWExh8dQ7cP6TWLj5RxGirL6feycdSksodbGKMINURA91hWiiBZonIUePEolfs2cIPYI523Uhd9IEynby8HJ8PRwNiBQk8WdnxO+rCblpXftPRct9TAjn8RlORX5iDdIEC/ggTi9Ul8UKUju+4kWVvF6vO+SuJ4NAx/yfPnZ2chHY6y2kq/CdAFoSV7UbPFDzf97SmT2vDWB+0vyeY7aQd6Agii9uNnY0v0kMAvf8weyDzVnqzYmNoKDGkW3nwiHTiRemmCmz03KFWqC6lJXLydQAR8z8bO6fC7s+HoofnekcqaddAriut0OlvWiq2IpbGiRI2F1IUgxnMkptbeRcKRznm9JOewIBcJ1Dlb4lAPB3L0KDCzxjlR1srLSu39WTec67ker56dM2+kfSvacbx6dj7XF6qJwzYPzoUPaUngEVrUwR9qcdHwNGOehuK9qUWGWhSkubpRCDDchxpaA59OLK0phV+RGKNYWVq+mEOMeSl13ADmIDzagvyLOdxWaEn7OZyPnbdGF+d9n24ct6vjGM9FhQWFG050puq875WLxv5aTfxGkzBLDsSRaATtkrkeiN9qshuxr6iJGGcmp/PvG1XcBnsv3r95d307e/NrejWOwzafZFaNlV8amppK2x0/2kvEj0GQ4hEzTYK6ovd2n+A2SXPdMTFliPYSVQ+V7CkR1919vQl0OyzpWFYCLXUSoly4vUG14UMlSu1R6kZUmdGO+4/ONkPxupOWk6wy1GRqd2D4s1RKLEjc1VRTPuxHPWuquOsFeml0MbC11iEtXWt0osSNyLB2nZ2Dfb5RY2coXhq9lEXNMq24tFrJ2uuaxRpVTV3Kg+gCzX8O0nTQhtIy3+ZLPPmqvzzdP5pX5D2bmXq0nvI2ISfDfyfkV4fncfSAWMJzffqIta4IPG7vIs/Z1FFiG1vPhk2oosRPHPfR2z4wQjqvjNTeiQUp87ltbZiF1tZOEv3qNa2ryljuZIea7pI4DhFQwAyxqmK3x4Ud7kHNyg9fIWEXQdc0Hnd5mIz+3mVO6/hy8jK9mqa36euLyWUzCwz9vQ81vDLOl6h7Htq5Sj0+dm0PHf5bJrC2A3m693GlUGq+VYh22zbHD7A+gcNNbyJYGed5fbtdoKN3Vu12vHzHBYhbXwTd0BIaYdQNb9wkc+l4I28b/j8G/5/Pb49e9hNtHs6c4f1BArCLti2CRV/19x6MT9zy9yPGT+llOktht/sLNc7wEA==
+sidebar_class_name: "delete api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Remove license"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/v1/license"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Remove registered active license
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Successful","content":{"application/json":{"schema":{"type":"object","properties":{"active":{"type":"boolean","example":false},"details":{"type":"boolean","example":false},"type":{"type":"string","example":"SSPL-1.0-or-later"}},"title":"EmptyLicenseResponse"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

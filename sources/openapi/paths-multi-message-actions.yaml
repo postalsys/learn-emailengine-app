@@ -1,0 +1,158 @@
+"/v1/account/{account}/messages":
+  put:
+    summary: Update messages
+    operationId: putV1AccountAccountMessages
+    description: Update message information for matching emails
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: path
+        in: query
+        schema:
+        type: string
+        description: "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts."
+        example: INBOX
+        description: "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts."
+        required: true
+    tags:
+      - Multi Message Actions
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MessagesUpdateRequest"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageUpdateResponse"
+"/v1/account/{account}/messages/move":
+  put:
+    summary: Move messages
+    operationId: putV1AccountAccountMessagesMove
+    description: Move messages matching to a search query to another folder
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: path
+        in: query
+        schema:
+        type: string
+        description: "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts."
+        example: INBOX
+        description: "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts."
+        required: true
+    tags:
+      - Multi Message Actions
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MessagesMoveRequest"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessagesMoveResponse"
+"/v1/account/{account}/messages/delete":
+  put:
+    summary: Delete messages
+    operationId: putV1AccountAccountMessagesDelete
+    description: Move messages to Trash or delete these if already in Trash
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: path
+        in: query
+        schema:
+        type: string
+        description: "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts."
+        example: INBOX
+        description: "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts."
+        required: true
+      -
+        name: force
+        in: query
+        schema:
+        type: boolean
+        description: Delete messages even if not in Trash
+        default: false
+        description: Delete messages even if not in Trash
+    tags:
+      - Multi Message Actions
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MessagesDeleteRequest"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessagesDeleteResponse"

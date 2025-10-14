@@ -1,0 +1,627 @@
+"/v1/account/{account}/messages":
+  get:
+    summary: List messages in a folder
+    operationId: getV1AccountAccountMessages
+    description: Lists messages in a mailbox folder
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: path
+        in: query
+        schema:
+        type: string
+        description: "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts."
+        example: INBOX
+        description: "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts."
+        required: true
+      -
+        name: cursor
+        in: query
+        schema:
+        type: string
+        description: "Paging cursor from `nextPageCursor` or `prevPageCursor` value"
+        example: imap_kcQIji3UobDDTxc
+        maxLength: 1048576
+        "x-convert":
+        trim: true
+        description: "Paging cursor from `nextPageCursor` or `prevPageCursor` value"
+      -
+        name: page
+        in: query
+        schema:
+        type: integer
+        description: "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts. Deprecated; use the paging cursor instead. If the page cursor value is provided, then the page number value is ignored."
+        example: 0
+        default: 0
+        minimum: 0
+        maximum: 1048576
+        description: "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts. Deprecated; use the paging cursor instead. If the page cursor value is provided, then the page number value is ignored."
+      -
+        name: pageSize
+        in: query
+        schema:
+        type: integer
+        description: How many entries per page
+        example: 20
+        default: 20
+        minimum: 1
+        maximum: 1000
+        description: How many entries per page
+    tags:
+      - Message
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageList"
+"/v1/account/{account}/text/{text}":
+  get:
+    summary: Retrieve message text
+    operationId: getV1AccountAccountTextText
+    description: Retrieves message text
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: text
+        in: path
+        schema:
+        type: string
+        description: Message text ID
+        example: AAAAAQAACnAcdfaaN
+        maxLength: 10240
+        description: Message text ID
+        required: true
+      -
+        name: maxBytes
+        in: query
+        schema:
+        type: integer
+        description: Max length of text content
+        example: 52428800
+        minimum: 0
+        maximum: 1073741824
+        description: Max length of text content
+      -
+        name: textType
+        in: query
+        schema:
+        type: string
+        description: "Which text content to return, use * for all. By default all contents are returned."
+        example: "*"
+        default: "*"
+        enum:
+        - html
+        - plain
+        - "*"
+        "x-convert":
+        case: lower
+        description: "Which text content to return, use * for all. By default all contents are returned."
+    tags:
+      - Message
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TextResponse"
+"/v1/account/{account}/attachment/{attachment}":
+  get:
+    summary: Download attachment
+    operationId: getV1AccountAccountAttachmentAttachment
+    description: Fetches attachment file as a binary stream
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: attachment
+        in: path
+        schema:
+        type: string
+        description: Attachment ID
+        example: AAAAAQAACnAcde
+        maxLength: 2048
+        description: Attachment ID
+        required: true
+    tags:
+      - Message
+    responses:
+      default:
+        description: Successful
+        content:
+          "application/octet-stream":
+            schema:
+              type: string
+"/v1/account/{account}/message/{message}":
+  get:
+    summary: Get message information
+    operationId: getV1AccountAccountMessageMessage
+    description: "Returns details of a specific message. By default text content is not included, use textType value to force retrieving text"
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: message
+        in: path
+        schema:
+        type: string
+        description: Message ID
+        example: AAAAAQAACnA
+        maxLength: 256
+        description: Message ID
+        required: true
+      -
+        name: maxBytes
+        in: query
+        schema:
+        type: integer
+        description: Max length of text content
+        example: 5248000
+        minimum: 0
+        maximum: 1073741824
+        description: Max length of text content
+      -
+        name: textType
+        in: query
+        schema:
+        type: string
+        description: "Which text content to return, use * for all. By default text content is not returned."
+        example: "*"
+        enum:
+        - html
+        - plain
+        - "*"
+        "x-convert":
+        case: lower
+        description: "Which text content to return, use * for all. By default text content is not returned."
+      -
+        name: webSafeHtml
+        in: query
+        schema:
+        type: boolean
+        description: "Shorthand option to fetch and preprocess HTML and inlined images. Overrides `textType`, `preProcessHtml`, and `preProcessHtml` options."
+        default: false
+        description: "Shorthand option to fetch and preprocess HTML and inlined images. Overrides `textType`, `preProcessHtml`, and `preProcessHtml` options."
+      -
+        name: embedAttachedImages
+        in: query
+        schema:
+        type: boolean
+        description: "If true, then fetches attached images and embeds these in the HTML as data URIs"
+        default: false
+        description: "If true, then fetches attached images and embeds these in the HTML as data URIs"
+      -
+        name: preProcessHtml
+        in: query
+        schema:
+        type: boolean
+        description: "If true, then pre-processes HTML for compatibility"
+        default: false
+        description: "If true, then pre-processes HTML for compatibility"
+      -
+        name: markAsSeen
+        in: query
+        schema:
+        type: boolean
+        description: "If true, then marks unseen email as seen while returning the message"
+        default: false
+        description: "If true, then marks unseen email as seen while returning the message"
+    tags:
+      - Message
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageDetails"
+  delete:
+    summary: Delete message
+    operationId: deleteV1AccountAccountMessageMessage
+    description: Move message to Trash or delete it if already in Trash
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: message
+        in: path
+        schema:
+        type: string
+        description: Message ID
+        example: AAAAAQAACnA
+        maxLength: 256
+        description: Message ID
+        required: true
+      -
+        name: force
+        in: query
+        schema:
+        type: boolean
+        description: Delete message even if not in Trash. Not supported for Gmail API accounts.
+        default: false
+        description: Delete message even if not in Trash. Not supported for Gmail API accounts.
+    tags:
+      - Message
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageDeleteResponse"
+  put:
+    summary: Update message
+    operationId: putV1AccountAccountMessageMessage
+    description: Update message information. Mainly this means changing message flag values
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: message
+        in: path
+        schema:
+        type: string
+        description: Message ID
+        example: AAAAAQAACnA
+        maxLength: 256
+        description: Message ID
+        required: true
+    tags:
+      - Message
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MessageUpdate"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageUpdateResponse"
+"/v1/account/{account}/message/{message}/source":
+  get:
+    summary: Download raw message
+    operationId: getV1AccountAccountMessageMessageSource
+    description: Fetches raw message as a stream
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: message
+        in: path
+        schema:
+        type: string
+        description: Message ID
+        example: AAAAAQAACnA
+        maxLength: 256
+        description: Message ID
+        required: true
+    tags:
+      - Message
+    responses:
+      default:
+        description: Successful
+        content:
+          message/rfc822:
+            schema:
+              type: string
+"/v1/account/{account}/message":
+  post:
+    summary: Upload message
+    operationId: postV1AccountAccountMessage
+    description: "Upload a message structure, compile it into an EML file and store it into selected mailbox."
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Message
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MessageUpload"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageUploadResponse"
+"/v1/account/{account}/search":
+  post:
+    summary: Search for messages
+    operationId: postV1AccountAccountSearch
+    description: Filter messages from a mailbox folder by search options. Search is performed against a specific folder and not for the entire account.
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: path
+        in: query
+        schema:
+        type: string
+        description: "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts."
+        example: INBOX
+        description: "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts."
+      -
+        name: cursor
+        in: query
+        schema:
+        type: string
+        description: "Paging cursor from `nextPageCursor` or `prevPageCursor` value"
+        example: imap_kcQIji3UobDDTxc
+        maxLength: 1048576
+        "x-convert":
+        trim: true
+        description: "Paging cursor from `nextPageCursor` or `prevPageCursor` value"
+      -
+        name: page
+        in: query
+        schema:
+        type: integer
+        description: "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts. Deprecated; use the paging cursor instead. If the page cursor value is provided, then the page number value is ignored."
+        example: 0
+        default: 0
+        minimum: 0
+        maximum: 1048576
+        description: "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts. Deprecated; use the paging cursor instead. If the page cursor value is provided, then the page number value is ignored."
+      -
+        name: pageSize
+        in: query
+        schema:
+        type: integer
+        description: How many entries per page
+        example: 20
+        default: 20
+        minimum: 1
+        maximum: 1000
+        description: How many entries per page
+      -
+        name: useOutlookSearch
+        in: query
+        schema:
+        type: boolean
+        description: "MS Graph only. If enabled, uses the $search parameter for MS Graph search queries instead of $filter. This allows searching the \"to\", \"cc\", \"bcc\", \"larger\", \"smaller\", \"body\", \"before\", \"sentBefore\", \"since\", and the \"sentSince\" fields. Note that $search returns up to 1,000 results, does not indicate the total number of matching results or pages, and returns results sorted by relevance rather than date."
+        description: "MS Graph only. If enabled, uses the $search parameter for MS Graph search queries instead of $filter. This allows searching the \"to\", \"cc\", \"bcc\", \"larger\", \"smaller\", \"body\", \"before\", \"sentBefore\", \"since\", and the \"sentSince\" fields. Note that $search returns up to 1,000 results, does not indicate the total number of matching results or pages, and returns results sorted by relevance rather than date."
+    tags:
+      - Message
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Model9"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageList"
+"/v1/account/{account}/message/{message}/move":
+  put:
+    summary: Move a message to a specified folder
+    operationId: putV1AccountAccountMessageMessageMove
+    description: Moves a message to a target folder
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: message
+        in: path
+        schema:
+        type: string
+        description: Message ID
+        example: AAAAAQAACnA
+        maxLength: 256
+        description: Message ID
+        required: true
+    tags:
+      - Message
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MessageMove"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageMoveResponse"

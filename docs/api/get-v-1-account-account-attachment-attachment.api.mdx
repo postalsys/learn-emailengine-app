@@ -1,0 +1,71 @@
+---
+id: get-v-1-account-account-attachment-attachment
+title: "Download attachment"
+description: "Fetches attachment file as a binary stream"
+sidebar_label: "Download attachment"
+hide_title: true
+hide_table_of_contents: true
+api: eJy1V21v20YM/ivEfWoB2crL2gyCm81r1cBbkraJs62og4CRaPlQ6U65O7nxDP/3gSfJlp2kaAtU+ZCzjveQfEgeqaXQJRl0UqtRKiKRkft7f5gkulKu/eccJrOCuisRiJRsYmTJJ0Uk3pJLZmQB1yIwlTkBWkC4lQrNAqwzhIUIRIkGC3JkrIg+LYXCgkQk7ntEPScL0hXjS4adEaZkRCBsMqMCRbQUblGytFSOMr+1bcgF3VVkHTRAIBUUMs+lpUSr1MIzPSdjZEoW4vj8ZHQe34xHZ/G7qzGQmkujlTd+jkbibU7PRSAKqWRRFSLaC0SB9/X66GCPn9VP178K1gxhHZCWnBLd7DFqrDNSZQ+YuVLyriKQKSknp5IMTLUBNyOgAmUOG3S6x6LMGaqyZPYPDoV3/JRU5mYiOnjxMhD3vUSrORnnFRtZiMiZilYPCPl2tYbuKmkobZA6fnfz7kdc3yQujN5sOTjk58Nw+FoNk5R2/Nz75dcH7uxC7Rh9HQiHGee1OCNrMSNxzUK21MqSZVNTmmKVu3rZhb6skoSsnVa5CESilWOHo6XAssxl4ms01Ikj12sqKVo+ycCKn0AU5Ga6qWtfeOyXCOf7YUN7uGwWq3DDcrjcrFdMM5l5W6yVybkunSujMNzr+7/o5cujI8G+W0oqI93Ci94SGjLDinV+uu5uX7LVNRtdobUTDN+Gl3/XQiJoFm+1KdCJSPz5z/hBrGPlyMBCV4ZTi6wFpz+TEkyHVFPt1Ujnox9zBsYqk4pg+H4kAsF+1jgH/RdH/b2H8J0jpdFzX8kIF/HleFrljOLzu0CFmVTZdpLbACyplN8XdXbYAFCljMSmbg6k6BAwMdpaKKrcyTJf6zO2P1ETNZgdHjNvXFd1dgzC2eHxRA3z2g5TX0UWmhwF3JKGyutDBcOapzHz1IePuoIEFWSkuDOQN9D7QzWtnk8LU6MLX8cDhJmh6auJCDEtpAprgYkAhyYj92oibko0pNxEHA+sM1plx12ddhA2bwchHkOJGXkPRyrJq7Srla/TtVu1/VoR6CkbYgnqfLfRRPXgQ0VmAeteE8Eg0Skd/1ZnxY3He/Xx3dXFzfjdX/H5IPTbfJJZ1Ub+V9NU96D2+NZeBH/4hIRHYOoAte3g/TrATZAmqmXikkWUk5h3pKI1JXDR+uu0p9tisXN3AhpqU4hSsGvAfMGHCpTKoVR1UiVaWWkdqWTRh7M2tazkLENFurIbhr/IPIdbgruKKkr7XavHdX+zHUNPtcp6plLKh6UdKywUuIAEK9vibPDZoxqnD6+1msqs4jQtS6NLIzn32jY6x7yiNuQ+6TzN//biuNeY0jDfxAue7XTe5+uiOSHnGObSoXGUNgHZ739fIp9symOrgDiFJ+rgEbT2Engcb5imDLUV2BrrsF+bCgV+Zru3anvDCKm01FI5C7eU6y9ND8HE95Cmk3Zvr8uqLLXhtrC5020Uht4C8jJ9LMvQruX8DveY+s3vO5JiFYhcJqQsPaHytNn9msqU5uHp6HV8fhnfxGfD0Wk9JfXdvfN3eKmtK1B1NLzRX1SuMQV8cj5dbvrp942qTUNydO/CMkep2Elv/LLppp/EfF8Endks2iy3DIo6v64DMdPW8enl8hYtXZl8teLXd3xrcb8MRDsD+maaSsvrVERTzC19xb9nF81I8hy+ffZ61M/mJaoFd0auQBEJEYjPtOhMozyo/ZB1u6PUj9iwoXR1vQra74XvI+wnfDI86kpt8s5nztolprGW4Nuk7O49OQDyTLUe8U7isVit/gdjWdec
+sidebar_class_name: "get api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Download attachment"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/account/{account}/attachment/{attachment}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Fetches attachment file as a binary stream
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"},{"name":"account","in":"path","schema":{"type":"string","description":"Unique identifier for the email account","example":"user123","maxLength":256,"x-convert":{"trim":true}},"description":"Unique identifier for the email account","required":true},{"name":"attachment","in":"path","schema":{"type":"string","description":"Attachment ID","example":"AAAAAQAACnAcde","maxLength":2048},"description":"Attachment ID","required":true}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"default":{"description":"Successful","content":{"application/octet-stream":{"schema":{"type":"string"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

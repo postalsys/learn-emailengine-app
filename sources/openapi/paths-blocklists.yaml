@@ -1,0 +1,187 @@
+/v1/blocklists:
+  get:
+    summary: List blocklists
+    operationId: getV1Blocklists
+    description: List blocklists with blocked addresses
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: page
+        in: query
+        schema:
+        type: integer
+        description: "Page number (zero indexed, so use 0 for first page)"
+        example: 0
+        default: 0
+        minimum: 0
+        maximum: 1048576
+        description: "Page number (zero indexed, so use 0 for first page)"
+      -
+        name: pageSize
+        in: query
+        schema:
+        type: integer
+        description: How many entries per page
+        example: 20
+        default: 20
+        minimum: 1
+        maximum: 1000
+        description: How many entries per page
+    tags:
+      - Blocklists
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlocklistsResponse"
+"/v1/blocklist/{listId}":
+  get:
+    summary: List blocklist entries
+    operationId: getV1BlocklistListid
+    description: List blocked addresses for a list
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: listId
+        in: path
+        schema:
+        type: string
+        description: "List ID. Must use a subdomain name format. Lists are registered ad-hoc, so a new identifier defines a new list."
+        example: "test-list"
+        "x-format":
+        hostname: true
+        description: "List ID. Must use a subdomain name format. Lists are registered ad-hoc, so a new identifier defines a new list."
+        required: true
+      -
+        name: page
+        in: query
+        schema:
+        type: integer
+        description: "Page number (zero indexed, so use 0 for first page)"
+        example: 0
+        default: 0
+        minimum: 0
+        maximum: 1048576
+        description: "Page number (zero indexed, so use 0 for first page)"
+      -
+        name: pageSize
+        in: query
+        schema:
+        type: integer
+        description: How many entries per page
+        example: 20
+        default: 20
+        minimum: 1
+        maximum: 1000
+        description: How many entries per page
+    tags:
+      - Blocklists
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlocklistListResponse"
+  post:
+    summary: Add to blocklist
+    operationId: postV1BlocklistListid
+    description: Add an email address to a blocklist
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: listId
+        in: path
+        schema:
+        type: string
+        description: "List ID. Must use a subdomain name format. Lists are registered ad-hoc, so a new identifier defines a new list."
+        example: "test-list"
+        "x-format":
+        hostname: true
+        description: "List ID. Must use a subdomain name format. Lists are registered ad-hoc, so a new identifier defines a new list."
+        required: true
+    tags:
+      - Blocklists
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BlocklistListAddPayload"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlocklistListAddResponse"
+  delete:
+    summary: Remove from blocklist
+    operationId: deleteV1BlocklistListid
+    description: Delete a blocked email address from a list
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: listId
+        in: path
+        schema:
+        type: string
+        description: "List ID. Must use a subdomain name format. Lists are registered ad-hoc, so a new identifier defines a new list."
+        example: "test-list"
+        "x-format":
+        hostname: true
+        description: "List ID. Must use a subdomain name format. Lists are registered ad-hoc, so a new identifier defines a new list."
+        required: true
+      -
+        name: recipient
+        in: query
+        schema:
+        type: string
+        description: Email address to remove from the list
+        example: "user@example.com"
+        "x-format":
+        email: true
+        description: Email address to remove from the list
+        required: true
+    tags:
+      - Blocklists
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteBlocklistResponse"

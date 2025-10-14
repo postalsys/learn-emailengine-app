@@ -1,0 +1,71 @@
+---
+id: delete-v-1-templates-template-template
+title: "Remove a template"
+description: "Delete a stored template"
+sidebar_label: "Remove a template"
+hide_title: true
+hide_table_of_contents: true
+api: eJy1V+tv2zYQ/1eI+9QCspXH2gCCm81ttcJbHl3srCviIKCls8xWIhU+3HiG//fhqIflOA3QAbU/mCCP9/jdj3fnNagSNbdCyVEKEaSYo8W/DydYlDm3aJpF8wsBpGgSLUq6AxG89zcYZ8YqjSmzW8GSa16gRW0gulmD5AVCBA89xJ4VBSpnIQBBShbIU9QQgEkWWHCI1mBXJUkLaTHzR7tmr/DeobGsVsSEZIXIc2EwUTI17IVaotYiRcPi+OLD6CK+m4zO48vrCUO5FFrJAqVlS64Fn+X4EgIohBSFKyA6CKDgD9X65OiAPpufbn8TtAh1IPTolNwunsLGWC1ktgdNkyo2eg8B4AMvypzEm5WP7gxlZhcQHb16vRfbrgKN905oTCGy2uHmNgDLM8poK2fglsRMqaRBQw4eHRzQz67asUsSNGbucgggUdKitCTFyzIXiedg+MWQ6Ho/VjX7ggnxpdTEWCsqQxVf047gTKkcudxD5RM3zC6w5SdrrpLgnLvc1gEGwJNEucq355G+luLeIRMpSivmAjWbK+2tYMFFzhpF3Sw4g/rw6HgvCwE89BIll6grw1oUtUObAET6/9M+HA7fZuPedTL8PKT1cLjPgE03zTew9VuklFsrrFd1rlLMD3+BDX0CKNAu1LZq+BdPGiFcHoYNzqZdhetmtSE2o142lcHpnIqAtWUUhgd9/41evz45AaKbwcRpYVdedIZcox46snNz2z0eE2UqVnSFWthIffOKPFG8EAT14nelC24hgj8+TfawjaVFzVbKacopGsOs+ooSfG7kXHkzNUgxpT6WmZDIhh9HEADFWek56r866R/sq+9cKbVa+rLB2VU8nsxdTlo8sQoueSZktssuEzCDMqX9Ao3hGZqAcZmSJnJ1eyHlljOeaGUMK1xuRZm39rTpT+VUDhbHp4QbEbp6koNwcXw6lcO88kNXdc+wmi+M70gz5+1xyYYVThPCqc8+K8cSLlmGktoNegd9PFjB6vE0bK5V4R/QgLOFxvmbKYQ8LYQMK4EpMMt1hvbNFO5KrlHaKZwOjNVKZqddm2YQ1ruDkJ+ykmfoIxzJJHdp1yrV7jasyn8lkak5OWKQVTQ30VT22F8O9Yq1jS1ig0SlePprxYo7r+/N58vrq7vJ5Z/xxSD0x3STUFVa/FvBVDW85vrOWcTeekKyJ9RUCWp6z8c2wXWSprJBYkwi0gqed6SiFhJ21cRrlYfb8OJR0WJcY0MhTJlpFeYrulRwIS0XsiJVoqQRxqJMVn123lDLCGIZl6ic2SL8TeQ5myG7d+gw7Xe9nlTN1HQcPVMy62knpU9LM6sYVvAVS7gzjZ6tfoqo0tNn75Sci8wRTUtqHFoQ95qeveS5wyblnnQe5n96cdyrXamRr/PFXjxq8y/bR/MBrSU1Y8u1xbROyGH/x4j8Yfs8dh4QUXgqj57Q1hSBp/UN05RU7SS20nXcr1xlBf9Kfu+87S0iKNNSCWkNm2GuvtWNmye+R9XjSrd6jV1ZKk2dY1vTTRSG3gP0Mn1elqFp5fwJdbVq57dHkrAJIBcJSoPfMXlWnz5nMsVleDZ6F1+M47v4fDg6q0ayvn2wvoaXytiCy46FKyzUksZa+53Bd70dYZ6bgevmY/HBhmXOhaSAvKPrulvewPKQBNthKugOgFG7vg1goYylC+v1jBu81vlmQ9v3VJSoHQbQzJO+V6bC0DqFaM5zg88E8OKq7v4v2e4Y8aT79SaXK2pu9IggAgjgK6660+vmdhM0k/2PufMThvsnA6kcfvSHpA2IJvJKgp5i2T3bG1lpEGnHoffxWTyJYbP5Dy/Fqfs=
+sidebar_class_name: "delete api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Remove a template"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/v1/templates/template/{template}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Delete a stored template
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"},{"name":"template","in":"path","schema":{"type":"string","description":"Template ID","example":"example","maxLength":256},"description":"Template ID","required":true}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Successful","content":{"application/json":{"schema":{"type":"object","properties":{"deleted":{"type":"boolean","description":"Was the template deleted","default":true},"account":{"type":"string","description":"Unique identifier for the email account","example":"user123","maxLength":256,"x-convert":{"trim":true}},"id":{"type":"string","description":"Template ID","example":"AAABgS-UcAYAAAABAA","maxLength":256}},"required":["account","id"],"title":"Model14"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

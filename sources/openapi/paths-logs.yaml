@@ -1,0 +1,36 @@
+"/v1/logs/{account}":
+  get:
+    summary: Return IMAP logs for an account
+    operationId: getV1LogsAccount
+    description: Output is a downloadable text file
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Logs
+    responses:
+      default:
+        description: Successful
+        content:
+          text/plain:
+            schema:
+              type: string

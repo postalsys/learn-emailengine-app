@@ -1,0 +1,559 @@
+---
+title: Basic Email Sending
+sidebar_position: 1
+description: Learn how to send emails using EmailEngine's submit API with HTML, attachments, and custom headers
+---
+
+<!--
+SOURCE ATTRIBUTION:
+- Primary: blog/2025-01-08-sending-an-email-from-emailengine.md
+- Merged: docs/usage/sending-emails.md
+-->
+
+# Basic Email Sending
+
+EmailEngine simplifies sending emails through registered accounts' SMTP servers. This guide covers the fundamentals of sending emails using the message submission API.
+
+## Why It Matters
+
+When your SaaS needs to send email on behalf of a customer, direct SMTP is brittle: every provider has its own auth, rate limits, retries, and error codes. **EmailEngine** shields you from that complexity by exposing a single REST endpoint that proxies the customer's mailbox. You get consistent JSON responses and robust retry logic.
+
+## Prerequisites
+
+- EmailEngine instance running and accessible
+- API access token configured
+- An email account registered in EmailEngine
+- Account in "connected" state (IMAP sync complete)
+
+## Step-by-Step Guide
+
+### 1. Register the Account
+
+Before sending, register an email account in EmailEngine.
+
+**Endpoint:** `POST /v1/account`
+
+```bash
+curl -XPOST "http://127.0.0.1:3000/v1/account" \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "example",
+    "name": "Andris Reinman",
+    "email": "andris@example.com",
+    "imap": {
+      "auth": { "user": "andris", "pass": "secretpass" },
+      "host": "mail.example.com",
+      "port": 993,
+      "secure": true
+    },
+    "smtp": {
+      "auth": { "user": "andris", "pass": "secretpass" },
+      "host": "mail.example.com",
+      "port": 465,
+      "secure": true
+    }
+  }'
+```
+
+**Expected response:**
+
+```json
+{
+  "account": "example",
+  "state": "new"
+}
+```
+
+**Important**: If you use an SMTP port other than 465, set `"secure": false`.
+
+### 2. Wait for Connection
+
+Before sending, ensure the account is connected. Poll the account status:
+
+```bash
+curl "http://127.0.0.1:3000/v1/account/example" \
+  -H "Authorization: Bearer <your-token>"
+```
+
+Wait until `state` becomes `"connected"`. Submission is rejected while EmailEngine is performing the initial sync.
+
+### 3. Submit a Simple Email
+
+**Endpoint:** `POST /v1/account/:id/submit`
+
+```bash
+curl -XPOST "http://127.0.0.1:3000/v1/account/example/submit" \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": [
+      {
+        "name": "Recipient Name",
+        "address": "recipient@example.com"
+      }
+    ],
+    "subject": "Test message",
+    "text": "Hello from myself!",
+    "html": "<p>Hello from myself!</p>"
+  }'
+```
+
+**Expected response (queued, not yet delivered):**
+
+```json
+{
+  "response": "Queued for delivery",
+  "messageId": "<99f7f0ec-90a1-caaf-698b-18e096c7679e@example.com>",
+  "sendAt": "2025-05-14T10:22:31.312Z",
+  "queueId": "4646ac53857fd2b2"
+}
+```
+
+The message is now queued for delivery. EmailEngine will handle the actual SMTP transmission.
+
+## Message Components
+
+### Recipients
+
+You can specify multiple recipients in `to`, `cc`, and `bcc` fields:
+
+```json
+{
+  "to": [
+    { "name": "Alice", "address": "alice@example.com" },
+    { "name": "Bob", "address": "bob@example.com" }
+  ],
+  "cc": [
+    { "address": "manager@example.com" }
+  ],
+  "bcc": [
+    { "address": "archive@example.com" }
+  ]
+}
+```
+
+The `name` field is optional but recommended for a better recipient experience.
+
+### Content
+
+#### Plain Text and HTML
+
+Always provide both plain text and HTML versions for best compatibility:
+
+```json
+{
+  "subject": "Welcome to our service",
+  "text": "Welcome! Visit https://example.com to get started.",
+  "html": "<p>Welcome!</p><p>Visit <a href='https://example.com'>our site</a> to get started.</p>"
+}
+```
+
+#### HTML Only
+
+If you only provide HTML, EmailEngine can auto-generate a plain text version:
+
+```json
+{
+  "subject": "HTML Newsletter",
+  "html": "<h1>Hello!</h1><p>This is an HTML email.</p>"
+}
+```
+
+### Attachments
+
+Add attachments using the `attachments` array:
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "Document attached",
+  "text": "Please find the document attached.",
+  "attachments": [
+    {
+      "filename": "document.pdf",
+      "content": "base64-encoded-content-here",
+      "contentType": "application/pdf"
+    }
+  ]
+}
+```
+
+**Attachment options:**
+
+- `filename` - Attachment filename (required)
+- `content` - Base64 encoded content (required)
+- `contentType` - MIME type (optional, auto-detected if omitted)
+- `cid` - Content ID for inline images (optional)
+
+#### Inline Images
+
+Reference inline images in HTML using Content ID:
+
+```json
+{
+  "html": "<p>Logo: <img src='cid:logo' /></p>",
+  "attachments": [
+    {
+      "filename": "logo.png",
+      "content": "iVBORw0KGgoAAAANS...",
+      "contentType": "image/png",
+      "cid": "logo"
+    }
+  ]
+}
+```
+
+### Custom Headers
+
+Add custom email headers:
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "Test",
+  "text": "Test message",
+  "headers": {
+    "X-Custom-Header": "value",
+    "X-Campaign-ID": "campaign-123",
+    "List-Unsubscribe": "<mailto:unsubscribe@example.com>"
+  }
+}
+```
+
+Common custom headers:
+
+- `X-Custom-*` - Your custom headers
+- `Reply-To` - Set reply address
+- `List-Unsubscribe` - Unsubscribe link for bulk email
+- `X-Priority` - Set message priority (1-5)
+
+### Sender Information
+
+Override default sender information:
+
+```json
+{
+  "from": {
+    "name": "Support Team",
+    "address": "support@example.com"
+  },
+  "replyTo": {
+    "name": "No Reply",
+    "address": "noreply@example.com"
+  },
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "Support Ticket Response",
+  "text": "Your ticket has been updated."
+}
+```
+
+If omitted, EmailEngine uses the account's configured email and name.
+
+## Advanced Options
+
+### Scheduled Sending
+
+Schedule an email for future delivery:
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "Scheduled message",
+  "text": "This will be sent at the specified time",
+  "sendAt": "2025-12-25T09:00:00.000Z"
+}
+```
+
+The message stays in the queue until the specified time.
+
+### Skip Sent Folder
+
+Prevent saving a copy to the Sent Mail folder:
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "No copy saved",
+  "text": "This won't appear in Sent Mail",
+  "copy": false
+}
+```
+
+Useful for bulk sending to avoid cluttering the Sent folder.
+
+### Custom Message ID
+
+Specify your own Message-ID for threading:
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "Custom ID",
+  "text": "Message with custom ID",
+  "messageId": "<custom-id-12345@example.com>"
+}
+```
+
+Important for maintaining email threads (see [Threading](./threading.md)).
+
+### Delivery Status Notifications
+
+Request delivery status notifications (DSN):
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "With DSN",
+  "text": "Request delivery notification",
+  "dsn": {
+    "return": "headers",
+    "notify": "success,failure,delay"
+  }
+}
+```
+
+Note: DSN support varies by email provider.
+
+## Webhook Notifications
+
+EmailEngine sends webhook notifications for delivery status updates. Configure your webhook URL under **Settings → Webhooks**.
+
+### messageSent
+
+Delivered to the outbound MTA (SMTP server accepted the message):
+
+```json
+{
+  "account": "example",
+  "date": "2025-05-14T10:32:39.499Z",
+  "event": "messageSent",
+  "data": {
+    "messageId": "<a00576bd-f757-10c7-26b8-885d7bbd9e83@example.com>",
+    "response": "250 2.0.0 Ok: queued as 5755482356",
+    "envelope": {
+      "from": "andris@example.com",
+      "to": ["recipient@example.com"]
+    }
+  }
+}
+```
+
+### messageDeliveryError
+
+Emitted **after every failed delivery attempt**. EmailEngine retries automatically until delivery succeeds or the maximum number of attempts is reached:
+
+```json
+{
+  "serviceUrl": "http://127.0.0.1:3000",
+  "account": "example",
+  "date": "2025-05-14T15:07:35.832Z",
+  "event": "messageDeliveryError",
+  "data": {
+    "queueId": "1833c8a88a86109a1bf",
+    "envelope": {
+      "from": "andris@example.com",
+      "to": ["recipient@example.com"]
+    },
+    "messageId": "<29e26263-7125-ff56-4f80-83a5cf737d5e@example.com>",
+    "error": "400 Message Not Accepted",
+    "errorCode": "EPROTOCOL",
+    "smtpResponseCode": 400,
+    "job": {
+      "attemptsMade": 1,
+      "attempts": 10,
+      "nextAttempt": "2025-05-14T15:07:45.465Z"
+    }
+  }
+}
+```
+
+### messageFailed
+
+Raised once EmailEngine gives up retrying (max attempts reached):
+
+```json
+{
+  "account": "example",
+  "date": "2025-05-14T11:58:50.181Z",
+  "event": "messageFailed",
+  "data": {
+    "messageId": "<97ac5d9a-93c7-104b-8d26-6b25f8d644ec@example.com>",
+    "queueId": "610c2c93e608bd37",
+    "error": "Error: Invalid login: 535 5.7.8 Error: authentication failed: "
+  }
+}
+```
+
+## Testing Sent Emails
+
+### Using Ethereal Email
+
+For testing, use [Ethereal Email](https://ethereal.email/) to create temporary test accounts:
+
+```bash
+# Send to your Ethereal test address
+curl -XPOST "http://127.0.0.1:3000/v1/account/example/submit" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": [{ "address": "test@ethereal.email" }],
+    "subject": "Test Email",
+    "text": "Testing EmailEngine sending"
+  }'
+```
+
+### Check Sent Folder
+
+Verify the email was saved to the Sent folder:
+
+```bash
+curl "http://127.0.0.1:3000/v1/account/example/messages?path=Sent" \
+  -H "Authorization: Bearer <token>"
+```
+
+### Monitor Queue
+
+Check the outbox queue status:
+
+```bash
+curl "http://127.0.0.1:3000/v1/account/example/outbox" \
+  -H "Authorization: Bearer <token>"
+```
+
+## Common Pitfalls
+
+### Authentication Issues
+
+**Problem**: Gmail, Outlook, and Yahoo may refuse SMTP logins that look like bots.
+
+**Solution**:
+- Switch to OAuth2 authentication
+- Use app-specific passwords
+- Enable "less secure app access" (not recommended)
+
+See [Gmail Setup](../accounts/gmail-imap.md) and [Outlook Setup](../accounts/outlook-365.md).
+
+### Timeout Errors
+
+**Problem**: Heroku dynos cut idle sockets.
+
+**Solution**:
+- Move off Heroku or increase dyno size
+- Configure longer timeouts
+- Use a different deployment platform
+
+### Account Not Connected
+
+**Problem**: Submission rejected with "Account not ready" error.
+
+**Solution**: Wait for initial IMAP sync to complete. Poll `/v1/account/:id` until `state` becomes `"connected"`.
+
+### Rate Limiting
+
+**Problem**: Too many emails sent too quickly.
+
+**Solution**:
+- Implement throttling in your application
+- Use mail merge for bulk sending
+- Spread sends over time
+- Check provider rate limits
+
+### Large Attachments
+
+**Problem**: Email rejected due to size limits.
+
+**Solution**:
+- Reduce attachment size
+- Use external file hosting with links
+- Compress attachments
+- Check provider size limits (typically 25-50MB)
+
+### Spam Filters
+
+**Problem**: Emails flagged as spam.
+
+**Solution**:
+- Provide both HTML and plain text versions
+- Avoid spam trigger words
+- Include unsubscribe links for bulk email
+- Authenticate domain with SPF/DKIM
+- Warm up new accounts gradually
+
+## Troubleshooting
+
+### Enable Debug Logging
+
+For detailed SMTP logs, enable debug mode in your account configuration:
+
+```bash
+curl -XPUT "http://127.0.0.1:3000/v1/account/example" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "smtp": {
+      "logger": true,
+      "debug": true
+    }
+  }'
+```
+
+Check logs in the EmailEngine interface or log files.
+
+### Check Account Status
+
+Verify account connection status:
+
+```bash
+curl "http://127.0.0.1:3000/v1/account/example" \
+  -H "Authorization: Bearer <token>"
+```
+
+Look for:
+- `state`: Should be "connected"
+- `smtp.auth`: Verify credentials are correct
+- `smtp.error`: Check for authentication errors
+
+### Test SMTP Connection
+
+Test SMTP connectivity without sending:
+
+```bash
+curl -XPOST "http://127.0.0.1:3000/v1/account/example/reconnect" \
+  -H "Authorization: Bearer <token>"
+```
+
+This forces a reconnection attempt and updates error status.
+
+## Performance Considerations
+
+### Optimize for Bulk Sending
+
+For sending multiple emails:
+- Use [Mail Merge](./mail-merge.md) instead of individual calls
+- Enable `copy: false` to skip Sent folder storage
+- Implement rate limiting
+- Monitor the outbox queue
+
+### Connection Pooling
+
+EmailEngine maintains SMTP connection pools automatically. For high-volume sending:
+- Keep accounts connected
+- Avoid frequent reconnections
+- Monitor connection status
+
+### Webhook Processing
+
+Handle webhooks asynchronously:
+- Return 200 OK quickly from webhook endpoint
+- Process delivery status in background jobs
+- Implement webhook retry logic
+
+## See Also
+
+- [Replies & Forwards](./replies-forwards.md) - Reply to and forward emails
+- [Mail Merge](./mail-merge.md) - Bulk personalized sending
+- [Templates](./templates.md) - Using email templates
+- [Outbox Queue](./outbox-queue.md) - Understanding the queue system
+- [API Reference: Message Submission](https://api.emailengine.app/#operation/postV1AccountAccountSubmit)
+- [Webhook Events](../reference/webhook-events.md)

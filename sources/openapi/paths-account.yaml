@@ -1,0 +1,496 @@
+/v1/accounts:
+  get:
+    summary: List accounts
+    operationId: getV1Accounts
+    description: Lists registered accounts
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: page
+        in: query
+        schema:
+        type: integer
+        description: "Page number (zero indexed, so use 0 for first page)"
+        example: 0
+        default: 0
+        minimum: 0
+        maximum: 1048576
+        description: "Page number (zero indexed, so use 0 for first page)"
+      -
+        name: pageSize
+        in: query
+        schema:
+        type: integer
+        description: How many entries per page
+        example: 20
+        default: 20
+        minimum: 1
+        maximum: 1000
+        description: How many entries per page
+      -
+        name: state
+        in: query
+        schema:
+        type: string
+        description: Filter accounts by state
+        example: connected
+        enum:
+        - init
+        - syncing
+        - connecting
+        - connected
+        - authenticationError
+        - connectError
+        - unset
+        - disconnected
+        description: Filter accounts by state
+      -
+        name: query
+        in: query
+        schema:
+        type: string
+        description: Filter accounts by string match
+        example: "user@example.com"
+        description: Filter accounts by string match
+    tags:
+      - Account
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountsFilterResponse"
+/v1/changes:
+  get:
+    summary: Stream state changes
+    operationId: getV1Changes
+    description: Stream account state changes as an EventSource
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+    tags:
+      - Account
+    responses:
+      default:
+        description: Successful
+        content:
+          "text/event-stream":
+            schema:
+              type: string
+"/v1/account/{account}":
+  get:
+    summary: Get account info
+    operationId: getV1AccountAccount
+    description: Returns stored information about the account. Passwords are not included.
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: quota
+        in: query
+        schema:
+        type: boolean
+        description: "If true, then include quota information in the response"
+        default: false
+        description: "If true, then include quota information in the response"
+    tags:
+      - Account
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountResponse"
+  delete:
+    summary: Remove account
+    operationId: deleteV1AccountAccount
+    description: Stop processing and clear the account's cache
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Account
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteRequestResponse"
+  put:
+    summary: Update account info
+    operationId: putV1AccountAccount
+    description: Updates account information
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Account
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UpdateAccount"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Model18"
+"/v1/account/{account}/oauth-token":
+  get:
+    summary: Get OAuth2 access token
+    operationId: getV1AccountAccountOauthtoken
+    description: "Get the active OAuth2 access token for an account. NB! This endpoint is disabled by default and needs activation on the Service configuration page."
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Account
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountTokenResponse"
+"/v1/account/{account}/server-signatures":
+  get:
+    summary: List Account Signatures
+    operationId: getV1AccountAccountServersignatures
+    description: "Returns signatures associated with the account. Currently only Gmail is supported, and only \"new message\" signatures from the \"sendAs\" list are returned."
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Account
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Model2"
+/v1/account:
+  post:
+    summary: Register new account
+    operationId: postV1Account
+    description: Registers new IMAP account to be synced
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+    tags:
+      - Account
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateAccount"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccountResponse"
+/v1/verifyAccount:
+  post:
+    summary: Verify IMAP and SMTP settings
+    operationId: postV1Verifyaccount
+    description: Checks if can connect and authenticate using provided account info
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+    tags:
+      - Account
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/VerifyAccount"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyAccountResponse"
+/v1/authentication/form:
+  post:
+    summary: Generate authentication link
+    operationId: postV1AuthenticationForm
+    description: Generates a redirect link to the hosted authentication form
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+    tags:
+      - Account
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RequestAuthForm"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestAuthFormResponse"
+"/v1/account/{account}/sync":
+  put:
+    summary: Request syncing
+    operationId: putV1AccountAccountSync
+    description: Immediately trigger account syncing for IMAP accounts
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Account
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RequestSync"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestSyncResponse"
+"/v1/account/{account}/reconnect":
+  put:
+    summary: Request reconnect
+    operationId: putV1AccountAccountReconnect
+    description: Requests connection to be reconnected
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Account
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RequestReconnect"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestReconnectResponse"
+"/v1/account/{account}/flush":
+  put:
+    summary: Request account flush
+    operationId: putV1AccountAccountFlush
+    description: "Deletes all email indexes from Redis and ElasticSearch and re-creates the index for that account. You can only run a single flush operation at a time, so you must wait until the previous flush has finished before initiating a new one."
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Account
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RequestFlush"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFlushResponse"

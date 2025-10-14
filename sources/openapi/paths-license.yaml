@@ -1,0 +1,75 @@
+/v1/license:
+  get:
+    summary: Request license info
+    operationId: getV1License
+    description: Get active license information
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+    tags:
+      - License
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LicenseResponse"
+  post:
+    summary: Register a license
+    operationId: postV1License
+    description: Set up a license for EmailEngine to unlock all features
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+    tags:
+      - License
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RegisterLicense"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LicenseResponse"
+  delete:
+    summary: Remove license
+    operationId: deleteV1License
+    description: Remove registered active license
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+    tags:
+      - License
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyLicenseResponse"

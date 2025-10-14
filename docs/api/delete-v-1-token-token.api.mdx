@@ -1,0 +1,71 @@
+---
+id: delete-v-1-token-token
+title: "Remove a token"
+description: "Delete an access token"
+sidebar_label: "Remove a token"
+hide_title: true
+hide_table_of_contents: true
+api: eJy1Vm1v2zYQ/isEP7WAbOWlTQDBzea1WuE1TTvbXVfUQXCWzjJbilRIyrVn6L8PR73YjtNh/dAEiBTxeC/PPfey5bpAA05oNUp5xFOU6PCv06n+isr/4QFP0SZGFCTEI/7KizBQDJIErWWuESvAQI4OjeXR5y1XkCOP+LqH2HMiR106HnBBKpYIKRoecJssMQcebbnbFCQtlMPMHx0aHeN9idaxRhETiuVCSmEx0Sq17IleoTEiRcvi+Ob16Ca+m47exu8+TBmqlTBa5agcW4ERMJf4lAc8F0rkZc6jk4DnsK7fL89O6Kf66faroEOoxc9DU4BbPgaMdUao7AiX4WEKcA15IUn+9Oz82fMLHvB1L9HKOgNCOdInUWVuyaOLZxUdLrTJwR8scU2P+cbhUIpMYcqjBUiLAS8MLsS6+beqjtB54IXB+1IYuu9MidVtwB1kRIpW0BPL8lsStYVWFi2ZPjs5oceh7knp7yxKyQOeaOWwjgOKQorEMzf8Ykl0e4yann/BhGhXGOK5E7WhmuXpnuBca4lwTPaPYJlbIlFdl8qx9ibJLaCUromxCrgTziNf14cPsWHNuAmSV5UHL0e31Ltq86VDKeHh6jT0IIZb/6iICWhWbUmVRlL1OFdEYXjS97/RxcXlJSeQLSalEW7jRecIBs2wJL2fb/ePJwRSjcO+UAcFqW8Z6KHxQjxoXn5vCMP/+Dg9gitWDg3b6NIcNgeKWqiF9mYanOIchIxVJhSy4fsRDzjFWes56z+/7J8cq9+7Uhi98vUGbBxPpotSkha20IbloCATKmNI8m3ubMAsqpS+52gtZGgDBiolTeTq7kIKDhgkRlvL8lI6UcjOnrH9mZqpwfL8inBD5RoSDsLl+dVMDWXth6lTb1lTDAwOpFnp7YFi+yXRZ590yRJQLENFbRm9gz4erGH1eFq2MDr3xBwAWxpcvJjxENJcqJo/dsaZA5OhezHjdwUYVG7GrwbWGa2yq4MyHITN10EIV6yADH2EI5XIMt23Sk2vC6v2XytkekGOWGQ1rW00Uz32Z4lmw7qJELFBolO8+qVmxZ3X9+LTuw/ju+m7N/HNIPTHdJNQ1Ub8U8NUT4r2+sFZxH7zhGSPqKkT1Dbt912CmyTNVIvEhESUEyD3pKIOEjZu43Xaw20hx0NaMTDYUghTZjuFckOXcuq7IFRNKmrFwjpUyabP3rbUsoJYBgp1aXcIfxNSsjmy+xJLTPv7Xk/rKWT3HL3WKuuZUimflnamW5bDhiVQ2lbPTj9FVOvps5daLURWEk0LapVGEPfaYbcCWWKbck86D/PfvTjuNa40yDf5Yk8ezMenXdG8RudIzcSBcZg2CTnt/xiRX+/K46CAiMIzdfaItrYJPK5vmKak6iCxta7zfu0qy+Er+X1Q2ztEUKWFFspZNkepvzWjChI/qpo5v9+9JmVRaEOTadfTbRSG3gP0Mn0oitB2cv6EFoH6y68PJHkVcCkSpDHzuMnr5vS/TKa4Cq9HL+ObSXwXvx2Orutdpu/WzvfwQluXg9qzMMZcr5BBN/wPOvZ2N7G/vzc2c8fh2oWFBKEoFu/jthmMn/nqlASbC1H9chvwpbaOjrfbOVj8YGRV0ed76j409wLeblx+KKbC0vtusfmus0/GzQ7zlA3/h7fNR1AbGmNULjziPOBfcdMteNVtFbSb74858xOW30ejqL19sLB30dDGWksQIsX+2dEuRvtGt+W8iq/jacyr6l/g5FjX
+sidebar_class_name: "delete api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Remove a token"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/v1/token/{token}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Delete an access token
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"},{"name":"token","in":"path","schema":{"type":"string","description":"Access token","example":"123456","x-constraint":{"length":64},"x-format":{"hex":{"byteAligned":false,"prefix":false}}},"description":"Access token","required":true}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Successful","content":{"application/json":{"schema":{"type":"object","properties":{"deleted":{"type":"boolean","description":"Was the account deleted","default":true}},"title":"DeleteTokenRequestResponse"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

@@ -1,0 +1,181 @@
+/v1/gateways:
+  get:
+    summary: List gateways
+    operationId: getV1Gateways
+    description: Lists registered gateways
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: page
+        in: query
+        schema:
+        type: integer
+        description: "Page number (zero indexed, so use 0 for first page)"
+        example: 0
+        default: 0
+        minimum: 0
+        maximum: 1048576
+        description: "Page number (zero indexed, so use 0 for first page)"
+      -
+        name: pageSize
+        in: query
+        schema:
+        type: integer
+        description: How many entries per page
+        example: 20
+        default: 20
+        minimum: 1
+        maximum: 1000
+        description: How many entries per page
+    tags:
+      - SMTP Gateway
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GatewaysFilterResponse"
+"/v1/gateway/{gateway}":
+  get:
+    summary: Get gateway info
+    operationId: getV1GatewayGateway
+    description: Returns stored information about the gateway. Passwords are not included.
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: gateway
+        in: path
+        schema:
+        type: string
+        description: Gateway ID
+        example: example
+        maxLength: 256
+        description: Gateway ID
+        required: true
+    tags:
+      - SMTP Gateway
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GatewayResponse"
+  delete:
+    summary: Remove SMTP gateway
+    operationId: deleteV1GatewayGateway
+    description: Delete SMTP gateway data
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: gateway
+        in: path
+        schema:
+        type: string
+        description: Gateway ID
+        example: example
+        maxLength: 256
+        description: Gateway ID
+        required: true
+    tags:
+      - SMTP Gateway
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Model13"
+/v1/gateway:
+  post:
+    summary: Register new gateway
+    operationId: postV1Gateway
+    description: Registers a new SMP gateway
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+    tags:
+      - SMTP Gateway
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateGateway"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGatewayResponse"
+"/v1/gateway/edit/{gateway}":
+  put:
+    summary: Update gateway info
+    operationId: putV1GatewayEditGateway
+    description: Updates gateway information
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: gateway
+        in: path
+        schema:
+        type: string
+        description: Gateway ID
+        example: example
+        maxLength: 256
+        description: Gateway ID
+        required: true
+    tags:
+      - SMTP Gateway
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UpdateGateway"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGatewayResponse"

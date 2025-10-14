@@ -1,0 +1,71 @@
+---
+id: get-v-1-account-account-serversignatures
+title: "List Account Signatures"
+description: "Returns signatures associated with the account. Currently only Gmail is supported, and only 'new message' signatures from the 'sendAs' list are returned."
+sidebar_label: "List Account Signatures"
+hide_title: true
+hide_table_of_contents: true
+api: eJzNV1tv2zYU/ivEeWoB2coFbQDBzeoWXuYtly52thVxEDDSscxWIhWScuIZ/u/DIWlZTtzbQ4HZD6bJw3P5zpVLUBVqboWSwwwSyNH+td9PU1VLG35GqOeojcglt7VGAxFkaFItKroFCVyirbU0bEPCuDEqFdxixh6EnTE7Q8Y9uy57X2uN0hYLpmSxYCclFwUThpm6qpS2mEWMy8wfTkDiAyvRGJ7jBNoyplqVjvEEDMqsbybACmEs4xqZdjph1oUIKq55iRa1geR6CZKXCAk8dhA7VpSoagsRCLJkhjxDDRGYdIYlh2QJdlERtZAWc3f01Pb7Go1lgRETkpWiKITBVMnMsBdqjlqLDA0bDM5PhueD2/HwbHBxNWYo50IrWaK0bM614HcFvoQISiFFWZeQ7EVQ8ke/PjrYo8/qp8tfRQ1CwWFrcCpuZ7ugMVYLmT9D5kqK+xqZyFBaMRWo2VRp5y90Dt9wx0deVgWxqg3q/YNDcIafosztDJKDV68jeOykSs5RWydYixISq2tcPQPk+8VqvK+FxixwuonA8pxCBELgww0RmUpJg4bkHuzt0c+2wFGdpmjMtC4gglRJi9IpyauqEKnLrPiTIdLlc+zU3SdMSZlKUx5a4QW1km1Dy7XmC3KGxdJ8mwfPMo3GfNtRA4+LJ9+ZuY06z5z1NvztpqoE8tJU6ZI7+x3cGy9teHxTodGalP02Pjtlqcq2BfcyMT9+R1GvMec6M1Evpi0gORuvXjcQtKWTm4V1fBo5l8HJQ4slrHYQDKTVBOuqdXimMiwOYEWfCEq0MxUKqCs5FLkQz/fjEHDxMixWsXEFtbNVUf2eL1C1LqgWWVslcbzXdd/k9eujI6AgNZjWWtiFI71DrlH3a5J2fdM+HlGo+UhoEzXYE/t1NtN/TwRRWPwa/Ai//z1+HjHSomYLVWtKJ4oaqz6jdPAIOVVOTIDJRddA5kIi638YQgSumTg+B91XR9293QEZrlRazV314uxyMBpP64K4uJwuueS5kPl2YpuIUTeg/dA1jG8nlVak6uZCxi1nPNXKGFbWhRVV0cjTpjuRE9mbHR4TblRLfCr34tnh8UT2C6+H9uXXsBB2jG9Rs9rJ45L1PU5jwqnLPqqapVyyHCU1X3QKOnvQw+rwbLW4HmczjdM3E4h5VgoZe4IJMMt1jvbNBG4rTl11Asc9Y7WS+XFbpunFYbcX82NW8RydhUOZFnXWlkotpDHL668kMjUlRQwyH+kmmcgO+7NGvWBNf01Yj5L1+BcfFbeO35uPF1eXt+OLPwbnvdgd001CVWnxr4fJ99319a2zhL1zAcl2sPEOWrfAD42Dg5Mmco3EiEikFbxoUSUNJOxyba9VvuDx8km/cENFCCHMmGkYFgu6VHIhLRfSB1WqpBHGokwXXXa2Di0jKMq4RFWbDcIPoijYHbL7GmvMum2tx76nm5aip0rmHV1L6dyyntwMK/mCpbw2az4b/mSR59Nl75WcipwKK6+oWWiq883oMOdFjWuXu6BzMP/TGQw6QZWAfPAXe/Fk2njZJM0JWktsRpbTQBccst/9sUA+2aTHVgJRCE/kwQ5u6yKwm18/y4jVlmM9r8OuV5WV/DPpvZXbG0RQZpUS0hp2h4V6CA2fp67hhampXb1GfqKFqFXTTRLHTgN0NF1eVbFp6ELXhLDz9gkldadCpCgNfkHkaTj9msgM5/Hp8P3gfDS4HZz1h6d+MuzaR+tqeKWMLblsSTiluTqMRWz0xafAcjMA/e9fBaEPWny0cVVwIQlbh9kytO9rmO9D1BqDk83yeQ+/iWCmjKVry+UdN3ili9WKtu+pSlJ/jmA9Z7vmnQlD6wySKS8MfgXLF5dhqnnJvn++3WngepaUNEm6jIcEIILPuGhN/KubVbR+DP2Ypj/hPbTTDq/vkzdcYw89YjwFlY2qffZsLKehqZneTgZjWK3+A00jUQE=
+sidebar_class_name: "get api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List Account Signatures"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/account/{account}/server-signatures"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Returns signatures associated with the account. Currently only Gmail is supported, and only "new message" signatures from the "sendAs" list are returned.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"},{"name":"account","in":"path","schema":{"type":"string","description":"Unique identifier for the email account","example":"user123","maxLength":256,"x-convert":{"trim":true}},"description":"Unique identifier for the email account","required":true}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Successful","content":{"application/json":{"schema":{"type":"object","properties":{"signatures":{"type":"array","items":{"type":"object","properties":{"address":{"type":"string","description":"Email address associated with the signature","example":"user@example.com","x-format":{"email":true}},"signature":{"type":"string","description":"Signature HTML code","example":"<div>Best regards,</div>"}},"required":["address","signature"],"title":"SignatureResponseItem"},"title":"SignatureEntries"}},"title":"Model2"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

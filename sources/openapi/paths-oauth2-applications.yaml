@@ -1,0 +1,179 @@
+/v1/oauth2:
+  get:
+    summary: List OAuth2 applications
+    operationId: getV1Oauth2
+    description: Lists registered OAuth2 applications
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: page
+        in: query
+        schema:
+        type: integer
+        description: "Page number (zero indexed, so use 0 for first page)"
+        example: 0
+        default: 0
+        minimum: 0
+        maximum: 1048576
+        description: "Page number (zero indexed, so use 0 for first page)"
+      -
+        name: pageSize
+        in: query
+        schema:
+        type: integer
+        description: How many entries per page
+        example: 20
+        default: 20
+        minimum: 1
+        maximum: 1000
+        description: How many entries per page
+    tags:
+      - OAuth2 Applications
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OAuth2FilterResponse"
+  post:
+    summary: Register OAuth2 application
+    operationId: postV1Oauth2
+    description: Registers a new OAuth2 application for a specific provider
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+    tags:
+      - OAuth2 Applications
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateOAuth2App"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAppResponse"
+"/v1/oauth2/{app}":
+  get:
+    summary: Get application info
+    operationId: getV1Oauth2App
+    description: Returns stored information about an OAuth2 application. Secrets are not included.
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: app
+        in: path
+        schema:
+        type: string
+        description: OAuth2 application ID
+        example: AAABhaBPHscAAAAH
+        maxLength: 256
+        description: OAuth2 application ID
+        required: true
+    tags:
+      - OAuth2 Applications
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicationResponse"
+  delete:
+    summary: Remove OAuth2 application
+    operationId: deleteV1Oauth2App
+    description: Delete OAuth2 application data
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: app
+        in: path
+        schema:
+        type: string
+        description: OAuth2 application ID
+        example: AAABhaBPHscAAAAH
+        maxLength: 256
+        description: OAuth2 application ID
+        required: true
+    tags:
+      - OAuth2 Applications
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteAppRequestResponse"
+  put:
+    summary: Update OAuth2 application
+    operationId: putV1Oauth2App
+    description: Updates OAuth2 application information
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: app
+        in: path
+        schema:
+        type: string
+        description: OAuth2 application ID
+        example: AAABhaBPHscAAAAH
+        maxLength: 256
+        description: OAuth2 application ID
+        required: true
+    tags:
+      - OAuth2 Applications
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UpdateOAuthApp"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOAuthAppResponse"

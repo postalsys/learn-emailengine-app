@@ -1,0 +1,188 @@
+import {themes as prismThemes} from 'prism-react-renderer';
+import type {Config} from '@docusaurus/types';
+import type * as Preset from '@docusaurus/preset-classic';
+
+// This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+
+const config: Config = {
+  title: 'EmailEngine',
+  tagline: 'Email API for IMAP and SMTP',
+  favicon: 'img/favicon.ico',
+
+  // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
+  future: {
+    v4: true, // Improve compatibility with the upcoming Docusaurus v4
+  },
+
+  // Set the production url of your site here
+  url: 'https://emailengine.app',
+  // Set the /<baseUrl>/ pathname under which your site is served
+  // For GitHub pages deployment, it is often '/<projectName>/'
+  baseUrl: '/',
+
+  // GitHub pages deployment config.
+  organizationName: 'postalsys',
+  projectName: 'emailengine',
+
+  onBrokenLinks: 'warn',
+  onBrokenMarkdownLinks: 'warn',
+
+  markdown: {
+    hooks: {
+      onBrokenMarkdownImages: 'warn',
+    },
+  },
+
+  // Even if you don't use internationalization, you can use this field to set
+  // useful metadata like html lang. For example, if your site is Chinese, you
+  // may want to replace "en" with "zh-Hans".
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en'],
+  },
+
+  presets: [
+    [
+      'classic',
+      {
+        docs: {
+          sidebarPath: './sidebars.ts',
+          // Remove edit URL for now
+          editUrl: undefined,
+          docItemComponent: "@theme/ApiItem", // Derived from docusaurus-theme-openapi-docs
+        },
+        blog: false, // Blog disabled
+        theme: {
+          customCss: './src/css/custom.css',
+        },
+      } satisfies Preset.Options,
+    ],
+  ],
+
+  plugins: [
+    [
+      'docusaurus-plugin-openapi-docs',
+      {
+        id: "api",
+        docsPluginId: "classic",
+        config: {
+          emailengine: {
+            specPath: "sources/swagger.json",
+            outputDir: "docs/api",
+            sidebarOptions: {
+              groupPathsBy: "tag",
+            },
+            version: "2.57.0",
+            label: "v2.57.0",
+            baseUrl: "/docs/api",
+            versions: {},
+          } satisfies any,
+        } satisfies any,
+      },
+    ],
+  ],
+
+  themes: ["docusaurus-theme-openapi-docs"],
+
+  themeConfig: {
+    // Replace with your project's social card
+    image: 'img/emailengine-social-card.jpg',
+    colorMode: {
+      respectPrefersColorScheme: true,
+    },
+    navbar: {
+      title: 'EmailEngine',
+      logo: {
+        alt: 'EmailEngine Logo',
+        src: 'img/logo.svg',
+      },
+      items: [
+        {
+          type: 'docSidebar',
+          sidebarId: 'docsSidebar',
+          position: 'left',
+          label: 'Documentation',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'apiSidebar',
+          position: 'left',
+          label: 'API Reference',
+        },
+        {
+          href: 'https://github.com/postalsys/emailengine',
+          label: 'GitHub',
+          position: 'right',
+        },
+        {
+          href: 'https://postalsys.com/plans',
+          label: 'Get License',
+          position: 'right',
+        },
+      ],
+    },
+    footer: {
+      style: 'dark',
+      links: [
+        {
+          title: 'Documentation',
+          items: [
+            {
+              label: 'Getting Started',
+              to: '/docs/getting-started/introduction',
+            },
+            {
+              label: 'Installation',
+              to: '/docs/installation',
+            },
+            {
+              label: 'API Reference',
+              to: '/docs/api-reference',
+            },
+          ],
+        },
+        {
+          title: 'Community',
+          items: [
+            {
+              label: 'Support',
+              to: '/docs/support',
+            },
+            {
+              label: 'GitHub',
+              href: 'https://github.com/postalsys/emailengine',
+            },
+          ],
+        },
+        {
+          title: 'More',
+          items: [
+            {
+              label: 'EmailEngine Website',
+              href: 'https://emailengine.app',
+            },
+            {
+              label: 'Get a License',
+              href: 'https://postalsys.com/plans',
+            },
+          ],
+        },
+      ],
+      copyright: `Copyright © ${new Date().getFullYear()} Postal Systems OÜ. Built with Docusaurus.`,
+    },
+    prism: {
+      theme: prismThemes.github,
+      darkTheme: prismThemes.dracula,
+      additionalLanguages: ['bash', 'json', 'javascript', 'typescript', 'yaml'],
+    },
+    algolia: {
+      // You can configure Algolia search later
+      appId: 'YOUR_APP_ID',
+      apiKey: 'YOUR_SEARCH_API_KEY',
+      indexName: 'emailengine',
+      contextualSearch: true,
+    },
+  } satisfies Preset.ThemeConfig,
+};
+
+export default config;

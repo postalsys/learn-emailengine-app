@@ -1,0 +1,169 @@
+"/v1/account/{account}/mailboxes":
+  get:
+    summary: List mailboxes
+    operationId: getV1AccountAccountMailboxes
+    description: Lists all available mailboxes
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: counters
+        in: query
+        schema:
+        type: boolean
+        description: "If true, then includes message counters in the response"
+        default: false
+        description: "If true, then includes message counters in the response"
+    tags:
+      - Mailbox
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MailboxesFilterResponse"
+"/v1/account/{account}/mailbox":
+  post:
+    summary: Create mailbox
+    operationId: postV1AccountAccountMailbox
+    description: Create new mailbox folder
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Mailbox
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateMailbox"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMailboxResponse"
+  delete:
+    summary: Delete mailbox
+    operationId: deleteV1AccountAccountMailbox
+    description: Delete existing mailbox folder
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+      -
+        name: path
+        in: query
+        schema:
+        type: string
+        description: Mailbox folder path to delete
+        example: My Outdated Mail
+        description: Mailbox folder path to delete
+        required: true
+    tags:
+      - Mailbox
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteMailboxResponse"
+  put:
+    summary: Modify mailbox
+    operationId: putV1AccountAccountMailbox
+    description: Modify an existing mailbox folder (rename or change subscription status)
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Mailbox
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ModifyMailbox"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModifyMailboxResponse"

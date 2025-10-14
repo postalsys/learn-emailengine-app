@@ -1,0 +1,810 @@
+---
+title: Virtual Mailing Lists
+sidebar_position: 10
+description: Implement List-Unsubscribe functionality for email campaigns without a full mailing list manager
+keywords:
+  - mailing lists
+  - list-unsubscribe
+  - mail merge
+  - unsubscribe
+  - bulk email
+  - email campaigns
+---
+
+<!--
+SOURCE: docs/usage/virtual-mailing-lists.md
+This guide covers EmailEngine's virtual mailing lists feature for List-Unsubscribe support.
+-->
+
+# Virtual Mailing Lists
+
+EmailEngine's virtual mailing lists provide List-Unsubscribe functionality for bulk email campaigns without requiring a full-featured mailing list manager. Focus on your core application while EmailEngine handles unsubscribe management.
+
+## Overview
+
+### What Are Virtual Mailing Lists?
+
+Virtual mailing lists are a lightweight feature that provides **only** the unsubscribe functionality:
+
+**What's included:**
+- `List-Unsubscribe` header generation
+- Unsubscribe link hosting
+- One-click unsubscribe (RFC 8058)
+- Unsubscribe webhook notifications
+
+**What's NOT included:**
+- Contact list management
+- Segmentation rules
+- Sending history
+- Analytics and reporting
+- Bounce management
+- Template management
+
+Virtual lists are perfect when you already have contact management in your application but need to comply with unsubscribe requirements for bulk emails.
+
+### Why Use Virtual Lists?
+
+**Legal compliance:**
+- Required by CAN-SPAM Act (USA)
+- Required by GDPR (EU)
+- Required by CASL (Canada)
+- Expected by email service providers
+
+**Deliverability benefits:**
+- Gmail requires List-Unsubscribe for bulk senders
+- Improves sender reputation
+- Reduces spam complaints
+- Better inbox placement
+
+**User experience:**
+- One-click unsubscribe in email clients
+- No need to visit external website
+- Instant unsubscribe processing
+
+## How It Works
+
+### Sending Flow
+
+```
+1. Send email via Mail Merge with listId
+      ↓
+2. EmailEngine adds List-Unsubscribe headers
+      ↓
+3. Recipient receives email with unsubscribe option
+      ↓
+4. Recipient clicks unsubscribe
+      ↓
+5. EmailEngine processes unsubscribe
+      ↓
+6. EmailEngine sends webhook notification
+      ↓
+7. Your app removes user from mailing list
+```
+
+### List-Unsubscribe Headers
+
+EmailEngine automatically adds these headers to emails sent with a `listId`:
+
+```
+List-Unsubscribe: <https://emailengine.app/unsubscribe/abc123>, <mailto:unsubscribe@example.com?subject=unsubscribe>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+```
+
+**Two unsubscribe methods:**
+
+1. **One-Click (HTTPS)** - Preferred by Gmail, instant processing
+2. **Mailto** - Fallback for older email clients
+
+## Sending Emails with Virtual Lists
+
+### Basic Mail Merge with listId
+
+Use [Mail Merge](/docs/sending/mail-merge) with a `listId` parameter:
+
+```bash
+curl -XPOST "http://localhost:3000/v1/account/sender@example.com/submit" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subject": "Weekly Newsletter - {{date}}",
+    "text": "Hello {{name}},\n\nHere is this week'\''s newsletter...\n\n{{content}}",
+    "listId": "newsletter-weekly",
+    "mergeList": [
+      {
+        "to": {"address": "john@example.com"},
+        "params": {
+          "name": "John",
+          "date": "October 13, 2024",
+          "content": "Newsletter content here..."
+        }
+      },
+      {
+        "to": {"address": "jane@example.com"},
+        "params": {
+          "name": "Jane",
+          "date": "October 13, 2024",
+          "content": "Newsletter content here..."
+        }
+      }
+    ]
+  }'
+```
+
+**Key field:** `listId` - Identifies this as a virtual mailing list campaign.
+
+### Node.js Example
+
+```javascript
+async function sendNewsletter(recipients, subject, content) {
+  const response = await fetch('http://localhost:3000/v1/account/sender@example.com/submit', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer YOUR_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      subject,
+      text: content,
+      listId: 'newsletter-weekly',  // Enable virtual list
+      mergeList: recipients.map(recipient => ({
+        to: { address: recipient.email },
+        params: {
+          name: recipient.name,
+          date: new Date().toLocaleDateString()
+        }
+      }))
+    })
+  });
+
+  return response.json();
+}
+
+// Usage
+await sendNewsletter(
+  [
+    { email: 'john@example.com', name: 'John' },
+    { email: 'jane@example.com', name: 'Jane' }
+  ],
+  'Weekly Newsletter',
+  'Hello {{name}}, here is your newsletter for {{date}}...'
+);
+```
+
+### Python Example
+
+```python
+import requests
+
+def send_newsletter(recipients, subject, content):
+    response = requests.post(
+        'http://localhost:3000/v1/account/sender@example.com/submit',
+        headers={
+            'Authorization': 'Bearer YOUR_TOKEN',
+            'Content-Type': 'application/json'
+        },
+        json={
+            'subject': subject,
+            'text': content,
+            'listId': 'newsletter-weekly',
+            'mergeList': [
+                {
+                    'to': {'address': r['email']},
+                    'params': {
+                        'name': r['name'],
+                        'date': '2024-10-13'
+                    }
+                }
+                for r in recipients
+            ]
+        }
+    )
+
+    return response.json()
+
+# Usage
+send_newsletter(
+    [
+        {'email': 'john@example.com', 'name': 'John'},
+        {'email': 'jane@example.com', 'name': 'Jane'}
+    ],
+    'Weekly Newsletter',
+    'Hello {{name}}, here is your newsletter for {{date}}...'
+)
+```
+
+### PHP Example
+
+```php
+<?php
+
+function sendNewsletter($recipients, $subject, $content) {
+    $mergeList = array_map(function($recipient) {
+        return [
+            'to' => ['address' => $recipient['email']],
+            'params' => [
+                'name' => $recipient['name'],
+                'date' => date('Y-m-d')
+            ]
+        ];
+    }, $recipients);
+
+    $data = [
+        'subject' => $subject,
+        'text' => $content,
+        'listId' => 'newsletter-weekly',
+        'mergeList' => $mergeList
+    ];
+
+    $ch = curl_init('http://localhost:3000/v1/account/sender@example.com/submit');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: Bearer YOUR_TOKEN',
+        'Content-Type: application/json'
+    ]);
+
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    return json_decode($response, true);
+}
+
+// Usage
+sendNewsletter(
+    [
+        ['email' => 'john@example.com', 'name' => 'John'],
+        ['email' => 'jane@example.com', 'name' => 'Jane']
+    ],
+    'Weekly Newsletter',
+    'Hello {{name}}, here is your newsletter for {{date}}...'
+);
+```
+
+## Handling Unsubscribes
+
+### Unsubscribe Webhook
+
+When a recipient unsubscribes, EmailEngine sends a webhook notification:
+
+```json
+{
+  "serviceUrl": "https://emailengine.example.com",
+  "account": "sender@example.com",
+  "date": "2024-10-13T14:23:45.678Z",
+  "event": "listUnsubscribe",
+  "data": {
+    "listId": "newsletter-weekly",
+    "recipient": "john@example.com",
+    "method": "https",
+    "timestamp": "2024-10-13T14:23:45.678Z"
+  }
+}
+```
+
+**Webhook fields:**
+
+| Field | Description |
+|-------|-------------|
+| `event` | Always `listUnsubscribe` |
+| `data.listId` | The list ID from the original email |
+| `data.recipient` | Email address that unsubscribed |
+| `data.method` | Unsubscribe method: `https` (one-click) or `mailto` |
+| `data.timestamp` | When unsubscribe occurred |
+
+### Webhook Handler Example
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+app.post('/webhooks/emailengine', async (req, res) => {
+  const webhook = req.body;
+
+  if (webhook.event === 'listUnsubscribe') {
+    const { listId, recipient, method } = webhook.data;
+
+    console.log(`Unsubscribe: ${recipient} from list ${listId} via ${method}`);
+
+    // Remove from your database
+    await db.mailingList.update(
+      { email: recipient, listId },
+      { subscribed: false, unsubscribedAt: new Date() }
+    );
+
+    // Log unsubscribe
+    await db.unsubscribeLogs.insert({
+      email: recipient,
+      listId,
+      method,
+      unsubscribedAt: new Date()
+    });
+
+    // Send confirmation email (optional)
+    await sendUnsubscribeConfirmation(recipient, listId);
+
+    console.log(`Successfully unsubscribed ${recipient} from ${listId}`);
+  }
+
+  res.json({ success: true });
+});
+
+async function sendUnsubscribeConfirmation(email, listId) {
+  await fetch('http://localhost:3000/v1/account/sender@example.com/submit', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer YOUR_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      to: { address: email },
+      subject: 'Unsubscribe Confirmation',
+      text: `You have been unsubscribed from ${listId}. You will no longer receive these emails.`
+    })
+  });
+}
+
+app.listen(3000);
+```
+
+### Python Webhook Handler
+
+```python
+from flask import Flask, request, jsonify
+from datetime import datetime
+
+app = Flask(__name__)
+
+@app.route('/webhooks/emailengine', methods=['POST'])
+def webhook_handler():
+    webhook = request.json
+
+    if webhook['event'] == 'listUnsubscribe':
+        data = webhook['data']
+        list_id = data['listId']
+        recipient = data['recipient']
+        method = data['method']
+
+        print(f"Unsubscribe: {recipient} from {list_id} via {method}")
+
+        # Update database
+        db.mailing_list.update(
+            {'email': recipient, 'listId': list_id},
+            {'subscribed': False, 'unsubscribedAt': datetime.now()}
+        )
+
+        # Log unsubscribe
+        db.unsubscribe_logs.insert({
+            'email': recipient,
+            'listId': list_id,
+            'method': method,
+            'unsubscribedAt': datetime.now()
+        })
+
+        print(f"Successfully unsubscribed {recipient}")
+
+    return jsonify({'success': True})
+
+if __name__ == '__main__':
+    app.run(port=3000)
+```
+
+### PHP Webhook Handler
+
+```php
+<?php
+// webhook-handler.php
+
+$webhook = json_decode(file_get_contents('php://input'), true);
+
+if ($webhook['event'] === 'listUnsubscribe') {
+    $listId = $webhook['data']['listId'];
+    $recipient = $webhook['data']['recipient'];
+    $method = $webhook['data']['method'];
+
+    error_log("Unsubscribe: {$recipient} from {$listId} via {$method}");
+
+    // Update database
+    $stmt = $pdo->prepare('UPDATE mailing_list SET subscribed = 0, unsubscribed_at = NOW() WHERE email = ? AND list_id = ?');
+    $stmt->execute([$recipient, $listId]);
+
+    // Log unsubscribe
+    $stmt = $pdo->prepare('INSERT INTO unsubscribe_logs (email, list_id, method, unsubscribed_at) VALUES (?, ?, ?, NOW())');
+    $stmt->execute([$recipient, $listId, $method]);
+
+    error_log("Successfully unsubscribed {$recipient}");
+}
+
+echo json_encode(['success' => true]);
+```
+
+## List Management
+
+### Multiple Lists
+
+Use different `listId` values for different campaigns:
+
+```javascript
+// Send to different lists
+await sendEmail({ listId: 'newsletter-weekly' });
+await sendEmail({ listId: 'newsletter-monthly' });
+await sendEmail({ listId: 'product-updates' });
+await sendEmail({ listId: 'promotional' });
+```
+
+### Subscribe Management in Your App
+
+Keep subscription status in your database:
+
+```sql
+CREATE TABLE mailing_list (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  list_id VARCHAR(100) NOT NULL,
+  subscribed BOOLEAN DEFAULT true,
+  subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  unsubscribed_at TIMESTAMP NULL,
+  UNIQUE(email, list_id)
+);
+
+CREATE INDEX idx_subscribed ON mailing_list(email, list_id, subscribed);
+```
+
+### Query Subscribers
+
+```javascript
+async function getSubscribers(listId) {
+  return await db.mailingList.find({
+    listId,
+    subscribed: true
+  });
+}
+
+async function isSubscribed(email, listId) {
+  const subscriber = await db.mailingList.findOne({
+    email,
+    listId
+  });
+
+  return subscriber && subscriber.subscribed;
+}
+
+async function unsubscribe(email, listId) {
+  await db.mailingList.update(
+    { email, listId },
+    { subscribed: false, unsubscribedAt: new Date() }
+  );
+}
+```
+
+### Prevent Sending to Unsubscribed
+
+Filter unsubscribed recipients before sending:
+
+```javascript
+async function sendToList(listId, subject, content) {
+  // Get all subscribers
+  const allSubscribers = await db.mailingList.find({ listId });
+
+  // Filter only subscribed
+  const activeSubscribers = allSubscribers.filter(s => s.subscribed);
+
+  // Send
+  await sendNewsletter(activeSubscribers, subject, content);
+
+  console.log(`Sent to ${activeSubscribers.length} subscribers (${allSubscribers.length - activeSubscribers.length} unsubscribed)`);
+}
+```
+
+## Best Practices
+
+### 1. Honor Unsubscribes Immediately
+
+Process unsubscribe webhooks in real-time:
+
+```javascript
+app.post('/webhooks/emailengine', async (req, res) => {
+  // Process immediately, don't queue
+  if (req.body.event === 'listUnsubscribe') {
+    await processUnsubscribe(req.body.data);
+  }
+
+  // Respond quickly
+  res.json({ success: true });
+});
+```
+
+### 2. Use Descriptive List IDs
+
+Make list IDs self-explanatory:
+
+```javascript
+// Good
+listId: 'newsletter-weekly'
+listId: 'product-updates-monthly'
+listId: 'promotional-offers'
+
+// Bad
+listId: 'list1'
+listId: 'nl'
+listId: 'campaign'
+```
+
+### 3. Maintain Unsubscribe History
+
+Keep records for compliance:
+
+```javascript
+await db.unsubscribeLogs.insert({
+  email: recipient,
+  listId,
+  method,
+  ipAddress: req.ip,
+  userAgent: req.headers['user-agent'],
+  unsubscribedAt: new Date()
+});
+```
+
+### 4. Provide Manual Unsubscribe
+
+Include unsubscribe link in email body:
+
+```javascript
+const unsubscribeLink = `https://yourapp.com/unsubscribe?email=${email}&list=${listId}`;
+
+const emailContent = `
+Your newsletter content here...
+
+---
+To unsubscribe from this list, click: ${unsubscribeLink}
+`;
+```
+
+### 5. Send Unsubscribe Confirmation
+
+Let users know they've been unsubscribed:
+
+```javascript
+async function sendUnsubscribeConfirmation(email, listId) {
+  await sendEmail({
+    to: email,
+    subject: 'Unsubscribe Confirmation',
+    text: `You have been successfully unsubscribed from ${listId}.
+           You will no longer receive these emails.
+
+           To resubscribe, visit: https://yourapp.com/subscribe`
+  });
+}
+```
+
+### 6. Implement Re-subscription
+
+Allow users to re-subscribe:
+
+```javascript
+async function resubscribe(email, listId) {
+  const result = await db.mailingList.update(
+    { email, listId },
+    { subscribed: true, resubscribedAt: new Date() }
+  );
+
+  if (result.modifiedCount === 0) {
+    // User not in database, add them
+    await db.mailingList.insert({
+      email,
+      listId,
+      subscribed: true,
+      subscribedAt: new Date()
+    });
+  }
+}
+```
+
+### 7. Monitor Unsubscribe Rates
+
+Track unsubscribe metrics:
+
+```javascript
+async function getUnsubscribeRate(listId, days = 30) {
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  const sent = await db.sentEmails.count({
+    listId,
+    sentAt: { $gte: startDate }
+  });
+
+  const unsubscribed = await db.unsubscribeLogs.count({
+    listId,
+    unsubscribedAt: { $gte: startDate }
+  });
+
+  const rate = (unsubscribed / sent * 100).toFixed(2);
+
+  console.log(`Unsubscribe rate for ${listId}: ${rate}% (${unsubscribed}/${sent})`);
+
+  // Alert if rate too high
+  if (rate > 5) {
+    await sendAlert(`High unsubscribe rate for ${listId}: ${rate}%`);
+  }
+
+  return rate;
+}
+```
+
+## Compliance
+
+### CAN-SPAM Act (USA)
+
+Requirements:
+- ✅ Include unsubscribe mechanism (provided by virtual lists)
+- ✅ Honor unsubscribes within 10 business days (you must implement)
+- ✅ Include physical postal address in emails (you must add)
+- ✅ Identify message as advertisement (you must add if applicable)
+
+### GDPR (EU)
+
+Requirements:
+- ✅ Obtain consent before sending (you must implement)
+- ✅ Provide easy unsubscribe method (provided by virtual lists)
+- ✅ Honor unsubscribes immediately (you must implement)
+- ✅ Keep records of consent and unsubscribes (you must implement)
+
+### CASL (Canada)
+
+Requirements:
+- ✅ Obtain express consent (you must implement)
+- ✅ Include unsubscribe mechanism (provided by virtual lists)
+- ✅ Honor unsubscribes within 10 days (you must implement)
+- ✅ Include sender information (you must add)
+
+## Troubleshooting
+
+### Unsubscribe Not Working
+
+**Check webhook configuration:**
+
+```bash
+curl "http://localhost:3000/v1/account/sender@example.com/webhooks" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Ensure `listUnsubscribe` event is enabled.
+
+**Verify List-Unsubscribe headers:**
+
+Check sent email headers include:
+
+```
+List-Unsubscribe: <https://...>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+```
+
+**Test webhook endpoint:**
+
+```bash
+curl -XPOST "https://yourapp.com/webhooks/emailengine" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event": "listUnsubscribe",
+    "data": {
+      "listId": "test",
+      "recipient": "test@example.com",
+      "method": "https"
+    }
+  }'
+```
+
+### Unsubscribes Not Honored
+
+**Check database updates:**
+
+Verify unsubscribe webhook is updating your database:
+
+```javascript
+app.post('/webhooks/emailengine', async (req, res) => {
+  // Add logging
+  console.log('Received webhook:', req.body);
+
+  if (req.body.event === 'listUnsubscribe') {
+    const result = await db.mailingList.update(...);
+    console.log('Database update result:', result);
+  }
+
+  res.json({ success: true });
+});
+```
+
+**Verify filtering before send:**
+
+Ensure you're checking subscription status:
+
+```javascript
+// Before sending
+const subscriber = await db.mailingList.findOne({
+  email: recipient.email,
+  listId: 'newsletter-weekly'
+});
+
+if (!subscriber || !subscriber.subscribed) {
+  console.log(`Skipping ${recipient.email} - not subscribed`);
+  continue;
+}
+```
+
+### Headers Not Added
+
+**Check listId is set:**
+
+```javascript
+// Ensure listId is present
+const payload = {
+  subject: 'Newsletter',
+  text: 'Content...',
+  listId: 'newsletter-weekly',  // Required!
+  mergeList: [...]
+};
+```
+
+**Verify Mail Merge is used:**
+
+Virtual lists only work with Mail Merge (not regular submit):
+
+```javascript
+// Use mergeList, not single recipient
+{
+  listId: 'newsletter',
+  mergeList: [...]  // Required for virtual lists
+}
+```
+
+## Limitations
+
+### What Virtual Lists Don't Do
+
+**Not a full mailing list manager:**
+- ❌ No contact storage
+- ❌ No segmentation
+- ❌ No sending history
+- ❌ No bounce management
+- ❌ No analytics/reporting
+- ❌ No A/B testing
+- ❌ No email templates
+
+**You must implement:**
+- Subscriber database
+- Subscription forms
+- Consent management
+- List segmentation
+- Send scheduling
+- Analytics tracking
+- Bounce handling
+
+### When to Use a Full Mailing List Service
+
+Consider a dedicated service (Mailchimp, SendGrid, etc.) if you need:
+
+- Advanced segmentation
+- Detailed analytics
+- A/B testing
+- Template editors
+- Automation workflows
+- Landing pages
+- Signup forms
+
+EmailEngine virtual lists are best when you already have these features in your app and just need compliant unsubscribe handling.
+
+## Next Steps
+
+- Review [Mail Merge](/docs/sending/mail-merge) for bulk sending
+- Configure [Webhooks](/docs/receiving/webhooks) to receive unsubscribe notifications
+- Implement [Bounce Detection](/docs/advanced/bounces) for list hygiene
+- Set up [Delivery Testing](/docs/advanced/delivery-testing) for campaigns
+
+## Related Resources
+
+- [CAN-SPAM Act Compliance](https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business)
+- [GDPR Email Marketing](https://gdpr.eu/email-marketing/)
+- [RFC 8058 - One-Click Unsubscribe](https://tools.ietf.org/html/rfc8058)
+- [RFC 2369 - List-Unsubscribe Header](https://tools.ietf.org/html/rfc2369)

@@ -1,0 +1,733 @@
+/v1/autoconfig:
+  get:
+    summary: Discover Email settings
+    operationId: getV1Autoconfig
+    description: Try to discover IMAP and SMTP settings for an email account
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: email
+        in: query
+        schema:
+        type: string
+        description: Email address to discover email settings for
+        example: "sender@example.com"
+        "x-format":
+        email: true
+        description: Email address to discover email settings for
+        required: true
+    tags:
+      - Settings
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiscoveredEmailSettings"
+/v1/settings:
+  get:
+    summary: List specific settings
+    operationId: getV1Settings
+    description: List setting values for specific keys
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: eventTypes
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: webhooksEnabled
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: webhooks
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: webhookEvents
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: webhooksCustomHeaders
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: notifyHeaders
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: serviceUrl
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: notificationBaseUrl
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: trackSentMessages
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: trackClicks
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: trackOpens
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: imapIndexer
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: resolveGmailCategories
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: ignoreMailCertErrors
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: generateEmailSummary
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: generateRiskAssessment
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: openAiAPIKey
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: openAiModel
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: openAiAPIUrl
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: documentStoreChatModel
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: openAiTemperature
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: openAiTopP
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: openAiPrompt
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: openAiGenerateEmbeddings
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: inboxNewOnly
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: serviceSecret
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: authServer
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: proxyEnabled
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: proxyUrl
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: smtpEhloName
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: notifyText
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: notifyWebSafeHtml
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: notifyTextSize
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: notifyAttachments
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: notifyAttachmentSize
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: notifyCalendarEvents
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: gmailEnabled
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: gmailClientId
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: gmailClientSecret
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: gmailRedirectUrl
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: gmailExtraScopes
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: outlookEnabled
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: outlookClientId
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: outlookClientSecret
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: outlookRedirectUrl
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: outlookAuthority
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: outlookExtraScopes
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: mailRuEnabled
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: mailRuClientId
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: mailRuClientSecret
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: mailRuRedirectUrl
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: mailRuExtraScopes
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: serviceClient
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: serviceKey
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: serviceExtraScopes
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: documentStoreEnabled
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: documentStoreUrl
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: documentStoreIndex
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: documentStoreAuthEnabled
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: documentStoreUsername
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: documentStorePassword
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: documentStoreGenerateEmbeddings
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: documentStorePreProcessingEnabled
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: logs
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: imapStrategy
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: smtpStrategy
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: localAddresses
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: smtpServerEnabled
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: smtpServerPort
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: smtpServerHost
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: smtpServerProxy
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: smtpServerAuthEnabled
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: smtpServerPassword
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: smtpServerTLSEnabled
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: imapProxyServerEnabled
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: imapProxyServerPort
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: imapProxyServerHost
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: imapProxyServerProxy
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: imapProxyServerPassword
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: imapProxyServerTLSEnabled
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: queueKeep
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: deliveryAttempts
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: templateHeader
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: templateHtmlHead
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: scriptEnv
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: enableApiProxy
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: locale
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: timezone
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: pageBrandName
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: openAiPreProcessingFn
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: imapClientName
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: imapClientVersion
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: imapClientVendor
+        in: query
+        schema:
+        type: boolean
+        default: false
+      -
+        name: imapClientSupportUrl
+        in: query
+        schema:
+        type: boolean
+        default: false
+    tags:
+      - Settings
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsQueryResponse"
+  post:
+    summary: Set setting values
+    operationId: postV1Settings
+    description: Set setting values for specific keys
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+    tags:
+      - Settings
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Settings"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsUpdatedResponse"
+"/v1/settings/queue/{queue}":
+  get:
+    summary: Show queue information
+    operationId: getV1SettingsQueueQueue
+    description: Show queue status and current state
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: queue
+        in: path
+        schema:
+        type: string
+        description: Queue ID
+        example: notify
+        enum:
+        - notify
+        - submit
+        - documents
+        "x-convert":
+        trim: true
+        description: Queue ID
+        required: true
+    tags:
+      - Settings
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsQueueResponse"
+  put:
+    summary: Set queue settings
+    operationId: putV1SettingsQueueQueue
+    description: Set queue settings
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: queue
+        in: path
+        schema:
+        type: string
+        description: Queue ID
+        example: notify
+        enum:
+        - notify
+        - submit
+        - documents
+        "x-convert":
+        trim: true
+        description: Queue ID
+        required: true
+    tags:
+      - Settings
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SettingsPutQueuePayload"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsPutQueueResponse"

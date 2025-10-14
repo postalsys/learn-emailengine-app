@@ -1,0 +1,79 @@
+"/v1/delivery-test/check/{deliveryTest}":
+  get:
+    summary: Check test status
+    operationId: getV1DeliverytestCheckDeliverytest
+    description: Check delivery test status
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: deliveryTest
+        in: path
+        schema:
+        type: string
+        description: Test ID
+        example: "6420a6ad-7f82-4e4f-8112-82a9dad1f34d"
+        "x-format":
+        guid:
+        version:
+        - uuidv4
+        - uuidv5
+        description: Test ID
+        required: true
+    tags:
+      - Delivery Test
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliveryCheckResponse"
+"/v1/delivery-test/account/{account}":
+  post:
+    summary: Create delivery test
+    operationId: postV1DeliverytestAccountAccount
+    description: Initiate a delivery test
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Delivery Test
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DeliveryStartRequest"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliveryStartResponse"

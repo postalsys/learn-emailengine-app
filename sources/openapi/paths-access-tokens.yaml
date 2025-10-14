@@ -1,0 +1,128 @@
+/v1/tokens:
+  get:
+    summary: List root tokens
+    operationId: getV1Tokens
+    description: Lists access tokens registered for root access
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+    tags:
+      - Access Tokens
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RootTokensResponse"
+"/v1/tokens/account/{account}":
+  get:
+    summary: List account tokens
+    operationId: getV1TokensAccountAccount
+    description: Lists access tokens registered for an account
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Access Tokens
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountsTokensResponse"
+/v1/token:
+  post:
+    summary: Provision an access token
+    operationId: postV1Token
+    description: Provisions a new access token for an account
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+    tags:
+      - Access Tokens
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateToken"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTokenResponse"
+"/v1/token/{token}":
+  delete:
+    summary: Remove a token
+    operationId: deleteV1TokenToken
+    description: Delete an access token
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: token
+        in: path
+        schema:
+        type: string
+        description: Access token
+        example: "123456"
+        "x-constraint":
+        length: 64
+        "x-format":
+        hex:
+        byteAligned: false
+        prefix: false
+        description: Access token
+        required: true
+    tags:
+      - Access Tokens
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteTokenRequestResponse"

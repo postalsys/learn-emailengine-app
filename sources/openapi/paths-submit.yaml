@@ -1,0 +1,52 @@
+"/v1/account/{account}/submit":
+  post:
+    summary: Submit message for delivery
+    operationId: postV1AccountAccountSubmit
+    description: Submit message for delivery. If reference message ID is provided then EmailEngine adds all headers and flags required for a reply/forward automatically.
+    parameters:
+      -
+        name: "x-ee-timeout"
+        in: header
+        schema:
+        type: integer
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+        minimum: 0
+        maximum: 7200000
+        description: Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)
+      -
+        name: "idempotency-key"
+        in: header
+        schema:
+        type: string
+        description: Unique key to prevent duplicate processing of the same request
+        minLength: 0
+        maxLength: 1024
+        "x-convert":
+        trim: true
+        description: Unique key to prevent duplicate processing of the same request
+      -
+        name: account
+        in: path
+        schema:
+        type: string
+        description: Unique identifier for the email account
+        example: user123
+        maxLength: 256
+        "x-convert":
+        trim: true
+        description: Unique identifier for the email account
+        required: true
+    tags:
+      - Submit
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SubmitMessage"
+    responses:
+      "200":
+        description: Successful
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitMessageResponse"

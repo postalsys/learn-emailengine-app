@@ -1,0 +1,71 @@
+---
+id: delete-v-1-outbox-queueid
+title: "Remove a message"
+description: "Remove a message from the outbox"
+sidebar_label: "Remove a message"
+hide_title: true
+hide_table_of_contents: true
+api: eJy1VttuGzcQ/RVinhJgrZXspEYXils32QZqHTuxlKZBZBjUciQx2SXXvChWBf17MeSuLrYQJA+RH7wgh3M5c+ayAl2j4U5qNRCQgcASHf7Tu/Juou/fefQoBSQg0BZG1iQHGVxjpRfIOKvQWj5DNjW6Ym6OTId3kEDNDa/QobGQfVqB4hVCBvdHiEdOVqi9gwQkKZsjF2ggAVvMseKQrcAta5KWyuEsXD00f+fROtYoYlKxSpaltFhoJSx7ohdojBRoWZ5fvh5c5rejwZv86v2IoVpIo1WFyrEFN5JPSnwKCVRSycpXkHUTqPh9/D497tJv/dPtr5MNQncE+UC04NTczQ9BY52RavYImZAwJgUqJ6cSDZtqw+ix8CUKhhWXJSSA97yqS9IjnvWm3WfHJ71fn0+PT3tTCOFfoJq5OWS9A8F/pwmDd14aFJA543F9k4DjM+ICRGrBDcnYWiuLlgI77nbp376xoS8KtHbqSWWhlUPlSIrXdSmLQNv0syXR1WOM9OQzFkSz2hDJnYyGIsXFjuBE6xK5eoTmB24DqVuWty9Jbsp96Zrg1gk46QKer4JIDDFXziyvmxhhTb8EKnRzva20UCkENaSLXhqrJ101JFhT5tEs2iLypqR6ca7O0rTbCX/ZL7+cngLha7HwRrplEJ0gN2jOPan+dLN7PSSYIhK7QhswSH3LuABOEIKk+fhTm4o7yOCvD6NHgOXKoWFL7Q3jIXHM6S+ogAKXaqqDmQapnIiSq5lUyM7fDiABijPqOe48P+10H6vfeVIbvQgVxtl1PhxNfUlaAhkrrvhMqlnkInmivXI2YRaVoPMmnzZhXAnSRK5uHwjuOOOF0dayypdO1uXGnrGdsRqr/vzkjHCjIog07Kfzk7OxOi+jHya2CMuaOmB8T5r5YI8rdh5xGhFOHfZRe1ZwxWaoqCtjcDDEgxHWgKfd9ts+Z3OD0xdjSLmopEqjwBiY42aG7sUYbmtuULkxnPWtM1rNznZt2n7anPZTfsZqPsMQ4UAVpRe7VqnNbcKK/muFTE/JEUtVQsy22VgdsXcezZJtZkDG+oUWePZbZMVt0Pfi49X769vR1d/5ZT8N1/SSUNVG/hdhirOhfb53l7E/AiHZATUxQW2bfrtJcJOksWqRGJKIcpKXO1LZBhJ23cbrdIDb8gr3acW4wZZCKJjdKCyX9KjiUjkuVSRVoZWV1qEqlh32pqWWlcQyrlB7u0X4qyxLNkEWeoHo7Ho9inPH7jh6odXsyHilQlrakW5ZxZes4N62erb6KaKop8NeajWVM080ralZGknca8fbgpce25QH0gWY/z3K86PGlQb5Jl/syYOJ+HRTNK/ROVIzdNw4FE1Cep0fI/LrbXnsFRBReKyOD2hrm8BhfedCkKq9xEZdJ53oKqv4F/J7r7a3iKAStZbKWTbBUn9thhUvwrBqJvtu9xr6utaGZtO2p9ssTYMHGGQ6vK5Tu5GLczWD5uT3B5KwTqCUBdKkOWzyorn9lkmBi/Ri8DK/HOa3+ZvzwUXcXjru3oUeXmvrKq52LDzcBB/27NV2an/P1tjMIIf3Lq1LLhXFFfxdNXPyEyx6kMDmRdYuTDcJzLV1JLFaTbjF96Zcr+n4jpoRjcEE2pUrzEghLX0LyKa8tPgNz59cN9vMU/ad68/BQJpDrpY07aiqIANI4Asudza/9c06aZfiH3PzJ+zFB+OI/j7Y5Tfx0DIbJag06927R2sbLSabjehVfpGPcliv/wfHj2jL
+sidebar_class_name: "delete api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Remove a message"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/v1/outbox/{queueId}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Remove a message from the outbox
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"},{"name":"queueId","in":"path","schema":{"type":"string","description":"Queue identifier for scheduled email","example":"d41f0423195f271f","maxLength":100},"description":"Queue identifier for scheduled email","required":true}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Successful","content":{"application/json":{"schema":{"type":"object","properties":{"deleted":{"type":"boolean","description":"Was the message deleted","default":true}},"title":"DeleteOutboxEntryResponse"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      
