@@ -1,8 +1,0 @@
-{
-  "label": "Configuration",
-  "position": 4,
-  "link": {
-    "type": "generated-index",
-    "description": "Configure EmailEngine with environment variables, Redis, OAuth2, and prepared settings"
-  }
-}

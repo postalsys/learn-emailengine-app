@@ -1,8 +1,0 @@
-{
-  "label": "Advanced",
-  "position": 9,
-  "link": {
-    "type": "generated-index",
-    "description": "Advanced topics including performance tuning, encryption, monitoring, and logging"
-  }
-}

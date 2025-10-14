@@ -1,8 +1,0 @@
-{
-  "label": "Sending",
-  "position": 5,
-  "link": {
-    "type": "generated-index",
-    "description": "Send emails with basic sending, replies, mail merge, threading, templates, and SMTP gateway"
-  }
-}
