@@ -45,7 +45,7 @@ Before installing EmailEngine, ensure you have:
    - Persistence enabled (RDB or AOF)
    - `noeviction` memory policy
 
-2. **Node.js 18+** (only for source installation)
+2. **Node.js 20+** (only for source installation)
    - Check version: `node --version`
    - Install from: [nodejs.org](https://nodejs.org/)
 
@@ -63,9 +63,11 @@ Before installing EmailEngine, ensure you have:
 
 ## Installation Methods
 
-### 1. Binary Installation (Recommended)
+### 1. Binary Installation
 
 EmailEngine is distributed as standalone executables for all major platforms.
+
+**Note:** While binary installation is the easiest method, running from source is recommended for production deployments as it requires less RAM.
 
 #### Linux
 
@@ -193,7 +195,13 @@ sudo su
 - SystemD service
 - Upgrade helper script at `/opt/upgrade-emailengine.sh`
 
-**Important:** Only use on fresh servers. It rewrites networking and service settings.
+**Features:**
+- Supports both fresh installations and upgrades
+- Automatically detects existing installations
+- Preserves Redis configuration and credentials during upgrades
+- Can install specific versions: `./install.sh example.com 2.55.4`
+
+**Important:** Only use on fresh servers for new installations. It rewrites networking and service settings.
 
 ---
 
@@ -235,7 +243,7 @@ node server.js
 - Customization possible
 
 **Disadvantages:**
-- Requires Node.js 18+
+- Requires Node.js 20+
 - Manual updates
 - Build requirements
 
@@ -571,10 +579,7 @@ curl http://localhost:3000/health
 **Expected response:**
 ```json
 {
-  "status": "ok",
-  "redis": "connected",
-  "version": "2.48.5",
-  "license": "development"
+  "success": true
 }
 ```
 

@@ -10,9 +10,9 @@ Run EmailEngine as a background service on Linux systems using SystemD.
 
 :::info Prerequisites
 - Linux system with SystemD (Ubuntu 16.04+, Debian 8+, CentOS 7+, RHEL 7+)
-- Node.js 18+ installed
+- Node.js 20+ installed (for source installation)
 - Redis 6.0+ installed and running
-- EmailEngine installed globally (`npm install -g emailengine`)
+- EmailEngine binary installed in `/usr/local/bin/` or `/opt/emailengine`
 :::
 
 ## Overview
