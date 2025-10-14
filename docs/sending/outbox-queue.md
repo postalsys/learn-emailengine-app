@@ -1,6 +1,6 @@
 ---
 title: Outbox Queue
-sidebar_position: 6
+sidebar_position: 7
 description: Understanding EmailEngine's message queue system for reliable email delivery
 ---
 

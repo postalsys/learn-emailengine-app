@@ -1,5 +1,5 @@
 ---
-title: "Searching Messages"
+title: Searching Messages
 sidebar_position: 5
 description: "Complete guide to searching emails with EmailEngine - search queries, operators, filters, and best practices"
 keywords:

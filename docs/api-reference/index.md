@@ -1,5 +1,6 @@
 ---
 title: API Reference Overview
+description: Complete API reference for EmailEngine with authentication, conventions, and error handling
 sidebar_position: 1
 ---
 

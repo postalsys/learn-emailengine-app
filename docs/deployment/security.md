@@ -1,5 +1,6 @@
 ---
 title: Security Best Practices
+description: Security best practices for production deployments including encryption and access control
 sidebar_position: 6
 ---
 

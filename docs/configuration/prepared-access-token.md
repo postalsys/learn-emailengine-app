@@ -1,6 +1,7 @@
 ---
 title: Prepared Access Token
-sidebar_position: 7
+description: Pre-configure API access tokens via environment variables
+sidebar_position: 8
 ---
 
 EmailEngine only allows API requests to be made [using a valid access token](/authenticating-api-requests). While it is generally straightforward to generate such a token – all you need to do is log in to the admin interface of EmailEngine and click on the "Generate token" button – this approach still requires some manual work. In some situations, we want things to be completely automated. For example, when setting up a complex Docker-based architecture, we might want to perform some API requests before visiting the web interface; or doing end-to-end automated testing.

@@ -1,5 +1,6 @@
 ---
 title: Sending API
+description: API endpoints for sending emails with attachments, templates, and delivery tracking
 sidebar_position: 4
 ---
 

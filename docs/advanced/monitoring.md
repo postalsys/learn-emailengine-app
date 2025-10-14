@@ -1,6 +1,6 @@
 ---
 title: Monitoring and Observability
-sidebar_position: 4
+sidebar_position: 5
 description: Monitor EmailEngine with health checks, Prometheus metrics, Grafana dashboards, and alerting for production deployments
 keywords:
   - monitoring

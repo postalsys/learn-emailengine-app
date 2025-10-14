@@ -1,5 +1,6 @@
 ---
 title: Webhooks API
+description: API endpoints for managing webhooks and receiving real-time email notifications
 sidebar_position: 5
 ---
 

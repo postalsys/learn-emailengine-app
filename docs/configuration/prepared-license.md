@@ -1,6 +1,7 @@
 ---
-title: Prepared license key
-sidebar_position: 8
+title: Prepared License Key
+description: Pre-configure license key via environment variables for production deployments
+sidebar_position: 9
 ---
 
 While you can set the license key using the administration interface, there are cases you might want to do this programmatically without manual intervention.

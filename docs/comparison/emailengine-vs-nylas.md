@@ -1,5 +1,6 @@
 ---
 title: EmailEngine vs Nylas
+description: Compare EmailEngine and Nylas features, pricing, and deployment options
 sidebar_position: 1
 ---
 

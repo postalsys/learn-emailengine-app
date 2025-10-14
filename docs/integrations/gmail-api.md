@@ -1,6 +1,7 @@
 ---
-title: Gmail API
-sidebar_position: 1
+title: Gmail API Integration
+description: Integrate EmailEngine with Gmail API for native Gmail features and Cloud Pub/Sub
+sidebar_position: 2
 ---
 
 > Click [here](/oauth2-configuration) to see other types of OAuth2 configurations, or follow [this tutorial](https://docs.emailengine.app/setting-up-gmail-api-access/) for a detailed step-by-step guide.

@@ -1,6 +1,6 @@
 ---
 title: Sending Emails
-sidebar_position: 4
+sidebar_position: 1
 description: Overview of EmailEngine's email sending capabilities including SMTP proxying, API submission, and mail merge
 ---
 

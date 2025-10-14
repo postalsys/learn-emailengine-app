@@ -1,5 +1,6 @@
 ---
 title: Troubleshooting Guide
+description: Troubleshoot common issues with accounts, webhooks, and email delivery
 sidebar_position: 1
 ---
 

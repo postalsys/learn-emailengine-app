@@ -1,5 +1,6 @@
 ---
 title: Configuration Options Reference
+description: Complete reference of all configuration options and settings
 sidebar_position: 3
 ---
 

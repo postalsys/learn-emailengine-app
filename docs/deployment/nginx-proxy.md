@@ -1,5 +1,6 @@
 ---
 title: Nginx Reverse Proxy
+description: Configure Nginx reverse proxy for EmailEngine with HTTPS and SSL termination
 sidebar_position: 5
 ---
 

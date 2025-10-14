@@ -1,6 +1,6 @@
 ---
 title: Logging
-sidebar_position: 5
+sidebar_position: 4
 description: Configure EmailEngine logging with Pino, log levels, rotation, and integration with ELK Stack, Grafana Loki, and other log aggregation platforms
 keywords:
   - logging

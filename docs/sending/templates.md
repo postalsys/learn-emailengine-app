@@ -1,6 +1,6 @@
 ---
 title: Email Templates
-sidebar_position: 5
+sidebar_position: 6
 description: Create and manage reusable email templates with Handlebars for consistent messaging
 ---
 

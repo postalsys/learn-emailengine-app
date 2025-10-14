@@ -1,6 +1,7 @@
 ---
 title: Configuration
-sidebar_position: 1
+description: Additional configuration options and advanced settings for EmailEngine
+sidebar_position: 10
 ---
 
 EmailEngine uses two types of configurations:

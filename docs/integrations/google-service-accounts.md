@@ -1,6 +1,7 @@
 ---
-title: Google Service Accounts
-sidebar_position: 5
+title: Google Service Accounts Integration
+description: Use Google Workspace service accounts with domain-wide delegation
+sidebar_position: 6
 ---
 
 > Click [here](/oauth2-configuration) to see other types of OAuth2 configurations.

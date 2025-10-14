@@ -1,5 +1,5 @@
 ---
-title: "Tracking Email Replies"
+title: Tracking Email Replies
 sidebar_position: 7
 description: "Detect and track email replies using Message-ID and In-Reply-To headers with EmailEngine"
 keywords:

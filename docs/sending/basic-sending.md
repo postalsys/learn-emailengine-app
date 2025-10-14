@@ -1,6 +1,6 @@
 ---
 title: Basic Email Sending
-sidebar_position: 1
+sidebar_position: 2
 description: Learn how to send emails using EmailEngine's submit API with HTML, attachments, and custom headers
 ---
 

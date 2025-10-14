@@ -1,6 +1,6 @@
 ---
 title: SMTP Gateway
-sidebar_position: 7
+sidebar_position: 8
 description: Using EmailEngine's SMTP gateway for sending emails with standard SMTP clients
 ---
 

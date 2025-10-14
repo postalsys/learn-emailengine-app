@@ -1,6 +1,6 @@
 ---
-title: Cloudflare Email Workers Integration
-sidebar_position: 6
+title: Cloudflare Workers Integration
+sidebar_position: 11
 description: Parse and process incoming emails with Cloudflare Email Workers
 ---
 

@@ -1,6 +1,7 @@
 ---
-title: Reset password
-sidebar_position: 9
+title: Reset Password
+description: Reset admin password using command-line tools or environment variables
+sidebar_position: 11
 ---
 
 If you've forgotten your admin password or need to set it during an automated setup process, you can do so using the command-line interface.

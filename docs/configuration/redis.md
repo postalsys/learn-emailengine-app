@@ -1,6 +1,7 @@
 ---
-title: Redis Requirements for EmailEngine
-sidebar_position: 2
+title: Redis Configuration
+description: Redis configuration requirements, connection settings, and performance tuning
+sidebar_position: 3
 ---
 
 > **TL;DR**  

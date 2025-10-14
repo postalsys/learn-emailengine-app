@@ -1,6 +1,7 @@
 ---
-title: Gmail over IMAP
-sidebar_position: 2
+title: Gmail Over IMAP Integration
+description: Connect Gmail accounts via IMAP with OAuth2 authentication
+sidebar_position: 3
 ---
 
 > Click [here](/oauth2-configuration) to see other types of OAuth2 configurations or follow [this tutorial](https://docs.emailengine.app/setting-up-gmail-oauth2-for-imap-api/) for a detailed step-by-step guide.

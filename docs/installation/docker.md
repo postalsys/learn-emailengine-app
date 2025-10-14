@@ -1,6 +1,7 @@
 ---
 title: Docker
-sidebar_position: 2
+description: Install and run EmailEngine using Docker containers
+sidebar_position: 3
 ---
 
 **Pull EmailEngine from Docker Hub**

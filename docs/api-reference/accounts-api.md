@@ -1,5 +1,6 @@
 ---
 title: Accounts API
+description: API endpoints for managing email accounts - register, update, delete, and retrieve account details
 sidebar_position: 2
 ---
 

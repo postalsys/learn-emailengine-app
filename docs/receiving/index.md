@@ -1,5 +1,5 @@
 ---
-title: "Receiving Emails"
+title: Receiving Emails
 sidebar_label: "Overview"
 sidebar_position: 1
 description: "Comprehensive guide to receiving and processing emails with EmailEngine - webhooks, real-time notifications, and mailbox operations"

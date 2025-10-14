@@ -1,6 +1,6 @@
 ---
 title: Mail Merge
-sidebar_position: 3
+sidebar_position: 4
 description: Send bulk personalized emails with EmailEngine's mail merge feature and Handlebars templates
 ---
 

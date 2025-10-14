@@ -1,5 +1,6 @@
 ---
 title: Introduction to EmailEngine
+description: Introduction to EmailEngine - unified REST API for email accounts and providers
 sidebar_position: 0
 ---
 

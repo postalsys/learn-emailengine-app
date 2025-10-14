@@ -1,5 +1,5 @@
 ---
-title: "Working with Attachments"
+title: Working with Attachments
 sidebar_position: 6
 description: "Complete guide to handling email attachments - downloading, uploading, inline images, and file management"
 keywords:

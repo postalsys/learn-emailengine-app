@@ -1,6 +1,7 @@
 ---
 title: License Information
-sidebar_position: 3
+description: License information, plans, and how to get a production license key
+sidebar_position: 1
 ---
 
 # EmailEngine Licensing

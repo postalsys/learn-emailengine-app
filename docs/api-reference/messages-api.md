@@ -1,5 +1,6 @@
 ---
 title: Messages API
+description: API endpoints for message operations - list, search, read, update, and delete emails
 sidebar_position: 3
 ---
 

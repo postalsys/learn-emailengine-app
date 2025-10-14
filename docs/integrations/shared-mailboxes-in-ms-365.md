@@ -1,6 +1,7 @@
 ---
-title: Accessing Shared Mailboxes in MS365
-sidebar_position: 4
+title: Shared Mailboxes in Microsoft 365
+description: Access and manage shared mailboxes in Microsoft 365 via EmailEngine
+sidebar_position: 5
 ---
 
 Microsoft 365 allows you to create **shared mailboxes** that are not bound to a specific user. Instead, one or multiple users can access these mailboxes using their own credentials to send and receive emails on behalf of the shared mailbox.

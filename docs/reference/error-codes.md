@@ -1,5 +1,6 @@
 ---
 title: Error Codes Reference
+description: Complete reference of API error codes and troubleshooting guidance
 sidebar_position: 2
 ---
 

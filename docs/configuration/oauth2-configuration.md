@@ -1,6 +1,7 @@
 ---
-title: OAuth2 configuration
-sidebar_position: 3
+title: OAuth2 Configuration
+description: Configure OAuth2 credentials for Gmail, Google Workspace, Microsoft 365, and Outlook
+sidebar_position: 4
 ---
 
 [![Your Logo](lib_pTNsKLAHHUZrxQKE/xwb20trbbhmhskes.png?w=160)](/)

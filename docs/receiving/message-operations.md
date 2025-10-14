@@ -1,5 +1,5 @@
 ---
-title: "Message Operations"
+title: Message Operations
 sidebar_position: 4
 description: "Complete guide to message operations - listing, fetching, moving, deleting, and updating messages"
 keywords:

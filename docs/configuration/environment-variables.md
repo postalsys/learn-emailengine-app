@@ -1,5 +1,6 @@
 ---
 title: Environment Variables Reference
+description: Complete reference of all environment variables for configuring EmailEngine
 sidebar_position: 2
 ---
 

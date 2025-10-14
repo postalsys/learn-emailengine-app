@@ -1,6 +1,6 @@
 ---
 title: Email Threading
-sidebar_position: 4
+sidebar_position: 5
 description: Understanding and maintaining email conversation threads across multiple messages
 ---
 

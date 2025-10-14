@@ -1,5 +1,5 @@
 ---
-title: "Webhooks"
+title: Webhooks
 sidebar_position: 2
 description: "Complete guide to EmailEngine webhooks - setup, event types, testing, debugging, and best practices"
 keywords:

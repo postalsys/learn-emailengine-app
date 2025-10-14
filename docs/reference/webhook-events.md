@@ -1,5 +1,6 @@
 ---
 title: Webhook Events Reference
+description: Complete reference of all webhook events and payload schemas
 sidebar_position: 1
 ---
 

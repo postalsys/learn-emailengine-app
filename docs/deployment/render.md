@@ -1,5 +1,6 @@
 ---
 title: Render.com Deployment
+description: Deploy EmailEngine to Render.com with one-click setup and managed Redis
 sidebar_position: 4
 ---
 

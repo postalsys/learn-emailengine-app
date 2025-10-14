@@ -1,5 +1,6 @@
 ---
 title: Deployment Overview
+description: Deploy EmailEngine to production with Docker, cloud platforms, and server configurations
 sidebar_position: 1
 ---
 

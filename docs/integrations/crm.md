@@ -1,6 +1,6 @@
 ---
-title: CRM Integration Guide
-sidebar_position: 3
+title: CRM Integration
+sidebar_position: 9
 description: Complete guide for integrating email functionality with CRM systems using EmailEngine
 ---
 

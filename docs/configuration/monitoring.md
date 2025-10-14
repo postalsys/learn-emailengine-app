@@ -1,6 +1,7 @@
 ---
-title: Monitoring
-sidebar_position: 5
+title: Monitoring Configuration
+description: Configure Prometheus metrics, health checks, and monitoring endpoints
+sidebar_position: 6
 ---
 
 ### Setting up Prometheus

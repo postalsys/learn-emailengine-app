@@ -1,6 +1,7 @@
 ---
-title: Outlook and MS365
-sidebar_position: 3
+title: Outlook and Microsoft 365 Integration
+description: Integrate Microsoft 365 and Outlook accounts with OAuth2 and Graph API
+sidebar_position: 4
 ---
 
 > Click [here](/oauth2-configuration) to see other types of OAuth2 configurations, or follow [this tutorial](https://docs.emailengine.app/setting-up-oauth2-with-outlook/) for a detailed step-by-step guide.

@@ -1,5 +1,6 @@
 ---
 title: SystemD Service
+description: Run EmailEngine as a SystemD service on Linux servers with automatic restart
 sidebar_position: 3
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: Sending Replies and Forwards
-sidebar_position: 2
+sidebar_position: 3
 description: Learn how to properly reply to and forward emails with correct threading headers and IMAP flags
 ---
 

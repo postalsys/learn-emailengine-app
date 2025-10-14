@@ -1,6 +1,6 @@
 ---
-title: PHP Integration Guide
-sidebar_position: 2
+title: PHP Integration
+sidebar_position: 7
 description: Complete guide to integrating EmailEngine with PHP applications using Composer
 ---
 

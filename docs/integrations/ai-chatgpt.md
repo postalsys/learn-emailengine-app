@@ -1,6 +1,6 @@
 ---
 title: AI and ChatGPT Integration
-sidebar_position: 4
+sidebar_position: 8
 description: Complete guide to integrating AI and ChatGPT with EmailEngine for email processing, summarization, and conversational search
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: "Mailbox Operations"
+title: Mailbox Operations
 sidebar_position: 3
 description: "Working with mailbox folders - listing, creating, deleting, and understanding special-use folders"
 keywords:

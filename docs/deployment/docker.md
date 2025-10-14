@@ -1,5 +1,6 @@
 ---
 title: Docker Deployment
+description: Deploy EmailEngine using Docker and Docker Compose with production configurations
 sidebar_position: 2
 ---
 

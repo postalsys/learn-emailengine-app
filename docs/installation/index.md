@@ -1,5 +1,6 @@
 ---
 title: Installation Guide
+description: Install EmailEngine using npm, Docker, or from source with system requirements
 sidebar_position: 1
 ---
 

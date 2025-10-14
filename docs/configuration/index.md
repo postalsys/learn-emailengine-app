@@ -1,5 +1,6 @@
 ---
 title: Configuration Overview
+description: Configure EmailEngine with environment variables, command-line arguments, and runtime settings
 sidebar_position: 1
 ---
 

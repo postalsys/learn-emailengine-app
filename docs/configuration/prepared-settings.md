@@ -1,6 +1,7 @@
 ---
 title: Prepared Configuration
-sidebar_position: 6
+description: Pre-configure settings via environment variables for automated deployments
+sidebar_position: 7
 ---
 
 # Prepared Configuration
