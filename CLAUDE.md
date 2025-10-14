@@ -11,6 +11,21 @@ This repository contains the **unified Docusaurus documentation site** for Email
 - **~85,000 lines** of comprehensive documentation
 - **Build status:** ✅ Passing (with minor non-critical anchor warnings)
 
+## Important Rules
+
+**CRITICAL - Read These First:**
+
+1. **Git Commit Messages** - DO NOT include Claude Code attribution or co-authorship
+   - ❌ Never add: "Generated with Claude Code"
+   - ❌ Never add: "Co-Authored-By: Claude"
+   - ✅ Write clear, professional commit messages without AI attribution
+
+2. **No Emojis in Documentation** - Never use emojis in documentation files
+   - ❌ Don't use: ✅ ❌ 🚀 💡 ⚠️ etc. in markdown files
+   - ✅ Exception: Only if explicitly needed for visual indicators (e.g., alert symbols in admonitions)
+   - ✅ Use text instead: "Success", "Warning", "Important", etc.
+   - Note: Existing emojis in CLAUDE.md itself are acceptable for this meta-documentation file
+
 ## Quick Commands
 
 ```bash
@@ -288,6 +303,8 @@ Every page should:
 - ❌ **Don't add `_category_.json` files** - Sidebars are auto-generated
 - ❌ **Don't create separate "tutorial" or "guide" sections** - Merge into relevant topic docs
 - ❌ **Don't commit with broken builds** - Always run `npm run build` first
+- ❌ **Don't use emojis in documentation** - Use text instead (see Important Rules section)
+- ❌ **Don't add AI attribution to git commits** - Keep commit messages professional (see Important Rules section)
 
 ## Troubleshooting
 
