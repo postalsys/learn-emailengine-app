@@ -175,18 +175,6 @@ Deploy via One-Click Apps in CapRover dashboard. Search for "EmailEngine".
 
 [View all deployment guides →](/docs/deployment)
 
-## Installation Comparison
-
-| Method                  | Difficulty | RAM Usage          | Best For        | Update Process                |
-| ----------------------- | ---------- | ------------------ | --------------- | ----------------------------- |
-| **Automated Installer** | Easy       | Medium             | Linux servers   | `/opt/upgrade-emailengine.sh` |
-| **Binary**              | Easy       | Medium             | Quick setup     | Download + replace            |
-| **Source**              | Medium     | **Low** (50% less) | **Production**  | Git pull or download          |
-| **Docker**              | Medium     | Medium             | Containers      | `docker pull`                 |
-| **Cloud Platform**      | Very Easy  | Varies             | Managed hosting | Platform-specific             |
-
-**Production recommendation:** Source installation offers the best RAM efficiency (100-200MB vs 200-400MB for binary).
-
 ## Post-Installation Steps
 
 After installing EmailEngine:
