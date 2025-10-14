@@ -1,44 +1,136 @@
 ---
 title: Installation Guide
-description: Install EmailEngine using binaries, Docker, or from source with system requirements
+description: Install EmailEngine on Linux, macOS, Windows, Docker, or from source
 sidebar_position: 1
 ---
 
 # Installing EmailEngine
 
-Complete guide to installing EmailEngine across different platforms and environments.
+Choose your installation method based on your operating system and deployment requirements.
 
-:::tip Quick Start
+## Quick Start
+
 ```bash
-# Download binary for Linux
+# Linux: Download binary
 wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
 tar xzf emailengine.tar.gz
 sudo mv emailengine /usr/local/bin/
 
-# Or use Docker
+# Docker: Run container
 docker run -p 3000:3000 --env EENGINE_REDIS="redis://host.docker.internal:6379" postalsys/emailengine:v2
+
+# Source: Production deployment (recommended - uses less RAM)
+wget https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz
+tar xzf source-dist.tar.gz && cd emailengine
+node server.js
 ```
-:::
 
-## Prerequisites
+## Installation Methods
 
-Before installing EmailEngine, ensure you have:
+### By Operating System
 
-### System Requirements
+<div class="installation-grid">
 
-**Minimum (testing/development):**
+#### [Linux Installation](/docs/installation/linux)
+
+Install on Ubuntu, Debian, CentOS, or RHEL.
+
+**Methods:**
+- Automated installer (Ubuntu/Debian) - one-click setup
+- Binary installation - standalone executable
+- Source installation - production recommended
+
+**Best for:** Servers, VPS hosting, production deployments
+
+[View Linux guide →](/docs/installation/linux)
+
+---
+
+#### [macOS Installation](/docs/installation/macos)
+
+Install on macOS (Intel or Apple Silicon).
+
+**Methods:**
+- PKG installer - signed macOS package
+- Homebrew + binary
+- Source installation
+
+**Best for:** Development, testing, local deployments
+
+[View macOS guide →](/docs/installation/macos)
+
+---
+
+#### [Windows Installation](/docs/installation/windows)
+
+Install on Windows 10+ (native or WSL2).
+
+**Methods:**
+- Windows executable - standalone .exe
+- WSL2 installation - recommended for production
+- Docker Desktop
+
+**Best for:** Development, testing, Windows servers
+
+[View Windows guide →](/docs/installation/windows)
+
+</div>
+
+### By Deployment Type
+
+<div class="installation-grid">
+
+#### [Docker Installation](/docs/installation/docker)
+
+Run in containers with Docker or Docker Compose.
+
+**Features:**
+- Isolated environment
+- Easy scaling
+- Quick updates
+- Consistent across platforms
+
+**Best for:** Containerized infrastructure, Kubernetes, cloud deployments
+
+[View Docker guide →](/docs/installation/docker)
+
+---
+
+#### [Source Installation](/docs/installation/source)
+
+Run from source code (Node.js 20+ required).
+
+**Advantages:**
+- **50% less RAM usage** (100-200MB vs 200-400MB binary)
+- Latest features
+- Full customization
+- Production recommended
+
+**Best for:** Production deployments, high-volume servers
+
+[View source guide →](/docs/installation/source)
+
+</div>
+
+## System Requirements
+
+### Minimum (Development/Testing)
+
 - **CPU:** 1-2 cores
 - **RAM:** 2 GB
 - **Storage:** 10 GB
 - **Network:** Stable internet connection
 
-**Recommended for production:**
-- **CPU:** 4+ cores
-- **RAM:** 4-8 GB (or more for high-volume deployments)
-- **Storage:** 20+ GB SSD
-- **Network:** Low-latency connection with high bandwidth
+### Recommended (Production)
 
-### Required Software
+- **CPU:** 4+ cores
+- **RAM:** 4-8 GB (or more for high-volume)
+- **Storage:** 20+ GB SSD
+- **Network:** Low-latency, high-bandwidth connection
+
+## Prerequisites
+
+All installation methods require:
 
 1. **Redis 6.0+**
    - Stand-alone mode (Cluster not supported)
@@ -46,750 +138,235 @@ Before installing EmailEngine, ensure you have:
    - `noeviction` memory policy
 
 2. **Node.js 20+** (only for source installation)
-   - Check version: `node --version`
-   - Install from: [nodejs.org](https://nodejs.org/)
 
 3. **Operating System:**
-   - Linux (Ubuntu 20.04+, Debian 10+, CentOS 8+, RHEL 8+)
-   - macOS 11+
-   - Windows 10+ (native executable or WSL2)
+   - Linux: Ubuntu 20.04+, Debian 10+, CentOS 8+, RHEL 8+
+   - macOS: 11+ (Big Sur or later)
+   - Windows: 10+ (native or WSL2)
 
-### Network Access
+## Cloud Platforms
 
-- **IMAP/SMTP ports:** 143, 993 (IMAP), 25, 465, 587 (SMTP)
-- **HTTPS:** 443 (for OAuth2 redirects)
-- **Redis:** 6379 (internal only)
-- **HTTP:** 3000 (default EmailEngine port)
+### One-Click Deployments
 
-## Installation Methods
-
-### 1. Binary Installation
-
-EmailEngine is distributed as standalone executables for all major platforms.
-
-**Note:** While binary installation is the easiest method, running from source is recommended for production deployments as it requires less RAM.
-
-#### Linux
-
-```bash
-# Download the latest release
-wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
-
-# Extract
-tar xzf emailengine.tar.gz
-rm emailengine.tar.gz
-
-# Move to system path
-sudo mv emailengine /usr/local/bin/
-
-# Verify installation
-emailengine --version
-
-# Start EmailEngine
-emailengine --dbs.redis="redis://127.0.0.1:6379"
-```
-
-**Advantages:**
-- No dependencies required (except Redis)
-- Fast startup
-- Small footprint
-- Production-ready
-
-**Best for:** Production deployments, VPS hosting, traditional servers
-
-[Detailed Linux setup →](#linux-setup)
-
----
-
-#### macOS
-
-Download the signed PKG installer:
-
-- **Intel CPU:** [emailengine.pkg](https://github.com/postalsys/emailengine/releases/latest/download/emailengine.pkg)
-- **Apple Silicon:** [emailengine-arm.pkg](https://github.com/postalsys/emailengine/releases/latest/download/emailengine-arm.pkg)
-
-The installer places the `emailengine` binary in `/usr/local/bin`.
-
-```bash
-# After installation, start EmailEngine
-emailengine --dbs.redis="redis://127.0.0.1:6379"
-```
-
-**Uninstall:**
-```bash
-sudo rm /usr/local/bin/emailengine
-```
-
-[macOS setup guide →](#macos-setup)
-
----
-
-#### Windows
-
-Download the standalone executable: [emailengine.exe](https://github.com/postalsys/emailengine/releases/latest/download/emailengine.exe)
-
-```powershell
-# Run from PowerShell
-.\emailengine.exe --dbs.redis="redis://127.0.0.1:6379"
-```
-
-**Note:** Redis is not officially supported on Windows. Use [Memurai](https://www.memurai.com/) or a remote Redis server.
-
-[Windows setup guide →](#windows-setup)
-
----
-
-### 2. Docker Installation
-
-Run EmailEngine in a Docker container:
-
-```bash
-# Pull latest image
-docker pull postalsys/emailengine:v2
-
-# Run container
-docker run -d \
-  --name emailengine \
-  -p 3000:3000 \
-  --env EENGINE_REDIS="redis://host.docker.internal:6379" \
-  --env EENGINE_SECRET="your-secret-key" \
-  --restart unless-stopped \
-  postalsys/emailengine:v2
-```
-
-**Advantages:**
-- Isolated environment
-- Consistent across platforms
-- Easy updates and rollbacks
-- Portable configuration
-
-**Disadvantages:**
-- Requires Docker knowledge
-- Slight performance overhead
-- More complex networking
-
-**Best for:** Containerized environments, Kubernetes, cloud deployments
-
-[Complete Docker guide →](/docs/deployment/docker)
-
----
-
-### 3. Automated Ubuntu/Debian Installer
-
-Use the one-click installer script for fresh Ubuntu 20.04 LTS or Debian 11 servers:
-
-```bash
-# Download installer
-wget https://go.emailengine.app -O install.sh
-
-# Make executable and run
-chmod +x install.sh
-sudo su
-./install.sh example.com
-```
-
-**What it installs:**
-- EmailEngine binary
-- Redis server
-- Caddy reverse proxy with TLS
-- SystemD service
-- Upgrade helper script at `/opt/upgrade-emailengine.sh`
-
-**Features:**
-- Supports both fresh installations and upgrades
-- Automatically detects existing installations
-- Preserves Redis configuration and credentials during upgrades
-- Can install specific versions: `./install.sh example.com 2.55.4`
-
-**Important:** Only use on fresh servers for new installations. It rewrites networking and service settings.
-
----
-
-### 4. Source Installation (Development)
-
-Build EmailEngine from source for development or customization:
-
-```bash
-# Clone repository
-git clone https://github.com/postalsys/emailengine.git
-cd emailengine
-
-# Install dependencies
-npm install --production
-
-# Start
-npm start
-```
-
-Or use the pre-packaged source distribution:
-
-```bash
-# Download source
-wget https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz
-tar xzf source-dist.tar.gz
-rm source-dist.tar.gz
-
-# Configure
-echo 'EENGINE_WORKERS=2
-EENGINE_REDIS=redis://127.0.0.1:6379' > .env
-
-# Run
-node server.js
-```
-
-**Advantages:**
-- Latest features (master branch)
-- Full source code access
-- Customization possible
-
-**Disadvantages:**
-- Requires Node.js 20+
-- Manual updates
-- Build requirements
-
-**Best for:** Development, testing new features, custom builds
-
----
-
-### 5. Cloud Platforms
-
-Deploy to managed platforms:
+EmailEngine is available on popular cloud platforms:
 
 #### Render.com
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/postalsys/emailengine)
 
-One-click deployment with automatic Redis setup.
+Automatic setup with managed Redis.
 
-[Render deployment guide →](/docs/deployment/render)
+[View Render guide →](/docs/deployment/render)
 
-#### DigitalOcean
-
-One-click application from the DigitalOcean Marketplace:
+#### DigitalOcean Marketplace
 
 [![DigitalOcean](https://cldup.com/QBubXuGF1M.svg)](https://marketplace.digitalocean.com/apps/emailengine?refcode=90a107552b31)
 
-**Important:** DigitalOcean blocks SMTP ports 587 and 465 by default. Open a support ticket to unblock them.
+One-click droplet with everything pre-configured.
 
-**Upgrade on DigitalOcean:**
-```bash
-sudo /opt/upgrade-emailengine.sh
-```
+**Note:** Request SMTP port unblocking from DigitalOcean support.
 
 #### CapRover
 
-Deploy via One-Click Apps in CapRover dashboard. Search for "EmailEngine" and deploy.
-
-**Upgrade on CapRover:**
-- Go to Deployment tab
-- Use Method 6 (Deploy via Image Name)
-- Enter: `postalsys/emailengine:v2`
-- Click Deploy now
+Deploy via One-Click Apps in CapRover dashboard. Search for "EmailEngine".
 
 #### Heroku
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/postalsys/emailengine)
 
-**Note:** Heroku regularly closes long-running connections. Allocate extra resources (4 GB RAM minimum) and ensure Redis allows 200+ concurrent connections.
+**Note:** Requires 4 GB RAM minimum due to Heroku's connection limits.
 
-[Cloud deployment guides →](/docs/deployment)
+[View all deployment guides →](/docs/deployment)
 
-## Detailed Setup Instructions
+## Installation Comparison
 
-### Linux Setup
+| Method | Difficulty | RAM Usage | Best For | Update Process |
+|--------|-----------|-----------|----------|----------------|
+| **Automated Installer** | Easy | Medium | Linux servers | `/opt/upgrade-emailengine.sh` |
+| **Binary** | Easy | Medium | Quick setup | Download + replace |
+| **Source** | Medium | **Low** (50% less) | **Production** | Git pull or download |
+| **Docker** | Medium | Medium | Containers | `docker pull` |
+| **Cloud Platform** | Very Easy | Varies | Managed hosting | Platform-specific |
 
-#### Step 1: Install Redis
+**Production recommendation:** Source installation offers the best RAM efficiency (100-200MB vs 200-400MB for binary).
 
-**Ubuntu/Debian:**
-```bash
-sudo apt update
-sudo apt install redis-server
+## Post-Installation Steps
 
-# Start Redis
-sudo systemctl start redis-server
-sudo systemctl enable redis-server
+After installing EmailEngine:
 
-# Verify
-redis-cli ping
-# Should return: PONG
-```
-
-**CentOS/RHEL:**
-```bash
-sudo yum install redis
-sudo systemctl start redis
-sudo systemctl enable redis
-```
-
-#### Step 2: Configure Redis
-
-Edit `/etc/redis/redis.conf`:
+### 1. Verify Installation
 
 ```bash
-# Set eviction policy
-maxmemory-policy noeviction
-
-# Enable persistence
-save 900 1
-save 300 10
-save 60 10000
-
-# Set max memory (e.g., 1GB)
-maxmemory 1gb
-```
-
-Restart Redis:
-```bash
-sudo systemctl restart redis
-```
-
-#### Step 3: Download EmailEngine
-
-```bash
-# Download binary
-wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
-
-# Extract and install
-tar xzf emailengine.tar.gz
-sudo mv emailengine /usr/local/bin/
-chmod +x /usr/local/bin/emailengine
-
-# Verify
-emailengine --version
-```
-
-#### Step 4: Start EmailEngine
-
-```bash
-# Start with command-line flags
-emailengine --dbs.redis="redis://127.0.0.1:6379"
-
-# Or with environment variables
-export EENGINE_REDIS="redis://127.0.0.1:6379"
-export EENGINE_SECRET="$(openssl rand -hex 32)"
-emailengine
-
-# Access web interface
+# Check health endpoint
 curl http://localhost:3000/health
+
+# Expected response:
+# {"success":true}
 ```
 
-#### Step 5: Run as Service (Optional)
+### 2. Access Web Interface
 
-See [SystemD service guide](/docs/deployment/systemd) for running as a background service.
+Open `http://localhost:3000` in your browser and create your admin account.
 
----
+### 3. Configure OAuth2
 
-### macOS Setup
+Set up OAuth2 credentials for Gmail and Microsoft 365:
 
-#### Step 1: Install Redis
+[OAuth2 Configuration Guide →](/docs/accounts/oauth2-setup)
 
-```bash
-# Install with Homebrew
-brew update
-brew install redis
+### 4. Add Your First Account
 
-# Start Redis
-brew services start redis
+Register an email account via the web interface or API:
 
-# Verify
-redis-cli ping
-```
+[Account Setup Guide →](/docs/accounts)
 
-#### Step 2: Download EmailEngine
+### 5. Set Up Webhooks
 
-Download the signed PKG installer for your CPU:
+Configure webhooks to receive real-time email notifications:
 
-- **Intel:** [emailengine.pkg](https://github.com/postalsys/emailengine/releases/latest/download/emailengine.pkg)
-- **Apple Silicon:** [emailengine-arm.pkg](https://github.com/postalsys/emailengine/releases/latest/download/emailengine-arm.pkg)
+[Webhooks Guide →](/docs/receiving/webhooks)
 
-Double-click to install. The binary is placed in `/usr/local/bin/`.
+### 6. Secure Your Deployment
 
-#### Step 3: Run EmailEngine
+For production deployments, follow security best practices:
 
-```bash
-emailengine --dbs.redis="redis://127.0.0.1:6379"
+[Security Guide →](/docs/deployment/security)
 
-# Or with environment variables
-export EENGINE_REDIS="redis://127.0.0.1:6379"
-export EENGINE_SECRET="$(openssl rand -hex 32)"
-emailengine
-```
+## Common Installation Scenarios
 
-#### Upgrading
+### Scenario 1: Development/Testing
 
-Download the newest PKG for your CPU architecture and run it. The installer replaces the existing binary.
+**Requirements:**
+- Local development machine
+- Testing EmailEngine features
+- Single account
 
-#### Uninstalling
+**Recommended:**
+- macOS: PKG installer
+- Windows: WSL2 + binary
+- Linux: Binary installation
 
-```bash
-sudo rm /usr/local/bin/emailengine
-```
+[Quick start for development →](/docs/getting-started/quick-start)
 
----
+### Scenario 2: Production Server (Small Scale)
 
-### Windows Setup
+**Requirements:**
+- 10-100 email accounts
+- VPS or dedicated server
+- 4 GB RAM, 2 CPU cores
 
-#### Step 1: Install Redis Alternative
+**Recommended:**
+- Linux automated installer
+- Or source installation for better RAM efficiency
 
-Windows does not have official Redis support. Options:
+[Linux installation →](/docs/installation/linux)
 
-1. **Memurai** - Redis-compatible Windows server: [memurai.com](https://www.memurai.com/)
-2. **Remote Redis** - Use a cloud Redis service (Upstash, Redis Cloud)
-3. **WSL2** - Run Linux and Redis in WSL2
+### Scenario 3: Production Server (Large Scale)
 
-#### Step 2: Download EmailEngine
+**Requirements:**
+- 100+ email accounts
+- High-volume email processing
+- 8+ GB RAM, 4+ CPU cores
 
-Download [emailengine.exe](https://github.com/postalsys/emailengine/releases/latest/download/emailengine.exe) and place it in a convenient directory.
+**Recommended:**
+- Source installation (50% less RAM)
+- Multiple instances with load balancer
+- Dedicated Redis server
 
-#### Step 3: Run
+[Source installation →](/docs/installation/source)
+[Performance tuning →](/docs/advanced/performance-tuning)
 
-```powershell
-# From PowerShell
-PS C:\EmailEngine> .\emailengine.exe --dbs.redis="redis://127.0.0.1:6379"
-```
+### Scenario 4: Containerized Infrastructure
 
-Or create a `.env` file in the same directory:
-```
-EENGINE_REDIS=redis://127.0.0.1:6379
-EENGINE_SECRET=your-secret-key-here
-```
+**Requirements:**
+- Kubernetes or Docker Swarm
+- Horizontal scaling
+- Container orchestration
 
-Then run:
-```powershell
-.\emailengine.exe
-```
+**Recommended:**
+- Docker with Docker Compose
+- Helm charts for Kubernetes
 
-#### Upgrading
+[Docker installation →](/docs/installation/docker)
 
-Download the newest `emailengine.exe` and replace the existing file.
+### Scenario 5: Managed Cloud Platform
 
----
+**Requirements:**
+- Zero infrastructure management
+- Quick deployment
+- Automatic scaling
 
-### Development Setup
+**Recommended:**
+- Render.com (easiest)
+- DigitalOcean Marketplace
+- Heroku (with caution)
 
-For development and testing:
+[Deployment guides →](/docs/deployment)
 
-#### 1. Clone Repository
+## Troubleshooting
 
-```bash
-git clone https://github.com/postalsys/emailengine.git
-cd emailengine
-```
-
-#### 2. Install Dependencies
-
-```bash
-# Install all dependencies (including dev)
-npm install
-
-# Or production only
-npm install --production
-```
-
-#### 3. Configure Environment
-
-Create `.env` file:
-
-```bash
-EENGINE_REDIS=redis://localhost:6379
-EENGINE_SECRET=development-secret-key
-EENGINE_LOG_LEVEL=trace
-EENGINE_WORKERS=1
-```
-
-#### 4. Start Development Server
-
-```bash
-# Start with auto-reload
-npm run dev
-
-# Or normal start
-npm start
-```
-
-#### 5. Run Tests
-
-```bash
-# Run test suite
-npm test
-
-# Run specific test
-npm test -- test/account-test.js
-
-# Check code coverage
-npm run coverage
-```
-
-## Post-Installation Setup
-
-### 1. Initial Configuration
-
-Access web interface at `http://localhost:3000`:
-
-1. **Set admin password** on first login
-2. **Configure OAuth2** credentials (Gmail, Outlook)
-3. **Set webhook URL** if using webhooks
-4. **Enter license key** for production features
-
-### 2. Register First Account
-
-**Via web interface:**
-1. Click "Add Account"
-2. Enter email and credentials
-3. Test connection
-4. Save account
-
-**Via API:**
-```bash
-curl -X POST http://localhost:3000/v1/account \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{
-    "account": "user@example.com",
-    "name": "User Name",
-    "email": "user@example.com",
-    "imap": {
-      "host": "imap.gmail.com",
-      "port": 993,
-      "secure": true,
-      "auth": {
-        "user": "user@example.com",
-        "pass": "password"
-      }
-    },
-    "smtp": {
-      "host": "smtp.gmail.com",
-      "port": 587,
-      "secure": false,
-      "auth": {
-        "user": "user@example.com",
-        "pass": "password"
-      }
-    }
-  }'
-```
+### Installation Issues
 
-### 3. Verify Installation
-
-**Check health endpoint:**
-```bash
-curl http://localhost:3000/health
-```
-
-**Expected response:**
-```json
-{
-  "success": true
-}
-```
-
-**Check metrics (if enabled):**
-```bash
-curl http://localhost:9090/metrics
-```
-
-### 4. Configure Security
-
-For production deployments:
-
-1. **Set strong secrets:**
-   ```bash
-   export EENGINE_SECRET=$(openssl rand -hex 32)
-   export EENGINE_ENCRYPTION_SECRET=$(openssl rand -hex 32)
-   ```
-
-2. **Enable HTTPS** with Nginx reverse proxy
-   [Nginx setup guide →](/docs/deployment/nginx-proxy)
-
-3. **Configure firewall:**
-   ```bash
-   sudo ufw allow 80/tcp
-   sudo ufw allow 443/tcp
-   sudo ufw deny 3000/tcp  # Block direct access
-   ```
-
-4. **Enable monitoring:**
-   ```bash
-   export EENGINE_METRICS_SERVER=true
-   ```
-
-[Complete security guide →](/docs/deployment/security)
-
-## Upgrading
-
-### Binary Installation
-
-```bash
-# Download latest release
-wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
-
-# Extract and replace
-tar xzf emailengine.tar.gz
-sudo mv emailengine /usr/local/bin/
-
-# Restart service
-sudo systemctl restart emailengine
-```
-
-### Docker
-
-```bash
-# Pull latest image
-docker pull postalsys/emailengine:v2
-
-# Recreate container
-docker stop emailengine
-docker rm emailengine
-docker run -d --name emailengine ... postalsys/emailengine:v2
-```
-
-### DigitalOcean Marketplace
-
-```bash
-sudo /opt/upgrade-emailengine.sh
-```
-
-### CapRover
-
-Use Deployment tab, Method 6 (Deploy via Image Name): `postalsys/emailengine:v2`
-
-## Troubleshooting Installation
-
-### Common Issues
-
-#### 1. Redis Connection Failed
-
-```
-Error: Redis connection to 127.0.0.1:6379 failed
-```
-
-**Solutions:**
+**Redis connection failed:**
 ```bash
 # Check Redis is running
-redis-cli ping
+redis-cli ping  # Should return: PONG
 
 # Start Redis
-sudo systemctl start redis
-
-# Check Redis logs
-sudo journalctl -u redis -n 50
+sudo systemctl start redis  # Linux
+brew services start redis   # macOS
 ```
 
-#### 2. Permission Denied
-
-```
-Error: EACCES: permission denied
-```
-
-**Solutions:**
+**Permission denied:**
 ```bash
 # Make binary executable
-chmod +x /usr/local/bin/emailengine
+chmod +x emailengine
 
-# Or move to user directory
-mv emailengine ~/.local/bin/
-export PATH=~/.local/bin:$PATH
+# Or run with proper user
+sudo chown $USER:$USER emailengine
 ```
 
-#### 3. Port Already in Use
-
-```
-Error: listen EADDRINUSE: address already in use :::3000
-```
-
-**Solutions:**
+**Port already in use:**
 ```bash
-# Find process using port
+# Find process using port 3000
 sudo lsof -i :3000
 
-# Kill process
-sudo kill -9 <PID>
-
-# Or use different port
+# Kill process or use different port
 emailengine --api.port=3001
 ```
 
-#### 4. Binary Won't Execute
-
-```
-Error: cannot execute binary file
-```
-
-**Solutions:**
-- Verify you downloaded the correct binary for your platform (Linux/macOS/Windows)
-- Verify CPU architecture (x64 vs ARM)
-- Check file permissions: `chmod +x emailengine`
-
-#### 5. Redis Memory Issues
-
-```
-Error: OOM command not allowed when used memory > 'maxmemory'
-```
-
-**Solutions:**
+**Node.js version too old:**
 ```bash
-# Edit Redis config
-sudo nano /etc/redis/redis.conf
-
-# Set memory policy
-maxmemory-policy noeviction
-maxmemory 2gb
-
-# Restart Redis
-sudo systemctl restart redis
+# Install Node.js 20+
+# See platform-specific guides for instructions
 ```
 
-### Getting Help
+[Complete troubleshooting guide →](/docs/troubleshooting)
 
-If issues persist:
+## Getting Help
 
-1. **Check logs:**
-   ```bash
-   # Binary installation
-   emailengine 2>&1 | tee emailengine.log
+If you encounter issues during installation:
 
-   # SystemD service
-   sudo journalctl -u emailengine -f
+1. **Check platform-specific guide** for detailed instructions
+2. **View troubleshooting documentation** for common problems
+3. **Check GitHub issues** for known problems
+4. **Contact support** for assistance
 
-   # Docker
-   docker logs emailengine -f
-   ```
-
-2. **Enable debug mode:**
-   ```bash
-   EENGINE_LOG_LEVEL=trace emailengine
-   ```
-
-3. **Visit troubleshooting guide:**
-   [Troubleshooting documentation →](/docs/troubleshooting)
-
-4. **Get support:**
-   [Support page →](/docs/support/license)
+[Support page →](/docs/support/license)
 
 ## Next Steps
 
-After successful installation:
+Choose your installation method:
 
-1. **Register email accounts**
-   [Account setup guide →](/docs/accounts)
+- [**Linux Installation**](/docs/installation/linux) - For servers and VPS
+- [**macOS Installation**](/docs/installation/macos) - For Mac users
+- [**Windows Installation**](/docs/installation/windows) - For Windows users
+- [**Docker Installation**](/docs/installation/docker) - For containers
+- [**Source Installation**](/docs/installation/source) - For production (recommended)
 
-2. **Configure OAuth2**
-   [OAuth2 setup →](/docs/accounts/oauth2-setup)
+Or jump to:
 
-3. **Set up webhooks**
-   [Webhooks guide →](/docs/receiving/webhooks)
-
-4. **Deploy to production**
-   [Deployment guides →](/docs/deployment)
-
-5. **Integrate with your app**
-   [API reference →](/docs/api-reference)
-
-## See Also
-
-- [Configuration Options](/docs/configuration)
-- [Docker Deployment](/docs/deployment/docker)
-- [SystemD Service](/docs/deployment/systemd)
-- [Render Deployment](/docs/deployment/render)
 - [Quick Start Guide](/docs/getting-started/quick-start)
-- [Account Setup](/docs/accounts)
+- [Configuration Options](/docs/configuration)
+- [Deployment Guides](/docs/deployment)
+- [API Reference](/docs/api-reference)
