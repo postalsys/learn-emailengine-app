@@ -1,0 +1,967 @@
+---
+title: Transactional Email Service
+sidebar_position: 9
+description: Use EmailEngine as a transactional email service with API and SMTP delivery, scheduling, bounce detection, and webhook notifications
+keywords:
+  - transactional email
+  - email delivery
+  - SMTP relay
+  - email scheduling
+  - bounce detection
+  - email queue
+---
+
+<!--
+SOURCE: sources/blog/2021-08-17-using-as-a-transactional-email-service.md
+Migrated to documentation format with technical how-to content.
+-->
+
+# Transactional Email Service
+
+EmailEngine can function as a self-hosted transactional email service, allowing you to convert any email account into a reliable email delivery system. You can submit messages for delivery, schedule future sends, track delivery status, and receive bounce notifications.
+
+## Overview
+
+EmailEngine provides transactional email capabilities through:
+
+- **Multiple Submission Methods**: Send via REST API or SMTP
+- **Message Queuing**: Reliable delivery with automatic retry
+- **Scheduled Sending**: Delay delivery to a specific future time
+- **Bounce Detection**: Automatic bounce tracking and webhooks
+- **Sent Mail Tracking**: Automatic upload to "Sent Mail" folder
+- **Reply Threading**: Automatic "Answered" flag on replied messages
+
+## Delivery via REST API
+
+### Submit Endpoint
+
+Submit emails using the `/v1/account/{account}/submit` endpoint. EmailEngine converts your structured JSON into a valid RFC822 MIME message.
+
+**Endpoint**: `POST /v1/account/{account}/submit`
+
+**Benefits**:
+- No MIME knowledge required
+- Unicode strings and base64 attachments
+- Automatic header generation
+- Reply threading support
+
+### Basic Example
+
+```bash
+curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "from": {
+      "name": "Example Sender",
+      "address": "sender@example.com"
+    },
+    "to": [{
+      "name": "John Doe",
+      "address": "john@example.com"
+    }],
+    "subject": "Hello from EmailEngine",
+    "text": "Plain text message",
+    "html": "<p>HTML message</p>",
+    "attachments": [
+      {
+        "filename": "document.pdf",
+        "content": "BASE64_ENCODED_CONTENT"
+      }
+    ]
+  }'
+```
+
+**Response**:
+
+```json
+{
+  "response": "Queued for delivery",
+  "messageId": "<188db4df-3abb-806c-94c8-7a9303652c50@example.com>",
+  "sendAt": "2025-10-15T10:30:00.000Z",
+  "queueId": "24279fb3e0dff64e"
+}
+```
+
+### Reply to Existing Message
+
+When replying to a message, EmailEngine automatically handles threading headers:
+
+```bash
+curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reference": {
+      "message": "AAAAAQAAP1w",
+      "action": "reply"
+    },
+    "from": {
+      "name": "Support Team",
+      "address": "support@example.com"
+    },
+    "to": [{
+      "name": "Customer",
+      "address": "customer@example.com"
+    }],
+    "text": "Thank you for your message. We will review and get back to you.",
+    "html": "<p>Thank you for your message. We will review and get back to you.</p>"
+  }'
+```
+
+**Automatic Handling**:
+- Subject derived from original (with "Re:" prefix)
+- `In-Reply-To` header set correctly
+- `References` header populated
+- Original message marked as "Answered"
+
+You can override the subject if needed:
+
+```json
+{
+  "reference": {
+    "message": "AAAAAQAAP1w",
+    "action": "reply"
+  },
+  "subject": "Custom reply subject",
+  "text": "Reply content"
+}
+```
+
+### Attachments
+
+Include attachments with base64-encoded content:
+
+```json
+{
+  "from": { "address": "sender@example.com" },
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "File attached",
+  "text": "Please find the file attached.",
+  "attachments": [
+    {
+      "filename": "report.pdf",
+      "content": "JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwI...",
+      "contentType": "application/pdf"
+    },
+    {
+      "filename": "image.png",
+      "content": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z...",
+      "contentType": "image/png",
+      "cid": "unique-cid-123"
+    }
+  ]
+}
+```
+
+**Attachment Properties**:
+- `filename`: Name of the file
+- `content`: Base64-encoded file content
+- `contentType` (optional): MIME type (auto-detected if omitted)
+- `cid` (optional): Content-ID for inline images
+
+### Inline Images
+
+Reference inline images in HTML using CID:
+
+```json
+{
+  "from": { "address": "sender@example.com" },
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "Image email",
+  "html": "<p>Check out this image:</p><img src=\"cid:logo-image\" />",
+  "attachments": [
+    {
+      "filename": "logo.png",
+      "content": "BASE64_ENCODED_IMAGE",
+      "contentType": "image/png",
+      "cid": "logo-image"
+    }
+  ]
+}
+```
+
+## Delivery via SMTP
+
+EmailEngine includes an optional SMTP server for standard email client integration.
+
+### Enable SMTP Server
+
+1. Navigate to **Configuration → SMTP Server**
+2. Check **Enable SMTP Server**
+3. Configure port (default: 2525)
+4. Set authentication password
+5. Save settings
+
+**Important Notes**:
+- No TLS support built-in (use HAProxy with PROXY protocol if TLS needed)
+- Uses cleartext connections
+- Can enable HAProxy PROXY protocol support
+- Authentication optional but recommended
+
+### Authentication
+
+SMTP uses PLAIN authentication. Generate auth string:
+
+```bash
+# Format: \0{account_id}\0{password}
+echo -ne "\0example\0your_password" | base64
+# Output: AGV4YW1wbGUAeW91cl9wYXNzd29yZA==
+```
+
+### Manual SMTP Session
+
+Test SMTP with telnet or netcat:
+
+```bash
+# Connect
+telnet localhost 2525
+# or
+nc -c localhost 2525
+```
+
+**SMTP Commands**:
+
+```
+EHLO client.example.com
+AUTH PLAIN AGV4YW1wbGUAeW91cl9wYXNzd29yZA==
+MAIL FROM:<sender@example.com>
+RCPT TO:<recipient@example.com>
+DATA
+From: sender@example.com
+To: recipient@example.com
+Subject: Test Email
+X-EE-Send-At: 2025-10-16T14:00:00.000Z
+
+This is the email body.
+.
+QUIT
+```
+
+**Response**: `250 Message queued for delivery as {queueId} ({timestamp})`
+
+### SMTP Headers
+
+EmailEngine recognizes special headers:
+
+#### X-EE-Send-At
+
+Schedule delivery for future time:
+
+```
+X-EE-Send-At: 2025-10-16T14:00:00.000Z
+```
+
+This header is removed before delivery.
+
+#### X-EE-Account
+
+Specify account when authentication disabled:
+
+```
+X-EE-Account: example
+```
+
+Required only if SMTP authentication is disabled.
+
+### SMTP Client Example
+
+**Node.js (nodemailer)**:
+
+```javascript
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+  host: 'localhost',
+  port: 2525,
+  secure: false, // No TLS
+  auth: {
+    user: 'example', // Account ID
+    pass: 'your_password'
+  }
+});
+
+const message = {
+  from: 'sender@example.com',
+  to: 'recipient@example.com',
+  subject: 'Test Email',
+  text: 'Plain text content',
+  html: '<p>HTML content</p>',
+  // Schedule for future delivery
+  headers: {
+    'X-EE-Send-At': '2025-10-16T14:00:00.000Z'
+  }
+};
+
+const info = await transporter.sendMail(message);
+console.log('Message queued:', info.messageId);
+```
+
+**Python (smtplib)**:
+
+```python
+import smtplib
+from email.message import EmailMessage
+
+msg = EmailMessage()
+msg['From'] = 'sender@example.com'
+msg['To'] = 'recipient@example.com'
+msg['Subject'] = 'Test Email'
+msg['X-EE-Send-At'] = '2025-10-16T14:00:00.000Z'
+msg.set_content('Plain text content')
+
+with smtplib.SMTP('localhost', 2525) as smtp:
+    smtp.login('example', 'your_password')
+    smtp.send_message(msg)
+    print('Message queued')
+```
+
+### Important SMTP Notes
+
+- **Recipient addresses**: Only addresses in `RCPT TO` commands receive email
+- **Header addresses**: `To`, `Cc`, `Bcc` headers are informational only
+- **Bcc header**: Automatically removed from messages
+- **Mandatory headers**: `Message-ID`, `MIME-Version`, `Date` added if missing
+- **No TLS**: Use HAProxy for TLS termination if needed
+
+## Scheduled Sending
+
+Delay message delivery to a specific future time.
+
+### API Scheduling
+
+Use the `sendAt` property with ISO timestamp:
+
+```bash
+curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "from": {
+      "address": "sender@example.com"
+    },
+    "to": [{
+      "address": "recipient@example.com"
+    }],
+    "subject": "Scheduled Email",
+    "text": "This email was scheduled for delivery.",
+    "sendAt": "2025-10-18T08:00:00.000Z"
+  }'
+```
+
+**Response includes scheduled time**:
+
+```json
+{
+  "response": "Queued for delivery",
+  "messageId": "<uuid@example.com>",
+  "sendAt": "2025-10-18T08:00:00.000Z",
+  "queueId": "abc123"
+}
+```
+
+### SMTP Scheduling
+
+Add `X-EE-Send-At` header:
+
+```
+From: sender@example.com
+To: recipient@example.com
+Subject: Scheduled Email
+X-EE-Send-At: 2025-10-18T08:00:00.000Z
+
+This email will be sent at the scheduled time.
+```
+
+### Time Format
+
+Use ISO 8601 format with timezone:
+
+```
+2025-10-18T08:00:00.000Z          # UTC
+2025-10-18T08:00:00+02:00         # UTC+2
+2025-10-18T08:00:00-05:00         # UTC-5
+```
+
+### Scheduling Limits
+
+- Maximum schedule time: Configurable (default: no limit)
+- Minimum schedule time: Current time + 1 minute
+- Queue retention: Messages remain queued until `sendAt` time
+
+## Webhook Notifications
+
+EmailEngine sends webhook notifications for delivery events.
+
+### messageSent
+
+Triggered when SMTP server accepts the message:
+
+```json
+{
+  "account": "example",
+  "date": "2025-10-15T10:30:05.000Z",
+  "event": "messageSent",
+  "data": {
+    "messageId": "<188db4df-3abb-806c-94c8-7a9303652c50@example.com>",
+    "response": "250 2.0.0 OK queued as 1234ABCD",
+    "queueId": "24279fb3e0dff64e",
+    "envelope": {
+      "from": "sender@example.com",
+      "to": ["recipient@example.com"]
+    }
+  }
+}
+```
+
+### messageDeliveryError
+
+Triggered when delivery fails temporarily (will retry):
+
+```json
+{
+  "account": "example",
+  "date": "2025-10-15T10:30:05.000Z",
+  "event": "messageDeliveryError",
+  "data": {
+    "queueId": "24279fb3e0dff64e",
+    "messageId": "<188db4df-3abb-806c-94c8-7a9303652c50@example.com>",
+    "error": "Connection timeout",
+    "response": "421 4.4.2 Connection timed out"
+  }
+}
+```
+
+### messageFailed
+
+Triggered when delivery permanently fails (no more retries):
+
+```json
+{
+  "account": "example",
+  "date": "2025-10-15T10:30:05.000Z",
+  "event": "messageFailed",
+  "data": {
+    "queueId": "24279fb3e0dff64e",
+    "messageId": "<188db4df-3abb-806c-94c8-7a9303652c50@example.com>",
+    "error": "Recipient address rejected",
+    "response": "550 5.1.1 User unknown"
+  }
+}
+```
+
+### messageBounce
+
+Triggered when a bounce message is detected in the mailbox:
+
+```json
+{
+  "account": "example",
+  "date": "2025-10-15T11:00:00.000Z",
+  "event": "messageBounce",
+  "data": {
+    "bounceMessage": "AAAAAgAAxxk",
+    "recipient": "invalid@example.com",
+    "action": "failed",
+    "response": {
+      "source": "smtp",
+      "message": "550 5.1.1 No such user",
+      "status": "5.1.1"
+    },
+    "mta": "mx.example.com (192.168.1.1)",
+    "messageId": "<19f1157c-d72b-50eb-74d5-d30f9ec816d3@example.com>"
+  }
+}
+```
+
+**Note**: Bounce notification includes only `messageId`, not a reference to the original queued message. You must track `messageId` values yourself to correlate bounces with sent messages.
+
+## Bounce Detection
+
+EmailEngine automatically monitors IMAP accounts for bounce messages and parses delivery status notifications (DSN).
+
+### How It Works
+
+1. Message submitted and sent to SMTP server
+2. SMTP server accepts message (`messageSent` webhook)
+3. If delivery later fails, MTA sends bounce email to sender
+4. EmailEngine detects bounce message in IMAP account
+5. EmailEngine parses bounce and extracts details
+6. `messageBounce` webhook sent with failure information
+
+### Bounce Types
+
+**Hard Bounce** (`action: "failed"`):
+- Permanent delivery failure
+- Invalid email address
+- Domain doesn't exist
+- Mailbox disabled
+
+**Soft Bounce** (`action: "delayed"`):
+- Temporary failure
+- Mailbox full
+- Server temporarily unavailable
+- Will be retried by MTA
+
+### Bounce Information
+
+Bounce webhooks include:
+
+- **recipient**: Failed recipient address
+- **action**: `failed` (permanent) or `delayed` (temporary)
+- **response.status**: SMTP status code (e.g., "5.1.1")
+- **response.message**: Error message from server
+- **mta**: Mail server that reported failure
+- **messageId**: Original message ID
+- **bounceMessage**: EmailEngine ID of the bounce email
+
+### Tracking Bounces
+
+To correlate bounces with sent messages:
+
+**1. Store messageId when sending**:
+
+```javascript
+const response = await fetch('https://ee.example.com/v1/account/example/submit', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    from: { address: 'sender@example.com' },
+    to: [{ address: 'recipient@example.com' }],
+    subject: 'Test',
+    text: 'Content'
+  })
+});
+
+const data = await response.json();
+
+// Store in database
+await db.messages.insert({
+  queueId: data.queueId,
+  messageId: data.messageId,
+  recipient: 'recipient@example.com',
+  status: 'queued'
+});
+```
+
+**2. Match bounce webhook to original**:
+
+```javascript
+// Webhook handler
+app.post('/webhooks', async (req, res) => {
+  const event = req.body;
+
+  if (event.event === 'messageBounce') {
+    const messageId = event.data.messageId;
+
+    // Find original message
+    const original = await db.messages.findOne({ messageId });
+
+    if (original) {
+      // Update status
+      await db.messages.update(
+        { messageId },
+        {
+          status: 'bounced',
+          bounceReason: event.data.response.message,
+          bounceStatus: event.data.response.status
+        }
+      );
+
+      // Handle bounce (unsubscribe, notify, etc.)
+      await handleBounce(original, event.data);
+    }
+  }
+
+  res.json({ success: true });
+});
+```
+
+## Queue Management
+
+EmailEngine uses BullMQ for reliable message queuing.
+
+### Queue Monitoring
+
+View queue status in Bull Board:
+
+1. Navigate to **Tools → Bull Board**
+2. Select **Submit** queue
+3. View job statuses:
+   - **Waiting**: Ready to send immediately
+   - **Delayed**: Scheduled for future or retry after failure
+   - **Active**: Currently being sent
+   - **Completed**: Successfully delivered
+   - **Failed**: Permanently failed
+
+### Retry Behavior
+
+**Default Retry Strategy**:
+- Initial attempt: Immediate
+- Retry 1: 30 seconds later
+- Retry 2: 5 minutes later
+- Retry 3: 30 minutes later
+- Retry 4: 2 hours later
+
+Configure retry attempts in **Configuration → Service → Delivery Attempts**.
+
+### Manual Queue Management
+
+**Retry a failed job**:
+1. Go to Bull Board → Submit queue → Failed
+2. Find the job
+3. Click **Retry**
+
+**Remove a job**:
+1. Go to Bull Board → Submit queue
+2. Find the job in any status
+3. Click **Delete**
+
+**Pause queue**:
+1. Go to Bull Board → Submit queue
+2. Click **Pause**
+3. All new jobs go to "Paused" status
+4. Click **Resume** to continue
+
+### Queue Performance
+
+For high-volume sending:
+
+- Monitor **Waiting** queue size
+- If growing, increase worker concurrency
+- Check SMTP server rate limits
+- Review delivery errors in **Failed** tab
+
+## Best Practices
+
+### 1. Implement Webhook Handlers
+
+Always handle delivery webhooks:
+
+```javascript
+const deliveryStatus = new Map();
+
+app.post('/webhooks/emailengine', async (req, res) => {
+  const event = req.body;
+
+  // Acknowledge immediately
+  res.json({ success: true });
+
+  // Process asynchronously
+  switch (event.event) {
+    case 'messageSent':
+      await markDelivered(event.data.queueId, event.data.response);
+      break;
+
+    case 'messageFailed':
+      await markFailed(event.data.queueId, event.data.error);
+      break;
+
+    case 'messageBounce':
+      await processBounce(event.data.messageId, event.data);
+      break;
+  }
+});
+```
+
+### 2. Track Message IDs
+
+Store `messageId` and `queueId` from submission response:
+
+```javascript
+const response = await submitEmail(data);
+
+await db.insert({
+  queueId: response.queueId,
+  messageId: response.messageId,
+  recipient: data.to[0].address,
+  status: 'queued',
+  submittedAt: new Date()
+});
+```
+
+### 3. Handle Failures Gracefully
+
+Implement retry logic in your application:
+
+```javascript
+async function handleMessageFailed(event) {
+  const job = await db.findOne({ queueId: event.data.queueId });
+
+  // Check if we should retry
+  if (job.retries < 3 && isRetryableError(event.data.error)) {
+    // Resubmit
+    await submitEmail(job.originalData);
+    await db.update({ queueId: job.queueId }, {
+      retries: job.retries + 1
+    });
+  } else {
+    // Permanent failure
+    await db.update({ queueId: job.queueId }, {
+      status: 'failed',
+      error: event.data.error
+    });
+
+    // Notify user
+    await notifyUserOfFailure(job);
+  }
+}
+```
+
+### 4. Monitor Bounce Rates
+
+Track bounce rates to identify issues:
+
+```javascript
+const stats = {
+  sent: 0,
+  bounced: 0,
+  failed: 0
+};
+
+// Calculate bounce rate
+function getBounceRate() {
+  return (stats.bounced / stats.sent) * 100;
+}
+
+// Alert if bounce rate too high
+if (getBounceRate() > 5) {
+  alertAdmin('High bounce rate detected');
+}
+```
+
+### 5. Use Scheduled Sending Wisely
+
+Schedule emails for optimal delivery times:
+
+```javascript
+function getOptimalSendTime(timezone) {
+  // Send at 9am recipient's time
+  const now = new Date();
+  const sendTime = new Date(now);
+  sendTime.setHours(9, 0, 0, 0);
+
+  // If already past 9am today, schedule for tomorrow
+  if (sendTime <= now) {
+    sendTime.setDate(sendTime.getDate() + 1);
+  }
+
+  return sendTime.toISOString();
+}
+
+await submitEmail({
+  to: [{ address: 'user@example.com' }],
+  subject: 'Daily Report',
+  text: 'Your daily report...',
+  sendAt: getOptimalSendTime('America/New_York')
+});
+```
+
+### 6. Enable Queue Retention
+
+Keep completed/failed jobs for debugging:
+
+1. Go to **Configuration → Service**
+2. Set **Completed/failed queue entries to keep** to 100+
+3. Review failures in Bull Board
+
+### 7. Implement Rate Limiting
+
+Respect SMTP server limits:
+
+```javascript
+const rateLimit = {
+  perHour: 500,
+  perMinute: 20
+};
+
+const sentCount = {
+  hour: 0,
+  minute: 0,
+  lastReset: Date.now()
+};
+
+async function submitWithRateLimit(data) {
+  // Reset counters if needed
+  const now = Date.now();
+  if (now - sentCount.lastReset > 60000) {
+    sentCount.minute = 0;
+    sentCount.lastReset = now;
+  }
+
+  // Check limits
+  if (sentCount.minute >= rateLimit.perMinute) {
+    throw new Error('Rate limit exceeded');
+  }
+
+  // Submit
+  await submitEmail(data);
+  sentCount.minute++;
+  sentCount.hour++;
+}
+```
+
+## Troubleshooting
+
+### Problem: Messages Not Sending
+
+**Symptoms**: Messages stuck in queue, never delivered
+
+**Solutions**:
+1. Check account credentials in EmailEngine
+2. Verify SMTP server is reachable
+3. Review Bull Board for error messages
+4. Check EmailEngine logs for authentication errors
+5. Verify account hasn't exceeded sending limits
+
+### Problem: Messages Sending But No Webhooks
+
+**Symptoms**: Messages delivered but no `messageSent` webhook
+
+**Solutions**:
+1. Verify webhook URL is configured
+2. Test webhook URL with webhook.site
+3. Check webhook handler responds with 200
+4. Review Bull Board → Webhooks queue for errors
+5. Enable queue retention to see failed webhook jobs
+
+### Problem: Bounces Not Detected
+
+**Symptoms**: Email bounces but no `messageBounce` webhook
+
+**Solutions**:
+1. Check bounce messages are in IMAP account
+2. Verify EmailEngine has access to all folders
+3. Check bounce format (must be standard DSN)
+4. Review EmailEngine logs for bounce parsing errors
+5. Some providers don't send DSN bounces
+
+### Problem: High Delivery Failure Rate
+
+**Symptoms**: Many messages in Failed queue
+
+**Solutions**:
+1. Check SMTP credentials are correct
+2. Verify recipient addresses are valid
+3. Review SMTP server logs
+4. Check for IP blacklisting
+5. Verify SPF/DKIM records are configured
+6. Reduce sending rate if hitting limits
+
+### Problem: Scheduled Messages Not Sending
+
+**Symptoms**: Messages remain in Delayed queue past `sendAt` time
+
+**Solutions**:
+1. Check EmailEngine is running
+2. Verify system clock is correct
+3. Review Redis connection (BullMQ dependency)
+4. Check Bull Board for paused queue
+5. Restart EmailEngine workers if stuck
+
+## Security Considerations
+
+### 1. Secure SMTP Server
+
+If enabling SMTP:
+
+```bash
+# Use strong password
+SMTP_PASSWORD=$(openssl rand -base64 32)
+
+# Restrict to localhost if possible
+SMTP_HOST=127.0.0.1
+SMTP_PORT=2525
+
+# Use HAProxy for TLS termination
+# Enable PROXY protocol in EmailEngine
+```
+
+### 2. Validate Input
+
+Always validate before submission:
+
+```javascript
+function validateEmail(data) {
+  if (!data.from || !data.from.address) {
+    throw new Error('From address required');
+  }
+
+  if (!data.to || data.to.length === 0) {
+    throw new Error('At least one recipient required');
+  }
+
+  if (!data.text && !data.html) {
+    throw new Error('Message body required');
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(data.from.address)) {
+    throw new Error('Invalid from address');
+  }
+
+  for (const recipient of data.to) {
+    if (!emailRegex.test(recipient.address)) {
+      throw new Error(`Invalid recipient: ${recipient.address}`);
+    }
+  }
+}
+```
+
+### 3. Prevent Abuse
+
+Implement sending limits:
+
+```javascript
+const sendingLimits = {
+  perUser: 100, // per hour
+  perIP: 50     // per hour
+};
+
+const userCounts = new Map();
+
+async function checkLimit(userId, ip) {
+  const userCount = userCounts.get(userId) || 0;
+
+  if (userCount >= sendingLimits.perUser) {
+    throw new Error('User sending limit exceeded');
+  }
+
+  userCounts.set(userId, userCount + 1);
+}
+```
+
+### 4. Sanitize Content
+
+Prevent header injection:
+
+```javascript
+function sanitizeHeaders(data) {
+  // Remove newlines from headers
+  if (data.subject) {
+    data.subject = data.subject.replace(/[\r\n]/g, ' ');
+  }
+
+  // Validate email addresses
+  [data.from, ...data.to].forEach(addr => {
+    if (addr.name) {
+      addr.name = addr.name.replace(/[\r\n]/g, ' ');
+    }
+  });
+
+  return data;
+}
+```
+
+## See Also
+
+- [Basic Sending](/docs/sending/basic-sending) - Simple email sending examples
+- [Webhooks](/docs/receiving/webhooks) - Webhook configuration and handling
+- [Outbox Queue](/docs/sending/outbox-queue) - Queue management details
+- [API Reference](https://api.emailengine.app/#tag/Submit) - Complete API documentation
+- [Bounces](/docs/advanced/bounces) - Detailed bounce handling
+- [Queue Management](/docs/advanced/queue-management) - Understanding BullMQ queues

@@ -872,6 +872,361 @@ function mapWebhook(data) {
 }
 ```
 
+## HTML Email Pre-Processing for Web Display
+
+<!--
+SOURCE: sources/blog/2023-03-14-making-email-html-webpage-compatible-with-emailengine.md
+Content on preprocessing HTML emails for safe web display.
+-->
+
+When displaying email HTML content on a webpage (such as in a webmail client), you face several challenges:
+
+**Problems with Raw HTML**:
+- Broken tags can break your page layout
+- CSS styles can override your page styles
+- JavaScript could execute malicious code
+- Images with `cid:` URLs won't load in browsers
+- Unclosed tags can corrupt surrounding content
+
+**Traditional Solution: iFrames**
+
+Many webmail clients use `<iframe>` containers with `sandbox` attributes to isolate email HTML. However, this approach has drawbacks:
+- Difficult to size correctly (scrollbars or blank space)
+- Responsive design challenges
+- Additional complexity for mobile views
+
+### EmailEngine's HTML Pre-Processing
+
+EmailEngine provides built-in HTML sanitization and transformation to make email HTML safe for inline display.
+
+#### Enable Pre-Processing
+
+Use query parameters when fetching message data:
+
+**API Request**:
+```bash
+curl "https://ee.example.com/v1/account/example/message/AAAAGQAACeE?embedAttachedImages=true&preProcessHtml=true&textType=*" \
+  -H "Authorization: Bearer TOKEN"
+```
+
+**Query Parameters**:
+- `embedAttachedImages=true`: Convert `cid:` image links to base64 Data URLs
+- `preProcessHtml=true`: Sanitize and fix HTML structure
+- `textType=*`: Include all content types for processing
+
+#### What Pre-Processing Does
+
+**1. HTML Sanitization**
+
+Uses [DOMPurify](https://github.com/cure53/DOMPurify) to:
+- Remove dangerous tags (`<script>`, `<object>`, `<embed>`)
+- Strip JavaScript event handlers (`onclick`, `onerror`, etc.)
+- Clean malicious attributes
+- Remove suspicious content
+
+**2. Structure Fixes**
+
+- Closes unclosed tags
+- Fixes broken HTML structure
+- Normalizes malformed markup
+- Ensures valid HTML5
+
+**3. CSS Scoping**
+
+- Removes global style overrides
+- Scopes styles to prevent interference
+- Strips `!important` declarations that affect page layout
+- Preserves email-specific styles
+
+**4. Image Handling**
+
+Converts embedded image references to inline data:
+
+**Before (in email)**:
+```html
+<img src="cid:image-123" />
+```
+
+**After (pre-processed)**:
+```html
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..." />
+```
+
+### Usage Example
+
+**Fetch and Display Email HTML**:
+
+```javascript
+async function displayEmail(accountId, messageId) {
+  const response = await fetch(
+    `https://ee.example.com/v1/account/${accountId}/message/${messageId}?` +
+    `embedAttachedImages=true&preProcessHtml=true&textType=*`,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }
+  );
+
+  const message = await response.json();
+
+  // Directly inject into page - safe due to pre-processing
+  document.getElementById('email-content').innerHTML = message.html[0];
+}
+```
+
+**HTML Structure**:
+
+```html
+<div class="webmail-container">
+  <div class="email-header">
+    <strong>From:</strong> <span id="from"></span><br>
+    <strong>Subject:</strong> <span id="subject"></span>
+  </div>
+
+  <!-- Pre-processed HTML injected here safely -->
+  <div id="email-content" class="email-body"></div>
+</div>
+```
+
+**CSS for Email Container**:
+
+```css
+.email-body {
+  /* Isolate email styles */
+  all: initial;
+
+  /* Apply safe defaults */
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+
+  /* Prevent layout breaking */
+  max-width: 100%;
+  overflow: hidden;
+  word-wrap: break-word;
+}
+
+.email-body img {
+  max-width: 100%;
+  height: auto;
+}
+```
+
+### Pre-Processing with Document Store
+
+If ElasticSearch Document Store is enabled, pre-processing is even faster:
+
+```bash
+curl "https://ee.example.com/v1/account/example/message/AAAAGQAACeE?embedAttachedImages=true&preProcessHtml=true&documentStore=true&textType=*" \
+  -H "Authorization: Bearer TOKEN"
+```
+
+**Benefits with Document Store**:
+- No IMAP requests needed
+- Embedded images cached in ElasticSearch
+- Significantly faster response times
+- Reduced load on IMAP server
+
+### Security Considerations
+
+**What Pre-Processing Blocks**:
+- JavaScript execution
+- Form submissions
+- External resource loading (can be configured)
+- Style injection attacks
+- XSS attempts
+
+**What's Preserved**:
+- Email styling and layout
+- Inline images (converted to data URLs)
+- Text formatting
+- Tables and structure
+
+**Limitations**:
+- Some complex CSS may be stripped
+- Advanced layouts might render differently
+- Embedded fonts might not work
+- Some CSS animations removed
+
+### Attachment Handling
+
+EmailEngine distinguishes between two attachment types:
+
+**1. Regular Attachments**
+- Meant to be downloaded
+- Listed in `attachments` array
+- Include download URLs
+
+**2. Embedded Attachments (Inline Images)**
+- Displayed within HTML
+- Referenced via `cid:` protocol
+- Converted to data URLs when `embedAttachedImages=true`
+
+**Example Response**:
+
+```json
+{
+  "id": "AAAAGQAACeE",
+  "subject": "Newsletter",
+  "html": [
+    "<p>Check out our new product:</p><img src=\"data:image/png;base64,iVBORw0...\" />"
+  ],
+  "attachments": [
+    {
+      "id": "ATT123",
+      "filename": "product-catalog.pdf",
+      "contentType": "application/pdf",
+      "size": 524288,
+      "embedded": false
+    }
+  ],
+  "embeddedImages": [
+    {
+      "id": "IMG456",
+      "contentId": "<image-123@example.com>",
+      "contentType": "image/png",
+      "size": 12345,
+      "embedded": true
+    }
+  ]
+}
+```
+
+### Comparison: iframe vs Inline
+
+**Using iframe (Traditional)**:
+
+```html
+<iframe
+  sandbox="allow-same-origin"
+  srcdoc="<html><body>EMAIL_HTML_HERE</body></html>"
+  style="width: 100%; height: 600px;">
+</iframe>
+```
+
+**Pros**: Strong isolation
+**Cons**: Sizing issues, scrollbars, responsive challenges
+
+**Using Pre-Processed Inline (EmailEngine)**:
+
+```html
+<div class="email-container">
+  <!-- Directly inject pre-processed HTML -->
+  <div innerHTML="EMAIL_HTML_HERE"></div>
+</div>
+```
+
+**Pros**: No sizing issues, responsive, seamless integration
+**Cons**: Requires proper pre-processing (provided by EmailEngine)
+
+### React Example
+
+```jsx
+import React, { useEffect, useState } from 'react';
+
+function EmailViewer({ accountId, messageId, token }) {
+  const [email, setEmail] = useState(null);
+
+  useEffect(() => {
+    async function fetchEmail() {
+      const response = await fetch(
+        `https://ee.example.com/v1/account/${accountId}/message/${messageId}?` +
+        `embedAttachedImages=true&preProcessHtml=true&textType=*`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+      const data = await response.json();
+      setEmail(data);
+    }
+
+    fetchEmail();
+  }, [accountId, messageId, token]);
+
+  if (!email) return <div>Loading...</div>;
+
+  return (
+    <div className="email-viewer">
+      <div className="email-header">
+        <div><strong>From:</strong> {email.from.name} &lt;{email.from.address}&gt;</div>
+        <div><strong>Subject:</strong> {email.subject}</div>
+        <div><strong>Date:</strong> {new Date(email.date).toLocaleString()}</div>
+      </div>
+
+      <div
+        className="email-body"
+        dangerouslySetInnerHTML={{ __html: email.html[0] }}
+      />
+
+      {email.attachments && email.attachments.length > 0 && (
+        <div className="attachments">
+          <h4>Attachments</h4>
+          {email.attachments.map(att => (
+            <a key={att.id} href={att.downloadUrl}>
+              {att.filename} ({att.size} bytes)
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Best Practices for HTML Pre-Processing
+
+**1. Always Enable Both Options Together**:
+```
+embedAttachedImages=true&preProcessHtml=true
+```
+
+**2. Use Document Store for Production**:
+Significantly improves performance for frequently accessed emails.
+
+**3. Scope Email CSS**:
+Apply container styles to prevent email CSS affecting your page:
+
+```css
+.email-body {
+  all: initial; /* Reset all styles */
+  display: block;
+}
+```
+
+**4. Set Content Security Policy**:
+Add CSP headers to prevent any bypassed scripts:
+
+```http
+Content-Security-Policy: default-src 'self'; img-src data: https:; style-src 'unsafe-inline';
+```
+
+**5. Handle Large Images**:
+Email images are base64 encoded, which increases size:
+
+```javascript
+// Check HTML size before displaying
+if (email.html[0].length > 1000000) { // 1MB
+  console.warn('Large email content, consider iframe approach');
+}
+```
+
+**6. Provide Fallback**:
+If pre-processing fails, show plain text:
+
+```javascript
+function displayEmail(email) {
+  if (email.html && email.html[0]) {
+    emailContainer.innerHTML = email.html[0];
+  } else if (email.text) {
+    emailContainer.textContent = email.text;
+  } else {
+    emailContainer.textContent = 'No content available';
+  }
+}
+```
+
 ## Best Practices
 
 1. **Keep functions simple** - Complex logic should be in your application
@@ -883,6 +1238,7 @@ function mapWebhook(data) {
 7. **Document your code** - Add comments explaining business logic
 8. **Monitor performance** - Track function execution time
 9. **Version your functions** - Keep history of changes
+10. **Use HTML pre-processing** - Enable `preProcessHtml` and `embedAttachedImages` for web display
 
 ## Next Steps
 
@@ -890,9 +1246,11 @@ function mapWebhook(data) {
 - Set up [Document Store](/docs/receiving/continuous-processing#elasticsearch-integration) for email indexing
 - Implement [Performance Tuning](/docs/advanced/performance-tuning) for optimal throughput
 - Review [Security Best Practices](/docs/deployment/security)
+- Learn about [Message Operations](/docs/receiving/message-operations) for fetching emails
 
 ## Related Resources
 
 - [Webhook Events Reference](/docs/reference/webhook-events)
 - [Message Operations](/docs/receiving/message-operations)
 - [JavaScript Security Best Practices](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects)
+- [DOMPurify Documentation](https://github.com/cure53/DOMPurify)

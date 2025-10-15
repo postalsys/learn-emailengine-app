@@ -15,13 +15,13 @@ EmailEngine handles sensitive data including email credentials, OAuth tokens, an
 ## Overview
 
 This guide covers:
+
 - Network security and firewall configuration
 - Authentication and access control
 - Encryption at rest and in transit
 - API security
 - Redis security
-- Compliance considerations
-- Security monitoring
+- GDPR compliance
 
 ## Network Security
 
@@ -94,11 +94,11 @@ location /admin {
 
 ```
 ┌─────────────────────────────────┐
-│    Public Network (Internet)     │
+│    Public Network (Internet)    │
 └─────────────┬───────────────────┘
               │
 ┌─────────────▼───────────────────┐
-│         DMZ Zone                 │
+│         DMZ Zone                │
 │  ┌────────────────────────────┐ │
 │  │   Nginx Reverse Proxy      │ │
 │  │   (443/tcp)                │ │
@@ -106,111 +106,94 @@ location /admin {
 └────────────────┼────────────────┘
                  │
 ┌────────────────▼────────────────┐
-│    Application Zone              │
-│  ┌──────────────────────────┐  │
-│  │   EmailEngine Instances  │  │
-│  │   (3000/tcp - internal)  │  │
-│  └─────────────┬────────────┘  │
-│                │                 │
-│  ┌─────────────▼────────────┐  │
-│  │   Redis Database         │  │
-│  │   (6379/tcp - internal)  │  │
-│  └──────────────────────────┘  │
+│    Application Zone             │
+│  ┌──────────────────────────┐   │
+│  │   EmailEngine Instances  │   │
+│  │   (3000/tcp - internal)  │   │
+│  └─────────────┬────────────┘   │
+│                │                │
+│  ┌─────────────▼────────────┐   │
+│  │   Redis Database         │   │
+│  │   (6379/tcp - internal)  │   │
+│  └──────────────────────────┘   │
 └─────────────────────────────────┘
 ```
 
 ## Authentication Security
 
-### API Token Management
+### EENGINE_SECRET
 
-**Generate strong tokens:**
+EmailEngine uses `EENGINE_SECRET` for encrypting stored credentials and OAuth tokens.
+
+**Generate and store secret:**
 
 ```bash
-# Generate secure random token
+# Generate secret
 openssl rand -hex 32
 
-# Or use Node.js
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
+# Store permanently in systemd service
+# /etc/systemd/system/emailengine.service
+[Service]
+Environment="EENGINE_SECRET=your-generated-secret-here"
 
-**Store tokens securely:**
-
-```bash
-# Environment variables (not in code!)
-export EENGINE_SECRET=$(openssl rand -hex 32)
-export EENGINE_ENCRYPTION_SECRET=$(openssl rand -hex 32)
+# Or in environment file
+# /etc/emailengine/environment
+EENGINE_SECRET=your-generated-secret-here
 
 # Or use secret management service
 # AWS Secrets Manager, HashiCorp Vault, etc.
 ```
 
-**Token rotation policy:**
+**What EENGINE_SECRET encrypts:**
+
+- Account passwords
+- OAuth2 access tokens
+- OAuth2 refresh tokens
+- SMTP credentials
+
+### API Token Management
+
+**API tokens are always bound to specific email accounts.**
+
+All management tokens must be generated from the web UI. You cannot create account-level API tokens programmatically.
+
+**Generate tokens via web UI:**
+
+1. Log in to EmailEngine admin interface
+2. Navigate to **Settings** → **Access Tokens**
+3. Click **Generate New Token**
+4. Set description and permissions
+5. Copy the token immediately (shown only once)
+
+**Store tokens securely:**
 
 ```bash
-#!/bin/bash
-# rotate-tokens.sh
+# Environment variables (not in code!)
+export EMAILENGINE_API_TOKEN=your-generated-token
 
-# Generate new token
-NEW_TOKEN=$(openssl rand -hex 32)
-
-# Update environment
-echo "EENGINE_SECRET=$NEW_TOKEN" >> /etc/emailengine/environment
-
-# Restart service
-systemctl restart emailengine
-
-# Notify applications to use new token
-# (implement gradual rollover for zero downtime)
-```
-
-### Access Control
-
-**Implement role-based access:**
-
-```javascript
-// Example: Restrict access by IP and token
-const allowedIPs = [
-    '203.0.113.0/24',  // Office network
-    '198.51.100.42'    // VPN server
-];
-
-const allowedTokens = {
-    'admin-token': ['admin'],
-    'api-token': ['read', 'write'],
-    'readonly-token': ['read']
-};
-```
-
-**API token scopes:**
-
-```bash
-# Create tokens with specific permissions
-curl -X POST https://emailengine.example.com/admin/tokens \
-  -H "Authorization: Bearer ADMIN_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "description": "Production API",
-    "scopes": ["accounts:read", "messages:read", "messages:send"],
-    "ip_whitelist": ["203.0.113.0/24"]
-  }'
+# Or use secret management service
+# AWS Secrets Manager, HashiCorp Vault, etc.
 ```
 
 ### OAuth2 Security
 
-**Secure OAuth2 credentials:**
+EmailEngine manages OAuth2 credentials internally. You only need to configure OAuth2 client credentials once via environment variables.
+
+**Configure OAuth2 app credentials:**
 
 ```bash
-# Never commit to version control
-echo ".env" >> .gitignore
-echo "config/secrets.json" >> .gitignore
-
-# Store in environment or secret manager
+# Gmail
 EENGINE_GMAIL_CLIENT_ID=xxx.apps.googleusercontent.com
 EENGINE_GMAIL_CLIENT_SECRET=GOCSPX-xxx
 
-# Rotate OAuth2 secrets periodically
-# Update in Google Cloud Console / Azure Portal
+# Outlook
+EENGINE_OUTLOOK_CLIENT_ID=xxx
+EENGINE_OUTLOOK_CLIENT_SECRET=xxx
 ```
+
+:::info OAuth2 Credential Storage
+Once users authenticate via OAuth2, EmailEngine automatically stores and manages access tokens, refresh tokens, and handles token refresh. You do not need to manage these tokens manually.
+:::
 
 **OAuth2 redirect URI restrictions:**
 
@@ -225,6 +208,66 @@ NO: https://*/oauth  (wildcard)
 NO: http://localhost/oauth  (except for development)
 ```
 
+### Access Control
+
+**Restrict admin interface access by IP:**
+
+EmailEngine provides built-in IP address filtering for admin pages using the `EENGINE_ADMIN_ACCESS_ADDRESSES` environment variable.
+
+```bash
+# Allow only specific IPs and CIDRs to access admin interface
+EENGINE_ADMIN_ACCESS_ADDRESSES=127.0.0.0/8,163.11.23.156
+
+# Multiple addresses separated by commas
+EENGINE_ADMIN_ACCESS_ADDRESSES=10.0.0.0/8,192.168.1.0/24,203.0.113.42
+```
+
+**How it works:**
+
+- Only IP addresses matching the list can access admin pages
+- Non-matching visitors receive an error message
+- API endpoints are not affected (use Nginx for API access control)
+- Supports both individual IPs and CIDR notation
+
+**Example configuration:**
+
+```bash
+# /etc/systemd/system/emailengine.service
+[Service]
+Environment="EENGINE_SECRET=your-secret-here"
+Environment="EENGINE_ADMIN_ACCESS_ADDRESSES=127.0.0.0/8,10.0.0.0/8"
+Environment="EENGINE_REDIS=redis://localhost:6379"
+```
+
+**Common use cases:**
+
+```bash
+# Localhost only (development)
+EENGINE_ADMIN_ACCESS_ADDRESSES=127.0.0.1
+
+# Office network + VPN
+EENGINE_ADMIN_ACCESS_ADDRESSES=203.0.113.0/24,10.8.0.0/24
+
+# Multiple specific IPs
+EENGINE_ADMIN_ACCESS_ADDRESSES=198.51.100.1,198.51.100.2,198.51.100.3
+```
+
+:::tip Combine with Nginx
+For production, combine `EENGINE_ADMIN_ACCESS_ADDRESSES` with Nginx IP restrictions for defense in depth.
+:::
+
+**Nginx additional protection:**
+
+```nginx
+# Nginx configuration
+location /admin {
+    allow 10.0.0.0/8;      # VPN network
+    allow 203.0.113.0/24;  # Office network
+    deny all;
+    proxy_pass http://localhost:3000;
+}
+```
+
 ## Encryption
 
 ### Encryption at Rest
@@ -233,26 +276,19 @@ NO: http://localhost/oauth  (except for development)
 
 ```bash
 # Set encryption secret
-export EENGINE_ENCRYPTION_SECRET=$(openssl rand -hex 32)
+export EENGINE_SECRET=$(openssl rand -hex 32)
 ```
 
-**Configure encryption in config.json:**
-
-```json
-{
-  "encryptionSecret": "${EENGINE_ENCRYPTION_SECRET}",
-  "encrypt": true,
-  "encryptPassword": true,
-  "encryptAccessToken": true
-}
-```
+:::danger Store Secret Permanently
+This secret must be stored permanently. If lost, you cannot decrypt stored credentials. See the [EENGINE_SECRET section](#eengine_secret) above.
+:::
 
 **Encrypted fields:**
+
 - Account passwords
 - OAuth2 access tokens
 - OAuth2 refresh tokens
 - SMTP credentials
-- API tokens (optional)
 
 ### Encryption in Transit
 
@@ -311,8 +347,7 @@ EENGINE_REDIS=rediss://localhost:6379  # Note: rediss:// (with 's')
 
 ```bash
 # /etc/emailengine/environment
-EENGINE_SECRET=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
-EENGINE_ENCRYPTION_SECRET=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+EENGINE_SECRET=your-permanent-secret-here
 EENGINE_REDIS=redis://localhost:6379
 ```
 
@@ -330,7 +365,6 @@ aws secretsmanager get-secret-value \
 
 # Export to environment
 export EENGINE_SECRET=$(jq -r .secret /tmp/secrets.json)
-export EENGINE_ENCRYPTION_SECRET=$(jq -r .encryption_secret /tmp/secrets.json)
 
 # Clean up
 rm /tmp/secrets.json
@@ -339,47 +373,9 @@ rm /tmp/secrets.json
 /usr/local/bin/emailengine
 ```
 
-**Vault integration:**
-
-```javascript
-// vault-secrets.js
-const vault = require('node-vault')();
-
-async function getSecrets() {
-    await vault.approleLogin({
-        role_id: process.env.VAULT_ROLE_ID,
-        secret_id: process.env.VAULT_SECRET_ID
-    });
-
-    const { data } = await vault.read('secret/data/emailengine');
-
-    process.env.EENGINE_SECRET = data.data.secret;
-    process.env.EENGINE_ENCRYPTION_SECRET = data.data.encryption_secret;
-}
-
-getSecrets().then(() => {
-    require('emailengine');
-});
-```
-
 ## API Security
 
 ### Rate Limiting
-
-**Application-level rate limiting:**
-
-```javascript
-// config.json
-{
-  "api": {
-    "rateLimit": {
-      "enabled": true,
-      "max": 100,        // requests
-      "window": 60000    // per minute
-    }
-  }
-}
-```
 
 **Nginx rate limiting:**
 
@@ -395,6 +391,10 @@ server {
     }
 }
 ```
+
+:::info No Built-in Rate Limiting
+EmailEngine does not have built-in rate limiting. Implement rate limiting at the reverse proxy level (Nginx, HAProxy) or API gateway.
+:::
 
 ### IP Whitelisting
 
@@ -419,47 +419,36 @@ server {
 }
 ```
 
-**Application-level IP filtering:**
+### API Request Examples
 
-```json
-// config.json
-{
-  "api": {
-    "whitelist": [
-      "203.0.113.0/24",
-      "198.51.100.42",
-      "10.0.0.0/8"
-    ]
-  }
-}
+**Using account IDs (not email addresses):**
+
+```bash
+# CORRECT: Use account ID
+curl https://emailengine.example.com/v1/account/account_1234 \
+  -H "Authorization: Bearer TOKEN"
+
+# INCORRECT: Cannot use email address
+# curl https://emailengine.example.com/v1/account/user@example.com
+
+# Account ID might be same as email, but usually is different
+# Always use the account ID returned during account creation
 ```
 
-### Request Validation
+**Common API operations:**
 
-**Input sanitization:**
+```bash
+# List accounts
+curl https://emailengine.example.com/v1/accounts \
+  -H "Authorization: Bearer TOKEN"
 
-```javascript
-// Validate email addresses
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+# Get account info (returns account ID)
+curl https://emailengine.example.com/v1/account/account_1234 \
+  -H "Authorization: Bearer TOKEN"
 
-// Validate account IDs
-const accountIdRegex = /^[a-f0-9]{24}$/;
-
-// Limit request size
-app.use(express.json({ limit: '10mb' }));
-```
-
-**Prevent injection attacks:**
-
-```javascript
-// Never use eval() or Function() with user input
-// Sanitize all inputs
-const sanitize = require('sanitize-html');
-
-const cleanInput = sanitize(userInput, {
-    allowedTags: [],
-    allowedAttributes: {}
-});
+# Delete account
+curl -X DELETE https://emailengine.example.com/v1/account/account_1234 \
+  -H "Authorization: Bearer TOKEN"
 ```
 
 ## Redis Security
@@ -495,22 +484,28 @@ bind 127.0.0.1 ::1
 bind 10.0.1.100
 ```
 
-### Disable Dangerous Commands
+### Redis Commands
+
+EmailEngine uses `KEYS` and `CONFIG` commands internally. Do not disable these commands.
+
+**Disable only dangerous commands:**
 
 ```bash
 # redis.conf
 rename-command FLUSHDB ""
 rename-command FLUSHALL ""
-rename-command KEYS ""
-rename-command CONFIG "CONFIG_67890"
 rename-command SHUTDOWN "SHUTDOWN_12345"
 ```
+
+:::warning Keep KEYS and CONFIG
+EmailEngine requires `KEYS` and `CONFIG` Redis commands to function properly. Only disable commands like `FLUSHDB`, `FLUSHALL`, and `SHUTDOWN`.
+:::
 
 ### Redis ACLs (Redis 6+)
 
 ```bash
-# Create restricted user
-ACL SETUSER emailengine on >password ~emailengine:* +@all -@dangerous
+# Create user with full access (EmailEngine needs most commands)
+ACL SETUSER emailengine on >password ~* +@all -flushdb -flushall
 
 # Verify
 ACL LIST
@@ -520,211 +515,34 @@ ACL LIST
 
 ### GDPR Compliance
 
-**Data minimization:**
-
-```json
-// config.json
-{
-  "dataRetention": {
-    "messages": 90,        // days
-    "deletedMessages": 30, // days
-    "logs": 180           // days
-  }
-}
-```
-
 **Right to deletion:**
 
 ```bash
 # API endpoint to delete account and all data
-curl -X DELETE https://emailengine.example.com/v1/account/user@example.com \
+curl -X DELETE https://emailengine.example.com/v1/account/account_1234 \
   -H "Authorization: Bearer TOKEN"
 
 # This deletes:
 # - Account credentials
 # - OAuth tokens
-# - Message metadata
 # - Webhook history
-# - Logs related to account
 ```
 
-**Data export:**
-
-```bash
-# Export all user data (GDPR Article 20)
-curl https://emailengine.example.com/v1/account/user@example.com/export \
-  -H "Authorization: Bearer TOKEN" > user-data.json
-```
-
-### HIPAA Compliance
-
-**Requirements for HIPAA:**
-
-1. **Encryption:**
-   - YES: TLS 1.2+ for all connections
-   - YES: Encryption at rest (Redis persistence encrypted)
-   - YES: Field-level encryption for sensitive data
-
-2. **Access Control:**
-   - YES: Role-based access control
-   - YES: API token authentication
-   - YES: IP whitelisting
-   - YES: Audit logging
-
-3. **Audit Trail:**
-   ```bash
-   # Enable detailed logging
-   EENGINE_LOG_LEVEL=info
-   EENGINE_LOG_FILE=/var/log/emailengine/audit.log
-   ```
-
-4. **Data Retention:**
-   ```json
-   {
-     "dataRetention": {
-       "logs": 2555  // 7 years (HIPAA requirement)
-     }
-   }
-   ```
-
-### SOC 2 Compliance
-
-**Logging requirements:**
-
-```javascript
-// Log all access attempts
-{
-  "timestamp": "2025-10-13T10:00:00Z",
-  "event": "api.access",
-  "user": "api-key-12345",
-  "ip": "203.0.113.42",
-  "endpoint": "/v1/accounts",
-  "status": 200,
-  "response_time": 45
-}
-```
-
-**Incident response:**
-
-```bash
-#!/bin/bash
-# incident-response.sh
-
-# 1. Alert team
-curl -X POST https://alerts.example.com/webhook \
-  -d '{"severity": "high", "message": "Security incident detected"}'
-
-# 2. Block suspicious IP
-iptables -A INPUT -s $SUSPICIOUS_IP -j DROP
-
-# 3. Rotate tokens
-./rotate-tokens.sh
-
-# 4. Collect evidence
-tar czf incident-$(date +%Y%m%d).tar.gz \
-  /var/log/emailengine/ \
-  /var/log/nginx/ \
-  /etc/emailengine/
-```
-
-## Security Monitoring
-
-### Log Monitoring
-
-**Monitor for suspicious activity:**
-
-```bash
-# Failed login attempts
-grep "401\|403" /var/log/nginx/emailengine-access.log | \
-  awk '{print $1}' | sort | uniq -c | sort -rn
-
-# Unusual API usage
-awk '{print $7}' /var/log/nginx/emailengine-access.log | \
-  sort | uniq -c | sort -rn | head -20
-
-# Large requests
-awk '$10 > 1000000 {print $1, $7, $10}' /var/log/nginx/emailengine-access.log
-```
-
-**Automated monitoring:**
-
-```bash
-#!/bin/bash
-# monitor-security.sh
-
-# Check for brute force attempts
-FAILED_LOGINS=$(grep "401" /var/log/nginx/emailengine-access.log | wc -l)
-if [ $FAILED_LOGINS -gt 100 ]; then
-    echo "WARNING: $FAILED_LOGINS failed login attempts"
-    # Send alert
-fi
-
-# Check for unusual traffic patterns
-REQUESTS_PER_IP=$(awk '{print $1}' /var/log/nginx/emailengine-access.log | \
-  sort | uniq -c | sort -rn | head -1 | awk '{print $1}')
-if [ $REQUESTS_PER_IP -gt 1000 ]; then
-    echo "WARNING: Unusual traffic from single IP"
-    # Send alert
-fi
-```
-
-### Intrusion Detection
-
-**Install AIDE (Advanced Intrusion Detection Environment):**
-
-```bash
-sudo apt install aide
-sudo aideinit
-sudo mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db
-
-# Run daily checks
-sudo aide --check
-
-# Cron job
-0 2 * * * /usr/bin/aide --check | mail -s "AIDE Report" admin@example.com
-```
-
-**File integrity monitoring:**
-
-```bash
-# Monitor critical files
-/etc/emailengine/config.json
-/etc/emailengine/environment
-/etc/systemd/system/emailengine.service
-/etc/nginx/sites-available/emailengine.conf
-```
-
-### Vulnerability Scanning
-
-**Regular security audits:**
-
-```bash
-# Update packages
-sudo apt update && sudo apt upgrade
-
-# NPM security audit
-npm audit
-
-# Check for CVEs
-sudo apt install lynis
-sudo lynis audit system
-
-# SSL/TLS check
-./testssl.sh --severity HIGH emailengine.example.com
-```
+:::info No Built-in Data Retention
+EmailEngine does not implement automatic data retention policies. Email messages are not stored by EmailEngine - it only maintains account credentials and webhook delivery history. Implement data retention policies at your application level if needed.
+:::
 
 ## Security Checklist
 
 ### Pre-Deployment
 
 - [ ] Generate strong `EENGINE_SECRET` (32+ characters)
-- [ ] Generate strong `EENGINE_ENCRYPTION_SECRET` (32+ characters)
+- [ ] Store `EENGINE_SECRET` permanently (critical!)
 - [ ] Configure Redis authentication
-- [ ] Enable Redis persistence
+- [ ] Enable Redis persistence with `noeviction` policy
 - [ ] Set up firewall rules
 - [ ] Configure SSL/TLS certificates
-- [ ] Enable field encryption
-- [ ] Set up secret management
+- [ ] Set up secret management service
 - [ ] Configure log rotation
 - [ ] Plan backup strategy
 
@@ -734,115 +552,27 @@ sudo lynis audit system
 - [ ] Test firewall rules
 - [ ] Verify Redis is not publicly accessible
 - [ ] Check SSL certificate auto-renewal
-- [ ] Set up monitoring alerts
 - [ ] Configure log aggregation
 - [ ] Perform security scan
-- [ ] Document incident response plan
-- [ ] Train team on security procedures
-- [ ] Schedule regular security audits
+- [ ] Document security procedures
+- [ ] Train team on security practices
 
 ### Ongoing Maintenance
 
 - [ ] Update EmailEngine regularly
-- [ ] Update system packages
-- [ ] Rotate API tokens quarterly
+- [ ] Update system packages weekly
 - [ ] Review access logs weekly
-- [ ] Check for security advisories
+- [ ] Check for security advisories monthly
 - [ ] Test backups monthly
 - [ ] Review firewall rules quarterly
 - [ ] Audit user access quarterly
-- [ ] Update SSL certificates (automatic)
-- [ ] Renew compliance certifications annually
-
-## Incident Response
-
-### Response Plan
-
-**1. Detection:**
-```bash
-# Automated monitoring alerts
-# Log analysis
-# User reports
-```
-
-**2. Containment:**
-```bash
-# Block malicious IPs
-sudo ufw deny from $IP_ADDRESS
-
-# Revoke compromised tokens
-curl -X DELETE https://emailengine.example.com/admin/tokens/$TOKEN_ID
-
-# Isolate affected systems
-sudo systemctl stop emailengine
-```
-
-**3. Investigation:**
-```bash
-# Collect logs
-tar czf incident-logs-$(date +%Y%m%d).tar.gz \
-  /var/log/emailengine/ \
-  /var/log/nginx/ \
-  /var/log/redis/
-
-# Analyze access patterns
-# Check for data exfiltration
-# Identify attack vector
-```
-
-**4. Remediation:**
-```bash
-# Patch vulnerabilities
-sudo apt update && sudo apt upgrade
-npm update
-
-# Rotate secrets
-./rotate-all-secrets.sh
-
-# Reset compromised accounts
-# Notify affected users
-```
-
-**5. Recovery:**
-```bash
-# Restore from backup if needed
-# Restart services
-sudo systemctl start redis
-sudo systemctl start emailengine
-
-# Verify functionality
-curl https://emailengine.example.com/health
-```
-
-**6. Post-Incident:**
-```bash
-# Document incident
-# Update security procedures
-# Implement additional controls
-# Conduct team review
-```
-
-## Security Resources
-
-### Tools
-
-- **SSL Testing:** [SSL Labs](https://www.ssllabs.com/ssltest/)
-- **Security Headers:** [SecurityHeaders.com](https://securityheaders.com/)
-- **Vulnerability Scanner:** [OpenVAS](https://www.openvas.org/)
-- **WAF:** [ModSecurity](https://modsecurity.org/)
-- **IDS/IPS:** [Snort](https://www.snort.org/), [Suricata](https://suricata.io/)
-
-### Documentation
-
-- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [CIS Benchmarks](https://www.cisecurity.org/cis-benchmarks/)
-- [NIST Cybersecurity Framework](https://www.nist.gov/cyberframework)
+- [ ] Update SSL certificates (automatic with Let's Encrypt)
 
 ## See Also
 
 - [Deployment Overview](/docs/deployment)
 - [Configuration Options](/docs/configuration)
 - [Nginx Proxy Setup](/docs/deployment/nginx-proxy)
+- [SystemD Service](/docs/deployment/systemd)
 - [Monitoring](/docs/advanced/monitoring)
 - [Logging](/docs/advanced/logging)
-- [Encryption](/docs/advanced/encryption)
