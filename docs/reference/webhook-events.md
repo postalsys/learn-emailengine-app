@@ -16,7 +16,6 @@ All webhook events follow this common structure:
 
 ```json
 {
-  "eventId": "af8435d9-ceee-4715-be71-08ac9d2dc04a",
   "serviceUrl": "https://emailengine.example.com",
   "event": "eventName",
   "account": "account-id",
@@ -27,13 +26,14 @@ All webhook events follow this common structure:
 }
 ```
 
+**Note:** The `eventId` is **NOT** included in the JSON payload. It's sent as the HTTP header `X-EE-Wh-Event-Id`.
+
 ### Universal Fields
 
-These fields appear in every webhook event:
+These fields appear in every webhook event JSON payload:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `eventId` | string | Unique webhook event identifier (UUID). Use for idempotency - all retries share the same ID |
 | `serviceUrl` | string | Base URL of the EmailEngine instance that generated the event |
 | `event` | string | Event type identifier (e.g., "messageNew", "messageSent") |
 | `account` | string | Account identifier that triggered the event |
@@ -54,11 +54,38 @@ EmailEngine includes diagnostic headers in every webhook HTTP request:
 
 | Header | Type | Example | Description |
 |--------|------|---------|-------------|
-| `X-EE-Wh-Event-Id` | string | `af8435d9-ceee-4715-be71-08ac9d2dc04a` | UUID for the event (same as `eventId` in payload) |
-| `X-EE-Wh-Custom-Route` | string | `AAABiL8tBKsAAAAG` | Identifier of the custom webhook route |
+| `X-EE-Wh-Event-Id` | string | `af8435d9-ceee-4715-be71-08ac9d2dc04a` | **Unique event identifier (UUID).** Use for idempotency - all retries share the same ID. **This is the ONLY place eventId is available** - it's NOT in the JSON payload. |
+| `X-EE-Wh-Id` | string | `907889` | Internal BullMQ job ID of the queued webhook entry |
+| `X-EE-Wh-Attempts-Made` | string | `1` | Delivery attempt counter (starts at 1, increases with retries) |
 | `X-EE-Wh-Queued-Time` | string | `5s` | Time the event spent in queue before delivery |
-| `X-EE-Wh-Attempts-Made` | integer | `1` | Delivery attempt counter (>1 indicates retries) |
-| `X-EE-Wh-Id` | integer | `907889` | Internal ID of the queued webhook entry |
+| `X-EE-Wh-Custom-Route` | string | `AAABiL8tBKsAAAAG` | Identifier of the custom webhook route (only present for webhook routes) |
+| `X-EE-Wh-Signature` | string | `dGhpcyBpcyBh...` | HMAC-SHA256 signature (base64url) of the JSON body using EENGINE_SECRET |
+| `Content-Type` | string | `application/json` | Always `application/json` |
+| `User-Agent` | string | `emailengine/2.x.x (+https://emailengine.app)` | EmailEngine version and homepage |
+
+### Webhook Signature Verification
+
+The `X-EE-Wh-Signature` header contains an HMAC-SHA256 signature of the request body:
+
+```javascript
+const crypto = require('crypto');
+
+function verifyWebhook(req, secret) {
+  const signature = req.headers['x-ee-wh-signature'];
+  const body = JSON.stringify(req.body);
+
+  const hmac = crypto.createHmac('sha256', secret);
+  hmac.update(body);
+  const expected = hmac.digest('base64url');
+
+  return signature === expected;
+}
+
+// Usage
+if (!verifyWebhook(req, process.env.EENGINE_SECRET)) {
+  return res.status(401).json({ error: 'Invalid signature' });
+}
+```
 
 You can also configure custom headers via `webhooksCustomHeaders` in Settings or **Configuration → Webhooks**.
 
@@ -73,7 +100,6 @@ Triggered when a new account is registered in EmailEngine.
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "accountAdded",
   "account": "user@example.com",
@@ -106,7 +132,6 @@ Triggered when an account is removed from EmailEngine.
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "accountDeleted",
   "account": "user@example.com",
@@ -135,7 +160,6 @@ Triggered when an account successfully connects for the first time and completes
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "accountInitialized",
   "account": "user@example.com",
@@ -168,7 +192,6 @@ Triggered when an account encounters an error (authentication failure, connectio
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "accountError",
   "account": "user@example.com",
@@ -213,7 +236,6 @@ Triggered when account authentication fails.
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "authenticationError",
   "account": "user@example.com",
@@ -251,7 +273,6 @@ Triggered when account authenticates successfully.
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "authenticationSuccess",
   "account": "user@example.com",
@@ -280,7 +301,6 @@ Triggered when connection to the email server fails.
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "connectError",
   "account": "user@example.com",
@@ -322,7 +342,6 @@ Triggered when a new message arrives in any mailbox. Also triggered when message
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "messageNew",
   "account": "user@example.com",
@@ -518,33 +537,39 @@ Included when AI features are enabled:
 
 **Example Integration:**
 ```javascript
-if (event.event === 'messageNew') {
-  const { data } = event;
+app.post('/webhook', async (req, res) => {
+  const event = req.body;
+  const eventId = req.headers['x-ee-wh-event-id'];
 
-  // Check idempotency
-  if (await isProcessed(event.eventId)) {
-    return; // Already handled
+  if (event.event === 'messageNew') {
+    const { data } = event;
+
+    // Check idempotency using header
+    if (await isProcessed(eventId)) {
+      return res.json({ success: true }); // Already handled
+    }
+
+    // Notify user
+    await sendPushNotification({
+      title: `New email from ${data.from.address}`,
+      body: data.subject
+    });
+
+    // Process attachments
+    if (data.attachments?.length > 0) {
+      await processAttachments(data.id, data.attachments);
+    }
+
+    // Auto-classify
+    if (data.subject?.includes('invoice')) {
+      await moveToFolder(data.id, 'Invoices');
+    }
+
+    // Mark as processed
+    await markProcessed(eventId);
+    res.json({ success: true });
   }
-
-  // Notify user
-  await sendPushNotification({
-    title: `New email from ${data.from.address}`,
-    body: data.subject
-  });
-
-  // Process attachments
-  if (data.attachments?.length > 0) {
-    await processAttachments(data.id, data.attachments);
-  }
-
-  // Auto-classify
-  if (data.subject?.includes('invoice')) {
-    await moveToFolder(data.id, 'Invoices');
-  }
-
-  // Mark as processed
-  await markProcessed(event.eventId);
-}
+});
 ```
 
 ---
@@ -556,7 +581,6 @@ Triggered when a message is deleted from a mailbox or moved to another folder.
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "messageDeleted",
   "account": "user@example.com",
@@ -596,7 +620,6 @@ Triggered when message flags or labels change (read/unread, flagged, etc.).
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "messageUpdated",
   "account": "user@example.com",
@@ -663,7 +686,6 @@ Triggered when a previously seen message is no longer found in the mailbox (may 
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "messageMissing",
   "account": "user@example.com",
@@ -702,7 +724,6 @@ Triggered when a new mailbox (folder) is created.
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "mailboxNew",
   "account": "user@example.com",
@@ -739,7 +760,6 @@ Triggered when a mailbox (folder) is deleted.
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "mailboxDeleted",
   "account": "user@example.com",
@@ -773,7 +793,6 @@ Triggered when the UIDVALIDITY of a folder changes. This indicates the folder wa
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "mailboxReset",
   "account": "user@example.com",
@@ -812,7 +831,6 @@ Triggered when a message is successfully accepted by the mail server (MTA).
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "messageSent",
   "account": "user@example.com",
@@ -896,7 +914,6 @@ Triggered when email sending fails. EmailEngine retries automatically. You recei
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "messageDeliveryError",
   "account": "user@example.com",
@@ -964,7 +981,6 @@ Triggered when EmailEngine abandons delivery after all retry attempts fail. This
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "messageFailed",
   "account": "user@example.com",
@@ -1016,7 +1032,6 @@ Triggered when a bounce (DSN - Delivery Status Notification) message is received
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "messageBounce",
   "account": "user@example.com",
@@ -1084,7 +1099,6 @@ Triggered when an ARF (Abuse Reporting Format) feedback loop complaint is receiv
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "messageComplaint",
   "account": "user@example.com",
@@ -1156,7 +1170,6 @@ Triggered when a tracking pixel embedded in an email is requested, indicating th
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "trackOpen",
   "account": "user@example.com",
@@ -1195,7 +1208,6 @@ Triggered when a tracked link in an email is clicked.
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "trackClick",
   "account": "user@example.com",
@@ -1235,7 +1247,6 @@ Triggered when a recipient clicks the List-Unsubscribe link or when an email cli
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "listUnsubscribe",
   "account": "user@example.com",
@@ -1273,7 +1284,6 @@ Triggered when a recipient resubscribes to a list after previously unsubscribing
 **Payload:**
 ```json
 {
-  "eventId": "uuid",
   "serviceUrl": "https://emailengine.example.com",
   "event": "listSubscribe",
   "account": "user@example.com",
@@ -1539,31 +1549,36 @@ Adds: `data.riskAssessment` (object) - AI-powered risk analysis
 
 ### Idempotency
 
-Always handle duplicate events using `eventId`:
+Always handle duplicate events using the `X-EE-Wh-Event-Id` header:
 
 ```javascript
 const processedEvents = new Set();
 
-async function handleWebhook(event) {
+app.post('/webhook', async (req, res) => {
+  const event = req.body;
+  const eventId = req.headers['x-ee-wh-event-id'];
+
   // Check idempotency
-  if (processedEvents.has(event.eventId)) {
+  if (processedEvents.has(eventId)) {
     console.log('Duplicate event, skipping');
-    return;
+    return res.json({ success: true });
   }
 
   // Or use database
-  const exists = await db.events.findOne({ eventId: event.eventId });
+  const exists = await db.events.findOne({ eventId });
   if (exists) {
-    return; // Already processed
+    return res.json({ success: true }); // Already processed
   }
 
   // Process event
   await processEvent(event);
 
   // Mark as processed
-  await db.events.insertOne({ eventId: event.eventId, processed: true });
-  processedEvents.add(event.eventId);
-}
+  await db.events.insertOne({ eventId, processed: true });
+  processedEvents.add(eventId);
+
+  res.json({ success: true });
+});
 ```
 
 ### Error Handling
@@ -1677,15 +1692,19 @@ async function processWebhook(event) {
 EmailEngine retries failed webhooks up to 10 times with exponential backoff:
 
 ```javascript
-function handleWebhook(req, res) {
+app.post('/webhook', async (req, res) => {
   const attemptNumber = parseInt(req.headers['x-ee-wh-attempts-made'] || '1');
+  const eventId = req.headers['x-ee-wh-event-id'];
 
   if (attemptNumber > 1) {
-    console.log(`Retry attempt ${attemptNumber} for event ${req.headers['x-ee-wh-event-id']}`);
+    console.log(`Retry attempt ${attemptNumber} for event ${eventId}`);
   }
 
   // Process webhook...
-}
+  await processEvent(req.body);
+
+  res.json({ success: true });
+});
 ```
 
 ## Webhook Retry Mechanism
