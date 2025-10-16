@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 400">
   <defs>
     <style>
       .component-box { fill: #ffffff; stroke: #2563eb; stroke-width: 2.5; }
@@ -8,7 +8,7 @@
       .label-text { font-family: -apple-system, sans-serif; font-size: 14px; fill: #6b7280; }
       .heading { font-family: -apple-system, sans-serif; font-size: 24px; font-weight: 700; fill: #111827; }
       .connection { stroke: #9ca3af; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
-      .connection-label { font-family: -apple-system, sans-serif; font-size: 12px; fill: #4b5563; font-weight: 500; }
+      .connection-label { font-family: -apple-system, sans-serif; font-size: 13px; fill: #4b5563; font-weight: 500; }
     </style>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
       <polygon points="0 0, 10 3, 0 6" fill="#9ca3af" />
@@ -16,61 +16,55 @@
   </defs>
 
   <!-- Title -->
-  <text x="500" y="40" class="heading" text-anchor="middle">EmailEngine Architecture</text>
+  <text x="550" y="35" class="heading" text-anchor="middle">EmailEngine Architecture</text>
 
-  <!-- Your Application (Top) -->
-  <rect x="350" y="80" width="300" height="100" class="external-box" rx="8"/>
-  <text x="500" y="115" class="title-text" text-anchor="middle">Your Application</text>
-  <text x="500" y="140" class="label-text" text-anchor="middle">REST API integration</text>
-  <text x="500" y="160" class="label-text" text-anchor="middle">Webhook endpoint</text>
+  <!-- Your Application (Left) -->
+  <rect x="50" y="120" width="220" height="160" class="external-box" rx="8"/>
+  <text x="160" y="155" class="title-text" text-anchor="middle">Your Application</text>
+  <text x="160" y="190" class="label-text" text-anchor="middle">Makes API calls</text>
+  <text x="160" y="210" class="label-text" text-anchor="middle">to EmailEngine</text>
+  <text x="160" y="240" class="label-text" text-anchor="middle">Receives webhooks</text>
+  <text x="160" y="260" class="label-text" text-anchor="middle">from EmailEngine</text>
 
-  <!-- Down arrow: App to EmailEngine -->
-  <path d="M 500 180 L 500 245" class="connection"/>
-  <text x="520" y="215" class="connection-label">API calls</text>
+  <!-- Arrow: App to EmailEngine -->
+  <path d="M 270 180 L 390 180" class="connection"/>
+  <text x="310" y="170" class="connection-label">REST API</text>
 
-  <!-- Up arrow: EmailEngine to App -->
-  <path d="M 470 245 L 470 180" class="connection"/>
-  <text x="410" y="215" class="connection-label">Webhooks</text>
+  <!-- Arrow: EmailEngine to App -->
+  <path d="M 390 220 L 270 220" class="connection"/>
+  <text x="305" y="240" class="connection-label">Webhooks</text>
 
   <!-- EmailEngine (Center) -->
-  <rect x="350" y="245" width="300" height="150" class="component-box" rx="8"/>
-  <text x="500" y="280" class="title-text" text-anchor="middle">EmailEngine</text>
-  <text x="500" y="308" class="label-text" text-anchor="middle">• Connection management</text>
-  <text x="500" y="328" class="label-text" text-anchor="middle">• Data sync &amp; caching</text>
-  <text x="500" y="348" class="label-text" text-anchor="middle">• Queue management</text>
-  <text x="500" y="368" class="label-text" text-anchor="middle">• Webhook notifications</text>
-  <text x="500" y="388" class="label-text" text-anchor="middle">• Account orchestration</text>
+  <rect x="390" y="80" width="220" height="240" class="component-box" rx="8"/>
+  <text x="500" y="115" class="title-text" text-anchor="middle">EmailEngine</text>
+  <text x="500" y="150" class="label-text" text-anchor="middle">Connection management</text>
+  <text x="500" y="175" class="label-text" text-anchor="middle">Data sync &amp; caching</text>
+  <text x="500" y="200" class="label-text" text-anchor="middle">Queue management</text>
+  <text x="500" y="225" class="label-text" text-anchor="middle">Webhook notifications</text>
+  <text x="500" y="250" class="label-text" text-anchor="middle">Account orchestration</text>
+  <text x="500" y="285" class="label-text" text-anchor="middle">Stores data in Redis</text>
+  <text x="500" y="305" class="label-text" text-anchor="middle">Connects to email servers</text>
 
-  <!-- Redis (Bottom Left) -->
-  <rect x="100" y="450" width="250" height="110" class="storage-box" rx="8"/>
-  <text x="225" y="490" class="title-text" text-anchor="middle">Redis</text>
-  <text x="225" y="518" class="label-text" text-anchor="middle">Email metadata</text>
-  <text x="225" y="538" class="label-text" text-anchor="middle">Message queues</text>
+  <!-- Redis (Bottom Center) -->
+  <rect x="390" y="340" width="220" height="50" class="storage-box" rx="8"/>
+  <text x="500" y="370" class="title-text" text-anchor="middle">Redis</text>
 
-  <!-- Arrow: EmailEngine to Redis -->
-  <path d="M 375 395 L 300 450" class="connection"/>
-  <text x="315" y="415" class="connection-label">Store</text>
+  <!-- Email Providers (Right) -->
+  <rect x="830" y="80" width="220" height="240" class="external-box" rx="8"/>
+  <text x="940" y="115" class="title-text" text-anchor="middle">Email Providers</text>
+  <text x="940" y="150" class="label-text" text-anchor="middle">Gmail</text>
+  <text x="940" y="175" class="label-text" text-anchor="middle">Outlook / Microsoft 365</text>
+  <text x="940" y="200" class="label-text" text-anchor="middle">Yahoo, AOL</text>
+  <text x="940" y="225" class="label-text" text-anchor="middle">Generic IMAP/SMTP</text>
+  <text x="940" y="250" class="label-text" text-anchor="middle">Custom servers</text>
+  <text x="940" y="285" class="label-text" text-anchor="middle">via IMAP, SMTP,</text>
+  <text x="940" y="305" class="label-text" text-anchor="middle">Gmail API, Graph API</text>
 
-  <!-- Arrow: Redis to EmailEngine -->
-  <path d="M 330 450 L 400 395" class="connection"/>
-  <text x="340" y="435" class="connection-label">Retrieve</text>
+  <!-- Arrow: EmailEngine to Providers -->
+  <path d="M 610 180 L 830 180" class="connection"/>
+  <text x="685" y="170" class="connection-label">IMAP/SMTP/APIs</text>
 
-  <!-- Email Providers (Bottom Right) -->
-  <rect x="650" y="430" width="280" height="170" class="external-box" rx="8"/>
-  <text x="790" y="465" class="title-text" text-anchor="middle">Email Providers</text>
-  <text x="790" y="495" class="label-text" text-anchor="middle">Gmail (IMAP / Gmail API)</text>
-  <text x="790" y="515" class="label-text" text-anchor="middle">Outlook (IMAP / Graph API)</text>
-  <text x="790" y="535" class="label-text" text-anchor="middle">Microsoft 365</text>
-  <text x="790" y="555" class="label-text" text-anchor="middle">Yahoo, Generic IMAP/SMTP</text>
-  <text x="790" y="575" class="label-text" text-anchor="middle">Custom mail servers</text>
-
-  <!-- Arrow: EmailEngine to Email Providers -->
-  <path d="M 625 340 L 680 465" class="connection"/>
-  <text x="640" y="390" class="connection-label">IMAP/SMTP</text>
-  <text x="640" y="405" class="connection-label">Gmail API</text>
-  <text x="640" y="420" class="connection-label">Graph API</text>
-
-  <!-- Arrow: Email Providers to EmailEngine -->
-  <path d="M 710 465 L 650 360" class="connection"/>
-  <text x="665" y="410" class="connection-label">Email sync</text>
+  <!-- Arrow: Providers to EmailEngine -->
+  <path d="M 830 220 L 610 220" class="connection"/>
+  <text x="695" y="240" class="connection-label">Email data</text>
 </svg>
