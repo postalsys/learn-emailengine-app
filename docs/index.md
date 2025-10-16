@@ -143,8 +143,6 @@ EmailEngine works as a middleware between your application and email providers:
 - **Automatic reconnection** and error recovery
 - **Queue management** with automatic retries
 
-[Learn more about the architecture →](/docs/getting-started/introduction)
-
 ## Popular Topics
 
 ### Setting Up Email Accounts
