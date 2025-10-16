@@ -8,11 +8,6 @@ description: Complete guide to integrating AI and ChatGPT with EmailEngine for e
 
 Learn how to enhance your email workflows with artificial intelligence using EmailEngine's OpenAI/ChatGPT integration capabilities.
 
-**Sources**:
-- [Integrating AI with EmailEngine](https://emailengine.app/blog/generating-summaries-of-new-emails-using-chatgpt) (September 14, 2023)
-- [Improved ChatGPT Integration](https://emailengine.app/blog/improved-chatgpt-integration-with-emailengine) (June 6, 2023)
-- [Chat with Emails](https://emailengine.app/blog/chat-with-emails-using-emailengine) (October 3, 2023)
-
 ## Overview
 
 EmailEngine integrates with OpenAI's API to provide AI-powered email processing capabilities:

@@ -15,7 +15,6 @@ Developer-focused comparison of EmailEngine and Nylas Email API without marketin
 Choose based on your priorities: operational overhead vs control and cost.
 :::
 
-**Source:** This comparison is based on the [original blog post](https://emailengine.app/blog/2025-05-19-emailengine-vs-nylas) by Andris Reinman.
 
 ## Quick Comparison Table
 

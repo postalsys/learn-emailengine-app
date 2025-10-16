@@ -8,7 +8,6 @@ description: Connect EmailEngine with low-code platforms like Zapier, Make.com, 
 
 Learn how to integrate EmailEngine with low-code platforms and automation tools using webhooks and custom routing.
 
-**Source**: [Low-code Integrations with EmailEngine](https://emailengine.app/blog/low-code-integrations) (October 19, 2022)
 
 ## Overview
 

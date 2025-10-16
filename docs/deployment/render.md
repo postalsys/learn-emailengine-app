@@ -14,7 +14,6 @@ Deploy EmailEngine on Render.com with zero DevOps overhead. Render provides mana
 Use the "Deploy to Render" button for automated setup with EmailEngine + Redis configured automatically.
 :::
 
-**Source:** This guide is based on the [original blog post](https://emailengine.app/blog/2022-05-06-install-emailengine-on-render-com) by Andris Reinman.
 
 ## Overview
 

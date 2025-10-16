@@ -8,7 +8,6 @@ description: Optimize EmailEngine performance for production workloads with prop
 
 Learn how to optimize EmailEngine for production workloads by tuning worker threads, Redis configuration, and implementing scaling strategies.
 
-**Source**: [Performance Tuning](https://emailengine.app/blog/tuning-performance) (September 6, 2025)
 
 ## Overview
 

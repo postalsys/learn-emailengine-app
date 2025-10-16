@@ -8,7 +8,6 @@ description: Enable field-level encryption for sensitive data like passwords and
 
 Learn how to enable field-level encryption for sensitive data stored by EmailEngine, including passwords, OAuth tokens, and API secrets.
 
-**Source**: [Enabling Secrets Encryption](https://emailengine.app/blog/enabling-secret-encryption) (September 21, 2023)
 
 ## Overview
 

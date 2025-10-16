@@ -8,7 +8,6 @@ description: Complete guide for integrating email functionality with CRM systems
 
 Learn how to integrate EmailEngine with CRM systems to provide seamless email synchronization, contact activity tracking, and direct email sending capabilities.
 
-**Source**: [Integrating Emails with a CRM](https://emailengine.app/blog/integrating-emails-with-a-crm) (April 21, 2023)
 
 ## Overview
 

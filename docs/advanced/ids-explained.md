@@ -8,7 +8,6 @@ description: Understand the different types of message identifiers in EmailEngin
 
 Learn about EmailEngine's various message identifiers - `id`, `uid`, `emailId`, `messageId`, and sequence numbers - and understand when and why to use each one.
 
-**Source**: [IDs Explained](https://emailengine.app/blog/ids-explained) (July 2, 2024)
 
 ## Overview
 

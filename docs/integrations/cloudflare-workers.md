@@ -8,7 +8,6 @@ description: Parse and process incoming emails with Cloudflare Email Workers
 
 Learn how to parse and process incoming emails using Cloudflare Email Workers with the postal-mime library.
 
-**Source**: [How to Parse Emails with Cloudflare Email Workers](https://emailengine.app/blog/how-to-parse-emails-with-cloudflare-email-workers) (February 27, 2024)
 
 :::info
 This guide covers general email processing with Cloudflare Email Workers and is not specific to EmailEngine. For processing incoming emails with EmailEngine instead, see other guides in this documentation.

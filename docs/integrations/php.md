@@ -8,7 +8,6 @@ description: Complete guide to integrating EmailEngine with PHP applications usi
 
 Learn how to integrate EmailEngine with PHP applications using the official EmailEngine PHP SDK available through Composer.
 
-**Source**: [Using EmailEngine with PHP and Composer](https://emailengine.app/blog/using-emailengine-with-php-and-composer) (December 31, 2021)
 
 ## Overview
 
