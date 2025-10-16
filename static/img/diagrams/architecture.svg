@@ -1,22 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 650">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 550">
   <defs>
     <style>
-      .box { fill: #ffffff; stroke: #2563eb; stroke-width: 2.5; rx: 8; }
-      .storage { fill: #fef3c7; stroke: #f59e0b; stroke-width: 2.5; rx: 8; }
-      .external { fill: #dbeafe; stroke: #3b82f6; stroke-width: 2.5; rx: 8; }
-      .text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 15px; fill: #111827; font-weight: 600; }
+      .box { fill: #ffffff; stroke: #2563eb; stroke-width: 2.5; }
+      .storage { fill: #fef3c7; stroke: #f59e0b; stroke-width: 2.5; }
+      .external { fill: #dbeafe; stroke: #3b82f6; stroke-width: 2.5; }
+      .text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 16px; fill: #111827; font-weight: 600; }
       .label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 13px; fill: #6b7280; }
-      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 20px; font-weight: 700; fill: #111827; }
-      .arrow { stroke: #4b5563; stroke-width: 2.5; fill: none; marker-end: url(#arrowhead); }
-      .arrow-bi { stroke: #4b5563; stroke-width: 2.5; fill: none; marker-end: url(#arrowhead); marker-start: url(#arrowhead-start); }
-      .arrow-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 12px; fill: #4b5563; font-weight: 500; }
-      .section-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 13px; fill: #374151; font-weight: 600; }
+      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 22px; font-weight: 700; fill: #111827; }
+      .arrow { stroke: #6b7280; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .arrow-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 11px; fill: #374151; font-weight: 500; }
     </style>
     <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-      <polygon points="0 0, 10 3, 0 6" fill="#4b5563" />
-    </marker>
-    <marker id="arrowhead-start" markerWidth="10" markerHeight="10" refX="1" refY="3" orient="auto" markerUnits="strokeWidth">
-      <polygon points="10 0, 0 3, 10 6" fill="#4b5563" />
+      <polygon points="0 0, 10 3, 0 6" fill="#6b7280" />
     </marker>
   </defs>
 
@@ -24,56 +19,57 @@
   <text x="450" y="35" class="title" text-anchor="middle">EmailEngine Architecture</text>
 
   <!-- Your Application -->
-  <rect x="325" y="70" width="250" height="90" class="external" rx="8"/>
+  <rect x="325" y="70" width="250" height="85" class="external" rx="8"/>
   <text x="450" y="105" class="text" text-anchor="middle">Your Application</text>
   <text x="450" y="130" class="label" text-anchor="middle">Makes REST API calls</text>
-  <text x="450" y="148" class="label" text-anchor="middle">Receives webhook notifications</text>
+  <text x="450" y="146" class="label" text-anchor="middle">Receives webhook notifications</text>
 
-  <!-- Bidirectional arrows between App and EmailEngine -->
-  <path d="M 450 160 L 450 215" class="arrow"/>
-  <text x="470" y="190" class="arrow-label">REST API</text>
+  <!-- Arrows between App and EmailEngine -->
+  <path d="M 470 155 L 470 225" class="arrow"/>
+  <text x="485" y="190" class="arrow-label">API requests</text>
 
-  <path d="M 420 215 L 420 160" class="arrow"/>
-  <text x="350" y="190" class="arrow-label">Webhooks</text>
+  <path d="M 430 225 L 430 155" class="arrow"/>
+  <text x="340" y="190" class="arrow-label">Webhook events</text>
 
   <!-- EmailEngine (main box) -->
-  <rect x="300" y="215" width="300" height="140" class="box" rx="8"/>
-  <text x="450" y="245" class="text" text-anchor="middle">EmailEngine</text>
-  <text x="450" y="270" class="label" text-anchor="middle">Connection management</text>
-  <text x="450" y="288" class="label" text-anchor="middle">Data sync &amp; caching</text>
-  <text x="450" y="306" class="label" text-anchor="middle">Queue management</text>
-  <text x="450" y="324" class="label" text-anchor="middle">Webhook notifications</text>
-  <text x="450" y="342" class="label" text-anchor="middle">Account orchestration</text>
+  <rect x="300" y="225" width="300" height="135" class="box" rx="8"/>
+  <text x="450" y="258" class="text" text-anchor="middle">EmailEngine</text>
+  <text x="450" y="283" class="label" text-anchor="middle">Connection management</text>
+  <text x="450" y="300" class="label" text-anchor="middle">Data sync &amp; caching</text>
+  <text x="450" y="317" class="label" text-anchor="middle">Queue management</text>
+  <text x="450" y="334" class="label" text-anchor="middle">Webhook notifications</text>
+  <text x="450" y="351" class="label" text-anchor="middle">Account orchestration</text>
 
   <!-- Redis -->
-  <rect x="50" y="420" width="220" height="100" class="storage" rx="8"/>
-  <text x="160" y="455" class="text" text-anchor="middle">Redis</text>
-  <text x="160" y="480" class="label" text-anchor="middle">Stores email metadata</text>
-  <text x="160" y="498" class="label" text-anchor="middle">Message queues</text>
+  <rect x="50" y="400" width="200" height="95" class="storage" rx="8"/>
+  <text x="150" y="435" class="text" text-anchor="middle">Redis</text>
+  <text x="150" y="460" class="label" text-anchor="middle">Email metadata storage</text>
+  <text x="150" y="477" class="label" text-anchor="middle">Message queues</text>
 
-  <!-- Arrow from EmailEngine to Redis -->
-  <path d="M 300 320 L 270 420" class="arrow-bi"/>
-  <text x="240" y="375" class="arrow-label">Store/Retrieve</text>
+  <!-- Arrow EmailEngine to Redis -->
+  <path d="M 300 330 L 250 400" class="arrow"/>
+  <text x="215" y="370" class="arrow-label">Store data</text>
+
+  <!-- Arrow Redis to EmailEngine -->
+  <path d="M 250 400 L 300 360" class="arrow"/>
+  <text x="215" y="390" class="arrow-label">Retrieve data</text>
 
   <!-- Email Providers -->
-  <rect x="630" y="380" width="220" height="180" class="external" rx="8"/>
-  <text x="740" y="410" class="text" text-anchor="middle">Email Providers</text>
-  <text x="740" y="438" class="label" text-anchor="middle">Gmail (IMAP/Gmail API)</text>
-  <text x="740" y="456" class="label" text-anchor="middle">Outlook (IMAP/Graph API)</text>
-  <text x="740" y="474" class="label" text-anchor="middle">Microsoft 365</text>
-  <text x="740" y="492" class="label" text-anchor="middle">Yahoo, AOL</text>
-  <text x="740" y="510" class="label" text-anchor="middle">Generic IMAP/SMTP</text>
-  <text x="740" y="528" class="label" text-anchor="middle">Custom mail servers</text>
+  <rect x="650" y="380" width="200" height="155" class="external" rx="8"/>
+  <text x="750" y="410" class="text" text-anchor="middle">Email Providers</text>
+  <text x="750" y="438" class="label" text-anchor="middle">Gmail (IMAP/Gmail API)</text>
+  <text x="750" y="455" class="label" text-anchor="middle">Outlook (IMAP/Graph API)</text>
+  <text x="750" y="472" class="label" text-anchor="middle">Microsoft 365</text>
+  <text x="750" y="489" class="label" text-anchor="middle">Yahoo, Generic IMAP/SMTP</text>
+  <text x="750" y="506" class="label" text-anchor="middle">Custom mail servers</text>
 
-  <!-- Arrow from EmailEngine to Email Providers -->
-  <path d="M 600 285 L 630 430" class="arrow-bi"/>
-  <text x="610" y="340" class="arrow-label">IMAP/SMTP</text>
-  <text x="610" y="356" class="arrow-label">Gmail API</text>
-  <text x="610" y="372" class="arrow-label">Graph API</text>
+  <!-- Arrow EmailEngine to Email Providers -->
+  <path d="M 600 280 L 650 430" class="arrow"/>
+  <text x="615" y="340" class="arrow-label">Connect via</text>
+  <text x="615" y="355" class="arrow-label">IMAP/SMTP/APIs</text>
 
-  <!-- Key Features at bottom -->
-  <rect x="50" y="580" width="800" height="50" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1" rx="6"/>
-  <text x="450" y="603" class="section-title" text-anchor="middle">Key Features</text>
-  <text x="250" y="622" class="label" text-anchor="middle">Unified API for all providers</text>
-  <text x="650" y="622" class="label" text-anchor="middle">OAuth2 authentication support</text>
+  <!-- Arrow Email Providers to EmailEngine -->
+  <path d="M 650 460 L 600 310" class="arrow"/>
+  <text x="615" y="390" class="arrow-label">Email data</text>
+  <text x="615" y="405" class="arrow-label">&amp; notifications</text>
 </svg>

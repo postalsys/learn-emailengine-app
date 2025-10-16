@@ -131,10 +131,17 @@ EmailEngine works as a middleware between your application and email providers:
 3. **Redis** - Stores email metadata, message queues, and account data for fast access
 4. **Email Providers** - Gmail, Outlook, Microsoft 365, and any IMAP/SMTP server
 
-**Key flows:**
-- **API requests**: Your app → EmailEngine → Email providers / Redis
-- **Webhooks**: Email providers → EmailEngine → Your app (instant notifications)
-- **Data storage**: EmailEngine ↔ Redis (metadata and queues only, not email content)
+**Data flows:**
+- **API requests**: Your app calls EmailEngine REST API → EmailEngine connects to email providers or retrieves from Redis
+- **Webhooks**: Email providers send updates → EmailEngine processes → Your app receives webhook notifications
+- **Data storage**: EmailEngine stores metadata and queues in Redis (email content is not stored, only fetched on demand)
+
+**Key features:**
+- **Unified API** for all email providers (IMAP, SMTP, Gmail API, Microsoft Graph API)
+- **OAuth2 authentication** support for Gmail, Google Workspace, and Microsoft 365
+- **Real-time webhooks** for instant email notifications
+- **Automatic reconnection** and error recovery
+- **Queue management** with automatic retries
 
 [Learn more about the architecture →](/docs/getting-started/introduction)
 
