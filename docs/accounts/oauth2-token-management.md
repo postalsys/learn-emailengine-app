@@ -13,6 +13,10 @@ Sources merged:
 
 EmailEngine automatically manages OAuth2 tokens for registered accounts, including refreshing expired access tokens. You can also retrieve these tokens to use with other Google or Microsoft APIs directly.
 
+:::tip Quick Reference
+**API Endpoint:** [GET /v1/account/{account}/oauth-token](/docs/api/get-v-1-account-account-oauthtoken) - Retrieve a valid OAuth2 access token for any account
+:::
+
 ## Overview
 
 When you register OAuth2 accounts in EmailEngine:
@@ -20,7 +24,7 @@ When you register OAuth2 accounts in EmailEngine:
 - EmailEngine stores OAuth2 tokens in Redis
 - Access tokens are automatically refreshed before expiration
 - You never need to handle token refresh logic
-- Tokens can be retrieved for use with other APIs
+- Tokens can be retrieved for use with other APIs via the [OAuth2 Token API](/docs/api/get-v-1-account-account-oauthtoken)
 
 :::warning Token Encryption
 OAuth2 tokens (including sensitive refresh tokens and client secrets) are stored **encrypted in Redis** only if you configure the `EENGINE_SECRET` environment variable. Without encryption enabled, credentials are stored in **cleartext**. For production deployments, always enable encryption by setting a strong encryption secret. [See encryption documentation →](/docs/advanced/encryption)
@@ -33,6 +37,7 @@ This makes EmailEngine a convenient OAuth2 token manager for your entire applica
 ### Email-Only Access
 
 Most applications only need EmailEngine for email operations:
+
 - Reading emails via webhooks
 - Sending emails via REST API
 - Managing folders and messages
@@ -44,21 +49,24 @@ EmailEngine handles all OAuth2 complexity transparently.
 Some applications need to access multiple Google/Microsoft services:
 
 **Example with Gmail:**
+
 - EmailEngine accesses Gmail for email operations
 - Your app accesses Google Calendar API
 - Your app accesses Google Drive API
 - All using the same OAuth2 tokens
 
 **Example with Outlook:**
+
 - EmailEngine accesses Outlook for email operations
 - Your app accesses Microsoft Calendar API
 - Your app accesses OneDrive API
 - All using the same OAuth2 tokens
 
 Instead of implementing separate OAuth2 flows, you can:
+
 1. Use EmailEngine for OAuth2 authentication
 2. Request additional scopes during setup
-3. Retrieve tokens from EmailEngine when needed
+3. Retrieve tokens from EmailEngine using the [OAuth2 Token API](/docs/api/get-v-1-account-account-oauthtoken)
 4. Use tokens to call provider APIs directly
 
 ## Setting Up Multi-Service Access
@@ -91,9 +99,7 @@ offline_access        (for token refresh)
 ```
 
 :::warning Microsoft Scope Compatibility
-Additional OAuth2 scopes with Microsoft accounts are only supported when using the **MS Graph API backend** (Mail.* scopes). If you configure EmailEngine to use IMAP/SMTP (IMAP.AccessAsUser.All, SMTP.Send scopes), those access tokens are valid **only for IMAP/SMTP** and cannot be used with other Microsoft Graph APIs like Calendars or Files.
-
-**Recommendation:** Use MS Graph API backend (Mail.ReadWrite, Mail.Send) instead of IMAP/SMTP scopes if you need to access multiple Microsoft services with the same token.
+Additional OAuth2 scopes with Microsoft accounts are only supported when using the **MS Graph API backend** (Mail.\* scopes). If you configure EmailEngine to use IMAP/SMTP (IMAP.AccessAsUser.All, SMTP.Send scopes), those access tokens are valid **only for IMAP/SMTP** and cannot be used with other Microsoft Graph APIs like Calendars or Files.
 :::
 
 ### Step 2: Configure Additional Scopes in EmailEngine
@@ -105,6 +111,7 @@ When setting up the OAuth2 application in EmailEngine, add extra scopes to the *
 Navigate to **Configuration** → **OAuth2** → Edit your Gmail app.
 
 **Additional scopes** field:
+
 ```
 https://www.googleapis.com/auth/calendar
 https://www.googleapis.com/auth/postmaster.readonly
@@ -159,9 +166,13 @@ If you add accounts before configuring all scopes, those accounts will be missin
 
 ## Retrieving OAuth2 Tokens
 
+:::info API Reference
+**[GET /v1/account/{account}/oauth-token](/docs/api/get-v-1-account-account-oauthtoken)** - Complete API documentation with request/response schemas, authentication, and error codes.
+:::
+
 ### Get Current Access Token
 
-Retrieve a currently valid access token for an account using the [OAuth2 token API](/docs/api/get-v-1-account-account-oauthtoken):
+Use the [OAuth2 Token API endpoint](/docs/api/get-v-1-account-account-oauthtoken) to retrieve a currently valid access token:
 
 ```bash
 curl https://your-ee.com/v1/account/example/oauth-token \
@@ -175,10 +186,7 @@ curl https://your-ee.com/v1/account/example/oauth-token \
   "account": "example",
   "user": "user@example.com",
   "accessToken": "ya29.a0AVA9y1sXQ....CP1A",
-  "registeredScopes": [
-    "https://www.googleapis.com/auth/postmaster.readonly",
-    "https://mail.google.com/"
-  ],
+  "registeredScopes": ["https://www.googleapis.com/auth/postmaster.readonly", "https://mail.google.com/"],
   "expires": "2022-07-08T14:25:27.780Z"
 }
 ```
@@ -200,22 +208,24 @@ EmailEngine ensures the returned access token is valid and not expired. If the t
 #### Google (Gmail API)
 
 **Access tokens:**
+
 - Expire after 1 hour
 - EmailEngine refreshes them automatically using the refresh token
 
 **Refresh tokens:**
+
 - Long-lived but can be invalidated under certain conditions
 - EmailEngine keeps them active by regular use
 
 **Conditions that invalidate Google refresh tokens:**
 
-| Condition | Explanation |
-|-----------|-------------|
-| **User revokes your app** | Immediate invalidation when user removes permissions via Google account settings |
-| **Not used for 6 months** | Auto-expired due to inactivity |
-| **Gmail password changed** | Token invalidated when Gmail scopes are present |
-| **Too many refresh tokens issued** | Google enforces limits (~50 per user/client); oldest tokens invalidated first when limit exceeded |
-| **Consent was time-bounded** | If user granted time-based access, it expires accordingly |
+| Condition                             | Explanation                                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **User revokes your app**             | Immediate invalidation when user removes permissions via Google account settings                        |
+| **Not used for 6 months**             | Auto-expired due to inactivity                                                                          |
+| **Gmail password changed**            | Token invalidated when Gmail scopes are present                                                         |
+| **Too many refresh tokens issued**    | Google enforces limits (~50 per user/client); oldest tokens invalidated first when limit exceeded       |
+| **Consent was time-bounded**          | If user granted time-based access, it expires accordingly                                               |
 | **OAuth consent screen in "Testing"** | For external apps in Testing mode, refresh tokens expire after 7 days. Move to Production to avoid this |
 
 :::warning Testing Mode Expiration
@@ -225,25 +235,27 @@ If your Google OAuth app is in "Testing" status, refresh tokens expire after **7
 #### Microsoft (Graph API / Outlook)
 
 **Access tokens:**
+
 - Expire after 1 hour
 - EmailEngine refreshes them automatically using the refresh token
 
 **Refresh tokens:**
+
 - Rolling lifetime up to 1 year
 - EmailEngine keeps them active by regular use
 
 **Conditions that invalidate Microsoft refresh tokens:**
 
-| Condition | Explanation |
-|-----------|-------------|
-| **User revokes consent** | User removes app permissions via https://myapps.microsoft.com |
-| **Admin revokes or disables the app** | Admin can revoke the service principal in Azure AD Enterprise Applications |
-| **Password change / account disabled** | Changing password or disabling account invalidates existing refresh tokens |
-| **Conditional access or MFA policy change** | New tenant policies (MFA, location requirements) invalidate old refresh tokens |
-| **Refresh token inactive for 90 days** | If not used to get new access tokens for 90 days, it expires |
-| **Maximum rolling lifetime (~1 year)** | Hard limit around 12 months even if used regularly (may vary by tenant config) |
-| **Application permission changes** | Changing requested scopes or app registration requires re-consent, invalidating old tokens |
-| **User signs out of all sessions** | "Sign out everywhere" action kills all refresh tokens |
+| Condition                                   | Explanation                                                                                |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **User revokes consent**                    | User removes app permissions via https://myapps.microsoft.com                              |
+| **Admin revokes or disables the app**       | Admin can revoke the service principal in Azure AD Enterprise Applications                 |
+| **Password change / account disabled**      | Changing password or disabling account invalidates existing refresh tokens                 |
+| **Conditional access or MFA policy change** | New tenant policies (MFA, location requirements) invalidate old refresh tokens             |
+| **Refresh token inactive for 90 days**      | If not used to get new access tokens for 90 days, it expires                               |
+| **Maximum rolling lifetime (~1 year)**      | Hard limit around 12 months even if used regularly (may vary by tenant config)             |
+| **Application permission changes**          | Changing requested scopes or app registration requires re-consent, invalidating old tokens |
+| **User signs out of all sessions**          | "Sign out everywhere" action kills all refresh tokens                                      |
 
 :::tip EmailEngine Keeps Tokens Active
 EmailEngine automatically uses refresh tokens to obtain new access tokens, which resets the 90-day inactivity timer for Microsoft and the 6-month timer for Google. As long as accounts remain connected in EmailEngine, tokens stay active.
@@ -251,16 +263,18 @@ EmailEngine automatically uses refresh tokens to obtain new access tokens, which
 
 #### Token Lifetime Summary
 
-| Provider | Access Token | Refresh Token (Active) | Refresh Token (Inactive) |
-|----------|--------------|------------------------|--------------------------|
-| **Google** | 1 hour | Long-lived (up to token limit) | Expires after 6 months |
-| **Microsoft** | 1 hour | Up to 1 year (rolling) | Expires after 90 days |
+| Provider      | Access Token | Refresh Token (Active)         | Refresh Token (Inactive) |
+| ------------- | ------------ | ------------------------------ | ------------------------ |
+| **Google**    | 1 hour       | Long-lived (up to token limit) | Expires after 6 months   |
+| **Microsoft** | 1 hour       | Up to 1 year (rolling)         | Expires after 90 days    |
 
 ## Using Tokens with Provider APIs
 
+All examples below use the [OAuth2 Token API](/docs/api/get-v-1-account-account-oauthtoken) to retrieve access tokens.
+
 ### Google API Example
 
-Retrieve token from EmailEngine:
+Retrieve token from EmailEngine using the [OAuth2 Token API](/docs/api/get-v-1-account-account-oauthtoken):
 
 ```bash
 curl https://your-ee.com/v1/account/example/oauth-token \
@@ -319,45 +333,37 @@ Using EmailEngine's OAuth2 tokens to create a Google Calendar event:
 
 ```javascript
 // Get current access token from EmailEngine
-const tokenResponse = await fetch(
-  'https://your-ee.com/v1/account/user123/oauth-token',
-  {
-    headers: {
-      'Authorization': 'Bearer YOUR_EMAILENGINE_TOKEN'
-    }
-  }
-);
+const tokenResponse = await fetch("https://your-ee.com/v1/account/user123/oauth-token", {
+  headers: {
+    Authorization: "Bearer YOUR_EMAILENGINE_TOKEN",
+  },
+});
 
 const { accessToken } = await tokenResponse.json();
 
 // Create calendar event
-const eventResponse = await fetch(
-  'https://www.googleapis.com/calendar/v3/calendars/primary/events',
-  {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
+const eventResponse = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    summary: "Team Meeting",
+    start: {
+      dateTime: "2024-01-15T10:00:00-07:00",
+      timeZone: "America/Los_Angeles",
     },
-    body: JSON.stringify({
-      summary: 'Team Meeting',
-      start: {
-        dateTime: '2024-01-15T10:00:00-07:00',
-        timeZone: 'America/Los_Angeles'
-      },
-      end: {
-        dateTime: '2024-01-15T11:00:00-07:00',
-        timeZone: 'America/Los_Angeles'
-      },
-      attendees: [
-        { email: 'colleague@example.com' }
-      ]
-    })
-  }
-);
+    end: {
+      dateTime: "2024-01-15T11:00:00-07:00",
+      timeZone: "America/Los_Angeles",
+    },
+    attendees: [{ email: "colleague@example.com" }],
+  }),
+});
 
 const event = await eventResponse.json();
-console.log('Event created:', event.htmlLink);
+console.log("Event created:", event.htmlLink);
 ```
 
 ## Token Refresh
@@ -365,18 +371,21 @@ console.log('Event created:', event.htmlLink);
 EmailEngine handles token refresh automatically:
 
 **When EmailEngine Refreshes Tokens:**
+
 - Before access token expires (proactive refresh)
 - When an API operation fails with token expiration error (reactive refresh)
 - During account reconnection
 - When you request a token via the API (if expired)
 
 **What EmailEngine Does:**
+
 1. Checks if access token is expired or about to expire
 2. Uses refresh token to get a new access token
 3. Updates stored credentials in Redis
 4. Returns the fresh access token
 
 **Your Responsibility:**
+
 - Nothing! EmailEngine handles everything
 - Just retrieve tokens when you need them
 - They'll always be valid and up-to-date
@@ -392,37 +401,31 @@ Even though EmailEngine provides valid tokens, API calls can still fail due to t
 ```javascript
 async function callGoogleAPI(account, endpoint) {
   // Get token
-  const tokenResponse = await fetch(
-    `https://your-ee.com/v1/account/${account}/oauth-token`,
-    {
-      headers: { 'Authorization': `Bearer ${EMAILENGINE_TOKEN}` }
-    }
-  );
+  const tokenResponse = await fetch(`https://your-ee.com/v1/account/${account}/oauth-token`, {
+    headers: { Authorization: `Bearer ${EMAILENGINE_TOKEN}` },
+  });
 
   const { accessToken } = await tokenResponse.json();
 
   // Call Google API
   const apiResponse = await fetch(endpoint, {
-    headers: { 'Authorization': `Bearer ${accessToken}` }
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
 
   // Handle token expiration
   if (apiResponse.status === 401) {
-    console.log('Token expired between retrieval and use, retrying...');
+    console.log("Token expired between retrieval and use, retrying...");
 
     // Get fresh token and retry
-    const newTokenResponse = await fetch(
-      `https://your-ee.com/v1/account/${account}/oauth-token`,
-      {
-        headers: { 'Authorization': `Bearer ${EMAILENGINE_TOKEN}` }
-      }
-    );
+    const newTokenResponse = await fetch(`https://your-ee.com/v1/account/${account}/oauth-token`, {
+      headers: { Authorization: `Bearer ${EMAILENGINE_TOKEN}` },
+    });
 
     const { accessToken: newToken } = await newTokenResponse.json();
 
     // Retry with new token
     return fetch(endpoint, {
-      headers: { 'Authorization': `Bearer ${newToken}` }
+      headers: { Authorization: `Bearer ${newToken}` },
     });
   }
 
@@ -435,6 +438,7 @@ async function callGoogleAPI(account, endpoint) {
 ### Protecting Access Tokens
 
 OAuth2 access tokens are powerful:
+
 - They provide access to user data
 - They should be treated like passwords
 - Never log them or expose them in client-side code
@@ -452,16 +456,19 @@ OAuth2 access tokens are powerful:
 Control who can retrieve tokens:
 
 **EmailEngine API Tokens:**
+
 - Create separate tokens for different services
 - Use scopes to limit token permissions (if available)
 - Rotate tokens regularly
 - Revoke unused tokens
 
 **IP Restrictions:**
+
 - Configure EmailEngine to accept API requests only from trusted IPs
 - Use firewall rules to protect EmailEngine instance
 
 **Monitoring:**
+
 - Log OAuth2 token retrievals
 - Alert on unusual token access patterns
 - Monitor for failed authentication attempts
@@ -471,16 +478,19 @@ Control who can retrieve tokens:
 Only request scopes you actually need:
 
 **Bad Example:**
+
 ```
 https://www.googleapis.com/auth/drive        (full Drive access)
 ```
 
 **Good Example:**
+
 ```
 https://www.googleapis.com/auth/drive.readonly    (read-only)
 ```
 
 Limiting scopes:
+
 - Reduces security risk
 - Makes approval easier
 - Builds user trust
@@ -493,6 +503,7 @@ Limiting scopes:
 **Cause:** OAuth2 token API endpoint is disabled.
 
 **Solution:** Enable it in EmailEngine settings:
+
 - Configuration → Service → Security
 - Check "Allow the API endpoint for fetching OAuth2 access tokens"
 
@@ -501,6 +512,7 @@ Limiting scopes:
 **Cause:** Scopes were added after account was registered.
 
 **Solution:** Have user re-authenticate:
+
 1. Update OAuth2 app configuration with new scopes
 2. Generate new authentication form URL
 3. User completes OAuth flow again
@@ -509,12 +521,14 @@ Limiting scopes:
 ### API Call Returns "Insufficient Permissions"
 
 **Possible Causes:**
+
 1. Required scope not configured in OAuth2 app
 2. Required API not enabled in provider console
 3. User didn't grant permission during consent
 4. Token doesn't have the required scope
 
 **Solution:**
+
 1. Verify scope is configured in provider console (Google Cloud / Azure AD)
 2. Verify API is enabled
 3. Check `registeredScopes` in token response
@@ -525,6 +539,7 @@ Limiting scopes:
 **Cause:** Microsoft refresh tokens expire after 90 days of inactivity.
 
 **Solution:**
+
 - EmailEngine keeps tokens active by regular use
 - If expired, user must re-authenticate
 - Cannot be prevented, but rare in active accounts
@@ -534,11 +549,14 @@ Limiting scopes:
 **Cause:** Account ID is incorrect or account was deleted.
 
 **Solution:**
+
 - Verify account ID
 - Check account exists: `GET /v1/account/{account}`
 - Account may have been deleted
 
 ## Advanced Patterns
+
+All patterns below use the [OAuth2 Token API](/docs/api/get-v-1-account-account-oauthtoken) - see the [complete API documentation](/docs/api/get-v-1-account-account-oauthtoken) for details.
 
 ### Token Caching Strategy
 
@@ -556,19 +574,16 @@ async function getCachedToken(account) {
   }
 
   // Fetch fresh token
-  const response = await fetch(
-    `https://your-ee.com/v1/account/${account}/oauth-token`,
-    {
-      headers: { 'Authorization': `Bearer ${EMAILENGINE_TOKEN}` }
-    }
-  );
+  const response = await fetch(`https://your-ee.com/v1/account/${account}/oauth-token`, {
+    headers: { Authorization: `Bearer ${EMAILENGINE_TOKEN}` },
+  });
 
   const data = await response.json();
 
   // Cache it
   tokenCache.set(account, {
     accessToken: data.accessToken,
-    expires: new Date(data.expires).getTime()
+    expires: new Date(data.expires).getTime(),
   });
 
   return data.accessToken;
@@ -581,10 +596,10 @@ If you need tokens for multiple accounts:
 
 ```javascript
 async function getMultipleTokens(accounts) {
-  const requests = accounts.map(account =>
+  const requests = accounts.map((account) =>
     fetch(`https://your-ee.com/v1/account/${account}/oauth-token`, {
-      headers: { 'Authorization': `Bearer ${EMAILENGINE_TOKEN}` }
-    }).then(r => r.json())
+      headers: { Authorization: `Bearer ${EMAILENGINE_TOKEN}` },
+    }).then((r) => r.json())
   );
 
   const tokens = await Promise.all(requests);
@@ -596,8 +611,8 @@ async function getMultipleTokens(accounts) {
 }
 
 // Usage
-const tokens = await getMultipleTokens(['user1', 'user2', 'user3']);
-console.log(tokens.user1);  // Access token for user1
+const tokens = await getMultipleTokens(["user1", "user2", "user3"]);
+console.log(tokens.user1); // Access token for user1
 ```
 
 ### Service-Specific Wrappers
@@ -612,12 +627,9 @@ class GoogleCalendarClient {
   }
 
   async getToken(account) {
-    const response = await fetch(
-      `${this.emailengineUrl}/v1/account/${account}/oauth-token`,
-      {
-        headers: { 'Authorization': `Bearer ${this.emailengineToken}` }
-      }
-    );
+    const response = await fetch(`${this.emailengineUrl}/v1/account/${account}/oauth-token`, {
+      headers: { Authorization: `Bearer ${this.emailengineToken}` },
+    });
 
     const { accessToken } = await response.json();
     return accessToken;
@@ -626,12 +638,9 @@ class GoogleCalendarClient {
   async listCalendars(account) {
     const token = await this.getToken(account);
 
-    const response = await fetch(
-      'https://www.googleapis.com/calendar/v3/users/me/calendarList',
-      {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }
-    );
+    const response = await fetch("https://www.googleapis.com/calendar/v3/users/me/calendarList", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
     return response.json();
   }
@@ -639,28 +648,22 @@ class GoogleCalendarClient {
   async createEvent(account, calendarId, event) {
     const token = await this.getToken(account);
 
-    const response = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(event)
-      }
-    );
+    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(event),
+    });
 
     return response.json();
   }
 }
 
 // Usage
-const calendar = new GoogleCalendarClient(
-  'https://your-ee.com',
-  process.env.EMAILENGINE_TOKEN
-);
+const calendar = new GoogleCalendarClient("https://your-ee.com", process.env.EMAILENGINE_TOKEN);
 
-const calendars = await calendar.listCalendars('user123');
-console.log('Calendars:', calendars);
+const calendars = await calendar.listCalendars("user123");
+console.log("Calendars:", calendars);
 ```
