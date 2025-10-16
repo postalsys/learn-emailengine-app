@@ -58,19 +58,16 @@ This guide covers both options.
 
 Go to [Azure Portal](https://portal.azure.com/) and navigate to **Microsoft Entra ID** → **App Registrations**.
 
-![Navigating to App Registrations](https://cldup.com/content/images/2024/07/out001.gif)
 
 <!-- Shows: Navigation to Azure AD App Registrations -->
 
 Click **New registration**.
 
-![Creating new registration](https://cldup.com/content/images/2024/07/out002.gif)
 
 <!-- Shows: Clicking "New registration" button -->
 
 ## Step 2: Configure Application Registration
 
-![Configuring application details](https://cldup.com/content/images/2024/07/out003.gif)
 
 <!-- Shows: Application registration form -->
 
@@ -125,7 +122,6 @@ Click **Register** to create the application.
 
 ## Step 3: Copy Application (Client) ID
 
-![Copying Application ID](https://cldup.com/content/images/2024/07/out004.gif)
 
 <!-- Shows: Application overview page with client ID -->
 
@@ -137,13 +133,11 @@ Keep this page open - you'll come back to it.
 
 Click **API permissions** in the left menu.
 
-![Navigating to API permissions](https://cldup.com/content/images/2024/07/out005.gif)
 
 <!-- Shows: API permissions page -->
 
 By default, only `User.Read` permission exists. Click **Add a permission**.
 
-![Adding permissions](https://cldup.com/content/images/2024/07/out006.gif)
 
 <!-- Shows: Adding permission button -->
 
@@ -153,7 +147,6 @@ Select **Microsoft Graph** and then **Delegated permissions**.
 
 Add these permissions:
 
-![Adding IMAP/SMTP permissions](https://cldup.com/content/images/2024/07/out007.gif)
 
 <!-- Shows: Searching for and selecting IMAP permissions -->
 
@@ -182,7 +175,6 @@ You cannot use both IMAP/SMTP and Mail.\* scopes together. Choose one backend:
 Pick one approach and stick with it.
 :::
 
-![Reviewing permissions](https://cldup.com/content/images/2024/07/out008.gif)
 
 <!-- Shows: All required permissions listed -->
 
@@ -192,7 +184,6 @@ Verify all required permissions are listed, then continue to the next step.
 
 Click **Certificates & secrets** in the left menu.
 
-![Navigating to certificates](https://cldup.com/content/images/2024/07/out009.gif)
 
 <!-- Shows: Certificates & secrets page -->
 
@@ -231,7 +222,6 @@ Skip this step if you're using MS Graph API as your backend.
 
 If you're managing a Microsoft 365 organization and EmailEngine cannot connect via IMAP/SMTP, you may need to enable these protocols manually.
 
-![Enabling IMAP/SMTP in Microsoft 365](https://cldup.com/content/images/2022/04/enable-imap-smtp.gif)
 
 <!-- Shows: Enabling IMAP and SMTP in Microsoft 365 admin center -->
 
@@ -249,7 +239,6 @@ Now configure EmailEngine with your Azure application credentials.
 
 ### Add Outlook OAuth2 Application
 
-![Creating Outlook app in EmailEngine](https://cldup.com/content/images/2024/07/out010.gif)
 
 <!-- Shows: Creating Outlook OAuth2 application in EmailEngine -->
 
@@ -260,7 +249,6 @@ Now configure EmailEngine with your Azure application credentials.
 
 ### Configure OAuth2 Settings
 
-![Configuring Outlook OAuth2 settings](https://cldup.com/content/images/2024/07/out011.gif)
 
 <!-- Shows: Outlook OAuth2 configuration form -->
 
@@ -309,7 +297,6 @@ Add an Outlook account to test the OAuth2 flow.
 
 ### Via Hosted Authentication Form
 
-![Testing with hosted authentication](https://cldup.com/content/images/2024/07/out012.gif)
 
 <!-- Shows: Using hosted authentication form -->
 

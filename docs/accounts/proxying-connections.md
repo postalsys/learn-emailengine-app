@@ -272,7 +272,6 @@ Configure your email client with these settings:
 
 **Example: Thunderbird**
 
-![Thunderbird configuration with EmailEngine proxy](https://cldup.com/content/images/2022/08/Screenshot-2022-08-24-at-13.09.26.png)
 
 <!-- Shows: Thunderbird account settings using EmailEngine IMAP proxy -->
 

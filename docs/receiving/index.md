@@ -218,7 +218,7 @@ async function fetchFullMessage(accountId, messageId) {
 
 ### 4. Download Attachments
 
-Process message attachments using the [Get Attachment API endpoint](/docs/api/get-v-1-account-account-message-message-attachment-attachment):
+Process message attachments using the [Get Attachment API endpoint](/docs/api/get-v-1-account-account-attachment-attachment):
 
 ```javascript
 async function downloadAttachment(accountId, messageId, attachmentId) {

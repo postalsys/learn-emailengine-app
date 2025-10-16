@@ -144,7 +144,7 @@ console.log('User authentication URL:', authUrl);
 
 ### Step 3: Configure Webhooks
 
-Enable webhooks to receive email notifications using the [Update Settings API endpoint](/docs/api/put-v-1-settings):
+Enable webhooks to receive email notifications using the [Update Settings API endpoint](/docs/api/post-v-1-settings):
 
 ```bash
 curl -X PUT "https://your-emailengine.com/admin/config" \

@@ -442,8 +442,6 @@ https://www.googleapis.com/auth/gmail.labels
 https://www.googleapis.com/auth/gmail.modify
 ```
 
-![Custom scopes configuration](https://cldup.com/content/images/2025/02/Screenshot-2025-02-25-at-10.12.54.png)
-
 <!-- Shows: OAuth permission screen with custom scopes -->
 
 When users authenticate, the permissions screen will only request the selected scopes.
@@ -484,67 +482,6 @@ This usually means:
 - OAuth app credentials changed
 
 **Solution:** Have the user re-authenticate.
-
-## Performance Considerations
-
-### Gmail API Rate Limits
-
-Gmail API has generous quotas but they exist:
-
-**Default Quotas:**
-
-- 1 billion quota units per day
-- 250 quota units per user per second
-
-**Typical Operations:**
-
-- List messages: 5 units
-- Get message: 5 units
-- Send message: 100 units
-- Modify message: 5 units
-
-**Best Practices:**
-
-- Use batch requests where possible
-- Implement exponential backoff on rate limit errors
-- Monitor quota usage in Google Cloud Console
-
-### Pub/Sub Costs
-
-Google Cloud Pub/Sub is not free:
-
-**Pricing (approximate):**
-
-- First 10 GB/month: Free
-- Additional data: $40/TB
-- Message storage: $0.27/GB/month
-
-**For typical EmailEngine usage:**
-
-- Costs are minimal for most deployments
-- High-volume accounts may incur charges
-- Monitor usage in Google Cloud Console billing
-
-### Scaling Considerations
-
-Gmail API scales better than IMAP for high-volume accounts:
-
-- No connection limit (IMAP limited to ~15 connections)
-- Batch operations reduce API calls
-- True push notifications (no polling)
-
-## IMAP vs Gmail API Feature Comparison
-
-| Feature                        | IMAP/SMTP               | Gmail API                 |
-| ------------------------------ | ----------------------- | ------------------------- |
-| **Setup Complexity**           | Simple                  | Moderate (needs Pub/Sub)  |
-| **Performance**                | Good                    | Excellent                 |
-| **Label Support**              | Mapped to folders       | Native                    |
-| **Push Notifications**         | IDLE (reconnects often) | Cloud Pub/Sub (true push) |
-| **Connection Limits**          | ~15 per account         | None (REST API)           |
-| **Gmail-Specific Features**    | Limited                 | Full access               |
-| **Works with other providers** | Yes                     | No (Gmail only)           |
-| **Cost**                       | Free                    | Pub/Sub costs             |
 
 ## Production Considerations
 

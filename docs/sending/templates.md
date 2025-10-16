@@ -36,7 +36,7 @@ You can manage templates in two ways:
 
 ### Via API
 
-Create a template using the [create template API](/docs/api/post-v-1-account-account-template):
+Create a template using the [create template API](/docs/api/post-v-1-templates-template):
 
 ```bash
 curl -XPOST "https://ee.example.com/v1/account/{account}/template" \
@@ -367,7 +367,7 @@ HTML:
 
 ### List All Templates
 
-Retrieve all templates using the [list templates API](/docs/api/get-v-1-account-account-templates):
+Retrieve all templates using the [list templates API](/docs/api/get-v-1-templates):
 
 ```bash
 curl "https://ee.example.com/v1/account/{account}/templates" \
@@ -397,7 +397,7 @@ curl "https://ee.example.com/v1/account/{account}/templates" \
 
 ### Get Template Details
 
-Use the [get template API](/docs/api/get-v-1-account-account-template-template):
+Use the [get template API](/docs/api/get-v-1-templates-template-template):
 
 ```bash
 curl "https://ee.example.com/v1/account/{account}/template/AAABgUIbuG0AAAAE" \
@@ -421,7 +421,7 @@ curl "https://ee.example.com/v1/account/{account}/template/AAABgUIbuG0AAAAE" \
 
 ### Update Template
 
-Use the [update template API](/docs/api/put-v-1-account-account-template-template):
+Use the [update template API](/docs/api/put-v-1-templates-template-template):
 
 ```bash
 curl -XPUT "https://ee.example.com/v1/account/{account}/template/AAABgUIbuG0AAAAE" \
@@ -437,7 +437,7 @@ Only include fields you want to update.
 
 ### Delete Template
 
-Use the [delete template API](/docs/api/delete-v-1-account-account-template-template):
+Use the [delete template API](/docs/api/delete-v-1-templates-template-template):
 
 ```bash
 curl -XDELETE "https://ee.example.com/v1/account/{account}/template/AAABgUIbuG0AAAAE" \

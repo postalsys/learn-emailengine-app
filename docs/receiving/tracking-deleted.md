@@ -90,7 +90,7 @@ Added: [106]
 
 ### messageDeleted Event
 
-When EmailEngine detects a deleted message, it sends a [`messageDeleted` webhook](/docs/api/get-v-1-webhooks):
+When EmailEngine detects a deleted message, it sends a [`messageDeleted` webhook](/docs/reference/webhook-events):
 
 ```json
 {

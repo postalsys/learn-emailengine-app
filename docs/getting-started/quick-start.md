@@ -245,7 +245,7 @@ Webhooks notify your application about email events in real-time.
 
 #### Via API:
 
-Use the [update settings API](/docs/api/put-v-1-settings):
+Use the [update settings API](/docs/api/post-v-1-settings):
 
 ```bash
 $ curl -XPUT "http://127.0.0.1:3000/v1/settings" \

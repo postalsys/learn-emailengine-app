@@ -90,20 +90,16 @@ Service accounts are a special type of Google account intended for applications 
 
 Go to [Google Cloud Console](https://console.cloud.google.com/) and create a new project.
 
-![Opening Google Cloud Console](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.14.11.png)
 <!-- Shows: Project selector in Google Cloud Console -->
 
 Click the project selector and then **New Project**.
 
-![Creating new project](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.14.14.png)
 <!-- Shows: New project button -->
 
-![Naming the project](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.14.28.png)
 <!-- Shows: Project creation form -->
 
 Fill in the project name (e.g., "EmailEngine Service Account").
 
-![Waiting for project creation](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.15.01.png)
 <!-- Shows: Project being created, then "Select project" button -->
 
 Wait for the project to be created, then click **Select project** to switch to it.
@@ -114,12 +110,10 @@ Even though service accounts don't show consent screens to users, the form allow
 
 Navigate to **APIs & Services** → **OAuth consent screen**.
 
-![Navigating to OAuth consent screen](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.15.26.png)
 <!-- Shows: Navigation to OAuth consent screen -->
 
 ### Select User Type
 
-![Selecting Internal user type](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.15.34.png)
 <!-- Shows: Internal vs External selection -->
 
 :::important Must Be Internal
@@ -130,7 +124,6 @@ Select **Internal** and click **Create**.
 
 ### Fill in App Information
 
-![Filling consent form](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.16.09-1.png)
 <!-- Shows: OAuth consent form fields -->
 
 Fill in the required fields:
@@ -144,14 +137,12 @@ Click **Save and continue**.
 
 ### Configure Scopes
 
-![Navigating to scopes configuration](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.16.59.png)
 <!-- Shows: Scopes configuration page -->
 
 Click **Add or remove scopes**.
 
 The required scope (`https://mail.google.com/`) for IMAP and SMTP is not in the default list, so we need to add it manually.
 
-![Adding mail.google.com scope](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.17.26.png)
 <!-- Shows: Manually adding scope -->
 
 Scroll to the end of the scopes list and manually add:
@@ -161,7 +152,6 @@ https://mail.google.com/
 
 Click **Add to table** then **Update**.
 
-![Scope added](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.17.38.png)
 <!-- Shows: Scope listed in restricted scopes -->
 
 The scope should now appear in the "Restricted scopes" section.
@@ -172,17 +162,14 @@ Click **Save and continue** to finish consent screen setup.
 
 Navigate to **APIs & Services** → **Credentials** and click the **Manage service accounts** link (bottom right corner).
 
-![Navigating to service accounts](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.17.58-1.png)
 <!-- Shows: Credentials page with "Manage service accounts" link -->
 
 Click **Create service account**.
 
-![Create service account button](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.18.10.png)
 <!-- Shows: Service accounts page with create button -->
 
 ### Configure Service Account
 
-![Service account details](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.18.29.png)
 <!-- Shows: Service account creation form -->
 
 **Service account name**: Choose a descriptive name (e.g., "emailengine-service")
@@ -195,7 +182,6 @@ Click **Create and continue**.
 
 ### Grant Role
 
-![Selecting Owner role](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.18.38.png)
 <!-- Shows: Role selection with "Owner" highlighted -->
 
 **Role**: Select **Owner**
@@ -208,7 +194,6 @@ Click **Continue**.
 
 ### Complete Setup
 
-![Completing service account creation](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.18.54.png)
 <!-- Shows: Final step, grant users access (can be left empty) -->
 
 Leave the optional fields empty and click **Done**.
@@ -221,7 +206,6 @@ Now we need to authorize the service account to access user mailboxes.
 
 From the service accounts list, copy the **OAuth2 Client ID** for your service account.
 
-![Copying Client ID](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.19.05.png)
 <!-- Shows: Service account list with Client ID column -->
 
 :::tip Finding Client ID
@@ -232,24 +216,20 @@ The Client ID is a long numeric string in the service account listing. You'll ne
 
 Open [Google Admin Console](https://admin.google.com/) for your domain and search for "API Controls".
 
-![Searching for API Controls](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.19.54.png)
 <!-- Shows: Google Admin search for "API Controls" -->
 
 ### Manage Domain-Wide Delegation
 
 Scroll down to find the "Domain-wide delegation" section and click **Manage domain-wide delegation**.
 
-![Domain-wide delegation section](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.20.21.png)
 <!-- Shows: Domain-wide delegation section in Security settings -->
 
 Click **Add new**.
 
-![Adding new API client](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.20.24.png)
 <!-- Shows: API clients list with "Add new" button -->
 
 ### Authorize API Client
 
-![Authorizing the service account](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.21.13.png)
 <!-- Shows: API client authorization form -->
 
 **Client ID**: Paste the Client ID you copied from the service account
@@ -271,17 +251,14 @@ Return to the Google Cloud Console service accounts page.
 
 Open the context menu for your service account (three dots) and click **Manage keys**.
 
-![Managing service account keys](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.21.46.png)
 <!-- Shows: Service account context menu with "Manage keys" option -->
 
 Click **Add Key** → **Create new key**.
 
-![Creating new key](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.21.51.png)
 <!-- Shows: Add Key dropdown menu -->
 
 Select **JSON** as the key type and click **Create**.
 
-![Selecting JSON format](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.21.54.png)
 <!-- Shows: Key type selection dialog -->
 
 The browser will automatically download the key file as a `.json` file.
@@ -323,20 +300,16 @@ Service accounts need Gmail API enabled to resolve account email addresses durin
 
 Navigate to **APIs & Services** → **Dashboard** and click **Enable APIs and Services**.
 
-![Enabling APIs and Services](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.22.57.png)
 <!-- Shows: Dashboard with "Enable APIs and Services" button -->
 
 Search for "mail" to find Gmail API.
 
-![Searching for Gmail API](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.23.03.png)
 <!-- Shows: API Library search results -->
 
-![Gmail API details](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.23.08.png)
 <!-- Shows: Gmail API details page -->
 
 Click **Enable**.
 
-![Gmail API enabled](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.23.13.png)
 <!-- Shows: Gmail API enabled confirmation -->
 
 ## Step 7: Configure EmailEngine
@@ -345,7 +318,6 @@ Now configure EmailEngine to use the service account.
 
 ### Add Gmail Service Account Application
 
-![Creating service account in EmailEngine](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.24.37.png)
 <!-- Shows: EmailEngine OAuth2 configuration page -->
 
 1. Open EmailEngine dashboard
@@ -355,7 +327,6 @@ Now configure EmailEngine to use the service account.
 
 ### Upload Credentials File
 
-![Uploading credentials file](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.25.46.png)
 <!-- Shows: Service account configuration form in EmailEngine -->
 
 **Credentials file**: Use the file input to select the service account key JSON file
@@ -452,7 +423,6 @@ curl -X POST https://your-ee.com/v1/account \
 
 Check the accounts list in EmailEngine:
 
-![Service accounts in EmailEngine](https://cldup.com/content/images/2022/01/Screenshot-2022-01-16-at-14.26.45.png)
 <!-- Shows: Accounts list showing Gmail OAuth2 accounts -->
 
 Service account-based accounts appear as "Gmail OAuth2" accounts in the list.

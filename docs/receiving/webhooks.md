@@ -60,7 +60,7 @@ Set your webhook endpoint URL in EmailEngine:
 
 **Via API:**
 
-Use the [settings API](/docs/api/put-v-1-settings) to configure webhooks:
+Use the [settings API](/docs/api/post-v-1-settings) to configure webhooks:
 
 ```bash
 curl -X PUT "https://your-emailengine.com/admin/config" \
@@ -699,7 +699,7 @@ https://YOUR-EMAILENGINE-HOST/oauth/msg/notification
 
 EmailEngine can sign webhooks using HMAC:
 
-**1. Set a webhook secret using the [settings API](/docs/api/put-v-1-settings):**
+**1. Set a webhook secret using the [settings API](/docs/api/post-v-1-settings):**
 
 ```bash
 curl -X PUT "https://your-emailengine.com/admin/config" \

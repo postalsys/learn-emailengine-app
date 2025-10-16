@@ -100,7 +100,6 @@ https://www.googleapis.com/auth/calendar
 https://www.googleapis.com/auth/postmaster.readonly
 ```
 
-![Adding additional scopes in EmailEngine](https://cldup.com/content/images/2022/08/Screenshot-2022-08-02-at-11.42.56.png)
 <!-- Shows: Additional scopes field in EmailEngine OAuth2 configuration -->
 
 **Microsoft Example:**
@@ -118,7 +117,6 @@ Enable it in EmailEngine:
 3. Check **Allow the API endpoint for fetching OAuth2 access tokens**
 4. Save settings
 
-![Enabling OAuth2 API endpoint](https://cldup.com/content/images/2022/08/Screenshot-2022-08-02-at-11.23.20.png)
 <!-- Shows: Security settings with OAuth2 API endpoint checkbox -->
 
 :::warning Security Consideration
@@ -135,7 +133,6 @@ Navigate to **APIs & Services** → **Enabled APIs and services**.
 
 Search for and enable required APIs (e.g., "Google Calendar API", "Gmail Postmaster API").
 
-![Enabling Google Calendar API](https://cldup.com/content/images/2022/08/Screenshot-2022-08-02-at-11.40.56.png)
 <!-- Shows: Enabling APIs in Google Cloud Console -->
 
 **Azure AD:**
@@ -154,7 +151,7 @@ If you add accounts before configuring all scopes, those accounts will be missin
 
 ### Get Current Access Token
 
-Retrieve a currently valid access token for an account using the [OAuth2 token API](/docs/api/get-v-1-account-account-oauth-token):
+Retrieve a currently valid access token for an account using the [OAuth2 token API](/docs/api/get-v-1-account-account-oauthtoken):
 
 ```bash
 curl https://your-ee.com/v1/account/example/oauth-token \

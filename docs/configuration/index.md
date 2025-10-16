@@ -39,7 +39,7 @@ EmailEngine uses two distinct types of configuration:
 
 **Configure via:**
 - Web interface (Settings page)
-- [Settings API endpoint](/docs/api/put-v-1-settings)
+- [Settings API endpoint](/docs/api/post-v-1-settings)
 - Prepared settings (environment variable)
 
 ## Configuration Methods
@@ -85,7 +85,7 @@ emailengine \
 
 ### Settings API
 
-**For runtime configuration.** (See: [Settings API](/docs/api/put-v-1-settings))
+**For runtime configuration.** (See: [Settings API](/docs/api/post-v-1-settings))
 
 ```bash
 curl -X POST http://localhost:3000/v1/settings \

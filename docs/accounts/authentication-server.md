@@ -280,7 +280,7 @@ Your authentication server must return:
 
 ### Step 3: Configure EmailEngine
 
-Set the authentication server URL in EmailEngine settings using the [Update Settings API endpoint](/docs/api/put-v-1-settings):
+Set the authentication server URL in EmailEngine settings using the [Update Settings API endpoint](/docs/api/post-v-1-settings):
 
 ```bash
 curl -X POST https://your-ee.com/v1/settings \
