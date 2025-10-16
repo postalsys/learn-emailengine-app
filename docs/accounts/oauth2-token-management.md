@@ -187,15 +187,64 @@ EmailEngine ensures the returned access token is valid and not expired. If the t
 
 ### Token Lifetime
 
-**Google:**
-- Access tokens expire after 1 hour
-- EmailEngine refreshes them automatically
-- Refresh tokens don't expire (unless revoked)
+#### Google (Gmail API)
 
-**Microsoft:**
-- Access tokens expire after 1 hour
-- Refresh tokens expire after 90 days of inactivity
-- EmailEngine keeps them active by regular refresh
+**Access tokens:**
+- Expire after 1 hour
+- EmailEngine refreshes them automatically using the refresh token
+
+**Refresh tokens:**
+- Long-lived but can be invalidated under certain conditions
+- EmailEngine keeps them active by regular use
+
+**Conditions that invalidate Google refresh tokens:**
+
+| Condition | Explanation |
+|-----------|-------------|
+| **User revokes your app** | Immediate invalidation when user removes permissions via Google account settings |
+| **Not used for 6 months** | Auto-expired due to inactivity |
+| **Gmail password changed** | Token invalidated when Gmail scopes are present |
+| **Too many refresh tokens issued** | Google enforces limits (~50 per user/client); oldest tokens invalidated first when limit exceeded |
+| **Consent was time-bounded** | If user granted time-based access, it expires accordingly |
+| **OAuth consent screen in "Testing"** | For external apps in Testing mode, refresh tokens expire after 7 days. Move to Production to avoid this |
+
+:::warning Testing Mode Expiration
+If your Google OAuth app is in "Testing" status, refresh tokens expire after **7 days**. Publish your app to "In production" status to get long-lived refresh tokens.
+:::
+
+#### Microsoft (Graph API / Outlook)
+
+**Access tokens:**
+- Expire after 1 hour
+- EmailEngine refreshes them automatically using the refresh token
+
+**Refresh tokens:**
+- Rolling lifetime up to 1 year
+- EmailEngine keeps them active by regular use
+
+**Conditions that invalidate Microsoft refresh tokens:**
+
+| Condition | Explanation |
+|-----------|-------------|
+| **User revokes consent** | User removes app permissions via https://myapps.microsoft.com |
+| **Admin revokes or disables the app** | Admin can revoke the service principal in Azure AD Enterprise Applications |
+| **Password change / account disabled** | Changing password or disabling account invalidates existing refresh tokens |
+| **Conditional access or MFA policy change** | New tenant policies (MFA, location requirements) invalidate old refresh tokens |
+| **Refresh token inactive for 90 days** | If not used to get new access tokens for 90 days, it expires |
+| **Maximum rolling lifetime (~1 year)** | Hard limit around 12 months even if used regularly (may vary by tenant config) |
+| **Application permission changes** | Changing requested scopes or app registration requires re-consent, invalidating old tokens |
+| **User signs out of all sessions** | "Sign out everywhere" action kills all refresh tokens |
+
+:::tip EmailEngine Keeps Tokens Active
+EmailEngine automatically uses refresh tokens to obtain new access tokens, which resets the 90-day inactivity timer for Microsoft and the 6-month timer for Google. As long as accounts remain connected in EmailEngine, tokens stay active.
+:::
+
+#### Token Lifetime Summary
+
+| Provider | Access Token | Refresh Token (Active) | Refresh Token (Inactive) |
+|----------|--------------|------------------------|--------------------------|
+| **Google** | 1 hour | Long-lived (up to token limit) | Expires after 6 months |
+| **Microsoft** | 1 hour | Up to 1 year (rolling) | Expires after 90 days |
 
 ## Using Tokens with Provider APIs
 
