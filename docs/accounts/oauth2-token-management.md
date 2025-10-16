@@ -14,7 +14,7 @@ Sources merged:
 EmailEngine automatically manages OAuth2 tokens for registered accounts, including refreshing expired access tokens. You can also retrieve these tokens to use with other Google or Microsoft APIs directly.
 
 :::tip Quick Reference
-**API Endpoint:** [GET /v1/account/{account}/oauth-token](/docs/api/get-v-1-account-account-oauthtoken) - Retrieve a valid OAuth2 access token for any account
+**API Endpoint:** [GET /v1/account/\{account\}/oauth-token](/docs/api/get-v-1-account-account-oauthtoken) - Retrieve a valid OAuth2 access token for any account
 :::
 
 ## Overview
@@ -166,10 +166,6 @@ If you add accounts before configuring all scopes, those accounts will be missin
 
 ## Retrieving OAuth2 Tokens
 
-:::info API Reference
-**[GET /v1/account/{account}/oauth-token](/docs/api/get-v-1-account-account-oauthtoken)** - Complete API documentation with request/response schemas, authentication, and error codes.
-:::
-
 ### Get Current Access Token
 
 Use the [OAuth2 Token API endpoint](/docs/api/get-v-1-account-account-oauthtoken) to retrieve a currently valid access token:
@@ -259,6 +255,21 @@ If your Google OAuth app is in "Testing" status, refresh tokens expire after **7
 
 :::tip EmailEngine Keeps Tokens Active
 EmailEngine automatically uses refresh tokens to obtain new access tokens, which resets the 90-day inactivity timer for Microsoft and the 6-month timer for Google. As long as accounts remain connected in EmailEngine, tokens stay active.
+:::
+
+:::danger Microsoft Client Secret Expiration
+Microsoft Graph API OAuth2 **client secrets expire** and must be renewed regularly. Secret expiration times are configured in Azure AD and can range from **90 days to 2 years maximum**. When a client secret expires, EmailEngine can no longer refresh access tokens, causing **all accounts using that OAuth2 app to fail** immediately.
+
+**To prevent service disruption:**
+1. Monitor client secret expiration in Azure AD: **Certificates & secrets** section
+2. Generate a new client secret **before** the current one expires
+3. Update EmailEngine configuration with the new client secret
+4. Azure AD allows multiple active secrets simultaneously, so you can add the new secret before removing the old one
+
+**If the secret expires:**
+- All accounts bound to that OAuth2 app will fail authentication
+- Users will need to re-authenticate after you update the client secret
+- No data is lost, but accounts become inaccessible until the secret is updated
 :::
 
 #### Token Lifetime Summary
@@ -394,45 +405,6 @@ EmailEngine handles token refresh automatically:
 While you can cache tokens in your application for a short time (e.g., 5-10 minutes), it's usually simpler to just request them from EmailEngine on-demand. EmailEngine's token retrieval is fast and guarantees validity.
 :::
 
-## Token Expiration Handling
-
-Even though EmailEngine provides valid tokens, API calls can still fail due to timing:
-
-```javascript
-async function callGoogleAPI(account, endpoint) {
-  // Get token
-  const tokenResponse = await fetch(`https://your-ee.com/v1/account/${account}/oauth-token`, {
-    headers: { Authorization: `Bearer ${EMAILENGINE_TOKEN}` },
-  });
-
-  const { accessToken } = await tokenResponse.json();
-
-  // Call Google API
-  const apiResponse = await fetch(endpoint, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-
-  // Handle token expiration
-  if (apiResponse.status === 401) {
-    console.log("Token expired between retrieval and use, retrying...");
-
-    // Get fresh token and retry
-    const newTokenResponse = await fetch(`https://your-ee.com/v1/account/${account}/oauth-token`, {
-      headers: { Authorization: `Bearer ${EMAILENGINE_TOKEN}` },
-    });
-
-    const { accessToken: newToken } = await newTokenResponse.json();
-
-    // Retry with new token
-    return fetch(endpoint, {
-      headers: { Authorization: `Bearer ${newToken}` },
-    });
-  }
-
-  return apiResponse;
-}
-```
-
 ## Security Considerations
 
 ### Protecting Access Tokens
@@ -450,51 +422,6 @@ OAuth2 access tokens are powerful:
 - Never send access tokens to client browsers
 - Use HTTPS for all API communications
 - Set appropriate API token permissions in EmailEngine
-
-### Access Control
-
-Control who can retrieve tokens:
-
-**EmailEngine API Tokens:**
-
-- Create separate tokens for different services
-- Use scopes to limit token permissions (if available)
-- Rotate tokens regularly
-- Revoke unused tokens
-
-**IP Restrictions:**
-
-- Configure EmailEngine to accept API requests only from trusted IPs
-- Use firewall rules to protect EmailEngine instance
-
-**Monitoring:**
-
-- Log OAuth2 token retrievals
-- Alert on unusual token access patterns
-- Monitor for failed authentication attempts
-
-### Token Scope Limitation
-
-Only request scopes you actually need:
-
-**Bad Example:**
-
-```
-https://www.googleapis.com/auth/drive        (full Drive access)
-```
-
-**Good Example:**
-
-```
-https://www.googleapis.com/auth/drive.readonly    (read-only)
-```
-
-Limiting scopes:
-
-- Reduces security risk
-- Makes approval easier
-- Builds user trust
-- May be required by provider review
 
 ## Troubleshooting
 
@@ -544,126 +471,40 @@ Limiting scopes:
 - If expired, user must re-authenticate
 - Cannot be prevented, but rare in active accounts
 
-### Token Request Returns "Account Not Found"
+### All Microsoft Accounts Failing (Client Secret Expired)
 
-**Cause:** Account ID is incorrect or account was deleted.
+**Cause:** Microsoft OAuth2 client secret has expired in Azure AD.
+
+**Symptoms:**
+- All accounts using the same Microsoft OAuth2 app fail simultaneously
+- Error messages about authentication failures
+- Unable to refresh access tokens
 
 **Solution:**
 
-- Verify account ID
-- Check account exists: `GET /v1/account/{account}`
-- Account may have been deleted
+1. **Check secret expiration:**
+   - Go to Azure AD → **App registrations** → Your app
+   - Navigate to **Certificates & secrets**
+   - Check expiration dates of client secrets
 
-## Advanced Patterns
+2. **Generate new client secret:**
+   - Click **New client secret**
+   - Set description (e.g., "EmailEngine 2025-10")
+   - Choose expiration period (max 24 months)
+   - Copy the secret value immediately (shown only once)
 
-All patterns below use the [OAuth2 Token API](/docs/api/get-v-1-account-account-oauthtoken) - see the [complete API documentation](/docs/api/get-v-1-account-account-oauthtoken) for details.
+3. **Update EmailEngine configuration:**
+   - Navigate to EmailEngine **Configuration** → **OAuth2**
+   - Edit your Microsoft OAuth2 app
+   - Update the **Client Secret** field with the new value
+   - Save changes
 
-### Token Caching Strategy
+4. **Verify accounts reconnect:**
+   - EmailEngine will automatically use the new secret for token refresh
+   - Accounts should reconnect within a few minutes
+   - If accounts remain disconnected, users may need to re-authenticate
 
-For high-volume applications:
-
-```javascript
-const tokenCache = new Map();
-
-async function getCachedToken(account) {
-  const cached = tokenCache.get(account);
-
-  // Use cached token if valid for at least 5 more minutes
-  if (cached && cached.expires > Date.now() + 5 * 60 * 1000) {
-    return cached.accessToken;
-  }
-
-  // Fetch fresh token
-  const response = await fetch(`https://your-ee.com/v1/account/${account}/oauth-token`, {
-    headers: { Authorization: `Bearer ${EMAILENGINE_TOKEN}` },
-  });
-
-  const data = await response.json();
-
-  // Cache it
-  tokenCache.set(account, {
-    accessToken: data.accessToken,
-    expires: new Date(data.expires).getTime(),
-  });
-
-  return data.accessToken;
-}
-```
-
-### Batch Token Retrieval
-
-If you need tokens for multiple accounts:
-
-```javascript
-async function getMultipleTokens(accounts) {
-  const requests = accounts.map((account) =>
-    fetch(`https://your-ee.com/v1/account/${account}/oauth-token`, {
-      headers: { Authorization: `Bearer ${EMAILENGINE_TOKEN}` },
-    }).then((r) => r.json())
-  );
-
-  const tokens = await Promise.all(requests);
-
-  return tokens.reduce((acc, token) => {
-    acc[token.account] = token.accessToken;
-    return acc;
-  }, {});
-}
-
-// Usage
-const tokens = await getMultipleTokens(["user1", "user2", "user3"]);
-console.log(tokens.user1); // Access token for user1
-```
-
-### Service-Specific Wrappers
-
-Create reusable wrappers for different services:
-
-```javascript
-class GoogleCalendarClient {
-  constructor(emailengineUrl, emailengineToken) {
-    this.emailengineUrl = emailengineUrl;
-    this.emailengineToken = emailengineToken;
-  }
-
-  async getToken(account) {
-    const response = await fetch(`${this.emailengineUrl}/v1/account/${account}/oauth-token`, {
-      headers: { Authorization: `Bearer ${this.emailengineToken}` },
-    });
-
-    const { accessToken } = await response.json();
-    return accessToken;
-  }
-
-  async listCalendars(account) {
-    const token = await this.getToken(account);
-
-    const response = await fetch("https://www.googleapis.com/calendar/v3/users/me/calendarList", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    return response.json();
-  }
-
-  async createEvent(account, calendarId, event) {
-    const token = await this.getToken(account);
-
-    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(event),
-    });
-
-    return response.json();
-  }
-}
-
-// Usage
-const calendar = new GoogleCalendarClient("https://your-ee.com", process.env.EMAILENGINE_TOKEN);
-
-const calendars = await calendar.listCalendars("user123");
-console.log("Calendars:", calendars);
-```
+**Prevention:**
+- Set calendar reminders 30 days before secret expiration
+- Azure AD allows multiple active secrets - add new secret before old one expires
+- Consider using certificate-based authentication for longer validity (up to 3 years)
