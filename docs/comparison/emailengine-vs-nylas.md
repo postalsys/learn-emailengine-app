@@ -351,10 +351,11 @@ Monitoring:        Built-in dashboard
 
 **EmailEngine:**
 ```
-Vertical scaling:  Increase server resources
-Horizontal scaling: Add more instances + load balancer
+Vertical scaling:  Increase server resources (CPU, RAM)
+Horizontal scaling: NOT SUPPORTED (no built-in coordination)
+Manual sharding:   Possible but complex (separate Redis per instance)
 Bottleneck:        Usually Redis or network to IMAP servers
-Max scale:         Tens of thousands of mailboxes
+Max scale:         Several thousand mailboxes per instance
 ```
 
 **Nylas:**
@@ -365,7 +366,7 @@ Max scale:         Hundreds of thousands of mailboxes
 ```
 
 **Best for:**
-- **EmailEngine:** Small to medium scale (< 10,000 mailboxes)
+- **EmailEngine:** Small to medium scale (< 5,000 mailboxes per instance)
 - **Nylas:** Any scale, especially large enterprises
 
 ---

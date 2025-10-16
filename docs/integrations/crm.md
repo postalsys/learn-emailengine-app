@@ -732,11 +732,13 @@ Review what data is stored and your compliance obligations:
 - Optimize worker thread counts
 - Tune Redis configuration
 
-**Horizontal Scaling**:
-- Shard accounts across multiple EmailEngine instances
-- Example: Accounts 0-999 → Instance A, 1000-1999 → Instance B
+**Manual Sharding** (if needed):
+- For very large deployments, manually shard accounts across completely separate EmailEngine instances
+- Each instance requires its own Redis database
+- Your application must route requests to the correct instance
+- Example: Accounts 0-999 → Instance A (Redis A), 1000-1999 → Instance B (Redis B)
 
-**Read more**: [Horizontal Scaling](/docs/advanced/performance-tuning#horizontal-scaling)
+**Read more**: [Performance Tuning](/docs/advanced/performance-tuning)
 
 ## Troubleshooting
 

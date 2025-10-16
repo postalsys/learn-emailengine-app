@@ -587,7 +587,7 @@ app.post('/webhook', async (req, res) => {
 
 - Break large merges into smaller batches (100-500 per batch)
 - Monitor queue depth
-- Scale EmailEngine horizontally if needed
+- Scale EmailEngine vertically (increase CPU/RAM and worker configuration)
 
 ### Unwanted Sent Copies
 

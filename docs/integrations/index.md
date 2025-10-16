@@ -107,9 +107,9 @@ Embed email functionality in business apps:
 
 ### Scalability
 
-**Horizontal Scaling**: Shard accounts across multiple EmailEngine instances for high-volume scenarios.
+**Vertical Scaling** (Recommended): Increase CPU, RAM, and optimize worker threads, webhook processing, and Redis configuration.
 
-**Vertical Scaling**: Optimize worker threads, webhook processing, and Redis configuration.
+**Manual Sharding** (Advanced): For very large deployments exceeding single-instance capacity, manually distribute accounts across separate EmailEngine instances, each with its own Redis database.
 
 **Read more**: [Performance Tuning](/docs/advanced/performance-tuning)
 

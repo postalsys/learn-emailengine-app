@@ -14,11 +14,11 @@ EmailEngine can be deployed in various ways depending on your infrastructure and
 
 | Method | Complexity | Best For | Scaling |
 |--------|------------|----------|---------|
-| [Docker](#docker) | Low | Quick start, containers | Horizontal |
+| [Docker](#docker) | Low | Quick start, containers | Vertical |
 | [Docker Compose](#docker-compose) | Low | Development, small teams | Limited |
-| [Kubernetes](#kubernetes) | High | Enterprise, cloud-native | Horizontal |
+| [Kubernetes](#kubernetes) | High | Enterprise, cloud-native | Vertical |
 | [SystemD Service](#systemd) | Medium | Bare metal, VPS | Vertical |
-| [Render.com](#rendercom) | Low | Managed hosting | Auto |
+| [Render.com](#rendercom) | Low | Managed hosting | Vertical |
 | [Nginx Reverse Proxy](#nginx-proxy) | Medium | Production with SSL | N/A |
 
 ## Quick Comparison
@@ -213,7 +213,11 @@ Before deploying to production, ensure you have:
 
 ## Scaling Strategies
 
-### Vertical Scaling
+### Vertical Scaling (Only Supported Method)
+
+:::warning No Horizontal Scaling
+EmailEngine does NOT support running multiple instances against the same Redis. Each instance would independently sync all accounts, causing conflicts and resource waste.
+:::
 
 **Increase resources on single instance:**
 
@@ -223,67 +227,61 @@ Before deploying to production, ensure you have:
 
 **Configuration:**
 ```bash
-EENGINE_WORKERS=8
+EENGINE_WORKERS=16           # Match CPU cores
 EENGINE_MAX_CONNECTIONS=20
+EENGINE_WORKERS_WEBHOOKS=8
+EENGINE_WORKERS_SUBMIT=4
 ```
 
-**Good for:** Up to 1000 accounts
+**Good for:** Several thousand accounts per instance
 
----
-
-### Horizontal Scaling
-
-**Multiple EmailEngine instances:**
-
-- Load balancer in front
-- Shared Redis cluster
-- Session affinity not required
-- Each instance independent
-
-**Good for:** 1000+ accounts
-
-**Architecture:**
-```
-           Load Balancer
-          /      |      \
-    EE Node 1  Node 2  Node 3
-          \      |      /
-           Redis Cluster
-```
+**Manual Sharding (Advanced):** For very large deployments, you can run completely separate EmailEngine instances with separate Redis databases and manually distribute accounts across them. This requires your application to route requests appropriately.
 
 [Scaling guide →](../advanced/performance-tuning.md)
 
 ## High Availability
 
-### Requirements
+### Redis HA (Recommended Approach)
 
-1. **Multiple EmailEngine instances** (3+ recommended)
-2. **Redis Sentinel or Cluster** (auto-failover)
-3. **Load balancer** with health checks
+Since EmailEngine doesn't support multiple instances, focus on Redis high availability:
+
+**Requirements:**
+
+1. **Single EmailEngine instance** (primary)
+2. **Standby EmailEngine instance** (cold standby, not running)
+3. **Redis Sentinel or Cluster** (auto-failover)
 4. **Persistent storage** for Redis
+5. **Health monitoring** to detect failures
 
 ### Architecture Example
 
 ```
-┌─────────────────┐
-│  Load Balancer  │
-│  (Health Check) │
-└────────┬────────┘
-         │
-    ┌────┴────┬────────┐
-    │         │        │
-┌───▼──┐  ┌───▼──┐  ┌──▼───┐
-│ EE-1 │  │ EE-2 │  │ EE-3 │
-└───┬──┘  └───┬──┘  └──┬───┘
-    │         │        │
-    └────┬────┴────┬───┘
-         │         │
-    ┌────▼─────────▼──┐
-    │ Redis Sentinel  │
-    │  (Master + 2x   │
-    │   Replicas)     │
-    └─────────────────┘
+┌─────────────────────┐
+│ Health Monitor      │
+│ (Detects failures)  │
+└──────────┬──────────┘
+           │
+    ┌──────┴────────┐
+    │               │
+┌───▼─────────┐ ┌──▼──────────┐
+│ EE Primary  │ │ EE Standby  │
+│ (Active)    │ │ (Stopped)   │
+└───┬─────────┘ └──┬──────────┘
+    │              │
+    └──────┬───────┘
+           │
+    ┌──────▼───────────┐
+    │ Redis Sentinel   │
+    │  (Master + 2x    │
+    │   Replicas)      │
+    └──────────────────┘
 ```
+
+**Failover Process:**
+1. Health monitor detects primary failure
+2. Manually start standby instance (or use orchestration tool)
+3. Standby connects to Redis Sentinel (gets current master)
+4. Service resumes with minimal downtime
 
 ### Health Check Endpoint
 

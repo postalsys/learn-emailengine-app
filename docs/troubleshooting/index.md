@@ -444,9 +444,10 @@ journalctl -u emailengine -f | grep webhook
    - Disable including full message content
    - Fetch content on-demand via API
 
-3. **Scale horizontally:**
-   - Add more EmailEngine instances
-   - Use load balancer
+3. **Scale vertically:**
+   - Increase server CPU and RAM
+   - Optimize worker configuration
+   - Upgrade Redis memory
 
 ### Performance Issues
 

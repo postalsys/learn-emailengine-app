@@ -75,7 +75,7 @@ Search messages, organize mailboxes, manage flags, and download attachments.
 
 ### Production-Ready
 - **Self-hosted** - Full control over your data and privacy
-- **Scalable** - Horizontal scaling with Redis
+- **Scalable** - Vertical scaling with performance tuning
 - **Reliable** - Automatic reconnection and error recovery
 - **Performant** - Efficient connection pooling and caching
 

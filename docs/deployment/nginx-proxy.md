@@ -10,7 +10,7 @@ Configure Nginx as a reverse proxy in front of EmailEngine to enable HTTPS, load
 
 :::info Why Use a Reverse Proxy
 - **SSL/TLS termination** - Secure HTTPS connections
-- **Load balancing** - Distribute traffic across multiple instances
+- **Failover** - Automatic failover to standby instance for high availability
 - **Security** - Additional protection layer
 - **Rate limiting** - Prevent abuse
 - **Caching** - Improve performance
@@ -169,13 +169,12 @@ Create `/etc/nginx/sites-available/emailengine.conf`:
 # Rate limiting zone
 limit_req_zone $binary_remote_addr zone=emailengine_limit:10m rate=10r/s;
 
-# Upstream definition (for load balancing)
+# Upstream definition
 upstream emailengine_backend {
-    least_conn;  # Load balancing method
     server 127.0.0.1:3000 max_fails=3 fail_timeout=30s;
-    # Add more servers for horizontal scaling:
-    # server 127.0.0.1:3001 max_fails=3 fail_timeout=30s;
-    # server 127.0.0.1:3002 max_fails=3 fail_timeout=30s;
+    # For high availability (NOT scaling), add backup instance:
+    # server 127.0.0.1:3001 backup;
+    # Note: EmailEngine does NOT support horizontal scaling
 }
 
 # HTTP server - redirect to HTTPS
@@ -296,25 +295,26 @@ server {
 
 ## Advanced Features
 
-### Load Balancing
+### High Availability with Failover
 
-**Multiple EmailEngine instances:**
+:::warning No Horizontal Scaling
+EmailEngine does NOT support horizontal scaling with load balancing. Multiple instances connecting to the same Redis will cause conflicts. The configuration below is for failover/high availability only.
+:::
+
+**Failover configuration (primary + cold standby):**
 
 ```nginx
 upstream emailengine_backend {
-    least_conn;  # or: ip_hash, round_robin
-
-    server 127.0.0.1:3000 weight=3 max_fails=3 fail_timeout=30s;
-    server 127.0.0.1:3001 weight=2 max_fails=3 fail_timeout=30s;
-    server 127.0.0.1:3002 weight=1 max_fails=3 fail_timeout=30s backup;
+    server emailengine-primary.internal:3000 max_fails=3 fail_timeout=30s;
+    server emailengine-standby.internal:3000 backup;  # Only used if primary fails
 }
 ```
 
-**Load balancing methods:**
-- `round_robin` (default) - Distribute evenly
-- `least_conn` - Send to least busy server
-- `ip_hash` - Sticky sessions based on client IP
-- `hash $request_uri` - Route based on URL
+This configuration:
+- Routes all traffic to the primary instance
+- Automatically fails over to standby if primary is down
+- Both instances should NOT run simultaneously (standby should be stopped unless primary fails)
+- Both need separate Redis instances OR the standby stays stopped
 
 ### Rate Limiting
 
@@ -778,15 +778,16 @@ server {
 }
 ```
 
-### High Availability
+### High Availability (Failover)
+
+:::warning
+This is for automatic failover only, NOT load balancing. Only the primary instance should be running. The standby should be stopped and manually started if the primary fails.
+:::
 
 ```nginx
 upstream emailengine {
-    least_conn;
-    server emailengine1.internal:3000 max_fails=3 fail_timeout=30s;
-    server emailengine2.internal:3000 max_fails=3 fail_timeout=30s;
-    server emailengine3.internal:3000 max_fails=3 fail_timeout=30s;
-    server emailengine4.internal:3000 backup;
+    server emailengine-primary.internal:3000 max_fails=3 fail_timeout=30s;
+    server emailengine-standby.internal:3000 backup;  # Backup instance (keep stopped)
 }
 
 server {
@@ -796,7 +797,9 @@ server {
     location / {
         proxy_pass http://emailengine;
         proxy_next_upstream error timeout http_502 http_503 http_504;
-        proxy_next_upstream_tries 3;
+        proxy_next_upstream_tries 2;
     }
 }
 ```
+
+**Note:** The standby instance should remain stopped under normal operation. Nginx's `backup` directive means it will only be contacted if the primary is unavailable.

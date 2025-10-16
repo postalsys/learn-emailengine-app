@@ -251,23 +251,15 @@ services:
 - Large mailboxes (10,000+ messages)
 - Performance monitoring shows high resource usage
 
-### Horizontal Scaling
+### Horizontal Scaling Not Supported
 
-**Multiple instances (load balancing):**
+:::warning No Horizontal Scaling
+EmailEngine does NOT support horizontal scaling. Running multiple EmailEngine instances connected to the same Redis will cause each instance to independently sync all accounts, leading to conflicts and wasted resources.
+:::
 
-Render doesn't support multiple instances of same service by default. For horizontal scaling:
-
-1. **Deploy multiple services:**
-   - Create separate web services: `emailengine-1`, `emailengine-2`
-   - Use same Redis instance
-   - Each gets unique URL
-
-2. **Use external load balancer:**
-   - CloudFlare
-   - AWS CloudFront
-   - Your own Nginx proxy
-
-3. **Or upgrade to higher tier** with more resources
+**Instead:**
+1. **Upgrade to higher tier** with more resources (vertical scaling)
+2. **For very large deployments**: Contact EmailEngine support for guidance on manual sharding strategies (requires separate Redis instances and complex routing)
 
 ### Redis Scaling
 

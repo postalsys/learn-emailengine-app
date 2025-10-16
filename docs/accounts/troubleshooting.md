@@ -571,7 +571,7 @@ No action needed from you. If issues persist, check logs for specific errors.
 
 1. **Reduce number of accounts**
    - Check account count: `curl https://your-ee.com/v1/accounts | jq '.total'`
-   - Consider horizontal scaling (multiple EmailEngine instances)
+   - Scale vertically (increase server resources)
 
 2. **Reduce sub-connections**
    - Remove unnecessary sub-connections

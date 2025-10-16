@@ -330,67 +330,64 @@ EENGINE_LOG_LEVEL=info
 EENGINE_METRICS_PORT=9090
 ```
 
-## Horizontal Scaling
+## Scaling EmailEngine
 
-:::warning
-EmailEngine does not coordinate across nodes. If multiple instances connect to the same Redis, each will attempt to sync every account independently.
+:::warning No Horizontal Scaling
+EmailEngine does NOT support horizontal scaling. Running multiple EmailEngine instances that connect to the same Redis will cause each instance to attempt syncing every account independently, leading to conflicts and increased load.
 :::
 
-**Current solution**: Manual sharding
+### Vertical Scaling (Recommended)
 
-> Divide your accounts across independent EmailEngine instances.
->
-> **Example**: Accounts 0-999 → Instance A, 1000-1999 → Instance B, etc.
+Increase resources on a single EmailEngine instance:
 
-### Sharding Strategy
+**Hardware:**
+- More CPU cores (increase `EENGINE_WORKERS`)
+- More RAM (support more concurrent accounts)
+- Faster network (reduce latency to Redis and IMAP/SMTP servers)
 
-**Option 1: Hash-based sharding**
-```
-// Pseudo code - implement in your preferred language
-instanceId = HASH(accountEmail) MOD NUM_INSTANCES
-```
-
-**Option 2: Range-based sharding**
-```
-// Pseudo code - implement in your preferred language
-if accountId < 1000 then
-  instance = 'A'
-else if accountId < 2000 then
-  instance = 'B'
-else
-  instance = 'C'
-end if
+**Configuration:**
+```bash
+# Optimize for larger deployments
+EENGINE_WORKERS=16                     # Match CPU cores
+EENGINE_WORKERS_WEBHOOKS=8
+EENGINE_NOTIFY_QC=4
+EENGINE_WORKERS_SUBMIT=4
+EENGINE_SUBMIT_QC=2
 ```
 
-**Option 3: Domain-based sharding**
-```
-// Pseudo code - implement in your preferred language
-domain = SPLIT(email, '@')[1]
-instanceId = HASH(domain) MOD NUM_INSTANCES
-```
+**Good for:** Up to several thousand accounts per instance
 
-### Sharding Implementation
+### Manual Sharding (Advanced Workaround)
 
-Each instance gets:
-- Separate Redis database or prefix
-- Separate configuration
-- Separate monitoring
+If you need to support more accounts than a single instance can handle, you can manually shard accounts across completely independent EmailEngine deployments:
+
+:::danger Manual Sharding Requirements
+- Each instance must have its own separate Redis instance
+- Each instance manages a different set of accounts
+- Your application must route API requests to the correct instance
+- No automatic failover or coordination between instances
+:::
+
+**Implementation approach:**
 
 ```bash
-# Instance A
-REDIS_PREFIX=ee-a
+# Instance A - Accounts 0-999
+REDIS_PREFIX=ee-shard-a
+REDIS_URL=redis://redis-a:6379
 EENGINE_PORT=3000
 
-# Instance B
-REDIS_PREFIX=ee-b
+# Instance B - Accounts 1000-1999
+REDIS_PREFIX=ee-shard-b
+REDIS_URL=redis://redis-b:6379
 EENGINE_PORT=3001
-
-# Instance C
-REDIS_PREFIX=ee-c
-EENGINE_PORT=3002
 ```
 
-Your application routes requests to appropriate instance based on account assignment.
+Your application must:
+1. Maintain a mapping of which accounts belong to which shard
+2. Route all API requests for an account to the correct instance
+3. Handle instance failures manually
+
+**Note:** This is complex and error-prone. Vertical scaling is strongly recommended instead.
 
 ## Monitoring and Metrics
 
@@ -518,4 +515,4 @@ EENGINE_NOTIFY_QC=4
 5. **Plan for Growth**: Leave headroom for traffic spikes
 6. **Keep Redis Local**: Minimize network latency to Redis
 7. **Lightweight Webhooks**: Queue payloads, process asynchronously
-8. **Shard When Needed**: Use horizontal scaling for very large deployments
+8. **Scale Vertically**: Add more CPU and RAM rather than multiple instances

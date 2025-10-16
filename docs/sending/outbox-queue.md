@@ -493,8 +493,8 @@ Emitted when job moves to *Failed*:
 - EmailEngine is overloaded
 
 **Solutions**:
-- Scale EmailEngine horizontally
-- Increase worker count
+- Scale EmailEngine vertically (increase CPU/RAM)
+- Increase worker count (`EENGINE_WORKERS_SUBMIT`)
 - Check SMTP server performance
 - Monitor active job processing time
 
