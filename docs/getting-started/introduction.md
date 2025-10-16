@@ -20,21 +20,27 @@ EmailEngine streamlines email integration for your app or service with a unified
 ## Key Features
 
 ### Unified REST API
+
 Access all email accounts through a single, consistent REST API regardless of the underlying protocol (IMAP, Gmail API, or Microsoft Graph).
 
 ### Real-time Webhooks
+
 Receive instant notifications about new emails, email updates, and account changes through webhooks.
 
 ### OAuth2 Support
+
 Built-in support for OAuth2 authentication for Gmail, Google Workspace, Microsoft 365, and Outlook.com accounts.
 
 ### Email Sending
+
 Send emails through SMTP or native APIs with support for attachments, HTML content, and templates.
 
 ### Account Management
+
 Register and manage multiple email accounts with automatic connection handling and reconnection.
 
 ### Message Management
+
 - List, search, and filter messages
 - Mark messages as read/unread
 - Move messages between folders
@@ -42,6 +48,7 @@ Register and manage multiple email accounts with automatic connection handling a
 - Download attachments
 
 ### Self-hosted
+
 Run EmailEngine on your own infrastructure for complete control over your email data and privacy.
 
 ## Use Cases
@@ -54,7 +61,7 @@ Run EmailEngine on your own infrastructure for complete control over your email 
 
 ## Architecture
 
-EmailEngine runs as a Node.js application that:
+EmailEngine is a self-hosted application that:
 
 1. Maintains persistent connections to email accounts
 2. Syncs email data to Redis for fast access
@@ -74,17 +81,9 @@ Get started with EmailEngine in just a few steps:
 
 ## System Requirements
 
-- **Node.js** 16.x or higher
 - **Redis** 6.x or higher
 - **Memory** Minimum 2GB RAM recommended
 - **OS** Linux, macOS, or Windows
-
-## Getting Help
-
-- **[Documentation](/docs/getting-started/introduction)** - Comprehensive guides and API reference
-- **[Blog](/blog)** - Tutorials and use case examples
-- **[Support](/docs/support/license)** - Get help from the EmailEngine team
-- **[GitHub](https://github.com/postalsys/emailengine)** - Report issues and contribute
 
 ## License
 

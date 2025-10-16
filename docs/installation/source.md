@@ -424,7 +424,7 @@ sudo systemctl start emailengine
 
 ### PM2 (Production Process Manager)
 
-PM2 is an excellent alternative to SystemD, especially for Node.js applications.
+PM2 is an excellent alternative to SystemD for process management.
 
 #### Install PM2
 
