@@ -35,7 +35,7 @@
   <rect x="250" y="190" width="300" height="120" class="box" rx="5"/>
   <text x="400" y="220" class="text" text-anchor="middle" font-weight="600">EmailEngine</text>
   <text x="400" y="240" class="label" text-anchor="middle">Connection management</text>
-  <text x="400" y="255" class="label" text-anchor="middle">Data sync & caching</text>
+  <text x="400" y="255" class="label" text-anchor="middle">Data sync &amp; caching</text>
   <text x="400" y="270" class="label" text-anchor="middle">Queue management</text>
   <text x="400" y="285" class="label" text-anchor="middle">Webhook notifications</text>
 
