@@ -86,6 +86,12 @@ Files.Read            (for OneDrive)
 offline_access        (for token refresh)
 ```
 
+:::warning Microsoft Scope Compatibility
+Additional OAuth2 scopes with Microsoft accounts are only supported when using the **MS Graph API backend** (Mail.* scopes). If you configure EmailEngine to use IMAP/SMTP (IMAP.AccessAsUser.All, SMTP.Send scopes), those access tokens are valid **only for IMAP/SMTP** and cannot be used with other Microsoft Graph APIs like Calendars or Files.
+
+**Recommendation:** Use MS Graph API backend (Mail.ReadWrite, Mail.Send) instead of IMAP/SMTP scopes if you need to access multiple Microsoft services with the same token.
+:::
+
 ### Step 2: Configure Additional Scopes in EmailEngine
 
 When setting up the OAuth2 application in EmailEngine, add extra scopes to the **Additional scopes** field.
