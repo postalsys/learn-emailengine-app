@@ -17,10 +17,14 @@ EmailEngine automatically manages OAuth2 tokens for registered accounts, includi
 
 When you register OAuth2 accounts in EmailEngine:
 
-- EmailEngine stores OAuth2 tokens securely in Redis
+- EmailEngine stores OAuth2 tokens in Redis
 - Access tokens are automatically refreshed before expiration
 - You never need to handle token refresh logic
 - Tokens can be retrieved for use with other APIs
+
+:::warning Token Encryption
+OAuth2 tokens (including sensitive refresh tokens and client secrets) are stored **encrypted in Redis** only if you configure the `EENGINE_SECRET` environment variable. Without encryption enabled, credentials are stored in **cleartext**. For production deployments, always enable encryption by setting a strong encryption secret. [See encryption documentation →](/docs/advanced/encryption)
+:::
 
 This makes EmailEngine a convenient OAuth2 token manager for your entire application, not just for email access.
 
