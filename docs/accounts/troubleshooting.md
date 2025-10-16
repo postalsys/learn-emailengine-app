@@ -12,7 +12,7 @@ This guide covers common issues when working with email accounts in EmailEngine 
 
 ### Check Account Status
 
-First, check the account's current state:
+First, check the account's current state using the [Get Account API endpoint](/docs/api/get-v-1-account-account):
 
 ```bash
 curl https://your-ee.com/v1/account/user123 \
@@ -65,7 +65,7 @@ tail -f /path/to/emailengine/logs/application.log
        "smtp": { "auth": { "pass": "correct-password" } }
      }'
 
-   # Then reconnect
+   # Then reconnect using the Reconnect Account API endpoint
    curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
      -H "Authorization: Bearer YOUR_TOKEN"
    ```
@@ -767,18 +767,3 @@ journalctl -u emailengine -f
 - Provider-specific documentation:
   - [Gmail IMAP Settings](https://support.google.com/mail/answer/7126229)
   - [Outlook IMAP Settings](https://support.microsoft.com/en-us/office/pop-imap-and-smtp-settings-8361e398-8af4-4e97-b147-6c6c4ac95353)
-
-## Next Steps
-
-- [Set up OAuth2 for better reliability](./oauth2-setup)
-- [Learn about performance tuning](/docs/advanced/performance-tuning)
-- [Configure monitoring and alerts](/docs/configuration/monitoring)
-- [Review security best practices](/docs/deployment/security)
-
-## See Also
-
-- [Gmail OAuth2 Setup](./gmail-imap)
-- [Outlook OAuth2 Setup](./outlook-365)
-- [Managing Accounts](./managing-accounts)
-- [Account States Documentation](/docs/api/get-v-1-account-account)
-- [Performance Tuning Guide](/docs/advanced/performance-tuning)

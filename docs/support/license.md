@@ -650,10 +650,3 @@ No charge for key rotation due to security incident.
 ### General Information
 - **Website:** [https://emailengine.app](https://emailengine.app)
 - **Pricing:** [https://postalsys.com/plans](https://postalsys.com/plans)
-
-## See Also
-
-- [Installation Guide](/docs/installation)
-- [Configuration Options](/docs/configuration)
-- [Support](/docs/support/license)
-- [Privacy Policy](/docs/support/license)

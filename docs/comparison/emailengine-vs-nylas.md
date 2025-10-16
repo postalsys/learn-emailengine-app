@@ -598,14 +598,6 @@ GET /messages/{id}
 
 **Both are excellent products** - choose based on your specific constraints and priorities, not generic "best" claims.
 
-## See Also
-
-- [EmailEngine Pricing](https://emailengine.app/pricing)
-- [Nylas Pricing](https://www.nylas.com/pricing)
-- [Installation Guide](/docs/installation)
-- [Quick Start](/docs/getting-started/quick-start)
-- [API Reference](/docs/api-reference)
-
 ## Further Reading
 
 - [Original blog post](https://emailengine.app/blog/2025-05-19-emailengine-vs-nylas)

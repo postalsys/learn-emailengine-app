@@ -11,14 +11,14 @@ When you start with **EmailEngine** and only have a handful of test accounts, a 
 **Rule‑of‑thumb**
 
 - **Waiting mainly for webhooks?** A smaller server is fine.
-- **Issuing many API calls?** Provision more CPU/RAM *and* tune the settings below.
+- **Issuing many API calls?** Provision more CPU/RAM _and_ tune the settings below.
 
 This post walks through the main knobs that affect performance and how to pick sensible values.
 
 ## IMAP
 
 EmailEngine spawns a fixed pool of worker threads to keep IMAP sessions alive.
-SettingDefaultWhat it does`EENGINE_WORKERS``4`Number of IMAP worker threads
+SettingDefaultWhat it does` EENGINE_WORKERS``4 `Number of IMAP worker threads
 If you have 100 accounts and `EENGINE_WORKERS=4`, each thread handles ~25 accounts. On a machine with many CPU cores (or on a VPS with several vCPUs), you can safely raise the value so that each core has fewer accounts to juggle.
 
 ### Smoother start‑up
@@ -28,7 +28,6 @@ Opening a TCP connection and running the IMAP handshake is CPU‑intensive. Doin
 Use an artificial delay so that EmailEngine brings the accounts online one‑by‑one:
 
     EENGINE_CONNECTION_SETUP_DELAY=3s   # e.g. 3 seconds
-    
 
 With a 3 s delay and 1 000 accounts, the full warm‑up takes ~50 minutes. This is perfectly fine if you are **only** waiting for webhooks; API requests for an account will fail until that account is connected.
 
@@ -39,9 +38,8 @@ If you need near‑real‑time updates for a small set of folders (for example `
     {
       "subconnections": ["\\Sent"]
     }
-    
 
-EmailEngine then opens a second TCP connection dedicated to that folder. The main connection still polls the rest of the mailbox, but the sub‑connection can fire webhooks for the selected folder instantly—saving both CPU and network traffic.
+EmailEngine then opens a second TCP connection dedicated to that folder. The main connection still polls the rest of the mailbox, but the sub‑connection can fire webhooks for the selected folder instantly - saving both CPU and network traffic.
 
 If you never care about the rest of the mailbox, limit indexing completely:
 
@@ -49,18 +47,16 @@ If you never care about the rest of the mailbox, limit indexing completely:
       "path": ["Inbox", "\\Sent"],
       "subconnections": ["\\Sent"]
     }
-    
 
 With this configuration EmailEngine ignores every other folder.
 
 ## Webhooks
 
 EmailEngine enqueues every event, even if webhooks are disabled. By default the queue is processed **serially** by one worker.
-SettingDefaultMeaning`EENGINE_WORKERS_WEBHOOKS``1`Number of webhook worker threads`EENGINE_NOTIFY_QC``1`Concurrency per worker
+SettingDefaultMeaning` EENGINE_WORKERS_WEBHOOKS``1 `Number of webhook worker threads` EENGINE_NOTIFY_QC``1 `Concurrency per worker
 The maximum number of in‑flight webhooks is therefore:
 
     ACTIVE_WH = EENGINE_WORKERS_WEBHOOKS × EENGINE_NOTIFY_QC
-    
 
 Make sure your webhook handler can cope with events arriving out‑of‑order if you raise either value.
 
@@ -69,7 +65,7 @@ Make sure your webhook handler can cope with events arriving out‑of‑order if
 ## Email sending
 
 Queued messages live in Redis, so RAM usage scales with the size and number of messages. Like webhooks, email submissions are handled by a worker pool:
-SettingDefaultMeaning`EENGINE_WORKERS_SUBMIT``1`Number of submission worker threads`EENGINE_SUBMIT_QC``1`Concurrency per worker
+SettingDefaultMeaning` EENGINE_WORKERS_SUBMIT``1 `Number of submission worker threads` EENGINE_SUBMIT_QC``1 `Concurrency per worker
 Be conservative when increasing `EENGINE_SUBMIT_QC`: each active submission loads the full RFC 822 message into the worker’s heap.
 
 ## Redis
@@ -85,10 +81,11 @@ Be conservative when increasing `EENGINE_SUBMIT_QC`: each active submission load
 Leave the default value (`300`). Setting it to `0` (disabling keep‑alive) may lead to half‑open TCP connections.
 
     tcp-keepalive 300
-    
 
 ### Redis‑compatible servers
+
 Provider / ProjectWorks with EmailEngineCaveats**Upstash Redis**✅1 MB command size limit – large attachments cannot be queued. Locate EmailEngine in the same GCP/AWS region.**AWS ElastiCache**✅ (technically)Treats itself as a cache; data loss on restarts. Not recommended.**Memurai**✅Tested only in staging.**Dragonfly**✅Start with `--default_lua_flags=allow-undeclared-keys`.**KeyDB**✅Tested only in staging.
+
 ## Horizontal scaling
 
 EmailEngine does not coordinate across nodes. If multiple instances connect to the same Redis, each one will attempt to sync every account on its own. For now the solution is **manual sharding**:

@@ -8,15 +8,6 @@ description: Get your first email working with EmailEngine in 10 minutes - from 
 
 Get EmailEngine up and running in 10 minutes. This guide walks you through installing EmailEngine, adding your first email account, sending an email, and receiving webhook notifications.
 
-## Prerequisites
-
-Before you begin, make sure you have:
-
-- **Node.js** 16.x or higher installed
-- **Redis** 6.x or higher running
-- An email account you want to connect (Gmail, Outlook, or any IMAP/SMTP provider)
-- Basic knowledge of REST APIs and command line
-
 ## Step 1: Install EmailEngine
 
 ### Option A: Using npm (Recommended for development)
@@ -72,6 +63,8 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/token" \
   -u "admin:your-password"
 ```
 
+See the [Create Access Token API](/docs/api/post-v-1-token) for more details.
+
 Save your token as an environment variable:
 ```bash
 $ export EMAILENGINE_TOKEN="your-token-here"
@@ -84,6 +77,8 @@ EmailEngine supports multiple account types. Choose the method that fits your em
 ### Option A: Gmail with OAuth2 (Recommended)
 
 **Prerequisites:** You need to set up OAuth2 credentials in Google Cloud Console. [See detailed guide →](/docs/accounts/gmail-imap)
+
+Use the [register account API](/docs/api/post-v-1-account):
 
 ```bash
 $ curl -XPOST "http://127.0.0.1:3000/v1/account" \
@@ -174,7 +169,9 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account" \
 
 ## Step 5: Wait for Initial Sync
 
-EmailEngine needs to perform an initial sync of your mailbox before you can use it:
+EmailEngine needs to perform an initial sync of your mailbox before you can use it.
+
+Use the [get account API](/docs/api/get-v-1-account-account) to check status:
 
 ```bash
 # Check account status
@@ -202,7 +199,7 @@ Initial sync time depends on mailbox size:
 
 ## Step 6: Send Your First Email
 
-Once the account is connected, send a test email:
+Once the account is connected, send a test email using the [submit API](/docs/api/post-v-1-account-account-submit):
 
 ```bash
 $ curl -XPOST "http://127.0.0.1:3000/v1/account/my-account/submit" \
@@ -247,8 +244,11 @@ Webhooks notify your application about email events in real-time.
 4. Save settings
 
 #### Via API:
+
+Use the [update settings API](/docs/api/put-v-1-settings):
+
 ```bash
-$ curl -XPOST "http://127.0.0.1:3000/v1/settings" \
+$ curl -XPUT "http://127.0.0.1:3000/v1/settings" \
   -H "Authorization: Bearer ${EMAILENGINE_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -320,7 +320,7 @@ For testing, use [webhook.site](https://webhook.site) to see webhook payloads:
 
 ## Step 8: List Incoming Messages
 
-Retrieve messages from the mailbox:
+Retrieve messages from the mailbox using the [list messages API](/docs/api/get-v-1-account-account-messages):
 
 ```bash
 $ curl "http://127.0.0.1:3000/v1/account/my-account/messages?path=INBOX&limit=10" \
@@ -353,7 +353,7 @@ $ curl "http://127.0.0.1:3000/v1/account/my-account/messages?path=INBOX&limit=10
 
 ## Step 9: Read a Specific Message
 
-Get full message content including body and attachments:
+Get full message content including body and attachments using the [get message API](/docs/api/get-v-1-account-account-message-message):
 
 ```bash
 $ curl "http://127.0.0.1:3000/v1/account/my-account/message/AAAAAQAACnA" \
@@ -362,7 +362,7 @@ $ curl "http://127.0.0.1:3000/v1/account/my-account/message/AAAAAQAACnA" \
 
 ## Step 10: Search Messages
 
-Search for messages matching specific criteria:
+Search for messages matching specific criteria using the [search messages API](/docs/api/post-v-1-account-account-search):
 
 ```bash
 $ curl -XPOST "http://127.0.0.1:3000/v1/account/my-account/search" \
@@ -384,14 +384,6 @@ You've successfully:
 - [YES] Sent an email via API
 - [YES] Configured webhooks
 - [YES] Retrieved and searched messages
-
-## Next Steps
-
-### Explore Core Features
-- **[Send Replies and Forwards](/docs/sending/replies-forwards)** - Learn how to properly reply to emails
-- **[Mail Merge](/docs/sending/mail-merge)** - Send personalized bulk emails
-- **[Email Templates](/docs/sending/templates)** - Use Handlebars templates for emails
-- **[Debug Webhooks](/docs/receiving/webhooks)** - Troubleshoot webhook delivery
 
 ### Set Up OAuth2
 - **[Gmail OAuth2 Setup](/docs/accounts/gmail-imap)** - Complete guide with screenshots

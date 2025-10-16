@@ -182,7 +182,7 @@ Menu
 
 Installation instructions
 
-All the following examples run EmailEngine with the default configuration. In most cases, you probably want to use specific settings—for example, change the Redis connection string. See the [configuration](/configuration) page for every available option.
+All the following examples run EmailEngine with the default configuration. In most cases, you probably want to use specific settings - for example, change the Redis connection string. See the [configuration](/configuration) page for every available option.
 
 - [Ubuntu / Debian](#ubuntu)
 - [Linux](#linux)
@@ -206,7 +206,7 @@ A VPS with **at least 2 GB of RAM** is recommended; smaller instances often stal
 
 1.  Fetch the installer:
 
-``` bash
+```bash
 wget https://go.emailengine.app -O install.sh
 # or
 curl -L https://go.emailengine.app -o install.sh
@@ -214,7 +214,7 @@ curl -L https://go.emailengine.app -o install.sh
 
 2.  Make it executable, become root, and run it. Replace `example.com` with your domain or leave it empty to let the script choose one:
 
-``` bash
+```bash
 chmod +x install.sh
 sudo su
 ./install.sh example.com
@@ -232,7 +232,7 @@ The steps below show a minimal binary installation on Ubuntu. Adapt paths and pa
 
 Add the RedisLabs PPA and install Redis:
 
-``` bash
+```bash
 sudo add-apt-repository -y ppa:redislabs/redis
 sudo apt-get update
 sudo apt-get -q -y install redis-server
@@ -244,7 +244,7 @@ sudo systemctl start redis-server
 
 Get the compressed binary, extract it, and move it somewhere in `$PATH`:
 
-``` bash
+```bash
 wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
 tar xzf emailengine.tar.gz
 rm emailengine.tar.gz
@@ -253,7 +253,7 @@ sudo mv emailengine /usr/local/bin/
 
 #### 3. Run
 
-``` bash
+```bash
 emailengine --dbs.redis="redis://127.0.0.1:6379/0"
 ```
 
@@ -273,7 +273,7 @@ EmailEngine ships as a signed PKG installer for both Intel and Apple Silicon Mac
 
 Install Redis with [Homebrew](https://brew.sh/):
 
-``` bash
+```bash
 brew update
 brew install redis
 brew services start redis
@@ -292,7 +292,7 @@ The installer places the `emailengine` binary in `/usr/local/bin` and adds it to
 
 #### 3. Run
 
-``` bash
+```bash
 emailengine --dbs.redis="redis://127.0.0.1:6379/0"
 ```
 
@@ -306,7 +306,7 @@ Download the newest PKG for your CPU architecture and run it. The installer repl
 
 Remove the executable:
 
-``` bash
+```bash
 sudo rm /usr/local/bin/emailengine
 ```
 
@@ -328,7 +328,7 @@ Grab the latest **emailengine.exe** from the [releases page](https://github.com/
 
 Open PowerShell and start EmailEngine:
 
-``` powershell
+```powershell
 PS C:\EmailEngine> .\emailengine.exe --dbs.redis="redis://127.0.0.1:6379/0"
 ```
 
@@ -354,7 +354,7 @@ Use a droplet with **at least 2 GB of RAM**.
 
 SSH into the droplet and run:
 
-``` bash
+```bash
 sudo /opt/upgrade-emailengine.sh
 ```
 
@@ -374,7 +374,7 @@ For a step‑by‑step walkthrough or customised setup, see the [Render installa
 
 ### Installing EmailEngine on CapRover
 
-CapRover provides a one‑click EmailEngine template. Open **One‑Click Apps** in your CapRover dashboard, search for *EmailEngine*, set the *App Name* (for example `emailengine`), and deploy.
+CapRover provides a one‑click EmailEngine template. Open **One‑Click Apps** in your CapRover dashboard, search for _EmailEngine_, set the _App Name_ (for example `emailengine`), and deploy.
 
 After the container starts, enable HTTPS for the app and tick **Force HTTPS (redirect HTTP → HTTPS)**. Then open the application URL to access EmailEngine.
 
@@ -382,7 +382,7 @@ After the container starts, enable HTTPS for the app and tick **Force HTTPS (red
 
 Open the CapRover admin panel, select the EmailEngine app, and go to the **Deployment** tab. In **Method 6 – Deploy via Image Name** enter:
 
-``` text
+```text
 postalsys/emailengine:v2
 ```
 
@@ -392,7 +392,7 @@ Click **Deploy now**. CapRover pulls the latest image, recreates the container, 
 
 ### Installing EmailEngine on Heroku
 
-Click **Deploy to Heroku**, enter the *App Name*, and leave all other fields unchanged.
+Click **Deploy to Heroku**, enter the _App Name_, and leave all other fields unchanged.
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/postalsys/emailengine)
 
@@ -418,7 +418,7 @@ Install and start a local Redis server. Official instructions for each platform 
 
 Create a working directory, fetch the latest release archive, and unpack it:
 
-``` bash
+```bash
 mkdir emailengine
 cd emailengine
 wget https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz
@@ -428,14 +428,14 @@ rm source-dist.tar.gz
 
 Create a minimal configuration file `.env`:
 
-``` bash
+```bash
 echo 'EENGINE_WORKERS=2
 EENGINE_REDIS=redis://127.0.0.1:6379/8' > .env
 ```
 
 Launch EmailEngine:
 
-``` bash
+```bash
 node server.js
 ```
 

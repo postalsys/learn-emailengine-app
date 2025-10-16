@@ -594,16 +594,3 @@ If migration fails:
 - Document secret storage location
 - Implement regular rotation schedule
 :::
-
-## See Also
-
-- [Security Best Practices](/docs/deployment/security)
-- [Configuration Options](/docs/configuration)
-- [Redis Configuration](/docs/configuration/redis)
-- [Deployment Guide](/docs/deployment)
-
-## Resources
-
-- **AES-256-GCM**: [NIST Recommendation](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf)
-- **Secret Management**: [OWASP Secrets Management](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html)
-- **Vault by HashiCorp**: [www.vaultproject.io](https://www.vaultproject.io/)

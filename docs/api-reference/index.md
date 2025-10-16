@@ -139,51 +139,26 @@ Use JSON for request bodies:
 
 ### Example Requests
 
-**Node.js:**
-```javascript
-const fetch = require('node-fetch');
-
-const response = await fetch('http://localhost:3000/v1/accounts', {
-  headers: {
-    'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-  }
-});
-
-const accounts = await response.json();
-console.log(accounts);
-```
-
-**Python:**
-```python
-import requests
-
-response = requests.get(
-    'http://localhost:3000/v1/accounts',
-    headers={'Authorization': 'Bearer YOUR_ACCESS_TOKEN'}
-)
-
-accounts = response.json()
-print(accounts)
-```
-
-**PHP:**
-```php
-<?php
-$ch = curl_init('http://localhost:3000/v1/accounts');
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Authorization: Bearer YOUR_ACCESS_TOKEN'
-]);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-$response = curl_exec($ch);
-$accounts = json_decode($response, true);
-print_r($accounts);
-```
-
 **cURL:**
 ```bash
 curl http://localhost:3000/v1/accounts \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Pseudo code:**
+```
+// Make HTTP GET request to the accounts endpoint
+response = HTTP_GET("http://localhost:3000/v1/accounts", {
+  headers: {
+    "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+  }
+})
+
+// Parse JSON response
+accounts = PARSE_JSON(response.body)
+
+// Display results
+PRINT(accounts)
 ```
 
 ## Response Format
@@ -280,27 +255,27 @@ Most successful responses follow this structure:
 
 For transient errors (429, 500, 503):
 
-```javascript
-async function retryRequest(url, options, maxRetries = 3) {
-  for (let i = 0; i < maxRetries; i++) {
-    const response = await fetch(url, options);
+```
+// Pseudo code for retry logic with exponential backoff
+function retryRequest(url, options, maxRetries = 3) {
+  for (i = 0; i < maxRetries; i++) {
+    response = HTTP_REQUEST(url, options)
 
-    if (response.ok) {
-      return response;
+    if (response.status >= 200 AND response.status < 300) {
+      return response
     }
 
-    if (response.status === 429 || response.status >= 500) {
+    if (response.status == 429 OR response.status >= 500) {
       // Exponential backoff: 1s, 2s, 4s
-      await new Promise(resolve =>
-        setTimeout(resolve, Math.pow(2, i) * 1000)
-      );
-      continue;
+      delay = POWER(2, i) * 1000  // milliseconds
+      SLEEP(delay)
+      continue
     }
 
-    throw new Error(`Request failed: ${response.status}`);
+    THROW_ERROR("Request failed with status: " + response.status)
   }
 
-  throw new Error('Max retries exceeded');
+  THROW_ERROR("Max retries exceeded")
 }
 ```
 
@@ -337,27 +312,34 @@ Paginated responses include navigation metadata:
 
 ### Navigation Example
 
-```javascript
-// Fetch all pages
-async function fetchAllMessages(account) {
-  let page = 0;
-  let allMessages = [];
-  let hasMore = true;
+```
+// Pseudo code: Fetch all pages of messages
+function fetchAllMessages(account) {
+  page = 0
+  allMessages = []
+  hasMore = true
 
   while (hasMore) {
-    const response = await fetch(
-      `http://localhost:3000/v1/account/${account}/messages?page=${page}&limit=100`,
-      { headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' } }
-    );
+    // Build URL with pagination parameters
+    url = "http://localhost:3000/v1/account/" + account + "/messages?page=" + page + "&limit=100"
 
-    const data = await response.json();
-    allMessages.push(...data.messages);
+    // Make HTTP GET request
+    response = HTTP_GET(url, {
+      headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
+    })
 
-    hasMore = page < data.pages - 1;
-    page++;
+    // Parse response
+    data = PARSE_JSON(response.body)
+
+    // Add messages to collection
+    allMessages = allMessages + data.messages
+
+    // Check if more pages exist
+    hasMore = (page < data.pages - 1)
+    page = page + 1
   }
 
-  return allMessages;
+  return allMessages
 }
 ```
 
@@ -435,17 +417,23 @@ When rate limited, you'll receive:
 
 Implement exponential backoff:
 
-```javascript
-async function makeRequestWithBackoff(url, options) {
-  const response = await fetch(url, options);
+```
+// Pseudo code: Handle rate limiting with backoff
+function makeRequestWithBackoff(url, options) {
+  response = HTTP_REQUEST(url, options)
 
-  if (response.status === 429) {
-    const retryAfter = response.headers.get('Retry-After') || 60;
-    await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-    return makeRequestWithBackoff(url, options);
+  if (response.status == 429) {
+    // Get retry delay from header or use default
+    retryAfter = response.headers['Retry-After'] OR 60
+
+    // Wait before retrying
+    SLEEP(retryAfter * 1000)  // Convert to milliseconds
+
+    // Recursive retry
+    return makeRequestWithBackoff(url, options)
   }
 
-  return response;
+  return response
 }
 ```
 
@@ -488,83 +476,88 @@ Learn more in the [Webhooks API documentation](./webhooks-api.md).
 
 Here's a complete workflow showing the most common operations:
 
-```javascript
-const BASE_URL = 'http://localhost:3000/v1';
-const TOKEN = 'YOUR_ACCESS_TOKEN';
+```
+// Pseudo code: Complete EmailEngine API workflow
 
-const headers = {
-  'Authorization': `Bearer ${TOKEN}`,
-  'Content-Type': 'application/json'
-};
+BASE_URL = "http://localhost:3000/v1"
+TOKEN = "YOUR_ACCESS_TOKEN"
 
 // 1. Register an email account
-const registerResponse = await fetch(`${BASE_URL}/account`, {
-  method: 'POST',
-  headers,
-  body: JSON.stringify({
-    account: 'user@example.com',
-    name: 'John Doe',
+registerResponse = HTTP_POST(BASE_URL + "/account", {
+  headers: {
+    "Authorization": "Bearer " + TOKEN,
+    "Content-Type": "application/json"
+  },
+  body: {
+    account: "user@example.com",
+    name: "John Doe",
     imap: {
-      host: 'imap.example.com',
+      host: "imap.example.com",
       port: 993,
       secure: true,
       auth: {
-        user: 'user@example.com',
-        pass: 'password'
+        user: "user@example.com",
+        pass: "password"
       }
     },
     smtp: {
-      host: 'smtp.example.com',
+      host: "smtp.example.com",
       port: 465,
       secure: true,
       auth: {
-        user: 'user@example.com',
-        pass: 'password'
+        user: "user@example.com",
+        pass: "password"
       }
     }
-  })
-});
+  }
+})
 
-const { account } = await registerResponse.json();
-console.log('Account registered:', account);
+account = PARSE_JSON(registerResponse.body).account
+PRINT("Account registered: " + account)
 
 // 2. Wait for account to connect (or use webhook)
-await new Promise(resolve => setTimeout(resolve, 5000));
+SLEEP(5000)  // Wait 5 seconds
 
 // 3. Send an email
-const sendResponse = await fetch(`${BASE_URL}/account/${account}/submit`, {
-  method: 'POST',
-  headers,
-  body: JSON.stringify({
-    to: [{ address: 'recipient@example.com' }],
-    subject: 'Hello from EmailEngine',
-    text: 'This is a test email sent via the API'
-  })
-});
+sendResponse = HTTP_POST(BASE_URL + "/account/" + account + "/submit", {
+  headers: {
+    "Authorization": "Bearer " + TOKEN,
+    "Content-Type": "application/json"
+  },
+  body: {
+    to: [{ address: "recipient@example.com" }],
+    subject: "Hello from EmailEngine",
+    text: "This is a test email sent via the API"
+  }
+})
 
-const { messageId } = await sendResponse.json();
-console.log('Email sent:', messageId);
+messageId = PARSE_JSON(sendResponse.body).messageId
+PRINT("Email sent: " + messageId)
 
 // 4. List recent messages
-const messagesResponse = await fetch(
-  `${BASE_URL}/account/${account}/messages?limit=10`,
-  { headers }
-);
+messagesResponse = HTTP_GET(
+  BASE_URL + "/account/" + account + "/messages?limit=10",
+  {
+    headers: { "Authorization": "Bearer " + TOKEN }
+  }
+)
 
-const { messages } = await messagesResponse.json();
-console.log('Recent messages:', messages.length);
+messages = PARSE_JSON(messagesResponse.body).messages
+PRINT("Recent messages: " + LENGTH(messages))
 
 // 5. Setup webhook for new messages
-await fetch(`${BASE_URL}/settings`, {
-  method: 'POST',
-  headers,
-  body: JSON.stringify({
-    webhooks: 'https://your-app.com/webhook',
-    webhookEvents: ['messageNew']
-  })
-});
+HTTP_POST(BASE_URL + "/settings", {
+  headers: {
+    "Authorization": "Bearer " + TOKEN,
+    "Content-Type": "application/json"
+  },
+  body: {
+    webhooks: "https://your-app.com/webhook",
+    webhookEvents: ["messageNew"]
+  }
+})
 
-console.log('Webhook configured');
+PRINT("Webhook configured")
 ```
 
 ## API Categories
@@ -616,13 +609,6 @@ Configure webhooks and event notifications.
 Complete auto-generated API documentation with all endpoints, parameters, and examples.
 
 [Browse full API reference](/docs/api-reference)
-
-## Next Steps
-
-- **Getting Started**: Read the [Quick Start Guide](/docs/getting-started/quick-start)
-- **Authentication**: Learn about [OAuth2 Setup](/docs/accounts/oauth2-setup)
-- **Webhooks**: Configure [Real-time Events](/docs/receiving/webhooks)
-- **Examples**: Explore [Integration Examples](/docs/integrations)
 
 ## Support
 

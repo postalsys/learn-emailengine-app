@@ -23,12 +23,6 @@ For production deployments on Windows Server, consider using **WSL2** or running
 
 Native Windows installation using the standalone executable.
 
-### Prerequisites
-
-- Windows 10 (version 1809+) or Windows Server 2019+
-- Administrator access for Redis installation
-- 2-4 GB RAM minimum
-
 ### Step 1: Install Redis Alternative
 
 EmailEngine requires Redis, which doesn't officially support Windows. Use one of these alternatives:
@@ -402,18 +396,3 @@ New-NetFirewallRule -DisplayName "EmailEngine" -Direction Inbound -Protocol TCP 
 
 - **Windows executable**: ~200-400 MB base memory
 - **Source in WSL2**: ~100-200 MB base memory (recommended for production)
-
-## Next Steps
-
-1. [Create your first email account](/docs/accounts)
-2. [Configure OAuth2 for Gmail/Outlook](/docs/accounts/oauth2-setup)
-3. [Set up webhooks](/docs/receiving/webhooks)
-4. [Review security best practices](/docs/deployment/security)
-
-## See Also
-
-- [Linux Installation](/docs/installation/linux) (for WSL2)
-- [macOS Installation](/docs/installation/macos)
-- [Docker Installation](/docs/installation/docker)
-- [Source Installation](/docs/installation/source)
-- [Configuration Options](/docs/configuration)

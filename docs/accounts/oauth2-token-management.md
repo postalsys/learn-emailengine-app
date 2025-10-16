@@ -154,7 +154,7 @@ If you add accounts before configuring all scopes, those accounts will be missin
 
 ### Get Current Access Token
 
-Retrieve a currently valid access token for an account:
+Retrieve a currently valid access token for an account using the [OAuth2 token API](/docs/api/get-v-1-account-account-oauth-token):
 
 ```bash
 curl https://your-ee.com/v1/account/example/oauth-token \
@@ -608,18 +608,3 @@ const calendar = new GoogleCalendarClient(
 const calendars = await calendar.listCalendars('user123');
 console.log('Calendars:', calendars);
 ```
-
-## Next Steps
-
-- [Learn about OAuth2 setup](./oauth2-setup)
-- [Set up Gmail OAuth2](./gmail-imap)
-- [Set up Outlook OAuth2](./outlook-365)
-- [Configure authentication server for custom flows](./authentication-server)
-- [Troubleshoot account issues](./troubleshooting)
-
-## See Also
-
-- [OAuth2 Configuration Documentation](/docs/configuration/oauth2-configuration)
-- [API Reference: Get OAuth Token](/docs/api/get-v-1-account-account-oauthtoken)
-- [Google API Documentation](https://developers.google.com/apis-explorer)
-- [Microsoft Graph API Documentation](https://learn.microsoft.com/en-us/graph/api/overview)

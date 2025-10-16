@@ -612,19 +612,3 @@ services:
       --timeout 300
       --tcp-keepalive 300
 ```
-
-## Next Steps
-
-1. [Create your first email account](/docs/accounts)
-2. [Configure OAuth2 for Gmail/Outlook](/docs/accounts/oauth2-setup)
-3. [Set up webhooks](/docs/receiving/webhooks)
-4. [Deploy to production](/docs/deployment/production)
-5. [Monitor with Prometheus](/docs/deployment/monitoring)
-
-## See Also
-
-- [Linux Installation](/docs/installation/linux)
-- [macOS Installation](/docs/installation/macos)
-- [Windows Installation](/docs/installation/windows)
-- [Source Installation](/docs/installation/source)
-- [Configuration Options](/docs/configuration)

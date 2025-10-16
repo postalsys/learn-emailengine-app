@@ -30,7 +30,7 @@ App name again, we'll go with the project's name, which is "EmailEngine." We als
 ![](https://cldup.com/FIRIMzunwz.gif)
 Click on the "Add or remove scopes" button and find "gmail.modify" from the list. Check it and click on "Update" to apply the changes.
 
-> If you need to use different scopes than `gmail.modify` — for example, if Google's verification process determined that you can achieve your use case with more limited scopes — then see the instructions in the [Appendices](#appendices).
+> If you need to use different scopes than `gmail.modify` - for example, if Google's verification process determined that you can achieve your use case with more limited scopes - then see the instructions in the [Appendices](#appendices).
 
 ![](https://cldup.com/BONjtoR9p6.gif)
 Scroll down to the end of the page and click on the "Save and continue" button to finish setting up the user consent screen.
@@ -55,7 +55,7 @@ Once the Service Account is created, we need to generate keys to use it. Navigat
 ![](https://cldup.com/VtJcozUfxY.gif)
 Next, we can add these credentials to the OAuth2 section on the EmailEngine configuration page. On your EmailEngine's dashboard page, navigate to "Configuration" → "OAuth2" and create a new "Gmail Service Accounts" application for managing webhook Pub/Sub queues.
 ![](https://cldup.com/YvOpC3QjWZ.gif)
-Select the credentials file on the OAuth2 application form to fill in all OAuth2 secrets and variables. Just ensure you use the credentials file for the service account, not the user consent screen. You can differentiate between these files by looking at the file name – the user consent screen file starts with the "client_secret_" prefix, and the service account key file uses the service account name prefix.
+Select the credentials file on the OAuth2 application form to fill in all OAuth2 secrets and variables. Just ensure you use the credentials file for the service account, not the user consent screen. You can differentiate between these files by looking at the file name – the user consent screen file starts with the "client*secret*" prefix, and the service account key file uses the service account name prefix.
 
 For base scopes, select "Cloud Pub/Sub." Otherwise, EmailEngine does not know how to prepare the required queues and permissions.
 ![](https://cldup.com/OfoPs4TldB.gif)
@@ -82,15 +82,14 @@ If you have a public OAuth2 application, Google might require you to use narrowe
     https://www.googleapis.com/auth/gmail.readonly
     https://www.googleapis.com/auth/gmail.send
     https://www.googleapis.com/auth/gmail.labels
-    
 
 **Disable `gmail.modify`** by adding it to the **Disabled scopes** field:
 
     https://www.googleapis.com/auth/gmail.modify
-    
 
 When you create a new OAuth2 account, the permissions screen will only request these selected scopes.
 ![](__GHOST_URL__/content/images/2025/02/Screenshot-2025-02-25-at-10.12.54.png)
+
 ### See more
 
 - [OAuth2 configuration documentation for EmailEngine](https://emailengine.app/oauth2-configuration)

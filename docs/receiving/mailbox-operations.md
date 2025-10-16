@@ -119,7 +119,7 @@ EmailEngine indicates how it determined a folder's special-use flag:
 
 ### Basic Listing
 
-List all mailboxes for an account:
+List all mailboxes for an account using the [mailboxes API](/docs/api/get-v-1-account-account-mailboxes):
 
 ```bash
 curl "https://your-emailengine.com/v1/account/example/mailboxes" \
@@ -237,6 +237,8 @@ async function listSentMessages(accountId) {
 
 ### Create a New Folder
 
+Create a mailbox folder using the [create mailbox API](/docs/api/post-v-1-account-account-mailbox):
+
 ```bash
 curl -X POST "https://your-emailengine.com/v1/account/example/mailbox" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -283,6 +285,8 @@ await createFolder('example', 'Personal/Finance/2025');
 ## Renaming Mailboxes
 
 ### Rename a Folder
+
+Rename a mailbox using the [rename mailbox API](/docs/api/put-v-1-account-account-mailbox):
 
 ```bash
 curl -X PUT "https://your-emailengine.com/v1/account/example/mailbox" \
@@ -332,6 +336,8 @@ await fetch(
 ## Deleting Mailboxes
 
 ### Delete a Folder
+
+Delete a mailbox using the [delete mailbox API](/docs/api/delete-v-1-account-account-mailbox):
 
 ```bash
 curl -X DELETE "https://your-emailengine.com/v1/account/example/mailbox" \
@@ -724,10 +730,3 @@ function isValidFolderPath(path) {
   return true;
 }
 ```
-
-## See Also
-
-- [Message Operations](./message-operations) - Working with messages
-- [Webhooks](./webhooks) - Real-time mailbox change notifications
-- [Searching](./searching) - Finding messages in folders
-- [Accounts: IMAP](/docs/accounts/imap-smtp) - IMAP account setup

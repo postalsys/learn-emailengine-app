@@ -33,8 +33,6 @@ Running EmailEngine from source provides several advantages over binary distribu
 **Production Recommendation:**
 For production environments, especially those managing many email accounts or running on resource-constrained servers, source installation is the recommended approach.
 
-## Prerequisites
-
 ### System Requirements
 
 **Minimum (development/testing):**
@@ -787,20 +785,3 @@ tail -f /var/log/emailengine/*.log
 8. **Monitor logs** for suspicious activity
 
 See [Security Best Practices](/docs/deployment/security) for detailed guidance.
-
-## Next Steps
-
-1. [Create your first email account](/docs/accounts)
-2. [Configure OAuth2 for Gmail/Outlook](/docs/accounts/oauth2-setup)
-3. [Set up webhooks](/docs/receiving/webhooks)
-4. [Deploy reverse proxy](/docs/deployment/production)
-5. [Configure monitoring](/docs/deployment/monitoring)
-
-## See Also
-
-- [Linux Installation](/docs/installation/linux) (includes automated installer)
-- [macOS Installation](/docs/installation/macos) (binary and PKG options)
-- [Windows Installation](/docs/installation/windows) (WSL2 recommended)
-- [Docker Installation](/docs/installation/docker) (containerized deployment)
-- [Configuration Options](/docs/configuration) (complete reference)
-- [SystemD Service Guide](/docs/deployment/systemd) (service management)

@@ -19,7 +19,7 @@ Source attribution:
 - Common search patterns
 -->
 
-EmailEngine provides powerful search capabilities to find messages across your email accounts. Search queries use IMAP SEARCH syntax under the hood, making them compatible with virtually any email server.
+EmailEngine provides powerful [search capabilities](/docs/api/post-v-1-account-account-search) to find messages across your email accounts. Search queries use IMAP SEARCH syntax under the hood, making them compatible with virtually any email server.
 
 ## Why Use Search?
 
@@ -865,10 +865,3 @@ async function loggedSearch(accountId, folderPath, searchParams) {
   }
 }
 ```
-
-## See Also
-
-- [Message Operations](./message-operations) - Working with messages
-- [Mailbox Operations](./mailbox-operations) - Managing folders
-- [Webhooks](./webhooks) - Real-time message notifications
-- [Advanced: Performance Tuning](/docs/advanced/performance-tuning) - Optimization techniques

@@ -367,6 +367,8 @@ Only disable certificate verification for development/testing. In production, us
 
 ### Basic IMAP/SMTP Account
 
+Add accounts using the [Register Account API endpoint](/docs/api/post-v-1-account):
+
 ```bash
 curl -X POST https://your-ee.com/v1/account \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -719,19 +721,3 @@ If migrating from OAuth2-based systems:
 - Consider using EmailEngine's OAuth2 support instead of IMAP/SMTP
 - See [Gmail OAuth2 guide](./gmail-imap) or [Outlook OAuth2 guide](./outlook-365)
 - OAuth2 provides better security and user experience
-
-## Next Steps
-
-- [Set up Gmail with OAuth2 for better security](./gmail-imap)
-- [Set up Outlook with OAuth2](./outlook-365)
-- [Learn about OAuth2 setup](./oauth2-setup)
-- [Configure account management](./managing-accounts)
-- [Troubleshoot connection issues](./troubleshooting)
-
-## See Also
-
-- [Supported Account Types](/docs/accounts)
-- [API Reference: Add Account](/docs/api/post-v-1-account)
-- [API Reference: Verify Account](/docs/api/post-v-1-verifyaccount)
-- [Hosted Authentication](/docs/accounts/oauth2-setup)
-- [Performance Tuning](/docs/advanced/performance-tuning)

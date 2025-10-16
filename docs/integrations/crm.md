@@ -721,7 +721,6 @@ Review what data is stored and your compliance obligations:
 
 - **Password Storage**: EmailEngine encrypts credentials
 - **Email Content**: Not stored by default (only metadata)
-- **ElasticSearch**: If enabled, stores full email content
 - **GDPR**: Implement data deletion workflows
 
 **Read more**: Data and Security Compliance guide
@@ -789,18 +788,3 @@ Review what data is stored and your compliance obligations:
 5. **Monitoring**: Track webhook failures and processing times
 6. **User Feedback**: Provide clear status about email sync
 7. **Testing**: Test with multiple email providers (Gmail, Outlook, etc.)
-
-## Next Steps
-
-- Implement [Performance Tuning](/docs/advanced/performance-tuning)
-- Set up [Monitoring](/docs/advanced/monitoring)
-- Review [Security Best Practices](/docs/deployment/security)
-- Explore [Advanced Features](/docs/advanced/performance-tuning)
-
-## See Also
-
-- [PHP Integration](/docs/integrations/php)
-- [Webhooks Configuration](/docs/receiving/webhooks)
-- [Sending Emails](/docs/sending)
-- [API Reference](/docs/api-reference)
-- [Performance Tuning](/docs/advanced/performance-tuning)

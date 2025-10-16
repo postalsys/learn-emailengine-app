@@ -731,85 +731,85 @@ EENGINE_WORKERS=20
 
 Track metrics programmatically:
 
-```javascript
-// Example monitoring
-const Bull = require('bull');
-const submitQueue = new Bull('submit', 'redis://localhost:6379');
+```
+// Pseudo code - implement in your preferred language
 
-async function getQueueMetrics() {
-  const waiting = await submitQueue.getWaitingCount();
-  const active = await submitQueue.getActiveCount();
-  const delayed = await submitQueue.getDelayedCount();
-  const failed = await submitQueue.getFailedCount();
+function get_queue_metrics(queue_name):
+  // Connect to queue system
+  queue = QUEUE_CONNECT('redis://localhost:6379', queue_name)
 
-  return { waiting, active, delayed, failed };
-}
+  // Get queue counts
+  waiting = QUEUE_COUNT(queue, 'waiting')
+  active = QUEUE_COUNT(queue, 'active')
+  delayed = QUEUE_COUNT(queue, 'delayed')
+  failed = QUEUE_COUNT(queue, 'failed')
+
+  return { waiting, active, delayed, failed }
+end function
 
 // Alert if waiting queue too large
-const metrics = await getQueueMetrics();
-if (metrics.waiting > 100) {
-  alertAdmin('Submit queue backlog detected');
-}
+metrics = get_queue_metrics('submit')
+
+if metrics.waiting > 100:
+  CALL alert_admin('Submit queue backlog detected')
+end if
 ```
 
 ## Advanced Topics
 
 ### Job Events
 
-BullMQ emits events for job lifecycle:
+Queue systems emit events for job lifecycle:
 
-```javascript
-const submitQueue = new Bull('submit', 'redis://localhost:6379');
+```
+// Pseudo code - implement in your preferred language
 
-// Job completed
-submitQueue.on('completed', (job, result) => {
-  console.log(`Job ${job.id} completed:`, result);
-});
+queue = QUEUE_CONNECT('redis://localhost:6379', 'submit')
 
-// Job failed
-submitQueue.on('failed', (job, err) => {
-  console.log(`Job ${job.id} failed:`, err);
-});
+// Job completed event
+ON_QUEUE_EVENT(queue, 'completed', function(job, result):
+  PRINT('Job ' + job.id + ' completed: ' + result)
+end function)
 
-// Job delayed (retry)
-submitQueue.on('delayed', (job, delay) => {
-  console.log(`Job ${job.id} delayed by ${delay}ms`);
-});
+// Job failed event
+ON_QUEUE_EVENT(queue, 'failed', function(job, error):
+  PRINT('Job ' + job.id + ' failed: ' + error)
+end function)
+
+// Job delayed event (retry)
+ON_QUEUE_EVENT(queue, 'delayed', function(job, delay):
+  PRINT('Job ' + job.id + ' delayed by ' + delay + 'ms')
+end function)
 ```
 
 ### Custom Job Processing
 
 For advanced use cases, process jobs programmatically:
 
-```javascript
-const Bull = require('bull');
-const queue = new Bull('custom-queue', 'redis://localhost:6379');
+```
+// Pseudo code - implement in your preferred language
+
+queue = QUEUE_CONNECT('redis://localhost:6379', 'custom-queue')
 
 // Add custom job
-await queue.add('my-task', {
-  data: 'custom data'
-}, {
-  delay: 5000, // 5 second delay
-  attempts: 3,
-  backoff: {
-    type: 'exponential',
-    delay: 2000
+QUEUE_ADD_JOB(
+  queue,
+  name='my-task',
+  data={ data: 'custom data' },
+  options={
+    delay: 5000,  // 5 second delay
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 2000
+    }
   }
-});
+)
 
 // Process custom job
-queue.process('my-task', async (job) => {
-  console.log('Processing:', job.data);
+QUEUE_PROCESS(queue, 'my-task', function(job):
+  PRINT('Processing: ' + job.data)
   // Your processing logic
-  return { success: true };
-});
+  return { success: true }
+end function)
 ```
-
-## See Also
-
-- [Transactional Email Service](/docs/sending/transactional-service) - Email submission and delivery
-- [Outbox Queue](/docs/sending/outbox-queue) - Outbound message queue details
-- [Webhooks](/docs/receiving/webhooks) - Webhook delivery and debugging
-- [Monitoring](/docs/advanced/monitoring) - System monitoring and alerts
-- [Performance Tuning](/docs/advanced/performance-tuning) - Optimization strategies
-- [BullMQ Documentation](https://docs.bullmq.io/) - Official BullMQ docs

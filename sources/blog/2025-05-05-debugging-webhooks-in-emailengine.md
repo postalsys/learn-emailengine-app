@@ -11,16 +11,15 @@ Webhooks are the mechanism EmailEngine uses to push account and message events t
 
 Start with the simplest external listener so you can observe the raw HTTP requests.
 
-> **Example listener**
-> [https://webhook.site/](https://webhook.site/) gives you a temporary URL and a live log of incoming requests.
+> **Example listener** > [https://webhook.site/](https://webhook.site/) gives you a temporary URL and a live log of incoming requests.
 > **Postal Systems OÜ is not affiliated with webhook.site; we mention it only as a convenient example.**
-> Any comparable service—e.g. **requestbin.com**, **pipelines.dev**, or a self‑hosted **ngrok** tunnel—works just as well.
+> Any comparable service - e.g. **requestbin.com**, **pipelines.dev**, or a self‑hosted **ngrok** tunnel - works just as well.
 
 1. Open your chosen listener and copy the unique callback URL.
 2. In EmailEngine open **Configuration → Webhooks**.
 3. Tick **Enable webhooks**, paste the URL into **Webhook URL**, select **All events**, and save.
 
-If you trigger any event now, the listener page should show a POST request from EmailEngine. If nothing appears, the problem is network level (firewall, proxy, DNS) or a typo in the URL—fix this before proceeding.
+If you trigger any event now, the listener page should show a POST request from EmailEngine. If nothing appears, the problem is network level (firewall, proxy, DNS) or a typo in the URL - fix this before proceeding.
 
 ## 2. Preserve failed webhook attempts for inspection
 
@@ -28,6 +27,7 @@ By default EmailEngine discards completed and failed jobs immediately, which hid
 
 1. Go to **Configuration → Service** and set **Completed/failed queue entries to keep** to **100** (or any non‑zero value).
 2. Open **Tools → Bull Board → Webhooks queue**.
+
 - **Delayed** tab – jobs that failed but will be retried automatically.
 - **Failed** tab – jobs that exceeded the retry limit.
 
@@ -37,11 +37,11 @@ Open a job to see the full error stack, headers, and payload that EmailEngine se
 
 Add a fresh mailbox to EmailEngine and wait until its status is **connected**. The listener should immediately receive an **Account initialized** event. If you see it, outbound delivery is working.
 
-Next, send an email *from an external mailbox* to the new account. Within 10‑60 s you should receive a **New message** webhook. If not, continue below.
+Next, send an email _from an external mailbox_ to the new account. Within 10‑60 s you should receive a **New message** webhook. If not, continue below.
 
 ### 3.1 Is the message in the mailbox at all?
 
-Log in with a regular mail client. If the message landed in *Spam* or *Other* folders, EmailEngine will still detect it, but this quick check rules out delivery issues.
+Log in with a regular mail client. If the message landed in _Spam_ or _Other_ folders, EmailEngine will still detect it, but this quick check rules out delivery issues.
 
 ### 3.2 Can EmailEngine see the message?
 
@@ -49,7 +49,6 @@ Run an API request against your EmailEngine to list messages in the INBOX folder
 
     curl "https://EMAILENGINE.HOST/v1/account/ACCOUNT_ID/messages?path=INBOX&pageSize=5" \
       -H "Authorization: Bearer ACCESS_TOKEN"
-    
 
 Edit EMAILENGINE.HOST, ACCOUNT_ID and ACCESS_TOKEN values
 
@@ -61,7 +60,7 @@ When **Base scopes** is **API** (Gmail API or MS Graph) instead of **IMAP**, Ema
 
 ### 4.1 Gmail API + Cloud Pub/Sub
 
-Open **Configuration → OAuth2**, choose the Gmail OAuth app, and scroll to **Cloud Pub/Sub configuration**. All three items—*Topic*, *Subscription*, *Gmail bindings*—must show **Created** in green. Anything else means the Google Cloud service account is missing IAM roles or the Pub/Sub API is disabled.
+Open **Configuration → OAuth2**, choose the Gmail OAuth app, and scroll to **Cloud Pub/Sub configuration**. All three items - _Topic_, _Subscription_, _Gmail bindings_ - must show **Created** in green. Anything else means the Google Cloud service account is missing IAM roles or the Pub/Sub API is disabled.
 
 ### 4.2 MS Graph API subscriptions
 
@@ -71,7 +70,6 @@ If a subscription has not been created, then the most common cause is that your 
 
     https://EMAILENGINE.HOST/oauth/msg/lifecycle
     https://EMAILENGINE.HOST/oauth/msg/notification
-    
 
 If Graph cannot reach those URLs, for example, if you are serving plain HTTP, your TLS certificates are invalid, **EMAILENGINE.HOST** does not resolve to your instance (set in **Configuration→Service→ServiceURL**), or outbound connections are firewalled, then new‑message webhooks for Graph accounts will fail.
 

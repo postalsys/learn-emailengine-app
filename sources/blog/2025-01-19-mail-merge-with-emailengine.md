@@ -8,11 +8,11 @@ excerpt: Use the mailMerge array in the message submission API call to generate 
 ---
 
 > **TL;DR**
-> Drop `to`/`cc`/`bcc` from your payload, add a `mailMerge` array, and EmailEngine fan‑outs the request into distinct messages—each with its own *Message‑ID* you can track later.
+> Drop `to`/`cc`/`bcc` from your payload, add a `mailMerge` array, and EmailEngine fan‑outs the request into distinct messages - each with its own _Message‑ID_ you can track later.
 
 ## Why it matters
 
-Bulk‑sending receipts, onboarding tips or weekly digests from **your customer’s** mailbox means better deliverability and brand consistency—but you don’t want 500 addresses exposed in the `To` header. EmailEngine turns one REST call into N fully‑formed messages, so every recipient feels like the only one.
+Bulk‑sending receipts, onboarding tips or weekly digests from **your customer’s** mailbox means better deliverability and brand consistency - but you don’t want 500 addresses exposed in the `To` header. EmailEngine turns one REST call into N fully‑formed messages, so every recipient feels like the only one.
 
 ## Step‑by‑step
 
@@ -31,7 +31,6 @@ With mail merge you still hit `**/v1/account/:id/submit**` but replace the usual
           { "to": { "name": "Grace Hopper", "address": "grace@example.com" } }
         ]
       }'
-    
 
 Response
 
@@ -52,9 +51,8 @@ Response
         }
       ]
     }
-    
 
-Each recipient sees only their own address in *To*. Need to skip saving copies to *Sent Mail*? Add `"copy": false` to the payload.
+Each recipient sees only their own address in _To_. Need to skip saving copies to _Sent Mail_? Add `"copy": false` to the payload.
 
 ### 2. Personalise with Handlebars
 
@@ -77,7 +75,6 @@ Handlebars lets you inject per‑recipient data:
           }
         ]
       }'
-    
 
 > ⚠️ **Heads‑up** – For plaintext fields (`subject`, `text`) use triple braces `{{{…}}}` so Handlebars doesn’t HTML‑escape characters.
 
@@ -103,7 +100,6 @@ First store a [template](https://emailengine.app/email-templates) via `**/v1/tem
           }
         ]
       }'
-    
 
 EmailEngine swaps in the stored `subject`/`html`/`text` and still personalises via the `params` object.
 

@@ -85,8 +85,8 @@ const config: Config = {
   themes: ["docusaurus-theme-openapi-docs"],
 
   themeConfig: {
-    // Replace with your project's social card
-    image: 'img/emailengine-social-card.jpg',
+    // Social card for sharing
+    image: 'img/logo.png',
     colorMode: {
       respectPrefersColorScheme: true,
     },
@@ -94,7 +94,7 @@ const config: Config = {
       title: 'EmailEngine',
       logo: {
         alt: 'EmailEngine Logo',
-        src: 'img/logo.svg',
+        src: 'img/logo.png',
       },
       items: [
         {

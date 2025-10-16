@@ -25,15 +25,6 @@ EmailEngine integrates with OpenAI's API to provide AI-powered email processing 
 - **Reply Detection**: Identify if sender expects a response
 - **Conversational Search**: Ask questions about your email history
 
-## Prerequisites
-
-Before enabling AI integration:
-
-1. **EmailEngine Instance**: Running EmailEngine installation
-2. **OpenAI Account**: Account with API access
-3. **API Key**: OpenAI API key (paid account recommended)
-4. **ElasticSearch** (optional): Required for chat/search features
-
 ### OpenAI API Access
 
 - **GPT-3.5**: Available to all OpenAI accounts
@@ -71,7 +62,6 @@ When AI processing is enabled, EmailEngine automatically processes every new ema
 2. EmailEngine extracts text content
 3. Content sent to OpenAI API for analysis
 4. Analysis results added to webhook payload
-5. If ElasticSearch is enabled, analysis stored with message
 
 ### Webhook Enhancement
 
@@ -310,38 +300,21 @@ If webhooks are configured not to include email content, AI summarization may fa
 
 ## Feature 2: Chat with Emails (Conversational Search)
 
+:::warning Feature No Longer Available
+The "Chat with emails" feature has been removed as it required Document Store (ElasticSearch backend) which is no longer available. This section is kept for reference only.
+:::
+
 ### Overview
 
-The "Chat with emails" feature enables conversational search over your email history using vector embeddings and AI.
+The "Chat with emails" feature enabled conversational search over your email history using vector embeddings and AI.
 
 **Example Question**: "Last week, I received a newsletter about a city threatened by salt water. Which city was it?"
 
 **AI Response**: "The city threatened by salt water mixing with their drinking water is New Orleans."
 
-### Prerequisites
-
-1. EmailEngine instance
-2. ElasticSearch server
-3. OpenAI API key
-4. Email accounts connected
-
-### Setup Process
-
-#### 1. Enable Document Store
-
-1. Go to **Configuration** → **Document Store**
-2. Enter ElasticSearch connection details:
-   ```
-   URL: https://elasticsearch.example.com:9200
-   Username: elastic
-   Password: your-password
-   ```
-3. Enable Document Store
-4. EmailEngine begins syncing emails to ElasticSearch
-
 #### 2. Enable Chat Feature
 
-1. Navigate to **Chat with Emails** tab (under Document Store)
+1. Navigate to **Chat with Emails** configuration tab
 2. Enter OpenAI API key
 3. Select model (recommend GPT-3.5 or GPT-4)
 4. Save configuration
@@ -468,7 +441,7 @@ When you ask a question:
 
 1. **Question Embedding**: Question converted to vector embeddings
 2. **Query Analysis**: GPT-3.5 Instruct analyzes question for constraints (timeframe, sender, etc.)
-3. **Vector Search**: ElasticSearch returns most relevant email chunks based on embeddings similarity
+3. **Vector Search**: Document Store returned most relevant email chunks based on embeddings similarity
 4. **Answer Generation**: Relevant chunks + question sent to GPT for answer generation
 5. **Response Formatting**: Answer formatted with source email references
 
@@ -486,11 +459,9 @@ EmailEngine provides a "Try it" button on the Chat configuration page for testin
 
 ### Limitations
 
-1. **Not True Chat**: More of an enhanced search than conversation
-2. **Context**: Doesn't maintain conversation context between queries
-3. **New Emails Only**: Must re-index existing accounts
-4. **ElasticSearch Required**: Full dependency on ElasticSearch
-5. **Metadata Loss**: Moving email from Inbox to another folder loses custom metadata in ElasticSearch
+1. **Feature Removed**: No longer available (required Document Store backend)
+2. **Not True Chat**: Was more of an enhanced search than conversation
+3. **Context**: Didn't maintain conversation context between queries
 
 ## Use Cases and Applications
 
@@ -498,153 +469,174 @@ EmailEngine provides a "Try it" button on the Chat configuration page for testin
 
 Route emails based on AI analysis:
 
-```javascript
-function routeEmail(webhook) {
-  const summary = webhook.data.summary;
+```
+// Pseudo code - implement in your preferred language
+function routeEmail(webhook):
+  summary = webhook.data.summary
 
-  if (summary.riskAssessment.risk >= 4) {
+  if summary.riskAssessment.risk >= 4:
     // High risk - route to spam/security team
-    moveToSpam(webhook.data.id);
-  } else if (summary.actions && summary.actions.length > 0) {
+    moveToSpam(webhook.data.id)
+  else if summary.actions AND summary.actions.length > 0:
     // Has action items - create tasks
-    createTasks(summary.actions);
-  } else if (summary.shouldReply) {
+    createTasks(summary.actions)
+  else if summary.shouldReply:
     // Needs response - add to priority inbox
-    markAsPriority(webhook.data.id);
-  }
-}
+    markAsPriority(webhook.data.id)
 ```
 
 ### 2. Automatic Calendar Events
 
 Create calendar events from email mentions:
 
-```javascript
-function createEventsFromEmail(webhook) {
-  const events = webhook.data.summary.events || [];
+```
+// Pseudo code - implement in your preferred language
+function createEventsFromEmail(webhook):
+  events = webhook.data.summary.events OR []
 
-  events.forEach(event => {
-    if (event.startTime) {
+  for each event in events:
+    if event.startTime:
       createCalendarEvent({
         title: event.description,
         start: event.startTime,
-        end: event.endTime || event.startTime,
+        end: event.endTime OR event.startTime,
         source: 'email',
         emailId: webhook.data.id
-      });
-    }
-  });
-}
+      })
 ```
 
 ### 3. Task Management Integration
 
 Extract and create tasks:
 
-```javascript
-function createTasksFromEmail(webhook) {
-  const actions = webhook.data.summary.actions || [];
+```
+// Pseudo code - implement in your preferred language
+function createTasksFromEmail(webhook):
+  actions = webhook.data.summary.actions OR []
 
-  actions.forEach(action => {
+  for each action in actions:
     createTask({
       title: action.description,
       dueDate: action.dueDate,
       source: webhook.data.from.address,
       emailSubject: webhook.data.subject,
       emailId: webhook.data.id
-    });
-  });
-}
+    })
 ```
 
 ### 4. Customer Support Triage
 
 Automatically categorize and prioritize support emails:
 
-```javascript
-function triageSupportEmail(webhook) {
-  const sentiment = webhook.data.summary.sentiment;
-  const risk = webhook.data.riskAssessment.risk;
+```
+// Pseudo code - implement in your preferred language
+function triageSupportEmail(webhook):
+  sentiment = webhook.data.summary.sentiment
+  risk = webhook.data.riskAssessment.risk
 
-  let priority = 'normal';
+  priority = 'normal'
 
-  if (sentiment === 'negative') {
-    priority = 'high';
-  } else if (risk >= 3) {
-    priority = 'spam';
-  } else if (webhook.data.summary.shouldReply) {
-    priority = 'normal';
-  } else {
-    priority = 'low';
-  }
+  if sentiment == 'negative':
+    priority = 'high'
+  else if risk >= 3:
+    priority = 'spam'
+  else if webhook.data.summary.shouldReply:
+    priority = 'normal'
+  else:
+    priority = 'low'
 
-  assignToQueue(webhook.data, priority);
-}
+  assignToQueue(webhook.data, priority)
 ```
 
 ### 5. Email Analytics Dashboard
 
 Build analytics from AI-processed emails:
 
-```javascript
-function trackEmailMetrics(webhook) {
-  const summary = webhook.data.summary;
+```
+// Pseudo code - implement in your preferred language
+function trackEmailMetrics(webhook):
+  summary = webhook.data.summary
 
   // Track sentiment distribution
-  incrementMetric('sentiment', summary.sentiment);
+  incrementMetric('sentiment', summary.sentiment)
 
   // Track response requirements
-  if (summary.shouldReply) {
-    incrementMetric('requiresResponse');
-  }
+  if summary.shouldReply:
+    incrementMetric('requiresResponse')
 
   // Track action items
-  if (summary.actions && summary.actions.length > 0) {
-    incrementMetric('hasActions', summary.actions.length);
-  }
+  if summary.actions AND summary.actions.length > 0:
+    incrementMetric('hasActions', summary.actions.length)
 
   // Track high-risk emails
-  if (summary.riskAssessment.risk >= 4) {
-    incrementMetric('highRisk');
-    alertSecurityTeam(webhook.data);
-  }
-}
+  if summary.riskAssessment.risk >= 4:
+    incrementMetric('highRisk')
+    alertSecurityTeam(webhook.data)
 ```
 
 ### 6. Smart Email Search Assistant
 
 Build conversational email search for users:
 
-```javascript
-async function searchEmails(userId, question) {
-  const response = await fetch(
-    `https://ee.example.com/v1/chat/${userId}`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ question })
-    }
-  );
+**cURL:**
+```bash
+curl -X POST "https://ee.example.com/v1/chat/user123" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "Did I receive the invoice from Acme Corp?"
+  }'
+```
 
-  const data = await response.json();
+**Response:**
+```json
+{
+  "success": true,
+  "answer": "Yes, you received an invoice from Acme Corp on October 5th for $1,500.",
+  "messages": [
+    {
+      "id": "AAAAGQAACeE",
+      "from": {
+        "name": "Acme Corp",
+        "address": "billing@acmecorp.com"
+      },
+      "subject": "Invoice #12345",
+      "date": "2023-10-05T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Implementation (Pseudo code):**
+```
+// Pseudo code - implement in your preferred language
+function searchEmails(userId, question):
+  response = HTTP_POST(
+    url: "https://ee.example.com/v1/chat/" + userId,
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Content-Type": "application/json"
+    },
+    body: {
+      "question": question
+    }
+  )
+
+  data = parse_json(response.body)
 
   return {
     answer: data.answer,
     sourceEmails: data.messages
-  };
-}
+  }
 
-// Usage
-const result = await searchEmails(
-  'user123',
-  'Did I receive the invoice from Acme Corp?'
-);
+// Usage example
+result = searchEmails(
+  userId: 'user123',
+  question: 'Did I receive the invoice from Acme Corp?'
+)
 
-console.log(result.answer);
-// "Yes, you received an invoice from Acme Corp on October 5th for $1,500."
+print(result.answer)
+// Output: "Yes, you received an invoice from Acme Corp on October 5th for $1,500."
 ```
 
 ## Privacy and Compliance
@@ -705,20 +697,19 @@ OpenAI charges based on token usage:
 
 Track token usage from webhooks:
 
-```javascript
-function trackTokenUsage(webhook) {
-  if (webhook.data.summary) {
-    const tokens = webhook.data.summary.tokens;
-    const model = webhook.data.summary.model;
+```
+// Pseudo code - implement in your preferred language
+function trackTokenUsage(webhook):
+  if webhook.data.summary exists:
+    tokens = webhook.data.summary.tokens
+    model = webhook.data.summary.model
 
     logMetric('openai_tokens', {
-      model,
-      tokens,
+      model: model,
+      tokens: tokens,
       account: webhook.account,
-      timestamp: new Date()
-    });
-  }
-}
+      timestamp: current_timestamp()
+    })
 ```
 
 ## Troubleshooting
@@ -748,12 +739,7 @@ function trackTokenUsage(webhook) {
 
 **Problem**: Chat API returns no results or errors
 
-**Solutions**:
-1. Verify ElasticSearch is running and accessible
-2. Check Document Store is enabled
-3. Confirm accounts have been indexed (or flushed)
-4. Test ElasticSearch connection manually
-5. Review EmailEngine logs
+**Note**: Chat feature is no longer available (required Document Store which has been removed).
 
 ### Inaccurate AI Responses
 
@@ -799,13 +785,13 @@ Configure EmailEngine to only process emails in Inbox to avoid wasting API calls
 
 Always check if `summary` exists before accessing:
 
-```javascript
-if (webhook.data.summary) {
-  const sentiment = webhook.data.summary.sentiment;
+```
+// Pseudo code - implement in your preferred language
+if webhook.data.summary exists:
+  sentiment = webhook.data.summary.sentiment
   // Process...
-} else {
+else:
   // AI processing failed or unavailable
-}
 ```
 
 ### 5. Monitor and Alert
@@ -826,24 +812,3 @@ Use AI to augment, not replace, traditional email processing:
 - Use AI for classification and extraction
 - Use rules for routing and automation
 - Combine both for best results
-
-## Next Steps
-
-- Review [API Reference](https://api.emailengine.app/) for Chat API details
-- Learn about [Webhooks Configuration](/docs/receiving/webhooks)
-- Explore [ElasticSearch Integration](/docs/advanced/monitoring)
-- Set up [Monitoring](/docs/advanced/monitoring)
-
-## See Also
-
-- [CRM Integration](/docs/integrations/crm)
-- [Webhooks](/docs/receiving/webhooks)
-- [Performance Tuning](/docs/advanced/performance-tuning)
-- [API Reference](/docs/api-reference)
-
-## Resources
-
-- **OpenAI API**: [platform.openai.com](https://platform.openai.com/)
-- **GPT-4 Access**: [OpenAI Waitlist](https://openai.com/waitlist/gpt-4-api)
-- **EmailEngine API**: [api.emailengine.app](https://api.emailengine.app/)
-- **Support**: [Get Help](/docs/support/license)

@@ -15,13 +15,7 @@ EmailEngine makes it easy to reply to or forward any message in your customer's 
 
 ## Why It Matters
 
-Writing a raw RFC 822 email that threads correctly is deceptively hard—`In-Reply-To`, `References`, prefixes like **Re:**/**Fwd:**, attachment handling, the IMAP `\Answered` flag... and that's *before* you juggle every provider's SMTP quirks. EmailEngine eliminates that boilerplate so you can reply or forward with one POST request.
-
-## Prerequisites
-
-- EmailEngine instance with registered account
-- Message ID of the email you want to reply to or forward
-- API access token
+Writing a raw RFC 822 email that threads correctly is deceptively hard - `In-Reply-To`, `References`, prefixes like **Re:**/**Fwd:**, attachment handling, the IMAP `\Answered` flag... and that's _before_ you juggle every provider's SMTP quirks. EmailEngine eliminates that boilerplate so you can reply or forward with one POST request.
 
 ## How It Works
 
@@ -38,7 +32,7 @@ When you include a `reference` object in your submission payload, EmailEngine:
 
 ### Simple Reply
 
-Reply to the sender of the original message:
+Reply to the sender of the original message using the [submit API](/docs/api/post-v-1-account-account-submit):
 
 ```bash
 curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
@@ -93,6 +87,7 @@ curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
 ```
 
 EmailEngine automatically:
+
 - Includes all original recipients in `to` and `cc` fields
 - Excludes your own email from recipients
 - Preserves the recipient structure
@@ -125,23 +120,6 @@ On May 14, 2025, at 10:30 AM, Original Sender wrote:
 
 When `false`, only your new content is included.
 
-#### documentStore (boolean)
-
-Use ElasticSearch for faster message retrieval:
-
-```json
-{
-  "reference": {
-    "message": "AAAADQAABl0",
-    "action": "reply",
-    "inline": true,
-    "documentStore": true
-  }
-}
-```
-
-Useful if you have document store enabled and want faster processing.
-
 ### Overriding Auto-Generated Fields
 
 You can override any automatically set fields:
@@ -152,9 +130,7 @@ You can override any automatically set fields:
     "message": "AAAADQAABl0",
     "action": "reply"
   },
-  "to": [
-    { "address": "different-recipient@example.com" }
-  ],
+  "to": [{ "address": "different-recipient@example.com" }],
   "subject": "Custom subject instead of Re:",
   "html": "<p>Reply with overrides</p>"
 }
@@ -183,7 +159,7 @@ curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
       "name": "Andris Reinman",
       "address": "andris@ethereal.email"
     },
-    "html": "<p>FYI — see below</p>"
+    "html": "<p>FYI  -  see below</p>"
   }'
 ```
 
@@ -263,9 +239,7 @@ Forward to multiple recipients:
     { "name": "Alice", "address": "alice@example.com" },
     { "name": "Bob", "address": "bob@example.com" }
   ],
-  "cc": [
-    { "address": "manager@example.com" }
-  ]
+  "cc": [{ "address": "manager@example.com" }]
 }
 ```
 
@@ -336,6 +310,8 @@ You need the EmailEngine message ID (e.g., `AAAADQAABl0`) to reply or forward. G
 
 ### 1. Message List API
 
+Use the [list messages API](/docs/api/get-v-1-account-account-messages):
+
 ```bash
 curl "https://emailengine.example.com/v1/account/example/messages?path=INBOX" \
   -H "Authorization: Bearer <token>"
@@ -375,7 +351,7 @@ Store these IDs in your application for later use.
 
 ### 3. Search API
 
-Search for specific messages:
+Search for specific messages using the [search messages API](/docs/api/post-v-1-account-account-search):
 
 ```bash
 curl -XPOST "https://emailengine.example.com/v1/account/example/search" \
@@ -424,6 +400,7 @@ curl -XPOST "https://emailengine.example.com/v1/account/example/search" \
 **Problem:** EmailEngine streams attachments from IMAP to SMTP. If the total size breaches the mailbox's send limit, the SMTP server will bounce the message.
 
 **Solution:**
+
 - Use `forwardAttachments: false`
 - Download attachments separately and host externally
 - Inform users of size limits
@@ -433,6 +410,7 @@ curl -XPOST "https://emailengine.example.com/v1/account/example/search" \
 **Problem:** Some PaaS providers kill idle sockets during long IMAP/SMTP operations.
 
 **Solutions:**
+
 - Increase `smtpTimeout` configuration
 - Scale your dynos/instances
 - Move EmailEngine off the constrained host
@@ -443,19 +421,21 @@ curl -XPOST "https://emailengine.example.com/v1/account/example/search" \
 **Problem:** Using wrong ID format (IMAP UID instead of EmailEngine ID).
 
 **Incorrect:**
+
 ```json
 {
   "reference": {
-    "message": "1234"  // IMAP UID - WRONG
+    "message": "1234" // IMAP UID - WRONG
   }
 }
 ```
 
 **Correct:**
+
 ```json
 {
   "reference": {
-    "message": "AAAADQAABl0"  // EmailEngine ID - CORRECT
+    "message": "AAAADQAABl0" // EmailEngine ID - CORRECT
   }
 }
 ```
@@ -467,13 +447,14 @@ Use the base64-encoded ID from EmailEngine, not the numeric IMAP UID.
 **Problem:** Overriding subject or recipients breaks threading.
 
 **Avoid:**
+
 ```json
 {
   "reference": {
     "message": "AAAADQAABl0",
     "action": "reply"
   },
-  "subject": "Completely different subject"  // Breaks threading!
+  "subject": "Completely different subject" // Breaks threading!
 }
 ```
 
@@ -560,25 +541,10 @@ Look for `\Answered` in the `flags` array:
 
 ## Performance Considerations
 
-### Document Store for Speed
-
-If you have many large messages, enable document store for faster retrieval:
-
-```json
-{
-  "reference": {
-    "message": "AAAADQAABl0",
-    "action": "reply",
-    "documentStore": true
-  }
-}
-```
-
-This retrieves the message from ElasticSearch instead of IMAP, which is much faster.
-
 ### Limit Forwarded Attachments
 
 For large forwards, consider:
+
 - Setting `forwardAttachments: false`
 - Downloading and re-uploading only specific attachments
 - Using external file storage with links
@@ -586,14 +552,7 @@ For large forwards, consider:
 ### Cache Original Messages
 
 If you need to reply multiple times to the same message:
+
 - Fetch the original message once via API
 - Cache the necessary fields in your application
 - Build the reply headers yourself
-
-## See Also
-
-- [Basic Sending](./basic-sending.md) - Fundamentals of email sending
-- [Threading](./threading.md) - Email threading concepts
-- [Outbox Queue](./outbox-queue.md) - Understanding message queues
-- [API Reference: Message Submission](https://api.emailengine.app/#operation/postV1AccountAccountSubmit)
-- [Webhook Events](../reference/webhook-events.md)

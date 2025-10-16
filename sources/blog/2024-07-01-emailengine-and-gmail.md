@@ -12,11 +12,12 @@ When talking about email servers, you can't ignore the elephant in the room, Gma
 What could go wrong when building on top of such a major player? It turns out, quite a lot.
 
 > Whoa, just got this notice from Google.
-> 
+>
 > Is this THE END of email warmup services?
-> 
+>
 > Anybody else offering warmup get this? [pic.twitter.com/TIMeMLfw3H](https://t.co/TIMeMLfw3H)
-> — Ajay Goel (@PartTimeSnob) [November 16, 2022](https://twitter.com/PartTimeSnob/status/1592886204709625857?ref_src=twsrc%5Etfw)
+>
+> - Ajay Goel (@PartTimeSnob) [November 16, 2022](https://twitter.com/PartTimeSnob/status/1592886204709625857?ref_src=twsrc%5Etfw)
 
 This is what might happen if you only depend on Gmail for your business.
 
@@ -35,9 +36,10 @@ To allow using the account password, navigate to your [Google account management
 > Google runs a lot of heuristics when authenticating, so your authentication attempts might still fail, but the error message from the server should indicate what you'd have to do. Usually, there's an account [unlock link](https://accounts.google.com/b/0/displayunlockcaptcha) you'd have to open in your browser.
 
 ![](__GHOST_URL__/content/images/2022/11/Screenshot-2022-11-17-at-14.24.43.png)If password authentication fails, you might need to unlock your Gmail account with this form.
+
 ### App Passwords
 
-If you have enabled two-factor authentication for your Google account, you can't use your account password with third-party services like EmailEngine. Instead, you would have to generate [application-specific passwords](https://support.google.com/accounts/answer/185833?hl=en). The app password option is only available for users with two-factor authentication enabled. 
+If you have enabled two-factor authentication for your Google account, you can't use your account password with third-party services like EmailEngine. Instead, you would have to generate [application-specific passwords](https://support.google.com/accounts/answer/185833?hl=en). The app password option is only available for users with two-factor authentication enabled.
 
 Regular Gmail accounts without two-factor authentication have no means at all to authenticate using a password and must use OAuth2-based authentication – as mentioned above, for Google Workspace accounts, using the account password is still an option.
 
@@ -57,7 +59,7 @@ EmailEngine can use the Gmail API or IMAP and SMTP with OAuth2, depending on app
 
 To use OAuth2, you first need to [create an "application"](__GHOST_URL__/setting-up-gmail-oauth2-for-imap-api/) on the Google Developer site. While doing so, you are provided a choice, should the application be public or internal? In this section, we explore the "internal" option.
 
-In short, internal apps cover all email accounts under the same Google Workspace organization. For example, if you're an admin of *@example.com* and create an internal app, then any email account under the same *@example.com* domain can authenticate and provide you access to their emails. The obvious downside is that users from other Google Workspace organizations and free *@gmail.com* accounts can not authenticate for your app.
+In short, internal apps cover all email accounts under the same Google Workspace organization. For example, if you're an admin of _@example.com_ and create an internal app, then any email account under the same _@example.com_ domain can authenticate and provide you access to their emails. The obvious downside is that users from other Google Workspace organizations and free _@gmail.com_ accounts can not authenticate for your app.
 
 For what is internal app type even useful, if most Gmail accounts are automatically excluded? Two words – no audit. Internal apps are managed and validated by the admin of the organization, not Google. If your target is only your organization, you can get the whole OAuth2 experience without hassle, money, or time.
 
@@ -95,7 +97,7 @@ The use case match is trickier. There are several app types that might seem legi
 
 The minimum permission set requirement is probably the one that will sink your application to get EmailEngine integrated with Gmail accounts. EmailEngine requires access to the highly restricted `"https://mail.google.com/"` OAuth2 scope. This is the only scope that allows access to IMAP and SMTP – the protocols that EmailEngine uses.
 
-Unfortunately, Google would probably consider that scope too wide for whatever use case you have and ask you to use more restrictive scopes. These restrictive scopes, in theory, give you access to the required data but not to IMAP and thus are unusable by EmailEngine. If you can convince Google that the features you need are only available via IMAP, then you *might* pass the review. Obviously, there are no guarantees.
+Unfortunately, Google would probably consider that scope too wide for whatever use case you have and ask you to use more restrictive scopes. These restrictive scopes, in theory, give you access to the required data but not to IMAP and thus are unusable by EmailEngine. If you can convince Google that the features you need are only available via IMAP, then you _might_ pass the review. Obviously, there are no guarantees.
 
 ### To sum it up
 

@@ -61,22 +61,25 @@ Configure a webhook endpoint to receive events.
 
 **Example:**
 
-**Node.js:**
-```javascript
-const response = await fetch('http://localhost:3000/v1/settings', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    webhooks: 'https://your-app.com/webhook',
-    webhookEvents: ['messageNew', 'messageSent', 'messageDeliveryError']
-  })
-});
+**Pseudo code:**
+```
+// Register webhook endpoint
+response = HTTP_POST(
+  "http://localhost:3000/v1/settings",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: {
+      webhooks: "https://your-app.com/webhook",
+      webhookEvents: ["messageNew", "messageSent", "messageDeliveryError"]
+    }
+  }
+)
 
-const result = await response.json();
-console.log('Webhook configured:', result.success);
+result = PARSE_JSON(response.body)
+PRINT("Webhook configured: " + result.success)
 ```
 
 **Python:**
@@ -123,17 +126,22 @@ Retrieve all configured webhook routes.
 
 **Example:**
 
-```javascript
-const response = await fetch('http://localhost:3000/v1/webhookroutes', {
-  headers: {
-    'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
+**Pseudo code:**
+```
+// List all webhook routes
+response = HTTP_GET(
+  "http://localhost:3000/v1/webhookroutes",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+    }
   }
-});
+)
 
-const routes = await response.json();
-routes.routes.forEach(route => {
-  console.log(`${route.id}: ${route.targetUrl}`);
-});
+routes = PARSE_JSON(response.body)
+for each route in routes.routes {
+  PRINT(route.id + ": " + route.targetUrl)
+}
 ```
 
 **Response:**
@@ -158,21 +166,23 @@ Retrieve details of a specific webhook route.
 
 **Example:**
 
-```javascript
-const routeId = 'route_123abc';
+**Pseudo code:**
+```
+// Get specific webhook route details
+routeId = "route_123abc"
 
-const response = await fetch(
-  `http://localhost:3000/v1/webhookroutes/webhookroute/${routeId}`,
+response = HTTP_GET(
+  "http://localhost:3000/v1/webhookroutes/webhookroute/" + routeId,
   {
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
     }
   }
-);
+)
 
-const route = await response.json();
-console.log('Webhook URL:', route.targetUrl);
-console.log('Events:', route.events);
+route = PARSE_JSON(response.body)
+PRINT("Webhook URL: " + route.targetUrl)
+PRINT("Events: " + route.events)
 ```
 
 **Response:**
@@ -196,26 +206,27 @@ Update an existing webhook route configuration.
 
 **Example:**
 
-```javascript
-const routeId = 'route_123abc';
+**Pseudo code:**
+```
+// Update webhook route configuration
+routeId = "route_123abc"
 
-const response = await fetch(
-  `http://localhost:3000/v1/webhookroutes/webhookroute/${routeId}`,
+response = HTTP_PUT(
+  "http://localhost:3000/v1/webhookroutes/webhookroute/" + routeId,
   {
-    method: 'PUT',
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      events: ['messageNew', 'messageDeleted', 'messageSent'],
+    body: {
+      events: ["messageNew", "messageDeleted", "messageSent"],
       enabled: true
-    })
+    }
   }
-);
+)
 
-const result = await response.json();
-console.log('Webhook updated:', result.success);
+result = PARSE_JSON(response.body)
+PRINT("Webhook updated: " + result.success)
 ```
 
 ### 5. Delete Webhook Route
@@ -226,21 +237,22 @@ Remove a webhook route.
 
 **Example:**
 
-```javascript
-const routeId = 'route_123abc';
+**Pseudo code:**
+```
+// Delete webhook route
+routeId = "route_123abc"
 
-const response = await fetch(
-  `http://localhost:3000/v1/webhookroutes/webhookroute/${routeId}`,
+response = HTTP_DELETE(
+  "http://localhost:3000/v1/webhookroutes/webhookroute/" + routeId,
   {
-    method: 'DELETE',
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
     }
   }
-);
+)
 
-const result = await response.json();
-console.log('Webhook deleted:', result.success);
+result = PARSE_JSON(response.body)
+PRINT("Webhook deleted: " + result.success)
 ```
 
 ## Webhook Configuration
@@ -432,34 +444,34 @@ EmailEngine signs webhook payloads for verification.
 X-EE-Signature: sha256=abc123def456...
 ```
 
-**Verify Signature (Node.js):**
-```javascript
-const crypto = require('crypto');
+**Verify Signature:**
 
+**Pseudo code:**
+```
+// Pseudo code - implement HMAC-SHA256 verification in your language
 function verifyWebhook(payload, signature, secret) {
-  const hmac = crypto.createHmac('sha256', secret);
-  hmac.update(JSON.stringify(payload));
-  const expectedSignature = 'sha256=' + hmac.digest('hex');
+  // Create HMAC with SHA256
+  hmac = CREATE_HMAC("sha256", secret)
+  hmac.UPDATE(JSON_STRING IFY(payload))
+  expectedSignature = "sha256=" + hmac.DIGEST_HEX()
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  );
+  // Constant-time comparison to prevent timing attacks
+  return CONSTANT_TIME_COMPARE(signature, expectedSignature)
 }
 
-// Express.js middleware
-app.post('/webhook', express.json(), (req, res) => {
-  const signature = req.headers['x-ee-signature'];
-  const secret = process.env.WEBHOOK_SECRET;
+// Example webhook handler
+function handleWebhook(request, response) {
+  signature = request.headers["x-ee-signature"]
+  secret = ENV_VAR("WEBHOOK_SECRET")
 
-  if (!verifyWebhook(req.body, signature, secret)) {
-    return res.status(401).json({ error: 'Invalid signature' });
+  if NOT verifyWebhook(request.body, signature, secret) {
+    return HTTP_RESPONSE(401, { error: "Invalid signature" })
   }
 
   // Process webhook
-  console.log('Event:', req.body.event);
-  res.json({ success: true });
-});
+  PRINT("Event: " + request.body.event)
+  return HTTP_RESPONSE(200, { success: true })
+}
 ```
 
 **Verify Signature (Python):**
@@ -504,22 +516,24 @@ location /webhook {
 }
 ```
 
-**Express.js:**
-```javascript
+**Pseudo code:**
+```
+// IP whitelist middleware - implement in your language/framework
 function ipWhitelist(allowedIPs) {
-  return (req, res, next) => {
-    const clientIP = req.ip;
-    if (!allowedIPs.includes(clientIP)) {
-      return res.status(403).json({ error: 'Forbidden' });
+  return function middleware(request, response, next) {
+    clientIP = request.ip
+    if clientIP NOT IN allowedIPs {
+      return HTTP_RESPONSE(403, { error: "Forbidden" })
     }
-    next();
-  };
+    next()
+  }
 }
 
-app.post('/webhook',
-  ipWhitelist(['1.2.3.4']),
+// Apply to webhook endpoint
+ROUTE("POST", "/webhook",
+  ipWhitelist(["1.2.3.4"]),
   handleWebhook
-);
+)
 ```
 
 ### HTTPS Requirement
@@ -566,22 +580,21 @@ ngrok http 3000
 
 ### Local Testing
 
-**Express.js test endpoint:**
-```javascript
-const express = require('express');
-const app = express();
+**Simple test endpoint (pseudo code):**
+```
+// Create basic webhook receiver for testing
+CREATE_HTTP_SERVER(port: 3000)
 
-app.post('/webhook', express.json(), (req, res) => {
-  console.log('Webhook received:', req.body);
-  console.log('Event:', req.body.event);
-  console.log('Account:', req.body.account);
+ROUTE("POST", "/webhook", function(request, response) {
+  PRINT("Webhook received: " + request.body)
+  PRINT("Event: " + request.body.event)
+  PRINT("Account: " + request.body.account)
 
-  res.json({ success: true });
-});
+  return HTTP_RESPONSE(200, { success: true })
+})
 
-app.listen(3000, () => {
-  console.log('Webhook receiver listening on port 3000');
-});
+START_SERVER()
+PRINT("Webhook receiver listening on port 3000")
 ```
 
 **Test with curl:**
@@ -626,87 +639,103 @@ curl -X POST https://your-app.com/webhook \
 
 Process only specific events:
 
-```javascript
-app.post('/webhook', express.json(), (req, res) => {
-  const { event, account, data } = req.body;
+**Pseudo code:**
+```
+// Webhook handler with event filtering
+ROUTE("POST", "/webhook", function(request, response) {
+  event = request.body.event
+  account = request.body.account
+  data = request.body.data
 
-  switch (event) {
-    case 'messageNew':
-      handleNewMessage(account, data);
-      break;
+  switch event {
+    case "messageNew":
+      handleNewMessage(account, data)
+      break
 
-    case 'messageSent':
-      handleMessageSent(account, data);
-      break;
+    case "messageSent":
+      handleMessageSent(account, data)
+      break
 
-    case 'messageDeliveryError':
-      handleSendError(account, data);
-      break;
+    case "messageDeliveryError":
+      handleSendError(account, data)
+      break
 
     default:
-      console.log('Unhandled event:', event);
+      PRINT("Unhandled event: " + event)
   }
 
-  res.json({ success: true });
-});
+  return HTTP_RESPONSE(200, { success: true })
+})
 ```
 
 ### Retry Handling
 
 Implement idempotent webhook processing:
 
-```javascript
-const processedWebhooks = new Set();
+**Pseudo code:**
+```
+// Track processed webhooks to prevent duplicates
+processedWebhooks = SET()  // or database table
 
-app.post('/webhook', express.json(), async (req, res) => {
-  const { event, account, data } = req.body;
+ROUTE("POST", "/webhook", function(request, response) {
+  event = request.body.event
+  account = request.body.account
+  data = request.body.data
 
   // Generate unique ID for this webhook
-  const webhookId = `${event}-${account}-${data.id}`;
+  webhookId = event + "-" + account + "-" + data.id
 
   // Check if already processed
-  if (processedWebhooks.has(webhookId)) {
-    console.log('Duplicate webhook, skipping');
-    return res.json({ success: true });
+  if webhookId IN processedWebhooks {
+    PRINT("Duplicate webhook, skipping")
+    return HTTP_RESPONSE(200, { success: true })
   }
 
   try {
-    await processWebhook(event, account, data);
-    processedWebhooks.add(webhookId);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Webhook processing error:', error);
-    res.status(500).json({ error: error.message });
+    processWebhook(event, account, data)
+    processedWebhooks.ADD(webhookId)
+    return HTTP_RESPONSE(200, { success: true })
+  } catch error {
+    PRINT_ERROR("Webhook processing error: " + error)
+    return HTTP_RESPONSE(500, { error: error.message })
   }
-});
+})
 ```
 
 ### Idempotency
 
 Use message IDs to prevent duplicate processing:
 
-```javascript
-async function handleNewMessage(account, message) {
+**Pseudo code:**
+```
+// Handle new message with idempotency check
+function handleNewMessage(account, message) {
   // Check if message already processed
-  const exists = await db.messages.findOne({
-    account: account,
-    messageId: message.id
-  });
+  exists = DATABASE.FIND_ONE({
+    table: "messages",
+    where: {
+      account: account,
+      messageId: message.id
+    }
+  })
 
-  if (exists) {
-    console.log('Message already processed');
-    return;
+  if exists {
+    PRINT("Message already processed")
+    return
   }
 
   // Process new message
-  await processMessage(message);
+  processMessage(message)
 
   // Mark as processed
-  await db.messages.insert({
-    account: account,
-    messageId: message.id,
-    processedAt: new Date()
-  });
+  DATABASE.INSERT({
+    table: "messages",
+    data: {
+      account: account,
+      messageId: message.id,
+      processedAt: CURRENT_TIMESTAMP()
+    }
+  })
 }
 ```
 
@@ -714,164 +743,163 @@ async function handleNewMessage(account, message) {
 
 Handle webhooks asynchronously:
 
-```javascript
-const Bull = require('bull');
-const queue = new Bull('webhooks');
+**Pseudo code:**
+```
+// Create job queue for webhook processing
+queue = CREATE_JOB_QUEUE("webhooks")
 
 // Webhook endpoint - quick response
-app.post('/webhook', express.json(), async (req, res) => {
+ROUTE("POST", "/webhook", function(request, response) {
   // Add to queue
-  await queue.add(req.body);
+  queue.ADD_JOB(request.body)
 
-  // Respond immediately
-  res.json({ success: true });
-});
+  // Respond immediately (< 30 seconds)
+  return HTTP_RESPONSE(200, { success: true })
+})
 
-// Worker process
-queue.process(async (job) => {
-  const { event, account, data } = job.data;
-  await processWebhook(event, account, data);
-});
+// Worker process (runs separately)
+queue.PROCESS(function(job) {
+  event = job.data.event
+  account = job.data.account
+  data = job.data.data
+
+  processWebhook(event, account, data)
+})
 ```
 
 ### Error Handling
 
 Implement robust error handling:
 
-```javascript
-app.post('/webhook', express.json(), async (req, res) => {
+**Pseudo code:**
+```
+// Webhook handler with comprehensive error handling
+ROUTE("POST", "/webhook", function(request, response) {
   try {
-    const { event, account, data } = req.body;
+    event = request.body.event
+    account = request.body.account
+    data = request.body.data
 
     // Validate payload
-    if (!event || !account) {
-      return res.status(400).json({
-        error: 'Invalid webhook payload'
-      });
+    if NOT event OR NOT account {
+      return HTTP_RESPONSE(400, {
+        error: "Invalid webhook payload"
+      })
     }
 
     // Process webhook
-    await processWebhook(event, account, data);
+    processWebhook(event, account, data)
 
-    res.json({ success: true });
+    return HTTP_RESPONSE(200, { success: true })
 
-  } catch (error) {
-    console.error('Webhook error:', error);
+  } catch error {
+    PRINT_ERROR("Webhook error: " + error)
 
     // Return 500 to trigger EmailEngine retry
-    res.status(500).json({
-      error: 'Processing failed',
+    return HTTP_RESPONSE(500, {
+      error: "Processing failed",
       message: error.message
-    });
+    })
   }
-});
+})
 ```
 
 ## Complete Example
 
 Full webhook receiver with all best practices:
 
-```javascript
-const express = require('express');
-const crypto = require('crypto');
-const app = express();
-
+**Pseudo code:**
+```
+// Complete webhook receiver implementation
 // Webhook secret for signature verification
-const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+WEBHOOK_SECRET = ENV_VAR("WEBHOOK_SECRET")
 
-// Verify webhook signature
-function verifySignature(req, res, next) {
-  const signature = req.headers['x-ee-signature'];
-  if (!signature) {
-    return res.status(401).json({ error: 'Missing signature' });
+// Verify webhook signature middleware
+function verifySignature(request, response, next) {
+  signature = request.headers["x-ee-signature"]
+  if NOT signature {
+    return HTTP_RESPONSE(401, { error: "Missing signature" })
   }
 
-  const hmac = crypto.createHmac('sha256', WEBHOOK_SECRET);
-  hmac.update(JSON.stringify(req.body));
-  const expected = 'sha256=' + hmac.digest('hex');
+  hmac = CREATE_HMAC("sha256", WEBHOOK_SECRET)
+  hmac.UPDATE(JSON_STRINGIFY(request.body))
+  expected = "sha256=" + hmac.DIGEST_HEX()
 
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
-    return res.status(401).json({ error: 'Invalid signature' });
+  if NOT CONSTANT_TIME_COMPARE(signature, expected) {
+    return HTTP_RESPONSE(401, { error: "Invalid signature" })
   }
 
-  next();
+  next()
 }
 
 // Track processed webhooks for idempotency
-const processed = new Set();
+processed = SET()
 
-// Webhook endpoint
-app.post('/webhook',
-  express.json(),
-  verifySignature,
-  async (req, res) => {
-    const { event, account, data } = req.body;
+// Webhook endpoint with middleware
+ROUTE("POST", "/webhook",
+  MIDDLEWARE: [JSON_PARSER, verifySignature],
+  HANDLER: function(request, response) {
+    event = request.body.event
+    account = request.body.account
+    data = request.body.data
 
     // Generate unique ID
-    const webhookId = `${event}-${account}-${data.id || Date.now()}`;
+    webhookId = event + "-" + account + "-" + (data.id OR CURRENT_TIMESTAMP())
 
     // Check if already processed
-    if (processed.has(webhookId)) {
-      return res.json({ success: true, duplicate: true });
+    if webhookId IN processed {
+      return HTTP_RESPONSE(200, { success: true, duplicate: true })
     }
 
     try {
       // Process event
-      switch (event) {
-        case 'messageNew':
-          await handleNewMessage(account, data);
-          break;
+      switch event {
+        case "messageNew":
+          handleNewMessage(account, data)
+          break
 
-        case 'messageSent':
-          await handleMessageSent(account, data);
-          break;
+        case "messageSent":
+          handleMessageSent(account, data)
+          break
 
-        case 'messageDeliveryError':
-          await handleSendError(account, data);
-          break;
+        case "messageDeliveryError":
+          handleSendError(account, data)
+          break
 
         default:
-          console.log('Unhandled event:', event);
+          PRINT("Unhandled event: " + event)
       }
 
       // Mark as processed
-      processed.add(webhookId);
+      processed.ADD(webhookId)
 
-      res.json({ success: true });
+      return HTTP_RESPONSE(200, { success: true })
 
-    } catch (error) {
-      console.error('Webhook processing error:', error);
-      res.status(500).json({ error: error.message });
+    } catch error {
+      PRINT_ERROR("Webhook processing error: " + error)
+      return HTTP_RESPONSE(500, { error: error.message })
     }
   }
-);
+)
 
-// Event handlers
-async function handleNewMessage(account, message) {
-  console.log(`New message from ${message.from.address}`);
-  console.log(`Subject: ${message.subject}`);
+// Event handler functions
+function handleNewMessage(account, message) {
+  PRINT("New message from " + message.from.address)
+  PRINT("Subject: " + message.subject)
   // Process message...
 }
 
-async function handleMessageSent(account, data) {
-  console.log(`Message sent: ${data.messageId}`);
+function handleMessageSent(account, data) {
+  PRINT("Message sent: " + data.messageId)
   // Update database...
 }
 
-async function handleSendError(account, data) {
-  console.error(`Send failed: ${data.error}`);
+function handleSendError(account, data) {
+  PRINT_ERROR("Send failed: " + data.error)
   // Alert admin...
 }
 
-app.listen(3000, () => {
-  console.log('Webhook receiver running on port 3000');
-});
+// Start server
+START_SERVER(port: 3000)
+PRINT("Webhook receiver running on port 3000")
 ```
-
-## See Also
-
-- [Webhook Events Reference](/docs/reference/webhook-events)
-- [Receiving Messages](/docs/receiving)
-- [Webhooks Guide](/docs/receiving/webhooks)
-- [Continuous Processing](/docs/receiving/continuous-processing)
-- [Error Codes](/docs/reference/error-codes)

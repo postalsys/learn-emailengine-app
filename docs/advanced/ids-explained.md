@@ -6,13 +6,13 @@ description: Understand the different types of message identifiers in EmailEngin
 
 # Message IDs Explained
 
-Learn about EmailEngine's various message identifiers—`id`, `uid`, `emailId`, `messageId`, and sequence numbers—and understand when and why to use each one.
+Learn about EmailEngine's various message identifiers - `id`, `uid`, `emailId`, `messageId`, and sequence numbers - and understand when and why to use each one.
 
 **Source**: [IDs Explained](https://emailengine.app/blog/ids-explained) (July 2, 2024)
 
 ## Overview
 
-If you've used EmailEngine for a while, you've probably noticed an abundance of different message identifiers: `id`, `emailId`, `uid`, `messageId`, and—under the hood—a sequence number.
+If you've used EmailEngine for a while, you've probably noticed an abundance of different message identifiers: `id`, `emailId`, `uid`, `messageId`, and - under the hood - a sequence number.
 
 **Why so many identifiers?**
 
@@ -20,13 +20,13 @@ The answer lies in 40 years of IMAP evolution and backward compatibility. Each i
 
 ## Quick Reference
 
-| Identifier | Stability | Scope | Use Case |
-|------------|-----------|-------|----------|
-| **id** | Within folder | EmailEngine API | Primary identifier for API requests |
-| **uid** | Within folder | IMAP folder | Range searches, IMAP operations |
-| **emailId** | Permanent | Email entity | Tracking across folders (Gmail/Yahoo only) |
-| **messageId** | Permanent | Global | Integration with external systems |
-| **Sequence** | Session only | IMAP internal | IMAP protocol (not exposed) |
+| Identifier    | Stability     | Scope           | Use Case                                   |
+| ------------- | ------------- | --------------- | ------------------------------------------ |
+| **id**        | Within folder | EmailEngine API | Primary identifier for API requests        |
+| **uid**       | Within folder | IMAP folder     | Range searches, IMAP operations            |
+| **emailId**   | Permanent     | Email entity    | Tracking across folders (Gmail/Yahoo only) |
+| **messageId** | Permanent     | Global          | Integration with external systems          |
+| **Sequence**  | Session only  | IMAP internal   | IMAP protocol (not exposed)                |
 
 ## The `id` Property
 
@@ -74,11 +74,11 @@ This encoding allows EmailEngine to locate the message on the IMAP server quickl
 
 ```javascript
 // Get message in INBOX
-const message = await getMessage('account1', 'AAAADAAAB40');
+const message = await getMessage("account1", "AAAADAAAB40");
 // id: AAAADAAAB40, path: "INBOX"
 
 // Move to Archive
-await moveMessage('account1', 'AAAADAAAB40', 'Archive');
+await moveMessage("account1", "AAAADAAAB40", "Archive");
 
 // Original ID is now invalid!
 // GET /v1/account/account1/message/AAAADAAAB40
@@ -179,17 +179,18 @@ Use `emailId` when you need to track messages across folders:
 
 ```javascript
 // Track message regardless of folder location
-const message1 = await getMessage('account1', id1);
-const message2 = await getMessage('account1', id2);
+const message1 = await getMessage("account1", id1);
+const message2 = await getMessage("account1", id2);
 
 if (message1.emailId === message2.emailId) {
-  console.log('Same email in different folders');
+  console.log("Same email in different folders");
 }
 ```
 
 ### Availability
 
 **Supported providers**:
+
 - Gmail (via X-GM-MSGID)
 - Yahoo
 - Fastmail
@@ -197,6 +198,7 @@ if (message1.emailId === message2.emailId) {
 - Some modern IMAP servers
 
 **Not supported**:
+
 - Microsoft Exchange
 - Most traditional IMAP servers
 - Self-hosted email servers (unless using specific extensions)
@@ -278,7 +280,7 @@ function processWebhook(webhook) {
 
   // Check if already processed
   if (processedIds.has(messageId)) {
-    console.log('Duplicate - already processed');
+    console.log("Duplicate - already processed");
     return;
   }
 
@@ -291,11 +293,13 @@ function processWebhook(webhook) {
 ### Reliability Considerations
 
 **Good indicators**:
+
 - Properly formatted: `<unique-id@domain.com>`
 - Domain matches sender domain
 - Unique across your system
 
 **Spam indicators**:
+
 - Missing Message-ID
 - Duplicate Message-ID across different emails
 - Malformed format
@@ -349,6 +353,7 @@ The `messageId` property works with related headers:
 ```
 
 **Building a thread**:
+
 1. Start with `messageId` of first message
 2. Find replies where `inReplyTo` matches
 3. Follow `references` chain
@@ -415,12 +420,10 @@ Seq 4: Message D
 
 ```javascript
 // User clicks message in inbox
-const messageId = 'AAAADAAAB40'; // From list API
+const messageId = "AAAADAAAB40"; // From list API
 
 // Fetch full details
-const message = await fetch(
-  `/v1/account/${account}/message/${messageId}`
-);
+const message = await fetch(`/v1/account/${account}/message/${messageId}`);
 
 // Display to user
 showMessage(message);
@@ -432,12 +435,12 @@ showMessage(message);
 
 ```javascript
 // Initial sync
-const messages = await listMessages(account, 'INBOX');
+const messages = await listMessages(account, "INBOX");
 
-messages.forEach(msg => {
+messages.forEach((msg) => {
   db.upsert({
     account: account,
-    messageId: msg.messageId,  // Primary key
+    messageId: msg.messageId, // Primary key
     emailId: msg.emailId || null,
     subject: msg.subject,
     // ... other fields
@@ -481,9 +484,9 @@ function handleMessageDeleted(webhook) {
     const newLocation = findByEmailId(emailId);
 
     if (newLocation) {
-      console.log('Message moved to:', newLocation.path);
+      console.log("Message moved to:", newLocation.path);
     } else {
-      console.log('Message permanently deleted');
+      console.log("Message permanently deleted");
     }
   }, 1000);
 }
@@ -556,7 +559,7 @@ function isReliableMessageId(messageId) {
   }
 
   // Check for suspicious patterns
-  if (messageId === '<>') {
+  if (messageId === "<>") {
     return false;
   }
 
@@ -569,23 +572,23 @@ function isReliableMessageId(messageId) {
 ```javascript
 // CORRECT
 const message = await getByEmailId(emailId);
-await deleteMessage(account, message.id);  // Use id from API response
+await deleteMessage(account, message.id); // Use id from API response
 
 // WRONG
-await deleteMessage(account, emailId);  // emailId won't work
+await deleteMessage(account, emailId); // emailId won't work
 ```
 
 ### 5. Handle Move Events
 
 ```javascript
 function handleWebhooks(webhook) {
-  if (webhook.event === 'messageDeleted') {
+  if (webhook.event === "messageDeleted") {
     // Don't immediately delete from database
     // Might be a move operation
-    scheduleCleanup(webhook.data.messageId, delay='5s');
+    scheduleCleanup(webhook.data.messageId, (delay = "5s"));
   }
 
-  if (webhook.event === 'messageNew') {
+  if (webhook.event === "messageNew") {
     // Cancel scheduled cleanup if it's a move
     const messageId = webhook.data.messageId;
     cancelCleanup(messageId);
@@ -603,17 +606,17 @@ function handleWebhooks(webhook) {
 ```javascript
 // WRONG
 const message = await getMessage(account, oldId);
-await moveMessage(account, oldId, 'Archive');
+await moveMessage(account, oldId, "Archive");
 
 // Try to update (will fail!)
-await updateMessage(account, oldId, {seen: true});
+await updateMessage(account, oldId, { seen: true });
 // Error: Message not found
 
 // CORRECT
-const moveResponse = await moveMessage(account, oldId, 'Archive');
+const moveResponse = await moveMessage(account, oldId, "Archive");
 const newId = moveResponse.id;
 
-await updateMessage(account, newId, {seen: true});
+await updateMessage(account, newId, { seen: true });
 ```
 
 ### 2. Assuming emailId is Always Available
@@ -622,7 +625,7 @@ await updateMessage(account, newId, {seen: true});
 // WRONG
 function trackMessage(message) {
   db.save({
-    id: message.emailId,  // undefined for most providers!
+    id: message.emailId, // undefined for most providers!
     // ...
   });
 }
@@ -641,42 +644,30 @@ function trackMessage(message) {
 
 ```javascript
 // WRONG - spam emails might have no messageId
-processedIds.add(message.messageId);  // Adds 'undefined'!
+processedIds.add(message.messageId); // Adds 'undefined'!
 
 // CORRECT
 if (message.messageId) {
   processedIds.add(message.messageId);
 } else {
-  console.log('Skipping email with no Message-ID (likely spam)');
+  console.log("Skipping email with no Message-ID (likely spam)");
 }
 ```
 
 ## Summary
 
-| Identifier | When to Use | Stability | Availability |
-|------------|-------------|-----------|--------------|
-| **id** | EmailEngine API calls | Stable within folder | Always |
-| **uid** | Range searches, IMAP ops | Stable within folder | Always |
-| **emailId** | Cross-folder tracking | Permanent | Gmail/Yahoo/Fastmail |
-| **messageId** | External integration, dedup | Permanent | Almost always |
-| **Sequence** | Don't use | Session-only | Internal only |
+| Identifier    | When to Use                 | Stability            | Availability         |
+| ------------- | --------------------------- | -------------------- | -------------------- |
+| **id**        | EmailEngine API calls       | Stable within folder | Always               |
+| **uid**       | Range searches, IMAP ops    | Stable within folder | Always               |
+| **emailId**   | Cross-folder tracking       | Permanent            | Gmail/Yahoo/Fastmail |
+| **messageId** | External integration, dedup | Permanent            | Almost always        |
+| **Sequence**  | Don't use                   | Session-only         | Internal only        |
 
 **General guidance**:
+
 - **Use `id`** for most EmailEngine API operations
 - **Use `uid`** for range-based searches
 - **Use `emailId`** for cross-folder tracking (if available)
 - **Use `messageId`** for external integration and deduplication
 - **Store all identifiers** in your database for maximum flexibility
-
-## See Also
-
-- [Receiving Emails](/docs/receiving)
-- [Webhooks](/docs/receiving/webhooks)
-- [CRM Integration](/docs/integrations/crm)
-- [API Reference](/docs/api-reference)
-
-## Resources
-
-- **RFC 3501 (IMAP)**: [IMAP UID definition](https://tools.ietf.org/html/rfc3501#section-2.3.1.1)
-- **RFC 5322**: [Message-ID header specification](https://tools.ietf.org/html/rfc5322#section-3.6.4)
-- **Gmail IMAP Extensions**: [X-GM-MSGID documentation](https://developers.google.com/gmail/imap/imap-extensions)

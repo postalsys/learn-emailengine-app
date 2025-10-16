@@ -157,6 +157,9 @@ START: What email provider?
 ### Adding Accounts
 
 **Via API (Programmatic):**
+
+Use the [register account API](/docs/api/post-v-1-account):
+
 ```javascript
 // Add account via REST API
 const response = await fetch('https://your-ee.com/v1/account', {
@@ -174,8 +177,6 @@ const response = await fetch('https://your-ee.com/v1/account', {
   })
 });
 ```
-
-[Full API documentation →](/docs/api/post-v-1-account)
 
 **Via Hosted Authentication Form (User-Friendly):**
 
@@ -208,6 +209,8 @@ Navigate to **Email Accounts** → **Add Account** in the EmailEngine dashboard.
 
 ### Updating Accounts
 
+Use the [update account API](/docs/api/put-v-1-account-account):
+
 ```javascript
 // Update account settings
 await fetch('https://your-ee.com/v1/account/user123', {
@@ -236,7 +239,7 @@ await fetch('https://your-ee.com/v1/account/user123', {
 
 ### Reconnecting Accounts
 
-If an account enters an error state, you can trigger a reconnection:
+If an account enters an error state, you can trigger a reconnection using the [reconnect account API](/docs/api/put-v-1-account-account-reconnect):
 
 ```bash
 curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
@@ -244,6 +247,8 @@ curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
 ```
 
 ### Deleting Accounts
+
+Use the [delete account API](/docs/api/delete-v-1-account-account):
 
 ```bash
 curl -X DELETE https://your-ee.com/v1/account/user123 \
@@ -465,16 +470,3 @@ For advanced use cases, you can delegate the OAuth2 flow to an external authenti
 - [PUT /v1/account/\{account\}/reconnect - Reconnect](/docs/api/put-v-1-account-account-reconnect)
 - [POST /v1/verifyaccount - Verify Account](/docs/api/post-v-1-verifyaccount)
 - [GET /v1/account/\{account\}/oauthtoken - Get OAuth Token](/docs/api/get-v-1-account-account-oauthtoken)
-
-## Next Steps
-
-Choose your setup method:
-
-- [Gmail OAuth2 (IMAP) →](./gmail-imap)
-- [Gmail API →](./gmail-api)
-- [Outlook OAuth2 (IMAP) →](./outlook-365)
-- [Microsoft Graph API →](./outlook-365#ms-graph-api)
-- [IMAP/SMTP Generic →](./imap-smtp)
-- [Service Accounts (Google) →](./google-service-accounts)
-- [OAuth2 Setup Guide →](./oauth2-setup)
-- [OAuth2 Token Management →](./oauth2-token-management)

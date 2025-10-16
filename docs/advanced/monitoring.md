@@ -534,26 +534,27 @@ receivers:
 
 Monitor EmailEngine with Datadog APM:
 
-```javascript
-// Add to EmailEngine startup
-const tracer = require('dd-trace').init({
-  service: 'emailengine',
-  env: process.env.NODE_ENV,
-  version: require('./package.json').version
-});
+```
+// Pseudo code - implement in your preferred language
 
-// Custom metrics
-const StatsD = require('node-statsd');
-const statsd = new StatsD({
+// Initialize Datadog tracer
+DATADOG_INIT({
+  service: 'emailengine',
+  env: ENV['NODE_ENV'],
+  version: APP_VERSION
+})
+
+// Initialize StatsD client
+statsd = STATSD_CLIENT({
   host: 'datadog-agent',
   port: 8125,
   prefix: 'emailengine.'
-});
+})
 
 // Track custom events
-statsd.increment('accounts.connected');
-statsd.gauge('queue.size', queueSize);
-statsd.timing('webhook.duration', duration);
+statsd.INCREMENT('accounts.connected')
+statsd.GAUGE('queue.size', queue_size)
+statsd.TIMING('webhook.duration', duration)
 ```
 
 ### New Relic
@@ -571,15 +572,7 @@ node -r newrelic server.js
 
 ### Elastic APM
 
-Monitor with Elasticsearch APM:
-
-```javascript
-const apm = require('elastic-apm-node').start({
-  serviceName: 'emailengine',
-  serverUrl: 'http://localhost:8200',
-  environment: process.env.NODE_ENV
-});
-```
+Monitor with Elasticsearch APM by initializing the APM agent with your language's elastic-apm library, providing service name, server URL, and environment configuration.
 
 ## Bull Board Dashboard
 
@@ -914,17 +907,3 @@ curl http://alertmanager:9093/api/v1/status
 # Check alert routing
 curl http://alertmanager:9093/api/v1/receivers
 ```
-
-## Next Steps
-
-- Set up [Logging](/docs/advanced/logging) for detailed diagnostics
-- Configure [Performance Tuning](/docs/advanced/performance-tuning) based on metrics
-- Review [Webhook Debugging](/docs/receiving/webhooks#debugging-webhooks) with Bull Board
-- Implement [Custom Pre-Processing](/docs/advanced/pre-processing) for metrics
-
-## Related Resources
-
-- [Prometheus Documentation](https://prometheus.io/docs/)
-- [Grafana Dashboards](https://grafana.com/docs/)
-- [Bull Board](https://github.com/felixmosh/bull-board)
-- [Webhook Troubleshooting](/docs/receiving/webhooks#troubleshooting)

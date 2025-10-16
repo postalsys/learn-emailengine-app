@@ -11,17 +11,11 @@ SOURCE ATTRIBUTION:
 
 # Mail Merge
 
-Use the `mailMerge` array in the message submission API call to generate per-recipient copies of the same message, inject template variables, and keep each copy in the mailbox's Sent Mail folder.
+Use the `mailMerge` array in the [message submission API](/docs/api/post-v-1-account-account-submit) call to generate per-recipient copies of the same message, inject template variables, and keep each copy in the mailbox's Sent Mail folder.
 
 ## Why It Matters
 
-Bulk-sending receipts, onboarding tips or weekly digests from **your customer's** mailbox means better deliverability and brand consistency—but you don't want 500 addresses exposed in the `To` header. EmailEngine turns one REST call into N fully-formed messages, so every recipient feels like the only one.
-
-## Prerequisites
-
-- EmailEngine instance with registered account
-- API access token
-- List of recipients with personalization data
+Bulk-sending receipts, onboarding tips or weekly digests from **your customer's** mailbox means better deliverability and brand consistency - but you don't want 500 addresses exposed in the `To` header. EmailEngine turns one REST call into N fully-formed messages, so every recipient feels like the only one.
 
 ## How Mail Merge Works
 
@@ -92,6 +86,7 @@ curl -XPOST "https://ee.example.com/v1/account/example/submit" \
 ```
 
 Each recipient:
+
 - Sees only their own address in the `To` field
 - Receives a message with a unique Message-ID
 - Gets their own queue entry for tracking
@@ -105,10 +100,7 @@ For bulk sending, you might not want to save 1000 copies to the Sent Mail folder
   "subject": "Newsletter",
   "html": "<p>Weekly digest</p>",
   "copy": false,
-  "mailMerge": [
-    { "to": { "address": "user1@example.com" } },
-    { "to": { "address": "user2@example.com" } }
-  ]
+  "mailMerge": [{ "to": { "address": "user1@example.com" } }, { "to": { "address": "user2@example.com" } }]
 }
 ```
 
@@ -157,11 +149,13 @@ For HTML fields, use double braces `{{…}}` to escape HTML entities, or triple 
 EmailEngine provides built-in variables you can reference:
 
 ```handlebars
-Hello {{params.name}},
-
-Your account: {{account.email}}
-Account name: {{account.name}}
-Support: {{service.url}}
+Hello
+{{params.name}}, Your account:
+{{account.email}}
+Account name:
+{{account.name}}
+Support:
+{{service.url}}
 ```
 
 Available variables:
@@ -302,6 +296,7 @@ curl -XPOST "https://ee.example.com/v1/account/example/submit" \
 ```
 
 EmailEngine:
+
 1. Loads the template
 2. Applies each recipient's `params` to the template
 3. Generates individual messages
@@ -319,18 +314,13 @@ Send to multiple recipients per merge entry:
   "html": "<p>Update for {{params.teamName}}</p>",
   "mailMerge": [
     {
-      "to": [
-        { "address": "alice@example.com" },
-        { "address": "bob@example.com" }
-      ],
+      "to": [{ "address": "alice@example.com" }, { "address": "bob@example.com" }],
       "params": {
         "teamName": "Engineering"
       }
     },
     {
-      "to": [
-        { "address": "charlie@example.com" }
-      ],
+      "to": [{ "address": "charlie@example.com" }],
       "params": {
         "teamName": "Sales"
       }
@@ -385,10 +375,7 @@ Schedule the entire merge for future sending:
   "subject": "Newsletter",
   "html": "<p>Weekly update</p>",
   "sendAt": "2025-12-25T09:00:00.000Z",
-  "mailMerge": [
-    { "to": { "address": "user1@example.com" } },
-    { "to": { "address": "user2@example.com" } }
-  ]
+  "mailMerge": [{ "to": { "address": "user1@example.com" } }, { "to": { "address": "user2@example.com" } }]
 }
 ```
 
@@ -450,6 +437,7 @@ curl "https://ee.example.com/v1/account/example/outbox" \
 ```
 
 Look for:
+
 - Number of waiting jobs
 - Number of delayed jobs
 - Any failed jobs
@@ -578,7 +566,7 @@ app.post('/webhook', async (req, res) => {
 
 ```json
 {
-  "subject": "Welcome {{params.name}}",  // Wrong for plain text!
+  "subject": "Welcome {{params.name}}" // Wrong for plain text!
 }
 ```
 
@@ -586,8 +574,8 @@ app.post('/webhook', async (req, res) => {
 
 ```json
 {
-  "subject": "Welcome {{{params.name}}}",  // Correct!
-  "html": "Hello {{params.name}}",         // Double braces for HTML
+  "subject": "Welcome {{{params.name}}}", // Correct!
+  "html": "Hello {{params.name}}" // Double braces for HTML
 }
 ```
 
@@ -596,6 +584,7 @@ app.post('/webhook', async (req, res) => {
 **Problem:** Each generated message gets its own queue entry; if your merge size is huge, watch `/v1/queue` for items that exceed EmailEngine's processing window.
 
 **Solution:**
+
 - Break large merges into smaller batches (100-500 per batch)
 - Monitor queue depth
 - Scale EmailEngine horizontally if needed
@@ -626,7 +615,7 @@ app.post('/webhook', async (req, res) => {
     },
     {
       "to": { "address": "bob@example.com" },
-      "params": {}  // Missing 'name'!
+      "params": {} // Missing 'name'!
     }
   ]
 }
@@ -645,6 +634,7 @@ Hello {{#if params.name}}{{params.name}}{{else}}there{{/if}}
 **Problem:** Sending too many messages too quickly.
 
 **Solution:**
+
 - Implement batching with delays
 - Use `sendAt` to schedule over time
 - Check provider limits
@@ -655,6 +645,7 @@ Hello {{#if params.name}}{{params.name}}{{else}}there{{/if}}
 ### Use Templates
 
 Pre-create templates instead of including HTML in every API call:
+
 - Reduces payload size
 - Faster processing
 - Easier to update content
@@ -662,6 +653,7 @@ Pre-create templates instead of including HTML in every API call:
 ### Optimize Params
 
 Keep param objects lean:
+
 - Only include necessary data
 - Avoid large nested objects
 - Don't duplicate account-level data
@@ -669,6 +661,7 @@ Keep param objects lean:
 ### Monitor Performance
 
 Track metrics:
+
 - Merge request processing time
 - Queue depth
 - Delivery success rate
@@ -700,6 +693,7 @@ Always test with a small batch first:
 ### Verify Personalization
 
 Check that each recipient gets personalized content:
+
 1. Send to test addresses
 2. Check each inbox
 3. Verify variables were replaced correctly
@@ -708,15 +702,7 @@ Check that each recipient gets personalized content:
 ### Test Error Handling
 
 Test with invalid data to ensure graceful failure:
+
 - Invalid email addresses
 - Missing required params
 - Oversized attachments
-
-## See Also
-
-- [Basic Sending](./basic-sending.md) - Fundamentals of email sending
-- [Templates](./templates.md) - Using email templates
-- [Outbox Queue](./outbox-queue.md) - Understanding the queue system
-- [Performance Tuning](../advanced/performance-tuning.md) - Optimize high-volume sending
-- [API Reference: Message Submission](https://api.emailengine.app/#operation/postV1AccountAccountSubmit)
-- [Webhook Events](../reference/webhook-events.md)

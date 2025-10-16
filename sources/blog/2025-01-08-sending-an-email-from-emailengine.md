@@ -4,7 +4,7 @@ slug: sending-an-email-from-emailengine
 date_published: 2025-01-08T21:21:00.000Z
 date_updated: 2025-05-14T11:13:06.000Z
 tags: EmailEngine, SMTP
-excerpt: Learn how to register an account in EmailEngine, queue a message for delivery, and verify it reached your MTA—all with two curl commands.
+excerpt: Learn how to register an account in EmailEngine, queue a message for delivery, and verify it reached your MTA - all with two curl commands.
 ---
 
 > **TL;DR**
@@ -18,7 +18,7 @@ When your SaaS needs to send email on behalf of a customer, direct SMTP is britt
 
 ### 1. Register the account
 
-**Endpoint:****`POST /v1/account`**
+**Endpoint:\*\***`POST /v1/account`\*\*
 
     $ curl -XPOST "http://127.0.0.1:3000/v1/account" \
       -H "Authorization: Bearer <your‑token>" \
@@ -40,18 +40,16 @@ When your SaaS needs to send email on behalf of a customer, direct SMTP is britt
           "secure": true
         }
       }'
-    
 
 Expected response:
 
     { "account": "example", "state": "new" }
-    
 
 > ⚠️ **Heads‑up** – If you use an SMTP port other than 465, set `"secure": false`.
 
 ### 2. Submit the message
 
-**Endpoint:****`POST /v1/account/:id/submit`**
+**Endpoint:\*\***`POST /v1/account/:id/submit`\*\*
 Full docs: [Message submission](https://api.emailengine.app/#operation/postV1AccountAccountSubmit)
 
     $ curl -XPOST "http://127.0.0.1:3000/v1/account/example/submit" \
@@ -63,7 +61,6 @@ Full docs: [Message submission](https://api.emailengine.app/#operation/postV1Acc
         "text": "Hello from myself!",
         "html": "<p>Hello from myself!</p>"
       }'
-    
 
 Expected response (queued, not yet delivered):
 
@@ -73,7 +70,6 @@ Expected response (queued, not yet delivered):
       "sendAt": "2025-05-14T10:22:31.312Z",
       "queueId": "4646ac53857fd2b2"
     }
-    
 
 > 💡 **Tip** – Submission is rejected while EmailEngine is still performing the initial sync. Poll `**/v1/account/:id**` until `state` becomes `"connected"`.
 
@@ -98,7 +94,6 @@ Delivered to the outbound MTA.
         }
       }
     }
-    
 
 #### messageDeliveryError
 
@@ -126,7 +121,6 @@ Emitted **after every failed delivery attempt**. EmailEngine retries automatical
         }
       }
     }
-    
 
 #### messageFailed
 
@@ -142,7 +136,6 @@ Raised once EmailEngine gives up retrying.
         "error": "Error: Invalid login: 535 5.7.8 Error: authentication failed: "
       }
     }
-    
 
 ## Common pitfalls
 

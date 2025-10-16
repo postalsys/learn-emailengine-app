@@ -17,9 +17,9 @@ So, when I started what eventually became [EmailEngine](https://emailengine.app/
 
 Obviously, I wanted to make some money from my new project, and my business plan was simple. I published the project (it was called IMAP API at that time) as an AGPL-licensed application. I also offered an MIT version, but to get that, you had to subscribe. The subscription fee was 250€ per year. My assumption was that companies - the main target for the software - do not like copyleft licenses and would convert to the permissive license once they see how useful the app is.
 
-Well, it turns out my business plan was bonkers. I only gained a few paying subscribers, and it seemed to me those people weren't even using IMAP API. They just wanted to support my effort. It turned out that smaller companies did not care about the license at all, and larger companies were not using it. After a year and a half and 750€ in total revenue, I decided to jump ship — enough of providing free stuff.
+Well, it turns out my business plan was bonkers. I only gained a few paying subscribers, and it seemed to me those people weren't even using IMAP API. They just wanted to support my effort. It turned out that smaller companies did not care about the license at all, and larger companies were not using it. After a year and a half and 750€ in total revenue, I decided to jump ship - enough of providing free stuff.
 
-I re-designed the UI of the app to look more professional and implemented a license key system. From that moment if you wanted to use EmailEngine (the new name for IMAP API), you needed a license key that was only available for paying subscribers. I also changed the license from AGPL to a commercial license. The source code is still published publicly on [GitHub](https://github.com/postalsys/emailengine). It is no longer *open-source* by definition but *source-available*. This change of license was only possible due to requiring outside committers to sign a CLA from the start.
+I re-designed the UI of the app to look more professional and implemented a license key system. From that moment if you wanted to use EmailEngine (the new name for IMAP API), you needed a license key that was only available for paying subscribers. I also changed the license from AGPL to a commercial license. The source code is still published publicly on [GitHub](https://github.com/postalsys/emailengine). It is no longer _open-source_ by definition but _source-available_. This change of license was only possible due to requiring outside committers to sign a CLA from the start.
 
 > I still publish MIT-licensed projects, but only for smaller tools, not larger projects. The goal of these tools is to promote my main effort. For example, I extracted the IMAP client functions from EmailEngine and published it under an MIT license as a generic IMAP client library for Node.js. This module  ([ImapFlow](https://imapflow.com/)) is gaining steam in adoption as it is by far better than any pre-existing alternative. The documentation page sends about 100 visitors per month to EmailEngine's homepage, which is not much, but hey, it is free traffic, and sometimes these visitors do convert, making the effort fruitful.
 
@@ -33,4 +33,4 @@ The current MRR for EmailEngine is 6100€ and grows steadily, which in Estonia,
 
 ---
 
-*Edit: changed "LGPL-licensed" with "AGPL-licensed" as the original OSS license was AGPL, not LGPL.*
+_Edit: changed "LGPL-licensed" with "AGPL-licensed" as the original OSS license was AGPL, not LGPL._

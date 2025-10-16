@@ -45,7 +45,7 @@ EmailEngine abstracts all of this complexity behind a simple REST API.
 EmailEngine supports multiple sending approaches:
 
 1. **Submit API** (Recommended)
-   - POST to `/v1/account/:id/submit`
+   - POST to [Submit Email API endpoint](/docs/api/post-v-1-account-account-submit)
    - Queue-based with automatic retries
    - Webhook notifications for delivery status
    - Best for application integration
@@ -219,10 +219,3 @@ Common sending issues and solutions:
 | Spam rejection | Content flagged | Review message content |
 
 For detailed troubleshooting, see [Accounts Troubleshooting](../accounts/troubleshooting.md).
-
-## See Also
-
-- [API Reference: Message Submission](https://api.emailengine.app/#operation/postV1AccountAccountSubmit)
-- [Webhook Events](../reference/webhook-events.md)
-- [Account Management](../accounts/managing-accounts.md)
-- [Performance Tuning](../advanced/performance-tuning.md)

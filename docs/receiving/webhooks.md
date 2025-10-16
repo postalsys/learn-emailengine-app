@@ -60,6 +60,8 @@ Set your webhook endpoint URL in EmailEngine:
 
 **Via API:**
 
+Use the [settings API](/docs/api/put-v-1-settings) to configure webhooks:
+
 ```bash
 curl -X PUT "https://your-emailengine.com/admin/config" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -644,6 +646,8 @@ curl "https://your-emailengine.com/v1/account/ACCOUNT_ID/messages?path=INBOX" \
   -H "Authorization: Bearer TOKEN"
 ```
 
+[List messages API →](/docs/api/get-v-1-account-account-messages)
+
 If message is missing:
 - Wrong account credentials
 - OAuth token lacks required scopes
@@ -695,7 +699,7 @@ https://YOUR-EMAILENGINE-HOST/oauth/msg/notification
 
 EmailEngine can sign webhooks using HMAC:
 
-**1. Set a webhook secret:**
+**1. Set a webhook secret using the [settings API](/docs/api/put-v-1-settings):**
 
 ```bash
 curl -X PUT "https://your-emailengine.com/admin/config" \
@@ -919,11 +923,3 @@ async function processWebhook(event) {
 2. Check "All events" is selected or specific events are enabled
 3. Confirm account type supports the event (e.g., IDLE for IMAP)
 4. Review account sync settings
-
-## See Also
-
-- [Message Operations](./message-operations) - Working with messages via API
-- [Mailbox Operations](./mailbox-operations) - Managing folders and mailboxes
-- [Tracking Replies](./tracking-replies) - Detecting reply emails
-- [Reference: Webhook Events](/docs/reference/webhook-events) - Complete event reference
-- [Advanced: Monitoring](/docs/advanced/monitoring) - System monitoring

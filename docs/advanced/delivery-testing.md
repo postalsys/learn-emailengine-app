@@ -252,188 +252,194 @@ Possible `category` values:
 
 ### Complete Testing Flow
 
-```javascript
-const express = require('express');
-const app = express();
-
-app.use(express.json());
+```
+// Pseudo code - implement in your preferred language
 
 // Track test emails
-const testEmails = new Map();
+test_emails = {}
 
 // 1. Send test email
-async function sendTestEmail(testAccount, subject, content) {
-  const testId = `test-${Date.now()}`;
+function send_test_email(test_account, subject, content):
+  test_id = 'test-' + CURRENT_TIMESTAMP()
 
   // Send email with tracking ID in subject
-  const response = await fetch('http://localhost:3000/v1/account/sender@example.com/submit', {
-    method: 'POST',
-    headers: {
+  response = HTTP_POST(
+    'http://localhost:3000/v1/account/sender@example.com/submit',
+    headers={
       'Authorization': 'Bearer YOUR_TOKEN',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      to: { address: testAccount },
-      subject: `${subject} [Test:${testId}]`,
+    body=JSON_ENCODE({
+      to: { address: test_account },
+      subject: subject + ' [Test:' + test_id + ']',
       text: content,
-      html: `<p>${content}</p>`
+      html: '<p>' + content + '</p>'
     })
-  });
+  )
 
-  const data = await response.json();
+  data = PARSE_JSON(response.body)
 
   // Store test metadata
-  testEmails.set(testId, {
+  test_emails[test_id] = {
     messageId: data.messageId,
-    testAccount,
-    subject,
-    sentAt: new Date(),
+    testAccount: test_account,
+    subject: subject,
+    sentAt: CURRENT_TIMESTAMP(),
     result: null
-  });
+  }
 
-  return testId;
-}
+  return test_id
+end function
 
 // 2. Receive webhook when email arrives
-app.post('/webhooks/emailengine', (req, res) => {
-  const webhook = req.body;
+function handle_webhook(request):
+  webhook = request.body
 
-  if (webhook.event === 'messageNew') {
-    const { subject, path, category } = webhook.data;
+  if webhook.event == 'messageNew':
+    subject = webhook.data.subject
+    path = webhook.data.path
+    category = webhook.data.category
 
     // Extract test ID from subject
-    const testMatch = subject && subject.match(/\[Test:([^\]]+)\]/);
+    test_match = REGEX_MATCH(subject, '\[Test:([^\]]+)\]')
 
-    if (testMatch) {
-      const testId = testMatch[1];
-      const test = testEmails.get(testId);
+    if test_match:
+      test_id = test_match[1]
+      test = test_emails[test_id]
 
-      if (test) {
+      if test exists:
         // Record delivery result
-        const deliveryTime = new Date() - test.sentAt;
+        delivery_time = CURRENT_TIMESTAMP() - test.sentAt
+
+        // Determine status
+        if path == 'INBOX':
+          status = 'inbox'
+        else if CONTAINS(path, 'Junk') OR CONTAINS(path, 'Spam'):
+          status = 'spam'
+        else:
+          status = 'other'
+        end if
 
         test.result = {
           folder: path,
-          category: category || null,
-          deliveredAt: new Date(),
-          deliveryTime: `${deliveryTime}ms`,
-          status: path === 'INBOX' ? 'inbox' :
-                  path.includes('Junk') || path.includes('Spam') ? 'spam' :
-                  'other'
-        };
+          category: category,
+          deliveredAt: CURRENT_TIMESTAMP(),
+          deliveryTime: delivery_time + 'ms',
+          status: status
+        }
 
-        console.log(`Test ${testId} result:`, test.result);
-      }
-    }
-  }
+        PRINT('Test ' + test_id + ' result: ' + test.result)
+      end if
+    end if
+  end if
 
-  res.json({ success: true });
-});
+  RESPOND(200, { success: true })
+end function
 
 // 3. Query test results
-app.get('/test-results/:testId', (req, res) => {
-  const test = testEmails.get(req.params.testId);
+function get_test_results(test_id):
+  test = test_emails[test_id]
 
-  if (!test) {
-    return res.status(404).json({ error: 'Test not found' });
-  }
+  if NOT test exists:
+    return ERROR(404, 'Test not found')
+  end if
 
-  res.json({
-    testId: req.params.testId,
+  return {
+    testId: test_id,
     sentAt: test.sentAt,
-    result: test.result || { status: 'pending' }
-  });
-});
-
-app.listen(3000, () => {
-  console.log('Test server running on port 3000');
-});
+    result: test.result OR { status: 'pending' }
+  }
+end function
 
 // Run test
-async function runDeliveryTest() {
-  const testId = await sendTestEmail(
+function run_delivery_test():
+  test_id = send_test_email(
     'deliverytest@gmail.com',
     'Delivery Test Email',
     'This is a test email to measure inbox placement.'
-  );
+  )
 
-  console.log(`Test started: ${testId}`);
+  PRINT('Test started: ' + test_id)
 
   // Wait for result (or poll)
-  setTimeout(() => {
-    const test = testEmails.get(testId);
-    console.log('Test result:', test.result);
-  }, 10000); // Check after 10 seconds
-}
-
-// runDeliveryTest();
+  SLEEP(10000)  // Wait 10 seconds
+  test = test_emails[test_id]
+  PRINT('Test result: ' + test.result)
+end function
 ```
 
 ### Seed List Testing
 
 Test multiple accounts simultaneously:
 
-```javascript
-async function runSeedListTest(subject, content) {
-  const seedList = [
+```
+// Pseudo code - implement in your preferred language
+
+function run_seed_list_test(subject, content):
+  seed_list = [
     'test1@gmail.com',
     'test2@outlook.com',
     'test3@yahoo.com',
     'test4@gmail.com'
-  ];
+  ]
 
-  const results = {
-    testId: `seed-${Date.now()}`,
-    sentAt: new Date(),
+  results = {
+    testId: 'seed-' + CURRENT_TIMESTAMP(),
+    sentAt: CURRENT_TIMESTAMP(),
     accounts: []
-  };
+  }
 
   // Send to all seed accounts
-  for (const email of seedList) {
-    const testId = await sendTestEmail(email, subject, content);
+  for each email in seed_list:
+    test_id = send_test_email(email, subject, content)
 
-    results.accounts.push({
-      email,
-      testId,
+    APPEND(results.accounts, {
+      email: email,
+      testId: test_id,
       status: 'pending'
-    });
-  }
+    })
+  end for
 
-  console.log(`Seed list test started: ${results.testId}`);
+  PRINT('Seed list test started: ' + results.testId)
 
-  return results;
-}
+  return results
+end function
 
 // Check results after delay
-async function checkSeedListResults(testResults) {
-  const completed = [];
-  const pending = [];
+function check_seed_list_results(test_results):
+  completed = []
+  pending = []
 
-  for (const account of testResults.accounts) {
-    const test = testEmails.get(account.testId);
+  for each account in test_results.accounts:
+    test = test_emails[account.testId]
 
-    if (test.result) {
-      completed.push({
+    if test.result exists:
+      APPEND(completed, {
         email: account.email,
         ...test.result
-      });
-    } else {
-      pending.push(account.email);
-    }
-  }
+      })
+    else:
+      APPEND(pending, account.email)
+    end if
+  end for
+
+  // Count by status
+  inbox_count = COUNT(completed WHERE status == 'inbox')
+  spam_count = COUNT(completed WHERE status == 'spam')
+  other_count = COUNT(completed WHERE status == 'other')
 
   return {
-    total: testResults.accounts.length,
-    completed: completed.length,
-    pending: pending.length,
+    total: LENGTH(test_results.accounts),
+    completed: LENGTH(completed),
+    pending: LENGTH(pending),
     results: {
-      inbox: completed.filter(r => r.status === 'inbox').length,
-      spam: completed.filter(r => r.status === 'spam').length,
-      other: completed.filter(r => r.status === 'other').length
+      inbox: inbox_count,
+      spam: spam_count,
+      other: other_count
     },
     details: completed
-  };
-}
+  }
+end function
 ```
 
 ### Python Example
@@ -764,16 +770,3 @@ curl "http://localhost:3000/admin/config" \
 ```
 
 **Note:** Categories only work for Gmail INBOX messages.
-
-## Next Steps
-
-- Configure [Bounces](/docs/advanced/bounces) detection for failed deliveries
-- Set up [Monitoring](/docs/advanced/monitoring) to track delivery metrics
-- Implement [Pre-Processing](/docs/advanced/pre-processing) to filter test results
-- Review [Sending Best Practices](/docs/sending) for better deliverability
-
-## Related Resources
-
-- [IMAP RFC 3501](https://tools.ietf.org/html/rfc3501)
-- [Gmail API Categories](https://developers.google.com/gmail/api/guides/labels)
-- [Email Deliverability Best Practices](https://sendgrid.com/blog/email-deliverability-best-practices/)

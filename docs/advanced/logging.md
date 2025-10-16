@@ -121,27 +121,22 @@ Pretty output example:
 
 Create custom Pino transports for specific formatting:
 
-**pino-transport.js:**
+**Custom Transport Example:**
 
-```javascript
-const build = require('pino-abstract-transport');
+```
+// Pseudo code - implement in your preferred language
 
-module.exports = async function (opts) {
-  return build(async function (source) {
-    for await (const obj of source) {
-      // Custom formatting
-      const line = `[${new Date(obj.time).toISOString()}] ${obj.level}: ${obj.msg}`;
-      console.log(line);
-    }
-  });
-};
+function custom_log_transport(log_stream):
+  for each log_object in log_stream:
+    // Custom formatting
+    timestamp = FORMAT_DATE(log_object.time, 'ISO8601')
+    line = CONCAT('[', timestamp, '] ', log_object.level, ': ', log_object.msg)
+    PRINT(line)
+  end for
+end function
 ```
 
-Use custom transport:
-
-```bash
-node server.js | pino-transport
-```
+Use custom transport by piping EmailEngine logs through your formatting tool.
 
 ## Log Rotation
 
@@ -464,38 +459,33 @@ services:
 
 Ship logs directly to Datadog:
 
-```javascript
-// custom-logger.js
-const pino = require('pino');
-const fetch = require('node-fetch');
+```
+// Pseudo code - implement in your preferred language
 
-const logger = pino({
-  level: process.env.EENGINE_LOG_LEVEL || 'info',
-  hooks: {
-    logMethod(inputArgs, method) {
-      // Send to Datadog
-      const log = inputArgs[0];
-
-      fetch('https://http-intake.logs.datadoghq.com/v1/input', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'DD-API-KEY': process.env.DATADOG_API_KEY
-        },
-        body: JSON.stringify({
-          ddsource: 'emailengine',
-          service: 'emailengine',
-          hostname: require('os').hostname(),
-          ...log
-        })
-      }).catch(err => console.error('Failed to send to Datadog:', err));
-
-      return method.apply(this, inputArgs);
-    }
+function custom_logger_with_datadog(log_entry):
+  // Prepare log data
+  log_data = {
+    ddsource: 'emailengine',
+    service: 'emailengine',
+    hostname: GET_HOSTNAME(),
+    level: log_entry.level,
+    message: log_entry.msg,
+    timestamp: log_entry.time
   }
-});
 
-module.exports = logger;
+  // Send to Datadog asynchronously
+  HTTP_POST_ASYNC(
+    'https://http-intake.logs.datadoghq.com/v1/input',
+    headers={
+      'Content-Type': 'application/json',
+      'DD-API-KEY': ENV['DATADOG_API_KEY']
+    },
+    body=JSON_ENCODE(log_data)
+  )
+
+  // Also log locally
+  PRINT(log_entry)
+end function
 ```
 
 ### Splunk
@@ -515,44 +505,44 @@ sourcetype = _json
 
 #### Using HTTP Event Collector
 
-```javascript
-// Send to Splunk HEC
-const SplunkLogger = require('splunk-logging').Logger;
+```
+// Pseudo code - implement in your preferred language
 
-const splunk = new SplunkLogger({
-  token: process.env.SPLUNK_HEC_TOKEN,
-  url: 'https://splunk.example.com:8088'
-});
+function splunk_forwarder(log_stream):
+  for each log_line in log_stream:
+    try:
+      log = PARSE_JSON(log_line)
 
-// Pipe Pino to Splunk
-const through = require('through2');
+      // Determine severity
+      if log.level >= 50:
+        severity = 'error'
+      else:
+        severity = 'info'
+      end if
 
-process.stdin
-  .pipe(through.obj(function (chunk, enc, cb) {
-    try {
-      const log = JSON.parse(chunk.toString());
-
-      splunk.send({
-        message: log,
-        severity: log.level >= 50 ? 'error' : 'info',
-        metadata: {
+      // Send to Splunk HEC
+      HTTP_POST(
+        'https://splunk.example.com:8088/services/collector',
+        headers={
+          'Authorization': CONCAT('Splunk ', ENV['SPLUNK_HEC_TOKEN'])
+        },
+        body=JSON_ENCODE({
+          event: log,
+          severity: severity,
           source: 'emailengine',
           sourcetype: '_json',
           index: 'emailengine'
-        }
-      });
-    } catch (err) {
+        })
+      )
+    catch parse_error:
       // Ignore parse errors
-    }
-    cb();
-  }));
+      continue
+    end try
+  end for
+end function
 ```
 
-Run:
-
-```bash
-node server.js | node splunk-forwarder.js
-```
+Run by piping EmailEngine logs through your forwarder implementation.
 
 ## Debugging with Logs
 
@@ -836,17 +826,3 @@ curl http://loki:3100/ready
 # Ensure logs are valid JSON
 cat logs/emailengine.log | jq . > /dev/null
 ```
-
-## Next Steps
-
-- Configure [Monitoring](/docs/advanced/monitoring) with Prometheus and Grafana
-- Set up [Performance Tuning](/docs/advanced/performance-tuning) based on log analysis
-- Review [Webhook Debugging](/docs/receiving/webhooks#debugging-webhooks) techniques
-- Implement [Error Handling](/docs/troubleshooting) procedures
-
-## Related Resources
-
-- [Pino Documentation](https://github.com/pinojs/pino)
-- [ELK Stack Guide](https://www.elastic.co/what-is/elk-stack)
-- [Grafana Loki](https://grafana.com/oss/loki/)
-- [Log Rotation Best Practices](https://linux.die.net/man/8/logrotate)

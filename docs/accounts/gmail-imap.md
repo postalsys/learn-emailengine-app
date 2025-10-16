@@ -32,12 +32,6 @@ When you enable OAuth2 for Gmail with IMAP/SMTP:
 - Users authenticate once via OAuth2, and EmailEngine automatically refreshes tokens
 - No passwords are stored, and 2FA accounts work seamlessly
 
-## Prerequisites
-
-- A Google account with access to Google Cloud Console
-- Access to create and configure Google Cloud projects
-- EmailEngine instance running and accessible
-
 ## Authentication Options for Gmail
 
 Before we dive into OAuth2 setup, it's worth understanding all Gmail authentication options:
@@ -467,19 +461,3 @@ You can:
 - Monitor token status via account state
 
 [Learn more about OAuth2 token management →](./oauth2-token-management)
-
-## Next Steps
-
-- [Set up Gmail API for better performance](./gmail-api)
-- [Configure Google Service Accounts for Google Workspace](./google-service-accounts)
-- [Learn about OAuth2 token management](./oauth2-token-management)
-- [Explore general OAuth2 concepts](./oauth2-setup)
-- [Troubleshoot account issues](./troubleshooting)
-
-## See Also
-
-- [OAuth2 Configuration Documentation](/docs/configuration/oauth2-configuration)
-- [Setting Up Outlook OAuth2](./outlook-365)
-- [Gmail Service Accounts Setup](./google-service-accounts)
-- [Hosted Authentication Guide](/docs/accounts/oauth2-setup)
-- [API Reference: Add Account](/docs/api/post-v-1-account)

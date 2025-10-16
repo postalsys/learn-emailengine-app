@@ -1,6 +1,5 @@
 ---
 title: Receiving Emails
-sidebar_label: "Overview"
 sidebar_position: 1
 description: "Comprehensive guide to receiving and processing emails with EmailEngine - webhooks, real-time notifications, and mailbox operations"
 keywords:
@@ -199,7 +198,7 @@ async function processNewMessage(event) {
 
 ### 3. Fetch Full Message Details
 
-If you need more information than what's in the webhook:
+If you need more information than what's in the webhook using the [Get Message API endpoint](/docs/api/get-v-1-account-account-message-message):
 
 ```javascript
 async function fetchFullMessage(accountId, messageId) {
@@ -219,7 +218,7 @@ async function fetchFullMessage(accountId, messageId) {
 
 ### 4. Download Attachments
 
-Process message attachments:
+Process message attachments using the [Get Attachment API endpoint](/docs/api/get-v-1-account-account-message-message-attachment-attachment):
 
 ```javascript
 async function downloadAttachment(accountId, messageId, attachmentId) {
@@ -302,10 +301,3 @@ This section covers all aspects of receiving and processing emails:
 2. **Check polling interval** if IDLE is unavailable
 3. **Review server logs** for connection issues
 4. **Monitor Redis performance** for queue delays
-
-## See Also
-
-- [Sending Emails](/docs/sending) - Learn about sending emails
-- [Accounts](/docs/accounts) - Managing email accounts
-- [API Reference](/docs/api-reference) - Complete API documentation
-- [Webhooks Configuration](/docs/receiving/webhooks) - Advanced webhook settings

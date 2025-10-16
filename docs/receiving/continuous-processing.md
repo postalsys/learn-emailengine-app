@@ -67,7 +67,7 @@ Continuous email processing enables you to build real-time pipelines that analyz
 
 ### Step 1: Configure notifyFrom for Historical Emails
 
-For IMAP accounts, EmailEngine can treat existing emails as "new" by setting `notifyFrom` to a past date:
+For IMAP accounts, EmailEngine can treat existing emails as "new" by setting `notifyFrom` to a past date using the [Register Account API endpoint](/docs/api/post-v-1-account):
 
 ```javascript
 async function addAccountWithHistoricalProcessing(accountId, credentials) {
@@ -144,7 +144,7 @@ console.log('User authentication URL:', authUrl);
 
 ### Step 3: Configure Webhooks
 
-Enable webhooks to receive email notifications:
+Enable webhooks to receive email notifications using the [Update Settings API endpoint](/docs/api/put-v-1-settings):
 
 ```bash
 curl -X PUT "https://your-emailengine.com/admin/config" \
@@ -919,10 +919,3 @@ async function processMessage(event) {
   }
 }
 ```
-
-## See Also
-
-- [Webhooks](./webhooks) - Understanding webhook events
-- [Message Operations](./message-operations) - Working with messages
-- [Searching](./searching) - Finding specific messages
-- [Advanced: Performance Tuning](/docs/advanced/performance-tuning) - Optimization strategies

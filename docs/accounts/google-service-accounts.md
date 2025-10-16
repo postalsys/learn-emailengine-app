@@ -48,13 +48,6 @@ Service accounts are a special type of Google account intended for applications 
 - Public-facing applications (users outside your organization)
 - Applications where users should control access
 
-## Prerequisites
-
-- Google Workspace organization (not free Gmail)
-- Super admin access to Google Workspace
-- Access to Google Cloud Console
-- EmailEngine instance running and accessible
-
 ## Benefits and Limitations
 
 ### Benefits
@@ -387,6 +380,8 @@ With the service account configured, you can now add email accounts without any 
 
 ### Add Account via API
 
+Add accounts using the [Register Account API endpoint](/docs/api/post-v-1-account):
+
 ```bash
 curl -X POST https://your-ee.com/v1/account \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
@@ -475,7 +470,7 @@ curl https://your-ee.com/v1/accounts \
 
 ### Updating Service Account Accounts
 
-Update account settings normally:
+Update account settings using the [Update Account API endpoint](/docs/api/put-v-1-account-account):
 
 ```bash
 curl -X PUT https://your-ee.com/v1/account/user123 \
@@ -489,7 +484,7 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 
 ### Deleting Service Account Accounts
 
-Delete accounts normally:
+Delete accounts using the [Delete Account API endpoint](/docs/api/delete-v-1-account-account):
 
 ```bash
 curl -X DELETE https://your-ee.com/v1/account/user123 \
@@ -634,17 +629,3 @@ Synchronize email data:
 | **Scalability** | Excellent (no per-user flow) | Good (per-user flow) |
 | **Security** | High risk if compromised | Lower risk (scoped to user) |
 | **Use Case** | Enterprise internal use | Public applications |
-
-## Next Steps
-
-- [Learn about regular Gmail OAuth2](./gmail-imap)
-- [Set up Gmail API for better performance](./gmail-api)
-- [Learn about OAuth2 token management](./oauth2-token-management)
-- [Troubleshoot account issues](./troubleshooting)
-
-## See Also
-
-- [Google Service Accounts Documentation](https://cloud.google.com/iam/docs/service-accounts)
-- [Domain-Wide Delegation](https://developers.google.com/identity/protocols/oauth2/service-account)
-- [OAuth2 Configuration in EmailEngine](/docs/configuration/oauth2-configuration)
-- [API Reference: Add Account](/docs/api/post-v-1-account)

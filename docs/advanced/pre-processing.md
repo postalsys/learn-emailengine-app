@@ -25,7 +25,6 @@ Pre-processing functions allow you to run custom JavaScript code to filter or tr
 EmailEngine supports pre-processing for:
 
 - **Webhooks** - Filter or modify webhook payloads before delivery
-- **Document Store** - Filter which emails are stored in Elasticsearch
 - **Custom Routes** - Transform data before processing
 
 Pre-processing functions are small JavaScript snippets that run in a secure sandbox environment.
@@ -43,7 +42,6 @@ Filter functions determine whether an event should be processed or discarded.
 
 **Use cases:**
 - Skip webhooks for automated messages
-- Only store important emails in Document Store
 - Filter out spam or promotional emails
 
 **Example - Skip auto-reply emails:**
@@ -209,81 +207,6 @@ console.log('Should send:', shouldSend); // true
 const mapped = mapWebhook(testData);
 console.log('Mapped data:', mapped);
 // Output includes: category: 'billing', ticketId: '12345', metadata: {...}
-```
-
-### Document Store Pre-Processing
-
-Configure which emails are stored in Elasticsearch.
-
-#### Configuration Page
-
-Navigate to **Settings** → **Document Store** → **Pre-Processing**
-
-![Document Store Pre-Processing Configuration](https://cldup.com/mEQk0jEyGc.png)
-
-#### Filter Function Example
-
-```javascript
-/**
- * Filter which emails to store in Document Store
- * @param {Object} email - Email data
- * @returns {Boolean} - true to store, false to skip
- */
-function filterDocument(email) {
-  // Don't store spam
-  if (email.labels && email.labels.includes('\\Junk')) {
-    return false;
-  }
-
-  // Don't store automated messages
-  if (email.headers && email.headers['auto-submitted']) {
-    return false;
-  }
-
-  // Only store emails from last 30 days
-  const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-  if (new Date(email.date).getTime() < thirtyDaysAgo) {
-    return false;
-  }
-
-  // Store everything else
-  return true;
-}
-```
-
-#### Mapping Function Example
-
-```javascript
-/**
- * Transform email data before storing
- * @param {Object} email - Email data
- * @returns {Object} - Modified email data
- */
-function mapDocument(email) {
-  // Add search-friendly fields
-  email.searchableText = [
-    email.from?.name,
-    email.from?.address,
-    email.subject,
-    email.text,
-    ...(email.to || []).map(t => t.address)
-  ].filter(Boolean).join(' ');
-
-  // Extract domain from sender
-  if (email.from && email.from.address) {
-    email.senderDomain = email.from.address.split('@')[1];
-  }
-
-  // Normalize labels
-  if (email.labels) {
-    email.labels = email.labels.map(l => l.toLowerCase());
-  }
-
-  // Add indexing timestamp
-  email.indexedAt = new Date().toISOString();
-
-  return email;
-}
 ```
 
 ## Common Use Cases
@@ -566,23 +489,6 @@ Pre-processing functions receive the complete webhook payload:
 }
 ```
 
-### Document Store Payload
-
-Similar structure with additional indexing fields:
-
-```javascript
-{
-  // All webhook fields, plus:
-
-  // IMAP metadata
-  internalDate: '2024-10-13T14:20:00.000Z',
-  encodedSize: 12345,
-
-  // Gmail-specific
-  threadId: 'abc123',
-  labelIds: ['INBOX', 'UNREAD']
-}
-```
 
 ## Sandbox Environment
 
@@ -956,23 +862,27 @@ Converts embedded image references to inline data:
 
 **Fetch and Display Email HTML**:
 
-```javascript
-async function displayEmail(accountId, messageId) {
-  const response = await fetch(
-    `https://ee.example.com/v1/account/${accountId}/message/${messageId}?` +
-    `embedAttachedImages=true&preProcessHtml=true&textType=*`,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    }
-  );
+```
+// Pseudo code - implement in your preferred language
 
-  const message = await response.json();
+function display_email(accountId, messageId, token):
+  // Build URL with query parameters
+  url = CONCAT(
+    "https://ee.example.com/v1/account/", accountId, "/message/", messageId,
+    "?embedAttachedImages=true&preProcessHtml=true&textType=*"
+  )
 
-  // Directly inject into page - safe due to pre-processing
-  document.getElementById('email-content').innerHTML = message.html[0];
-}
+  // Make HTTP GET request
+  response = HTTP_GET(url, headers={
+    "Authorization": CONCAT("Bearer ", token)
+  })
+
+  // Parse JSON response
+  message = PARSE_JSON(response.body)
+
+  // Inject HTML into page (safe due to pre-processing)
+  SET_ELEMENT_HTML("email-content", message.html[0])
+end function
 ```
 
 **HTML Structure**:
@@ -1014,16 +924,16 @@ async function displayEmail(accountId, messageId) {
 }
 ```
 
-### Pre-Processing with Document Store
+### Pre-Processing with ElasticSearch
 
-If ElasticSearch Document Store is enabled, pre-processing is even faster:
+If ElasticSearch is enabled, pre-processing is even faster:
 
 ```bash
 curl "https://ee.example.com/v1/account/example/message/AAAAGQAACeE?embedAttachedImages=true&preProcessHtml=true&documentStore=true&textType=*" \
   -H "Authorization: Bearer TOKEN"
 ```
 
-**Benefits with Document Store**:
+**Benefits with ElasticSearch**:
 - No IMAP requests needed
 - Embedded images cached in ElasticSearch
 - Significantly faster response times
@@ -1121,58 +1031,46 @@ EmailEngine distinguishes between two attachment types:
 **Pros**: No sizing issues, responsive, seamless integration
 **Cons**: Requires proper pre-processing (provided by EmailEngine)
 
-### React Example
+### Implementation Example
 
-```jsx
-import React, { useEffect, useState } from 'react';
+```
+// Pseudo code - implement in your preferred language
 
-function EmailViewer({ accountId, messageId, token }) {
-  const [email, setEmail] = useState(null);
+function email_viewer(accountId, messageId, token):
+  // Fetch email data
+  url = CONCAT(
+    "https://ee.example.com/v1/account/", accountId, "/message/", messageId,
+    "?embedAttachedImages=true&preProcessHtml=true&textType=*"
+  )
 
-  useEffect(() => {
-    async function fetchEmail() {
-      const response = await fetch(
-        `https://ee.example.com/v1/account/${accountId}/message/${messageId}?` +
-        `embedAttachedImages=true&preProcessHtml=true&textType=*`,
-        {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }
-      );
-      const data = await response.json();
-      setEmail(data);
-    }
+  response = HTTP_GET(url, headers={
+    "Authorization": CONCAT("Bearer ", token)
+  })
 
-    fetchEmail();
-  }, [accountId, messageId, token]);
+  email = PARSE_JSON(response.body)
 
-  if (!email) return <div>Loading...</div>;
+  if email is null:
+    DISPLAY("Loading...")
+    return
+  end if
 
-  return (
-    <div className="email-viewer">
-      <div className="email-header">
-        <div><strong>From:</strong> {email.from.name} &lt;{email.from.address}&gt;</div>
-        <div><strong>Subject:</strong> {email.subject}</div>
-        <div><strong>Date:</strong> {new Date(email.date).toLocaleString()}</div>
-      </div>
+  // Display email header
+  DISPLAY("From: " + email.from.name + " <" + email.from.address + ">")
+  DISPLAY("Subject: " + email.subject)
+  DISPLAY("Date: " + FORMAT_DATE(email.date))
 
-      <div
-        className="email-body"
-        dangerouslySetInnerHTML={{ __html: email.html[0] }}
-      />
+  // Display email body (pre-processed HTML)
+  SET_HTML("email-body", email.html[0])
 
-      {email.attachments && email.attachments.length > 0 && (
-        <div className="attachments">
-          <h4>Attachments</h4>
-          {email.attachments.map(att => (
-            <a key={att.id} href={att.downloadUrl}>
-              {att.filename} ({att.size} bytes)
-            </a>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+  // Display attachments if present
+  if email.attachments exists AND LENGTH(email.attachments) > 0:
+    DISPLAY("Attachments:")
+    for each attachment in email.attachments:
+      DISPLAY_LINK(attachment.downloadUrl,
+                   attachment.filename + " (" + attachment.size + " bytes)")
+    end for
+  end if
+end function
 ```
 
 ### Best Practices for HTML Pre-Processing
@@ -1182,7 +1080,7 @@ function EmailViewer({ accountId, messageId, token }) {
 embedAttachedImages=true&preProcessHtml=true
 ```
 
-**2. Use Document Store for Production**:
+**2. Use ElasticSearch for Production**:
 Significantly improves performance for frequently accessed emails.
 
 **3. Scope Email CSS**:
@@ -1205,26 +1103,27 @@ Content-Security-Policy: default-src 'self'; img-src data: https:; style-src 'un
 **5. Handle Large Images**:
 Email images are base64 encoded, which increases size:
 
-```javascript
-// Check HTML size before displaying
-if (email.html[0].length > 1000000) { // 1MB
-  console.warn('Large email content, consider iframe approach');
-}
+```
+// Pseudo code - implement in your preferred language
+if LENGTH(email.html[0]) > 1000000:  // 1MB
+  LOG_WARNING('Large email content, consider iframe approach')
+end if
 ```
 
 **6. Provide Fallback**:
 If pre-processing fails, show plain text:
 
-```javascript
-function displayEmail(email) {
-  if (email.html && email.html[0]) {
-    emailContainer.innerHTML = email.html[0];
-  } else if (email.text) {
-    emailContainer.textContent = email.text;
-  } else {
-    emailContainer.textContent = 'No content available';
-  }
-}
+```
+// Pseudo code - implement in your preferred language
+function display_email(email):
+  if email.html exists AND email.html[0] exists:
+    SET_HTML(emailContainer, email.html[0])
+  else if email.text exists:
+    SET_TEXT(emailContainer, email.text)
+  else:
+    SET_TEXT(emailContainer, 'No content available')
+  end if
+end function
 ```
 
 ## Best Practices
@@ -1239,18 +1138,3 @@ function displayEmail(email) {
 8. **Monitor performance** - Track function execution time
 9. **Version your functions** - Keep history of changes
 10. **Use HTML pre-processing** - Enable `preProcessHtml` and `embedAttachedImages` for web display
-
-## Next Steps
-
-- Configure [Webhooks](/docs/receiving/webhooks) for event delivery
-- Set up [Document Store](/docs/receiving/continuous-processing#elasticsearch-integration) for email indexing
-- Implement [Performance Tuning](/docs/advanced/performance-tuning) for optimal throughput
-- Review [Security Best Practices](/docs/deployment/security)
-- Learn about [Message Operations](/docs/receiving/message-operations) for fetching emails
-
-## Related Resources
-
-- [Webhook Events Reference](/docs/reference/webhook-events)
-- [Message Operations](/docs/receiving/message-operations)
-- [JavaScript Security Best Practices](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects)
-- [DOMPurify Documentation](https://github.com/cure53/DOMPurify)

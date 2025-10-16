@@ -26,6 +26,10 @@ Cloudflare [Email Workers](https://developers.cloudflare.com/email-routing/email
 
 However, the built-in API has limitations when accessing email content beyond basic headers.
 
+:::tip JavaScript Environment
+Cloudflare Workers run JavaScript/TypeScript code. All examples in this guide use JavaScript, which is the native language for Cloudflare Workers. This is different from EmailEngine's REST API, which can be called from any programming language.
+:::
+
 ## Limitations of Built-In API
 
 ### What's Available
@@ -688,24 +692,3 @@ Workers have execution time limits. For long processing:
 - Use Cloudflare Workers for inbound processing
 - Use EmailEngine for account management and sending
 - Best of both worlds
-
-## Next Steps
-
-- Review [postal-mime documentation](https://www.npmjs.com/package/postal-mime)
-- Explore [Cloudflare Email Workers docs](https://developers.cloudflare.com/email-routing/email-workers/)
-- Learn about [EmailEngine integrations](/docs/integrations)
-- Compare with [EmailEngine receiving features](/docs/receiving)
-
-## See Also
-
-- [Receiving Emails with EmailEngine](/docs/receiving)
-- [Webhooks Configuration](/docs/receiving/webhooks)
-- [Low-Code Integrations](/docs/integrations/low-code)
-- [API Reference](/docs/api-reference)
-
-## Resources
-
-- **postal-mime**: [npmjs.com/package/postal-mime](https://www.npmjs.com/package/postal-mime)
-- **Cloudflare Email Workers**: [developers.cloudflare.com/email-routing/email-workers/](https://developers.cloudflare.com/email-routing/email-workers/)
-- **Cloudflare Workers**: [workers.cloudflare.com](https://workers.cloudflare.com/)
-- **EmailEngine**: [emailengine.app](https://emailengine.app/)

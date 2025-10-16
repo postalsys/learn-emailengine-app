@@ -276,8 +276,8 @@ Encryption and security settings.
 
 **Enable field encryption:**
 ```bash
-# Generate encryption key
-ENCRYPTION_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+# Generate encryption key (using OpenSSL)
+ENCRYPTION_KEY=$(openssl rand -hex 32)
 
 EENGINE_ENCRYPTION_SECRET=$ENCRYPTION_KEY
 EENGINE_ENCRYPTION_ALGO=aes-256-gcm
@@ -551,7 +551,7 @@ Error: EENGINE_SECRET must be at least 32 characters
 ```
 **Solution:** Generate longer secret:
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+openssl rand -hex 32
 ```
 
 **Invalid Redis URL:**
@@ -585,13 +585,3 @@ echo $REDIS_URL
 Error: redirect_uri_mismatch
 ```
 **Solution:** Ensure `EENGINE_BASE_URL` matches OAuth2 app configuration.
-
-## See Also
-
-- [Configuration Overview](./index.md)
-- [Redis Configuration](./redis.md)
-- [OAuth2 Configuration](./oauth2-configuration.md)
-- [Prepared Settings](./prepared-settings.md)
-- [Logging Configuration](./logging.md)
-- [Monitoring Setup](./monitoring.md)
-- [Production Security](/docs/deployment/security)

@@ -39,7 +39,7 @@ EmailEngine uses two distinct types of configuration:
 
 **Configure via:**
 - Web interface (Settings page)
-- Settings API endpoint
+- [Settings API endpoint](/docs/api/put-v-1-settings)
 - Prepared settings (environment variable)
 
 ## Configuration Methods
@@ -85,7 +85,7 @@ emailengine \
 
 ### Settings API
 
-**For runtime configuration.**
+**For runtime configuration.** (See: [Settings API](/docs/api/put-v-1-settings))
 
 ```bash
 curl -X POST http://localhost:3000/v1/settings \
@@ -340,7 +340,7 @@ Pre-configured settings, tokens, and licenses.
 
 ### Check Configuration
 
-**View current settings via API:**
+**View current settings via API:** (See: [Get Settings](/docs/api/get-v-1-settings))
 ```bash
 curl http://localhost:3000/v1/settings \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
@@ -376,14 +376,14 @@ Error: EENGINE_SECRET must be at least 32 characters
 
 **Random secret key:**
 ```bash
-# Node.js
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-
 # OpenSSL
 openssl rand -hex 32
 
 # /dev/urandom
 head -c 32 /dev/urandom | base64
+
+# Python
+python3 -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 ## Migration & Updates
@@ -404,19 +404,3 @@ When upgrading EmailEngine:
 - Update environment variable names (see changelog)
 - Migrate runtime settings via Settings API
 - Update OAuth2 configuration format
-
-## Next Steps
-
-- [Environment Variables Reference](./environment-variables.md) - Complete list of all variables
-- [Redis Configuration](./redis.md) - Redis setup and tuning
-- [OAuth2 Configuration](./oauth2-configuration.md) - OAuth2 provider setup
-- [Prepared Settings](./prepared-settings.md) - Pre-configured deployment
-- [Logging Configuration](./logging.md) - Logging and debugging
-- [Monitoring Configuration](./monitoring.md) - Metrics and monitoring
-
-## See Also
-
-- [Installation Guide](/docs/installation/set-up)
-- [Docker Deployment](/docs/deployment/docker)
-- [Production Security](/docs/deployment/security)
-- [Troubleshooting](/docs/troubleshooting)

@@ -151,23 +151,25 @@ EENGINE_NOTIFY_QC=4
 
 **Example lightweight handler**:
 
-```javascript
-// Express.js webhook endpoint
-app.post('/webhook', async (req, res) => {
-  // Return 2xx immediately
-  res.status(200).send('OK');
+```
+// Pseudo code - implement in your preferred language
+
+// Webhook endpoint
+function handle_webhook(request):
+  // Return 200 immediately
+  RESPOND(200, 'OK')
 
   // Queue for background processing
-  await redis.lpush('webhook_queue', JSON.stringify(req.body));
-});
+  REDIS_PUSH('webhook_queue', JSON_ENCODE(request.body))
+end function
 
 // Separate worker processes the queue
-async function processWebhookQueue() {
-  while (true) {
-    const payload = await redis.brpop('webhook_queue', 0);
-    await heavyProcessing(payload);
-  }
-}
+function process_webhook_queue():
+  while true:
+    payload = REDIS_POP_BLOCKING('webhook_queue')
+    CALL heavy_processing(payload)
+  end while
+end function
 ```
 
 ## Email Sending Configuration
@@ -343,28 +345,28 @@ EmailEngine does not coordinate across nodes. If multiple instances connect to t
 ### Sharding Strategy
 
 **Option 1: Hash-based sharding**
-```javascript
-// Assign account to instance based on hash
-const instanceId = hashCode(accountEmail) % NUM_INSTANCES;
+```
+// Pseudo code - implement in your preferred language
+instanceId = HASH(accountEmail) MOD NUM_INSTANCES
 ```
 
 **Option 2: Range-based sharding**
-```javascript
-// Assign account to instance based on ID range
-if (accountId < 1000) {
-  instance = 'A';
-} else if (accountId < 2000) {
-  instance = 'B';
-} else {
-  instance = 'C';
-}
+```
+// Pseudo code - implement in your preferred language
+if accountId < 1000 then
+  instance = 'A'
+else if accountId < 2000 then
+  instance = 'B'
+else
+  instance = 'C'
+end if
 ```
 
 **Option 3: Domain-based sharding**
-```javascript
-// Assign accounts from same domain to same instance
-const domain = email.split('@')[1];
-const instanceId = hashCode(domain) % NUM_INSTANCES;
+```
+// Pseudo code - implement in your preferred language
+domain = SPLIT(email, '@')[1]
+instanceId = HASH(domain) MOD NUM_INSTANCES
 ```
 
 ### Sharding Implementation
@@ -517,16 +519,3 @@ EENGINE_NOTIFY_QC=4
 6. **Keep Redis Local**: Minimize network latency to Redis
 7. **Lightweight Webhooks**: Queue payloads, process asynchronously
 8. **Shard When Needed**: Use horizontal scaling for very large deployments
-
-## See Also
-
-- [Monitoring](/docs/advanced/monitoring)
-- [Redis Configuration](/docs/configuration/redis)
-- [Deployment](/docs/deployment)
-- [Security](/docs/deployment/security)
-
-## Resources
-
-- **Redis Documentation**: [redis.io/documentation](https://redis.io/documentation)
-- **Redis Memory Optimization**: [redis.io/topics/memory-optimization](https://redis.io/topics/memory-optimization)
-- **Prometheus**: [prometheus.io](https://prometheus.io/)

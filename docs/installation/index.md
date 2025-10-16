@@ -124,23 +124,6 @@ Run from source code (Node.js 20+ required).
 - **Storage:** 20+ GB SSD
 - **Network:** Low-latency, high-bandwidth connection
 
-## Prerequisites
-
-All installation methods require:
-
-1. **Redis 6.0+**
-
-   - Stand-alone mode (Cluster not supported)
-   - Persistence enabled (RDB or AOF)
-   - `noeviction` memory policy
-
-2. **Node.js 20+** (only for source installation)
-
-3. **Operating System:**
-   - Linux: Ubuntu 20.04+, Debian 10+, CentOS 8+, RHEL 8+
-   - macOS: 11+ (Big Sur or later)
-   - Windows: 10+ (native or WSL2)
-
 ## Cloud Platforms
 
 ### One-Click Deployments
@@ -271,20 +254,3 @@ If you encounter issues during installation:
 4. **Contact support** for assistance
 
 [Support page →](/docs/support/license)
-
-## Next Steps
-
-Choose your installation method:
-
-- [**Linux Installation**](/docs/installation/linux) - For servers and VPS
-- [**macOS Installation**](/docs/installation/macos) - For Mac users
-- [**Windows Installation**](/docs/installation/windows) - For Windows users
-- [**Docker Installation**](/docs/installation/docker) - For containers
-- [**Source Installation**](/docs/installation/source) - For production (recommended)
-
-Or jump to:
-
-- [Quick Start Guide](/docs/getting-started/quick-start)
-- [Configuration Options](/docs/configuration)
-- [Deployment Guides](/docs/deployment)
-- [API Reference](/docs/api-reference)

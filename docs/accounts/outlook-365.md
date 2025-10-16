@@ -21,12 +21,14 @@ This guide shows you how to set up Outlook OAuth2 authentication with EmailEngin
 EmailEngine has native support for Outlook and Microsoft 365 accounts with two backend options:
 
 **IMAP/SMTP Backend:**
+
 - Standard email protocols
 - Works like any other email account
 - Simpler setup
 - Compatible with EmailEngine v2.0+
 
 **Microsoft Graph API Backend:**
+
 - Native Microsoft 365 integration
 - Better performance for high-volume accounts
 - Access to Microsoft-specific features
@@ -35,26 +37,20 @@ EmailEngine has native support for Outlook and Microsoft 365 accounts with two b
 
 This guide covers both options.
 
-## Prerequisites
-
-- Access to [Azure Portal](https://portal.azure.com/)
-- Azure AD account with permissions to register applications
-- EmailEngine instance running and accessible
-- For MS Graph API: EmailEngine v2.44 or newer
-
 ## Choosing IMAP/SMTP vs MS Graph API
 
-| Feature | IMAP/SMTP | MS Graph API |
-|---------|-----------|--------------|
-| **Setup Complexity** | Simple | Moderate |
-| **Performance** | Good | Excellent |
-| **Shared Mailboxes** | Limited support | Native support |
-| **EmailEngine Version** | v2.0+ | v2.44+ |
-| **Connection Protocol** | IMAP/SMTP | REST API |
-| **Microsoft-Specific Features** | Limited | Full access |
-| **Works with other providers** | Yes | No |
+| Feature                         | IMAP/SMTP       | MS Graph API   |
+| ------------------------------- | --------------- | -------------- |
+| **Setup Complexity**            | Simple          | Moderate       |
+| **Performance**                 | Good            | Excellent      |
+| **Shared Mailboxes**            | Limited support | Native support |
+| **EmailEngine Version**         | v2.0+           | v2.44+         |
+| **Connection Protocol**         | IMAP/SMTP       | REST API       |
+| **Microsoft-Specific Features** | Limited         | Full access    |
+| **Works with other providers**  | Yes             | No             |
 
 **Recommendation:**
+
 - Use **IMAP/SMTP** for simple setups and compatibility
 - Use **MS Graph API** for shared mailboxes and Microsoft 365 enterprise features
 
@@ -63,16 +59,19 @@ This guide covers both options.
 Go to [Azure Portal](https://portal.azure.com/) and navigate to **Microsoft Entra ID** → **App Registrations**.
 
 ![Navigating to App Registrations](https://cldup.com/content/images/2024/07/out001.gif)
+
 <!-- Shows: Navigation to Azure AD App Registrations -->
 
 Click **New registration**.
 
 ![Creating new registration](https://cldup.com/content/images/2024/07/out002.gif)
+
 <!-- Shows: Clicking "New registration" button -->
 
 ## Step 2: Configure Application Registration
 
 ![Configuring application details](https://cldup.com/content/images/2024/07/out003.gif)
+
 <!-- Shows: Application registration form -->
 
 ### Application Name
@@ -84,19 +83,23 @@ Choose a name that users will see in the authorization form. Make it clear and r
 Choose who can use this application:
 
 **Personal Microsoft accounts only:**
+
 - Only free @hotmail.com, @outlook.com, @live.com accounts
 - Select: "Accounts in any organizational directory and personal Microsoft accounts"
 
 **Single tenant (organization only):**
+
 - Only accounts from your Microsoft 365 organization
 - Select: "Accounts in this organizational directory only"
 
 **Multi-tenant (any organization):**
+
 - Any Microsoft 365 organization account
 - Does NOT include personal Microsoft accounts
 - Select: "Accounts in any organizational directory"
 
 **Multi-tenant + personal accounts:**
+
 - Both Microsoft 365 and personal accounts
 - Most flexible option
 - Select: "Accounts in any organizational directory and personal Microsoft accounts"
@@ -110,6 +113,7 @@ For maximum compatibility, select **"Accounts in any organizational directory an
 **Platform:** Select **Web**
 
 **URI:** Your EmailEngine URL with `/oauth` path:
+
 - `http://localhost:3000/oauth` (for local testing)
 - `https://your-emailengine-domain.com/oauth` (for production)
 
@@ -122,22 +126,25 @@ Click **Register** to create the application.
 ## Step 3: Copy Application (Client) ID
 
 ![Copying Application ID](https://cldup.com/content/images/2024/07/out004.gif)
+
 <!-- Shows: Application overview page with client ID -->
 
 On the application overview page, find and copy the **Application (client) ID**. You'll need this for EmailEngine configuration.
 
-Keep this page open—you'll come back to it.
+Keep this page open - you'll come back to it.
 
 ## Step 4: Configure API Permissions
 
 Click **API permissions** in the left menu.
 
 ![Navigating to API permissions](https://cldup.com/content/images/2024/07/out005.gif)
+
 <!-- Shows: API permissions page -->
 
 By default, only `User.Read` permission exists. Click **Add a permission**.
 
 ![Adding permissions](https://cldup.com/content/images/2024/07/out006.gif)
+
 <!-- Shows: Adding permission button -->
 
 Select **Microsoft Graph** and then **Delegated permissions**.
@@ -147,6 +154,7 @@ Select **Microsoft Graph** and then **Delegated permissions**.
 Add these permissions:
 
 ![Adding IMAP/SMTP permissions](https://cldup.com/content/images/2024/07/out007.gif)
+
 <!-- Shows: Searching for and selecting IMAP permissions -->
 
 - `IMAP.AccessAsUser.All` - For IMAP access
@@ -166,14 +174,16 @@ Add these permissions instead:
 - `offline_access` - For token refresh
 
 :::warning Don't Mix Scopes
-You cannot use both IMAP/SMTP and Mail.* scopes together. Choose one backend:
+You cannot use both IMAP/SMTP and Mail.\* scopes together. Choose one backend:
+
 - **IMAP/SMTP scopes**: From Outlook API
-- **Mail.* scopes**: From MS Graph API
+- **Mail.\* scopes**: From MS Graph API
 
 Pick one approach and stick with it.
 :::
 
 ![Reviewing permissions](https://cldup.com/content/images/2024/07/out008.gif)
+
 <!-- Shows: All required permissions listed -->
 
 Verify all required permissions are listed, then continue to the next step.
@@ -183,6 +193,7 @@ Verify all required permissions are listed, then continue to the next step.
 Click **Certificates & secrets** in the left menu.
 
 ![Navigating to certificates](https://cldup.com/content/images/2024/07/out009.gif)
+
 <!-- Shows: Certificates & secrets page -->
 
 Click **New client secret**.
@@ -192,6 +203,7 @@ Click **New client secret**.
 **Description:** Give it a meaningful name (e.g., "EmailEngine Secret")
 
 **Expires:** Choose an expiration period you're comfortable with
+
 - 6 months (default)
 - 12 months
 - 24 months
@@ -206,7 +218,7 @@ Click **Add**.
 ### Copy Secret Value
 
 :::danger Copy Secret Now
-The secret value is only shown once. Copy it immediately—you cannot retrieve it later. If you lose it, you'll need to generate a new secret.
+The secret value is only shown once. Copy it immediately - you cannot retrieve it later. If you lose it, you'll need to generate a new secret.
 :::
 
 Copy the value from the **Value** column (NOT the "Secret ID").
@@ -220,6 +232,7 @@ Skip this step if you're using MS Graph API as your backend.
 If you're managing a Microsoft 365 organization and EmailEngine cannot connect via IMAP/SMTP, you may need to enable these protocols manually.
 
 ![Enabling IMAP/SMTP in Microsoft 365](https://cldup.com/content/images/2022/04/enable-imap-smtp.gif)
+
 <!-- Shows: Enabling IMAP and SMTP in Microsoft 365 admin center -->
 
 1. Navigate to [https://admin.microsoft.com/](https://admin.microsoft.com/)
@@ -237,6 +250,7 @@ Now configure EmailEngine with your Azure application credentials.
 ### Add Outlook OAuth2 Application
 
 ![Creating Outlook app in EmailEngine](https://cldup.com/content/images/2024/07/out010.gif)
+
 <!-- Shows: Creating Outlook OAuth2 application in EmailEngine -->
 
 1. Open EmailEngine dashboard
@@ -247,6 +261,7 @@ Now configure EmailEngine with your Azure application credentials.
 ### Configure OAuth2 Settings
 
 ![Configuring Outlook OAuth2 settings](https://cldup.com/content/images/2024/07/out011.gif)
+
 <!-- Shows: Outlook OAuth2 configuration form -->
 
 **Application name:** Give it a descriptive name (e.g., "Outlook OAuth2")
@@ -258,9 +273,11 @@ Now configure EmailEngine with your Azure application credentials.
 **Client Secret:** Paste the secret value you copied earlier
 
 **Redirect URL:** Must match exactly what you entered in Azure:
+
 - Example: `http://localhost:3000/oauth`
 
 **Supported account types:** Choose based on your Azure configuration:
+
 - `common` - Organizations and personal accounts (most flexible)
 - `consumers` - Personal Microsoft accounts only (@hotmail.com, @outlook.com, @live.com)
 - `organizations` - Microsoft 365 organizations only
@@ -293,6 +310,7 @@ Add an Outlook account to test the OAuth2 flow.
 ### Via Hosted Authentication Form
 
 ![Testing with hosted authentication](https://cldup.com/content/images/2024/07/out012.gif)
+
 <!-- Shows: Using hosted authentication form -->
 
 1. In EmailEngine, click **Add account**
@@ -350,6 +368,7 @@ Microsoft 365 shared mailboxes are mailboxes not bound to a specific user. Multi
 ### How Shared Mailboxes Work with EmailEngine
 
 EmailEngine accesses shared mailboxes through OAuth2 authentication where:
+
 - The **shared mailbox** is the account being managed
 - A **user with access** provides the OAuth2 authentication
 
@@ -389,6 +408,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 - `type`: The ID of your OAuth2 application in EmailEngine
 
 ![Finding OAuth2 app ID](https://cldup.com/IVrLyCqaBc.png)
+
 <!-- Shows: OAuth2 app ID in EmailEngine configuration -->
 
 The "type" field value is the ID shown in the OAuth2 applications list in EmailEngine.
@@ -444,6 +464,7 @@ After adding a shared mailbox:
 ### OAuth2 Application Settings Show Errors
 
 Check for:
+
 - **Invalid client secret**: Verify you copied the value correctly from Azure
 - **Mismatched redirect URL**: Must match exactly between Azure and EmailEngine
 - **Expired client secret**: Generate a new secret in Azure and update EmailEngine
@@ -453,20 +474,24 @@ Check for:
 Common Azure AD errors:
 
 **AADSTS50011: The redirect URI specified does not match**
+
 - Redirect URL mismatch between Azure and EmailEngine
 - Check for trailing slashes, http vs https
 
 **AADSTS65001: The user or administrator has not consented**
+
 - Required permissions not configured
 - User needs to accept permissions
 
 **AADSTS7000218: The request body must contain the 'client_assertion' parameter**
+
 - Using wrong account type setting
 - Check if account type matches Azure configuration
 
 ### Account Shows "authenticationError" State
 
 Possible issues:
+
 - **IMAP/SMTP not enabled**: Enable in Microsoft 365 admin center
 - **Wrong base scope**: Must match Azure permissions (IMAP vs Graph API)
 - **Insufficient permissions**: User doesn't have mailbox access
@@ -477,6 +502,7 @@ Possible issues:
 ### Shared Mailbox Not Accessible
 
 Check:
+
 - **User has permissions**: Verify in Microsoft 365 admin center
 - **Correct email address**: Must use shared mailbox address, not user's address
 - **Delegated flag set**: Must be `true` when creating authentication form
@@ -485,6 +511,7 @@ Check:
 ### IMAP/SMTP Connection Fails
 
 For Microsoft 365 accounts:
+
 1. Verify IMAP/SMTP is enabled in admin center
 2. Check firewall/network connectivity
 3. Verify correct base scope selected (IMAP and SMTP)
@@ -493,6 +520,7 @@ For Microsoft 365 accounts:
 ### Token Refresh Failures
 
 If tokens fail to refresh:
+
 - **Client secret expired**: Generate new secret in Azure
 - **App permissions changed**: User may need to re-authenticate
 - **Refresh token invalid**: User needs to re-authenticate
@@ -504,14 +532,17 @@ If tokens fail to refresh:
 Microsoft enforces connection and rate limits:
 
 **Connection Limits:**
+
 - 15 concurrent IMAP connections per account
 - 30 SMTP connections per minute
 
 **Rate Limits:**
+
 - Throttling on excessive operations
 - May temporarily block account
 
 **Best Practices:**
+
 - Use sub-connections sparingly
 - Implement path filtering
 - Monitor account states for throttling
@@ -521,10 +552,12 @@ Microsoft enforces connection and rate limits:
 Microsoft Graph has separate quotas:
 
 **Throttling Limits:**
+
 - Varies by license type and tenant
 - Typically higher than IMAP limits
 
 **Best Practices:**
+
 - Implement exponential backoff
 - Use batch requests where possible
 - Monitor for throttling responses
@@ -546,6 +579,7 @@ This pre-approves the app for all users in the organization.
 ### Multi-Tenant Apps
 
 If your app supports multiple organizations:
+
 - Each organization's admin must grant consent
 - Or users can self-consent (if allowed by admin)
 - Consider different consent experiences per tenant
@@ -564,12 +598,14 @@ Set calendar reminders well before expiration.
 ### Monitoring
 
 Monitor these metrics:
+
 - Account connection states
 - Authentication error rates
 - Token refresh success rates
 - API rate limit warnings
 
 Set up alerts for:
+
 - Accounts entering error states
 - Token refresh failures
 - Client secret expiration approaching
@@ -579,12 +615,14 @@ Set up alerts for:
 ### When to Use IMAP/SMTP
 
 **Advantages:**
+
 - Simpler setup (no additional APIs)
 - Standard email protocols
 - Works with existing IMAP integrations
 - Available in all EmailEngine versions
 
 **Use Cases:**
+
 - Simple email access
 - Personal accounts
 - Legacy integrations
@@ -593,6 +631,7 @@ Set up alerts for:
 ### When to Use MS Graph API
 
 **Advantages:**
+
 - Better performance
 - Native shared mailbox support
 - Advanced Microsoft 365 features
@@ -600,28 +639,14 @@ Set up alerts for:
 - Better calendar/contacts integration potential
 
 **Use Cases:**
+
 - Shared mailboxes
 - High-volume accounts
 - Microsoft 365 enterprise features
 - Need for advanced Microsoft integrations
 
 **Requirements:**
+
 - EmailEngine v2.44+
 - More complex setup
 - Microsoft 365 (not personal accounts)
-
-## Next Steps
-
-- [Set up Gmail OAuth2 for comparison](./gmail-imap)
-- [Learn about OAuth2 token management](./oauth2-token-management)
-- [Explore general OAuth2 concepts](./oauth2-setup)
-- [Configure authentication server for custom flows](./authentication-server)
-- [Troubleshoot account issues](./troubleshooting)
-
-## See Also
-
-- [OAuth2 Configuration Documentation](/docs/configuration/oauth2-configuration)
-- [Setting Up Gmail OAuth2](./gmail-imap)
-- [Shared Mailboxes in MS365 Details](/docs/integrations/shared-mailboxes-in-ms-365)
-- [Hosted Authentication Guide](/docs/accounts/oauth2-setup)
-- [API Reference: Add Account](/docs/api/post-v-1-account)

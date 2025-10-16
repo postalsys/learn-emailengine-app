@@ -12,24 +12,17 @@ SOURCE ATTRIBUTION:
 
 # Basic Email Sending
 
-EmailEngine simplifies sending emails through registered accounts' SMTP servers. This guide covers the fundamentals of sending emails using the message submission API.
+EmailEngine simplifies sending emails through registered accounts' SMTP servers. This guide covers the fundamentals of sending emails using the [submit API](/docs/api/post-v-1-account-account-submit).
 
 ## Why It Matters
 
 When your SaaS needs to send email on behalf of a customer, direct SMTP is brittle: every provider has its own auth, rate limits, retries, and error codes. **EmailEngine** shields you from that complexity by exposing a single REST endpoint that proxies the customer's mailbox. You get consistent JSON responses and robust retry logic.
 
-## Prerequisites
-
-- EmailEngine instance running and accessible
-- API access token configured
-- An email account registered in EmailEngine
-- Account in "connected" state (IMAP sync complete)
-
 ## Step-by-Step Guide
 
 ### 1. Register the Account
 
-Before sending, register an email account in EmailEngine.
+Before sending, register an email account in EmailEngine using the [account registration API](/docs/api/post-v-1-account).
 
 **Endpoint:** `POST /v1/account`
 
@@ -548,12 +541,3 @@ Handle webhooks asynchronously:
 - Return 200 OK quickly from webhook endpoint
 - Process delivery status in background jobs
 - Implement webhook retry logic
-
-## See Also
-
-- [Replies & Forwards](./replies-forwards.md) - Reply to and forward emails
-- [Mail Merge](./mail-merge.md) - Bulk personalized sending
-- [Templates](./templates.md) - Using email templates
-- [Outbox Queue](./outbox-queue.md) - Understanding the queue system
-- [API Reference: Message Submission](https://api.emailengine.app/#operation/postV1AccountAccountSubmit)
-- [Webhook Events](../reference/webhook-events.md)

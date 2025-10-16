@@ -20,13 +20,6 @@ The EmailEngine PHP library provides a simple interface for:
 
 ## Installation
 
-### Prerequisites
-
-- PHP 7.4 or higher
-- Composer package manager
-- Running EmailEngine instance
-- EmailEngine API access token
-
 ### Install via Composer
 
 Add the EmailEngine PHP library as a dependency:
@@ -68,7 +61,7 @@ $ee = new EmailEngine([
 
 ## Registering an Email Account
 
-Use the `request()` helper method to make API calls to EmailEngine:
+Use the `request()` helper method to make API calls to EmailEngine (see: [Account Registration API](/docs/api/post-v-1-account)):
 
 ```php
 <?php
@@ -154,7 +147,7 @@ while (!$account_connected) {
 
 ## Sending Emails
 
-Once the account is connected, use the message submission endpoint:
+Once the account is connected, use the message submission endpoint (see: [Submit Message API](/docs/api/post-v-1-account-account-submit)):
 
 ```php
 <?php
@@ -224,6 +217,8 @@ $submit_response = $ee->request('post', '/v1/account/example/submit', [
 
 ### Listing Messages
 
+(See: [List Messages API](/docs/api/get-v-1-account-account-messages))
+
 ```php
 <?php
 
@@ -240,6 +235,8 @@ foreach ($messages['messages'] as $message) {
 ```
 
 ### Getting Message Details
+
+(See: [Get Message API](/docs/api/get-v-1-account-account-message-message))
 
 ```php
 <?php
@@ -609,24 +606,3 @@ $ee = new EmailEngine([
 - Check SMTP configuration
 - Verify sender address matches account
 - Check rate limits and quotas
-
-## Next Steps
-
-- Explore [API Reference](https://api.emailengine.app/) for all available endpoints
-- Learn about [Webhook Configuration](/docs/receiving/webhooks)
-- Implement [Error Handling and Logging](/docs/advanced/logging)
-- Scale with [Performance Tuning](/docs/advanced/performance-tuning)
-
-## See Also
-
-- [CRM Integration Guide](/docs/integrations/crm)
-- [Sending Emails](/docs/sending)
-- [Receiving Emails](/docs/receiving)
-- [API Authentication](/docs/api-reference)
-
-## Resources
-
-- **PHP SDK**: [packagist.org/packages/postalsys/emailengine-php](https://packagist.org/packages/postalsys/emailengine-php)
-- **API Documentation**: [api.emailengine.app](https://api.emailengine.app/)
-- **GitHub**: [EmailEngine on GitHub](https://github.com/postalsys/emailengine)
-- **Support**: [Get Help](/docs/support/license)

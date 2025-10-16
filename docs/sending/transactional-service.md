@@ -956,12 +956,3 @@ function sanitizeHeaders(data) {
   return data;
 }
 ```
-
-## See Also
-
-- [Basic Sending](/docs/sending/basic-sending) - Simple email sending examples
-- [Webhooks](/docs/receiving/webhooks) - Webhook configuration and handling
-- [Outbox Queue](/docs/sending/outbox-queue) - Queue management details
-- [API Reference](https://api.emailengine.app/#tag/Submit) - Complete API documentation
-- [Bounces](/docs/advanced/bounces) - Detailed bounce handling
-- [Queue Management](/docs/advanced/queue-management) - Understanding BullMQ queues

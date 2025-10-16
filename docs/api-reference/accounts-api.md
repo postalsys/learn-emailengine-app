@@ -114,40 +114,24 @@ Register a new email account with EmailEngine.
 
 **Examples:**
 
-**Node.js:**
-```javascript
-const response = await fetch('http://localhost:3000/v1/account', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    account: 'user@example.com',
-    name: 'John Doe',
-    imap: {
-      host: 'imap.example.com',
-      port: 993,
-      secure: true,
-      auth: {
-        user: 'user@example.com',
-        pass: 'password'
-      }
-    },
-    smtp: {
-      host: 'smtp.example.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: 'user@example.com',
-        pass: 'password'
+**cURL:**
+```bash
+curl -X POST http://localhost:3000/v1/account \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "user@example.com",
+    "name": "John Doe",
+    "imap": {
+      "host": "imap.example.com",
+      "port": 993,
+      "secure": true,
+      "auth": {
+        "user": "user@example.com",
+        "pass": "password"
       }
     }
-  })
-});
-
-const result = await response.json();
-console.log('Account registered:', result.account);
+  }'
 ```
 
 **Python:**
@@ -179,53 +163,40 @@ result = response.json()
 print(f"Account registered: {result['account']}")
 ```
 
-**PHP:**
-```php
-<?php
-$ch = curl_init('http://localhost:3000/v1/account');
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Authorization: Bearer YOUR_ACCESS_TOKEN',
-    'Content-Type: application/json'
-]);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-    'account' => 'user@example.com',
-    'name' => 'John Doe',
-    'imap' => [
-        'host' => 'imap.example.com',
-        'port' => 993,
-        'secure' => true,
-        'auth' => [
-            'user' => 'user@example.com',
-            'pass' => 'password'
-        ]
-    ]
-]));
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-$response = curl_exec($ch);
-$result = json_decode($response, true);
-echo "Account registered: " . $result['account'];
+**Pseudo code:**
 ```
-
-**cURL:**
-```bash
-curl -X POST http://localhost:3000/v1/account \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "account": "user@example.com",
-    "name": "John Doe",
-    "imap": {
-      "host": "imap.example.com",
-      "port": 993,
-      "secure": true,
-      "auth": {
-        "user": "user@example.com",
-        "pass": "password"
+// Register a new email account
+response = HTTP_POST("http://localhost:3000/v1/account", {
+  headers: {
+    "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+    "Content-Type": "application/json"
+  },
+  body: {
+    account: "user@example.com",
+    name: "John Doe",
+    imap: {
+      host: "imap.example.com",
+      port: 993,
+      secure: true,
+      auth: {
+        user: "user@example.com",
+        pass: "password"
+      }
+    },
+    smtp: {
+      host: "smtp.example.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: "user@example.com",
+        pass: "password"
       }
     }
-  }'
+  }
+})
+
+result = PARSE_JSON(response.body)
+PRINT("Account registered: " + result.account)
 ```
 
 **Response:**
@@ -261,39 +232,27 @@ Retrieve all registered accounts.
 
 **Examples:**
 
-**Node.js:**
-```javascript
-const response = await fetch('http://localhost:3000/v1/accounts?limit=50', {
-  headers: {
-    'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-  }
-});
-
-const data = await response.json();
-console.log(`Total accounts: ${data.total}`);
-data.accounts.forEach(account => {
-  console.log(`${account.account}: ${account.state}`);
-});
-```
-
-**Python:**
-```python
-response = requests.get(
-    'http://localhost:3000/v1/accounts',
-    params={'limit': 50},
-    headers={'Authorization': 'Bearer YOUR_ACCESS_TOKEN'}
-)
-
-data = response.json()
-print(f"Total accounts: {data['total']}")
-for account in data['accounts']:
-    print(f"{account['account']}: {account['state']}")
-```
-
 **cURL:**
 ```bash
 curl "http://localhost:3000/v1/accounts?limit=50" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Pseudo code:**
+```
+// List all accounts with pagination
+response = HTTP_GET("http://localhost:3000/v1/accounts?limit=50", {
+  headers: {
+    "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+  }
+})
+
+data = PARSE_JSON(response.body)
+PRINT("Total accounts: " + data.total)
+
+for each account in data.accounts {
+  PRINT(account.account + ": " + account.state)
+}
 ```
 
 **Response:**
@@ -342,41 +301,29 @@ Retrieve detailed information about a specific account.
 
 **Examples:**
 
-**Node.js:**
-```javascript
-const account = 'user@example.com';
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}`,
-  {
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-    }
-  }
-);
-
-const details = await response.json();
-console.log('Connection state:', details.state);
-console.log('Last sync:', new Date(details.syncTime));
-```
-
-**Python:**
-```python
-from urllib.parse import quote
-
-account = 'user@example.com'
-response = requests.get(
-    f'http://localhost:3000/v1/account/{quote(account)}',
-    headers={'Authorization': 'Bearer YOUR_ACCESS_TOKEN'}
-)
-
-details = response.json()
-print(f"Connection state: {details['state']}")
-```
-
 **cURL:**
 ```bash
 curl "http://localhost:3000/v1/account/user@example.com" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Pseudo code:**
+```
+// Get detailed information about a specific account
+account = "user@example.com"
+
+response = HTTP_GET(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account),
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+    }
+  }
+)
+
+details = PARSE_JSON(response.body)
+PRINT("Connection state: " + details.state)
+PRINT("Last sync: " + details.syncTime)
 ```
 
 **Response:**
@@ -429,32 +376,6 @@ Update account settings or credentials.
 
 **Examples:**
 
-**Node.js:**
-```javascript
-const account = 'user@example.com';
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}`,
-  {
-    method: 'PUT',
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      name: 'Updated Name',
-      imap: {
-        auth: {
-          pass: 'new_password'
-        }
-      }
-    })
-  }
-);
-
-const result = await response.json();
-console.log('Account updated:', result.success);
-```
-
 **cURL:**
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com" \
@@ -468,6 +389,33 @@ curl -X PUT "http://localhost:3000/v1/account/user@example.com" \
       }
     }
   }'
+```
+
+**Pseudo code:**
+```
+// Update account settings or credentials
+account = "user@example.com"
+
+response = HTTP_PUT(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account),
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: {
+      name: "Updated Name",
+      imap: {
+        auth: {
+          pass: "new_password"
+        }
+      }
+    }
+  }
+)
+
+result = PARSE_JSON(response.body)
+PRINT("Account updated: " + result.success)
 ```
 
 **Use Cases:**
@@ -487,27 +435,28 @@ Remove an account and stop synchronization.
 
 **Examples:**
 
-**Node.js:**
-```javascript
-const account = 'user@example.com';
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}`,
-  {
-    method: 'DELETE',
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-    }
-  }
-);
-
-const result = await response.json();
-console.log('Account deleted:', result.success);
-```
-
 **cURL:**
 ```bash
 curl -X DELETE "http://localhost:3000/v1/account/user@example.com" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Pseudo code:**
+```
+// Delete an account
+account = "user@example.com"
+
+response = HTTP_DELETE(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account),
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+    }
+  }
+)
+
+result = PARSE_JSON(response.body)
+PRINT("Account deleted: " + result.success)
 ```
 
 **Response:**
@@ -535,27 +484,28 @@ Force reconnection to mail server (useful after credential updates).
 
 **Examples:**
 
-**Node.js:**
-```javascript
-const account = 'user@example.com';
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/reconnect`,
-  {
-    method: 'PUT',
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-    }
-  }
-);
-
-const result = await response.json();
-console.log('Reconnection initiated:', result.success);
-```
-
 **cURL:**
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com/reconnect" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Pseudo code:**
+```
+// Force account reconnection
+account = "user@example.com"
+
+response = HTTP_PUT(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/reconnect",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+    }
+  }
+)
+
+result = PARSE_JSON(response.body)
+PRINT("Reconnection initiated: " + result.success)
 ```
 
 **Use Cases:**
@@ -630,94 +580,113 @@ Detailed state descriptions:
 
 Register multiple accounts efficiently:
 
-```javascript
-async function registerAccounts(accounts) {
-  const results = await Promise.all(
-    accounts.map(acc =>
-      fetch('http://localhost:3000/v1/account', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(acc)
-      }).then(r => r.json())
-    )
-  );
+```
+// Pseudo code: Register multiple accounts in parallel
+function registerAccounts(accounts) {
+  results = []
 
-  return results;
+  // Process accounts in parallel
+  for each acc in accounts {
+    response = HTTP_POST("http://localhost:3000/v1/account", {
+      headers: {
+        "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+        "Content-Type": "application/json"
+      },
+      body: acc
+    })
+
+    result = PARSE_JSON(response.body)
+    results = results + [result]
+  }
+
+  return results
 }
 
-const accounts = [
-  { account: 'user1@example.com', name: 'User 1', imap: { /* ... */ } },
-  { account: 'user2@example.com', name: 'User 2', imap: { /* ... */ } }
-];
+// Example usage
+accounts = [
+  { account: "user1@example.com", name: "User 1", imap: { /* ... */ } },
+  { account: "user2@example.com", name: "User 2", imap: { /* ... */ } }
+]
 
-const results = await registerAccounts(accounts);
-console.log(`Registered ${results.length} accounts`);
+results = registerAccounts(accounts)
+PRINT("Registered " + LENGTH(results) + " accounts")
 ```
 
 ### Health Monitoring
 
 Monitor account connection health:
 
-```javascript
-async function checkAccountHealth() {
-  const response = await fetch('http://localhost:3000/v1/accounts', {
-    headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
-  });
+```
+// Pseudo code: Monitor account health
+function checkAccountHealth() {
+  // Get all accounts
+  response = HTTP_GET("http://localhost:3000/v1/accounts", {
+    headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
+  })
 
-  const { accounts } = await response.json();
+  accounts = PARSE_JSON(response.body).accounts
 
-  const unhealthy = accounts.filter(
-    acc => acc.state !== 'connected' && acc.state !== 'connecting'
-  );
+  // Find unhealthy accounts
+  unhealthy = []
+  for each acc in accounts {
+    if (acc.state != "connected" AND acc.state != "connecting") {
+      unhealthy = unhealthy + [acc]
+    }
+  }
 
-  if (unhealthy.length > 0) {
-    console.warn('Unhealthy accounts:', unhealthy.map(a => a.account));
+  // Alert if issues found
+  if (LENGTH(unhealthy) > 0) {
+    PRINT("WARNING: Unhealthy accounts found")
+    for each acc in unhealthy {
+      PRINT("  - " + acc.account + ": " + acc.state)
+    }
     // Send alerts, attempt reconnection, etc.
   }
 
+  // Return summary
+  connected = FILTER(accounts, state == "connected")
   return {
-    total: accounts.length,
-    connected: accounts.filter(a => a.state === 'connected').length,
-    unhealthy: unhealthy.length
-  };
+    total: LENGTH(accounts),
+    connected: LENGTH(connected),
+    unhealthy: LENGTH(unhealthy)
+  }
 }
 
-// Run every 5 minutes
-setInterval(checkAccountHealth, 5 * 60 * 1000);
+// Run periodically (every 5 minutes)
+SCHEDULE(checkAccountHealth, interval: 5 * 60 * 1000)
 ```
 
 ### Credential Rotation
 
 Update passwords programmatically:
 
-```javascript
-async function rotateCredentials(account, newPassword) {
-  // 1. Update credentials
-  await fetch(`http://localhost:3000/v1/account/${encodeURIComponent(account)}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      imap: { auth: { pass: newPassword } },
-      smtp: { auth: { pass: newPassword } }
-    })
-  });
-
-  // 2. Force reconnection
-  await fetch(
-    `http://localhost:3000/v1/account/${encodeURIComponent(account)}/reconnect`,
+```
+// Pseudo code: Rotate account credentials
+function rotateCredentials(account, newPassword) {
+  // Step 1: Update credentials
+  HTTP_PUT(
+    "http://localhost:3000/v1/account/" + URL_ENCODE(account),
     {
-      method: 'PUT',
-      headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
+      headers: {
+        "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+        "Content-Type": "application/json"
+      },
+      body: {
+        imap: { auth: { pass: newPassword } },
+        smtp: { auth: { pass: newPassword } }
+      }
     }
-  );
+  )
 
-  console.log('Credentials rotated and reconnected');
+  // Step 2: Force reconnection to apply new credentials
+  HTTP_PUT(
+    "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/reconnect",
+    {
+      headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
+    }
+  )
+
+  PRINT("Credentials rotated and reconnected")
 }
 ```
 
@@ -725,23 +694,30 @@ async function rotateCredentials(account, newPassword) {
 
 Track sync progress:
 
-```javascript
-async function getSyncStatus(account) {
-  const response = await fetch(
-    `http://localhost:3000/v1/account/${encodeURIComponent(account)}`,
+```
+// Pseudo code: Get account sync status
+function getSyncStatus(account) {
+  // Get account details
+  response = HTTP_GET(
+    "http://localhost:3000/v1/account/" + URL_ENCODE(account),
     {
-      headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
+      headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
     }
-  );
+  )
 
-  const details = await response.json();
+  details = PARSE_JSON(response.body)
+
+  // Calculate status
+  currentTime = CURRENT_TIMESTAMP()
+  timeSinceSync = currentTime - details.syncTime
+  isHealthy = (details.state == "connected" AND details.lastError == null)
 
   return {
     state: details.state,
-    lastSync: new Date(details.syncTime),
-    timeSinceSync: Date.now() - details.syncTime,
-    isHealthy: details.state === 'connected' && !details.lastError
-  };
+    lastSync: details.syncTime,
+    timeSinceSync: timeSinceSync,
+    isHealthy: isHealthy
+  }
 }
 ```
 
@@ -788,12 +764,3 @@ For accounts stuck in error states:
 3. Test connection with manual reconnect
 4. Check mail server accessibility
 5. Review OAuth2 token expiration
-
-## See Also
-
-- [Account Setup Guides](/docs/accounts)
-- [OAuth2 Configuration](/docs/accounts/oauth2-setup)
-- [Troubleshooting Accounts](/docs/accounts/troubleshooting)
-- [Gmail Setup](/docs/accounts/gmail-api)
-- [Outlook Setup](/docs/accounts/outlook-365)
-- [Managing Accounts](/docs/accounts/managing-accounts)

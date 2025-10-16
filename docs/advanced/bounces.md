@@ -256,97 +256,106 @@ Response includes full bounce details in the `bounces` array.
 
 ## Handling Bounces in Your Application
 
-### Node.js Example
+### Implementation Example
 
-```javascript
-const express = require('express');
-const app = express();
-
-app.use(express.json());
+```
+// Pseudo code - implement in your preferred language
 
 // Store sent message IDs
-const sentMessages = new Map();
+sent_messages = {}
 
 // Send email
-async function sendEmail(to, subject, text) {
-  const response = await fetch('https://emailengine.example.com/v1/account/john@example.com/submit', {
-    method: 'POST',
-    headers: {
+function send_email(to, subject, text):
+  // Make HTTP POST request
+  response = HTTP_POST(
+    'https://emailengine.example.com/v1/account/john@example.com/submit',
+    headers={
       'Authorization': 'Bearer YOUR_TOKEN',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ to: { address: to }, subject, text })
-  });
+    body=JSON_ENCODE({
+      to: { address: to },
+      subject: subject,
+      text: text
+    })
+  )
 
-  const data = await response.json();
+  data = PARSE_JSON(response.body)
 
   // Store message ID for bounce tracking
-  sentMessages.set(data.messageId, {
-    to,
-    subject,
-    sentAt: new Date(),
+  sent_messages[data.messageId] = {
+    to: to,
+    subject: subject,
+    sentAt: CURRENT_TIMESTAMP(),
     bounced: false
-  });
-
-  return data.messageId;
-}
-
-// Webhook endpoint
-app.post('/webhooks/emailengine', async (req, res) => {
-  const webhook = req.body;
-
-  if (webhook.event === 'messageBounce') {
-    const { messageId, recipient, action, response } = webhook.data;
-
-    // Find original sent message
-    const sentMessage = sentMessages.get(messageId);
-
-    if (sentMessage) {
-      console.log(`Bounce detected for ${recipient}`);
-      console.log(`Original subject: ${sentMessage.subject}`);
-      console.log(`Bounce type: ${action}`);
-      console.log(`Error: ${response.message}`);
-
-      // Mark as bounced
-      sentMessage.bounced = true;
-      sentMessage.bounceReason = response.message;
-      sentMessage.bounceAction = action;
-
-      // Handle hard bounces
-      if (action === 'failed') {
-        console.log(`Hard bounce - removing ${recipient} from list`);
-        await removeFromMailingList(recipient);
-      }
-
-      // Handle soft bounces
-      if (action === 'delayed') {
-        console.log(`Soft bounce - retry ${recipient} later`);
-        await scheduleRetry(recipient, sentMessage.subject);
-      }
-    }
   }
 
-  res.json({ success: true });
-});
+  return data.messageId
+end function
 
-async function removeFromMailingList(email) {
+// Webhook endpoint
+function handle_webhook(request):
+  webhook = request.body
+
+  if webhook.event == 'messageBounce':
+    message_id = webhook.data.messageId
+    recipient = webhook.data.recipient
+    action = webhook.data.action
+    error_msg = webhook.data.response.message
+
+    // Find original sent message
+    sent_message = sent_messages[message_id]
+
+    if sent_message exists:
+      PRINT('Bounce detected for ' + recipient)
+      PRINT('Original subject: ' + sent_message.subject)
+      PRINT('Bounce type: ' + action)
+      PRINT('Error: ' + error_msg)
+
+      // Mark as bounced
+      sent_message.bounced = true
+      sent_message.bounceReason = error_msg
+      sent_message.bounceAction = action
+
+      // Handle hard bounces
+      if action == 'failed':
+        PRINT('Hard bounce - removing ' + recipient + ' from list')
+        CALL remove_from_mailing_list(recipient)
+      end if
+
+      // Handle soft bounces
+      if action == 'delayed':
+        PRINT('Soft bounce - retry ' + recipient + ' later')
+        CALL schedule_retry(recipient, sent_message.subject)
+      end if
+    end if
+  end if
+
+  RESPOND(200, { success: true })
+end function
+
+function remove_from_mailing_list(email):
   // Remove from your database
-  await db.mailingList.update(
-    { email },
-    { status: 'bounced', bouncedAt: new Date() }
-  );
-}
+  DATABASE_UPDATE(
+    table='mailing_list',
+    where={ email: email },
+    set={ status: 'bounced', bouncedAt: CURRENT_TIMESTAMP() }
+  )
+end function
 
-async function scheduleRetry(email, subject) {
+function schedule_retry(email, subject):
   // Schedule retry for soft bounces
-  await db.retryQueue.insert({
-    email,
-    subject,
-    retryAt: new Date(Date.now() + 3600000) // Retry in 1 hour
-  });
-}
+  retry_time = CURRENT_TIMESTAMP() + 3600  // Retry in 1 hour
 
-app.listen(3000);
+  DATABASE_INSERT(
+    table='retry_queue',
+    values={
+      email: email,
+      subject: subject,
+      retryAt: retry_time
+    }
+  )
+end function
 ```
 
 ### Python Example
@@ -524,118 +533,151 @@ function scheduleRetry($email, $subject) {
 
 Save the Message-ID when sending emails so you can correlate bounces:
 
-```javascript
-const messageId = await sendEmail(to, subject, text);
+```
+// Pseudo code - implement in your preferred language
+
+message_id = CALL send_email(to, subject, text)
 
 // Store in your database
-await db.sentEmails.insert({
-  messageId,
-  to,
-  subject,
-  sentAt: new Date()
-});
+DATABASE_INSERT(
+  table='sent_emails',
+  values={
+    messageId: message_id,
+    to: to,
+    subject: subject,
+    sentAt: CURRENT_TIMESTAMP()
+  }
+)
 ```
 
 ### 2. Differentiate Hard and Soft Bounces
 
 Handle them differently:
 
-```javascript
-if (webhook.data.action === 'failed') {
+```
+// Pseudo code - implement in your preferred language
+
+if webhook.data.action == 'failed':
   // Hard bounce - permanent failure
   // Remove from mailing list immediately
-  await removeFromMailingList(recipient);
-}
+  CALL remove_from_mailing_list(recipient)
+end if
 
-if (webhook.data.action === 'delayed') {
+if webhook.data.action == 'delayed':
   // Soft bounce - temporary failure
   // Retry after delay
-  await scheduleRetry(recipient);
-}
+  CALL schedule_retry(recipient)
+end if
 ```
 
 ### 3. Implement Retry Logic for Soft Bounces
 
 Retry soft bounces with exponential backoff:
 
-```javascript
-async function scheduleRetry(recipient, attempt = 1) {
-  const maxAttempts = 3;
+```
+// Pseudo code - implement in your preferred language
 
-  if (attempt > maxAttempts) {
+function schedule_retry(recipient, attempt=1):
+  max_attempts = 3
+
+  if attempt > max_attempts:
     // Treat as hard bounce after max attempts
-    await removeFromMailingList(recipient);
-    return;
-  }
+    CALL remove_from_mailing_list(recipient)
+    return
+  end if
 
   // Exponential backoff: 1h, 4h, 16h
-  const delayMs = Math.pow(4, attempt - 1) * 3600000;
+  delay_seconds = POWER(4, attempt - 1) * 3600
 
-  await db.retryQueue.insert({
-    recipient,
-    attempt,
-    retryAt: new Date(Date.now() + delayMs)
-  });
-}
+  DATABASE_INSERT(
+    table='retry_queue',
+    values={
+      recipient: recipient,
+      attempt: attempt,
+      retryAt: CURRENT_TIMESTAMP() + delay_seconds
+    }
+  )
+end function
 ```
 
 ### 4. Maintain Bounce Statistics
 
 Track bounce rates to identify problems:
 
-```javascript
-async function updateBounceStats(account, action) {
-  await db.stats.increment({
-    account,
-    metric: action === 'failed' ? 'hard_bounces' : 'soft_bounces',
-    date: new Date().toISOString().split('T')[0]
-  });
+```
+// Pseudo code - implement in your preferred language
+
+function update_bounce_stats(account, action):
+  // Increment bounce counter
+  if action == 'failed':
+    metric = 'hard_bounces'
+  else:
+    metric = 'soft_bounces'
+  end if
+
+  DATABASE_INCREMENT(
+    table='stats',
+    where={ account: account, date: TODAY() },
+    field=metric
+  )
 
   // Alert if bounce rate too high
-  const stats = await db.stats.find({ account, date: today });
-  const bounceRate = (stats.hard_bounces + stats.soft_bounces) / stats.sent;
+  stats = DATABASE_GET(
+    table='stats',
+    where={ account: account, date: TODAY() }
+  )
 
-  if (bounceRate > 0.05) { // 5% threshold
-    await sendAlert(`High bounce rate: ${bounceRate * 100}%`);
-  }
-}
+  bounce_rate = (stats.hard_bounces + stats.soft_bounces) / stats.sent
+
+  if bounce_rate > 0.05:  // 5% threshold
+    CALL send_alert('High bounce rate: ' + (bounce_rate * 100) + '%')
+  end if
+end function
 ```
 
 ### 5. Clean Your Mailing Lists
 
 Remove bounced addresses:
 
-```javascript
-async function removeFromMailingList(email) {
-  await db.mailingList.update(
-    { email },
-    {
+```
+// Pseudo code - implement in your preferred language
+
+function remove_from_mailing_list(email):
+  DATABASE_UPDATE(
+    table='mailing_list',
+    where={ email: email },
+    set={
       status: 'bounced',
-      bouncedAt: new Date(),
+      bouncedAt: CURRENT_TIMESTAMP(),
       unsubscribed: true
     }
-  );
+  )
 
-  console.log(`Removed ${email} from mailing list`);
-}
+  PRINT('Removed ' + email + ' from mailing list')
+end function
 ```
 
 ### 6. Log Bounce Details
 
 Keep detailed bounce logs for analysis:
 
-```javascript
-async function logBounce(webhook) {
-  await db.bounceLogs.insert({
-    messageId: webhook.data.messageId,
-    recipient: webhook.data.recipient,
-    action: webhook.data.action,
-    errorMessage: webhook.data.response.message,
-    smtpStatus: webhook.data.response.status,
-    mta: webhook.data.mta,
-    bouncedAt: new Date(webhook.date)
-  });
-}
+```
+// Pseudo code - implement in your preferred language
+
+function log_bounce(webhook):
+  DATABASE_INSERT(
+    table='bounce_logs',
+    values={
+      messageId: webhook.data.messageId,
+      recipient: webhook.data.recipient,
+      action: webhook.data.action,
+      errorMessage: webhook.data.response.message,
+      smtpStatus: webhook.data.response.status,
+      mta: webhook.data.mta,
+      bouncedAt: PARSE_TIMESTAMP(webhook.date)
+    }
+  )
+end function
 ```
 
 ## SMTP Status Codes
@@ -731,17 +773,3 @@ Make sure sent messages are stored in the correct folder.
 - Avoid spam trigger words
 - Include unsubscribe link
 - Use proper email formatting
-
-## Next Steps
-
-- Configure [Webhooks](/docs/receiving/webhooks) to receive bounce notifications
-- Set up [Pre-Processing Functions](/docs/advanced/pre-processing) to filter bounce types
-- Implement [Delivery Testing](/docs/advanced/delivery-testing) to monitor inbox placement
-- Review [Sending Best Practices](/docs/sending)
-
-## Related Resources
-
-- [DSN (Delivery Status Notification) RFC 3464](https://tools.ietf.org/html/rfc3464)
-- [SMTP Status Codes RFC 5321](https://tools.ietf.org/html/rfc5321)
-- [Webhook Events Reference](/docs/reference/webhook-events)
-- [Email Deliverability Best Practices](https://www.emaildoctor.org/)

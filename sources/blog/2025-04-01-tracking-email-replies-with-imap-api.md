@@ -7,7 +7,7 @@ tags: IMAP, IMAP API, EmailEngine
 excerpt: Reply tracking is useful when building integrations with users’ email accounts. Let’s say our service sends out emails as if these were sent by the user, eg. automated sales emails, and now the recipient replies to such message.
 ---
 
-Integrating reply tracking into your application can turn an incoming response into a meaningful event—for example, converting a cold lead into a hot opportunity the moment they reply. In this guide, we'll walk through how to:
+Integrating reply tracking into your application can turn an incoming response into a meaningful event - for example, converting a cold lead into a hot opportunity the moment they reply. In this guide, we'll walk through how to:
 
 1. Send outbound messages with a reusable `Message-ID` for tracking.
 2. Receive and inspect webhooks for new messages.
@@ -21,10 +21,10 @@ Integrating reply tracking into your application can turn an incoming response i
 When sending outbound mail, include a unique `Message-ID` header. Store this ID in your database so that replies referencing it can be matched later. Suppress some automated replies by adding `X-Auto-Response-Suppress`.
 
     // send.js
-    
+
     async function sendTrackedEmail(accountId, to, subject, html) {
       const messageId = `<${Date.now()}-${accountId}@yourdomain.com>`;
-    
+
       const payload = {
         messageId,
         headers: {
@@ -35,10 +35,10 @@ When sending outbound mail, include a unique `Message-ID` header. Store this ID 
         subject,
         html
       };
-    
+
       // Store messageId in your DB for future matching
       await saveMessageRecord({ accountId, messageId, to, subject });
-    
+
       const res = await fetch(`https://your-emailengine.com/v1/account/${accountId}/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -46,7 +46,6 @@ When sending outbound mail, include a unique `Message-ID` header. Store this ID 
       });
       return res.json();
     }
-    
 
 > **Tip:** Always persist the exact `messageId` string (including angle brackets) in your database.
 
@@ -69,25 +68,24 @@ Example notification for Gmail accounts:
         "labels": ["\\Inbox", "Leads"]
       }
     }
-    
 
 ## 3. Detecting replies
 
 1. **Check mailbox placement**: Ensure the message landed in the inbox:
+
 - For IMAP: `path === 'INBOX'`.
 - For Gmail: `data.labels.includes('\\Inbox')`.
 
 2. **Match `In-Reply-To`**: Look for `data.inReplyTo` matching any stored `messageId`.
 
-    function isReply(notification, storedMessageIds) {
-      const inReplyTo = notification.data.inReplyTo;
-      const inInbox = (
-        notification.path === 'INBOX' ||
-        (notification.data.labels || []).includes('\\Inbox')
-      );
-      return inInbox && storedMessageIds.includes(inReplyTo);
-    }
-    
+   function isReply(notification, storedMessageIds) {
+   const inReplyTo = notification.data.inReplyTo;
+   const inInbox = (
+   notification.path === 'INBOX' ||
+   (notification.data.labels || []).includes('\\Inbox')
+   );
+   return inInbox && storedMessageIds.includes(inReplyTo);
+   }
 
 ## 4. Filtering out bounces and auto-responses
 
@@ -100,7 +98,6 @@ Even with OOF suppression, some automated messages still slip through. Fetch ful
       const msg = await res.json();
       return msg.headers; // object: lowercase header name → [values]
     }
-    
 
 Check these headers:
 
@@ -119,7 +116,6 @@ Also inspect the `Subject` for prefixes like `Out of Office:` or `Auto:`.
         headers['list-id'] || headers['list-unsubscribe']
       );
     }
-    
 
 ## 5. Finalizing reply detection
 
@@ -128,13 +124,13 @@ If a message passes all checks, classify it as a genuine reply. You can then:
 - **Signal lead status**: Mark the user interaction as a hot lead.
 - **Archive content**: Fetch full body and attachments via `/message/:id` for further processing.
 
-    async function processNotification(accountId, notification) {
-      const storedIds = await getStoredMessageIds(accountId);
-      if (!isReply(notification, storedIds)) return;
-    
+  async function processNotification(accountId, notification) {
+  const storedIds = await getStoredMessageIds(accountId);
+  if (!isReply(notification, storedIds)) return;
+
       const headers = await fetchHeaders(accountId, notification.data.id);
       if (isAutomated(headers)) return;
-    
+
       // Genuine reply!
       await markLeadAsReplied(notification.data.inReplyTo);
       // Optionally, fetch full content:
@@ -142,7 +138,7 @@ If a message passes all checks, classify it as a genuine reply. You can then:
         `https://your-emailengine.com/v1/account/${accountId}/message/${notification.data.id}`
       ).then(r => r.json());
       // Process fullMsg.text, attachments, etc.
-    }
-    
+
+  }
 
 And that’s it! With these steps, you’ll reliably detect replies and trigger workflows based on genuine user responses.

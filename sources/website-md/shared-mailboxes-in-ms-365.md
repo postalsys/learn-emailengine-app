@@ -214,11 +214,11 @@ Here's how to structure your API call:
 - **`oauth2.auth.delegatedUser`**: The email address or MS365 user ID of the shared mailbox.
 - **`oauth2.auth.delegatedAccount`**: The EmailEngine account ID of the main user (e.g., `"my-account"`).
 
-#### Request — **POST `/v1/account`**
+#### Request - **POST `/v1/account`**
 
-``` json
+```json
 {
-  "account": "shared",                     // optional; null ⇒ auto-generated
+  "account": "shared", // optional; null ⇒ auto-generated
   "name": "Shared Account",
   "email": "shared@example.com",
   "oauth2": {
@@ -303,22 +303,22 @@ With updated permissions:
 - **Add New Shared Mailboxes**: Use the [Account API](https://api.emailengine.app/#operation/postV1Account) as previously described.
 - **Reconnect Existing Mailboxes**: If shared mailboxes were added before, use the [Reconnect API](https://api.emailengine.app/#operation/putV1AccountAccountReconnect) to refresh their access.
 
-## Registering a Microsoft 365 shared mailbox *without* adding the user’s personal account
+## Registering a Microsoft 365 shared mailbox _without_ adding the user’s personal account
 
 If you only need the shared mailbox, create **one** EmailEngine account for it and let an authorised user grant consent during OAuth 2.0 login.
 
-#### Request — **POST `/v1/account`**
+#### Request - **POST `/v1/account`**
 
-``` json
+```json
 {
-  "account": "shared",                     // optional; null ⇒ auto-generated
-  "name":   "Shared mailbox",
-  "email":  "shared@example.com",
+  "account": "shared", // optional; null ⇒ auto-generated
+  "name": "Shared mailbox",
+  "email": "shared@example.com",
 
   "oauth2": {
-    "provider":   "AAABkwrwyA8AAAAm",      // ID of the MS365 OAuth2 provider in EmailEngine
-    "authorize":  true,                    // ask EmailEngine to return an auth URL
-    "redirectUrl":"https://emailengine.app/", // user is sent here after consent
+    "provider": "AAABkwrwyA8AAAAm", // ID of the MS365 OAuth2 provider in EmailEngine
+    "authorize": true, // ask EmailEngine to return an auth URL
+    "redirectUrl": "https://emailengine.app/", // user is sent here after consent
 
     "auth": {
       "delegatedUser": "shared@example.com" // address or objectId of the shared mailbox
@@ -329,20 +329,20 @@ If you only need the shared mailbox, create **one** EmailEngine account for it a
 
 #### Response
 
-``` json
+```json
 {
   "redirect": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=e887..."
 }
 ```
 
 Send the `redirect` URL to a user who **already has Full Access** to the shared mailbox.  
-After they sign in and accept the scopes, EmailEngine stores the tokens and the new *shared* account appears in the account listing. A separate personal-mailbox account is **not** required.
+After they sign in and accept the scopes, EmailEngine stores the tokens and the new _shared_ account appears in the account listing. A separate personal-mailbox account is **not** required.
 
 ##### Field notes
 
 - **`account`** – unique EmailEngine ID; set `null` to auto-generate.
 - **`email`** – email address of the shared mailbox. Usually identical to `oauth2.auth.delegatedUser` unless you provide an objectId in that field.
-- **`oauth2.auth.delegatedUser`** – the shared mailbox’s address or objectId, *not* the credentials of the user who signs in.
+- **`oauth2.auth.delegatedUser`** – the shared mailbox’s address or objectId, _not_ the credentials of the user who signs in.
 - The signing-in user’s own mailbox is never added to EmailEngine; their login is used solely to authorise the shared mailbox.
 
 Once consent is complete, call any EmailEngine REST endpoint against the `"shared"` account exactly as you would for a normal mailbox.

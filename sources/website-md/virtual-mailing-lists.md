@@ -184,7 +184,7 @@ Allow recipients to unsubscribe
 
 When using [Mail Merge](https://docs.emailengine.app/mail-merge-with-emailengine/) to send emails, EmailEngine allows specifying an additional property, `listId`. If this value is set, EmailEngine treats the message as a virtual mailing list email.
 
-EmailEngine does not have "real" mailing list capabilities—there are no contact lists, segmentation rules, or recorded history. Almost everything you'd expect from a mailing list manager is missing. Virtual mailing lists provide only a single feature: **list-unsubscribe**.
+EmailEngine does not have "real" mailing list capabilities - there are no contact lists, segmentation rules, or recorded history. Almost everything you'd expect from a mailing list manager is missing. Virtual mailing lists provide only a single feature: **list-unsubscribe**.
 
 Sometimes, for legal reasons, it might be necessary to offer an unsubscribe option to recipients. Building all the required components only to support unsubscribing can be tedious, so EmailEngine provides this feature for you.
 
@@ -216,7 +216,7 @@ In addition to the `listId` value, there's an extra template variable `rcpt.unsu
 
 Example:
 
-``` bash
+```bash
 curl -XPOST "https://example.com/v1/account/example/submit" \
   -H "Content-type: application/json" \
   -H "Authorization: Bearer test123" \
@@ -243,7 +243,7 @@ If you want to manually unsubscribe recipients from specific lists, you can use 
 
 Example:
 
-``` bash
+```bash
 curl -XPOST "https://example.com/v1/blocklist/my.special.list" \
   -H "Content-type: application/json" \
   -H "Authorization: Bearer test123" \

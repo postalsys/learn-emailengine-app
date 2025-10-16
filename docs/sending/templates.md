@@ -36,10 +36,10 @@ You can manage templates in two ways:
 
 ### Via API
 
-Create a template using the Templates API:
+Create a template using the [create template API](/docs/api/post-v-1-account-account-template):
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/templates" \
+curl -XPOST "https://ee.example.com/v1/account/{account}/template" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -367,8 +367,10 @@ HTML:
 
 ### List All Templates
 
+Retrieve all templates using the [list templates API](/docs/api/get-v-1-account-account-templates):
+
 ```bash
-curl "https://ee.example.com/v1/templates" \
+curl "https://ee.example.com/v1/account/{account}/templates" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -395,8 +397,10 @@ curl "https://ee.example.com/v1/templates" \
 
 ### Get Template Details
 
+Use the [get template API](/docs/api/get-v-1-account-account-template-template):
+
 ```bash
-curl "https://ee.example.com/v1/templates/AAABgUIbuG0AAAAE" \
+curl "https://ee.example.com/v1/account/{account}/template/AAABgUIbuG0AAAAE" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -417,8 +421,10 @@ curl "https://ee.example.com/v1/templates/AAABgUIbuG0AAAAE" \
 
 ### Update Template
 
+Use the [update template API](/docs/api/put-v-1-account-account-template-template):
+
 ```bash
-curl -XPUT "https://ee.example.com/v1/templates/AAABgUIbuG0AAAAE" \
+curl -XPUT "https://ee.example.com/v1/account/{account}/template/AAABgUIbuG0AAAAE" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -431,8 +437,10 @@ Only include fields you want to update.
 
 ### Delete Template
 
+Use the [delete template API](/docs/api/delete-v-1-account-account-template-template):
+
 ```bash
-curl -XDELETE "https://ee.example.com/v1/templates/AAABgUIbuG0AAAAE" \
+curl -XDELETE "https://ee.example.com/v1/account/{account}/template/AAABgUIbuG0AAAAE" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -606,10 +614,3 @@ Subject: {{{params.subject}}}
 - Ensure all `{{#if}}` have matching `{{/if}}`
 - Ensure all `{{#each}}` have matching `{{/each}}`
 - Check for typos in variable names
-
-## See Also
-
-- [Mail Merge](./mail-merge.md) - Bulk sending with templates
-- [Basic Sending](./basic-sending.md) - Email sending fundamentals
-- [API Reference: Templates](https://api.emailengine.app/#tag/templates)
-- [Handlebars Documentation](https://handlebarsjs.com/)

@@ -19,13 +19,6 @@ Configure Nginx as a reverse proxy in front of EmailEngine to enable HTTPS, load
 
 **Source:** This guide is based on the [original documentation](https://emailengine.app/expose-public-https).
 
-## Prerequisites
-
-- EmailEngine installed and running
-- Domain name pointing to your server
-- Root/sudo access to server
-- Port 80 and 443 available
-
 ## Quick Start
 
 ### 1. Install Nginx
@@ -807,20 +800,3 @@ server {
     }
 }
 ```
-
-## See Also
-
-- [Installation Guide](/docs/installation/set-up)
-- [Docker Deployment](/docs/deployment/docker)
-- [SystemD Service](/docs/deployment/systemd)
-- [Security Guide](/docs/deployment/security)
-- [Monitoring Setup](/docs/advanced/monitoring)
-- [Performance Tuning](/docs/advanced/performance-tuning)
-
-## References
-
-- [Nginx Documentation](https://nginx.org/en/docs/)
-- [Nginx Proxy Module](https://nginx.org/en/docs/http/ngx_http_proxy_module.html)
-- [Complete Nginx Config Example](https://raw.githubusercontent.com/postalsys/emailengine/master/systemd/nginx-proxy.conf)
-- [Let's Encrypt](https://letsencrypt.org/)
-- [Acme.sh](https://acme.sh/)

@@ -1114,10 +1114,3 @@ journalctl -u emailengine -f
    curl http://localhost:3000/v1/settings \
      -H "Authorization: Bearer TOKEN"
    ```
-
-## See Also
-
-- [API Reference](../api-reference) - Complete API documentation
-- [Troubleshooting Guide](../troubleshooting) - Common issues and solutions
-- [Webhook Events](./webhook-events.md) - Webhook event reference
-- [Configuration Reference](../configuration) - Configuration options

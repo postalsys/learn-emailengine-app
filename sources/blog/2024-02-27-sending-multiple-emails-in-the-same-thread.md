@@ -12,7 +12,7 @@ excerpt: Keep your follow‑up emails in the same conversation by generating you
 
 ## Why it matters
 
-Email clients rely on the RFC 5322 `Message‑ID` and `References` headers—never on SMTP commands—to decide which messages belong together. If you let EmailEngine autogenerate those values, your perfectly timed sequence may scatter across the inbox. By controlling them yourself, every follow‑up lands exactly where the user expects.
+Email clients rely on the RFC 5322 `Message‑ID` and `References` headers to decide which messages belong together. If you let EmailEngine autogenerate those values, your perfectly timed sequence may scatter across the inbox. By controlling them yourself, every follow‑up lands exactly where the user expects.
 
 ## Step‑by‑step
 
@@ -28,9 +28,8 @@ Email clients rely on the RFC 5322 `Message‑ID` and `References` headers—n
         "html": "<p>First message in thread!</p>",
         "messageId": "<56b3c6d2-f7c0-4272-8beb-e25fdb7c19f1@example.com>"
       }'
-    
 
-*Save the `messageId` value—you’ll need it for every reply.*
+_Save the `messageId` value - you’ll need it for every reply._
 
 ### 2. **Add the first follow‑up**
 
@@ -47,7 +46,6 @@ Email clients rely on the RFC 5322 `Message‑ID` and `References` headers—n
           "references": "<56b3c6d2-f7c0-4272-8beb-e25fdb7c19f1@example.com>"
         }
       }'
-    
 
 ### 3. **Keep extending `references`**
 
@@ -56,13 +54,12 @@ Each subsequent call appends the current message’s ID:
     "headers": {
       "references": "<56b3c6d2-f7c0-4272-8beb-e25fdb7c19f1@example.com> <77a7c383-cc1a-44c6-9866-96b2873e3322@example.com>"
     }
-    
 
 ## Common pitfalls
 
 > ⚠️ **Missing angle brackets** – Wrap every ID in `< >` or some clients ignore the header.
 
-> 💡 **Subject drift** – Changing the subject (beyond adding *Re:*) breaks the thread despite perfect headers.
+> 💡 **Subject drift** – Changing the subject (beyond adding _Re:_) breaks the thread despite perfect headers.
 
 > 🚧 **Gmail limit** – Gmail reads only the last 20 `References` entries. If your sequence is longer, drop the oldest IDs.
 

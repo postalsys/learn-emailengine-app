@@ -532,21 +532,3 @@ redis-cli --latency
 - Increase worker threads
 
 [Performance tuning →](../advanced/performance-tuning.md)
-
-## Next Steps
-
-Choose your deployment method and follow the detailed guide:
-
-1. [Docker Deployment](./docker.md) - Containerized deployment
-2. [SystemD Service](./systemd.md) - Linux service
-3. [Render Deployment](./render.md) - Managed platform
-4. [Nginx Proxy Setup](./nginx-proxy.md) - HTTPS configuration
-5. [Security Hardening](./security.md) - Production security
-
-## See Also
-
-- [Installation Guide](/docs/installation/set-up)
-- [Configuration Overview](/docs/configuration)
-- [Performance Tuning](/docs/advanced/performance-tuning)
-- [Monitoring Setup](/docs/advanced/monitoring)
-- [Troubleshooting](/docs/troubleshooting)

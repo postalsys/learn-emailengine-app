@@ -49,6 +49,8 @@ connectError → (wait/retry) → connecting → connected
 
 #### IMAP/SMTP with Password
 
+Register a new account using the [account registration API](/docs/api/post-v-1-account):
+
 ```bash
 curl -X POST https://your-ee.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -281,6 +283,8 @@ curl "https://your-ee.com/v1/accounts?page=1&pageSize=20" \
 
 ### Update Basic Information
 
+Use the [update account API](/docs/api/put-v-1-account-account):
+
 ```bash
 curl -X PUT https://your-ee.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -480,7 +484,7 @@ Account will reconnect and resume syncing.
 
 ## Deleting Accounts
 
-Permanently remove an account from EmailEngine:
+Permanently remove an account from EmailEngine using the [delete account API](/docs/api/delete-v-1-account-account):
 
 ```bash
 curl -X DELETE https://your-ee.com/v1/account/user123 \
@@ -646,37 +650,38 @@ curl "https://your-ee.com/v1/accounts?state=connectError" \
 
 ### Set Up Monitoring Alerts
 
-**Example Node.js monitoring script:**
+**Example monitoring script (pseudo code):**
 
-```javascript
-const fetch = require('node-fetch');
+```
+// Pseudo code - implement in your preferred language
 
-async function checkAccountHealth() {
-  const response = await fetch('https://your-ee.com/v1/accounts', {
+function CHECK_ACCOUNT_HEALTH() {
+  response = HTTP_GET('https://your-ee.com/v1/accounts', {
     headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
-  });
+  })
 
-  const { accounts } = await response.json();
+  data = PARSE_JSON(response.body)
+  accounts = data.accounts
 
-  const errorAccounts = accounts.filter(
-    a => a.state === 'authenticationError' || a.state === 'connectError'
-  );
+  errorAccounts = FILTER(accounts, function(account) {
+    return account.state == 'authenticationError' OR account.state == 'connectError'
+  })
 
-  if (errorAccounts.length > 0) {
-    console.error(`${errorAccounts.length} accounts in error state:`);
-    errorAccounts.forEach(a => {
-      console.error(`- ${a.account} (${a.email}): ${a.state}`);
-    });
+  if LENGTH(errorAccounts) > 0 {
+    PRINT(LENGTH(errorAccounts) + " accounts in error state:")
+    for each account in errorAccounts {
+      PRINT("- " + account.account + " (" + account.email + "): " + account.state)
+    }
 
     // Send alert (email, Slack, PagerDuty, etc.)
-    await sendAlert(errorAccounts);
+    SEND_ALERT(errorAccounts)
   } else {
-    console.log('All accounts healthy');
+    PRINT("All accounts healthy")
   }
 }
 
 // Run every 5 minutes
-setInterval(checkAccountHealth, 5 * 60 * 1000);
+SCHEDULE_INTERVAL(CHECK_ACCOUNT_HEALTH, 300000)  // 5 minutes in milliseconds
 ```
 
 ## Bulk Operations
@@ -712,29 +717,30 @@ done < accounts.csv
 
 ### Update Multiple Accounts
 
-```javascript
-const accounts = ['user1', 'user2', 'user3'];
+```
+// Pseudo code - implement in your preferred language
 
-async function updateAllAccounts(updates) {
-  for (const account of accounts) {
-    await fetch(`https://your-ee.com/v1/account/${account}`, {
-      method: 'PUT',
+accounts = ['user1', 'user2', 'user3']
+
+function UPDATE_ALL_ACCOUNTS(updates) {
+  for each account in accounts {
+    HTTP_PUT('https://your-ee.com/v1/account/' + account, {
       headers: {
         'Authorization': 'Bearer YOUR_TOKEN',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(updates)
-    });
+      body: JSON_ENCODE(updates)
+    })
 
-    // Rate limit
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Rate limit - wait 100ms between requests
+    SLEEP(100)
   }
 }
 
 // Enable sub-connections for all accounts
-await updateAllAccounts({
+UPDATE_ALL_ACCOUNTS({
   subconnections: ['\\Sent']
-});
+})
 ```
 
 ### Delete Multiple Accounts
@@ -759,76 +765,79 @@ done
 
 ### Trial Period Handling
 
-```javascript
-async function handleTrialExpiry(accountId) {
+```
+// Pseudo code - implement in your preferred language
+
+function HANDLE_TRIAL_EXPIRY(accountId) {
   // Disable account when trial expires
-  await fetch(`https://your-ee.com/v1/account/${accountId}`, {
-    method: 'PUT',
+  HTTP_PUT('https://your-ee.com/v1/account/' + accountId, {
     headers: {
       'Authorization': 'Bearer YOUR_TOKEN',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ disabled: true })
-  });
+    body: JSON_ENCODE({ disabled: true })
+  })
 
-  console.log(`Account ${accountId} disabled - trial expired`);
+  PRINT("Account " + accountId + " disabled - trial expired")
 }
 
 // Re-enable when user subscribes
-async function handleSubscription(accountId) {
-  await fetch(`https://your-ee.com/v1/account/${accountId}`, {
-    method: 'PUT',
+function HANDLE_SUBSCRIPTION(accountId) {
+  HTTP_PUT('https://your-ee.com/v1/account/' + accountId, {
     headers: {
       'Authorization': 'Bearer YOUR_TOKEN',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ disabled: false })
-  });
+    body: JSON_ENCODE({ disabled: false })
+  })
 
-  console.log(`Account ${accountId} re-enabled - subscription active`);
+  PRINT("Account " + accountId + " re-enabled - subscription active")
 }
 ```
 
 ### Automatic Reconnection
 
-```javascript
-async function autoReconnectErrorAccounts() {
-  const response = await fetch('https://your-ee.com/v1/accounts', {
+```
+// Pseudo code - implement in your preferred language
+
+function AUTO_RECONNECT_ERROR_ACCOUNTS() {
+  response = HTTP_GET('https://your-ee.com/v1/accounts', {
     headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
-  });
+  })
 
-  const { accounts } = await response.json();
+  data = PARSE_JSON(response.body)
+  accounts = data.accounts
 
-  for (const account of accounts) {
-    if (account.state === 'connectError') {
-      console.log(`Reconnecting ${account.account}...`);
+  for each account in accounts {
+    if account.state == 'connectError' {
+      PRINT("Reconnecting " + account.account + "...")
 
-      await fetch(`https://your-ee.com/v1/account/${account.account}/reconnect`, {
-        method: 'PUT',
+      HTTP_PUT('https://your-ee.com/v1/account/' + account.account + '/reconnect', {
         headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
-      });
+      })
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      SLEEP(1000)  // Wait 1 second between reconnect attempts
     }
   }
 }
 
 // Run every hour
-setInterval(autoReconnectErrorAccounts, 60 * 60 * 1000);
+SCHEDULE_INTERVAL(AUTO_RECONNECT_ERROR_ACCOUNTS, 3600000)  // 60 * 60 * 1000 ms
 ```
 
 ### Credential Rotation
 
-```javascript
-async function rotateAccountPassword(accountId, newPassword) {
+```
+// Pseudo code - implement in your preferred language
+
+function ROTATE_ACCOUNT_PASSWORD(accountId, newPassword) {
   // Update password
-  await fetch(`https://your-ee.com/v1/account/${accountId}`, {
-    method: 'PUT',
+  HTTP_PUT('https://your-ee.com/v1/account/' + accountId, {
     headers: {
       'Authorization': 'Bearer YOUR_TOKEN',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
+    body: JSON_ENCODE({
       imap: {
         auth: { pass: newPassword }
       },
@@ -836,15 +845,14 @@ async function rotateAccountPassword(accountId, newPassword) {
         auth: { pass: newPassword }
       }
     })
-  });
+  })
 
   // Trigger reconnection
-  await fetch(`https://your-ee.com/v1/account/${accountId}/reconnect`, {
-    method: 'PUT',
+  HTTP_PUT('https://your-ee.com/v1/account/' + accountId + '/reconnect', {
     headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
-  });
+  })
 
-  console.log(`Password rotated for ${accountId}`);
+  PRINT("Password rotated for " + accountId)
 }
 ```
 
@@ -875,55 +883,64 @@ test123 (not meaningful)
 
 Always check response status:
 
-```javascript
-const response = await fetch('https://your-ee.com/v1/account', {
-  method: 'POST',
+```
+// Pseudo code - implement in your preferred language
+
+response = HTTP_POST('https://your-ee.com/v1/account', {
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
     'Content-Type': 'application/json'
   },
-  body: JSON.stringify(accountData)
-});
+  body: JSON_ENCODE(accountData)
+})
 
-if (!response.ok) {
-  const error = await response.json();
-  console.error('Failed to add account:', error.error);
+if response.statusCode != 200 {
+  error = PARSE_JSON(response.body)
+  PRINT("Failed to add account: " + error.error)
 
   // Handle specific errors
-  if (error.code === 'AccountExists') {
+  if error.code == 'AccountExists' {
     // Account already exists, update instead
-    await updateAccount(accountData);
-  } else if (error.code === 'AuthFailed') {
+    UPDATE_ACCOUNT(accountData)
+  } else if error.code == 'AuthFailed' {
     // Invalid credentials
-    notifyUser('Invalid email credentials');
+    NOTIFY_USER('Invalid email credentials')
   }
 
-  return;
+  return
 }
 
-const result = await response.json();
-console.log('Account added:', result.account);
+result = PARSE_JSON(response.body)
+PRINT("Account added: " + result.account)
 ```
 
 ### Rate Limiting
 
 Respect EmailEngine's rate limits:
 
-```javascript
+```
+// Pseudo code - implement in your preferred language
+
 // Sequential with delay
-async function addMultipleAccounts(accounts) {
-  for (const account of accounts) {
-    await addAccount(account);
-    await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
+function ADD_MULTIPLE_ACCOUNTS(accounts) {
+  for each account in accounts {
+    ADD_ACCOUNT(account)
+    SLEEP(100)  // 100ms delay between requests
   }
 }
 
-// Batch with Promise.all (faster but respect limits)
-async function addAccountsBatch(accounts, batchSize = 5) {
-  for (let i = 0; i < accounts.length; i += batchSize) {
-    const batch = accounts.slice(i, i + batchSize);
-    await Promise.all(batch.map(addAccount));
-    await new Promise(resolve => setTimeout(resolve, 1000)); // 1s between batches
+// Batch processing (faster but respect limits)
+function ADD_ACCOUNTS_BATCH(accounts, batchSize = 5) {
+  for i = 0 to LENGTH(accounts) step batchSize {
+    batch = SLICE(accounts, i, i + batchSize)
+
+    // Process batch in parallel
+    for each account in batch {
+      ASYNC_ADD_ACCOUNT(account)
+    }
+
+    WAIT_FOR_ALL_ASYNC()  // Wait for all parallel requests to complete
+    SLEEP(1000)  // 1 second between batches
   }
 }
 ```
@@ -931,46 +948,33 @@ async function addAccountsBatch(accounts, batchSize = 5) {
 ### Security
 
 **Never log credentials:**
-```javascript
-// Bad
-console.log('Adding account:', accountData);
+```
+// Bad - DO NOT DO THIS
+PRINT("Adding account:", accountData)  // Logs passwords!
 
-// Good
-console.log('Adding account:', accountData.account, accountData.email);
+// Good - Only log non-sensitive fields
+PRINT("Adding account:", accountData.account, accountData.email)
 ```
 
 **Use environment variables for tokens:**
-```javascript
-const EMAILENGINE_TOKEN = process.env.EMAILENGINE_TOKEN;
+```
+// Read token from environment variable
+EMAILENGINE_TOKEN = GET_ENV_VARIABLE('EMAILENGINE_TOKEN')
 ```
 
 **Validate input:**
-```javascript
-function validateAccountData(data) {
-  if (!data.account || !data.email) {
-    throw new Error('Missing required fields');
+```
+// Pseudo code - implement in your preferred language
+
+function VALIDATE_ACCOUNT_DATA(data) {
+  if NOT data.account OR NOT data.email {
+    THROW_ERROR('Missing required fields')
   }
 
-  if (!/^[a-zA-Z0-9_-]+$/.test(data.account)) {
-    throw new Error('Invalid account ID format');
+  if NOT REGEX_MATCH(data.account, '^[a-zA-Z0-9_-]+$') {
+    THROW_ERROR('Invalid account ID format')
   }
 
   // ... more validation
 }
 ```
-
-## Next Steps
-
-- [Learn about troubleshooting accounts](./troubleshooting)
-- [Set up OAuth2 authentication](./oauth2-setup)
-- [Configure performance optimization](/docs/advanced/performance-tuning)
-- [Explore webhook configuration](/docs/receiving/webhooks)
-
-## See Also
-
-- [API Reference: Add Account](/docs/api/post-v-1-account)
-- [API Reference: List Accounts](/docs/api/get-v-1-accounts)
-- [API Reference: Update Account](/docs/api/put-v-1-account-account)
-- [API Reference: Delete Account](/docs/api/delete-v-1-account-account)
-- [API Reference: Reconnect Account](/docs/api/put-v-1-account-account-reconnect)
-- [Performance Tuning Guide](/docs/advanced/performance-tuning)

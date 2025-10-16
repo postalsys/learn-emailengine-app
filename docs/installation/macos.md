@@ -16,8 +16,6 @@ EmailEngine can be installed on macOS using three methods:
 2. **Binary Installation** - Standalone executable with Homebrew Redis
 3. **Source Installation** - Run from source (requires Node.js 20+)
 
-## Prerequisites
-
 ### System Requirements
 
 **Minimum (development/testing):**
@@ -448,18 +446,3 @@ kill -9 <PID>
 
 # Or change port in .env or launch agent plist
 ```
-
-## Next Steps
-
-1. [Create your first email account](/docs/accounts)
-2. [Configure OAuth2 for Gmail/Outlook](/docs/accounts/oauth2-setup)
-3. [Set up webhooks](/docs/receiving/webhooks)
-4. [Review security best practices](/docs/deployment/security)
-
-## See Also
-
-- [Linux Installation](/docs/installation/linux)
-- [Windows Installation](/docs/installation/windows)
-- [Docker Installation](/docs/installation/docker)
-- [Source Installation](/docs/installation/source)
-- [Configuration Options](/docs/configuration)

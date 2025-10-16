@@ -16,8 +16,6 @@ EmailEngine can be installed on Linux using three methods:
 2. **Binary Installation** - Standalone executable (all distributions)
 3. **Source Installation** - Run from source for production (requires Node.js 20+)
 
-## Prerequisites
-
 ### System Requirements
 
 **Minimum (development/testing):**
@@ -639,20 +637,3 @@ redis-cli INFO stats
 # Prometheus metrics (if enabled)
 curl http://localhost:9090/metrics
 ```
-
-## Next Steps
-
-1. [Create your first email account](/docs/accounts)
-2. [Configure OAuth2 for Gmail/Outlook](/docs/accounts/oauth2-setup)
-3. [Set up webhooks](/docs/receiving/webhooks)
-4. [Review security best practices](/docs/deployment/security)
-5. [Configure monitoring](/docs/deployment/monitoring)
-
-## See Also
-
-- [Docker Installation](/docs/installation/docker)
-- [macOS Installation](/docs/installation/macos)
-- [Windows Installation](/docs/installation/windows)
-- [Source Installation](/docs/installation/source)
-- [SystemD Service Guide](/docs/deployment/systemd)
-- [Configuration Options](/docs/configuration)

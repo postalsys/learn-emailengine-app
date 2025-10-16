@@ -229,7 +229,7 @@ EmailEngine includes [Arena](https://github.com/bee-queue/arena), a web UI for B
 
 ### API Access
 
-Query queue status via API:
+Query queue status via the [outbox API](/docs/api/get-v-1-outbox):
 
 ```bash
 # Get queue summary
@@ -669,11 +669,3 @@ for (let i = 0; i < messages.length; i += batchSize) {
   });
 }
 ```
-
-## See Also
-
-- [Basic Sending](./basic-sending.md) - Email sending fundamentals
-- [Mail Merge](./mail-merge.md) - Bulk sending
-- [Performance Tuning](../advanced/performance-tuning.md) - Optimize queue performance
-- [Webhook Events](../reference/webhook-events.md) - Complete webhook reference
-- [BullMQ Documentation](https://docs.bullmq.io/)

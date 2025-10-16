@@ -24,6 +24,7 @@ Major email providers (Gmail, Outlook) are deprecating password-based authentica
 - **iCloud**: Requires app-specific passwords
 
 However:
+
 - Many IMAP client libraries don't support OAuth2
 - Scripts and automation tools expect username/password authentication
 - OAuth2 token management is complex for simple scripts
@@ -42,11 +43,13 @@ Gmail/Outlook IMAP Server
 ```
 
 **Your client:**
+
 - Connects to EmailEngine's proxy as if it were an IMAP server
 - Authenticates with account ID + short-lived access token
 - Uses standard IMAP commands
 
 **EmailEngine:**
+
 - Looks up OAuth2 credentials for the account
 - Establishes real IMAP session with provider (OAuth2)
 - Relays IMAP session between client and provider
@@ -57,6 +60,7 @@ Gmail/Outlook IMAP Server
 ### OAuth2 Without Native Support
 
 Access OAuth2-protected accounts using any IMAP client:
+
 - No OAuth2 library required
 - Works with standard IMAP clients
 - Transparent OAuth2 handling
@@ -64,6 +68,7 @@ Access OAuth2-protected accounts using any IMAP client:
 ### Short-Lived Access Tokens
 
 Instead of long-lived passwords:
+
 - Generate temporary access tokens via API
 - Tokens can be scoped (e.g., imap-proxy only)
 - Tokens can be revoked instantly
@@ -72,6 +77,7 @@ Instead of long-lived passwords:
 ### Standard IMAP Protocol
 
 Full IMAP compatibility:
+
 - All IMAP commands supported
 - Works with any IMAP client
 - Use with Thunderbird, Outlook, scripts, etc.
@@ -80,6 +86,7 @@ Full IMAP compatibility:
 ### Centralized Management
 
 Manage all accounts in EmailEngine:
+
 - Single place for OAuth2 configuration
 - Automatic token refresh
 - Connection monitoring
@@ -153,10 +160,11 @@ telnet localhost 2143
 ```
 
 :::tip Port Selection
+
 - **2993**: Common choice for TLS-enabled IMAP proxy (993 + 2000)
 - **2143**: Common choice for non-TLS proxy (143 + 2000)
 - Choose any available port that doesn't conflict with existing services
-:::
+  :::
 
 ### Step 3: Add OAuth2 Account to EmailEngine
 
@@ -174,7 +182,7 @@ The account must be configured to use **IMAP/SMTP**, not Gmail API or MS Graph A
 
 ### Step 4: Generate Access Token for Proxy
 
-Create an access token scoped specifically for IMAP proxy access:
+Create an access token scoped specifically for IMAP proxy access using the [Generate Token API endpoint](/docs/api/post-v-1-token):
 
 ```bash
 curl -X POST https://your-ee.com/v1/token \
@@ -205,15 +213,17 @@ curl -X POST https://your-ee.com/v1/token \
 }
 ```
 
-Save this token—you'll use it as the IMAP password.
+Save this token - you'll use it as the IMAP password.
 
 :::tip Token Scopes
 If you also want to use the same token for SMTP proxy, include both scopes:
+
 ```json
 {
   "scopes": ["imap-proxy", "smtp"]
 }
 ```
+
 :::
 
 ### Step 5: Connect via IMAP Client
@@ -253,6 +263,7 @@ B LIST "" "*"
 Configure your email client with these settings:
 
 **IMAP Settings:**
+
 - **Server**: `localhost` (or EmailEngine server IP)
 - **Port**: `2993` (your configured proxy port)
 - **Security**: SSL/TLS (if you enabled TLS)
@@ -262,6 +273,7 @@ Configure your email client with these settings:
 **Example: Thunderbird**
 
 ![Thunderbird configuration with EmailEngine proxy](https://cldup.com/content/images/2022/08/Screenshot-2022-08-24-at-13.09.26.png)
+
 <!-- Shows: Thunderbird account settings using EmailEngine IMAP proxy -->
 
 1. Add new account
@@ -296,33 +308,30 @@ print(f'Found {len(messages[0].split())} messages')
 mail.logout()
 ```
 
-#### Using Node.js Script
+#### Using Generic IMAP Client
 
-```javascript
-const Imap = require('imap');
+```
+// Pseudo code - use any IMAP library in your preferred language
 
-const imap = new Imap({
-  user: 'user123',
-  password: '6cad01dae08f...458576a026c1ec',
-  host: 'localhost',
+connection = IMAP_CONNECT({
+  user: "user123",
+  password: "6cad01dae08f...458576a026c1ec",
+  host: "localhost",
   port: 2993,
   tls: true,
   tlsOptions: {
     rejectUnauthorized: false  // Only for self-signed certs
   }
-});
+})
 
-imap.once('ready', () => {
-  imap.openBox('INBOX', false, (err, box) => {
-    if (err) throw err;
+if CONNECTION_READY(connection) {
+  mailbox = OPEN_MAILBOX(connection, "INBOX", readOnly: false)
 
-    console.log(`INBOX has ${box.messages.total} messages`);
-
-    imap.end();
-  });
-});
-
-imap.connect();
+  if mailbox {
+    PRINT("INBOX has " + mailbox.messageCount + " messages")
+    CLOSE_CONNECTION(connection)
+  }
+}
 ```
 
 ## Access Token Management
@@ -332,6 +341,7 @@ imap.connect();
 Generate tokens for specific purposes:
 
 **Backup Script Token:**
+
 ```bash
 curl -X POST https://your-ee.com/v1/token \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -344,6 +354,7 @@ curl -X POST https://your-ee.com/v1/token \
 ```
 
 **Admin Access Token (Multiple Scopes):**
+
 ```bash
 curl -X POST https://your-ee.com/v1/token \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -400,6 +411,7 @@ curl -X DELETE https://your-ee.com/v1/token/6cad01dae08f...458576a026c1ec \
 ```
 
 After revocation:
+
 - Token can no longer authenticate
 - Active connections using that token remain open until they disconnect
 - Client will be unable to reconnect with that token
@@ -465,6 +477,7 @@ curl -X POST https://your-ee.com/v1/token \
 ```
 
 **Common CIDR Ranges:**
+
 - `127.0.0.0/8` - Localhost only
 - `10.0.0.0/8` - Private network (10.x.x.x)
 - `172.16.0.0/12` - Private network (172.16-31.x.x)
@@ -499,6 +512,7 @@ offlineimap -c ~/.offlineimaprc-via-proxy
 ```
 
 **~/.offlineimaprc-via-proxy:**
+
 ```ini
 [general]
 accounts = EmailEngineProxy
@@ -530,6 +544,7 @@ Use standard email clients with OAuth2 accounts:
 - **Mobile clients**: Configure IMAP settings
 
 Benefits:
+
 - Users don't need to know about OAuth2
 - Centralized credential management
 - Easy to revoke access
@@ -538,18 +553,21 @@ Benefits:
 
 Test email integration without complex OAuth2 setup:
 
-```javascript
-// Simple IMAP test script
-const imap = new Imap({
-  user: 'test-account',
-  password: 'test-token-12345',
-  host: 'localhost',
+```
+// Pseudo code - simple IMAP test script
+
+connection = IMAP_CONNECT({
+  user: "test-account",
+  password: "test-token-12345",
+  host: "localhost",
   port: 2993,
-  tls: false  // Development only
-});
+  tls: false  // Development only - use TLS in production!
+})
 
 // Test IMAP functionality
-imap.connect();
+if CONNECTION_READY(connection) {
+  PRINT("Connected successfully!")
+}
 ```
 
 ### Monitoring and Alerting
@@ -589,6 +607,7 @@ EmailEngine also provides an SMTP proxy. With both enabled, email clients get fu
 In EmailEngine: **Configuration** → **SMTP Proxy Interface**
 
 **Settings:**
+
 - **Host**: `0.0.0.0`
 - **Port**: `2587` (or your choice)
 - **TLS**: Enabled (recommended)
@@ -609,6 +628,7 @@ curl -X POST https://your-ee.com/v1/token \
 ### Configure Email Client
 
 **Incoming (IMAP):**
+
 - Server: `emailengine.company.com`
 - Port: `2993`
 - Security: SSL/TLS
@@ -616,6 +636,7 @@ curl -X POST https://your-ee.com/v1/token \
 - Password: `6cad01dae08...`
 
 **Outgoing (SMTP):**
+
 - Server: `emailengine.company.com`
 - Port: `2587`
 - Security: STARTTLS
@@ -631,6 +652,7 @@ Now the email client can both send and receive through EmailEngine's proxies.
 Always use TLS for production:
 
 **Why TLS is Important:**
+
 - Protects tokens in transit
 - Prevents eavesdropping
 - Required for compliance
@@ -650,6 +672,7 @@ Always use TLS for production:
 Treat proxy tokens like passwords:
 
 **Do:**
+
 - Generate separate tokens for different purposes
 - Use IP restrictions where possible
 - Rotate tokens regularly
@@ -657,6 +680,7 @@ Treat proxy tokens like passwords:
 - Store tokens securely (environment variables, secret managers)
 
 **Don't:**
+
 - Commit tokens to version control
 - Share tokens between applications
 - Use tokens without IP restrictions for production
@@ -679,6 +703,7 @@ iptables -A INPUT -p tcp --dport 2993 -j DROP
 **VPN Access:**
 
 For remote access, use VPN instead of exposing proxy publicly:
+
 - Users connect to company VPN
 - Proxy only accessible from VPN network
 - Additional authentication layer
@@ -688,11 +713,13 @@ For remote access, use VPN instead of exposing proxy publicly:
 Monitor proxy usage:
 
 **Access Logs:**
+
 - Log all authentication attempts
 - Track successful vs failed logins
 - Alert on suspicious patterns
 
 **Rate Limiting:**
+
 - Implement connection rate limits
 - Prevent brute force attacks
 - Monitor for abuse
@@ -702,12 +729,14 @@ Monitor proxy usage:
 ### Cannot Connect to Proxy
 
 **Symptoms:**
+
 ```
 Connection refused
 Connection timed out
 ```
 
 **Solutions:**
+
 1. Verify proxy is enabled in EmailEngine
 2. Check firewall allows connections on proxy port
 3. Verify host/port settings
@@ -716,6 +745,7 @@ Connection timed out
 ### Authentication Fails
 
 **Symptoms:**
+
 ```
 A NO [AUTHENTICATIONFAILED] ...
 ```
@@ -723,32 +753,39 @@ A NO [AUTHENTICATIONFAILED] ...
 **Solutions:**
 
 **Wrong credentials:**
+
 - Verify account ID is correct
 - Verify token is correct (copy-paste errors)
 
 **IP restriction:**
+
 ```
 A NO [AUTHENTICATIONFAILED] Access denied, traffic not accepted from this IP
 ```
+
 - Check your IP address: `curl ifconfig.me`
 - Verify token's IP restrictions
 - Update restrictions or create new token
 
 **Token revoked:**
+
 - Token may have been deleted
 - Generate new token
 
 **Account not found:**
+
 - Account ID doesn't exist in EmailEngine
 - Check account ID spelling
 
 ### Connection Drops
 
 **Symptoms:**
+
 - Connection works briefly then disconnects
 - Timeouts during operations
 
 **Solutions:**
+
 1. Check EmailEngine logs for errors
 2. Verify upstream IMAP server is accessible
 3. Check network stability
@@ -757,6 +794,7 @@ A NO [AUTHENTICATIONFAILED] Access denied, traffic not accepted from this IP
 ### TLS Certificate Errors
 
 **Symptoms:**
+
 ```
 Certificate verification failed
 SSL handshake failed
@@ -765,14 +803,17 @@ SSL handshake failed
 **Solutions:**
 
 **Self-signed certificate:**
+
 - For development: Configure client to accept self-signed certs
 - For production: Use proper CA-signed certificate
 
 **Expired certificate:**
+
 - Renew certificate
 - Update EmailEngine configuration
 
 **Hostname mismatch:**
+
 - Certificate must match hostname used to connect
 - Use same hostname in certificate and connection
 
@@ -781,6 +822,7 @@ SSL handshake failed
 ### Connection Pooling
 
 EmailEngine maintains persistent connections:
+
 - Reduces connection overhead
 - Faster operation execution
 - Efficient resource usage
@@ -788,6 +830,7 @@ EmailEngine maintains persistent connections:
 ### Concurrent Connections
 
 Monitor simultaneous connections:
+
 - Each proxy connection uses one upstream IMAP connection
 - Provider connection limits still apply (typically 10-15)
 - Don't exceed provider limits
@@ -797,26 +840,13 @@ Monitor simultaneous connections:
 For many concurrent users:
 
 **Load Balancing:**
+
 - Deploy multiple EmailEngine instances
 - Use load balancer for proxy connections
 - Distribute accounts across instances
 
 **Monitoring:**
+
 - Track connection count
 - Monitor resource usage
 - Alert on capacity issues
-
-## Next Steps
-
-- [Learn about OAuth2 setup](./oauth2-setup)
-- [Set up Gmail OAuth2](./gmail-imap)
-- [Set up Outlook OAuth2](./outlook-365)
-- [Manage accounts effectively](./managing-accounts)
-- [Troubleshoot connection issues](./troubleshooting)
-
-## See Also
-
-- [IMAP Proxy Configuration](/docs/accounts/proxying-connections)
-- [SMTP Proxy Configuration](/docs/accounts/proxying-connections)
-- [API Reference: Create Token](/docs/api/post-v-1-token)
-- [API Reference: Delete Token](/docs/api/delete-v-1-token-token)

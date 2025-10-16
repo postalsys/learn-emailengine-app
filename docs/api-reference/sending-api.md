@@ -71,98 +71,35 @@ Or simplified:
 
 **Simple Email:**
 
-**Node.js:**
-```javascript
-const account = 'user@example.com';
+**Pseudo code:**
+```
+// Send a simple email
+account = "user@example.com"
 
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/submit`,
+response = HTTP_POST(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
   {
-    method: 'POST',
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify({
+    body: {
       to: [
         {
-          name: 'Jane Smith',
-          address: 'jane@example.com'
+          name: "Jane Smith",
+          address: "jane@example.com"
         }
       ],
-      subject: 'Hello from EmailEngine',
-      text: 'This is a test email sent via the API.',
-      html: '<p>This is a test email sent via the API.</p>'
-    })
-  }
-);
-
-const result = await response.json();
-console.log('Message sent:', result.messageId);
-console.log('Queue ID:', result.queueId);
-```
-
-**Python:**
-```python
-from urllib.parse import quote
-
-account = 'user@example.com'
-
-response = requests.post(
-    f'http://localhost:3000/v1/account/{quote(account)}/submit',
-    headers={
-        'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-        'Content-Type': 'application/json'
-    },
-    json={
-        'to': [{'address': 'jane@example.com', 'name': 'Jane Smith'}],
-        'subject': 'Hello from EmailEngine',
-        'text': 'This is a test email sent via the API.'
+      subject: "Hello from EmailEngine",
+      text: "This is a test email sent via the API.",
+      html: "<p>This is a test email sent via the API.</p>"
     }
+  }
 )
 
-result = response.json()
-print(f"Message sent: {result['messageId']}")
-```
-
-**PHP:**
-```php
-<?php
-$account = urlencode('user@example.com');
-$ch = curl_init("http://localhost:3000/v1/account/$account/submit");
-
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Authorization: Bearer YOUR_ACCESS_TOKEN',
-    'Content-Type: application/json'
-]);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-    'to' => [['address' => 'jane@example.com']],
-    'subject' => 'Hello from EmailEngine',
-    'text' => 'This is a test email sent via the API.'
-]));
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-$response = curl_exec($ch);
-$result = json_decode($response, true);
-echo "Message sent: " . $result['messageId'];
-```
-
-**cURL:**
-```bash
-curl -X POST "http://localhost:3000/v1/account/user@example.com/submit" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "to": [
-      {
-        "address": "jane@example.com",
-        "name": "Jane Smith"
-      }
-    ],
-    "subject": "Hello from EmailEngine",
-    "text": "This is a test email sent via the API."
-  }'
+result = PARSE_JSON(response.body)
+PRINT("Message sent: " + result.messageId)
+PRINT("Queue ID: " + result.queueId)
 ```
 
 **Response:**
@@ -176,79 +113,88 @@ curl -X POST "http://localhost:3000/v1/account/user@example.com/submit" \
 
 **HTML Email with Attachments:**
 
-```javascript
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/submit`,
+**Pseudo code:**
+```
+// Send HTML email with PDF attachment
+account = "user@example.com"
+
+response = HTTP_POST(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
   {
-    method: 'POST',
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      to: [{ address: 'client@example.com' }],
-      subject: 'Invoice #12345',
-      html: '<h1>Invoice</h1><p>Please find your invoice attached.</p>',
+    body: {
+      to: [{ address: "client@example.com" }],
+      subject: "Invoice #12345",
+      html: "<h1>Invoice</h1><p>Please find your invoice attached.</p>",
       attachments: [
         {
-          filename: 'invoice.pdf',
-          content: 'base64_encoded_content_here',
-          encoding: 'base64',
-          contentType: 'application/pdf'
+          filename: "invoice.pdf",
+          content: "base64_encoded_content_here",
+          encoding: "base64",
+          contentType: "application/pdf"
         }
       ]
-    })
+    }
   }
-);
+)
 ```
 
 **Reply to Email:**
 
-```javascript
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/submit`,
+**Pseudo code:**
+```
+// Reply to an existing message
+account = "user@example.com"
+
+response = HTTP_POST(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
   {
-    method: 'POST',
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      to: [{ address: 'original-sender@example.com' }],
-      subject: 'Re: Original Subject',
-      text: 'This is my reply.',
+    body: {
+      to: [{ address: "original-sender@example.com" }],
+      subject: "Re: Original Subject",
+      text: "This is my reply.",
       reference: {
-        message: 'AAAABAABNc',  // ID of message being replied to
-        action: 'reply'
+        message: "AAAABAABNc",  // ID of message being replied to
+        action: "reply"
       }
-    })
+    }
   }
-);
+)
 ```
 
 **Forward Email:**
 
-```javascript
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/submit`,
+**Pseudo code:**
+```
+// Forward an existing message
+account = "user@example.com"
+
+response = HTTP_POST(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
   {
-    method: 'POST',
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      to: [{ address: 'colleague@example.com' }],
-      subject: 'Fwd: Original Subject',
-      text: 'See forwarded message below.',
+    body: {
+      to: [{ address: "colleague@example.com" }],
+      subject: "Fwd: Original Subject",
+      text: "See forwarded message below.",
       reference: {
-        message: 'AAAABAABNc',
-        action: 'forward',
+        message: "AAAABAABNc",
+        action: "forward",
         attachments: true  // Include original attachments
       }
-    })
+    }
   }
-);
+)
 ```
 
 ### Webhooks
@@ -312,50 +258,53 @@ Same as Submit API, plus:
 
 **Queue Immediate Send:**
 
-```javascript
-const account = 'user@example.com';
+**Pseudo code:**
+```
+// Queue email for immediate delivery
+account = "user@example.com"
 
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/outbox`,
+response = HTTP_POST(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/outbox",
   {
-    method: 'POST',
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      to: [{ address: 'subscriber@example.com' }],
-      subject: 'Newsletter January 2025',
-      html: '<h1>This month in news...</h1>'
-    })
+    body: {
+      to: [{ address: "subscriber@example.com" }],
+      subject: "Newsletter January 2025",
+      html: "<h1>This month in news...</h1>"
+    }
   }
-);
+)
 
-const result = await response.json();
-console.log('Queued:', result.queueId);
+result = PARSE_JSON(response.body)
+PRINT("Queued: " + result.queueId)
 ```
 
 **Schedule Email:**
 
-```javascript
-const sendAt = new Date('2025-01-20T09:00:00Z').toISOString();
+**Pseudo code:**
+```
+// Schedule email for future delivery
+account = "user@example.com"
+sendAt = "2025-01-20T09:00:00Z"  // ISO 8601 timestamp
 
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/outbox`,
+response = HTTP_POST(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/outbox",
   {
-    method: 'POST',
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      to: [{ address: 'client@example.com' }],
-      subject: 'Meeting Reminder',
-      text: 'Reminder: Meeting tomorrow at 10 AM.',
+    body: {
+      to: [{ address: "client@example.com" }],
+      subject: "Meeting Reminder",
+      text: "Reminder: Meeting tomorrow at 10 AM.",
       sendAt: sendAt
-    })
+    }
   }
-);
+)
 ```
 
 **Response:**
@@ -379,21 +328,26 @@ const response = await fetch(
 
 **Example:**
 
-```javascript
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/outbox?limit=50`,
+**Pseudo code:**
+```
+// List outbox messages with pagination
+account = "user@example.com"
+
+response = HTTP_GET(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/outbox?limit=50",
   {
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
     }
   }
-);
+)
 
-const data = await response.json();
-console.log(`Queued messages: ${data.total}`);
-data.messages.forEach(msg => {
-  console.log(`${msg.queueId}: ${msg.subject} - ${msg.status}`);
-});
+data = PARSE_JSON(response.body)
+PRINT("Queued messages: " + data.total)
+
+for each msg in data.messages {
+  PRINT(msg.queueId + ": " + msg.subject + " - " + msg.status)
+}
 ```
 
 **Response:**
@@ -421,21 +375,23 @@ data.messages.forEach(msg => {
 
 **Example:**
 
-```javascript
-const queueId = 'outbox_789ghi';
+**Pseudo code:**
+```
+// Get details of specific outbox message
+queueId = "outbox_789ghi"
 
-const response = await fetch(
-  `http://localhost:3000/v1/outbox/${queueId}`,
+response = HTTP_GET(
+  "http://localhost:3000/v1/outbox/" + queueId,
   {
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
     }
   }
-);
+)
 
-const message = await response.json();
-console.log('Status:', message.status);
-console.log('Attempts:', message.attempts);
+message = PARSE_JSON(response.body)
+PRINT("Status: " + message.status)
+PRINT("Attempts: " + message.attempts)
 ```
 
 **Response:**
@@ -458,21 +414,22 @@ console.log('Attempts:', message.attempts);
 
 **Example:**
 
-```javascript
-const queueId = 'outbox_789ghi';
+**Pseudo code:**
+```
+// Cancel queued outbox message
+queueId = "outbox_789ghi"
 
-const response = await fetch(
-  `http://localhost:3000/v1/outbox/${queueId}`,
+response = HTTP_DELETE(
+  "http://localhost:3000/v1/outbox/" + queueId,
   {
-    method: 'DELETE',
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
     }
   }
-);
+)
 
-const result = await response.json();
-console.log('Message cancelled:', result.success);
+result = PARSE_JSON(response.body)
+PRINT("Message cancelled: " + result.success)
 ```
 
 **Note:** Can only cancel messages with status `queued`. Messages already `sending` or `sent` cannot be cancelled.
@@ -638,175 +595,216 @@ Best practice: Always provide both `text` and `html` for maximum compatibility.
 
 ### Simple Email
 
-```javascript
-await fetch(`http://localhost:3000/v1/account/${account}/submit`, {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    to: [{ address: 'user@example.com' }],
-    subject: 'Hello',
-    text: 'Hello, World!'
-  })
-});
+**Pseudo code:**
+```
+// Send simple text email
+account = "user@example.com"
+
+HTTP_POST(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: {
+      to: [{ address: "user@example.com" }],
+      subject: "Hello",
+      text: "Hello, World!"
+    }
+  }
+)
 ```
 
 ### HTML Email with Attachments
 
-```javascript
-await fetch(`http://localhost:3000/v1/account/${account}/submit`, {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    to: [{ address: 'client@example.com', name: 'John Doe' }],
-    subject: 'Your Invoice',
-    html: '<h1>Invoice</h1><p>Attached is your invoice.</p>',
-    text: 'Invoice\n\nAttached is your invoice.',
-    attachments: [
-      {
-        filename: 'invoice.pdf',
-        content: fs.readFileSync('invoice.pdf').toString('base64'),
-        encoding: 'base64',
-        contentType: 'application/pdf'
-      }
-    ]
-  })
-});
+**Pseudo code:**
+```
+// Send HTML email with PDF attachment
+account = "user@example.com"
+
+// Read file and encode as base64
+pdfContent = READ_FILE_AS_BASE64("invoice.pdf")
+
+HTTP_POST(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: {
+      to: [{ address: "client@example.com", name: "John Doe" }],
+      subject: "Your Invoice",
+      html: "<h1>Invoice</h1><p>Attached is your invoice.</p>",
+      text: "Invoice\n\nAttached is your invoice.",
+      attachments: [
+        {
+          filename: "invoice.pdf",
+          content: pdfContent,
+          encoding: "base64",
+          contentType: "application/pdf"
+        }
+      ]
+    }
+  }
+)
 ```
 
 ### Reply to Email
 
-```javascript
+**Pseudo code:**
+```
 // 1. Get original message to reply to
-const originalMsg = await fetch(
-  `http://localhost:3000/v1/account/${account}/message/${messageId}`,
-  { headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' } }
-).then(r => r.json());
+account = "user@example.com"
+messageId = "AAAABAABNc"
+
+response = HTTP_GET(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId,
+  {
+    headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
+  }
+)
+
+originalMsg = PARSE_JSON(response.body)
 
 // 2. Send reply
-await fetch(`http://localhost:3000/v1/account/${account}/submit`, {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    to: [originalMsg.from],
-    subject: `Re: ${originalMsg.subject}`,
-    text: 'This is my reply.',
-    reference: {
-      message: messageId,
-      action: 'reply'
+HTTP_POST(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: {
+      to: [originalMsg.from],
+      subject: "Re: " + originalMsg.subject,
+      text: "This is my reply.",
+      reference: {
+        message: messageId,
+        action: "reply"
+      }
     }
-  })
-});
+  }
+)
 ```
 
 ### Forward Email
 
-```javascript
-await fetch(`http://localhost:3000/v1/account/${account}/submit`, {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    to: [{ address: 'colleague@example.com' }],
-    subject: `Fwd: ${originalMsg.subject}`,
-    text: '---------- Forwarded message ---------\n\n' + originalMsg.text.plain,
-    reference: {
-      message: messageId,
-      action: 'forward',
-      attachments: true
+**Pseudo code:**
+```
+// Forward email with attachments
+account = "user@example.com"
+messageId = "AAAABAABNc"
+originalMsg = /* retrieved earlier */
+
+HTTP_POST(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: {
+      to: [{ address: "colleague@example.com" }],
+      subject: "Fwd: " + originalMsg.subject,
+      text: "---------- Forwarded message ---------\n\n" + originalMsg.text.plain,
+      reference: {
+        message: messageId,
+        action: "forward",
+        attachments: true
+      }
     }
-  })
-});
+  }
+)
 ```
 
 ### Templated Emails
 
-```javascript
+**Pseudo code:**
+```
+// Simple template replacement function
 function generateEmail(template, data) {
   return {
     to: [{ address: data.email, name: data.name }],
-    subject: template.subject.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key]),
-    html: template.html.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key]),
-    text: template.text.replace(/\{\{(\w+)\}\}/g, (_, key) => data[key])
-  };
+    subject: REPLACE_TEMPLATE_VARS(template.subject, data),
+    html: REPLACE_TEMPLATE_VARS(template.html, data),
+    text: REPLACE_TEMPLATE_VARS(template.text, data)
+  }
 }
 
-const template = {
-  subject: 'Welcome, {{name}}!',
-  html: '<h1>Welcome {{name}}</h1><p>Your account is ready.</p>',
-  text: 'Welcome {{name}}!\n\nYour account is ready.'
-};
+// Define template with {{variable}} placeholders
+template = {
+  subject: "Welcome, {{name}}!",
+  html: "<h1>Welcome {{name}}</h1><p>Your account is ready.</p>",
+  text: "Welcome {{name}}!\n\nYour account is ready."
+}
 
-const email = generateEmail(template, {
-  name: 'John',
-  email: 'john@example.com'
-});
+// Generate email from template
+email = generateEmail(template, {
+  name: "John",
+  email: "john@example.com"
+})
 
-await fetch(`http://localhost:3000/v1/account/${account}/submit`, {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify(email)
-});
+// Send templated email
+account = "user@example.com"
+
+HTTP_POST(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: email
+  }
+)
 ```
 
 ### Bulk Sending with Outbox
 
-```javascript
-async function sendBulkCampaign(account, recipients, content) {
-  const queued = await Promise.all(
-    recipients.map(recipient =>
-      fetch(
-        `http://localhost:3000/v1/account/${encodeURIComponent(account)}/outbox`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            to: [{ address: recipient.email, name: recipient.name }],
-            subject: content.subject,
-            html: content.html.replace('{{name}}', recipient.name)
-          })
-        }
-      ).then(r => r.json())
-    )
-  );
+**Pseudo code:**
+```
+// Send bulk campaign by queuing individual emails
+function sendBulkCampaign(account, recipients, content) {
+  queued = []
 
-  console.log(`Queued ${queued.length} emails`);
-  return queued.map(q => q.queueId);
+  // Queue email for each recipient
+  for each recipient in recipients {
+    response = HTTP_POST(
+      "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/outbox",
+      {
+        headers: {
+          "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+          "Content-Type": "application/json"
+        },
+        body: {
+          to: [{ address: recipient.email, name: recipient.name }],
+          subject: content.subject,
+          html: REPLACE(content.html, "{{name}}", recipient.name)
+        }
+      }
+    )
+
+    result = PARSE_JSON(response.body)
+    queued.append(result.queueId)
+  }
+
+  PRINT("Queued " + LENGTH(queued) + " emails")
+  return queued
 }
 
-const recipients = [
-  { email: 'user1@example.com', name: 'User 1' },
-  { email: 'user2@example.com', name: 'User 2' }
+// Example usage
+account = "user@example.com"
+
+recipients = [
+  { email: "user1@example.com", name: "User 1" },
+  { email: "user2@example.com", name: "User 2" }
   // ... thousands more
-];
+]
 
-const queueIds = await sendBulkCampaign(account, recipients, {
-  subject: 'Newsletter',
-  html: '<h1>Hi {{name}}</h1>'
-});
+queueIds = sendBulkCampaign(account, recipients, {
+  subject: "Newsletter",
+  html: "<h1>Hi {{name}}</h1>"
+})
 ```
-
-## See Also
-
-- [Basic Sending](/docs/sending/basic-sending)
-- [Outbox Queue](/docs/sending/outbox-queue)
-- [Replies & Forwards](/docs/sending/replies-forwards)
-- [Email Templates](/docs/sending/templates)
-- [Threading](/docs/sending/threading)
-- [Webhooks](/docs/receiving/webhooks)

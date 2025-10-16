@@ -102,23 +102,10 @@ Retrieve messages from a mailbox with filtering and pagination.
 
 **Examples:**
 
-**Node.js:**
-```javascript
-const account = 'user@example.com';
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/messages?path=INBOX&limit=50&unseen=true`,
-  {
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-    }
-  }
-);
-
-const data = await response.json();
-console.log(`Total messages: ${data.total}`);
-data.messages.forEach(msg => {
-  console.log(`${msg.from.address}: ${msg.subject}`);
-});
+**cURL:**
+```bash
+curl "http://localhost:3000/v1/account/user@example.com/messages?path=INBOX&limit=50&unseen=true" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 **Python:**
@@ -138,31 +125,24 @@ for msg in data['messages']:
     print(f"{msg['from']['address']}: {msg['subject']}")
 ```
 
-**PHP:**
-```php
-<?php
-$account = urlencode('user@example.com');
-$url = "http://localhost:3000/v1/account/$account/messages?path=INBOX&limit=50";
-
-$ch = curl_init($url);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Authorization: Bearer YOUR_ACCESS_TOKEN'
-]);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-$response = curl_exec($ch);
-$data = json_decode($response, true);
-
-echo "Total messages: " . $data['total'] . "\n";
-foreach ($data['messages'] as $msg) {
-    echo $msg['from']['address'] . ": " . $msg['subject'] . "\n";
-}
+**Pseudo code:**
 ```
+// List messages from a mailbox with filtering
+account = "user@example.com"
+url = "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/messages?path=INBOX&limit=50&unseen=true"
 
-**cURL:**
-```bash
-curl "http://localhost:3000/v1/account/user@example.com/messages?path=INBOX&limit=50&unseen=true" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+response = HTTP_GET(url, {
+  headers: {
+    "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+  }
+})
+
+data = PARSE_JSON(response.body)
+PRINT("Total messages: " + data.total)
+
+for each msg in data.messages {
+  PRINT(msg.from.address + ": " + msg.subject)
+}
 ```
 
 **Response:**
@@ -220,49 +200,32 @@ Retrieve complete message information including body and attachments.
 
 **Examples:**
 
-**Node.js:**
-```javascript
-const account = 'user@example.com';
-const messageId = 'AAAABAABNc';
-
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/message/${messageId}`,
-  {
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-    }
-  }
-);
-
-const message = await response.json();
-console.log('Subject:', message.subject);
-console.log('From:', message.from.address);
-console.log('Text:', message.text.plain);
-console.log('Attachments:', message.attachments.length);
-```
-
-**Python:**
-```python
-from urllib.parse import quote
-
-account = 'user@example.com'
-message_id = 'AAAABAABNc'
-
-response = requests.get(
-    f'http://localhost:3000/v1/account/{quote(account)}/message/{message_id}',
-    headers={'Authorization': 'Bearer YOUR_ACCESS_TOKEN'}
-)
-
-message = response.json()
-print(f"Subject: {message['subject']}")
-print(f"From: {message['from']['address']}")
-print(f"Text: {message['text']['plain']}")
-```
-
 **cURL:**
 ```bash
 curl "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Pseudo code:**
+```
+// Get complete message details
+account = "user@example.com"
+messageId = "AAAABAABNc"
+
+response = HTTP_GET(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId,
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+    }
+  }
+)
+
+message = PARSE_JSON(response.body)
+PRINT("Subject: " + message.subject)
+PRINT("From: " + message.from.address)
+PRINT("Text: " + message.text.plain)
+PRINT("Attachments: " + LENGTH(message.attachments))
 ```
 
 **Response:**
@@ -312,30 +275,34 @@ Retrieve raw RFC822 message source.
 
 **Examples:**
 
-**Node.js:**
-```javascript
-const account = 'user@example.com';
-const messageId = 'AAAABAABNc';
-
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/message/${messageId}/source`,
-  {
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-    }
-  }
-);
-
-const source = await response.text();
-console.log('Raw message source:', source);
-// Save to file, parse with email library, etc.
-```
-
 **cURL:**
 ```bash
 curl "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc/source" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -o message.eml
+```
+
+**Pseudo code:**
+```
+// Get raw RFC822 message source
+account = "user@example.com"
+messageId = "AAAABAABNc"
+
+response = HTTP_GET(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId + "/source",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+    }
+  }
+)
+
+source = response.body  // Raw text content
+PRINT("Raw message source:")
+PRINT(source)
+
+// Can save to file or parse with email library
+SAVE_TO_FILE("message.eml", source)
 ```
 
 **Use Cases:**
@@ -376,49 +343,6 @@ Change message flags like read/unread, flagged, etc.
 
 **Examples:**
 
-**Node.js:**
-```javascript
-// Mark message as read and flagged
-const account = 'user@example.com';
-const messageId = 'AAAABAABNc';
-
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/message/${messageId}`,
-  {
-    method: 'PUT',
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      flags: {
-        add: ['\\Seen', '\\Flagged']
-      }
-    })
-  }
-);
-
-const result = await response.json();
-console.log('Flags updated:', result.success);
-```
-
-**Python:**
-```python
-# Mark message as unread
-response = requests.put(
-    f'http://localhost:3000/v1/account/{quote(account)}/message/{message_id}',
-    headers={
-        'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-        'Content-Type': 'application/json'
-    },
-    json={
-        'flags': {
-            'delete': ['\\Seen']
-        }
-    }
-)
-```
-
 **cURL:**
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc" \
@@ -429,6 +353,47 @@ curl -X PUT "http://localhost:3000/v1/account/user@example.com/message/AAAABAABN
       "add": ["\\Seen"]
     }
   }'
+```
+
+**Pseudo code:**
+```
+// Example 1: Mark message as read and flagged
+account = "user@example.com"
+messageId = "AAAABAABNc"
+
+response = HTTP_PUT(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId,
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: {
+      flags: {
+        add: ["\\Seen", "\\Flagged"]
+      }
+    }
+  }
+)
+
+result = PARSE_JSON(response.body)
+PRINT("Flags updated: " + result.success)
+
+// Example 2: Mark message as unread (remove Seen flag)
+response = HTTP_PUT(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId,
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: {
+      flags: {
+        delete: ["\\Seen"]
+      }
+    }
+  }
+)
 ```
 
 **Use Cases:**
@@ -456,50 +421,36 @@ Move a message to a different mailbox.
 
 **Examples:**
 
-**Node.js:**
-```javascript
-// Move message to Archive folder
-const account = 'user@example.com';
-const messageId = 'AAAABAABNc';
-
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/message/${messageId}/move`,
-  {
-    method: 'PUT',
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      path: 'Archive'
-    })
-  }
-);
-
-const result = await response.json();
-console.log('Message moved:', result.success);
-console.log('New message ID:', result.id);
-```
-
-**Python:**
-```python
-# Move to Spam folder
-response = requests.put(
-    f'http://localhost:3000/v1/account/{quote(account)}/message/{message_id}/move',
-    headers={
-        'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-        'Content-Type': 'application/json'
-    },
-    json={'path': 'Spam'}
-)
-```
-
 **cURL:**
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc/move" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"path": "Archive"}'
+```
+
+**Pseudo code:**
+```
+// Move message to a different mailbox
+account = "user@example.com"
+messageId = "AAAABAABNc"
+
+response = HTTP_PUT(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId + "/move",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: {
+      path: "Archive"
+    }
+  }
+)
+
+result = PARSE_JSON(response.body)
+PRINT("Message moved: " + result.success)
+PRINT("New message ID: " + result.id)
 ```
 
 **Response:**
@@ -537,36 +488,6 @@ Delete a message permanently or move to trash.
 
 **Examples:**
 
-**Node.js:**
-```javascript
-// Move to Trash (soft delete)
-const account = 'user@example.com';
-const messageId = 'AAAABAABNc';
-
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/message/${messageId}`,
-  {
-    method: 'DELETE',
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-    }
-  }
-);
-
-const result = await response.json();
-console.log('Message deleted:', result.success);
-```
-
-**Python:**
-```python
-# Permanently delete (force)
-response = requests.delete(
-    f'http://localhost:3000/v1/account/{quote(account)}/message/{message_id}',
-    params={'force': True},
-    headers={'Authorization': 'Bearer YOUR_ACCESS_TOKEN'}
-)
-```
-
 **cURL:**
 ```bash
 # Soft delete (move to Trash)
@@ -576,6 +497,35 @@ curl -X DELETE "http://localhost:3000/v1/account/user@example.com/message/AAAABA
 # Hard delete (permanent)
 curl -X DELETE "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc?force=true" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Pseudo code:**
+```
+// Example 1: Soft delete (move to Trash)
+account = "user@example.com"
+messageId = "AAAABAABNc"
+
+response = HTTP_DELETE(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId,
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+    }
+  }
+)
+
+result = PARSE_JSON(response.body)
+PRINT("Message deleted: " + result.success)
+
+// Example 2: Permanently delete (force)
+response = HTTP_DELETE(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId + "?force=true",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+    }
+  }
+)
 ```
 
 **Use Cases:**
@@ -623,55 +573,6 @@ Search messages using advanced query syntax.
 
 **Examples:**
 
-**Node.js:**
-```javascript
-const account = 'user@example.com';
-
-const response = await fetch(
-  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/search`,
-  {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      search: {
-        from: 'boss@example.com',
-        subject: 'urgent',
-        unseen: true
-      },
-      limit: 20
-    })
-  }
-);
-
-const results = await response.json();
-console.log(`Found ${results.total} messages`);
-```
-
-**Python:**
-```python
-# Search for large attachments from specific sender
-response = requests.post(
-    f'http://localhost:3000/v1/account/{quote(account)}/search',
-    headers={
-        'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-        'Content-Type': 'application/json'
-    },
-    json={
-        'search': {
-            'from': 'client@example.com',
-            'size': {'min': 1000000}  # > 1 MB
-        }
-    }
-)
-
-results = response.json()
-for msg in results['messages']:
-    print(f"{msg['subject']} - {msg['size']} bytes")
-```
-
 **cURL:**
 ```bash
 curl -X POST "http://localhost:3000/v1/account/user@example.com/search" \
@@ -683,6 +584,55 @@ curl -X POST "http://localhost:3000/v1/account/user@example.com/search" \
       "since": "2025-01-01T00:00:00.000Z"
     }
   }'
+```
+
+**Pseudo code:**
+```
+// Example 1: Search for urgent unread messages from boss
+account = "user@example.com"
+
+response = HTTP_POST(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/search",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: {
+      search: {
+        from: "boss@example.com",
+        subject: "urgent",
+        unseen: true
+      },
+      limit: 20
+    }
+  }
+)
+
+results = PARSE_JSON(response.body)
+PRINT("Found " + results.total + " messages")
+
+// Example 2: Search for large attachments from specific sender
+response = HTTP_POST(
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/search",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: {
+      search: {
+        from: "client@example.com",
+        size: { min: 1000000 }  // > 1 MB
+      }
+    }
+  }
+)
+
+results = PARSE_JSON(response.body)
+for each msg in results.messages {
+  PRINT(msg.subject + " - " + msg.size + " bytes")
+}
 ```
 
 **Use Cases:**
@@ -765,54 +715,54 @@ curl -X POST "http://localhost:3000/v1/account/user@example.com/search" \
 
 **List Messages Filters:**
 
-```javascript
+```
 // Unread messages in INBOX
-const url = `/v1/account/${account}/messages?path=INBOX&unseen=true`;
+url = "/v1/account/" + account + "/messages?path=INBOX&unseen=true"
 
 // Flagged messages
-const url = `/v1/account/${account}/messages?flagged=true`;
+url = "/v1/account/" + account + "/messages?flagged=true"
 
 // Specific mailbox
-const url = `/v1/account/${account}/messages?path=Archive`;
+url = "/v1/account/" + account + "/messages?path=Archive"
 
 // Pagination
-const url = `/v1/account/${account}/messages?page=2&limit=100`;
+url = "/v1/account/" + account + "/messages?page=2&limit=100"
 ```
 
 ### Search Syntax
 
 **Advanced Search Examples:**
 
-```javascript
+```
 // Messages from domain
-{
+searchCriteria = {
   search: {
-    from: '@example.com'
+    from: "@example.com"
   }
 }
 
 // Date range
-{
+searchCriteria = {
   search: {
-    since: '2025-01-01T00:00:00.000Z',
-    before: '2025-02-01T00:00:00.000Z'
+    since: "2025-01-01T00:00:00.000Z",
+    before: "2025-02-01T00:00:00.000Z"
   }
 }
 
 // Multiple criteria
-{
+searchCriteria = {
   search: {
-    from: 'client@example.com',
-    subject: 'invoice',
+    from: "client@example.com",
+    subject: "invoice",
     unseen: true,
     size: { min: 100000 }
   }
 }
 
 // Body text search
-{
+searchCriteria = {
   search: {
-    body: 'urgent payment'
+    body: "urgent payment"
   }
 }
 ```
@@ -823,28 +773,33 @@ const url = `/v1/account/${account}/messages?page=2&limit=100`;
 
 Fetch all messages across pages:
 
-```javascript
-async function fetchAllMessages(account, path = 'INBOX') {
-  let page = 0;
-  let allMessages = [];
-  let hasMore = true;
+```
+// Pseudo code: Fetch all messages with pagination
+function fetchAllMessages(account, path = "INBOX") {
+  page = 0
+  allMessages = []
+  hasMore = true
 
   while (hasMore) {
-    const response = await fetch(
-      `http://localhost:3000/v1/account/${encodeURIComponent(account)}/messages?path=${path}&page=${page}&limit=100`,
-      {
-        headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
-      }
-    );
+    // Build URL with pagination
+    url = "http://localhost:3000/v1/account/" + URL_ENCODE(account) +
+          "/messages?path=" + path + "&page=" + page + "&limit=100"
 
-    const data = await response.json();
-    allMessages.push(...data.messages);
+    // Make request
+    response = HTTP_GET(url, {
+      headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
+    })
 
-    hasMore = page < data.pages - 1;
-    page++;
+    // Parse response
+    data = PARSE_JSON(response.body)
+    allMessages = allMessages + data.messages
+
+    // Check if more pages exist
+    hasMore = (page < data.pages - 1)
+    page = page + 1
   }
 
-  return allMessages;
+  return allMessages
 }
 ```
 
@@ -852,67 +807,74 @@ async function fetchAllMessages(account, path = 'INBOX') {
 
 Instead of polling, use webhooks:
 
-```javascript
-// Setup webhook for new messages
-await fetch('http://localhost:3000/v1/settings', {
-  method: 'POST',
+```
+// Step 1: Setup webhook for new messages
+HTTP_POST("http://localhost:3000/v1/settings", {
   headers: {
-    'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-    'Content-Type': 'application/json'
+    "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+    "Content-Type": "application/json"
   },
-  body: JSON.stringify({
-    webhooks: 'https://your-app.com/webhook',
-    webhookEvents: ['messageNew', 'messageDeleted']
-  })
-});
+  body: {
+    webhooks: "https://your-app.com/webhook",
+    webhookEvents: ["messageNew", "messageDeleted"]
+  }
+})
 
-// Handle webhook (Express.js example)
-app.post('/webhook', express.json(), (req, res) => {
-  const event = req.body;
+// Step 2: Handle webhook in your application
+// This is a webhook endpoint handler (pseudo code for web server)
+function handleWebhook(request, response) {
+  event = PARSE_JSON(request.body)
 
-  if (event.event === 'messageNew') {
-    console.log('New message:', event.data.subject);
+  if (event.event == "messageNew") {
+    PRINT("New message: " + event.data.subject)
     // Process new message
+    processNewMessage(event.data)
   }
 
-  res.json({ success: true });
-});
+  if (event.event == "messageDeleted") {
+    PRINT("Message deleted: " + event.data.id)
+    // Handle deletion
+  }
+
+  // Respond with success
+  response.send({ success: true })
+}
 ```
 
 ### Bulk Operations
 
 Update multiple messages:
 
-```javascript
-async function markAllAsRead(account, path = 'INBOX') {
-  const response = await fetch(
-    `http://localhost:3000/v1/account/${encodeURIComponent(account)}/messages?path=${path}&unseen=true`,
-    {
-      headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
-    }
-  );
+```
+// Pseudo code: Mark all unread messages as read
+function markAllAsRead(account, path = "INBOX") {
+  // Step 1: Get all unread messages
+  url = "http://localhost:3000/v1/account/" + URL_ENCODE(account) +
+        "/messages?path=" + path + "&unseen=true"
 
-  const { messages } = await response.json();
+  response = HTTP_GET(url, {
+    headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
+  })
 
-  await Promise.all(
-    messages.map(msg =>
-      fetch(
-        `http://localhost:3000/v1/account/${encodeURIComponent(account)}/message/${msg.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            flags: { add: ['\\Seen'] }
-          })
+  messages = PARSE_JSON(response.body).messages
+
+  // Step 2: Update each message
+  for each msg in messages {
+    HTTP_PUT(
+      "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + msg.id,
+      {
+        headers: {
+          "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+          "Content-Type": "application/json"
+        },
+        body: {
+          flags: { add: ["\\Seen"] }
         }
-      )
+      }
     )
-  );
+  }
 
-  console.log(`Marked ${messages.length} messages as read`);
+  PRINT("Marked " + LENGTH(messages) + " messages as read")
 }
 ```
 
@@ -920,39 +882,33 @@ async function markAllAsRead(account, path = 'INBOX') {
 
 Download all attachments from a message:
 
-```javascript
-async function downloadAttachments(account, messageId) {
-  // Get message details
-  const msgResponse = await fetch(
-    `http://localhost:3000/v1/account/${encodeURIComponent(account)}/message/${messageId}`,
-    {
-      headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
-    }
-  );
+```
+// Pseudo code: Download all attachments from a message
+function downloadAttachments(account, messageId) {
+  // Step 1: Get message details
+  msgUrl = "http://localhost:3000/v1/account/" + URL_ENCODE(account) +
+           "/message/" + messageId
 
-  const message = await msgResponse.json();
+  msgResponse = HTTP_GET(msgUrl, {
+    headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
+  })
 
-  // Download each attachment
-  for (const attachment of message.attachments) {
-    const attResponse = await fetch(
-      `http://localhost:3000/v1/account/${encodeURIComponent(account)}/attachment/${attachment.id}`,
-      {
-        headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
-      }
-    );
+  message = PARSE_JSON(msgResponse.body)
 
-    const blob = await attResponse.blob();
-    // Save blob to file, upload to S3, etc.
-    console.log(`Downloaded ${attachment.filename}`);
+  // Step 2: Download each attachment
+  for each attachment in message.attachments {
+    attUrl = "http://localhost:3000/v1/account/" + URL_ENCODE(account) +
+             "/attachment/" + attachment.id
+
+    attResponse = HTTP_GET(attUrl, {
+      headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
+    })
+
+    // Save to file or process
+    fileData = attResponse.body
+    SAVE_TO_FILE(attachment.filename, fileData)
+
+    PRINT("Downloaded: " + attachment.filename)
   }
 }
 ```
-
-## See Also
-
-- [Receiving Messages](/docs/receiving)
-- [Webhooks](/docs/receiving/webhooks)
-- [Attachments](/docs/receiving/attachments)
-- [Searching Messages](/docs/receiving/searching)
-- [Message Operations](/docs/receiving/message-operations)
-- [IDs Explained](/docs/advanced/ids-explained)

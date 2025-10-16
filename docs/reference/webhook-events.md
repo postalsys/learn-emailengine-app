@@ -1782,11 +1782,3 @@ https://abc123.ngrok.io/webhook
 **Test trackClick**: Enable tracking, send email with link, click it
 
 **Test listUnsubscribe**: Add List-Unsubscribe header, click unsubscribe
-
-## See Also
-
-- [Webhooks Setup Guide](/docs/receiving/webhooks) - Configure webhooks
-- [Webhooks API Reference](/docs/api-reference/webhooks-api) - Manage webhooks via API
-- [Settings API](/docs/api/post-v-1-settings) - Configure webhook behavior
-- [Queue Management](/docs/advanced/queue-management) - Monitor webhook delivery
-- [Error Codes Reference](/docs/reference/error-codes) - Error handling

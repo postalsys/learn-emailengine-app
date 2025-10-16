@@ -32,8 +32,6 @@ If your server has multiple IP addresses or network interfaces, configure EmailE
 
 EmailEngine can bind to specific local IP addresses when making outbound connections to email servers.
 
-## Prerequisites
-
 ### 1. Multiple IP Addresses
 
 Your server must have multiple IP addresses configured:
@@ -124,74 +122,81 @@ Accounts without explicit `localAddress` will use this default.
 
 Distribute accounts across multiple IPs:
 
-```javascript
-const localAddresses = [
-  '192.168.1.100',
-  '192.168.1.101',
-  '192.168.1.102'
-];
+```
+// Pseudo code - implement in your preferred language
 
-let currentIndex = 0;
+local_addresses = ['192.168.1.100', '192.168.1.101', '192.168.1.102']
+current_index = 0
 
-async function registerAccount(email, password) {
+function register_account(email, password):
   // Round-robin IP selection
-  const localAddress = localAddresses[currentIndex];
-  currentIndex = (currentIndex + 1) % localAddresses.length;
+  local_address = local_addresses[current_index]
+  current_index = (current_index + 1) MOD LENGTH(local_addresses)
 
-  const response = await fetch('http://localhost:3000/v1/account', {
-    method: 'POST',
-    headers: {
+  // Prepare request payload
+  payload = {
+    account: email,
+    name: email,
+    email: email,
+    imap: {
+      host: 'imap.gmail.com',
+      port: 993,
+      secure: true,
+      auth: { user: email, pass: password },
+      localAddress: local_address  // Assign IP
+    },
+    smtp: {
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: { user: email, pass: password },
+      localAddress: local_address  // Assign IP
+    }
+  }
+
+  // Make HTTP POST request
+  response = HTTP_POST(
+    'http://localhost:3000/v1/account',
+    headers={
       'Authorization': 'Bearer YOUR_TOKEN',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      account: email,
-      name: email,
-      email,
-      imap: {
-        host: 'imap.gmail.com',
-        port: 993,
-        secure: true,
-        auth: { user: email, pass: password },
-        localAddress  // Assign IP
-      },
-      smtp: {
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        auth: { user: email, pass: password },
-        localAddress  // Assign IP
-      }
-    })
-  });
+    body=JSON_ENCODE(payload)
+  )
 
-  return response.json();
-}
+  return PARSE_JSON(response.body)
+end function
 ```
 
 ### Method 4: Provider-Specific IPs
 
 Assign IPs based on email provider:
 
-```javascript
-function getLocalAddressForProvider(email) {
-  const domain = email.split('@')[1].toLowerCase();
+```
+// Pseudo code - implement in your preferred language
 
-  const ipMap = {
+function get_local_address_for_provider(email):
+  domain = LOWERCASE(SPLIT(email, '@')[1])
+
+  ip_map = {
     'gmail.com': '192.168.1.100',
     'outlook.com': '192.168.1.101',
     'yahoo.com': '192.168.1.102'
-  };
+  }
 
-  return ipMap[domain] || '192.168.1.100'; // Default IP
-}
+  if domain in ip_map:
+    return ip_map[domain]
+  else:
+    return '192.168.1.100'  // Default IP
+  end if
+end function
 
-async function registerAccountWithProviderIP(email, password) {
-  const localAddress = getLocalAddressForProvider(email);
+function register_account_with_provider_ip(email, password):
+  local_address = get_local_address_for_provider(email)
 
   // Register account with assigned IP
-  await registerAccount(email, password, localAddress);
-}
+  CALL register_account(email, password, local_address)
+end function
 ```
 
 ## Use Cases
@@ -200,21 +205,23 @@ async function registerAccountWithProviderIP(email, password) {
 
 Gmail limits IMAP connections per IP (typically 15 concurrent connections). Distribute accounts across IPs:
 
-```javascript
+```
+// Pseudo code - implement in your preferred language
+
 // Split 100 Gmail accounts across 10 IPs (10 accounts per IP)
-const IPS_PER_ACCOUNT_COUNT = 10;
+IPS_PER_ACCOUNT_COUNT = 10
 
-function assignIP(accountIndex) {
-  const ipSuffix = 100 + Math.floor(accountIndex / IPS_PER_ACCOUNT_COUNT);
-  return `192.168.1.${ipSuffix}`;
-}
+function assign_ip(account_index):
+  ip_suffix = 100 + FLOOR(account_index / IPS_PER_ACCOUNT_COUNT)
+  return CONCAT('192.168.1.', ip_suffix)
+end function
 
-for (let i = 0; i < gmailAccounts.length; i++) {
-  const account = gmailAccounts[i];
-  const localAddress = assignIP(i);
+for i from 0 to LENGTH(gmail_accounts) - 1:
+  account = gmail_accounts[i]
+  local_address = assign_ip(i)
 
-  await registerAccount(account.email, account.password, localAddress);
-}
+  CALL register_account(account.email, account.password, local_address)
+end for
 ```
 
 ### 2. Dedicated IPs for VIP Accounts
@@ -239,49 +246,58 @@ function getIPForAccount(email) {
 
 Rotate IPs for accounts sending high volumes:
 
-```javascript
-class IPRotator {
-  constructor(ipPool) {
-    this.ipPool = ipPool;
-    this.usageCount = new Map();
+```
+// Pseudo code - implement in your preferred language
+
+class IPRotator:
+  properties:
+    ip_pool: list
+    usage_count: dictionary
+
+  function initialize(ip_pool):
+    this.ip_pool = ip_pool
+    this.usage_count = {}
 
     // Initialize usage tracking
-    ipPool.forEach(ip => this.usageCount.set(ip, 0));
-  }
+    for each ip in ip_pool:
+      this.usage_count[ip] = 0
+    end for
+  end function
 
   // Get least-used IP
-  getLeastUsedIP() {
-    let minIP = this.ipPool[0];
-    let minCount = this.usageCount.get(minIP);
+  function get_least_used_ip():
+    min_ip = this.ip_pool[0]
+    min_count = this.usage_count[min_ip]
 
-    for (const ip of this.ipPool) {
-      const count = this.usageCount.get(ip);
-      if (count < minCount) {
-        minIP = ip;
-        minCount = count;
-      }
-    }
+    for each ip in this.ip_pool:
+      count = this.usage_count[ip]
+      if count < min_count:
+        min_ip = ip
+        min_count = count
+      end if
+    end for
 
-    this.usageCount.set(minIP, minCount + 1);
-    return minIP;
-  }
+    this.usage_count[min_ip] = min_count + 1
+    return min_ip
+  end function
 
   // Release IP (when account disconnects)
-  releaseIP(ip) {
-    const count = this.usageCount.get(ip) || 0;
-    this.usageCount.set(ip, Math.max(0, count - 1));
-  }
-}
+  function release_ip(ip):
+    count = this.usage_count[ip] OR 0
+    this.usage_count[ip] = MAX(0, count - 1)
+  end function
+end class
 
-const rotator = new IPRotator([
+// Usage
+rotator = NEW IPRotator([
   '192.168.1.100',
   '192.168.1.101',
   '192.168.1.102',
   '192.168.1.103'
-]);
+])
 
 // Assign IP to new account
-const localAddress = rotator.getLeastUsedIP();
+local_address = rotator.get_least_used_ip()
 ```
 
 ### 4. Separate IPs for Sending and Receiving
@@ -705,16 +721,3 @@ Log IP assignments for audit trails:
 ```javascript
 console.log(`Account ${email} assigned to IP ${localAddress}`);
 ```
-
-## Next Steps
-
-- Configure [Performance Tuning](/docs/advanced/performance-tuning) to optimize connection handling
-- Set up [Monitoring](/docs/advanced/monitoring) to track IP usage
-- Implement [Delivery Testing](/docs/advanced/delivery-testing) with different IPs
-- Review [Security Best Practices](/docs/deployment/security)
-
-## Related Resources
-
-- [Node.js net.Socket localAddress](https://nodejs.org/api/net.html#socketlocaladdress)
-- [Linux IP Configuration](https://linux.die.net/man/8/ip)
-- [IMAP Connection Limits by Provider](https://support.google.com/mail/answer/7126229)

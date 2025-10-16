@@ -105,7 +105,7 @@ async function sendTrackedEmail(accountId, recipient, subject, content) {
 
   // Send email
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/submit`,
+    `https://your-emailengine.com/v1/account/${accountId}/submit`, // See: /docs/api/post-v-1-account-account-submit
     {
       method: 'POST',
       headers: {
@@ -498,7 +498,7 @@ function isAutoResponse(message) {
 // Get message details
 async function getMessage(accountId, messageId) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}`,
+    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}`, // See: /docs/api/get-v-1-account-account-message-message
     { headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' } }
   );
   return await response.json();
@@ -838,10 +838,3 @@ async function calculateReplyRate(timeframe = 7) {
 const stats = await calculateReplyRate(7);
 console.log(`Reply rate: ${stats.rate} (${stats.replied}/${stats.sent})`);
 ```
-
-## See Also
-
-- [Webhooks](./webhooks) - Setting up webhook notifications
-- [Sending: Threading](/docs/sending/threading) - Email threading concepts
-- [Message Operations](./message-operations) - Working with messages
-- [Continuous Processing](./continuous-processing) - Real-time email processing

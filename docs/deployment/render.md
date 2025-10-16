@@ -40,11 +40,6 @@ Do not choose the smallest instance sizes. EmailEngine requires at least:
 - **256MB+** for Redis (with `noeviction` policy)
 :::
 
-## Prerequisites
-
-- Render.com account ([sign up free](https://dashboard.render.com/register))
-- GitHub account (for automated deployment)
-
 ## Step-by-Step Setup
 
 ### Step 1: Create Redis Instance
@@ -648,18 +643,3 @@ redis-cli -u <external-redis-url> --rdb ./dump.rdb
 4. **Consider alternatives at scale:**
    - Self-hosted VPS: ~$10-20/month for 500+ accounts
    - Render is best for < 200 accounts
-
-## See Also
-
-- [Installation Guide](/docs/installation/set-up)
-- [Docker Deployment](/docs/deployment/docker)
-- [Configuration Options](/docs/configuration)
-- [Security Best Practices](/docs/deployment/security)
-- [Performance Tuning](/docs/advanced/performance-tuning)
-- [Monitoring Setup](/docs/advanced/monitoring)
-
-## References
-
-- [Render Documentation](https://render.com/docs)
-- [Render Pricing](https://render.com/pricing)
-- [Original Blog Post](https://emailengine.app/blog/2022-05-06-install-emailengine-on-render-com)

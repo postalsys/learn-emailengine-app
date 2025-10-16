@@ -25,7 +25,7 @@ Message operations allow you to list, fetch, move, delete, and update email mess
 
 ### Basic Message Listing
 
-List messages in a folder:
+List messages in a folder using the [messages listing API](/docs/api/get-v-1-account-account-messages):
 
 ```bash
 curl "https://your-emailengine.com/v1/account/example/messages?path=INBOX" \
@@ -171,7 +171,7 @@ async function listUnreadMessages(accountId, folderPath) {
 
 ### Get Message by ID
 
-Fetch complete message details:
+Fetch complete message details using the [get message API](/docs/api/get-v-1-account-account-message-message):
 
 ```bash
 curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE" \
@@ -258,7 +258,7 @@ console.log(`Body: ${message.text}`);
 
 ### Get Message Source
 
-Fetch raw RFC822 message source:
+Fetch raw RFC822 message source using the [message source API](/docs/api/get-v-1-account-account-message-message-source):
 
 ```bash
 curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE/source" \
@@ -305,7 +305,7 @@ console.log(source);
 
 ### Move to Different Folder
 
-Move a message to another folder:
+Move a message to another folder using the [move message API](/docs/api/put-v-1-account-account-message-message-move):
 
 ```bash
 curl -X PUT "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE/move" \
@@ -386,7 +386,7 @@ async function trashMessage(accountId, messageId) {
 
 ### Delete Message
 
-Permanently delete a message:
+Permanently delete a message using the [delete message API](/docs/api/delete-v-1-account-account-message-message):
 
 ```bash
 curl -X DELETE "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE" \
@@ -467,7 +467,7 @@ async function softDelete(accountId, messageId) {
 
 ### Set Flags
 
-Update message flags:
+Update message flags using the [update message API](/docs/api/put-v-1-account-account-message-message):
 
 ```bash
 curl -X PUT "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE" \
@@ -907,10 +907,3 @@ async function retryOperation(operation, maxRetries = 3) {
 // Usage
 await retryOperation(() => getMessage(accountId, messageId));
 ```
-
-## See Also
-
-- [Searching](./searching) - Finding messages with queries
-- [Attachments](./attachments) - Working with attachments
-- [Webhooks](./webhooks) - Real-time message notifications
-- [Mailbox Operations](./mailbox-operations) - Managing folders

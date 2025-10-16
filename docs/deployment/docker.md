@@ -825,12 +825,3 @@ services:
 ```bash
 curl http://localhost:9090/metrics
 ```
-
-## See Also
-
-- [Installation Guide](/docs/installation/set-up)
-- [Configuration Options](/docs/configuration)
-- [SystemD Service](/docs/deployment/systemd)
-- [Nginx Proxy Setup](/docs/deployment/nginx-proxy)
-- [Security Guide](/docs/deployment/security)
-- [Performance Tuning](/docs/advanced/performance-tuning)

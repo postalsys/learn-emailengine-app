@@ -130,7 +130,7 @@ if (payload.event === "messageBounce") {
 return {
     username: 'EmailEngine',
     avatar_url: 'https://emailengine.app/logo.png',
-    content: `🚨 **Bounce Alert**`,
+    content: `**Bounce Alert**`,
     embeds: [{
         title: 'Email Bounced',
         color: 16711680, // Red
@@ -684,25 +684,3 @@ Maintain documentation of:
 - Use secure authentication for custom APIs
 - Include API keys in headers, not URLs
 - Rotate credentials regularly
-
-## Next Steps
-
-- Explore [Webhooks Configuration](/docs/receiving/webhooks)
-- Learn about [CRM Integration](/docs/integrations/crm)
-- Review [API Reference](/docs/api-reference)
-- Set up [Monitoring](/docs/advanced/monitoring)
-
-## See Also
-
-- [Webhooks](/docs/receiving/webhooks)
-- [PHP Integration](/docs/integrations/php)
-- [AI Integration](/docs/integrations/ai-chatgpt)
-- [API Reference](/docs/api-reference)
-
-## Resources
-
-- **Zapier**: [zapier.com](https://zapier.com/)
-- **Make.com**: [make.com](https://www.make.com/)
-- **n8n**: [n8n.io](https://n8n.io/)
-- **Discord Webhooks**: [Discord Developer Docs](https://discord.com/developers/docs/resources/webhook)
-- **Slack Webhooks**: [Slack API](https://api.slack.com/messaging/webhooks)

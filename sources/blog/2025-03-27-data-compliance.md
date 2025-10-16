@@ -8,11 +8,11 @@ excerpt: Understand exactly what EmailEngine stores, how it encrypts secrets, an
 ---
 
 > **TL;DR**
-> EmailEngine only keeps the minimum metadata it needs to sync mail—nothing leaves **your** infrastructure, and you can wipe everything with a single Redis command.
+> EmailEngine only keeps the minimum metadata it needs to sync mail - nothing leaves **your** infrastructure, and you can wipe everything with a single Redis command.
 
 ## Why it matters
 
-Moving email through your SaaS means you’re touching PII and potentially regulated content (GDPR, HIPAA, etc.). Storing less data—and encrypting what you must keep—shrinks your compliance surface and calms security auditors.
+Moving email through your SaaS means you’re touching PII and potentially regulated content (GDPR, HIPAA, etc.). Storing less data - and encrypting what you must keep - shrinks your compliance surface and calms security auditors.
 
 > 🛠️ **Self‑hosted reassurance** – EmailEngine processes email entirely inside **your** infrastructure; no data leaves your network.
 
@@ -20,9 +20,9 @@ Moving email through your SaaS means you’re touching PII and potentially regul
 
 ## What EmailEngine stores (and when)
 
-EmailEngine tracks state in Redis so it can answer questions like “Has message *123* changed since the last webhook?” The exact data set depends on the backend.
+EmailEngine tracks state in Redis so it can answer questions like “Has message _123_ changed since the last webhook?” The exact data set depends on the backend.
 
-> 🗒️ **Note** – EmailEngine stores message metadata **only for IMAP accounts**. Gmail API and Microsoft Graph accounts rely on provider‑side change tracking, so EmailEngine keeps **no local index** for them. Likewise, if you enable the *fast* indexer for IMAP (see [**Supported account types**](https://emailengine.app/supported-account-types)), EmailEngine skips the per‑message index altogether.
+> 🗒️ **Note** – EmailEngine stores message metadata **only for IMAP accounts**. Gmail API and Microsoft Graph accounts rely on provider‑side change tracking, so EmailEngine keeps **no local index** for them. Likewise, if you enable the _fast_ indexer for IMAP (see [**Supported account types**](https://emailengine.app/supported-account-types)), EmailEngine skips the per‑message index altogether.
 
 ### 1. Account data
 
@@ -31,10 +31,13 @@ EmailEngine tracks state in Redis so it can answer questions like “Has message
 - **Secrets** – IMAP/SMTP password or OAuth2 tokens, encrypted at rest.
 
 ### 2. Folder‑level data
+
 FieldPurposePath namePrimary identifier in IMAP`UIDVALIDITY`, `HIGHESTMODSEQ`, `UIDNEXT`Detect additions, deletions and flag changes
+
 ### 3. Message‑level data (IMAP only)
-FieldExampleWhy it’s stored`UID``4521`Stable per‑folder identifier`MODSEQ``1245567`Incremented on flag/body changeGlobal ID`X‑GM‑MSGID` / `EMAILID`Cross‑folder dedupingFlags`\Seen`, `\Flagged`Webhook diffingLabels (Gmail over IMAP)`Inbox`, `Important`Multi‑folder storageBounce info`550 5.1.1 No such user`Deliverability analytics
-If a field never changes—or reveals sensitive content (e.g. *Subject*)—EmailEngine fetches it live from the mail server instead of caching it.
+
+FieldExampleWhy it’s stored` UID``4521 `Stable per‑folder identifier` MODSEQ``1245567 `Incremented on flag/body changeGlobal ID`X‑GM‑MSGID` / `EMAILID`Cross‑folder dedupingFlags`\Seen`, `\Flagged`Webhook diffingLabels (Gmail over IMAP)`Inbox`, `Important`Multi‑folder storageBounce info`550 5.1.1 No such user`Deliverability analytics
+If a field never changes - or reveals sensitive content (e.g. _Subject_) - EmailEngine fetches it live from the mail server instead of caching it.
 
 ---
 
@@ -42,7 +45,7 @@ If a field never changes—or reveals sensitive content (e.g. *Subject*)—Email
 
 ### Field‑level (secrets)
 
-EmailEngine encrypts every value marked as *secret* with **AES‑256‑GCM**. Provide the key via [`EENGINE_SECRET`](__GHOST_URL__/enabling-secret-encryption/).
+EmailEngine encrypts every value marked as _secret_ with **AES‑256‑GCM**. Provide the key via [`EENGINE_SECRET`](__GHOST_URL__/enabling-secret-encryption/).
 
 ### Disk‑level
 
@@ -58,11 +61,10 @@ EmailEngine never touches disk directly; Redis does. Use encrypted volumes (LUKS
 
 ## Deleting data
 
-Removing an account via **`DELETE /v1/accounts/:id`** wipes every related key in Redis. Legacy instances (< 2.0) may leave a pathname list behind—you can purge it manually:
+Removing an account via **`DELETE /v1/accounts/:id`** wipes every related key in Redis. Legacy instances (< 2.0) may leave a pathname list behind - you can purge it manually:
 
     $ redis-cli DEL iah:<accountId>
-    
 
 ### Backups
 
-Because all state is Redis, your backups are Redis RDB/AOF snapshots. Decide—together with your Data Protection Officer—whether a GDPR “right to be forgotten” request affects historical RDB/AOF files.
+Because all state is Redis, your backups are Redis RDB/AOF snapshots. Decide - together with your Data Protection Officer - whether a GDPR “right to be forgotten” request affects historical RDB/AOF files.
