@@ -131,14 +131,14 @@ EmailEngine uses `EENGINE_SECRET` for encrypting stored credentials and OAuth to
 # Generate secret
 openssl rand -hex 32
 
-# Store permanently in systemd service
-# /etc/systemd/system/emailengine.service
+# Store permanently in SystemD service file
+# Edit /etc/systemd/system/emailengine.service
 [Service]
 Environment="EENGINE_SECRET=your-generated-secret-here"
 
-# Or in environment file
-# /etc/emailengine/environment
-EENGINE_SECRET=your-generated-secret-here
+# Then reload and restart:
+sudo systemctl daemon-reload
+sudo systemctl restart emailengine
 
 # Or use secret management service
 # AWS Secrets Manager, HashiCorp Vault, etc.
@@ -343,12 +343,17 @@ EENGINE_REDIS=rediss://localhost:6379  # Note: rediss:// (with 's')
 
 ### Secret Management
 
-**Use environment variables (basic):**
+**Use SystemD service file (basic):**
 
 ```bash
-# /etc/emailengine/environment
-EENGINE_SECRET=your-permanent-secret-here
-EENGINE_REDIS=redis://localhost:6379
+# Edit /etc/systemd/system/emailengine.service
+[Service]
+Environment="EENGINE_SECRET=your-permanent-secret-here"
+Environment="EENGINE_REDIS=redis://localhost:6379"
+
+# Then reload and restart
+sudo systemctl daemon-reload
+sudo systemctl restart emailengine
 ```
 
 **Use secret management service (production):**

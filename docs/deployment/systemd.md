@@ -179,30 +179,24 @@ Environment="EENGINE_SECRET=your-secret-key"
 Environment="EENGINE_WORKERS=4"
 ```
 
-**Method 2: Environment file**
+**Method 2: Multiple environment variables in service file**
 
-Create `/etc/emailengine/environment`:
-
-```bash
-EENGINE_REDIS=redis://localhost:6379
-EENGINE_SECRET=your-secret-key-at-least-32-characters
-EENGINE_ENCRYPTION_SECRET=another-secret-for-encryption
-EENGINE_WORKERS=4
-EENGINE_LOG_LEVEL=info
-EENGINE_METRICS_SERVER=true
-```
-
-**Reference in service file:**
+Edit `/etc/systemd/system/emailengine.service`:
 
 ```ini
 [Service]
-EnvironmentFile=/etc/emailengine/environment
+Environment="EENGINE_REDIS=redis://localhost:6379"
+Environment="EENGINE_SECRET=your-secret-key-at-least-32-characters"
+Environment="EENGINE_ENCRYPTION_SECRET=another-secret-for-encryption"
+Environment="EENGINE_WORKERS=4"
+Environment="EENGINE_LOG_LEVEL=info"
+Environment="EENGINE_METRICS_SERVER=true"
 ```
 
-**Set permissions:**
+**Apply changes:**
 ```bash
-sudo chown root:emailengine /etc/emailengine/environment
-sudo chmod 640 /etc/emailengine/environment
+sudo systemctl daemon-reload
+sudo systemctl restart emailengine
 ```
 
 ### Configuration File
@@ -733,11 +727,14 @@ sudo systemctl show emailengine | grep -E 'CPU|Memory|Limit'
 
 **Increase workers:**
 ```bash
-# Edit environment file
-sudo nano /etc/emailengine/environment
+# Edit service file
+sudo nano /etc/systemd/system/emailengine.service
 
-# Add or modify
-EENGINE_WORKERS=8
+# Modify the Environment line:
+Environment="EENGINE_WORKERS=8"
+
+# Reload SystemD configuration
+sudo systemctl daemon-reload
 ```
 
 **Restart service:**
@@ -815,21 +812,17 @@ sudo mkdir -p /etc/emailengine /var/log/emailengine
 sudo chown emailengine:emailengine /var/log/emailengine
 ```
 
-**3. Create configuration:**
+**3. Generate secrets:**
 ```bash
-sudo tee /etc/emailengine/environment > /dev/null <<EOF
-EENGINE_REDIS=redis://localhost:6379
+# Generate secrets (save these!)
 EENGINE_SECRET=$(openssl rand -hex 32)
 EENGINE_ENCRYPTION_SECRET=$(openssl rand -hex 32)
-EENGINE_WORKERS=4
-EENGINE_LOG_LEVEL=info
-EOF
 
-sudo chown root:emailengine /etc/emailengine/environment
-sudo chmod 640 /etc/emailengine/environment
+echo "EENGINE_SECRET: $EENGINE_SECRET"
+echo "EENGINE_ENCRYPTION_SECRET: $EENGINE_ENCRYPTION_SECRET"
 ```
 
-**4. Create service file:**
+**4. Create service file (use the secrets from step 3):**
 ```bash
 sudo tee /etc/systemd/system/emailengine.service > /dev/null <<'EOF'
 [Unit]
@@ -842,7 +835,14 @@ Type=simple
 User=emailengine
 Group=emailengine
 WorkingDirectory=/opt/emailengine
-EnvironmentFile=/etc/emailengine/environment
+
+# Replace with your actual secrets from step 3
+Environment="EENGINE_REDIS=redis://localhost:6379"
+Environment="EENGINE_SECRET=your-generated-secret-from-step-3"
+Environment="EENGINE_ENCRYPTION_SECRET=your-generated-encryption-secret-from-step-3"
+Environment="EENGINE_WORKERS=4"
+Environment="EENGINE_LOG_LEVEL=info"
+
 ExecStart=/usr/local/bin/emailengine
 Restart=always
 RestartSec=10
