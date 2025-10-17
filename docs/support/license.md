@@ -1,17 +1,18 @@
 ---
 title: License Information
-description: License information, plans, and how to get a production license key
+description: License information, subscription plans, and how to get a production license key
 sidebar_position: 1
 ---
 
 # EmailEngine Licensing
 
-Complete information about EmailEngine licenses, pricing, activation, and management.
+Complete information about EmailEngine subscription-based licensing, activation, and management.
 
 :::info Quick Summary
-- **Development:** Free with limited features
-- **Production:** Paid yearly license with full features
-- **Pricing:** $995/year flat rate for unlimited mailboxes
+- **Development:** Free with limited features (up to 10 accounts)
+- **Production:** Annual subscription with unlimited license keys
+- **Pricing:** [View current pricing](https://postalsys.com/plans)
+- **License Keys:** Generate unlimited keys per subscription
 :::
 
 ## License Types
@@ -51,16 +52,17 @@ Accounts: 7/10 (limit reached at 10)
 - Learning the API
 
 :::warning Development Only
-Development license is for testing only. Commercial use requires production license.
+Development license is for testing only. Commercial use requires production subscription.
 :::
 
 ---
 
-### Production License (Paid)
+### Production Subscription (Paid)
 
 **Features:**
 - YES: **Unlimited accounts**
-- YES: **Unlimited instances**
+- YES: **Unlimited EmailEngine instances**
+- YES: **Unlimited license keys**
 - YES: **Unlimited API calls**
 - YES: All development features
 - YES: Priority support
@@ -69,16 +71,16 @@ Development license is for testing only. Commercial use requires production lice
 - YES: Source code access
 
 **Pricing:**
-- **$995 USD per year**
-- Flat rate (not per-mailbox)
-- Volume discounts available for multiple licenses
+- [View current pricing and plans](https://postalsys.com/plans)
+- Annual subscription model
+- Flat rate (not per-mailbox or per-instance)
 - Payment via credit card or invoice
 
-**How to purchase:**
-1. Visit [EmailEngine Plans](https://postalsys.com/plans)
-2. Select EmailEngine license
-3. Complete purchase
-4. Receive license key via email
+**How it works:**
+1. Purchase a **subscription** (not individual licenses)
+2. Generate **unlimited license keys** for your EmailEngine instances
+3. All keys remain valid as long as subscription is active
+4. No additional costs per key or instance
 
 **Best for:**
 - Production deployments
@@ -86,118 +88,87 @@ Development license is for testing only. Commercial use requires production lice
 - Commercial applications
 - Professional support needed
 
-## Pricing Details
+## How Subscriptions Work
 
-### Standard Pricing
+### Subscription vs License Keys
 
-| Item | Price | Notes |
-|------|-------|-------|
-| **Single License** | $995/year | Unlimited mailboxes, instances |
-| **Support** | Included | Community + email support |
-| **Updates** | Included | All updates during license period |
-| **Renewal** | $995/year | Same price (no increase) |
+**Important distinction:**
 
-### Volume Discounts
+- **Subscription:** Your annual plan that you pay for at https://postalsys.com/
+- **License Keys:** Individual keys generated from your subscription for each EmailEngine instance
 
-For multiple licenses (e.g., multiple projects):
+**You buy one subscription, generate many keys.**
 
-| Licenses | Discount | Price per License |
-|----------|----------|-------------------|
-| 1 | 0% | $995 |
-| 2-4 | 10% | $895 |
-| 5-9 | 15% | $846 |
-| 10+ | 20% | $796 |
-
-**Contact sales for volume pricing:** sales@emailengine.app
-
----
-
-### Cost Comparison
-
-**Cost per mailbox:**
+### Subscription Model
 
 ```
-For 100 mailboxes:  $995/year ÷ 100 = $9.95/mailbox/year ($0.83/month)
-For 500 mailboxes:  $995/year ÷ 500 = $1.99/mailbox/year ($0.17/month)
-For 2,000 mailboxes: $995/year ÷ 2,000 = $0.50/mailbox/year ($0.04/month)
+┌─────────────────────────────────────────┐
+│  Annual Subscription                    │
+│  - Pay once per year                    │
+│  - Flat rate (see pricing page)         │
+└─────────────────────────────────────────┘
+            │
+            ├──> Generate License Key #1 (Production Server)
+            ├──> Generate License Key #2 (Staging Server)
+            ├──> Generate License Key #3 (Backup Instance)
+            ├──> Generate License Key #4 (Customer A deployment)
+            └──> Generate License Key #5 (Customer B deployment)
+                 ... unlimited keys
 ```
 
-**The more mailboxes, the lower the per-mailbox cost.**
+**No additional costs for:**
+- Number of license keys
+- Number of EmailEngine instances
+- Number of email accounts
+- Number of API calls
 
-**Total cost of ownership:**
+**You only pay for the subscription.**
 
-```
-EmailEngine License:    $995/year
-+ Server costs:         $50-500/month
-+ Redis costs:          $10-200/month
-───────────────────────────────────
-Total:                  ~$1,500-10,000/year
+## Getting Started
 
-Compare to per-mailbox services:
-100 mailboxes at $3/mailbox/month = $3,600/year
-500 mailboxes at $2/mailbox/month = $12,000/year
-2,000 mailboxes at $1/mailbox/month = $24,000/year
-```
+### Step 1: Create Account
 
-## Getting a License
+1. Visit [https://postalsys.com/](https://postalsys.com/)
+2. Click "Sign Up" or "Create Account"
+3. Provide email and password
+4. Verify email address
 
-### Step 1: Purchase
+### Step 2: Add Billing Information
 
-**Option A: Online Purchase**
-
-1. Visit [EmailEngine Plans](https://postalsys.com/plans)
-2. Click "Get EmailEngine License"
-3. Select payment method (card/PayPal)
-4. Complete purchase
-5. Receive license key via email (usually within minutes)
-
-**Option B: Invoice Purchase**
-
-For invoice payment (NET30):
-
-1. Email: sales@emailengine.app
-2. Provide:
-   - Company name
+1. Log in to your account at [https://postalsys.com/](https://postalsys.com/)
+2. Navigate to **Billing** section
+3. Add billing details:
+   - Company name (optional)
    - Billing address
-   - Number of licenses needed
-3. Receive invoice
-4. Pay via bank transfer
-5. Receive license key after payment clears
+   - Tax information (if applicable)
+4. Add payment method:
+   - Credit card
+   - Or request invoice payment (contact sales)
 
-**Option C: Purchase Order**
+### Step 3: Subscribe to Plan
 
-For companies requiring PO:
+1. Go to [https://postalsys.com/plans](https://postalsys.com/plans)
+2. Review available plans and pricing
+3. Select the plan that fits your needs
+4. Click "Subscribe"
+5. Confirm payment
 
-1. Email sales@emailengine.app
-2. Request quote
-3. Submit PO
-4. Receive invoice
-5. License key sent after PO processing
+**Upon successful payment:**
+- Subscription is activated immediately
+- "License Keys" section becomes available in your account
+- You can now generate license keys
 
-### Step 2: License Key Format
+### Step 4: Generate License Keys
 
-Your license key will look like:
+1. Log in to [https://postalsys.com/](https://postalsys.com/)
+2. Navigate to **License Keys** section
+3. Click "Generate New License Key"
+4. Optionally add a label (e.g., "Production Server", "Staging")
+5. Copy the generated license key
 
-```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsaWNlbnNlS2V5IjoiZXhhbXBsZS1rZXkiLCJsaWNlbnNlZCI6IkV4YW1wbGUgQ29ycCIsImV4cGlyZXMiOiIyMDI2LTEyLTMxVDIzOjU5OjU5LjAwMFoifQ.signature
-```
+**You can generate as many license keys as you need at no additional cost.**
 
-**What's in a license key:**
-- Licensee name (your company)
-- Expiration date
-- License ID
-- Digital signature
-
-**License keys are JWT tokens** that can be decoded (but not modified without invalidating signature):
-
-```bash
-# Decode license (first part after splitting by '.')
-echo "eyJhbGc..." | base64 -d | jq
-```
-
-### Step 3: Activate License
-
-There are three ways to activate your license:
+### Step 5: Activate License in EmailEngine
 
 **Option 1: Environment Variable (Recommended)**
 
@@ -252,14 +223,6 @@ Edit `/etc/emailengine/config.json`:
 }
 ```
 
-Or reference from environment:
-
-```json
-{
-  "licenseKey": "${EENGINE_LICENSE_KEY}"
-}
-```
-
 ---
 
 **Option 4: Web Interface**
@@ -270,12 +233,12 @@ Or reference from environment:
 4. Paste license key
 5. Click **Save**
 
-### Step 4: Verify Activation
+### Step 6: Verify Activation
 
 **Check via web interface:**
-- Status should show: "Licensed to: Your Company Name"
+- Status should show: "Licensed"
 - Account limit removed
-- Expiration date displayed
+- Subscription status displayed
 
 **Check via API:**
 
@@ -289,282 +252,309 @@ curl http://localhost:3000/v1/license \
 {
   "active": true,
   "type": "EmailEngine License",
-  "details": {
-    "licensedTo": "Your Company Name",
-    "expires": "2026-12-31T23:59:59.000Z"
-  },
   "status": "Valid license"
 }
 ```
 
-**Check via logs:**
+## Managing Your Subscription
+
+### Inviting Team Members
+
+You can invite teammates to help manage license keys and billing:
+
+1. Log in to [https://postalsys.com/](https://postalsys.com/)
+2. Navigate to **Team** or **Account Settings**
+3. Click "Invite Team Member"
+4. Enter their email address
+5. Select permissions (billing, license management, etc.)
+
+**Team members can:**
+- Generate new license keys
+- View existing keys
+- Manage billing information (if granted permission)
+- View invoices
+
+**Team members cannot:**
+- Cancel subscription (unless owner)
+- Access other team members' personal settings
+
+### Annual Renewal
+
+**Automatic Renewal (Default):**
+
+- **60 days before expiration:** Renewal reminder email sent
+- **On renewal date:** Subscription automatically renews
+- **Payment:** Credit card charged automatically
+- **License keys:** All existing keys remain valid
+- **No action needed** if auto-renewal succeeds
+
+**What happens on successful renewal:**
+- Subscription extended for another year
+- All license keys remain active
+- No interruption to EmailEngine instances
+- Invoice generated and emailed
+
+### Failed Renewal
+
+**If automatic renewal fails (expired card, insufficient funds, etc.):**
+
+1. **Immediate notification:**
+   - Email sent to billing email address
+   - Subject: "EmailEngine Subscription Renewal Failed"
+
+2. **Invoice generated:**
+   - Payment due within 28 days
+   - Late payment grace period
+
+3. **View invoice:**
+   - Log in to [https://postalsys.com/](https://postalsys.com/)
+   - Warning banner displayed with link to invoice
+   - Navigate to **Billing** → **Invoices**
+
+4. **During 28-day grace period:**
+   - All license keys remain valid
+   - EmailEngine continues working normally
+   - No interruption to service
+   - Warning shown in account dashboard
+
+5. **Pay the invoice:**
+   - Click "Pay Invoice" in account dashboard
+   - Or use payment link from email
+   - Update payment method if needed
+   - Complete payment
+
+6. **After payment:**
+   - Subscription status restored to active
+   - New expiration date = original date + 1 year
+   - All license keys remain active
+   - No disruption
+
+### Grace Period Expiration
+
+**If invoice remains unpaid after 28 days:**
+
+1. **Subscription canceled automatically**
+2. **All license keys revoked**
+3. **EmailEngine instances:**
+   - Revert to development mode
+   - Account limit enforced (10 accounts max)
+   - Existing accounts over 10 remain but read-only
+   - Cannot add new accounts
+4. **Email notification sent**
+
+**To restore service:**
+1. Subscribe to a new plan at [https://postalsys.com/plans](https://postalsys.com/plans)
+2. Generate new license keys
+3. Update EmailEngine instances with new keys
+4. Service restored immediately
+5. All accounts and data preserved
+
+:::warning Subscription Cancellation
+If you cancel your subscription voluntarily, all license keys are immediately revoked. EmailEngine instances will revert to development mode.
+:::
+
+## Multiple Instances
+
+One subscription allows unlimited EmailEngine instances:
 
 ```bash
-journalctl -u emailengine | grep -i license
+# Instance 1 - Production
+EENGINE_LICENSE_KEY="key-generated-from-subscription-1" emailengine --port=3000
 
-# Should see:
-# [INFO] License validated: Your Company Name (expires 2026-12-31)
+# Instance 2 - Staging
+EENGINE_LICENSE_KEY="key-generated-from-subscription-2" emailengine --port=3001
+
+# Instance 3 - Customer A deployment
+EENGINE_LICENSE_KEY="key-generated-from-subscription-3" emailengine --port=3002
+
+# All keys come from same subscription
 ```
 
-## License Management
+**Best practices:**
+- Generate separate key for each instance/environment
+- Label keys clearly (e.g., "Production US-East", "Customer A")
+- Revoke/regenerate keys if compromised
+- Use different keys for different customers (if reselling)
 
-### Checking License Status
+## License Key Management
 
-**Via web interface:**
-- Dashboard shows license status
-- Settings → License page shows details
+### Generating New Keys
 
-**Via API:**
+**Anytime you need a new key:**
 
-```bash
-# Get license info
-GET /v1/license
+1. Log in to [https://postalsys.com/](https://postalsys.com/)
+2. Go to **License Keys**
+3. Click "Generate New License Key"
+4. Add label (optional but recommended)
+5. Copy key and use in EmailEngine
+
+**No limit on number of keys.**
+
+### Viewing Existing Keys
+
+**See all your generated keys:**
+
+1. Log in to [https://postalsys.com/](https://postalsys.com/)
+2. Go to **License Keys**
+3. View list of all keys with:
+   - Label
+   - Creation date
+   - Last used date (if tracked)
+   - Status (active/revoked)
+
+### Revoking Keys
+
+**If a key is compromised or no longer needed:**
+
+1. Log in to [https://postalsys.com/](https://postalsys.com/)
+2. Go to **License Keys**
+3. Find the key to revoke
+4. Click "Revoke" or "Delete"
+5. Confirm revocation
+
+**After revocation:**
+- Key immediately becomes invalid
+- EmailEngine instances using that key revert to development mode
+- Generate and deploy new key to affected instances
+- Other keys remain unaffected
+
+### Key Rotation
+
+**Periodic key rotation for security:**
+
+1. Generate new license key
+2. Update EmailEngine instance with new key
+3. Verify instance is working
+4. Revoke old key
+5. Repeat for other instances as needed
+
+## License Key Format
+
+Your license key is a JWT (JSON Web Token):
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsaWNlbnNlS2V5IjoiZXhhbXBsZS1rZXkiLCJzdWJzY3JpcHRpb25JZCI6ImV4YW1wbGUiLCJleHBpcmVzIjoiMjAyNi0xMi0zMVQyMzo1OTo1OS4wMDBaIn0.signature
 ```
 
-**Via health endpoint:**
+**License keys contain:**
+- Subscription ID
+- Expiration date
+- Issue date
+- Digital signature
 
-```bash
-curl http://localhost:3000/health
+**License validation:**
+- Performed locally (JWT signature verification)
+- No "phone home" required
+- Works offline
+- Cryptographically secure
 
-{
-  "status": "ok",
-  "version": "2.48.5",
-  "license": {
-    "active": true,
-    "expires": "2026-12-31"
-  }
-}
+## Pricing
+
+For current pricing, visit [https://postalsys.com/plans](https://postalsys.com/plans)
+
+**Pricing structure:**
+- Annual subscription fee
+- No per-mailbox charges
+- No per-instance charges
+- No per-key charges
+- Flat rate for unlimited use
+
+**Example cost comparison:**
+
+```
+Subscription:           See pricing page
++ Server costs:         $50-500/month
++ Redis costs:          $10-200/month
+───────────────────────────────────
+Total annual cost:      See pricing page + infrastructure
+
+Compare to per-mailbox services:
+100 mailboxes at $3/mailbox/month = $3,600/year
+500 mailboxes at $2/mailbox/month = $12,000/year
+2,000 mailboxes at $1/mailbox/month = $24,000/year
 ```
 
-### Updating License Key
+**For volume inquiries or custom enterprise plans, contact sales@emailengine.app**
 
-When renewing or changing license:
-
-**Method 1: Environment variable**
-
-```bash
-# Update environment
-export EENGINE_LICENSE_KEY="new-license-key"
-
-# Restart service
-sudo systemctl restart emailengine
-```
-
-**Method 2: API**
-
-```bash
-POST /v1/license
-Content-Type: application/json
-
-{
-  "licenseKey": "new-license-key"
-}
-```
-
-**No downtime required** - EmailEngine validates new license and continues running.
-
-### Multiple Instances
-
-**One license covers unlimited instances:**
-
-```bash
-# Instance 1
-EENGINE_LICENSE_KEY="same-key" emailengine --port=3000
-
-# Instance 2
-EENGINE_LICENSE_KEY="same-key" emailengine --port=3001
-
-# Instance 3
-EENGINE_LICENSE_KEY="same-key" emailengine --port=3002
-
-# All use same license key
-```
-
-**Load-balanced setup:**
-
-```yaml
-# Docker Compose with 3 instances
-services:
-  emailengine-1:
-    image: postalsys/emailengine:v2
-    environment:
-      - EENGINE_LICENSE_KEY=${LICENSE_KEY}
-  emailengine-2:
-    image: postalsys/emailengine:v2
-    environment:
-      - EENGINE_LICENSE_KEY=${LICENSE_KEY}
-  emailengine-3:
-    image: postalsys/emailengine:v2
-    environment:
-      - EENGINE_LICENSE_KEY=${LICENSE_KEY}
-```
-
-**All instances share same license.**
-
-## License Expiration
-
-### What Happens at Expiration
-
-**30 days before expiration:**
-- Warning appears in web interface
-- Email notification sent (if configured)
-- API returns expiration warning in responses
-
-**7 days before expiration:**
-- More frequent warnings
-- Daily email reminders
-
-**On expiration day:**
-- EmailEngine continues to function
-- No accounts deleted
-- All features remain active
-- **Grace period:** 30 days to renew
-
-**After grace period (30 days expired):**
-- EmailEngine reverts to development mode
-- Account limit enforced (10 accounts)
-- Existing accounts over limit remain but read-only
-- New account registration blocked
-
-**Accounts are never deleted**, even in development mode.
-
-### Renewal Process
-
-**60 days before expiration:**
-- Renewal notice sent to licensee email
-- Renewal link provided
-
-**Renewal steps:**
-
-1. **Receive renewal notice** via email
-2. **Click renewal link** or visit [renewal page](https://postalsys.com/renew)
-3. **Complete payment** (same price: $995/year)
-4. **Receive new license key** via email
-5. **Update license key** in EmailEngine
-
-**Early renewal:**
-- Can renew any time
-- New expiration = current expiration + 1 year
-- No time lost by renewing early
-
-**Example:**
-```
-Current expiration: 2025-12-31
-Renew on: 2025-10-01
-New expiration: 2026-12-31 (not 2026-10-01)
-```
-
-### Lapsed License Recovery
-
-If license expires and grace period passes:
-
-1. **Purchase new license** (same process as initial)
-2. **Activate new license key**
-3. **All accounts automatically re-enabled**
-4. **No data loss** - everything preserved
-
-## License FAQ
+## FAQ
 
 ### General Questions
 
-**Q: Can I use one license for multiple projects?**
+**Q: Do I need separate subscriptions for dev/staging/production?**
 
-A: Yes! One license covers unlimited instances. Use for as many projects as needed.
+A: No. One subscription covers all environments. Generate separate license keys for each environment from the same subscription. Or use development mode (free) for non-production environments.
 
-**Q: Can I transfer my license to someone else?**
+**Q: Can I share my subscription with others?**
 
-A: Yes. Email support@emailengine.app with:
-- Current license key
-- New owner information
-- Reason for transfer
+A: If you're part of the same organization, yes. Invite them as team members. Each team member can manage license keys. Do not share subscriptions across different companies.
 
-Transfer fee may apply.
+**Q: What happens if I cancel my subscription?**
 
-**Q: What if I need a refund?**
+A: All license keys are immediately revoked. EmailEngine instances revert to development mode (10 account limit). You can resubscribe anytime to restore service.
 
-A: **30-day money-back guarantee.** Not satisfied? Full refund within 30 days of purchase.
+**Q: Can I upgrade or downgrade my plan?**
 
-Email: support@emailengine.app
+A: Contact sales@emailengine.app to discuss plan changes. Prorated adjustments may apply.
 
-**Q: Do you offer monthly payment?**
+**Q: Do you offer refunds?**
 
-A: Currently annual only. Monthly subscriptions may be available in future.
+A: Refund policies are listed at https://postalsys.com/plans. Generally, 30-day money-back guarantee for new subscriptions. Email support@emailengine.app for refund requests.
 
 ---
 
 ### Technical Questions
 
-**Q: Is license key validated online?**
+**Q: Is the license key validated online?**
 
-A: **No.** License validation is local (JWT signature verification). No "phone home" required. Works offline.
+A: No. License validation is local (JWT signature verification). EmailEngine works completely offline. No internet connection needed for license validation.
 
-**Q: What if my server has no internet access?**
+**Q: Can I use the same license key on multiple instances?**
 
-A: License works fine offline. JWT validation is cryptographic, not server-based.
+A: While technically possible, **best practice is to generate separate keys for each instance**. This allows you to:
+- Track which key is used where
+- Revoke individual keys if needed
+- Better security and management
 
-**Q: Can I inspect my license key?**
+**Q: What if my license key is compromised?**
+
+A: Log in to https://postalsys.com/, revoke the compromised key, and generate a new one. Update affected instances immediately. Other keys remain unaffected.
+
+**Q: Can I inspect the license key?**
 
 A: Yes, it's a JWT token. Decode using:
 
 ```bash
-# Extract payload
-echo "eyJhbGc..." | base64 -d | jq
+# Extract payload (middle section between dots)
+echo "eyJsaWNlbnNlS..." | base64 -d | jq
 ```
 
-**Q: Is the license key secret?**
-
-A: It's not a password, but treat it as confidential. Anyone with your license key could use it.
-
-If leaked, email support@emailengine.app for replacement.
-
----
-
-### Compliance Questions
-
-**Q: Do I need a license for staging/testing?**
-
-A: **No.** Use development mode (no license) for staging/testing. Production license only for production.
-
-**Q: Do I need separate licenses for dev/staging/production?**
-
-A: **No.** One license covers all environments. Or use development mode (free) for non-production.
-
-**Q: Can I use EmailEngine for open-source projects?**
-
-A: Yes, if self-hosted. Development mode (free) sufficient if under 10 accounts.
-
-**Q: Can I resell EmailEngine as part of my SaaS?**
-
-A: Yes, with production license. Your customers don't need individual licenses.
-
-Example: You build CRM with email. You need one license (for your backend). Your 1,000 customers don't need licenses.
+But **treat license keys as confidential** even though they're not passwords.
 
 ---
 
 ### Business Questions
 
-**Q: Do you offer discounts for startups/nonprofits?**
+**Q: Can I resell EmailEngine as part of my SaaS?**
 
-A: Case-by-case basis. Email sales@emailengine.app with:
-- Organization details
-- Use case
-- Budget constraints
+A: Yes, with active subscription. Your customers don't need individual subscriptions. You deploy EmailEngine with your license keys on your infrastructure.
 
-**Q: Can I get invoice/PO payment?**
+Example: You build a CRM with email. You subscribe to EmailEngine. Your 1,000 customers use your CRM. You only need one subscription.
 
-A: Yes, for companies. Email sales@emailengine.app
+**Q: Do you offer discounts for nonprofits/educational institutions?**
 
-**Q: Do you offer educational licenses?**
+A: Contact sales@emailengine.app with details about your organization. Special pricing may be available.
 
-A: Reduced pricing available for educational institutions. Email sales@emailengine.app
+**Q: Can I pay via invoice/PO?**
+
+A: Yes, for companies. Contact sales@emailengine.app to arrange invoice payment.
 
 **Q: What currency is pricing in?**
 
-A: USD. Credit card payments auto-convert from your currency.
+A: See https://postalsys.com/plans for currency options. Credit card payments auto-convert.
 
-## Support Included
+## Support
 
-### License Includes
+### What's Included
 
 **Community support:**
 - GitHub discussions
@@ -577,7 +567,7 @@ A: USD. Credit card payments auto-convert from your currency.
 - Bug reports prioritized
 
 **Updates:**
-- All updates during license period
+- All updates during subscription period
 - Security patches
 - Bug fixes
 - New features
@@ -590,25 +580,25 @@ A: USD. Credit card payments auto-convert from your currency.
 - Architecture review
 - White-glove support
 
-For enterprise support, contact sales@emailengine.app
+For enterprise support, contact sales@emailengine.com
 
 ## Security Best Practices
 
-### Protecting Your License Key
+### Protecting License Keys
 
 **Do:**
-- YES: Store in environment variables
-- YES: Use secret management service (Vault, AWS Secrets Manager)
-- YES: Restrict file permissions (600)
-- YES: Rotate if exposed
-- YES: Use different keys for different deployments (if multiple licenses)
+- Store in environment variables
+- Use secret management service (Vault, AWS Secrets Manager)
+- Restrict file permissions (600)
+- Generate separate keys per instance
+- Revoke compromised keys immediately
 
 **Don't:**
-- NO: Commit to version control
-- NO: Include in Docker images
-- NO: Share publicly
-- NO: Email unencrypted
-- NO: Store in code
+- Commit to version control
+- Include in Docker images
+- Share publicly
+- Email unencrypted
+- Reuse same key everywhere
 
 **Example secure setup:**
 
@@ -622,31 +612,19 @@ EENGINE_LICENSE_KEY=your-key-here
 # Set permissions
 sudo chown root:emailengine /etc/emailengine/environment
 sudo chmod 640 /etc/emailengine/environment
-
-# Only root and emailengine user can read
 ```
-
-### License Key Rotation
-
-If license key exposed:
-
-1. **Email support immediately:** support@emailengine.app
-2. **Request new license key**
-3. **Update all instances**
-4. **Old key will be invalidated**
-
-No charge for key rotation due to security incident.
 
 ## Contact
 
 ### Sales Inquiries
 - **Email:** sales@emailengine.app
-- **Topics:** Pricing, volume discounts, enterprise, quotes
+- **Topics:** Pricing, enterprise plans, volume discounts
 
-### License Support
+### Subscription Support
 - **Email:** support@emailengine.app
-- **Topics:** Activation, renewal, technical issues
+- **Topics:** Billing, activation, renewal issues
 
 ### General Information
 - **Website:** [https://emailengine.app](https://emailengine.app)
 - **Pricing:** [https://postalsys.com/plans](https://postalsys.com/plans)
+- **Account Portal:** [https://postalsys.com/](https://postalsys.com/)
