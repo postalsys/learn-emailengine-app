@@ -81,7 +81,7 @@ Start using EmailEngine immediately. No sign-up, no credit card, no limitations 
 - [View current pricing and plans](https://postalsys.com/plans)
 - Annual subscription model
 - Flat rate (not per-mailbox or per-instance)
-- Payment via credit card or invoice
+- Payment via credit card or SEPA direct debit
 
 **How it works:**
 1. Purchase a **subscription** (not individual licenses)
@@ -150,8 +150,8 @@ Start using EmailEngine immediately. No sign-up, no credit card, no limitations 
    - Billing address
    - Tax information (if applicable)
 4. Add payment method:
-   - Credit card
-   - Or request invoice payment (contact sales)
+   - Credit card, or
+   - SEPA direct debit
 
 ### Step 4: Subscribe to Plan
 
@@ -299,7 +299,7 @@ You can invite teammates to help manage license keys and billing:
 
 - **60 days before expiration:** Renewal reminder email sent
 - **On renewal date:** Subscription automatically renews
-- **Payment:** Credit card charged automatically
+- **Payment:** Credit card or SEPA direct debit charged automatically
 - **License keys:** All existing keys remain valid
 - **No action needed** if auto-renewal succeeds
 
@@ -335,8 +335,9 @@ You can invite teammates to help manage license keys and billing:
 5. **Pay the invoice:**
    - Click "Pay Invoice" in account dashboard
    - Or use payment link from email
+   - Payment must be made online via credit card or SEPA direct debit
    - Update payment method if needed
-   - Complete payment
+   - Complete payment online
 
 6. **After payment:**
    - Subscription status restored to active
@@ -581,7 +582,7 @@ A: Contact sales@emailengine.app with details about your organization. Special p
 
 **Q: Can I pay via invoice/PO?**
 
-A: Yes, for companies. Contact sales@emailengine.app to arrange invoice payment.
+A: All payments must be made online via credit card or SEPA direct debit. If automatic renewal fails, an invoice is generated, but payment must still be completed online through the account dashboard using credit card or SEPA direct debit.
 
 **Q: What currency is pricing in?**
 
