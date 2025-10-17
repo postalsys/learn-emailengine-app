@@ -165,7 +165,7 @@ Check which sub-connections are active in the EmailEngine UI:
 3. Scroll to **IMAP** section
 4. View **Sub-connections** list
 
-![Sub-connections UI](__GHOST_URL__/content/images/2023/02/Screenshot-2023-02-27-at-11.48.41.png)
+![Sub-connections UI](/img/external/Screenshot-2023-02-27-at-11.48.41.png)
 
 **Note:** EmailEngine skips duplicate connections. If you request INBOX as a sub-connection and EmailEngine already monitors it as the primary connection, it won't appear in the sub-connections list.
 
@@ -201,7 +201,7 @@ Gmail sorts inbox emails into category tabs:
 - **Updates** - Confirmations, receipts, statements
 - **Forums** - Mailing lists, discussion groups
 
-![Gmail Category Tabs](__GHOST_URL__/content/images/2023/02/Screenshot-2023-02-27-at-11.52.29.png)
+![Gmail Category Tabs](/img/external/Screenshot-2023-02-27-at-11.52.29.png)
 
 ### Enable Category Detection
 
@@ -213,7 +213,7 @@ Category detection requires **additional IMAP commands per email**, which can sl
 2. Enable **Gmail Category Detection**
 3. Save changes
 
-![Enable Category Detection](__GHOST_URL__/content/images/2023/02/Screenshot-2023-02-27-at-11.50.10.png)
+![Enable Category Detection](/img/external/Screenshot-2023-02-27-at-11.50.10.png)
 
 #### Enable via Environment Variable
 

@@ -49,7 +49,7 @@ Do not choose the smallest instance sizes. EmailEngine requires at least:
 
 3. **Select "Redis"**
 
-   ![Create Redis](__GHOST_URL__/content/images/2022/05/Screenshot-2022-05-06-at-11.16.42.png)
+   ![Create Redis](/img/external/Screenshot-2022-05-06-at-11.16.42.png)
 
 4. **Configure Redis:**
 
@@ -61,7 +61,7 @@ Do not choose the smallest instance sizes. EmailEngine requires at least:
    | **Maxmemory Policy** | `noeviction` | **Required** |
    | **Eviction** | Disabled | Prevents data loss |
 
-   ![Redis Configuration](__GHOST_URL__/content/images/2022/05/Screenshot-2022-05-06-at-11.23.37.png)
+   ![Redis Configuration](/img/external/Screenshot-2022-05-06-at-11.23.37.png)
 
 5. **Click "Create Redis"**
 
@@ -70,7 +70,7 @@ Do not choose the smallest instance sizes. EmailEngine requires at least:
    - On the Redis info page, copy the **Internal Connection String**
    - Format: `redis://red-xxxxx:6379`
 
-   ![Redis URL](__GHOST_URL__/content/images/2022/05/Screenshot-2022-05-06-at-11.20.57.png)
+   ![Redis URL](/img/external/Screenshot-2022-05-06-at-11.20.57.png)
 
 :::tip Internal vs External URL
 Use the **Internal Connection String** for better performance and no data transfer costs. External URLs are only needed if connecting from outside Render.
@@ -82,13 +82,13 @@ Use the **Internal Connection String** for better performance and no data transf
 
 2. **Select "Web Service"**
 
-   ![Create Web Service](__GHOST_URL__/content/images/2022/05/Screenshot-2022-05-06-at-11.26.28.png)
+   ![Create Web Service](/img/external/Screenshot-2022-05-06-at-11.26.28.png)
 
 3. **Connect Repository:**
    - Select "Deploy an existing image from a registry" OR
    - Use public repository: `https://github.com/postalsys/emailengine`
 
-   ![Connect Repository](__GHOST_URL__/content/images/2022/05/Screenshot-2022-05-06-at-10.53.33.png)
+   ![Connect Repository](/img/external/Screenshot-2022-05-06-at-10.53.33.png)
 
 4. **Click "Connect"** next to `postalsys/emailengine`
 
@@ -116,7 +116,7 @@ Use the **Internal Connection String** for better performance and no data transf
    | `EENGINE_WORKERS` | `2` | Optional |
    | `NODE_ENV` | `production` | Recommended |
 
-   ![Environment Variables](__GHOST_URL__/content/images/2022/05/render-app.png)
+   ![Environment Variables](/img/external/render-app.png)
 
    :::warning Generate Strong Secrets
    Use a password generator to create strong random strings:
@@ -147,7 +147,7 @@ Use the **Internal Connection String** for better performance and no data transf
 3. **Get application URL:**
    - Once deployed, URL appears at top: `https://emailengine-xxxx.onrender.com`
 
-   ![Deployed Application](__GHOST_URL__/content/images/2022/05/Screenshot-2022-05-06-at-11.34.54.png)
+   ![Deployed Application](/img/external/Screenshot-2022-05-06-at-11.34.54.png)
 
 4. **Access EmailEngine:**
    - Open the URL in your browser
