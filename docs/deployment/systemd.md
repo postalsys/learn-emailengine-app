@@ -34,9 +34,46 @@ EmailEngine is well-suited for SystemD because it:
 
 ### 1. Install EmailEngine
 
+Choose one of the following installation methods:
+
+**Option A: Download Binary (Recommended)**
+
 ```bash
-# Install globally
-sudo npm install -g emailengine
+# Download and extract
+wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
+tar xzf emailengine.tar.gz
+sudo mv emailengine /usr/local/bin/
+sudo chmod +x /usr/local/bin/emailengine
+
+# Verify installation
+emailengine --version
+```
+
+**Option B: Using Install Script (Ubuntu/Debian)**
+
+```bash
+# Download and run install script
+wget https://go.emailengine.app -O install.sh
+chmod +x install.sh
+sudo ./install.sh
+
+# Verify installation
+emailengine --version
+```
+
+**Option C: From Source**
+
+```bash
+# Download source distribution
+wget https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz
+tar xzf source-dist.tar.gz
+cd emailengine
+
+# Install dependencies
+npm install --production
+
+# Make globally available
+sudo npm link
 
 # Verify installation
 emailengine --version
@@ -750,11 +787,16 @@ sudo systemctl restart emailengine
 # Stop service
 sudo systemctl stop emailengine
 
-# Update package
-sudo npm update -g emailengine
+# Download new version
+wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
+tar xzf emailengine.tar.gz
 
-# Or install specific version
-sudo npm install -g emailengine@2.48.5
+# Replace binary
+sudo mv emailengine /usr/local/bin/
+sudo chmod +x /usr/local/bin/emailengine
+
+# Or download specific version (e.g., v2.48.5)
+# wget https://github.com/postalsys/emailengine/releases/download/v2.48.5/emailengine.tar.gz
 
 # Reload systemd (if service file changed)
 sudo systemctl daemon-reload
@@ -801,8 +843,13 @@ sudo systemctl restart emailengine
 **1. Install dependencies:**
 ```bash
 sudo apt update
-sudo apt install -y nodejs npm redis-server
-sudo npm install -g emailengine
+sudo apt install -y redis-server
+
+# Download and install EmailEngine
+wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
+tar xzf emailengine.tar.gz
+sudo mv emailengine /usr/local/bin/
+sudo chmod +x /usr/local/bin/emailengine
 ```
 
 **2. Create user and directories:**

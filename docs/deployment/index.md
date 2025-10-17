@@ -416,7 +416,13 @@ docker run ... postalsys/emailengine:latest
 
 **SystemD:**
 ```bash
-npm install -g emailengine
+# Download new version
+wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
+tar xzf emailengine.tar.gz
+sudo mv emailengine /usr/local/bin/
+sudo chmod +x /usr/local/bin/emailengine
+
+# Restart service
 systemctl restart emailengine
 ```
 
