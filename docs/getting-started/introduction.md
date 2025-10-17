@@ -87,6 +87,6 @@ Get started with EmailEngine in just a few steps:
 
 ## License
 
-EmailEngine requires a valid license key for production use. [Get a license key](https://postalsys.com/plans) to unlock all features.
+EmailEngine includes a **14-day free trial** with full functionality and no limitations. No credit card required - just click "Activate Trial" in the dashboard to begin.
 
-A development license is available for free for testing and development purposes.
+For production use, [get a license key](https://postalsys.com/plans) from postalsys.com.
