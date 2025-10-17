@@ -226,10 +226,10 @@ $ curl "http://127.0.0.1:3000/v1/account/my-account" \
 
 ### Initial Sync Duration
 
-Sync time depends on mailbox size:
-- **Small mailbox** (< 1000 messages): 10-30 seconds
-- **Medium mailbox** (1000-10000 messages): 1-5 minutes
-- **Large mailbox** (> 10000 messages): 5-15 minutes
+Sync time depends on:
+- **Number of mailbox folders** - More folders take longer to scan
+- **Number of messages** - Each message needs to be indexed
+- **Indexer type** - Fast indexer (basic metadata) or Full indexer (complete indexing, default)
 
 ## Step 6: Send Your First Email
 
