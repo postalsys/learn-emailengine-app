@@ -177,9 +177,34 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account" \
 
 ## Step 5: Wait for Initial Sync
 
-EmailEngine needs to perform an initial sync of your mailbox before you can use it.
+EmailEngine performs an initial sync of your mailbox before it's ready to use.
 
-Use the [get account API](/docs/api/get-v-1-account-account) to check status:
+### Option A: Using Webhooks (Recommended)
+
+Once the account completes its initial sync, EmailEngine automatically sends an `accountInitialized` webhook event:
+
+```json
+{
+  "serviceUrl": "https://emailengine.example.com",
+  "event": "accountInitialized",
+  "account": "my-account",
+  "date": "2025-01-15T10:23:45.678Z",
+  "data": {
+    "account": "my-account",
+    "state": "connected",
+    "syncTime": 2341
+  }
+}
+```
+
+**Benefits:**
+- No polling required
+- Instant notification when account is ready
+- Efficient for production applications
+
+### Option B: Polling Account Status
+
+Alternatively, poll the [get account API](/docs/api/get-v-1-account-account) until `state` shows `"connected"`:
 
 ```bash
 # Check account status
@@ -187,8 +212,7 @@ $ curl "http://127.0.0.1:3000/v1/account/my-account" \
   -H "Authorization: Bearer ${EMAILENGINE_TOKEN}"
 ```
 
-Wait until the `state` field shows `"connected"`:
-
+**Response when ready:**
 ```json
 {
   "account": "my-account",
@@ -200,7 +224,9 @@ Wait until the `state` field shows `"connected"`:
 }
 ```
 
-Initial sync time depends on mailbox size:
+### Initial Sync Duration
+
+Sync time depends on mailbox size:
 - **Small mailbox** (< 1000 messages): 10-30 seconds
 - **Medium mailbox** (1000-10000 messages): 1-5 minutes
 - **Large mailbox** (> 10000 messages): 5-15 minutes
