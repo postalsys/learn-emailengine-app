@@ -404,7 +404,7 @@ A: EmailEngine stops accepting connections. All data preserved. Activate with li
 
 **Q: Can I extend the trial?**
 
-A: Trial is fixed at 14 days. Contact support@emailengine.app if you need more evaluation time.
+A: Trial is fixed at 14 days. Contact support@postalsys.com if you need more evaluation time.
 
 **Q: Do I need separate subscriptions for dev/staging/production?**
 
@@ -441,6 +441,7 @@ A: No. One subscription covers all your deployments, regardless of how many cust
 A: Invoice payment is not available for regular self-service plans. All regular plan payments must be made online via credit card or SEPA direct debit.
 
 However, **custom plans** are available with invoice payment options. Custom plans are more expensive than regular plans but offer additional flexibility such as:
+
 - Invoice/PO payment
 - Lifetime subscriptions
 - Custom terms and pricing
@@ -464,7 +465,7 @@ A: See https://postalsys.com/plans for currency options. Credit card payments au
 
 **Email support:**
 
-- support@emailengine.app
+- support@postalsys.com
 - Response time: Usually within 24 hours
 - Bug reports prioritized
 

@@ -42,17 +42,17 @@ EmailEngine will start on **http://localhost:3000**
 2. On first startup, you'll be prompted to create an admin account
 3. Set a secure password - you'll use this to access the API
 
-![EmailEngine First Start](../assets/emailengine-first-start.png)
-
 ## Step 3: Generate an API Access Token
 
 You need an access token to authenticate API requests.
 
 ### Via Web Interface:
-1. Go to **Settings → Access Tokens**
-2. Click **Create new token**
-3. Give it a description (e.g., "Development")
-4. Copy the generated token - you'll need it for API calls
+1. Navigate to **Access Tokens** in the sidebar menu
+2. Click **Create new**
+3. Provide a name (e.g., "Development")
+4. Select scopes (use `*` for full access)
+5. Click **Generate a token**
+6. Copy the token immediately - it's shown only once and keep it secure
 
 ### Via API:
 ```bash

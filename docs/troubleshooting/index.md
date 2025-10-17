@@ -9,11 +9,12 @@ sidebar_position: 1
 Comprehensive troubleshooting guide for common issues and diagnostic procedures.
 
 :::tip Quick Diagnostic
+
 1. Check `/health` endpoint: `curl http://localhost:3000/health`
 2. Check logs: `journalctl -u emailengine -n 100` or `docker logs emailengine`
 3. Verify Redis: `redis-cli ping`
 4. Test account connection from web interface
-:::
+   :::
 
 ## Quick Diagnostic Checklist
 
@@ -57,11 +58,13 @@ emailengine --help
 **Common causes and solutions:**
 
 1. **Redis connection failed**
+
    ```
    Error: Redis connection to 127.0.0.1:6379 failed - connect ECONNREFUSED
    ```
 
    **Solution:**
+
    ```bash
    # Check Redis status
    sudo systemctl status redis
@@ -76,22 +79,26 @@ emailengine --help
    ```
 
 2. **Missing required configuration**
+
    ```
    Error: EENGINE_SECRET is required
    ```
 
    **Solution:**
+
    ```bash
    # Generate and set secret
    export EENGINE_SECRET=$(openssl rand -hex 32)
    ```
 
 3. **Port already in use**
+
    ```
    Error: listen EADDRINUSE: address already in use :::3000
    ```
 
    **Solution:**
+
    ```bash
    # Find process using port
    sudo lsof -i :3000
@@ -102,11 +109,13 @@ emailengine --help
    ```
 
 4. **Node.js version incompatible**
+
    ```
    Error: Node.js version 14.x is not supported
    ```
 
    **Solution:**
+
    ```bash
    # Check version
    node --version
@@ -140,6 +149,7 @@ journalctl -u emailengine | grep -i "connection\|error"
 1. **Redis out of memory**
 
    **Check Redis memory:**
+
    ```bash
    # Via redis-cli
    redis-cli INFO memory | grep used_memory_human
@@ -150,6 +160,7 @@ journalctl -u emailengine | grep -i "connection\|error"
    ```
 
    **Solution:**
+
    ```bash
    # Increase Redis maxmemory
    # Edit /etc/redis/redis.conf
@@ -165,6 +176,7 @@ journalctl -u emailengine | grep -i "connection\|error"
 2. **Network connectivity issues**
 
    **Test IMAP connection:**
+
    ```bash
    # Test IMAP host reachability
    telnet imap.gmail.com 993
@@ -175,6 +187,7 @@ journalctl -u emailengine | grep -i "connection\|error"
    ```
 
    **Check firewall:**
+
    ```bash
    # Check if ports are blocked
    sudo iptables -L -n | grep -E "993|587|465|143"
@@ -187,6 +200,7 @@ journalctl -u emailengine | grep -i "connection\|error"
 3. **Rate limiting by email provider**
 
    **Solution:**
+
    - Reduce `maxConnections` per account
    - Increase connection timeout
    - Implement exponential backoff
@@ -203,6 +217,7 @@ journalctl -u emailengine | grep -i "connection\|error"
 4. **Too many accounts**
 
    **Solution:**
+
    ```bash
    # Increase worker threads
    export EENGINE_WORKERS=8
@@ -233,11 +248,13 @@ traceroute imap.gmail.com
 **Solutions:**
 
 1. **Increase timeout:**
+
    ```bash
    export EENGINE_IMAP_CONNECTION_TIMEOUT=120000  # 120 seconds
    ```
 
 2. **Check network quality:**
+
    ```bash
    # Test packet loss
    mtr -c 100 imap.gmail.com
@@ -280,6 +297,7 @@ curl https://oauth2.googleapis.com/token
 1. **Invalid client ID/secret**
 
    **Solution:**
+
    - Verify credentials in Google Cloud Console
    - Ensure credentials match environment variables
    - Check for trailing spaces in environment variables
@@ -292,6 +310,7 @@ curl https://oauth2.googleapis.com/token
 2. **Incorrect redirect URI**
 
    **Solution:**
+
    ```bash
    # Set correct base URL
    export EENGINE_BASE_URL=https://emailengine.example.com
@@ -303,11 +322,13 @@ curl https://oauth2.googleapis.com/token
 3. **OAuth2 scopes insufficient**
 
    **Gmail required scopes:**
+
    - `https://mail.google.com/`
    - `https://www.googleapis.com/auth/gmail.send`
    - `https://www.googleapis.com/auth/gmail.modify`
 
    **Outlook required scopes:**
+
    - `https://outlook.office.com/IMAP.AccessAsUser.All`
    - `https://outlook.office.com/SMTP.Send`
 
@@ -329,10 +350,12 @@ journalctl -u emailengine | grep -i "refresh\|token"
 **Solutions:**
 
 1. **Refresh token expired:**
+
    - Re-authenticate account
    - Check OAuth2 app approval screen settings
 
 2. **OAuth2 app disabled:**
+
    - Verify app status in provider console
    - Check for security alerts
 
@@ -371,6 +394,7 @@ journalctl -u emailengine | grep -i webhook
 1. **Webhook URL not set**
 
    **Solution:**
+
    ```bash
    curl -X POST http://localhost:3000/v1/settings \
      -H "Authorization: Bearer TOKEN" \
@@ -381,6 +405,7 @@ journalctl -u emailengine | grep -i webhook
 2. **Webhook endpoint unreachable**
 
    **Test from EmailEngine server:**
+
    ```bash
    curl -I https://your-app.com/webhooks
 
@@ -394,6 +419,7 @@ journalctl -u emailengine | grep -i webhook
 3. **Webhook timeout**
 
    **Solution:**
+
    ```json
    {
      "webhooks": {
@@ -406,6 +432,7 @@ journalctl -u emailengine | grep -i webhook
 4. **SSL certificate issues**
 
    **Check certificate:**
+
    ```bash
    openssl s_client -connect your-app.com:443 -servername your-app.com
 
@@ -434,6 +461,7 @@ journalctl -u emailengine -f | grep webhook
 **Solutions:**
 
 1. **Increase queue concurrency:**
+
    ```bash
    curl -X PUT http://localhost:3000/v1/settings/queue/webhooks \
      -H "Authorization: Bearer TOKEN" \
@@ -441,6 +469,7 @@ journalctl -u emailengine -f | grep webhook
    ```
 
 2. **Reduce webhook payload:**
+
    - Disable including full message content
    - Fetch content on-demand via API
 
@@ -473,15 +502,18 @@ curl http://localhost:3000/v1/accounts \
 **Solutions:**
 
 1. **Too many accounts:**
+
    - **Rule of thumb:** 1-2 MB per account
    - 100 accounts ≈ 200 MB
    - 1000 accounts ≈ 2 GB
 
    **Solution:**
+
    - Add more instances
    - Increase system RAM
 
 2. **Large mailboxes:**
+
    ```bash
    # Reduce chunk size
    export EENGINE_CHUNK_SIZE=2500
@@ -491,6 +523,7 @@ curl http://localhost:3000/v1/accounts \
    ```
 
 3. **Memory leak:**
+
    ```bash
    # Update to latest version
    npm update -g emailengine
@@ -524,6 +557,7 @@ time curl http://localhost:3000/v1/accounts \
 **Solutions:**
 
 1. **Redis latency high:**
+
    ```bash
    # Check Redis is on same machine/network
    ping <redis-host>
@@ -539,12 +573,14 @@ time curl http://localhost:3000/v1/accounts \
    ```
 
 2. **Too few workers:**
+
    ```bash
    # Increase workers
    export EENGINE_WORKERS=$(nproc)  # Match CPU cores
    ```
 
 3. **Database performance:**
+
    ```bash
    # Check Redis slow queries
    redis-cli SLOWLOG GET 10
@@ -577,10 +613,12 @@ journalctl -u emailengine | grep -i "sync\|idle"
 **Solutions:**
 
 1. **IMAP IDLE not working:**
+
    - Check if server supports IDLE
    - Enable regular polling
 
 2. **Sync paused:**
+
    ```bash
    # Resume sync
    curl -X PUT http://localhost:3000/v1/account/user@example.com \
@@ -725,21 +763,25 @@ journalctl -u emailengine --since "1 hour ago" | grep -c ERROR
 ### Log Patterns to Look For
 
 **Connection issues:**
+
 ```
 grep -i "econnrefused\|etimedout\|enotfound" emailengine.log
 ```
 
 **Authentication failures:**
+
 ```
 grep -i "authentication failed\|invalid credentials" emailengine.log
 ```
 
 **Rate limiting:**
+
 ```
 grep -i "rate limit\|too many requests\|throttle" emailengine.log
 ```
 
 **Memory issues:**
+
 ```
 grep -i "out of memory\|heap\|fatal" emailengine.log
 ```
@@ -751,11 +793,13 @@ grep -i "out of memory\|heap\|fatal" emailengine.log
 When requesting support, provide:
 
 1. **EmailEngine version:**
+
    ```bash
    emailengine --version
    ```
 
 2. **System information:**
+
    ```bash
    uname -a
    node --version
@@ -763,12 +807,14 @@ When requesting support, provide:
    ```
 
 3. **Configuration:**
+
    ```bash
    # Sanitize sensitive data before sharing
    cat /etc/emailengine/config.json
    ```
 
 4. **Logs:**
+
    ```bash
    journalctl -u emailengine -n 200 > logs.txt
    ```
@@ -784,5 +830,5 @@ When requesting support, provide:
 
 - **Documentation:** [https://docs.emailengine.app](https://docs.emailengine.app)
 - **GitHub Issues:** [https://github.com/postalsys/emailengine/issues](https://github.com/postalsys/emailengine/issues)
-- **Email Support:** [support@emailengine.app](mailto:support@emailengine.app)
+- **Email Support:** [support@postalsys.com](mailto:support@postalsys.com)
 - **Community Forum:** [https://emailengine.app/support](/docs/support/license)
