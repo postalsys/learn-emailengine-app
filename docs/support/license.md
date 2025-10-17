@@ -424,41 +424,6 @@ A: No refunds are offered. Please use the 14-day free trial to fully evaluate Em
 
 ---
 
-### Technical Questions
-
-**Q: Is the license key validated online?**
-
-A: No. License validation is local (JWT signature verification). EmailEngine works completely offline. No internet connection needed for license validation.
-
-**Q: Can I use the same license key on multiple instances?**
-
-A: While technically possible, **best practice is to generate separate keys for each instance**. This allows you to:
-
-- Track which key is used where
-- Revoke individual keys if needed
-- Better security and management
-
-**Q: What if my license key is compromised?**
-
-A: Log in to https://postalsys.com/, revoke the compromised key, and generate a new one. Update affected instances immediately. Other keys remain unaffected.
-
-**Q: Can I inspect the license key?**
-
-A: Yes, it's a JWT token. Decode using:
-
-```bash
-# Extract payload (middle section between dots)
-echo "eyJsaWNlbnNlS..." | base64 -d | jq
-```
-
-But **treat license keys as confidential** even though they're not passwords.
-
-**Q: Does the trial require a license key?**
-
-A: No. Start EmailEngine without any license key, access the web interface at `http://localhost:3000`, and click the "Activate Trial" button. Trial begins immediately after clicking the button.
-
----
-
 ### Business Questions
 
 **Q: Can I resell EmailEngine as part of my SaaS?**
@@ -471,13 +436,19 @@ Example: You build a CRM with email. You subscribe to EmailEngine. Your 1,000 cu
 
 A: No. One subscription covers all your deployments, regardless of how many customers you serve.
 
-**Q: Do you offer discounts for nonprofits/educational institutions?**
-
-A: Contact support@emailengine.app with details about your organization. Special pricing may be available.
-
 **Q: Can I pay via invoice/PO?**
 
-A: All payments must be made online via credit card or SEPA direct debit. If automatic renewal fails, an invoice is generated, but payment must still be completed online through the account dashboard using credit card or SEPA direct debit.
+A: Invoice payment is not available for regular self-service plans. All regular plan payments must be made online via credit card or SEPA direct debit.
+
+However, **custom plans** are available with invoice payment options. Custom plans are more expensive than regular plans but offer additional flexibility such as:
+- Invoice/PO payment
+- Lifetime subscriptions
+- Custom terms and pricing
+- Enterprise agreements
+
+Contact support@postalsys.com for custom plan details and pricing.
+
+Note: If automatic renewal fails on a regular plan, an invoice is generated for the grace period, but payment must still be completed online using credit card or SEPA direct debit.
 
 **Q: What currency is pricing in?**
 
@@ -489,8 +460,6 @@ A: See https://postalsys.com/plans for currency options. Credit card payments au
 
 **Community support:**
 
-- GitHub discussions
-- Community forum
 - Documentation
 
 **Email support:**
@@ -499,13 +468,6 @@ A: See https://postalsys.com/plans for currency options. Credit card payments au
 - Response time: Usually within 24 hours
 - Bug reports prioritized
 
-**Updates:**
-
-- All updates during subscription period
-- Security patches
-- Bug fixes
-- New features
-
 ### Not Included
 
 - Custom development
@@ -513,62 +475,3 @@ A: See https://postalsys.com/plans for currency options. Credit card payments au
 - Consulting services
 - Architecture review
 - White-glove support
-
-For enterprise support, contact support@emailengine.app
-
-## Security Best Practices
-
-### Protecting License Keys
-
-**Do:**
-
-- Store in environment variables
-- Use secret management service (Vault, AWS Secrets Manager)
-- Restrict file permissions (600)
-- Generate separate keys per instance
-- Revoke compromised keys immediately
-
-**Don't:**
-
-- Commit to version control
-- Include in Docker images
-- Share publicly
-- Email unencrypted
-- Reuse same key everywhere
-
-**Example secure setup for SystemD:**
-
-```bash
-# Edit service file
-sudo nano /etc/systemd/system/emailengine.service
-
-# Add to [Service] section with proper escaping:
-[Service]
-Environment="EENGINE_PREPARED_LICENSE=-----BEGIN LICENSE-----\nApplication: EmailEngine\nLicensed to: Your Company\n\nyour-license-key-data-here...\n-----END LICENSE-----"
-
-# Set restrictive permissions
-sudo chmod 644 /etc/systemd/system/emailengine.service
-sudo chown root:root /etc/systemd/system/emailengine.service
-
-# Reload and restart
-sudo systemctl daemon-reload
-sudo systemctl restart emailengine
-```
-
-## Contact
-
-### Sales Inquiries
-
-- **Email:** support@emailengine.app
-- **Topics:** Pricing, enterprise plans, trial extensions
-
-### Subscription Support
-
-- **Email:** support@emailengine.app
-- **Topics:** Billing, activation, renewal issues
-
-### General Information
-
-- **Website:** [https://emailengine.app](https://emailengine.app)
-- **Pricing:** [https://postalsys.com/plans](https://postalsys.com/plans)
-- **Account Portal:** [https://postalsys.com/](https://postalsys.com/)
