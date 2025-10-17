@@ -179,7 +179,20 @@ Start using EmailEngine immediately. No sign-up, no credit card, no limitations 
 
 ### Step 6: Activate License in EmailEngine
 
-**Option 1: Environment Variable (Recommended)**
+**Option 1: Web Dashboard (Recommended)**
+
+1. Access web interface: `http://127.0.0.1:3000`
+2. Navigate to **License** page: `http://127.0.0.1:3000/admin/config/license`
+3. Paste license key in the text field
+4. Click **Update License Key**
+
+This is the easiest method for manual activation.
+
+---
+
+**Option 2: Environment Variable**
+
+For automated deployments and containerized environments:
 
 ```bash
 export EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----
@@ -229,7 +242,9 @@ services:
 
 ---
 
-**Option 2: Command Line**
+**Option 3: Command Line**
+
+For quick testing or scripts:
 
 ```bash
 emailengine --preparedLicense="-----BEGIN LICENSE-----
@@ -239,15 +254,6 @@ Licensed to: Your Company Name
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9abcdefghijklmnopqrstuvwxyz...
 -----END LICENSE-----"
 ```
-
----
-
-**Option 3: Web Interface**
-
-1. Access web interface: `http://localhost:3000`
-2. Go to **Settings** → **License**
-3. Paste license key
-4. Click **Save**
 
 ### Step 7: Verify Activation
 
