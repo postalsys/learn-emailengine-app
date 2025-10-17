@@ -277,28 +277,15 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9abcdefghijklmnopqrstuvwxyz...
 You can invite teammates to help manage license keys and billing:
 
 1. Log in to [https://postalsys.com/](https://postalsys.com/)
-2. Navigate to **Team** or **Account Settings**
-3. Click "Invite Team Member"
+2. Navigate to **Manage Team**
+3. Click "Invite Member"
 4. Enter their email address
-5. Select permissions (billing, license management, etc.)
-
-**Team members can:**
-
-- Generate new license keys
-- View existing keys
-- Manage billing information (if granted permission)
-- View invoices
-
-**Team members cannot:**
-
-- Cancel subscription (unless owner)
-- Access other team members' personal settings
 
 ### Annual Renewal
 
 **Automatic Renewal (Default):**
 
-- **60 days before expiration:** Renewal reminder email sent
+- **7 days before expiration:** Renewal reminder email sent
 - **On renewal date:** Subscription automatically renews
 - **Payment:** Credit card or SEPA direct debit charged automatically
 - **License keys:** All existing keys remain valid
@@ -318,7 +305,6 @@ You can invite teammates to help manage license keys and billing:
 1. **Immediate notification:**
 
    - Email sent to billing email address
-   - Subject: "EmailEngine Subscription Renewal Failed"
 
 2. **Invoice generated:**
 
@@ -329,7 +315,6 @@ You can invite teammates to help manage license keys and billing:
 
    - Log in to [https://postalsys.com/](https://postalsys.com/)
    - Warning banner displayed with link to invoice
-   - Navigate to **Billing** → **Invoices**
 
 4. **During 28-day grace period:**
 
@@ -340,9 +325,7 @@ You can invite teammates to help manage license keys and billing:
 
 5. **Pay the invoice:**
 
-   - Click "Pay Invoice" in account dashboard
-   - Or use payment link from email
-   - Payment must be made online via credit card or SEPA direct debit
+   - Payment must be made on the invoice page via credit card or SEPA direct debit
    - Update payment method if needed
    - Complete payment online
 
@@ -363,7 +346,6 @@ You can invite teammates to help manage license keys and billing:
    - Existing data preserved
    - Cannot process emails
    - All accounts remain in database
-4. **Email notification sent**
 
 **To restore service:**
 
@@ -373,9 +355,38 @@ You can invite teammates to help manage license keys and billing:
 4. Service restored immediately
 5. All accounts and data preserved
 
-:::warning Subscription Cancellation
-If you cancel your subscription voluntarily, all license keys are immediately revoked. EmailEngine instances will stop functioning.
-:::
+### Voluntary Subscription Cancellation
+
+**If you cancel your subscription voluntarily:**
+
+1. **Subscription remains active until renewal date**
+   - No immediate service interruption
+   - All license keys remain valid
+   - EmailEngine continues working normally
+
+2. **On original renewal date:**
+   - Subscription expires
+   - All license keys revoked
+   - EmailEngine instances stop functioning
+   - All data preserved in database
+
+3. **To continue service:**
+   - Resubscribe before expiration date
+   - Or subscribe after expiration to restore access
+   - Generate new license keys after resubscribing
+   - Update EmailEngine instances with new keys
+
+**Example timeline:**
+
+```
+Jan 1, 2025:  Subscribe (expires Jan 1, 2026)
+Nov 15, 2025: Cancel subscription voluntarily
+              → Service continues normally
+              → License keys still valid
+Jan 1, 2026:  Subscription expires (original renewal date)
+              → License keys revoked
+              → EmailEngine stops functioning
+```
 
 ## Multiple Instances
 
@@ -531,7 +542,7 @@ A: If you're part of the same organization, yes. Invite them as team members. Ea
 
 **Q: What happens if I cancel my subscription?**
 
-A: All license keys are immediately revoked. EmailEngine instances stop functioning. You can resubscribe anytime to restore service.
+A: Your subscription remains active until the original renewal date. All license keys continue working normally until that date. On the renewal date, the subscription expires and all license keys are revoked. You can resubscribe anytime to restore service.
 
 **Q: Can I upgrade or downgrade my plan?**
 
