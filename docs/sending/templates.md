@@ -30,7 +30,7 @@ You can manage templates in two ways:
 1. **Templates API**: Programmatically create, update, and delete templates
 2. **Admin Interface**: Visual interface at **Email templates** in the side menu
 
-![Email Templates Interface](https://cldup.com/okV3xd67hr.png)
+![Email Templates Interface](/img/external/okV3xd67hr.png)
 
 ## Creating Templates
 

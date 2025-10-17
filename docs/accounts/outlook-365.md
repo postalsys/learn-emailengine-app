@@ -394,7 +394,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 - `redirectUrl`: Where to redirect after authentication
 - `type`: The ID of your OAuth2 application in EmailEngine
 
-![Finding OAuth2 app ID](https://cldup.com/IVrLyCqaBc.png)
+![Finding OAuth2 app ID](/img/external/IVrLyCqaBc.png)
 
 <!-- Shows: OAuth2 app ID in EmailEngine configuration -->
 

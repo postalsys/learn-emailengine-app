@@ -225,7 +225,7 @@ EmailEngine includes [Arena](https://github.com/bee-queue/arena), a web UI for B
 - Pause/resume queues
 - View job logs
 
-![Arena Interface](https://cldup.com/dTxpPiMO3S.png)
+![Arena Interface](/img/external/dTxpPiMO3S.png)
 
 ### API Access
 

@@ -81,19 +81,19 @@ Don't worry - this guide walks through everything step by step.
 
 Go to [Google Cloud Console](https://console.cloud.google.com/) and open the project menu in the top navbar.
 
-![Creating a new Google Cloud project](https://cldup.com/6V0B1AgnvU.gif)
+![Creating a new Google Cloud project](/img/external/6V0B1AgnvU.gif)
 
 <!-- Shows: Clicking "New project" button from project selector -->
 
 Click the "New project" button to start.
 
-![Naming your project](https://cldup.com/owSQLNV1_5.gif)
+![Naming your project](/img/external/owSQLNV1_5.gif)
 
 <!-- Shows: Project creation form with name field -->
 
 Name your project (e.g., "EmailEngine Gmail API").
 
-![Waiting for project creation](https://cldup.com/0B4b3JeP3t.gif)
+![Waiting for project creation](/img/external/0B4b3JeP3t.gif)
 
 <!-- Shows: Project creation progress and selection -->
 
@@ -103,7 +103,7 @@ Wait for the project to be created, then select it from the project menu.
 
 Click the hamburger menu (top-left) → **APIs & Services** → **Enabled APIs & Services**.
 
-![Navigating to APIs & Services](https://cldup.com/v3Flo-WBVG.gif)
+![Navigating to APIs & Services](/img/external/v3Flo-WBVG.gif)
 
 <!-- Shows: Navigation to API configuration -->
 
@@ -111,7 +111,7 @@ Click the hamburger menu (top-left) → **APIs & Services** → **Enabled APIs &
 
 Find and enable **Gmail API** for your project.
 
-![Enabling Gmail API](https://cldup.com/vz7Is1SAWe.gif)
+![Enabling Gmail API](/img/external/vz7Is1SAWe.gif)
 
 <!-- Shows: Searching for and enabling Gmail API -->
 
@@ -121,7 +121,7 @@ This allows EmailEngine to perform Gmail REST API requests.
 
 Also find and enable **Cloud Pub/Sub API**.
 
-![Enabling Cloud Pub/Sub API](https://cldup.com/KwfF06xSzN.gif)
+![Enabling Cloud Pub/Sub API](/img/external/KwfF06xSzN.gif)
 
 <!-- Shows: Searching for and enabling Cloud Pub/Sub API -->
 
@@ -137,13 +137,13 @@ The consent screen is shown to users when they authorize EmailEngine.
 
 Click hamburger menu → **APIs & Services** → **OAuth consent screen**.
 
-![Navigating to consent screen](https://cldup.com/0h3kuzzsCN.gif)
+![Navigating to consent screen](/img/external/0h3kuzzsCN.gif)
 
 <!-- Shows: Navigation to OAuth consent screen -->
 
 ### Choose User Type
 
-![Selecting user type](https://cldup.com/mT6n2spEgt.gif)
+![Selecting user type](/img/external/mT6n2spEgt.gif)
 
 <!-- Shows: Internal vs External selection -->
 
@@ -163,7 +163,7 @@ For this tutorial, we'll use **Internal**. For production, select **External** a
 
 ### Fill in App Information
 
-![Configuring consent screen details](https://cldup.com/FIRIMzunwz.gif)
+![Configuring consent screen details](/img/external/FIRIMzunwz.gif)
 
 <!-- Shows: Filling app name, support email, etc. -->
 
@@ -180,7 +180,7 @@ Click **Save and continue**.
 
 Click **Add or remove scopes** and find `gmail.modify` from the list.
 
-![Adding required scope](https://cldup.com/BONjtoR9p6.gif)
+![Adding required scope](/img/external/BONjtoR9p6.gif)
 
 <!-- Shows: Adding gmail.modify scope -->
 
@@ -192,7 +192,7 @@ The `gmail.modify` scope is required for Gmail API access. This is different fro
 If Google's verification process determines you need different scopes (e.g., `gmail.readonly`, `gmail.send`, `gmail.labels`), see the [Custom Scopes section](#using-custom-scopes) below.
 :::
 
-![Saving consent screen configuration](https://cldup.com/THYy7q5W6Z.gif)
+![Saving consent screen configuration](/img/external/THYy7q5W6Z.gif)
 
 <!-- Shows: Saving and continuing -->
 
@@ -202,19 +202,19 @@ Scroll down and click **Save and continue** to finish consent screen setup.
 
 Navigate to **APIs & Services** → **Credentials**.
 
-![Navigating to credentials page](https://cldup.com/7bDFveWih1.gif)
+![Navigating to credentials page](/img/external/7bDFveWih1.gif)
 
 <!-- Shows: Navigation to credentials -->
 
 Click **Create credentials** → **OAuth client ID**.
 
-![Creating OAuth client ID](https://cldup.com/dd27iNGkH0.gif)
+![Creating OAuth client ID](/img/external/dd27iNGkH0.gif)
 
 <!-- Shows: Creating OAuth client ID -->
 
 ### Configure OAuth Client
 
-![Configuring OAuth client details](https://cldup.com/5gMPcI0kJe.gif)
+![Configuring OAuth client details](/img/external/5gMPcI0kJe.gif)
 
 <!-- Shows: Setting application type and URIs -->
 
@@ -236,7 +236,7 @@ Click **Create**.
 
 ### Download User Credentials
 
-![Downloading OAuth credentials](https://cldup.com/4UhRTwH9yL.gif)
+![Downloading OAuth credentials](/img/external/4UhRTwH9yL.gif)
 
 <!-- Shows: Downloading credentials JSON file -->
 
@@ -256,7 +256,7 @@ EmailEngine needs a service account with permissions to manage Pub/Sub topics an
 
 On the **Credentials** page, navigate to the **Service Account management** page.
 
-![Navigating to service accounts](https://cldup.com/FztCvZP6it.gif)
+![Navigating to service accounts](/img/external/FztCvZP6it.gif)
 
 <!-- Shows: Clicking "Manage service accounts" -->
 
@@ -264,7 +264,7 @@ Click **Create Service Account**.
 
 ### Configure Service Account
 
-![Creating service account](https://cldup.com/M5HVdcmnY8.gif)
+![Creating service account](/img/external/M5HVdcmnY8.gif)
 
 <!-- Shows: Service account creation form -->
 
@@ -288,7 +288,7 @@ Click **Create** to finish.
 
 Once created, select the service account and navigate to **Manage Keys**.
 
-![Generating service account keys](https://cldup.com/VtJcozUfxY.gif)
+![Generating service account keys](/img/external/VtJcozUfxY.gif)
 
 <!-- Shows: Adding a new JSON key -->
 
@@ -302,7 +302,7 @@ Now configure EmailEngine to use the service account for managing webhooks.
 
 ### Add Gmail Service Account Application
 
-![Creating service account app in EmailEngine](https://cldup.com/YvOpC3QjWZ.gif)
+![Creating service account app in EmailEngine](/img/external/YvOpC3QjWZ.gif)
 
 <!-- Shows: Creating Gmail Service Account in EmailEngine -->
 
@@ -313,7 +313,7 @@ Now configure EmailEngine to use the service account for managing webhooks.
 
 ### Configure Service Account Settings
 
-![Configuring service account](https://cldup.com/OfoPs4TldB.gif)
+![Configuring service account](/img/external/OfoPs4TldB.gif)
 
 <!-- Shows: Uploading service account credentials -->
 
@@ -338,7 +338,7 @@ Now configure the user OAuth application that will authenticate Gmail accounts.
 
 ### Add Gmail OAuth2 Application
 
-![Creating Gmail OAuth2 app](https://cldup.com/cJspELPMDV.gif)
+![Creating Gmail OAuth2 app](/img/external/cJspELPMDV.gif)
 
 <!-- Shows: Creating Gmail OAuth2 application in EmailEngine -->
 
@@ -348,7 +348,7 @@ Now configure the user OAuth application that will authenticate Gmail accounts.
 
 ### Configure OAuth2 Settings
 
-![Configuring Gmail OAuth2 settings](https://cldup.com/vj8qeSQt6D.gif)
+![Configuring Gmail OAuth2 settings](/img/external/vj8qeSQt6D.gif)
 
 <!-- Shows: Uploading user credentials and selecting service account -->
 
@@ -376,7 +376,7 @@ Add a Gmail account to test the complete flow.
 
 ### Via Hosted Authentication Form
 
-![Testing with hosted authentication](https://cldup.com/5OA36VmtxU.gif)
+![Testing with hosted authentication](/img/external/5OA36VmtxU.gif)
 
 <!-- Shows: Using hosted authentication form -->
 

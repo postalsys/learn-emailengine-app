@@ -140,7 +140,7 @@ Automatic setup with managed Redis.
 
 #### DigitalOcean Marketplace
 
-[![DigitalOcean](https://cldup.com/QBubXuGF1M.svg)](https://marketplace.digitalocean.com/apps/emailengine?refcode=90a107552b31)
+[![DigitalOcean](/img/external/QBubXuGF1M.svg)](https://marketplace.digitalocean.com/apps/emailengine?refcode=90a107552b31)
 
 One-click droplet with everything pre-configured.
 
