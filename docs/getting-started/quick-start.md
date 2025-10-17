@@ -55,6 +55,11 @@ You need an access token to authenticate API requests.
 6. Copy the token immediately - it's shown only once and keep it secure
 
 ### Via API:
+
+:::warning Limited Token Scope
+Tokens generated via API are limited and always bound to a specific email account. For example, you can generate a token to list emails for a specific account, but cannot generate a token to access system-wide endpoints like Prometheus `/metrics`. For full access tokens, use the web interface.
+:::
+
 ```bash
 $ curl -XPOST "http://127.0.0.1:3000/v1/token" \
   -H "Content-Type: application/json" \
