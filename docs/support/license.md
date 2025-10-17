@@ -6,69 +6,73 @@ sidebar_position: 1
 
 # EmailEngine Licensing
 
-Complete information about EmailEngine subscription-based licensing, activation, and management.
+Complete information about EmailEngine subscription-based licensing, free trial, activation, and management.
 
 :::info Quick Summary
-- **Development:** Free with limited features (up to 10 accounts)
+- **Free Trial:** 14 days, full functionality, no limitations
 - **Production:** Annual subscription with unlimited license keys
 - **Pricing:** [View current pricing](https://postalsys.com/plans)
 - **License Keys:** Generate unlimited keys per subscription
 :::
 
-## License Types
+## Free Trial
 
-### Development License (Free)
+Every EmailEngine instance includes a **14-day free trial** with **full functionality**.
 
-**Features:**
-- YES: Full API access
-- YES: All email protocols (IMAP, SMTP, Gmail API, etc.)
-- YES: OAuth2 authentication
-- YES: Webhooks
-- YES: Basic monitoring
-- NO: Limited to 10 accounts
-- NO: Development use only
-- NO: No commercial use
-- NO: Limited support
+**Trial Features:**
+- **Unlimited accounts** - No account limits
+- **Full API access** - All endpoints available
+- **All email protocols** - IMAP, SMTP, Gmail API, Microsoft Graph
+- **OAuth2 authentication** - Gmail, Outlook, Microsoft 365
+- **Webhooks** - Real-time notifications
+- **All features** - Identical to paid subscription
+- **No credit card required** - Start immediately
 
 **How to use:**
 ```bash
 # Simply start EmailEngine without license key
 emailengine
 
-# Or explicitly
-EENGINE_LICENSE_KEY="" emailengine
+# Trial starts automatically on first use
+# Lasts for 14 days from first start
 ```
 
-**Web interface shows:**
-```
-Status: Development Mode
-Accounts: 7/10 (limit reached at 10)
-```
+**Trial period:**
+- Starts when EmailEngine first launches
+- Lasts 14 days from first start
+- No functionality restrictions
+- Full production capabilities
+
+**After trial expires:**
+- EmailEngine stops accepting connections
+- Existing accounts remain in database
+- No data loss
+- Activate with license key to continue
 
 **Best for:**
-- Testing EmailEngine
-- Development and prototyping
+- Evaluating EmailEngine
+- Testing integration
 - Proof of concept
-- Learning the API
+- Development and prototyping
 
-:::warning Development Only
-Development license is for testing only. Commercial use requires production subscription.
+:::tip No Credit Card Needed
+Start using EmailEngine immediately. No sign-up, no credit card, no limitations during trial period.
 :::
 
 ---
 
-### Production Subscription (Paid)
+## Production Subscription
 
 **Features:**
-- YES: **Unlimited accounts**
-- YES: **Unlimited EmailEngine instances**
-- YES: **Unlimited license keys**
-- YES: **Unlimited API calls**
-- YES: All development features
-- YES: Priority support
-- YES: Commercial use allowed
-- YES: Updates included
-- YES: Source code access
+- **Unlimited accounts** - No restrictions
+- **Unlimited EmailEngine instances** - Run as many as needed
+- **Unlimited license keys** - Generate keys for all instances
+- **Unlimited API calls** - No rate limits beyond technical constraints
+- **All features included** - Same as trial, no feature tiers
+- **Priority support** - Email support with faster response
+- **Commercial use** - Deploy in production environments
+- **Updates included** - All updates during subscription period
+- **Source code access** - Self-hosted deployment
 
 **Pricing:**
 - [View current pricing and plans](https://postalsys.com/plans)
@@ -80,13 +84,7 @@ Development license is for testing only. Commercial use requires production subs
 1. Purchase a **subscription** (not individual licenses)
 2. Generate **unlimited license keys** for your EmailEngine instances
 3. All keys remain valid as long as subscription is active
-4. No additional costs per key or instance
-
-**Best for:**
-- Production deployments
-- More than 10 accounts
-- Commercial applications
-- Professional support needed
+4. No additional costs per key, instance, account, or API call
 
 ## How Subscriptions Work
 
@@ -126,14 +124,21 @@ Development license is for testing only. Commercial use requires production subs
 
 ## Getting Started
 
-### Step 1: Create Account
+### Step 1: Try for Free
+
+1. [Download and install EmailEngine](/docs/installation/set-up)
+2. Start EmailEngine without license key
+3. 14-day trial begins automatically
+4. Full functionality, no limitations
+
+### Step 2: Create Account (When Ready to Purchase)
 
 1. Visit [https://postalsys.com/](https://postalsys.com/)
 2. Click "Sign Up" or "Create Account"
 3. Provide email and password
 4. Verify email address
 
-### Step 2: Add Billing Information
+### Step 3: Add Billing Information
 
 1. Log in to your account at [https://postalsys.com/](https://postalsys.com/)
 2. Navigate to **Billing** section
@@ -145,7 +150,7 @@ Development license is for testing only. Commercial use requires production subs
    - Credit card
    - Or request invoice payment (contact sales)
 
-### Step 3: Subscribe to Plan
+### Step 4: Subscribe to Plan
 
 1. Go to [https://postalsys.com/plans](https://postalsys.com/plans)
 2. Review available plans and pricing
@@ -158,7 +163,7 @@ Development license is for testing only. Commercial use requires production subs
 - "License Keys" section becomes available in your account
 - You can now generate license keys
 
-### Step 4: Generate License Keys
+### Step 5: Generate License Keys
 
 1. Log in to [https://postalsys.com/](https://postalsys.com/)
 2. Navigate to **License Keys** section
@@ -168,7 +173,7 @@ Development license is for testing only. Commercial use requires production subs
 
 **You can generate as many license keys as you need at no additional cost.**
 
-### Step 5: Activate License in EmailEngine
+### Step 6: Activate License in EmailEngine
 
 **Option 1: Environment Variable (Recommended)**
 
@@ -227,17 +232,16 @@ Edit `/etc/emailengine/config.json`:
 
 **Option 4: Web Interface**
 
-1. Start EmailEngine (without license)
-2. Access web interface: `http://localhost:3000`
-3. Go to **Settings** → **License**
-4. Paste license key
-5. Click **Save**
+1. Access web interface: `http://localhost:3000`
+2. Go to **Settings** → **License**
+3. Paste license key
+4. Click **Save**
 
-### Step 6: Verify Activation
+### Step 7: Verify Activation
 
 **Check via web interface:**
 - Status should show: "Licensed"
-- Account limit removed
+- Trial message removed
 - Subscription status displayed
 
 **Check via API:**
@@ -336,10 +340,10 @@ You can invite teammates to help manage license keys and billing:
 1. **Subscription canceled automatically**
 2. **All license keys revoked**
 3. **EmailEngine instances:**
-   - Revert to development mode
-   - Account limit enforced (10 accounts max)
-   - Existing accounts over 10 remain but read-only
-   - Cannot add new accounts
+   - Stop accepting new connections
+   - Existing data preserved
+   - Cannot process emails
+   - All accounts remain in database
 4. **Email notification sent**
 
 **To restore service:**
@@ -350,7 +354,7 @@ You can invite teammates to help manage license keys and billing:
 5. All accounts and data preserved
 
 :::warning Subscription Cancellation
-If you cancel your subscription voluntarily, all license keys are immediately revoked. EmailEngine instances will revert to development mode.
+If you cancel your subscription voluntarily, all license keys are immediately revoked. EmailEngine instances will stop functioning.
 :::
 
 ## Multiple Instances
@@ -414,7 +418,7 @@ EENGINE_LICENSE_KEY="key-generated-from-subscription-3" emailengine --port=3002
 
 **After revocation:**
 - Key immediately becomes invalid
-- EmailEngine instances using that key revert to development mode
+- EmailEngine instances using that key stop functioning
 - Generate and deploy new key to affected instances
 - Other keys remain unaffected
 
@@ -480,9 +484,21 @@ Compare to per-mailbox services:
 
 ### General Questions
 
+**Q: How long is the free trial?**
+
+A: 14 days from first launch of EmailEngine instance. Full functionality, no limitations, no credit card required.
+
+**Q: What happens when trial expires?**
+
+A: EmailEngine stops accepting connections. All data preserved. Activate with license key to continue.
+
+**Q: Can I extend the trial?**
+
+A: Trial is fixed at 14 days. Contact sales@emailengine.app if you need more evaluation time.
+
 **Q: Do I need separate subscriptions for dev/staging/production?**
 
-A: No. One subscription covers all environments. Generate separate license keys for each environment from the same subscription. Or use development mode (free) for non-production environments.
+A: No. One subscription covers all environments. Generate separate license keys for each environment from the same subscription. Or use free trial for testing/development.
 
 **Q: Can I share my subscription with others?**
 
@@ -490,7 +506,7 @@ A: If you're part of the same organization, yes. Invite them as team members. Ea
 
 **Q: What happens if I cancel my subscription?**
 
-A: All license keys are immediately revoked. EmailEngine instances revert to development mode (10 account limit). You can resubscribe anytime to restore service.
+A: All license keys are immediately revoked. EmailEngine instances stop functioning. You can resubscribe anytime to restore service.
 
 **Q: Can I upgrade or downgrade my plan?**
 
@@ -530,6 +546,10 @@ echo "eyJsaWNlbnNlS..." | base64 -d | jq
 
 But **treat license keys as confidential** even though they're not passwords.
 
+**Q: Does the trial require a license key?**
+
+A: No. Simply start EmailEngine without any license key. Trial begins automatically.
+
 ---
 
 ### Business Questions
@@ -539,6 +559,10 @@ But **treat license keys as confidential** even though they're not passwords.
 A: Yes, with active subscription. Your customers don't need individual subscriptions. You deploy EmailEngine with your license keys on your infrastructure.
 
 Example: You build a CRM with email. You subscribe to EmailEngine. Your 1,000 customers use your CRM. You only need one subscription.
+
+**Q: Do I need to buy separate subscriptions for each customer?**
+
+A: No. One subscription covers all your deployments, regardless of how many customers you serve.
 
 **Q: Do you offer discounts for nonprofits/educational institutions?**
 
@@ -580,7 +604,7 @@ A: See https://postalsys.com/plans for currency options. Credit card payments au
 - Architecture review
 - White-glove support
 
-For enterprise support, contact sales@emailengine.com
+For enterprise support, contact sales@emailengine.app
 
 ## Security Best Practices
 
@@ -618,7 +642,7 @@ sudo chmod 640 /etc/emailengine/environment
 
 ### Sales Inquiries
 - **Email:** sales@emailengine.app
-- **Topics:** Pricing, enterprise plans, volume discounts
+- **Topics:** Pricing, enterprise plans, trial extensions
 
 ### Subscription Support
 - **Email:** support@emailengine.app
