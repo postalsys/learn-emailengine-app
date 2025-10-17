@@ -89,7 +89,7 @@ const sidebars: SidebarsConfig = {
         {
           type: 'link',
           label: 'Complete API Documentation',
-          href: '/api/emailengine-api',
+          href: '/docs/api/emailengine-api',
         },
       ],
     },
