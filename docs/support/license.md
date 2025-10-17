@@ -28,20 +28,23 @@ Every EmailEngine instance includes a **14-day free trial** with **full function
 - **All features** - Identical to paid subscription
 - **No credit card required** - Start immediately
 
-**How to use:**
+**How to activate:**
 ```bash
 # Simply start EmailEngine without license key
 emailengine
-
-# Trial starts automatically on first use
-# Lasts for 14 days from first start
 ```
 
+1. Access web interface: `http://localhost:3000`
+2. Click **"Activate Trial"** button in the dashboard
+3. Trial begins immediately (no sign-up required)
+4. Lasts for 14 days from activation
+
 **Trial period:**
-- Starts when EmailEngine first launches
-- Lasts 14 days from first start
+- Starts when you click "Activate Trial" button
+- Lasts 14 days from activation
 - No functionality restrictions
 - Full production capabilities
+- No sign-up or account creation needed
 
 **After trial expires:**
 - EmailEngine stops accepting connections
@@ -178,7 +181,12 @@ Start using EmailEngine immediately. No sign-up, no credit card, no limitations 
 **Option 1: Environment Variable (Recommended)**
 
 ```bash
-export EENGINE_LICENSE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+export EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----
+Application: EmailEngine
+Licensed to: Your Company Name
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9abcdefghijklmnopqrstuvwxyz...
+-----END LICENSE-----"
 
 # Start EmailEngine
 emailengine
@@ -188,14 +196,24 @@ emailengine
 
 Edit `/etc/emailengine/environment`:
 ```bash
-EENGINE_LICENSE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----
+Application: EmailEngine
+Licensed to: Your Company Name
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9abcdefghijklmnopqrstuvwxyz...
+-----END LICENSE-----"
 ```
 
 **For Docker:**
 
 ```bash
 docker run -d \
-  --env EENGINE_LICENSE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  --env EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----
+Application: EmailEngine
+Licensed to: Your Company Name
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9abcdefghijklmnopqrstuvwxyz...
+-----END LICENSE-----" \
   postalsys/emailengine:v2
 ```
 
@@ -205,7 +223,7 @@ docker run -d \
 services:
   emailengine:
     environment:
-      - EENGINE_LICENSE_KEY=${EENGINE_LICENSE_KEY}
+      - EENGINE_PREPARED_LICENSE=${EENGINE_PREPARED_LICENSE}
 ```
 
 ---
@@ -213,24 +231,17 @@ services:
 **Option 2: Command Line**
 
 ```bash
-emailengine --licenseKey="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+emailengine --preparedLicense="-----BEGIN LICENSE-----
+Application: EmailEngine
+Licensed to: Your Company Name
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9abcdefghijklmnopqrstuvwxyz...
+-----END LICENSE-----"
 ```
 
 ---
 
-**Option 3: Configuration File**
-
-Edit `/etc/emailengine/config.json`:
-
-```json
-{
-  "licenseKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
----
-
-**Option 4: Web Interface**
+**Option 3: Web Interface**
 
 1. Access web interface: `http://localhost:3000`
 2. Go to **Settings** → **License**
@@ -363,15 +374,15 @@ One subscription allows unlimited EmailEngine instances:
 
 ```bash
 # Instance 1 - Production
-EENGINE_LICENSE_KEY="key-generated-from-subscription-1" emailengine --port=3000
+EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----..." emailengine --port=3000
 
 # Instance 2 - Staging
-EENGINE_LICENSE_KEY="key-generated-from-subscription-2" emailengine --port=3001
+EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----..." emailengine --port=3001
 
 # Instance 3 - Customer A deployment
-EENGINE_LICENSE_KEY="key-generated-from-subscription-3" emailengine --port=3002
+EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----..." emailengine --port=3002
 
-# All keys come from same subscription
+# All keys come from same subscription (generate separate key for each)
 ```
 
 **Best practices:**
@@ -631,7 +642,12 @@ For enterprise support, contact sales@emailengine.app
 sudo nano /etc/emailengine/environment
 
 # Content:
-EENGINE_LICENSE_KEY=your-key-here
+EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----
+Application: EmailEngine
+Licensed to: Your Company
+
+your-license-key-data-here...
+-----END LICENSE-----"
 
 # Set permissions
 sudo chown root:emailengine /etc/emailengine/environment

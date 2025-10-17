@@ -196,8 +196,8 @@ EENGINE_OUTLOOK_CLIENT_SECRET=your-outlook-client-secret
 # Webhooks
 EENGINE_WEBHOOK_URL=https://your-app.com/webhooks
 
-# License key
-EENGINE_LICENSE_KEY=your-license-key
+# License key (PEM format - use Render environment editor for multiline)
+EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----..."
 
 # Performance
 EENGINE_WORKERS=4

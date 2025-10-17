@@ -503,19 +503,27 @@ curl http://localhost:3000/health
 
 ### License Key
 
-**Environment:** `EENGINE_LICENSE_KEY`
-**Command line:** `--licenseKey=...`
-**Config file:** `licenseKey`
-**Default:** Development mode
+**Environment:** `EENGINE_PREPARED_LICENSE`
+**Command line:** `--preparedLicense=...`
+**Default:** 14-day trial
 
-Production license key.
+Production license key in PEM format or exported format.
 
 ```bash
-EENGINE_LICENSE_KEY=your-license-key-here
+# PEM format (recommended)
+EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----
+Application: EmailEngine
+Licensed to: Your Company
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+-----END LICENSE-----"
+
+# Exported format
+EENGINE_PREPARED_LICENSE="i0-AgqFsxFWFoWvEDGC7..."
 ```
 
-:::info Development Mode
-Without a license key, EmailEngine runs in development mode with limited features.
+:::info Trial Mode
+Without a license key, EmailEngine runs in 14-day trial mode with full functionality. Activate trial via dashboard button.
 :::
 
 ## Advanced Settings
@@ -679,7 +687,7 @@ curl -X POST https://emailengine.example.com/v1/settings \
 | `EENGINE_ENCRYPTION_SECRET` | Recommended | Field encryption secret |
 | `EENGINE_WORKERS` | `1` | Worker threads |
 | `EENGINE_LOG_LEVEL` | `trace` | Log level |
-| `EENGINE_LICENSE_KEY` | None | License key |
+| `EENGINE_PREPARED_LICENSE` | None | License key (PEM or exported format) |
 | `EENGINE_GMAIL_CLIENT_ID` | None | Gmail OAuth2 client ID |
 | `EENGINE_GMAIL_CLIENT_SECRET` | None | Gmail OAuth2 secret |
 | `EENGINE_OUTLOOK_CLIENT_ID` | None | Outlook OAuth2 client ID |
@@ -703,7 +711,6 @@ curl -X POST https://emailengine.example.com/v1/settings \
   },
   "secret": "${EENGINE_SECRET}",
   "encryptionSecret": "${EENGINE_ENCRYPTION_SECRET}",
-  "licenseKey": "${EENGINE_LICENSE_KEY}",
   "workers": 4,
   "maxConnections": 20,
   "chunkSize": 5000,

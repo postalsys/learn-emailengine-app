@@ -175,8 +175,13 @@ Create `.env` file:
 EENGINE_SECRET=your-strong-secret-key-at-least-32-characters-long
 EENGINE_ENCRYPTION_SECRET=another-strong-secret-for-field-encryption
 
-# Optional: License key
-EENGINE_LICENSE_KEY=your-license-key
+# Optional: License key (PEM format - multiline)
+EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----
+Application: EmailEngine
+Licensed to: Your Company
+
+your-license-key-data-here...
+-----END LICENSE-----"
 
 # Optional: OAuth2 configuration
 EENGINE_GMAIL_CLIENT_ID=your-gmail-client-id
