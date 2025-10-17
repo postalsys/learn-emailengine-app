@@ -129,24 +129,25 @@ Start using EmailEngine immediately. No sign-up, no credit card, no limitations 
 
 ### Step 1: Try for Free
 
-1. [Download and install EmailEngine](/docs/installation/set-up)
+1. [Download and install EmailEngine](/docs/installation)
 2. Start EmailEngine without license key
-3. 14-day trial begins automatically
-4. Full functionality, no limitations
+3. Access web interface at `http://localhost:3000`
+4. Click **"Activate Trial"** button in the dashboard
+5. 14-day trial begins immediately
+6. Full functionality, no limitations
 
 ### Step 2: Create Account (When Ready to Purchase)
 
 1. Visit [https://postalsys.com/](https://postalsys.com/)
 2. Click "Sign Up" or "Create Account"
 3. Provide email and password
-4. Verify email address
 
 ### Step 3: Add Billing Information
 
 1. Log in to your account at [https://postalsys.com/](https://postalsys.com/)
-2. Navigate to **Billing** section
+2. Navigate to **Billing** section: [https://postalsys.com/billing/info](https://postalsys.com/billing/info)
 3. Add billing details:
-   - Company name (optional)
+   - Company name (required)
    - Billing address
    - Tax information (if applicable)
 4. Add payment method:
@@ -169,7 +170,7 @@ Start using EmailEngine immediately. No sign-up, no credit card, no limitations 
 ### Step 5: Generate License Keys
 
 1. Log in to [https://postalsys.com/](https://postalsys.com/)
-2. Navigate to **License Keys** section
+2. Navigate to **License Keys** section: [https://postalsys.com/licenses](https://postalsys.com/licenses)
 3. Click "Generate New License Key"
 4. Optionally add a label (e.g., "Production Server", "Staging")
 5. Copy the generated license key
@@ -399,7 +400,7 @@ EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----..." emailengine --port=3002
 **Anytime you need a new key:**
 
 1. Log in to [https://postalsys.com/](https://postalsys.com/)
-2. Go to **License Keys**
+2. Go to **License Keys**: [https://postalsys.com/licenses](https://postalsys.com/licenses)
 3. Click "Generate New License Key"
 4. Add label (optional but recommended)
 5. Copy key and use in EmailEngine
@@ -411,7 +412,7 @@ EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----..." emailengine --port=3002
 **See all your generated keys:**
 
 1. Log in to [https://postalsys.com/](https://postalsys.com/)
-2. Go to **License Keys**
+2. Go to **License Keys**: [https://postalsys.com/licenses](https://postalsys.com/licenses)
 3. View list of all keys with:
    - Label
    - Creation date
@@ -423,7 +424,7 @@ EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----..." emailengine --port=3002
 **If a key is compromised or no longer needed:**
 
 1. Log in to [https://postalsys.com/](https://postalsys.com/)
-2. Go to **License Keys**
+2. Go to **License Keys**: [https://postalsys.com/licenses](https://postalsys.com/licenses)
 3. Find the key to revoke
 4. Click "Revoke" or "Delete"
 5. Confirm revocation
@@ -560,7 +561,7 @@ But **treat license keys as confidential** even though they're not passwords.
 
 **Q: Does the trial require a license key?**
 
-A: No. Simply start EmailEngine without any license key. Trial begins automatically.
+A: No. Start EmailEngine without any license key, access the web interface at `http://localhost:3000`, and click the "Activate Trial" button. Trial begins immediately after clicking the button.
 
 ---
 
