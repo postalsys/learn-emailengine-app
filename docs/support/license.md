@@ -360,11 +360,13 @@ You can invite teammates to help manage license keys and billing:
 **If you cancel your subscription voluntarily:**
 
 1. **Subscription remains active until renewal date**
+
    - No immediate service interruption
    - All license keys remain valid
    - EmailEngine continues working normally
 
 2. **On original renewal date:**
+
    - Subscription expires
    - All license keys revoked
    - EmailEngine instances stop functioning
@@ -388,134 +390,6 @@ Jan 1, 2026:  Subscription expires (original renewal date)
               → EmailEngine stops functioning
 ```
 
-## Multiple Instances
-
-One subscription allows unlimited EmailEngine instances:
-
-```bash
-# Instance 1 - Production
-EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----..." emailengine --port=3000
-
-# Instance 2 - Staging
-EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----..." emailengine --port=3001
-
-# Instance 3 - Customer A deployment
-EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----..." emailengine --port=3002
-
-# All keys come from same subscription (generate separate key for each)
-```
-
-**Best practices:**
-
-- Generate separate key for each instance/environment
-- Label keys clearly (e.g., "Production US-East", "Customer A")
-- Revoke/regenerate keys if compromised
-- Use different keys for different customers (if reselling)
-
-## License Key Management
-
-### Generating New Keys
-
-**Anytime you need a new key:**
-
-1. Log in to [https://postalsys.com/](https://postalsys.com/)
-2. Go to **License Keys**: [https://postalsys.com/licenses](https://postalsys.com/licenses)
-3. Click "Generate New License Key"
-4. Add label (optional but recommended)
-5. Copy key and use in EmailEngine
-
-**No limit on number of keys.**
-
-### Viewing Existing Keys
-
-**See all your generated keys:**
-
-1. Log in to [https://postalsys.com/](https://postalsys.com/)
-2. Go to **License Keys**: [https://postalsys.com/licenses](https://postalsys.com/licenses)
-3. View list of all keys with:
-   - Label
-   - Creation date
-   - Last used date (if tracked)
-   - Status (active/revoked)
-
-### Revoking Keys
-
-**If a key is compromised or no longer needed:**
-
-1. Log in to [https://postalsys.com/](https://postalsys.com/)
-2. Go to **License Keys**: [https://postalsys.com/licenses](https://postalsys.com/licenses)
-3. Find the key to revoke
-4. Click "Revoke" or "Delete"
-5. Confirm revocation
-
-**After revocation:**
-
-- Key immediately becomes invalid
-- EmailEngine instances using that key stop functioning
-- Generate and deploy new key to affected instances
-- Other keys remain unaffected
-
-### Key Rotation
-
-**Periodic key rotation for security:**
-
-1. Generate new license key
-2. Update EmailEngine instance with new key
-3. Verify instance is working
-4. Revoke old key
-5. Repeat for other instances as needed
-
-## License Key Format
-
-Your license key is a JWT (JSON Web Token):
-
-```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsaWNlbnNlS2V5IjoiZXhhbXBsZS1rZXkiLCJzdWJzY3JpcHRpb25JZCI6ImV4YW1wbGUiLCJleHBpcmVzIjoiMjAyNi0xMi0zMVQyMzo1OTo1OS4wMDBaIn0.signature
-```
-
-**License keys contain:**
-
-- Subscription ID
-- Expiration date
-- Issue date
-- Digital signature
-
-**License validation:**
-
-- Performed locally (JWT signature verification)
-- No "phone home" required
-- Works offline
-- Cryptographically secure
-
-## Pricing
-
-For current pricing, visit [https://postalsys.com/plans](https://postalsys.com/plans)
-
-**Pricing structure:**
-
-- Annual subscription fee
-- No per-mailbox charges
-- No per-instance charges
-- No per-key charges
-- Flat rate for unlimited use
-
-**Example cost comparison:**
-
-```
-Subscription:           See pricing page
-+ Server costs:         $50-500/month
-+ Redis costs:          $10-200/month
-───────────────────────────────────
-Total annual cost:      See pricing page + infrastructure
-
-Compare to per-mailbox services:
-100 mailboxes at $3/mailbox/month = $3,600/year
-500 mailboxes at $2/mailbox/month = $12,000/year
-2,000 mailboxes at $1/mailbox/month = $24,000/year
-```
-
-**For volume inquiries or custom enterprise plans, contact sales@emailengine.app**
-
 ## FAQ
 
 ### General Questions
@@ -530,7 +404,7 @@ A: EmailEngine stops accepting connections. All data preserved. Activate with li
 
 **Q: Can I extend the trial?**
 
-A: Trial is fixed at 14 days. Contact sales@emailengine.app if you need more evaluation time.
+A: Trial is fixed at 14 days. Contact support@emailengine.app if you need more evaluation time.
 
 **Q: Do I need separate subscriptions for dev/staging/production?**
 
@@ -544,13 +418,9 @@ A: If you're part of the same organization, yes. Invite them as team members. Ea
 
 A: Your subscription remains active until the original renewal date. All license keys continue working normally until that date. On the renewal date, the subscription expires and all license keys are revoked. You can resubscribe anytime to restore service.
 
-**Q: Can I upgrade or downgrade my plan?**
-
-A: Contact sales@emailengine.app to discuss plan changes. Prorated adjustments may apply.
-
 **Q: Do you offer refunds?**
 
-A: Refund policies are listed at https://postalsys.com/plans. Generally, 30-day money-back guarantee for new subscriptions. Email support@emailengine.app for refund requests.
+A: No refunds are offered. Please use the 14-day free trial to fully evaluate EmailEngine before subscribing. The trial includes all features with no limitations, allowing you to thoroughly test the service for your use case.
 
 ---
 
@@ -603,7 +473,7 @@ A: No. One subscription covers all your deployments, regardless of how many cust
 
 **Q: Do you offer discounts for nonprofits/educational institutions?**
 
-A: Contact sales@emailengine.app with details about your organization. Special pricing may be available.
+A: Contact support@emailengine.app with details about your organization. Special pricing may be available.
 
 **Q: Can I pay via invoice/PO?**
 
@@ -644,7 +514,7 @@ A: See https://postalsys.com/plans for currency options. Credit card payments au
 - Architecture review
 - White-glove support
 
-For enterprise support, contact sales@emailengine.app
+For enterprise support, contact support@emailengine.app
 
 ## Security Best Practices
 
@@ -689,7 +559,7 @@ sudo systemctl restart emailengine
 
 ### Sales Inquiries
 
-- **Email:** sales@emailengine.app
+- **Email:** support@emailengine.app
 - **Topics:** Pricing, enterprise plans, trial extensions
 
 ### Subscription Support
