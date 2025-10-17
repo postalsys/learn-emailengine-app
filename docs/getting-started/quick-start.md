@@ -64,6 +64,7 @@ Tokens generated via API are limited and always bound to a specific email accoun
 $ curl -XPOST "http://127.0.0.1:3000/v1/token" \
   -H "Content-Type: application/json" \
   -d '{
+    "account": "my-account",
     "description": "Development token",
     "scopes": ["*"]
   }' \
