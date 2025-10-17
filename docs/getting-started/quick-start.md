@@ -10,14 +10,16 @@ Get EmailEngine up and running in 10 minutes. This guide walks you through insta
 
 ## Step 1: Install EmailEngine
 
-### Option A: Using npm (Recommended for development)
+### Option A: Download Binary (Quickest)
 
 ```bash
-# Install EmailEngine globally
-$ npm install -g emailengine
+# Download latest release
+$ wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
+$ tar xzf emailengine.tar.gz
+$ chmod +x emailengine
 
 # Start EmailEngine
-$ emailengine --dbs.redis="redis://127.0.0.1:6379"
+$ ./emailengine --dbs.redis="redis://127.0.0.1:6379"
 ```
 
 ### Option B: Using Docker
