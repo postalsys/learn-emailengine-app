@@ -40,7 +40,7 @@ EmailEngine will start on **http://localhost:3000**
 
 1. Open your browser and navigate to **http://localhost:3000**
 2. On first startup, you'll be prompted to create an admin account
-3. Set a secure password - you'll use this to access the API
+3. Set a secure password for the web admin UI
 
 ## Step 3: Generate an API Access Token
 
