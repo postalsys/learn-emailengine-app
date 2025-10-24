@@ -68,6 +68,11 @@ Build the static site for production:
 npm run build
 ```
 
+The build automatically:
+1. Downloads the latest OpenAPI spec from https://emailengine.dev/swagger.json
+2. Updates `sources/swagger.json`
+3. Builds the static site
+
 The build output will be in the `build/` directory.
 
 Test the production build locally:
@@ -75,6 +80,16 @@ Test the production build locally:
 ```bash
 npm run serve
 ```
+
+### Manual Swagger Update
+
+To update the OpenAPI specification without building:
+
+```bash
+npm run update-swagger
+```
+
+This downloads the latest swagger.json from EmailEngine production.
 
 ## OpenAPI Integration
 
@@ -224,9 +239,10 @@ If build fails:
 ## Scripts
 
 - `npm start` - Start development server
-- `npm run build` - Build production site
+- `npm run build` - Build production site (auto-updates swagger.json)
 - `npm run serve` - Serve production build locally
 - `npm run clear` - Clear cache
+- `npm run update-swagger` - Download latest OpenAPI spec from production
 - `npm run swizzle` - Customize theme components
 - `npm run deploy` - Deploy to GitHub Pages
 

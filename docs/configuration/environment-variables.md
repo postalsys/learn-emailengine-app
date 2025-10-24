@@ -113,7 +113,7 @@ Email protocol settings and limits.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_MAX_ATTACHMENT_SIZE` | bytes | `5242880` | Max attachment size (5 MB) | `10485760` |
+| `EENGINE_MAX_SIZE` | bytes | `5242880` | Max attachment size (5 MB) | `10485760` |
 | `EENGINE_IMAP_TIMEOUT` | ms | `90000` | IMAP command timeout | `120000` |
 | `EENGINE_IMAP_IDLE_TIMEOUT` | ms | `1740000` | IMAP IDLE timeout (29 min) | `1800000` |
 | `EENGINE_SMTP_TIMEOUT` | ms | `60000` | SMTP command timeout | `90000` |
@@ -123,7 +123,7 @@ Email protocol settings and limits.
 
 **High attachment limit:**
 ```bash
-EENGINE_MAX_ATTACHMENT_SIZE=20971520  # 20 MB
+EENGINE_MAX_SIZE=20971520  # 20 MB
 ```
 
 **Extended timeouts for slow servers:**
@@ -166,9 +166,10 @@ EENGINE_MAX_CONNECTIONS=5
 EENGINE_CHUNK_SIZE=1000
 ```
 
-**Large payload support:**
+**Large payload and attachment support:**
 ```bash
-EENGINE_MAX_PAYLOAD_SIZE=20971520  # 20 MB
+EENGINE_MAX_SIZE=20971520  # 20 MB attachments
+EENGINE_MAX_PAYLOAD_SIZE=20971520  # 20 MB request body
 ```
 
 **Account limits (licensing):**

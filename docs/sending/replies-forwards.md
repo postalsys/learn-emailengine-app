@@ -354,7 +354,7 @@ Store these IDs in your application for later use.
 Search for specific messages using the [search messages API](/docs/api/post-v-1-account-account-search):
 
 ```bash
-curl -XPOST "https://emailengine.example.com/v1/account/example/search" \
+curl -XPOST "https://emailengine.example.com/v1/account/example/search?path=INBOX" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{

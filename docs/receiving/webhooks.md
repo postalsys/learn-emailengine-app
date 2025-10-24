@@ -299,17 +299,29 @@ Triggered when message flags or labels change.
     "id": "AAAAAQAAAeE",
     "uid": 12345,
     "path": "INBOX",
-    "flags": {
-      "add": ["\\Seen"],
-      "delete": []
-    },
-    "labels": {
-      "add": ["Important"],
-      "delete": []
+    "changes": {
+      "flags": {
+        "added": ["\\Seen"],
+        "removed": [],
+        "value": ["\\Seen", "\\Flagged"]
+      },
+      "labels": {
+        "added": ["\\Important"],
+        "removed": ["\\Inbox"],
+        "value": ["\\Important", "\\Starred"]
+      }
     }
   }
 }
 ```
+
+**Payload Fields:**
+- `changes.flags.added` - Flags that were just added
+- `changes.flags.removed` - Flags that were just removed
+- `changes.flags.value` - Complete current flag list
+- `changes.labels.added` - Labels added (Gmail only)
+- `changes.labels.removed` - Labels removed (Gmail only)
+- `changes.labels.value` - Complete current label list (Gmail only)
 
 **Use Cases:**
 - Track read status
@@ -462,15 +474,16 @@ Triggered when a recipient opens an email (requires open tracking enabled).
 {
   "account": "example",
   "event": "trackOpen",
+  "date": "2025-10-13T10:30:00.000Z",
   "data": {
     "messageId": "<sent-message@example.com>",
-    "recipient": "user@example.com",
-    "timestamp": "2025-10-13T10:30:00.000Z",
-    "userAgent": "Mozilla/5.0...",
-    "ip": "192.168.1.1"
+    "remoteAddress": "192.168.1.1",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)..."
   }
 }
 ```
+
+**Note:** The timestamp is in the parent-level `date` field, not in `data`.
 
 #### trackClick
 
@@ -482,16 +495,17 @@ Triggered when a recipient clicks a tracked link.
 {
   "account": "example",
   "event": "trackClick",
+  "date": "2025-10-13T10:31:00.000Z",
   "data": {
     "messageId": "<sent-message@example.com>",
-    "recipient": "user@example.com",
     "url": "https://example.com/product",
-    "timestamp": "2025-10-13T10:31:00.000Z",
-    "userAgent": "Mozilla/5.0...",
-    "ip": "192.168.1.1"
+    "remoteAddress": "192.168.1.1",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)..."
   }
 }
 ```
+
+**Note:** The timestamp is in the parent-level `date` field, not in `data`.
 
 #### listUnsubscribe
 

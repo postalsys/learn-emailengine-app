@@ -94,9 +94,10 @@ Retrieve messages from a mailbox with filtering and pagination.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `path` | string | Mailbox path (default: INBOX) |
-| `page` | number | Page number (0-indexed) |
-| `limit` | number | Messages per page (default 20, max 250) |
+| `path` | string | Mailbox path (required) |
+| `page` | number | Page number (0-indexed, default 0) |
+| `pageSize` | number | Messages per page (default 20, max 1000) |
+| `cursor` | string | Paging cursor from nextPageCursor or prevPageCursor |
 | `unseen` | boolean | Filter by unseen status |
 | `flagged` | boolean | Filter by flagged status |
 
@@ -104,7 +105,7 @@ Retrieve messages from a mailbox with filtering and pagination.
 
 **cURL:**
 ```bash
-curl "http://localhost:3000/v1/account/user@example.com/messages?path=INBOX&limit=50&unseen=true" \
+curl "http://localhost:3000/v1/account/user@example.com/messages?path=INBOX&pageSize=50&unseen=true" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -115,7 +116,7 @@ from urllib.parse import quote
 account = 'user@example.com'
 response = requests.get(
     f'http://localhost:3000/v1/account/{quote(account)}/messages',
-    params={'path': 'INBOX', 'limit': 50, 'unseen': True},
+    params={'path': 'INBOX', 'pageSize': 50, 'unseen': True},
     headers={'Authorization': 'Bearer YOUR_ACCESS_TOKEN'}
 )
 
@@ -129,7 +130,7 @@ for msg in data['messages']:
 ```
 // List messages from a mailbox with filtering
 account = "user@example.com"
-url = "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/messages?path=INBOX&limit=50&unseen=true"
+url = "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/messages?path=INBOX&pageSize=50&unseen=true"
 
 response = HTTP_GET(url, {
   headers: {
@@ -543,17 +544,23 @@ Search messages using advanced query syntax.
 
 **Endpoint:** `POST /v1/account/:account/search`
 
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `path` | string | Mailbox path (default: INBOX) |
+| `page` | number | Page number (0-indexed, default 0) |
+| `pageSize` | number | Messages per page (default 20, max 1000) |
+| `cursor` | string | Paging cursor from nextPageCursor or prevPageCursor |
+
 **Request Body:**
 ```json
 {
-  "path": "INBOX",
   "search": {
     "from": "sender@example.com",
     "subject": "invoice",
     "since": "2025-01-01T00:00:00.000Z"
-  },
-  "page": 0,
-  "limit": 50
+  }
 }
 ```
 
@@ -575,7 +582,7 @@ Search messages using advanced query syntax.
 
 **cURL:**
 ```bash
-curl -X POST "http://localhost:3000/v1/account/user@example.com/search" \
+curl -X POST "http://localhost:3000/v1/account/user@example.com/search?path=INBOX" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -592,7 +599,7 @@ curl -X POST "http://localhost:3000/v1/account/user@example.com/search" \
 account = "user@example.com"
 
 response = HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/search",
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/search?path=INBOX&pageSize=20",
   {
     headers: {
       "Authorization": "Bearer YOUR_ACCESS_TOKEN",
@@ -603,8 +610,7 @@ response = HTTP_POST(
         from: "boss@example.com",
         subject: "urgent",
         unseen: true
-      },
-      limit: 20
+      }
     }
   }
 )
@@ -614,7 +620,7 @@ PRINT("Found " + results.total + " messages")
 
 // Example 2: Search for large attachments from specific sender
 response = HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/search",
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/search?path=INBOX",
   {
     headers: {
       "Authorization": "Bearer YOUR_ACCESS_TOKEN",
@@ -726,7 +732,7 @@ url = "/v1/account/" + account + "/messages?flagged=true"
 url = "/v1/account/" + account + "/messages?path=Archive"
 
 // Pagination
-url = "/v1/account/" + account + "/messages?page=2&limit=100"
+url = "/v1/account/" + account + "/messages?path=INBOX&page=2&pageSize=100"
 ```
 
 ### Search Syntax
@@ -783,7 +789,7 @@ function fetchAllMessages(account, path = "INBOX") {
   while (hasMore) {
     // Build URL with pagination
     url = "http://localhost:3000/v1/account/" + URL_ENCODE(account) +
-          "/messages?path=" + path + "&page=" + page + "&limit=100"
+          "/messages?path=" + path + "&page=" + page + "&pageSize=100"
 
     // Make request
     response = HTTP_GET(url, {

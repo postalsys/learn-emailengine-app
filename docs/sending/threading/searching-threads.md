@@ -26,11 +26,10 @@ Gmail and Microsoft Graph API support a special `\All` folder that searches acro
 **Gmail Example** using the [Search Messages API endpoint](/docs/api/post-v-1-account-account-search):
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/gmail/search" \
+curl -XPOST "https://ee.example.com/v1/account/gmail/search?path=%5CAll" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "\\All",
     "search": {
       "threadId": "1759349012996310407"
     }
@@ -79,11 +78,10 @@ curl -XPOST "https://ee.example.com/v1/account/gmail/search" \
 **Microsoft Graph API Example**:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/outlook-graph/search" \
+curl -XPOST "https://ee.example.com/v1/account/outlook-graph/search?path=%5CAll" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "\\All",
     "search": {
       "threadId": "AAQkAGI2TH..."
     }
@@ -112,11 +110,10 @@ For providers without `\All` support, you must search each folder individually.
 **Step 1: Search Inbox**:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/yahoo/search" \
+curl -XPOST "https://ee.example.com/v1/account/yahoo/search?path=INBOX" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "INBOX",
     "search": {
       "threadId": "501"
     }
@@ -126,11 +123,10 @@ curl -XPOST "https://ee.example.com/v1/account/yahoo/search" \
 **Step 2: Search Sent**:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/yahoo/search" \
+curl -XPOST "https://ee.example.com/v1/account/yahoo/search?path=Sent" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "Sent",
     "search": {
       "threadId": "501"
     }
@@ -148,13 +144,12 @@ function getCompleteThread(accountId, threadId):
     for each folder in folders:
         // Send HTTP POST request
         response = HTTP_POST(
-            url: "https://ee.example.com/v1/account/" + accountId + "/search",
+            url: "https://ee.example.com/v1/account/" + accountId + "/search?path=" + folder,
             headers: {
                 "Authorization": "Bearer " + token,
                 "Content-Type": "application/json"
             },
             body: {
-                path: folder,
                 search: { threadId: threadId }
             }
         )
@@ -250,13 +245,12 @@ function buildThreadFromHeaders(message, allMessages):
 function searchGmailThread(accountId, threadId):
     // Single request using \All
     response = HTTP_POST(
-        url: "https://ee.example.com/v1/account/" + accountId + "/search",
+        url: "https://ee.example.com/v1/account/" + accountId + "/search?path=%5CAll",
         headers: {
             "Authorization": "Bearer " + token,
             "Content-Type": "application/json"
         },
         body: {
-            path: "\\All",
             search: { threadId: threadId }
         }
     )
@@ -271,13 +265,12 @@ function searchGmailThread(accountId, threadId):
 function searchGraphThread(accountId, threadId):
     // Single request using \All
     response = HTTP_POST(
-        url: "https://ee.example.com/v1/account/" + accountId + "/search",
+        url: "https://ee.example.com/v1/account/" + accountId + "/search?path=%5CAll",
         headers: {
             "Authorization": "Bearer " + token,
             "Content-Type": "application/json"
         },
         body: {
-            path: "\\All",
             search: { threadId: threadId }
         }
     )
@@ -296,13 +289,12 @@ function searchYahooThread(accountId, threadId):
 
     for each folder in folders:
         response = HTTP_POST(
-            url: "https://ee.example.com/v1/account/" + accountId + "/search",
+            url: "https://ee.example.com/v1/account/" + accountId + "/search?path=%5CAll",
             headers: {
                 "Authorization": "Bearer " + token,
                 "Content-Type": "application/json"
             },
             body: {
-                path: folder,
                 search: { threadId: threadId }
             }
         )
@@ -328,7 +320,7 @@ function searchGenericThread(accountId, subject):
 
     for each folder in folders:
         response = HTTP_POST(
-            url: "https://ee.example.com/v1/account/" + accountId + "/search",
+            url: "https://ee.example.com/v1/account/" + accountId + "/search?path=%5CAll",
             headers: {
                 "Authorization": "Bearer " + token,
                 "Content-Type": "application/json"
@@ -351,11 +343,10 @@ function searchGenericThread(accountId, subject):
 Thread searches support pagination for long threads:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/gmail/search?page=0&pageSize=50" \
+curl -XPOST "https://ee.example.com/v1/account/gmail/search?path=%5CAll&page=0&pageSize=50" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "\\All",
     "search": {
       "threadId": "1759349012996310407"
     }

@@ -227,21 +227,22 @@ Retrieve all registered accounts.
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `page` | number | Page number (0-indexed) |
-| `limit` | number | Items per page (default 20, max 250) |
+| `pageSize` | number | Items per page (default 20) |
 | `state` | string | Filter by account state |
+| `query` | string | Filter accounts by string match |
 
 **Examples:**
 
 **cURL:**
 ```bash
-curl "http://localhost:3000/v1/accounts?limit=50" \
+curl "http://localhost:3000/v1/accounts?pageSize=50" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 **Pseudo code:**
 ```
 // List all accounts with pagination
-response = HTTP_GET("http://localhost:3000/v1/accounts?limit=50", {
+response = HTTP_GET("http://localhost:3000/v1/accounts?pageSize=50", {
   headers: {
     "Authorization": "Bearer YOUR_ACCESS_TOKEN"
   }

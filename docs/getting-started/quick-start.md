@@ -80,13 +80,49 @@ $ export EMAILENGINE_TOKEN="your-token-here"
 
 ## Step 4: Add Your First Email Account
 
-EmailEngine supports multiple account types. Choose the method that fits your email provider:
+EmailEngine supports multiple account types. Choose the method that fits your needs:
 
-### Option A: Gmail with OAuth2 (Recommended)
+### Option A: Hosted Authentication Form (Recommended)
+
+The easiest way to add accounts is using EmailEngine's built-in hosted authentication form. EmailEngine handles the entire OAuth2 flow for you.
+
+**Benefits:**
+- No need to obtain OAuth2 tokens manually
+- EmailEngine manages token refresh automatically
+- Works with Gmail, Outlook, and other OAuth2 providers
+- User-friendly authentication experience
+
+**How to use:**
+
+1. Navigate to the EmailEngine web interface at **http://localhost:3000**
+2. Go to **Accounts** in the sidebar
+3. Click **Add new account**
+4. Enter the email address
+5. Click **Authenticate** and follow the provider's OAuth2 flow
+6. EmailEngine will handle the rest automatically
+
+**When to use the hosted form:**
+- Quick account setup during development
+- End-user account authentication in your application
+- When you don't need programmatic control over OAuth2 tokens
+
+:::tip Using in Your Application
+You can redirect users to the hosted authentication form from your application. The form will redirect users to the OAuth2 provider's permission page (which must open in a main window, not an iframe due to security restrictions). After authentication, users are redirected back to your application. See the [Authentication Form API](/docs/api/get-v-1-authentication-form) for details.
+:::
+
+### Option B: API with OAuth2 Tokens (Advanced)
+
+For programmatic control or special requirements, register accounts directly via API with OAuth2 tokens you've obtained.
+
+**When to use direct API:**
+- Automated account provisioning
+- Service account authentication
+- Custom OAuth2 flows
+- When you need to manage tokens yourself
+
+**Gmail Example:**
 
 **Prerequisites:** You need to set up OAuth2 credentials in Google Cloud Console. [See detailed guide →](/docs/accounts/gmail-imap)
-
-Use the [register account API](/docs/api/post-v-1-account):
 
 ```bash
 $ curl -XPOST "http://127.0.0.1:3000/v1/account" \
@@ -104,7 +140,7 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account" \
   }'
 ```
 
-### Option B: Outlook/Microsoft 365 with OAuth2
+**Outlook Example:**
 
 **Prerequisites:** You need to register an app in Azure AD. [See detailed guide →](/docs/accounts/outlook-365)
 
@@ -357,7 +393,7 @@ For testing, use [webhook.site](https://webhook.site) to see webhook payloads:
 Retrieve messages from the mailbox using the [list messages API](/docs/api/get-v-1-account-account-messages):
 
 ```bash
-$ curl "http://127.0.0.1:3000/v1/account/my-account/messages?path=INBOX&limit=10" \
+$ curl "http://127.0.0.1:3000/v1/account/my-account/messages?path=INBOX&pageSize=10" \
   -H "Authorization: Bearer ${EMAILENGINE_TOKEN}"
 ```
 

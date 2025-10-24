@@ -126,30 +126,34 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 
 ## Decision Tree: Which Method Should I Use?
 
-```
-START: What email provider?
-│
-├─ Gmail / Google Workspace
-│  │
-│  ├─ Need maximum performance? → Gmail API
-│  ├─ Connecting user accounts (OAuth)? → Gmail OAuth2 (IMAP)
-│  └─ Quick testing? → IMAP with app password
-│
-├─ Microsoft 365 / Outlook
-│  │
-│  ├─ Need shared mailboxes? → Microsoft Graph API
-│  ├─ Enterprise features? → Microsoft Graph API
-│  ├─ Connecting user accounts (OAuth)? → Outlook OAuth2 (IMAP)
-│  └─ Quick testing? → IMAP with password
-│
-├─ Yahoo / AOL / Verizon
-│  └─ → IMAP/SMTP with app password
-│
-├─ iCloud
-│  └─ → IMAP/SMTP with app-specific password
-│
-└─ Other / Self-hosted
-   └─ → IMAP/SMTP with credentials
+```mermaid
+graph TD
+    Start[What email provider?]
+    Start --> Gmail[Gmail / Google Workspace]
+    Start --> M365[Microsoft 365 / Outlook]
+    Start --> Yahoo[Yahoo / AOL / Verizon]
+    Start --> iCloud[iCloud]
+    Start --> Other[Other / Self-hosted]
+
+    Gmail --> GmailPerf{Need maximum performance?}
+    Gmail --> GmailOAuth{Connecting user accounts?}
+    Gmail --> GmailTest{Quick testing?}
+    GmailPerf -->|Yes| GmailAPI[Gmail API]
+    GmailOAuth -->|Yes| GmailOAuth2[Gmail OAuth2 IMAP]
+    GmailTest -->|Yes| GmailIMAPApp[IMAP with app password]
+
+    M365 --> M365Shared{Need shared mailboxes?}
+    M365 --> M365Enterprise{Enterprise features?}
+    M365 --> M365OAuth{Connecting user accounts?}
+    M365 --> M365Test{Quick testing?}
+    M365Shared -->|Yes| GraphAPI[Microsoft Graph API]
+    M365Enterprise -->|Yes| GraphAPI2[Microsoft Graph API]
+    M365OAuth -->|Yes| OutlookOAuth2[Outlook OAuth2 IMAP]
+    M365Test -->|Yes| M365IMAP[IMAP with password]
+
+    Yahoo --> YahooIMAP[IMAP/SMTP with app password]
+    iCloud --> iCloudIMAP[IMAP/SMTP with app-specific password]
+    Other --> OtherIMAP[IMAP/SMTP with credentials]
 ```
 
 ## Account Management Tasks
@@ -231,11 +235,14 @@ await fetch('https://your-ee.com/v1/account/user123', {
 | State | Description | Actions Available |
 |-------|-------------|-------------------|
 | `new` | Just added, not yet connected | Wait for initialization |
+| `init` | Being initialized | Wait |
+| `syncing` | Performing initial mailbox sync | Wait for sync to complete |
 | `connecting` | Establishing connection | Wait |
 | `connected` | Active and syncing | All operations available |
 | `authenticationError` | Invalid credentials | Update credentials |
 | `connectError` | Cannot reach server | Check connectivity, retry |
-| `disabled` | Manually disabled | Re-enable account |
+| `unset` | OAuth2 authentication not complete | Complete OAuth2 flow |
+| `disconnected` | Manually disconnected or paused | Re-enable account |
 
 ### Reconnecting Accounts
 

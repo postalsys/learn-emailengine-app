@@ -105,8 +105,9 @@ PRINT("Queue ID: " + result.queueId)
 **Response:**
 ```json
 {
-  "success": true,
+  "response": "Queued for delivery",
   "messageId": "<abc123@example.com>",
+  "sendAt": "2025-01-15T10:30:00.000Z",
   "queueId": "queue_456def"
 }
 ```
@@ -323,8 +324,8 @@ response = HTTP_POST(
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `page` | number | Page number |
-| `limit` | number | Items per page |
+| `page` | number | Page number (0-indexed) |
+| `pageSize` | number | Items per page (default 20) |
 
 **Example:**
 
@@ -334,7 +335,7 @@ response = HTTP_POST(
 account = "user@example.com"
 
 response = HTTP_GET(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/outbox?limit=50",
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/outbox?pageSize=50",
   {
     headers: {
       "Authorization": "Bearer YOUR_ACCESS_TOKEN"

@@ -41,6 +41,15 @@ For production deployments, replace with your EmailEngine instance URL:
 https://emailengine.yourdomain.com/v1
 ```
 
+:::tip IPv6 Note
+If you encounter connection issues with `localhost`, try using `127.0.0.1` instead. On some systems, `localhost` resolves to IPv6 (`::1`) which may cause connection failures if EmailEngine is only listening on IPv4.
+
+```bash
+# Use 127.0.0.1 instead of localhost
+curl http://127.0.0.1:3000/v1/accounts
+```
+:::
+
 ### Versioning
 
 The API version is included in the URL path (`/v1`). This ensures backward compatibility when new versions are released.
@@ -288,12 +297,13 @@ For endpoints that return lists (accounts, messages, etc.), use pagination param
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `page` | number | 0 | Page number (0-indexed) |
-| `limit` | number | 20 | Items per page (max 250) |
+| `pageSize` | number | 20 | Items per page |
+| `cursor` | string | - | Paging cursor from nextPageCursor or prevPageCursor |
 
 ### Example Request
 
 ```bash
-curl "http://localhost:3000/v1/account/user@example.com/messages?page=0&limit=50" \
+curl "http://localhost:3000/v1/account/user@example.com/messages?path=INBOX&page=0&pageSize=50" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -321,7 +331,7 @@ function fetchAllMessages(account) {
 
   while (hasMore) {
     // Build URL with pagination parameters
-    url = "http://localhost:3000/v1/account/" + account + "/messages?page=" + page + "&limit=100"
+    url = "http://localhost:3000/v1/account/" + account + "/messages?path=INBOX&page=" + page + "&pageSize=100"
 
     // Make HTTP GET request
     response = HTTP_GET(url, {
@@ -536,7 +546,7 @@ PRINT("Email sent: " + messageId)
 
 // 4. List recent messages
 messagesResponse = HTTP_GET(
-  BASE_URL + "/account/" + account + "/messages?limit=10",
+  BASE_URL + "/account/" + account + "/messages?path=INBOX&pageSize=10",
   {
     headers: { "Authorization": "Bearer " + TOKEN }
   }

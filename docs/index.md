@@ -188,7 +188,7 @@ EmailEngine provides a comprehensive REST API:
 
 ## System Requirements
 
-- **Node.js** 16.x or higher
+- **Node.js** 20.x or higher
 - **Redis** 6.x or higher (or Redis-compatible service like Upstash)
 - **Memory** Minimum 2GB RAM (4GB+ recommended for production)
 - **OS** Linux, macOS, or Windows

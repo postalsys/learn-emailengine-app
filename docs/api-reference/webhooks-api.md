@@ -122,7 +122,7 @@ curl -X POST http://localhost:3000/v1/settings \
 
 Retrieve all configured webhook routes.
 
-**Endpoint:** `GET /v1/webhookroutes`
+**Endpoint:** `GET /v1/webhookRoutes`
 
 **Example:**
 
@@ -130,7 +130,7 @@ Retrieve all configured webhook routes.
 ```
 // List all webhook routes
 response = HTTP_GET(
-  "http://localhost:3000/v1/webhookroutes",
+  "http://localhost:3000/v1/webhookRoutes",
   {
     headers: {
       "Authorization": "Bearer YOUR_ACCESS_TOKEN"
@@ -162,7 +162,7 @@ for each route in routes.routes {
 
 Retrieve details of a specific webhook route.
 
-**Endpoint:** `GET /v1/webhookroutes/webhookroute/:webhookroute`
+**Endpoint:** `GET /v1/webhookRoutes/webhookRoute/:webhookRoute`
 
 **Example:**
 
@@ -172,7 +172,7 @@ Retrieve details of a specific webhook route.
 routeId = "route_123abc"
 
 response = HTTP_GET(
-  "http://localhost:3000/v1/webhookroutes/webhookroute/" + routeId,
+  "http://localhost:3000/v1/webhookRoutes/webhookRoute/" + routeId,
   {
     headers: {
       "Authorization": "Bearer YOUR_ACCESS_TOKEN"
@@ -202,7 +202,7 @@ PRINT("Events: " + route.events)
 
 Update an existing webhook route configuration.
 
-**Endpoint:** `PUT /v1/webhookroutes/webhookroute/:webhookroute`
+**Endpoint:** `PUT /v1/webhookRoutes/webhookRoute/:webhookRoute`
 
 **Example:**
 
@@ -212,7 +212,7 @@ Update an existing webhook route configuration.
 routeId = "route_123abc"
 
 response = HTTP_PUT(
-  "http://localhost:3000/v1/webhookroutes/webhookroute/" + routeId,
+  "http://localhost:3000/v1/webhookRoutes/webhookRoute/" + routeId,
   {
     headers: {
       "Authorization": "Bearer YOUR_ACCESS_TOKEN",
@@ -233,7 +233,7 @@ PRINT("Webhook updated: " + result.success)
 
 Remove a webhook route.
 
-**Endpoint:** `DELETE /v1/webhookroutes/webhookroute/:webhookroute`
+**Endpoint:** `DELETE /v1/webhookRoutes/webhookRoute/:webhookRoute`
 
 **Example:**
 
@@ -243,7 +243,7 @@ Remove a webhook route.
 routeId = "route_123abc"
 
 response = HTTP_DELETE(
-  "http://localhost:3000/v1/webhookroutes/webhookroute/" + routeId,
+  "http://localhost:3000/v1/webhookRoutes/webhookRoute/" + routeId,
   {
     headers: {
       "Authorization": "Bearer YOUR_ACCESS_TOKEN"

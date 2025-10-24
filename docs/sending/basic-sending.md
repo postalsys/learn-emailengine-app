@@ -308,6 +308,166 @@ Request delivery status notifications (DSN):
 
 Note: DSN support varies by email provider.
 
+### Email Tracking
+
+Enable open and click tracking for your emails:
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "Tracked Email",
+  "html": "<p>Check out <a href='https://example.com'>our website</a>!</p>",
+  "trackOpens": true,
+  "trackClicks": true
+}
+```
+
+When enabled, EmailEngine will:
+- Insert a tracking pixel to detect email opens (`trackOpens`)
+- Rewrite links to track clicks (`trackClicks`)
+- Send `trackOpen` and `trackClick` webhook events when detected
+
+**Optional:** Override the base URL for tracking links:
+
+```json
+{
+  "trackOpens": true,
+  "trackClicks": true,
+  "baseUrl": "https://yourdomain.com"
+}
+```
+
+[Learn more about tracking events →](../receiving/webhooks#tracking-events)
+
+### Preview Mode (Dry Run)
+
+Generate email preview without actually sending:
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "Test Email",
+  "html": "<p>Preview this email</p>",
+  "dryRun": true
+}
+```
+
+**Response:**
+```json
+{
+  "preview": "BASE64_ENCODED_RFC822_MESSAGE"
+}
+```
+
+The response contains the complete RFC822 formatted email (base64 encoded). Decode it to see exactly what would be sent. Perfect for testing templates and rendering.
+
+### Network Configuration
+
+#### Proxy Routing
+
+Route SMTP connection through a proxy server:
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "Via Proxy",
+  "text": "Sent through proxy",
+  "proxy": "http://proxy.company.com:8080"
+}
+```
+
+Supports HTTP, HTTPS, SOCKS4, and SOCKS5 proxies.
+
+#### Local Address Binding
+
+Bind to a specific local IP address:
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "From Specific IP",
+  "text": "Sent from specific interface",
+  "localAddress": "192.168.1.100"
+}
+```
+
+Useful for multi-interface systems or IP-based routing.
+
+### Delivery Control
+
+#### Custom Retry Attempts
+
+Override the default retry count for this message:
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "High Priority",
+  "text": "Will retry up to 15 times",
+  "deliveryAttempts": 15
+}
+```
+
+Default is usually 10 attempts. Use higher values for critical emails.
+
+#### SMTP Gateway
+
+Route through a specific SMTP gateway:
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "Via Gateway",
+  "text": "Sent through custom gateway",
+  "gateway": "gateway-id-123"
+}
+```
+
+Gateways must be configured in EmailEngine settings first. [Learn more →](./smtp-gateway)
+
+#### SMTP Envelope
+
+Specify SMTP envelope separately from message headers:
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "from": { "address": "noreply@example.com" },
+  "subject": "Envelope Example",
+  "text": "Header From and SMTP MAIL FROM can differ",
+  "envelope": {
+    "from": "bounce@example.com",
+    "to": ["actualrecipient@example.com"]
+  }
+}
+```
+
+Useful for bounce handling and advanced email routing.
+
+### Idempotency
+
+Prevent duplicate message submission with idempotency keys:
+
+**Request:**
+```bash
+curl -XPOST "http://127.0.0.1:3000/v1/account/example/submit" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: unique-key-12345" \
+  -d '{
+    "to": [{ "address": "recipient@example.com" }],
+    "subject": "Important",
+    "text": "This will only send once even if request is retried"
+  }'
+```
+
+If the same request is sent multiple times with the same `Idempotency-Key` header, EmailEngine will:
+- Process it only once
+- Return the same response for duplicate requests
+- Prevent accidental double-sends
+
+The idempotency key can be any string (0-1024 characters). Use UUIDs or request-specific identifiers.
+
 ## Webhook Notifications
 
 EmailEngine sends webhook notifications for delivery status updates. Configure your webhook URL under **Settings → Webhooks**.

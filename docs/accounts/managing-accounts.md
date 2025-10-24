@@ -18,29 +18,33 @@ Every account in EmailEngine has a state that indicates its current status:
 |-------|-------------|------------------|---------|
 | `new` | Just added, not yet initialized | No | Wait |
 | `init` | Being initialized | No | Wait |
+| `syncing` | Performing initial mailbox sync | No | Wait |
 | `connecting` | Establishing connection | No | Wait |
 | `connected` | Active and operational | Yes | All operations available |
 | `authenticationError` | Invalid or expired credentials | No | Update credentials or reconnect |
 | `connectError` | Cannot reach mail server | No | Check network, server status |
 | `unset` | OAuth2 authentication not complete | No | Complete OAuth2 flow |
-| `disabled` | Manually disabled | No | Re-enable account |
+| `disconnected` | Manually disconnected or paused | No | Re-enable account |
 
 ### State Transitions
 
-```
-new → init → connecting → connected
-                ↓
-        authenticationError
-                ↓
-        (fix credentials)
-                ↓
-           reconnect → connecting → connected
+```mermaid
+stateDiagram-v2
+    [*] --> new
+    new --> init
+    init --> syncing
+    syncing --> connecting
+    connecting --> connected
+    connected --> [*]
 
-connectError → (wait/retry) → connecting → connected
-                ↓
-            (if persists)
-                ↓
-            disabled
+    connecting --> authenticationError
+    authenticationError --> reconnect: fix credentials
+    reconnect --> connecting
+
+    connecting --> connectError
+    connectError --> connecting: wait/retry
+    connectError --> disconnected: if persists
+    disconnected --> [*]
 ```
 
 ## Adding Accounts

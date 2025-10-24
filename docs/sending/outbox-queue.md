@@ -257,7 +257,7 @@ curl "https://ee.example.com/v1/account/example/outbox" \
 
 ```bash
 # List waiting jobs
-curl "https://ee.example.com/v1/account/example/outbox?state=waiting&limit=10" \
+curl "https://ee.example.com/v1/account/example/outbox?state=waiting&pageSize=10" \
   -H "Authorization: Bearer <token>"
 ```
 
