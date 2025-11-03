@@ -391,30 +391,6 @@ emailengine tokens import -t $USER1_TOKEN
 emailengine
 ```
 
-### Security Considerations
-
-**Storage:**
-- Never commit prepared tokens to version control
-- Use secret management (AWS Secrets Manager, HashiCorp Vault)
-- Rotate tokens regularly
-
-**Scope Limitation:**
-- Use minimal required scope
-- Prefer account-specific tokens when possible
-- Separate tokens for different purposes
-
-**Example secret management:**
-```bash
-# Fetch from AWS Secrets Manager
-PREPARED_TOKEN=$(aws secretsmanager get-secret-value \
-  --secret-id emailengine/api-token \
-  --query SecretString \
-  --output text)
-
-export EENGINE_PREPARED_TOKEN=$PREPARED_TOKEN
-emailengine
-```
-
 ---
 
 ## Prepared License Keys

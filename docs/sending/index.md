@@ -56,17 +56,6 @@ EmailEngine supports multiple sending approaches:
    - EmailEngine routes to the correct account
    - Best for legacy applications
 
-## Sending vs API Comparison
-
-| Feature | Submit API | SMTP Gateway |
-|---------|-----------|--------------|
-| Integration | REST API | SMTP protocol |
-| Queuing | Automatic | Automatic |
-| Webhooks | Yes | Yes |
-| Retry logic | Configurable | Configurable |
-| Best for | Modern apps | Legacy systems |
-| Authentication | API token | Account credentials |
-
 ## Quick Examples
 
 ### Simple Email

@@ -597,29 +597,3 @@ tail -f /path/to/emailengine/logs/app.log
 2. Verify API authentication
 3. Add timeout handling
 4. Check CORS (only affects browser testing)
-
-## Security Considerations
-
-### 1. Protect Webhook URLs
-
-- Don't share webhook URLs publicly
-- Rotate URLs periodically
-- Use services with URL validation
-
-### 2. Validate Data
-
-- Sanitize data before sending to external services
-- Avoid exposing sensitive information
-- Filter PII if required
-
-### 3. Rate Limiting
-
-- Be aware of target service rate limits
-- Implement throttling if needed
-- Handle rate limit errors gracefully
-
-### 4. Authentication
-
-- Use secure authentication for custom APIs
-- Include API keys in headers, not URLs
-- Rotate credentials regularly

@@ -58,17 +58,6 @@ EmailEngine handles steps 4-7 automatically. You just need to:
 - Direct users to the authentication URL
 - EmailEngine handles the rest
 
-## OAuth2 vs Password Authentication
-
-| Aspect | OAuth2 | Password |
-|--------|--------|----------|
-| **Security** | No password storage | Password stored/transmitted |
-| **2FA Support** | Works seamlessly | May require app passwords |
-| **User Trust** | Authenticate with provider | Share password with app |
-| **Token Revocation** | Revoke without password change | Must change password |
-| **Setup Complexity** | Requires OAuth app setup | Simple (just credentials) |
-| **Provider Support** | Gmail, Outlook, major providers | Universal |
-
 ## Supported Providers in EmailEngine
 
 EmailEngine supports OAuth2 for:

@@ -477,38 +477,6 @@ sudo systemctl start emailengine
 - Credentials cached in memory during session
 - No impact on email processing once connected
 
-## Security Considerations
-
-### Defense in Depth
-
-Encryption is one layer of security. Also implement:
-
-1. **Network Security**: Firewall rules, VPN, private networks
-2. **Access Control**: Limit Redis access, user permissions
-3. **Monitoring**: Track access patterns, alert on anomalies
-4. **Regular Updates**: Keep EmailEngine and dependencies updated
-5. **Audit Logs**: Enable and monitor audit logs
-
-### Compliance
-
-Encryption helps meet requirements for:
-
-- **GDPR**: Data protection by design
-- **HIPAA**: Protected Health Information (PHI) encryption
-- **PCI DSS**: Cardholder data protection
-- **SOC 2**: Security controls
-
-Consult with compliance team for specific requirements.
-
-### What Encryption Doesn't Protect Against
-
-Encryption at rest doesn't protect against:
-
-- [NO] Compromised EmailEngine process (credentials in memory)
-- [NO] Network sniffing (use TLS for network protection)
-- [NO] Application vulnerabilities (keep EmailEngine updated)
-- [NO] Stolen encryption secret (protect the secret itself)
-
 ## Migration Planning
 
 ### Pre-Migration Checklist

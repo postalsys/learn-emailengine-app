@@ -588,14 +588,3 @@ Synchronize email data:
 - Mirror to CRM systems
 - Sync with document management
 
-## Comparison with Regular OAuth2
-
-| Aspect | Service Accounts | Regular OAuth2 |
-|--------|------------------|----------------|
-| **User Consent** | Not required | Required per user |
-| **Setup Complexity** | High (domain delegation) | Moderate (OAuth app) |
-| **Account Coverage** | Google Workspace only | Any Gmail user |
-| **Admin Requirements** | Super admin access | None |
-| **Scalability** | Excellent (no per-user flow) | Good (per-user flow) |
-| **Security** | High risk if compromised | Lower risk (scoped to user) |
-| **Use Case** | Enterprise internal use | Public applications |

@@ -366,52 +366,6 @@ curl "https://ee.example.com/v1/account/example/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 
-## Security Considerations
-
-### Use API Tokens, Not Account Passwords
-
-Always use EmailEngine API tokens for authentication, never the actual email account password:
-
-```javascript
-// GOOD: Using API token
-auth: {
-  user: 'example-account',
-  pass: process.env.EMAILENGINE_API_TOKEN
-}
-
-// BAD: Using account password
-auth: {
-  user: 'example-account',
-  pass: 'actual-email-password'  // Don't do this!
-}
-```
-
-### Firewall Rules
-
-Restrict SMTP gateway access to trusted IPs:
-
-```bash
-# Example: iptables
-iptables -A INPUT -p tcp --dport 2525 -s 10.0.0.0/8 -j ACCEPT
-iptables -A INPUT -p tcp --dport 2525 -j DROP
-```
-
-Or use a reverse proxy (nginx) with access control.
-
-### Enable TLS
-
-Always use TLS in production:
-
-```bash
-EENGINE_SMTP_GATEWAY_SECURE=true
-# OR
-EENGINE_SMTP_GATEWAY_STARTTLS=true
-```
-
-### Rate Limiting
-
-Implement rate limiting at the network level or use EmailEngine's built-in limits.
-
 ## Troubleshooting
 
 ### Connection Refused

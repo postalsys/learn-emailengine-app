@@ -405,24 +405,6 @@ EmailEngine handles token refresh automatically:
 While you can cache tokens in your application for a short time (e.g., 5-10 minutes), it's usually simpler to just request them from EmailEngine on-demand. EmailEngine's token retrieval is fast and guarantees validity.
 :::
 
-## Security Considerations
-
-### Protecting Access Tokens
-
-OAuth2 access tokens are powerful:
-
-- They provide access to user data
-- They should be treated like passwords
-- Never log them or expose them in client-side code
-
-**Best Practices:**
-
-- Store EmailEngine API token securely (environment variable, secret manager)
-- Make token requests from server-side code only
-- Never send access tokens to client browsers
-- Use HTTPS for all API communications
-- Set appropriate API token permissions in EmailEngine
-
 ## Troubleshooting
 
 ### Token Endpoint Returns 403 Forbidden

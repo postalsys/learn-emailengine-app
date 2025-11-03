@@ -494,39 +494,6 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 - Privacy policy link
 - Terms of service link
 
-## Security Considerations
-
-### URL Expiration
-
-Authentication URLs are valid for a limited time:
-- Default: 1 hour
-- After expiration, user must request new URL
-- Prevents URL reuse attacks
-
-### HTTPS Required
-
-Always use HTTPS for:
-- EmailEngine server
-- Redirect URLs
-- Your application
-
-### Token Storage
-
-EmailEngine securely stores:
-- OAuth2 access tokens (encrypted)
-- OAuth2 refresh tokens (encrypted)
-- Account credentials (encrypted)
-
-Your application never sees these tokens.
-
-### Account ID Security
-
-Use opaque account IDs:
-- Don't use email addresses as IDs
-- Don't use sequential numbers
-- Use UUIDs or random strings
-- IDs appear in URLs
-
 ## Troubleshooting
 
 ### Authentication URL Returns 404
@@ -581,17 +548,6 @@ if (state === 'authenticationError') {
   });
 }
 ```
-
-## Comparison with Other Methods
-
-| Aspect | Hosted Authentication | Direct API Registration | Authentication Server |
-|--------|----------------------|-------------------------|----------------------|
-| **Complexity** | Simple | Moderate | Complex |
-| **User interaction** | Required | Optional | Required |
-| **OAuth2 handling** | EmailEngine | Your app | External server |
-| **Token storage** | EmailEngine | EmailEngine | Your server |
-| **Customization** | Limited | Full | Full |
-| **Setup time** | Minutes | Hours | Days |
 
 ## See Also
 

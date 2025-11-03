@@ -447,13 +447,3 @@ Use minimal required scopes:
 }
 ```
 
-## Comparison: System vs Account Tokens
-
-| Aspect                | System-Wide Token   | Account-Specific Token |
-| --------------------- | ------------------- | ---------------------- |
-| **Created via**       | Web UI, CLI         | API only               |
-| **Scope**             | All accounts        | Single account         |
-| **Use case**          | Admin operations    | User-specific access   |
-| **Security**          | High risk if leaked | Limited risk           |
-| **Can create tokens** | Yes                 | No                     |
-| **Recommended for**   | Internal automation | Multi-tenant apps      |

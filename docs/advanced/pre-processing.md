@@ -512,80 +512,6 @@ Pre-processing functions run in a secure sandbox with limited access:
 
 Functions that exceed limits are terminated and the event is discarded.
 
-## Security Considerations
-
-### 1. Validate Input
-
-Always validate data before processing:
-
-```javascript
-function filterWebhook(data) {
-  // Check required fields exist
-  if (!data.from || !data.from.address) {
-    return false;
-  }
-
-  // Validate structure
-  if (typeof data.subject !== 'string') {
-    return false;
-  }
-
-  return true;
-}
-```
-
-### 2. Avoid Exposing Secrets
-
-Don't hardcode sensitive values:
-
-```javascript
-// Bad - hardcoded secret
-function mapWebhook(data) {
-  data.apiKey = 'secret123'; // Don't do this!
-  return data;
-}
-
-// Good - use webhook payload only
-function mapWebhook(data) {
-  data.timestamp = Date.now();
-  return data;
-}
-```
-
-### 3. Handle Errors Gracefully
-
-```javascript
-function mapWebhook(data) {
-  try {
-    // Your transformation logic
-    data.customField = JSON.parse(data.customData);
-  } catch (err) {
-    // Log error but don't crash
-    console.log('Failed to parse custom data:', err.message);
-    data.customField = null;
-  }
-
-  return data;
-}
-```
-
-### 4. Limit Computation
-
-Avoid expensive operations:
-
-```javascript
-// Bad - expensive regex
-function filterWebhook(data) {
-  // This can cause performance issues
-  return !/(a+)+b/.test(data.text); // Catastrophic backtracking
-}
-
-// Good - efficient check
-function filterWebhook(data) {
-  return data.text && data.text.length < 100000; // Simple check
-}
-```
-
 ## Testing
 
 ### Test in UI
@@ -939,27 +865,6 @@ curl "https://ee.example.com/v1/account/example/message/AAAAGQAACeE?embedAttache
 - Significantly faster response times
 - Reduced load on IMAP server
 
-### Security Considerations
-
-**What Pre-Processing Blocks**:
-- JavaScript execution
-- Form submissions
-- External resource loading (can be configured)
-- Style injection attacks
-- XSS attempts
-
-**What's Preserved**:
-- Email styling and layout
-- Inline images (converted to data URLs)
-- Text formatting
-- Tables and structure
-
-**Limitations**:
-- Some complex CSS may be stripped
-- Advanced layouts might render differently
-- Embedded fonts might not work
-- Some CSS animations removed
-
 ### Attachment Handling
 
 EmailEngine distinguishes between two attachment types:
@@ -1003,33 +908,6 @@ EmailEngine distinguishes between two attachment types:
   ]
 }
 ```
-
-### Comparison: iframe vs Inline
-
-**Using iframe (Traditional)**:
-
-```html
-<iframe
-  sandbox="allow-same-origin"
-  srcdoc="<html><body>EMAIL_HTML_HERE</body></html>"
-  style="width: 100%; height: 600px;">
-</iframe>
-```
-
-**Pros**: Strong isolation
-**Cons**: Sizing issues, scrollbars, responsive challenges
-
-**Using Pre-Processed Inline (EmailEngine)**:
-
-```html
-<div class="email-container">
-  <!-- Directly inject pre-processed HTML -->
-  <div innerHTML="EMAIL_HTML_HERE"></div>
-</div>
-```
-
-**Pros**: No sizing issues, responsive, seamless integration
-**Cons**: Requires proper pre-processing (provided by EmailEngine)
 
 ### Implementation Example
 
