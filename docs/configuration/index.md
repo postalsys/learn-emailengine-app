@@ -66,7 +66,6 @@ services:
       - EENGINE_HOST=0.0.0.0
       - EENGINE_PORT=3000
       - REDIS_URL=redis://redis:6379
-      - EENGINE_SECRET=my-secret-key
 ```
 
 [Complete environment variables reference →](./environment-variables.md)
@@ -137,8 +136,8 @@ environment:
   - EENGINE_HOST=0.0.0.0
   - EENGINE_PORT=3000
   - REDIS_URL=redis://redis:6379
-  - EENGINE_SECRET=${SECRET_KEY}
-  - EENGINE_ENCRYPTION_SECRET=${ENCRYPTION_KEY}
+  - EENGINE_PREPARED_PASSWORD=${ADMIN_PASSWORD}
+  - EENGINE_PREPARED_LICENSE=${LICENSE_KEY}
 ```
 
 **Keep secrets secure:**
@@ -153,7 +152,7 @@ environment:
 EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
 REDIS_URL=redis://localhost:6379
-EENGINE_SECRET=change-me-in-production
+EENGINE_PREPARED_PASSWORD=change-me-in-production
 ```
 
 ### Development Setup
@@ -217,8 +216,8 @@ metadata:
   name: emailengine-secrets
 type: Opaque
 stringData:
-  EENGINE_SECRET: "your-secret-key"
-  EENGINE_ENCRYPTION_SECRET: "your-encryption-key"
+  EENGINE_PREPARED_PASSWORD: "your-admin-password"
+  EENGINE_PREPARED_LICENSE: "your-license-key"
 
 ---
 # Deployment
@@ -250,14 +249,12 @@ spec:
 | Redis URL | `REDIS_URL` | Redis connection string |
 | Server Host | `EENGINE_HOST` | Listen address (0.0.0.0) |
 | Server Port | `EENGINE_PORT` | HTTP port (default 3000) |
-| Secret Key | `EENGINE_SECRET` | Session encryption key |
 
 **Example:**
 ```bash
 REDIS_URL=redis://localhost:6379
 EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
-EENGINE_SECRET=random-secret-at-least-32-chars
 ```
 
 ### Common Configuration Scenarios
@@ -266,26 +263,17 @@ EENGINE_SECRET=random-secret-at-least-32-chars
 ```bash
 EENGINE_HOST=127.0.0.1
 EENGINE_PORT=3000
-EENGINE_BASE_URL=https://emailengine.yourdomain.com
 ```
 
 **With Redis Cluster:**
 ```bash
 REDIS_URL=redis://node1:6379,redis://node2:6379
-REDIS_CONF='{"enableAutoPipelining":true}'
-```
-
-**High Security:**
-```bash
-EENGINE_ENCRYPTION_SECRET=your-32-char-encryption-key-here
-EENGINE_ENCRYPTION_ALGO=aes-256-gcm
-EENGINE_SECRET=your-session-secret-key-here
+EENGINE_REDIS_PREFIX={ee-prod}
 ```
 
 **Development Mode:**
 ```bash
 EENGINE_LOG_LEVEL=trace
-EENGINE_LOG_RAW=true
 NODE_ENV=development
 ```
 
@@ -301,30 +289,30 @@ Redis connection, clustering, and persistence.
 
 [View details →](./redis.md)
 
-### Email & IMAP
+### Email Protocol Settings
 Email handling, attachment size limits, timeouts.
 
-[View details →](./environment-variables.md#email--imap)
+[View details →](./environment-variables.md#email-protocol-settings)
 
-### Features
-Workers, connections, chunking, payload limits.
+### Worker Threads
+Worker thread configuration for processing workload.
 
-[View details →](./environment-variables.md#features)
+[View details →](./environment-variables.md#worker-threads)
 
-### Webhooks
-Default webhooks, timeouts, retry settings.
+### Queue Management
+Job queue retention and cleanup configuration.
 
-[View details →](./environment-variables.md#webhooks)
+[View details →](./environment-variables.md#queue-management)
 
 ### OAuth2
 OAuth2 provider credentials and configuration.
 
 [View details →](./oauth2-configuration.md)
 
-### Security & Encryption
-Encryption keys, algorithms, session secrets.
+### TLS Configuration
+TLS/SSL settings for secure connections.
 
-[View details →](./environment-variables.md#security--encryption)
+[View details →](./environment-variables.md#tls-configuration)
 
 ### Logging & Monitoring
 Log levels, metrics endpoints, monitoring.

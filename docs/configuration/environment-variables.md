@@ -16,24 +16,21 @@ Minimal production configuration:
 REDIS_URL=redis://localhost:6379
 EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
-EENGINE_SECRET=your-random-secret-at-least-32-characters
 ```
 
 **Alternative:** Use command-line arguments instead of environment variables. [See CLI reference →](./cli)
 
 ## Server & Connection
 
-Configure HTTP server, public URLs, and proxy settings.
+Configure HTTP server and connection settings.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
 | `EENGINE_HOST` | string | `127.0.0.1` | HTTP server bind address | `0.0.0.0` |
 | `EENGINE_PORT` | number | `3000` | HTTP server port | `8080` |
-| `EENGINE_BASE_URL` | string | auto-detected | Public base URL for OAuth2 callbacks | `https://emailengine.example.com` |
-| `EENGINE_PROXY` | string | none | HTTP proxy for outgoing connections | `http://proxy.example.com:8080` |
-| `EENGINE_SECRET` | string | random | Session encryption secret (min 32 chars) | `abc123def456...` |
-| `EENGINE_APP_PASSWORD` | string | none | Admin panel password (deprecated, use access tokens) | `secure-password` |
+| `PORT` | number | `3000` | Alternative to EENGINE_PORT (used by some platforms) | `8080` |
 | `EENGINE_TIMEOUT` | number | `10000` | HTTP request timeout (ms) | `30000` |
+| `EENGINE_API_PROXY` | string | none | HTTP proxy for API outgoing connections | `http://proxy.example.com:8080` |
 
 [Access token management →](./access-tokens)
 
@@ -43,19 +40,17 @@ Configure HTTP server, public URLs, and proxy settings.
 ```bash
 EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
-EENGINE_BASE_URL=https://emailengine.yourdomain.com
 ```
 
 **Behind reverse proxy:**
 ```bash
 EENGINE_HOST=127.0.0.1
 EENGINE_PORT=3000
-EENGINE_BASE_URL=https://mail-api.company.com
 ```
 
-**With HTTP proxy:**
+**With HTTP proxy for outgoing API calls:**
 ```bash
-EENGINE_PROXY=http://corporate-proxy:8080
+EENGINE_API_PROXY=http://corporate-proxy:8080
 ```
 
 ## Redis
@@ -65,9 +60,8 @@ Redis database connection and configuration.
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
 | `REDIS_URL` | string | `redis://127.0.0.1:6379` | Redis connection URL | `redis://user:pass@redis.example.com:6379/0` |
-| `REDIS_PREFIX` | string | `{emailengine}` | Key prefix for Redis keys | `{ee-prod}` |
-| `REDIS_CONF` | JSON | `{}` | Additional Redis client options | `{"enableAutoPipelining":true}` |
-| `REDIS_WAIT_FOR_CONNECTION` | boolean | `false` | Wait for Redis on startup | `true` |
+| `EENGINE_REDIS` | string | none | Alternative to REDIS_URL | `redis://localhost:6379` |
+| `EENGINE_REDIS_PREFIX` | string | `{emailengine}` | Key prefix for Redis keys | `{ee-prod}` |
 
 **Connection URL Format:**
 ```
@@ -97,26 +91,23 @@ REDIS_URL=rediss://redis.example.com:6380
 REDIS_URL=redis://localhost:6379/8
 ```
 
-**Advanced configuration:**
+**Custom Redis key prefix:**
 ```bash
-REDIS_PREFIX="{emailengine-prod}"
-REDIS_CONF='{"enableAutoPipelining":true,"maxRetriesPerRequest":3}'
-REDIS_WAIT_FOR_CONNECTION=true
+EENGINE_REDIS_PREFIX="{emailengine-prod}"
 ```
 
 [Detailed Redis configuration →](./redis.md)
 
-## Email & IMAP
+## Email Protocol Settings
 
-Email protocol settings and limits.
+Email protocol timeouts and limits.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
 | `EENGINE_MAX_SIZE` | bytes | `5242880` | Max attachment size (5 MB) | `10485760` |
-| `EENGINE_IMAP_TIMEOUT` | ms | `90000` | IMAP command timeout | `120000` |
-| `EENGINE_IMAP_IDLE_TIMEOUT` | ms | `1740000` | IMAP IDLE timeout (29 min) | `1800000` |
-| `EENGINE_SMTP_TIMEOUT` | ms | `60000` | SMTP command timeout | `90000` |
-| `EENGINE_IMAP_DOWNLOAD_SIZE` | bytes | none | Max message download size | `52428800` |
+| `EENGINE_TIMEOUT` | ms | `10000` | General timeout for operations | `30000` |
+| `EENGINE_FETCH_TIMEOUT` | ms | `10000` | Timeout for HTTP fetch operations | `30000` |
+| `EENGINE_CONNECTION_SETUP_DELAY` | ms | `0` | Delay before setting up account connections | `5000` |
 
 **Examples:**
 
@@ -127,186 +118,153 @@ EENGINE_MAX_SIZE=20971520  # 20 MB
 
 **Extended timeouts for slow servers:**
 ```bash
-EENGINE_IMAP_TIMEOUT=180000   # 3 minutes
-EENGINE_SMTP_TIMEOUT=120000   # 2 minutes
+EENGINE_TIMEOUT=30000      # 30 seconds
+EENGINE_FETCH_TIMEOUT=60000  # 60 seconds
 ```
 
-**Limit message downloads:**
+**Delay connection setup on startup (useful for high account count):**
 ```bash
-EENGINE_IMAP_DOWNLOAD_SIZE=10485760  # 10 MB max
+EENGINE_CONNECTION_SETUP_DELAY=10000  # 10 seconds
 ```
 
-## Features
+## Worker Threads
 
-Core application features and limits.
+Control worker thread configuration for processing workload.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_WORKERS` | number | CPU count | Worker thread count | `4` |
-| `EENGINE_MAX_CONNECTIONS` | number | `10` | Max IMAP connections per account | `5` |
-| `EENGINE_CHUNK_SIZE` | number | `2500` | Messages per sync chunk | `5000` |
-| `EENGINE_MAX_PAYLOAD_SIZE` | bytes | `5242880` | Max API request body size | `10485760` |
-| `EENGINE_ENABLE_IMAP_PROXY` | boolean | `false` | Enable IMAP proxy feature | `true` |
-| `EENGINE_MAX_ACCOUNTS` | number | unlimited | Max account limit | `1000` |
+| `EENGINE_WORKERS` | number | CPU count | General worker thread count | `4` |
+| `EENGINE_WORKERS_SUBMIT` | number | CPU count | Worker threads for email submission | `2` |
+| `EENGINE_WORKERS_WEBHOOKS` | number | CPU count | Worker threads for webhook delivery | `2` |
 
 **Examples:**
 
 **High-performance setup:**
 ```bash
 EENGINE_WORKERS=8
-EENGINE_MAX_CONNECTIONS=20
-EENGINE_CHUNK_SIZE=5000
+EENGINE_WORKERS_SUBMIT=4
+EENGINE_WORKERS_WEBHOOKS=4
 ```
 
 **Resource-constrained environment:**
 ```bash
 EENGINE_WORKERS=2
-EENGINE_MAX_CONNECTIONS=5
-EENGINE_CHUNK_SIZE=1000
+EENGINE_WORKERS_SUBMIT=1
+EENGINE_WORKERS_WEBHOOKS=1
 ```
 
-**Large payload and attachment support:**
-```bash
-EENGINE_MAX_SIZE=20971520  # 20 MB attachments
-EENGINE_MAX_PAYLOAD_SIZE=20971520  # 20 MB request body
-```
+## Queue Management
 
-**Account limits (licensing):**
-```bash
-EENGINE_MAX_ACCOUNTS=100
-```
-
-## Webhooks
-
-Default webhook configuration.
+Configure job queue retention and cleanup.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_DEFAULT_WEBHOOK` | string | none | Default webhook URL | `https://your-app.com/webhook` |
-| `EENGINE_DEFAULT_WEBHOOK_TIMEOUT` | ms | `10000` | Webhook request timeout | `30000` |
-| `EENGINE_WEBHOOK_RETRY_ATTEMPTS` | number | `3` | Max webhook retry attempts | `5` |
-| `EENGINE_WEBHOOK_RETRY_DELAY` | ms | `5000` | Initial retry delay | `10000` |
+| `EENGINE_QUEUE_REMOVE_AFTER` | number | `1000` | Number of completed jobs to keep in queue | `5000` |
 
 **Examples:**
 
-**Default webhook for all accounts:**
+**Keep more job history:**
 ```bash
-EENGINE_DEFAULT_WEBHOOK=https://your-app.com/emailengine/webhook
-EENGINE_DEFAULT_WEBHOOK_TIMEOUT=30000
+EENGINE_QUEUE_REMOVE_AFTER=10000
 ```
 
-**Aggressive retry policy:**
+**Minimal job retention:**
 ```bash
-EENGINE_WEBHOOK_RETRY_ATTEMPTS=5
-EENGINE_WEBHOOK_RETRY_DELAY=3000
+EENGINE_QUEUE_REMOVE_AFTER=100
 ```
 
-[Webhook configuration guide →](../receiving/webhooks.md)
+## IMAP Proxy Server
 
-## OAuth2
-
-OAuth2 provider credentials.
-
-### Gmail (Google)
-
-| Variable | Description |
-|----------|-------------|
-| `EENGINE_OAUTH2_PROVIDER_GMAIL_ENABLED` | Enable Gmail OAuth2 |
-| `EENGINE_OAUTH2_PROVIDER_GMAIL_CLIENT_ID` | Google OAuth2 client ID |
-| `EENGINE_OAUTH2_PROVIDER_GMAIL_CLIENT_SECRET` | Google OAuth2 client secret |
-| `EENGINE_OAUTH2_PROVIDER_GMAIL_REDIRECT_URL` | OAuth2 redirect URL |
-
-**Example:**
-```bash
-EENGINE_OAUTH2_PROVIDER_GMAIL_ENABLED=true
-EENGINE_OAUTH2_PROVIDER_GMAIL_CLIENT_ID=123456789-abc.apps.googleusercontent.com
-EENGINE_OAUTH2_PROVIDER_GMAIL_CLIENT_SECRET=GOCSPX-abc123def456
-EENGINE_OAUTH2_PROVIDER_GMAIL_REDIRECT_URL=https://emailengine.example.com/oauth
-```
-
-### Outlook (Microsoft)
-
-| Variable | Description |
-|----------|-------------|
-| `EENGINE_OAUTH2_PROVIDER_OUTLOOK_ENABLED` | Enable Outlook OAuth2 |
-| `EENGINE_OAUTH2_PROVIDER_OUTLOOK_CLIENT_ID` | Microsoft OAuth2 client ID |
-| `EENGINE_OAUTH2_PROVIDER_OUTLOOK_CLIENT_SECRET` | Microsoft OAuth2 client secret |
-| `EENGINE_OAUTH2_PROVIDER_OUTLOOK_REDIRECT_URL` | OAuth2 redirect URL |
-| `EENGINE_OAUTH2_PROVIDER_OUTLOOK_AUTHORITY` | Azure AD authority URL |
-
-**Example:**
-```bash
-EENGINE_OAUTH2_PROVIDER_OUTLOOK_ENABLED=true
-EENGINE_OAUTH2_PROVIDER_OUTLOOK_CLIENT_ID=abc123-def456-ghi789
-EENGINE_OAUTH2_PROVIDER_OUTLOOK_CLIENT_SECRET=secretvalue
-EENGINE_OAUTH2_PROVIDER_OUTLOOK_REDIRECT_URL=https://emailengine.example.com/oauth
-EENGINE_OAUTH2_PROVIDER_OUTLOOK_AUTHORITY=https://login.microsoftonline.com/common
-```
-
-### Generic OAuth2
-
-| Variable | Description |
-|----------|-------------|
-| `EENGINE_OAUTH2_CALLBACK_URL` | Global OAuth2 callback URL |
-
-**Example:**
-```bash
-EENGINE_OAUTH2_CALLBACK_URL=https://emailengine.example.com/oauth/callback
-```
-
-[Gmail OAuth2 setup →](../accounts/gmail-imap)
-[Outlook OAuth2 setup →](../accounts/outlook-365)
-[OAuth2 configuration guide →](../accounts/oauth2-setup)
-
-## Security & Encryption
-
-Encryption and security settings.
+Enable and configure the built-in IMAP proxy server feature.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_ENCRYPTION_SECRET` | string | none | Encryption key for sensitive data | `32-char-hex-key` |
-| `EENGINE_ENCRYPTION_ALGO` | string | `aes-256-cbc` | Encryption algorithm | `aes-256-gcm` |
-| `EENGINE_SECRET` | string | random | Session secret (min 32 chars) | `session-secret-key` |
-
-**Supported Algorithms:**
-- `aes-256-cbc` (default)
-- `aes-256-gcm` (recommended for new deployments)
-- `aes-192-cbc`
-- `aes-128-cbc`
+| `EENGINE_IMAP_PROXY_ENABLED` | boolean | `false` | Enable IMAP proxy server | `true` |
+| `EENGINE_IMAP_PROXY_HOST` | string | `127.0.0.1` | IMAP proxy bind address | `0.0.0.0` |
+| `EENGINE_IMAP_PROXY_PORT` | number | `9993` | IMAP proxy server port | `1993` |
+| `EENGINE_IMAP_PROXY_SECRET` | string | random | IMAP proxy authentication secret | `your-secret-key` |
+| `EENGINE_IMAP_PROXY_PROXY` | string | none | Proxy server for IMAP proxy connections | `socks5://proxy:1080` |
 
 **Examples:**
 
-**Enable field encryption:**
+**Enable IMAP proxy:**
 ```bash
-# Generate encryption key (using OpenSSL)
-ENCRYPTION_KEY=$(openssl rand -hex 32)
-
-EENGINE_ENCRYPTION_SECRET=$ENCRYPTION_KEY
-EENGINE_ENCRYPTION_ALGO=aes-256-gcm
+EENGINE_IMAP_PROXY_ENABLED=true
+EENGINE_IMAP_PROXY_HOST=0.0.0.0
+EENGINE_IMAP_PROXY_PORT=9993
+EENGINE_IMAP_PROXY_SECRET=my-secure-secret-key
 ```
 
-**Session security:**
+**IMAP proxy with upstream proxy:**
 ```bash
-# Generate session secret
-SESSION_SECRET=$(openssl rand -hex 32)
-
-EENGINE_SECRET=$SESSION_SECRET
+EENGINE_IMAP_PROXY_ENABLED=true
+EENGINE_IMAP_PROXY_PROXY=socks5://upstream-proxy:1080
 ```
 
-**Important:** Once encryption is enabled and data is stored, changing the encryption secret or algorithm will make existing encrypted data unreadable.
+## SMTP Submission Server
 
-[Encryption guide →](../advanced/encryption.md)
+Enable and configure the built-in SMTP submission server feature.
+
+| Variable | Type | Default | Description | Example |
+|----------|------|---------|-------------|---------|
+| `EENGINE_SMTP_ENABLED` | boolean | `false` | Enable SMTP submission server | `true` |
+| `EENGINE_SMTP_HOST` | string | `127.0.0.1` | SMTP server bind address | `0.0.0.0` |
+| `EENGINE_SMTP_PORT` | number | `2525` | SMTP server port | `587` |
+| `EENGINE_SMTP_SECRET` | string | random | SMTP authentication secret | `your-secret-key` |
+| `EENGINE_SMTP_PROXY` | string | none | Proxy server for SMTP connections | `http://proxy:8080` |
+
+**Examples:**
+
+**Enable SMTP submission server:**
+```bash
+EENGINE_SMTP_ENABLED=true
+EENGINE_SMTP_HOST=0.0.0.0
+EENGINE_SMTP_PORT=2525
+EENGINE_SMTP_SECRET=my-secure-secret-key
+```
+
+**SMTP with upstream proxy:**
+```bash
+EENGINE_SMTP_ENABLED=true
+EENGINE_SMTP_PROXY=http://corporate-proxy:8080
+```
+
+## TLS Configuration
+
+Configure TLS/SSL settings for secure connections.
+
+| Variable | Type | Default | Description | Example |
+|----------|------|---------|-------------|---------|
+| `EENGINE_TLS_MIN_VERSION` | string | `TLSv1.2` | Minimum TLS version | `TLSv1.3` |
+| `EENGINE_TLS_MIN_DH_SIZE` | number | `1024` | Minimum Diffie-Hellman key size | `2048` |
+| `EENGINE_TLS_CIPHERS` | string | system default | TLS cipher suite list | `TLS_AES_256_GCM_SHA384` |
+
+**Examples:**
+
+**Enforce TLS 1.3 only:**
+```bash
+EENGINE_TLS_MIN_VERSION=TLSv1.3
+```
+
+**Stronger DH parameters:**
+```bash
+EENGINE_TLS_MIN_DH_SIZE=2048
+```
+
+**Custom cipher suite:**
+```bash
+EENGINE_TLS_CIPHERS="TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256"
+```
 
 ## Logging & Monitoring
 
-Logging configuration and monitoring endpoints.
+Logging configuration and error tracking.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_LOG_LEVEL` | string | `info` | Log level (trace, debug, info, warn, error) | `debug` |
-| `EENGINE_LOG_RAW` | boolean | `false` | Log raw IMAP/SMTP protocol | `true` |
-| `EENGINE_METRICS_SERVER` | boolean | `false` | Enable Prometheus metrics endpoint | `true` |
-| `EENGINE_METRICS_PORT` | number | `9090` | Metrics server port | `9091` |
+| `EENGINE_LOG_LEVEL` | string | `info` | Log level (trace, debug, info, warn, error, fatal) | `debug` |
+| `BUGSNAG_API_KEY` | string | none | Bugsnag API key for error tracking | `your-bugsnag-key` |
+| `NODE_ENV` | string | `production` | Node.js environment | `development` |
 
 **Log Levels:**
 - `trace` - Very detailed, includes all protocol messages
@@ -314,28 +272,28 @@ Logging configuration and monitoring endpoints.
 - `info` - General operational messages (default)
 - `warn` - Warning messages
 - `error` - Error messages only
+- `fatal` - Fatal errors only
 
 **Examples:**
 
 **Development/debugging:**
 ```bash
+NODE_ENV=development
 EENGINE_LOG_LEVEL=trace
-EENGINE_LOG_RAW=true
 ```
 
 **Production:**
 ```bash
+NODE_ENV=production
 EENGINE_LOG_LEVEL=info
-EENGINE_LOG_RAW=false
 ```
 
-**Enable monitoring:**
+**Enable error tracking:**
 ```bash
-EENGINE_METRICS_SERVER=true
-EENGINE_METRICS_PORT=9090
+BUGSNAG_API_KEY=your-bugsnag-api-key-here
 ```
 
-[Monitoring and metrics →](../advanced/monitoring)
+[Monitoring and logging →](../advanced/monitoring)
 
 ## Prepared Configuration
 
@@ -345,6 +303,7 @@ Pre-configured settings for automated deployments.
 |----------|------|-------------|---------|
 | `EENGINE_SETTINGS` | JSON | Pre-configured runtime settings | See below |
 | `EENGINE_PREPARED_TOKEN` | string | Pre-configured API access token | `base64-encoded-token` |
+| `EENGINE_PREPARED_PASSWORD` | string | Pre-configured admin password | `secure-password` |
 | `EENGINE_PREPARED_LICENSE` | string | Pre-configured license key | `license-key-string` |
 
 **Examples:**
@@ -380,36 +339,17 @@ EXPORTED=$(emailengine tokens export -t $TOKEN)
 EENGINE_PREPARED_TOKEN=$EXPORTED
 ```
 
+**Prepared password (for admin panel):**
+```bash
+EENGINE_PREPARED_PASSWORD=your-secure-admin-password
+```
+
 **Prepared license:**
 ```bash
 EENGINE_PREPARED_LICENSE=your-license-key-here
 ```
 
 [Prepared configuration guide →](./prepared-settings.md)
-
-## Development
-
-Development and debugging settings.
-
-| Variable | Type | Default | Description | Example |
-|----------|------|---------|-------------|---------|
-| `NODE_ENV` | string | `production` | Node.js environment | `development` |
-| `DEBUG` | string | none | Debug namespace filter | `emailengine:*` |
-
-**Examples:**
-
-**Development mode:**
-```bash
-NODE_ENV=development
-DEBUG=emailengine:*
-EENGINE_LOG_LEVEL=trace
-```
-
-**Production mode:**
-```bash
-NODE_ENV=production
-EENGINE_LOG_LEVEL=info
-```
 
 ## Complete Examples
 
@@ -420,11 +360,8 @@ EENGINE_LOG_LEVEL=info
 REDIS_URL=redis://localhost:6379
 EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
-EENGINE_SECRET=your-random-secret-minimum-32-characters-long
 
-# Optional but recommended
-EENGINE_BASE_URL=https://emailengine.yourdomain.com
-EENGINE_ENCRYPTION_SECRET=your-32-char-encryption-key-here
+# Recommended
 EENGINE_LOG_LEVEL=info
 ```
 
@@ -434,35 +371,30 @@ EENGINE_LOG_LEVEL=info
 # Server
 EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
-EENGINE_BASE_URL=https://emailengine.example.com
-EENGINE_SECRET=your-session-secret-key
 
 # Redis
 REDIS_URL=redis://redis-cluster:6379
-REDIS_PREFIX={ee-prod}
-REDIS_CONF='{"enableAutoPipelining":true}'
+EENGINE_REDIS_PREFIX={ee-prod}
 
 # Performance
 EENGINE_WORKERS=8
-EENGINE_MAX_CONNECTIONS=20
-EENGINE_CHUNK_SIZE=5000
+EENGINE_WORKERS_SUBMIT=4
+EENGINE_WORKERS_WEBHOOKS=4
 
 # Limits
-EENGINE_MAX_SIZE=20971520  # Max attachment size
-EENGINE_MAX_PAYLOAD_SIZE=20971520
+EENGINE_MAX_SIZE=20971520  # 20 MB attachments
+EENGINE_TIMEOUT=30000
 
-# Security
-EENGINE_ENCRYPTION_SECRET=your-encryption-key
-EENGINE_ENCRYPTION_ALGO=aes-256-gcm
+# Queue
+EENGINE_QUEUE_REMOVE_AFTER=5000
 
-# Webhooks
-EENGINE_DEFAULT_WEBHOOK=https://your-app.com/webhook
-EENGINE_WEBHOOK_RETRY_ATTEMPTS=5
+# TLS
+EENGINE_TLS_MIN_VERSION=TLSv1.3
+EENGINE_TLS_MIN_DH_SIZE=2048
 
-# Monitoring
-EENGINE_METRICS_SERVER=true
-EENGINE_METRICS_PORT=9090
+# Logging
 EENGINE_LOG_LEVEL=info
+BUGSNAG_API_KEY=your-bugsnag-key
 ```
 
 ### Development Setup
@@ -471,21 +403,18 @@ EENGINE_LOG_LEVEL=info
 # Server
 EENGINE_HOST=127.0.0.1
 EENGINE_PORT=3001
-EENGINE_SECRET=dev-secret-key-12345678901234567890
 
 # Redis (separate DB for dev)
 REDIS_URL=redis://localhost:6379/8
-REDIS_PREFIX={ee-dev}
+EENGINE_REDIS_PREFIX={ee-dev}
 
 # Debugging
 NODE_ENV=development
 EENGINE_LOG_LEVEL=trace
-EENGINE_LOG_RAW=true
-DEBUG=emailengine:*
 
 # Relaxed limits for testing
 EENGINE_MAX_SIZE=104857600  # 100 MB
-EENGINE_IMAP_TIMEOUT=180000
+EENGINE_TIMEOUT=180000
 ```
 
 ### Docker Compose Example
@@ -506,39 +435,67 @@ services:
       - redis
     ports:
       - "3000:3000"
-      - "9090:9090"
     environment:
       # Server
       - EENGINE_HOST=0.0.0.0
       - EENGINE_PORT=3000
-      - EENGINE_BASE_URL=https://emailengine.example.com
-      - EENGINE_SECRET=${EENGINE_SECRET}
 
       # Redis
       - REDIS_URL=redis://redis:6379
-      - REDIS_PREFIX={ee-prod}
+      - EENGINE_REDIS_PREFIX={ee-prod}
 
       # Performance
       - EENGINE_WORKERS=4
-      - EENGINE_MAX_CONNECTIONS=10
+      - EENGINE_WORKERS_SUBMIT=2
+      - EENGINE_WORKERS_WEBHOOKS=2
 
-      # Security
-      - EENGINE_ENCRYPTION_SECRET=${ENCRYPTION_SECRET}
-      - EENGINE_ENCRYPTION_ALGO=aes-256-gcm
+      # Settings
+      - EENGINE_SETTINGS=${EENGINE_SETTINGS}
 
-      # Webhooks
-      - EENGINE_DEFAULT_WEBHOOK=${WEBHOOK_URL}
+      # Credentials
+      - EENGINE_PREPARED_PASSWORD=${ADMIN_PASSWORD}
+      - EENGINE_PREPARED_LICENSE=${LICENSE_KEY}
 
-      # Monitoring
-      - EENGINE_METRICS_SERVER=true
+      # Logging
       - EENGINE_LOG_LEVEL=info
-
-      # OAuth2
-      - EENGINE_OAUTH2_PROVIDER_GMAIL_ENABLED=true
-      - EENGINE_OAUTH2_PROVIDER_GMAIL_CLIENT_ID=${GMAIL_CLIENT_ID}
-      - EENGINE_OAUTH2_PROVIDER_GMAIL_CLIENT_SECRET=${GMAIL_CLIENT_SECRET}
 
 volumes:
   redis-data:
 ```
 
+### With Proxy Servers Enabled
+
+```bash
+# Server
+EENGINE_HOST=0.0.0.0
+EENGINE_PORT=3000
+
+# Redis
+REDIS_URL=redis://localhost:6379
+
+# IMAP Proxy
+EENGINE_IMAP_PROXY_ENABLED=true
+EENGINE_IMAP_PROXY_HOST=0.0.0.0
+EENGINE_IMAP_PROXY_PORT=9993
+EENGINE_IMAP_PROXY_SECRET=imap-proxy-secret
+
+# SMTP Server
+EENGINE_SMTP_ENABLED=true
+EENGINE_SMTP_HOST=0.0.0.0
+EENGINE_SMTP_PORT=2525
+EENGINE_SMTP_SECRET=smtp-server-secret
+
+# API Proxy (for outgoing connections)
+EENGINE_API_PROXY=http://corporate-proxy:8080
+
+# Logging
+EENGINE_LOG_LEVEL=info
+```
+
+## See Also
+
+- [CLI Reference](./cli) - Command-line arguments as an alternative to environment variables
+- [Redis Configuration](./redis.md) - Detailed Redis setup and optimization
+- [Prepared Settings](./prepared-settings.md) - Automated deployment configuration
+- [Access Tokens](./access-tokens) - API authentication setup
+- [Monitoring](../advanced/monitoring) - Logging and monitoring setup

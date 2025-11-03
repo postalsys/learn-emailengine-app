@@ -59,16 +59,6 @@ Run EmailEngine on your own infrastructure for complete control over your email 
 - **Email Analytics** - Track and analyze email communications
 - **Email Backup** - Create backups of email accounts
 
-## Architecture
-
-EmailEngine is a self-hosted application that:
-
-1. Maintains persistent connections to email accounts
-2. Syncs email data to Redis for fast access
-3. Exposes a REST API for your application
-4. Sends webhooks for real-time updates
-5. Handles authentication, retries, and error recovery
-
 ## Quick Start
 
 Get started with EmailEngine in just a few steps:
