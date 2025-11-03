@@ -13,7 +13,7 @@ Complete reference for all EmailEngine environment variables. These settings are
 Minimal production configuration:
 
 ```bash
-REDIS_URL=redis://localhost:6379
+EENGINE_REDIS=redis://localhost:6379
 EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
 ```
@@ -55,8 +55,8 @@ Redis database connection and configuration.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `REDIS_URL` | string | `redis://127.0.0.1:6379` | Redis connection URL | `redis://user:pass@redis.example.com:6379/0` |
-| `EENGINE_REDIS` | string | none | Alternative to REDIS_URL | `redis://localhost:6379` |
+| `EENGINE_REDIS` | string | `redis://127.0.0.1:6379` | Redis connection URL (primary) | `redis://user:pass@redis.example.com:6379/0` |
+| `REDIS_URL` | string | `redis://127.0.0.1:6379` | Redis connection URL (fallback if EENGINE_REDIS not set) | `redis://localhost:6379` |
 | `EENGINE_REDIS_PREFIX` | string | none | Optional key prefix for Redis keys | `{ee-prod}` |
 
 **Connection URL Format:**
@@ -69,22 +69,22 @@ rediss://...  (with TLS)
 
 **Basic connection:**
 ```bash
-REDIS_URL=redis://localhost:6379
+EENGINE_REDIS=redis://localhost:6379
 ```
 
 **With authentication:**
 ```bash
-REDIS_URL=redis://username:password@redis.example.com:6379
+EENGINE_REDIS=redis://username:password@redis.example.com:6379
 ```
 
 **With TLS:**
 ```bash
-REDIS_URL=rediss://redis.example.com:6380
+EENGINE_REDIS=rediss://redis.example.com:6380
 ```
 
 **With database selection:**
 ```bash
-REDIS_URL=redis://localhost:6379/8
+EENGINE_REDIS=redis://localhost:6379/8
 ```
 
 **Custom Redis key prefix:**
@@ -353,7 +353,7 @@ EENGINE_PREPARED_LICENSE=your-license-key-here
 
 ```bash
 # Required
-REDIS_URL=redis://localhost:6379
+EENGINE_REDIS=redis://localhost:6379
 EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
 
@@ -369,7 +369,7 @@ EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
 
 # Redis
-REDIS_URL=redis://redis-cluster:6379
+EENGINE_REDIS=redis://redis-cluster:6379
 EENGINE_REDIS_PREFIX={ee-prod}
 
 # Performance
@@ -401,7 +401,7 @@ EENGINE_HOST=127.0.0.1
 EENGINE_PORT=3001
 
 # Redis (separate DB for dev)
-REDIS_URL=redis://localhost:6379/8
+EENGINE_REDIS=redis://localhost:6379/8
 EENGINE_REDIS_PREFIX={ee-dev}
 
 # Debugging
@@ -437,7 +437,7 @@ services:
       - EENGINE_PORT=3000
 
       # Redis
-      - REDIS_URL=redis://redis:6379
+      - EENGINE_REDIS=redis://redis:6379
       - EENGINE_REDIS_PREFIX={ee-prod}
 
       # Performance
@@ -467,7 +467,7 @@ EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
 
 # Redis
-REDIS_URL=redis://localhost:6379
+EENGINE_REDIS=redis://localhost:6379
 
 # IMAP Proxy
 EENGINE_IMAP_PROXY_ENABLED=true
@@ -480,9 +480,6 @@ EENGINE_SMTP_ENABLED=true
 EENGINE_SMTP_HOST=0.0.0.0
 EENGINE_SMTP_PORT=2525
 EENGINE_SMTP_SECRET=smtp-server-secret
-
-# API Proxy (for outgoing connections)
-EENGINE_API_PROXY=http://corporate-proxy:8080
 
 # Logging
 EENGINE_LOG_LEVEL=info
