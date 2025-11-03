@@ -18,9 +18,9 @@
     "generate-api-sidebar": "node scripts/generate-api-sidebar.js"
   },
   "dependencies": {
-    "@docusaurus/core": "3.9.1",
-    "@docusaurus/preset-classic": "3.9.1",
-    "@docusaurus/theme-mermaid": "^3.9.1",
+    "@docusaurus/core": "^3.9.2",
+    "@docusaurus/preset-classic": "^3.9.2",
+    "@docusaurus/theme-mermaid": "^3.9.2",
     "@mdx-js/react": "^3.0.0",
     "clsx": "^2.0.0",
     "docusaurus-plugin-openapi-docs": "^4.5.1",
@@ -30,14 +30,14 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "3.9.1",
-    "@docusaurus/tsconfig": "3.9.1",
-    "@docusaurus/types": "3.9.1",
+    "@docusaurus/module-type-aliases": "^3.9.2",
+    "@docusaurus/tsconfig": "^3.9.2",
+    "@docusaurus/types": "^3.9.2",
     "js-yaml": "^4.1.0",
-    "jsdom": "^27.0.0",
+    "jsdom": "^27.1.0",
     "playwright": "^1.56.1",
-    "turndown": "^7.2.1",
-    "typescript": "~5.6.2"
+    "turndown": "^7.2.2",
+    "typescript": "^5.9.3"
   },
   "browserslist": {
     "production": [
