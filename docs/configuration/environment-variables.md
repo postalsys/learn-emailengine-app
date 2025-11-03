@@ -30,7 +30,7 @@ Configure HTTP server and connection settings.
 | `EENGINE_PORT` | number | `3000` | HTTP server port | `8080` |
 | `PORT` | number | `3000` | Alternative to EENGINE_PORT (used by some platforms) | `8080` |
 | `EENGINE_TIMEOUT` | number | `10000` | HTTP request timeout (ms) | `30000` |
-| `EENGINE_API_PROXY` | string | none | HTTP proxy for API outgoing connections | `http://proxy.example.com:8080` |
+| `EENGINE_API_PROXY` | boolean | `false` | Trust reverse proxy headers (X-Forwarded-For) for client IP | `true` |
 
 [Access token management →](./access-tokens)
 
@@ -42,15 +42,11 @@ EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
 ```
 
-**Behind reverse proxy:**
+**Behind reverse proxy (Nginx, Apache, etc):**
 ```bash
 EENGINE_HOST=127.0.0.1
 EENGINE_PORT=3000
-```
-
-**With HTTP proxy for outgoing API calls:**
-```bash
-EENGINE_API_PROXY=http://corporate-proxy:8080
+EENGINE_API_PROXY=true  # Trust X-Forwarded-For headers for client IP
 ```
 
 ## Redis
