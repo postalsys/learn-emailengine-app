@@ -170,93 +170,78 @@ EmailEngine should appear with status `UP`.
 
 EmailEngine exposes these Prometheus metrics:
 
-#### Account Metrics
+#### Connection Metrics
 
 ```
-# Total accounts registered
-emailengine_accounts_total
+# IMAP connections by status
+imap_connections{status="connected"}
+imap_connections{status="connecting"}
+imap_connections{status="authenticationError"}
+imap_connections{status="connectError"}
+imap_connections{status="syncing"}
+imap_connections{status="disconnected"}
 
-# Accounts by connection state
-emailengine_accounts_state{state="connected"}
-emailengine_accounts_state{state="connecting"}
-emailengine_accounts_state{state="authenticationError"}
-emailengine_accounts_state{state="connectError"}
+# IMAP responses
+imap_responses{response="OK"}
+imap_responses{response="OK",code="CAPABILITY"}
 
-# Accounts by provider
-emailengine_accounts_by_type{type="imap"}
-emailengine_accounts_by_type{type="gmail"}
-emailengine_accounts_by_type{type="outlook"}
+# IMAP traffic
+imap_bytes_sent
+imap_bytes_received
 ```
 
-#### Message Processing Metrics
+#### Webhook and Event Metrics
 
 ```
-# New messages received (counter)
-emailengine_messages_new_total
+# Webhooks sent by event and status
+webhooks{event="messageNew",status="success"}
+webhooks{event="messageUpdated",status="success"}
+webhooks{event="messageDeleted",status="success"}
 
-# Messages sent (counter)
-emailengine_messages_sent_total
+# Events fired
+events{event="messageNew"}
+events{event="messageUpdated"}
 
-# Webhook deliveries (counter)
-emailengine_webhook_calls_total
-
-# Failed webhook deliveries (counter)
-emailengine_webhook_failures_total
-
-# Message processing duration (histogram)
-emailengine_message_processing_duration_seconds
+# Webhook request duration
+webhook_req{le="0.1"}  # Histogram buckets
+webhook_req_sum
+webhook_req_count
 ```
 
 #### Queue Metrics
 
 ```
-# Jobs waiting in queue
-emailengine_queue_waiting{queue="webhook"}
-emailengine_queue_waiting{queue="submit"}
-emailengine_queue_waiting{queue="documents"}
+# Queue sizes by state
+queue_size{queue="notify",state="waiting"}
+queue_size{queue="submit",state="active"}
+queue_size{queue="documents",state="delayed"}
 
-# Active jobs
-emailengine_queue_active{queue="webhook"}
-
-# Completed jobs
-emailengine_queue_completed_total{queue="webhook"}
-
-# Failed jobs
-emailengine_queue_failed_total{queue="webhook"}
-
-# Queue processing duration
-emailengine_queue_duration_seconds{queue="webhook"}
+# Processed job counts
+queues_processed{queue="notify"}
+queues_processed{queue="submit"}
 ```
 
-#### Connection Metrics
+#### API Metrics
 
 ```
-# Active IMAP connections
-emailengine_imap_connections_active
-
-# IMAP connection errors (counter)
-emailengine_imap_errors_total{type="timeout"}
-emailengine_imap_errors_total{type="authentication"}
-
-# Average connection duration
-emailengine_imap_connection_duration_seconds
+# API calls by method and status
+api_call{method="post",route="/v1/account/:account/submit",statusCode="200"}
+api_call{method="get",route="/v1/account/:account",statusCode="200"}
 ```
 
 #### System Metrics
 
 ```
-# Redis connection status
-emailengine_redis_connected
+# Worker threads
+threads{type="imap"}
+threads{type="webhooks"}
 
-# Memory usage (bytes)
-emailengine_memory_usage_bytes
-
-# CPU usage (percent)
-emailengine_cpu_usage_percent
-
-# Uptime (seconds)
-emailengine_uptime_seconds
+# Configuration
+emailengine_config{version="v2.58.0"}
+emailengine_config{config="workersImap"}
 ```
+
+Note: Memory usage, CPU usage, and uptime metrics are available through standard Node.js metrics exporters if needed.
 
 ## Grafana Dashboard
 
@@ -275,67 +260,70 @@ Create a comprehensive EmailEngine dashboard in Grafana.
 
 Import this dashboard JSON or create panels manually:
 
-**Panel 1: Account Status Overview**
+**Panel 1: IMAP Connection Status**
 
 ```promql
 # Query
-sum by (state) (emailengine_accounts_state)
+sum by (status) (imap_connections)
 
 # Visualization: Pie Chart
-# Legend: {{state}}
+# Legend: {{status}}
 ```
 
-**Panel 2: Message Processing Rate**
+**Panel 2: Webhook Events Rate**
 
 ```promql
 # Query
-rate(emailengine_messages_new_total[5m]) * 60
+rate(webhooks[5m]) * 60
 
 # Visualization: Graph
-# Label: Messages per minute
+# Label: Webhooks per minute
 ```
 
-**Panel 3: Webhook Success Rate**
+**Panel 3: Webhook Success vs Failure**
 
 ```promql
-# Query
-rate(emailengine_webhook_calls_total[5m]) -
-rate(emailengine_webhook_failures_total[5m])
+# Queries (use multiple series)
+sum(rate(webhooks{status="success"}[5m])) * 60
+sum(rate(webhooks{status="failure"}[5m])) * 60
 
 # Visualization: Graph
-# Label: Successful webhooks/sec
+# Labels: Success, Failure
 ```
 
 **Panel 4: Queue Health**
 
 ```promql
-# Query
-emailengine_queue_waiting{queue="webhook"}
+# Queries (multiple series)
+queue_size{queue="notify",state="waiting"}
+queue_size{queue="submit",state="waiting"}
 
-# Visualization: Stat
+# Visualization: Stat or Graph
 # Alert if > 100
 ```
 
-**Panel 5: Connection Errors**
+**Panel 5: IMAP Connections by Status**
 
 ```promql
 # Query
-rate(emailengine_imap_errors_total[5m]) * 60
+imap_connections{status="connected"}
+imap_connections{status="authenticationError"}
+imap_connections{status="connectError"}
 
 # Visualization: Graph (stacked)
-# Legend: {{type}}
+# Legend: {{status}}
 ```
 
-**Panel 6: Response Time**
+**Panel 6: Webhook Response Time**
 
 ```promql
 # Query (99th percentile)
 histogram_quantile(0.99,
-  rate(emailengine_message_processing_duration_seconds_bucket[5m])
+  rate(webhook_req_bucket[5m])
 )
 
 # Visualization: Graph
-# Label: 99th percentile response time
+# Label: 99th percentile webhook duration
 ```
 
 ### Dashboard Variables
@@ -343,8 +331,8 @@ histogram_quantile(0.99,
 Add variables for filtering:
 
 ```
-$environment = label_values(emailengine_accounts_total, environment)
-$instance = label_values(emailengine_accounts_total, instance)
+$environment = label_values(imap_connections, environment)
+$instance = label_values(imap_connections, instance)
 ```
 
 ## Key Metrics to Monitor
@@ -356,42 +344,47 @@ Monitor these metrics closely in production:
 #### 1. Account Connection Health
 
 ```promql
-# Percentage of connected accounts
-(emailengine_accounts_state{state="connected"} /
- emailengine_accounts_total) * 100
+# Connected accounts
+imap_connections{status="connected"}
 
-# Alert if < 95%
+# Disconnected or errored accounts
+imap_connections{status="authenticationError"}
+imap_connections{status="connectError"}
+imap_connections{status="disconnected"}
+
+# Alert if too many disconnected
 ```
 
 #### 2. Webhook Queue Size
 
 ```promql
 # Alert if queue is backing up
-emailengine_queue_waiting{queue="webhook"} > 100
+queue_size{queue="notify",state="waiting"} > 100
 ```
 
 #### 3. Webhook Failure Rate
 
 ```promql
 # Alert if failure rate > 5%
-(rate(emailengine_webhook_failures_total[5m]) /
- rate(emailengine_webhook_calls_total[5m])) * 100 > 5
+(sum(rate(webhooks{status="failure"}[5m])) /
+ sum(rate(webhooks[5m]))) * 100 > 5
 ```
 
-#### 4. Message Processing Lag
+#### 4. Webhook Processing Time
 
 ```promql
-# Alert if messages are processing slowly
+# Alert if webhooks are processing slowly (99th percentile > 5 seconds)
 histogram_quantile(0.99,
-  rate(emailengine_message_processing_duration_seconds_bucket[5m])
+  rate(webhook_req_bucket[5m])
 ) > 5
 ```
 
-#### 5. IMAP Connection Errors
+#### 5. Queue Processing Rate
 
 ```promql
-# Alert if error rate increasing
-rate(emailengine_imap_errors_total[5m]) * 60 > 10
+# Monitor queue processing rate
+rate(queues_processed{queue="notify"}[5m])
+rate(queues_processed{queue="submit"}[5m])
 ```
 
 ### Performance Indicators
@@ -399,19 +392,22 @@ rate(emailengine_imap_errors_total[5m]) * 60 > 10
 Track these for performance optimization:
 
 ```promql
-# Average messages processed per minute
-rate(emailengine_messages_new_total[5m]) * 60
+# Webhook events per minute
+rate(webhooks[5m]) * 60
 
 # Webhook processing time (median)
 histogram_quantile(0.5,
-  rate(emailengine_queue_duration_seconds_bucket{queue="webhook"}[5m])
+  rate(webhook_req_bucket[5m])
 )
 
-# Memory growth rate
-deriv(emailengine_memory_usage_bytes[30m])
+# Queue throughput
+rate(queues_processed[5m])
 
-# Connection pool utilization
-emailengine_imap_connections_active / emailengine_accounts_total
+# Active queue jobs
+queue_size{state="active"}
+
+# API call rate by endpoint
+rate(api_call[5m])
 ```
 
 ## Alerting Setup
@@ -425,39 +421,38 @@ groups:
   - name: emailengine
     interval: 30s
     rules:
-      # Account connection health
-      - alert: EmailEngineAccountsDisconnected
+      # IMAP connection errors
+      - alert: EmailEngineConnectionErrors
         expr: |
-          (emailengine_accounts_state{state="connected"} /
-           emailengine_accounts_total) < 0.95
+          imap_connections{status=~"authenticationError|connectError"} > 5
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "Less than 95% accounts connected"
-          description: "Only {{ $value }}% of accounts connected"
+          summary: "Multiple IMAP connection errors"
+          description: "{{ $value }} accounts with {{ $labels.status }}"
 
       # Webhook queue backing up
       - alert: EmailEngineWebhookQueueHigh
-        expr: emailengine_queue_waiting{queue="webhook"} > 100
+        expr: queue_size{queue="notify",state="waiting"} > 100
         for: 5m
         labels:
           severity: warning
         annotations:
           summary: "Webhook queue is backing up"
-          description: "{{ $value }} webhooks waiting"
+          description: "{{ $value }} webhooks waiting in queue"
 
       # High webhook failure rate
       - alert: EmailEngineWebhookFailureRate
         expr: |
-          (rate(emailengine_webhook_failures_total[5m]) /
-           rate(emailengine_webhook_calls_total[5m])) > 0.1
+          (sum(rate(webhooks{status="failure"}[5m])) /
+           sum(rate(webhooks[5m]))) > 0.1
         for: 5m
         labels:
           severity: critical
         annotations:
           summary: "High webhook failure rate"
-          description: "{{ $value | humanizePercentage }} failing"
+          description: "{{ $value | humanizePercentage }} webhooks failing"
 
       # EmailEngine down
       - alert: EmailEngineDown
@@ -469,24 +464,27 @@ groups:
           summary: "EmailEngine is down"
           description: "EmailEngine on {{ $labels.instance }} is down"
 
-      # Memory usage high
-      - alert: EmailEngineHighMemory
-        expr: emailengine_memory_usage_bytes > 2147483648  # 2GB
-        for: 10m
+      # Slow webhook processing
+      - alert: EmailEngineSlowWebhooks
+        expr: |
+          histogram_quantile(0.99, rate(webhook_req_bucket[5m])) > 10
+        for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "EmailEngine using high memory"
-          description: "{{ $value | humanize }}B used"
+          summary: "Webhooks processing slowly"
+          description: "99th percentile webhook duration: {{ $value }}s"
 
-      # Redis connection lost
-      - alert: EmailEngineRedisDisconnected
-        expr: emailengine_redis_connected == 0
-        for: 1m
+      # Queue not processing
+      - alert: EmailEngineQueueStalled
+        expr: |
+          rate(queues_processed[5m]) == 0 and queue_size{state="waiting"} > 0
+        for: 10m
         labels:
           severity: critical
         annotations:
-          summary: "EmailEngine lost Redis connection"
+          summary: "Queue processing stalled"
+          description: "Queue {{ $labels.queue }} has jobs but no processing"
 ```
 
 ### Alertmanager Configuration
@@ -683,25 +681,25 @@ Don't alert on noise:
 
 ```promql
 # Bad - too sensitive
-emailengine_queue_waiting > 0
+queue_size{state="waiting"} > 0
 
 # Good - meaningful threshold
-emailengine_queue_waiting > 100 for 5m
+queue_size{state="waiting"} > 100 for 5m
 ```
 
 ### 2. Monitor Trends, Not Just Absolutes
 
 ```promql
-# Track rate of change
-deriv(emailengine_webhook_failures_total[30m]) > 10
+# Track rate of change for webhooks
+rate(webhooks{status="failure"}[30m])
 ```
 
 ### 3. Create Composite Alerts
 
 ```promql
 # Alert only if multiple conditions met
-(emailengine_queue_waiting{queue="webhook"} > 100) AND
-(rate(emailengine_webhook_failures_total[5m]) > 0.1)
+(queue_size{queue="notify",state="waiting"} > 100) AND
+(sum(rate(webhooks{status="failure"}[5m])) > 0.1)
 ```
 
 ### 4. Use Alert Grouping
