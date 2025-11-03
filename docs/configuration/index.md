@@ -82,6 +82,12 @@ emailengine \
   --log.level="trace"
 ```
 
+:::tip Interchangeable Configuration
+Environment variables and CLI arguments can be used together. CLI arguments take precedence over environment variables. See the [mapping table](/docs/configuration/environment-variables#environment-variable-to-cli-mapping) for equivalents.
+:::
+
+[Complete CLI reference →](./cli)
+
 ### Settings API
 
 **For runtime configuration.** (See: [Settings API](/docs/api/post-v-1-settings))

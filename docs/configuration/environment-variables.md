@@ -8,17 +8,30 @@ sidebar_position: 2
 
 Complete reference for all EmailEngine environment variables. These settings are loaded at application startup and require a restart to take effect.
 
+:::tip Command-Line Alternative
+Every environment variable can also be set via command-line arguments using the format `--section.key=value`. For example, `EENGINE_HOST=0.0.0.0` can be set as `--api.host=0.0.0.0`. [See CLI reference →](./cli)
+:::
+
 ## Quick Start
 
 Minimal production configuration:
 
+**Using environment variables:**
 ```bash
 EENGINE_REDIS=redis://localhost:6379
 EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
 ```
 
-**Alternative:** Use command-line arguments instead of environment variables. [See CLI reference →](./cli)
+**Using command-line arguments:**
+```bash
+emailengine \
+  --dbs.redis="redis://localhost:6379" \
+  --api.host="0.0.0.0" \
+  --api.port=3000
+```
+
+[Complete CLI reference →](./cli)
 
 ## Server & Connection
 
@@ -540,6 +553,25 @@ EENGINE_SMTP_SECRET=smtp-server-secret
 # Logging
 EENGINE_LOG_LEVEL=info
 ```
+
+## Environment Variable to CLI Mapping
+
+Common environment variables and their command-line equivalents:
+
+| Environment Variable | CLI Argument | Description |
+|---------------------|--------------|-------------|
+| `EENGINE_REDIS` or `REDIS_URL` | `--dbs.redis` | Redis connection URL |
+| `EENGINE_HOST` | `--api.host` | HTTP server bind address |
+| `EENGINE_PORT` or `PORT` | `--api.port` | HTTP server port |
+| `EENGINE_LOG_LEVEL` | `--log.level` | Log level |
+| `EENGINE_SECRET` | `--service.secret` | Encryption secret |
+| `EENGINE_WORKERS` | `--workers.imap` | IMAP worker count |
+| `EENGINE_WORKERS_WEBHOOKS` | `--workers.webhooks` | Webhook worker count |
+| `EENGINE_WORKERS_SUBMIT` | `--workers.submit` | Submission worker count |
+| `EENGINE_MAX_SIZE` | `--api.maxSize` | Max attachment size |
+| `EENGINE_TIMEOUT` | `--service.commandTimeout` | Command timeout |
+
+**Pattern:** Most environment variables follow the pattern `EENGINE_*` → `--section.key`. To find the CLI equivalent, check the [wild-config](https://github.com/nodemailer/wild-config) documentation or use `--help`.
 
 ## See Also
 

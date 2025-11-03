@@ -138,17 +138,19 @@ emailengine \
 
 **Common options:**
 
-| Option               | Description          | Default     |
-| -------------------- | -------------------- | ----------- |
-| `--dbs.redis`        | Redis connection URL | Required    |
-| `--api.host`         | API server host      | `127.0.0.1` |
-| `--api.port`         | API server port      | `3000`      |
-| `--workers.imap`     | IMAP worker count    | `4`         |
-| `--workers.webhooks` | Webhook worker count | `1`         |
-| `--log.level`        | Log level            | `trace`     |
-| `--service.secret`   | Encryption secret    | Optional    |
+| Option               | Environment Variable | Description          | Default     |
+| -------------------- | -------------------- | -------------------- | ----------- |
+| `--dbs.redis`        | `EENGINE_REDIS` | Redis connection URL | Required    |
+| `--api.host`         | `EENGINE_HOST` | API server host      | `127.0.0.1` |
+| `--api.port`         | `EENGINE_PORT` | API server port      | `3000`      |
+| `--workers.imap`     | `EENGINE_WORKERS` | IMAP worker count    | `4`         |
+| `--workers.webhooks` | `EENGINE_WORKERS_WEBHOOKS` | Webhook worker count | `1`         |
+| `--log.level`        | `EENGINE_LOG_LEVEL` | Log level            | `trace`     |
+| `--service.secret`   | `EENGINE_SECRET` | Encryption secret    | Optional    |
 
-See [Environment Variables](/docs/configuration/environment-variables) for all options.
+:::tip Environment Variables
+All CLI arguments can also be set as environment variables. See [Environment Variables reference](/docs/configuration/environment-variables) for complete list.
+:::
 
 ---
 
