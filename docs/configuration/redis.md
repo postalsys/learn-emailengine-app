@@ -603,9 +603,15 @@ curl http://localhost:3000/metrics | grep redis
 
 Example output:
 ```
-emailengine_redis_version{version="v7.2.4"} 1
-emailengine_redis_memory_used_bytes 47185920
-emailengine_redis_connected_clients 5
+redis_version{version="v7.2.7"} 1
+redis_uptime_in_seconds 369345
+redis_latency 103542
+redis_connected_clients 34
+redis_memory_used_bytes 279341568
+redis_memory_max_bytes 17179869184
+redis_mem_fragmentation_ratio 0.06
+redis_instantaneous_ops_per_sec 597
+redis_last_save_time 1762178720
 ```
 
 ## Quick Reference
