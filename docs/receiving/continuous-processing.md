@@ -765,38 +765,3 @@ async function processMessage(event) {
 }
 ```
 
-## Troubleshooting
-
-### Problem: No Historical Messages Processed
-
-**Solutions:**
-1. Verify `notifyFrom` is set correctly
-2. Check account is IMAP (not Gmail API/MS Graph)
-3. Review account sync status
-4. Check webhook delivery logs
-
-### Problem: Processing Too Slow
-
-**Solutions:**
-1. Use "fast" indexing mode
-2. Implement batch processing
-3. Add message queue
-4. Process in parallel with limits
-5. Filter messages before processing
-
-### Problem: Missing Some Messages
-
-**Solutions:**
-1. Check webhook delivery logs
-2. Verify no filtering at EmailEngine level
-3. Review processing error logs
-4. Check for deduplication issues
-
-### Problem: Memory Issues
-
-**Solutions:**
-1. Process messages one at a time
-2. Don't load all content into memory
-3. Stream attachments if needed
-4. Clear processed message cache regularly
-

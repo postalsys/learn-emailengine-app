@@ -482,62 +482,6 @@ async function registerAccountDynamic(email, password) {
 ```
 
 
-## Troubleshooting
-
-### Connection Fails with Local Address
-
-**Check IP is configured:**
-
-```bash
-ip addr show | grep 192.168.1.101
-```
-
-**Test connectivity:**
-
-```bash
-curl --interface 192.168.1.101 https://imap.gmail.com
-```
-
-**Check routing:**
-
-```bash
-ip route get 8.8.8.8 from 192.168.1.101
-```
-
-### "Address already in use" Error
-
-Too many connections from same IP:
-
-```bash
-# Check connection count
-netstat -an | grep 192.168.1.101 | grep ESTABLISHED | wc -l
-```
-
-**Solution:** Use additional IPs or reduce accounts per IP.
-
-### IP Blocked by Provider
-
-Provider may have blocked the IP:
-
-```bash
-# Test from command line
-telnet --bind-address 192.168.1.101 imap.gmail.com 993
-```
-
-**Solution:** Use different IP or contact provider.
-
-### Firewall Blocking Outbound
-
-Check firewall rules:
-
-```bash
-# Check iptables
-iptables -L OUTPUT -n -v | grep 192.168.1.101
-
-# Test with firewall temporarily disabled (careful!)
-# iptables -F OUTPUT  # Flush rules (TESTING ONLY)
-```
-
 ## Performance Considerations
 
 ### Connection Overhead

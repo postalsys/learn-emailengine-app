@@ -513,68 +513,6 @@ Response if successful:
 }
 ```
 
-## Troubleshooting
-
-### Authentication Failures
-
-**"Invalid credentials" or "Authentication failed":**
-- Verify username and password are correct
-- Check if provider requires app-specific password
-- Ensure 2FA is configured correctly
-- Try unlocking account (some providers like Gmail may block "suspicious" activity)
-
-**Gmail-specific unlock:** Visit [https://accounts.google.com/b/0/displayunlockcaptcha](https://accounts.google.com/b/0/displayunlockcaptcha)
-
-### Connection Failures
-
-**"Connection timeout" or "ECONNREFUSED":**
-- Verify host and port are correct
-- Check firewall rules allow outbound connections
-- Verify server is online and accessible
-- Try alternative ports (993/143 for IMAP, 465/587/25 for SMTP)
-
-**"Certificate verification failed":**
-- Server may use self-signed certificate
-- Set `tls.rejectUnauthorized: false` for testing (not recommended for production)
-- Install proper SSL certificate on server
-
-### Protocol-Specific Issues
-
-**IMAP IDLE not working:**
-- Some providers don't support IDLE
-- EmailEngine will fall back to polling
-- Check provider documentation
-
-**SMTP "Relay access denied":**
-- Verify SMTP authentication is enabled
-- Check if account has send permissions
-- Some servers require authentication before sending
-
-**Port 25 blocked:**
-- Many ISPs and cloud providers block port 25
-- Use port 587 with STARTTLS instead
-- Or port 465 with SSL/TLS
-
-### Provider-Specific Issues
-
-**Gmail:**
-- Enable "Less secure app access" (deprecated, use OAuth2 or app passwords)
-- Generate app-specific password if 2FA enabled
-- May need to unlock account after first connection attempt
-
-**Yahoo/AOL:**
-- App passwords are required
-- Regular password will not work
-
-**iCloud:**
-- App-specific password required
-- Generate at appleid.apple.com
-
-**Microsoft 365:**
-- IMAP/SMTP may be disabled by admin
-- Check admin center settings
-- Consider using OAuth2 or MS Graph API
-
 ## Advanced Configuration
 
 ### Custom Sent Mail Path

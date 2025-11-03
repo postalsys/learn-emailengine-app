@@ -446,43 +446,6 @@ https://www.googleapis.com/auth/gmail.modify
 
 When users authenticate, the permissions screen will only request the selected scopes.
 
-## Troubleshooting
-
-### OAuth2 Application Settings Show Errors
-
-Check for:
-
-- **Invalid credentials**: Re-download credentials from Google Cloud Console
-- **Mismatched redirect URL**: Must match exactly between Google and EmailEngine
-- **Wrong credentials file**: Ensure you're using the correct file (user vs service account)
-
-### Account Fails to Connect
-
-Common issues:
-
-- **Pub/Sub API not enabled**: Verify Cloud Pub/Sub API is enabled in Google Cloud Console
-- **Service account permissions**: Ensure service account has Pub/Sub Admin role
-- **Wrong base scope**: Must select "Gmail API" not "IMAP and SMTP"
-
-### Webhooks Not Firing
-
-Check:
-
-- **Pub/Sub subscription exists**: Look in Google Cloud Console → Pub/Sub
-- **Subscription is active**: EmailEngine should show connection status
-- **Webhook URL reachable**: Verify your webhook endpoint is accessible
-- **Check webhook queue**: Use EmailEngine's Bull Board to inspect webhook jobs
-
-### "Invalid Grant" Errors
-
-This usually means:
-
-- OAuth2 tokens are invalid or expired
-- User revoked access
-- OAuth app credentials changed
-
-**Solution:** Have the user re-authenticate.
-
 ## Production Considerations
 
 ### Security Audit for Public Apps

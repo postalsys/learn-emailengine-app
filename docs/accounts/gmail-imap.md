@@ -338,58 +338,6 @@ curl -X POST https://your-ee.com/v1/account \
 
 [See full API documentation →](/docs/api/post-v-1-account)
 
-## Troubleshooting
-
-### OAuth2 Application Settings Page Shows Errors
-
-If you see error messages on the OAuth2 application settings page in EmailEngine:
-- **Invalid client secret**: Re-download credentials from Google Cloud Console
-- **Mismatched redirect URL**: Ensure URLs match exactly between Google Cloud Console and EmailEngine
-- **Scope errors**: Verify `https://mail.google.com/` is added to your consent screen
-
-### Authentication Fails with "Access Denied"
-
-Common causes:
-- User account is not in your organization (for Internal apps)
-- Required scopes not configured
-- App is not enabled in EmailEngine settings
-
-### Account Shows "authenticationError" State
-
-Possible issues:
-- OAuth2 tokens expired and refresh failed
-- User revoked access
-- App credentials were rotated in Google Cloud Console
-
-**Solution:** Have the user re-authenticate via the hosted authentication form.
-
-### "Less Secure App Access" Not Available
-
-Google has disabled this for personal Gmail accounts. Options:
-- Use OAuth2 (this guide)
-- Generate an app password (requires 2FA)
-- Use Google Workspace with password auth still enabled
-
-### Rate Limits and Quotas
-
-Gmail enforces various limits:
-
-**IMAP Limits:**
-- 15 concurrent connections per account
-- Download limit: 2500 MB/day
-- Upload limit: 500 MB/day
-
-**API Quotas (if using Gmail API):**
-- 1 billion quota units per day (default)
-- 250 quota units per user per second
-
-**Solutions:**
-- Use path filtering to sync only needed folders
-- Implement exponential backoff on rate limit errors
-- Request quota increases from Google Cloud Console
-
-[Learn more about performance tuning →](/docs/advanced/performance-tuning)
-
 ## Gmail-Specific Considerations
 
 ### Label vs Folder Mapping

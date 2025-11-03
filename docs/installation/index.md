@@ -200,50 +200,6 @@ For production deployments, follow security best practices:
 
 [Security Guide →](/docs/deployment/security)
 
-## Troubleshooting
-
-### Installation Issues
-
-**Redis connection failed:**
-
-```bash
-# Check Redis is running
-redis-cli ping  # Should return: PONG
-
-# Start Redis
-sudo systemctl start redis  # Linux
-brew services start redis   # macOS
-```
-
-**Permission denied:**
-
-```bash
-# Make binary executable
-chmod +x emailengine
-
-# Or run with proper user
-sudo chown $USER:$USER emailengine
-```
-
-**Port already in use:**
-
-```bash
-# Find process using port 3000
-sudo lsof -i :3000
-
-# Kill process or use different port
-emailengine --api.port=3001
-```
-
-**Node.js version too old:**
-
-```bash
-# Install Node.js 20+
-# See platform-specific guides for instructions
-```
-
-[Complete troubleshooting guide →](/docs/troubleshooting)
-
 ## Getting Help
 
 If you encounter issues during installation:

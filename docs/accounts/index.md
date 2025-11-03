@@ -407,32 +407,6 @@ For advanced use cases, you can delegate the OAuth2 flow to an external authenti
 [Authentication Server Guide →](./authentication-server)
 
 
-## Troubleshooting
-
-### Common Issues
-
-**Account stuck in "connecting" state:**
-- Check Redis connection
-- Verify IMAP/SMTP settings
-- Review EmailEngine logs
-
-**"authenticationError" for Gmail:**
-- Enable "Less secure app access" (not recommended)
-- Use OAuth2 instead
-- Generate app-specific password
-
-**"authenticationError" for Outlook:**
-- Verify OAuth2 app configuration
-- Check account type (common/consumers/organizations)
-- Ensure IMAP/SMTP is enabled in Microsoft 365 admin
-
-**Webhooks not firing:**
-- For API backends (Gmail API/Graph), check subscription status
-- Verify webhook URL is reachable
-- Check webhook queue in Bull Board
-
-[Full troubleshooting guide →](./troubleshooting)
-
 ## API Reference
 
 - [POST /v1/account - Add Account](/docs/api/post-v-1-account)

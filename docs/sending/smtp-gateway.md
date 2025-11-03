@@ -366,52 +366,6 @@ curl "https://ee.example.com/v1/account/example/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 
-## Troubleshooting
-
-### Connection Refused
-
-**Issue**: Cannot connect to SMTP gateway
-
-**Solutions**:
-- Verify SMTP gateway is enabled
-- Check port is correct
-- Verify firewall allows connections
-- Check EmailEngine logs
-
-```bash
-# Test connection
-telnet emailengine.example.com 2525
-```
-
-### Authentication Failed
-
-**Issue**: "535 Authentication failed"
-
-**Solutions**:
-- Verify username (account ID or email)
-- Verify password (API token, not account password)
-- Check account exists and is active
-- Check API token has correct permissions
-
-### Messages Not Sending
-
-**Issue**: Messages accepted but not delivered
-
-**Solutions**:
-- Check outbox queue for errors
-- Verify account SMTP configuration
-- Check webhook events for delivery errors
-- Review failed jobs in Arena UI
-
-### TLS Errors
-
-**Issue**: "SSL/TLS handshake failed"
-
-**Solutions**:
-- Verify certificate is valid
-- Check certificate path configuration
-- Ensure client supports TLS version
-- Try with STARTTLS instead of implicit SSL
 
 ## When to Use SMTP Gateway vs REST API
 

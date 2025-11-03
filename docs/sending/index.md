@@ -170,16 +170,3 @@ Integrate email into your application logic:
 7. **[SMTP Gateway](./smtp-gateway.md)** - Alternative SMTP integration
 
 
-## Troubleshooting
-
-Common sending issues and solutions:
-
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Account not connected | IMAP sync in progress | Wait for state to become "connected" |
-| Authentication failed | Invalid SMTP credentials | Verify account credentials |
-| Rate limit exceeded | Too many messages | Implement throttling |
-| Message too large | Attachment size limit | Reduce attachment size |
-| Spam rejection | Content flagged | Review message content |
-
-For detailed troubleshooting, see [Accounts Troubleshooting](../accounts/troubleshooting.md).

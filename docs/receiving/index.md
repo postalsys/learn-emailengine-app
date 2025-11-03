@@ -250,25 +250,3 @@ This section covers all aspects of receiving and processing emails:
 8. **[Continuous Processing](./continuous-processing)** - Building real-time email processing pipelines
 
 
-## Troubleshooting
-
-### Not Receiving Webhooks?
-
-1. **Check webhook configuration** in Settings → Webhooks
-2. **Verify webhook URL is accessible** from EmailEngine
-3. **Check webhook logs** in Tools → Bull Board
-4. **Test with webhook.site** or similar service
-
-### Missing Messages?
-
-1. **Verify account is connected** and syncing
-2. **Check folder paths** - messages might be in different folders
-3. **Review message filters** on the email server
-4. **Check notifyFrom date** if set
-
-### Delayed Notifications?
-
-1. **Verify IDLE support** for IMAP accounts
-2. **Check polling interval** if IDLE is unavailable
-3. **Review server logs** for connection issues
-4. **Monitor Redis performance** for queue delays

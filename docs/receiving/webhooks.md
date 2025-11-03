@@ -772,37 +772,3 @@ const webhookLimiter = rateLimit({
 app.post('/webhooks/emailengine', webhookLimiter, handleWebhook);
 ```
 
-## Troubleshooting
-
-### Problem: Webhooks Not Received
-
-**Solutions:**
-1. Verify webhooks are enabled in Configuration → Webhooks
-2. Check webhook URL is correct and accessible
-3. Test with webhook.site first
-4. Review firewall and proxy settings
-5. Check EmailEngine logs for errors
-
-### Problem: Webhooks Delayed
-
-**Solutions:**
-1. Check your server response time (should be < 1 second)
-2. Review Bull Board for queue backlog
-3. Monitor Redis performance
-4. Consider scaling your webhook processing
-
-### Problem: Duplicate Webhooks
-
-**Solutions:**
-1. Implement idempotency checking (use message IDs)
-2. Ensure your handler returns 200 quickly
-3. Don't throw errors that cause retries
-4. Check for multiple EmailEngine instances with same config
-
-### Problem: Missing Event Types
-
-**Solutions:**
-1. Verify event type is enabled in Configuration → Webhooks
-2. Check "All events" is selected or specific events are enabled
-3. Confirm account type supports the event (e.g., IDLE for IMAP)
-4. Review account sync settings

@@ -242,35 +242,3 @@ References: <original@example.com> <reply1@example.com> <reply2@example.com>
 | Manual Threading Required | No              | No              | Yes            | No             | Yes             |
 | Cross-Folder Search       | Single API call | Single API call | Multiple calls | Multiple calls | Manual building |
 
-## Troubleshooting
-
-### Thread IDs Missing
-
-**Problem:** No `threadId` in message responses.
-
-**Solutions:**
-
-- Check provider supports threading (see [Provider Support](./threading/provider-support))
-- For generic IMAP, implement manual thread building from Message-ID headers
-- For Outlook/Microsoft 365, consider switching to Graph API backend for native threading
-
-### Threading Not Working
-
-**Problem:** Messages don't group together in email clients.
-
-**Solutions:**
-
-- Verify Message-IDs wrapped in angle brackets
-- Check References header format (space-separated)
-- Ensure subject line is consistent
-- Test headers with [Sending Threaded Messages](./threading/sending-threaded) examples
-
-### Cannot Search All Folders
-
-**Problem:** Can't retrieve complete thread in one request.
-
-**Solutions:**
-
-- Use `\All` folder if provider supports it (Gmail, Graph API)
-- Search folders individually (Yahoo, generic IMAP)
-- Implement manual thread building for generic IMAP providers
