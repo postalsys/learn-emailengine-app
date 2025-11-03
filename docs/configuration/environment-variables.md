@@ -19,6 +19,8 @@ EENGINE_PORT=3000
 EENGINE_SECRET=your-random-secret-at-least-32-characters
 ```
 
+**Alternative:** Use command-line arguments instead of environment variables. [See CLI reference →](./cli)
+
 ## Server & Connection
 
 Configure HTTP server, public URLs, and proxy settings.
@@ -30,8 +32,10 @@ Configure HTTP server, public URLs, and proxy settings.
 | `EENGINE_BASE_URL` | string | auto-detected | Public base URL for OAuth2 callbacks | `https://emailengine.example.com` |
 | `EENGINE_PROXY` | string | none | HTTP proxy for outgoing connections | `http://proxy.example.com:8080` |
 | `EENGINE_SECRET` | string | random | Session encryption secret (min 32 chars) | `abc123def456...` |
-| `EENGINE_APP_PASSWORD` | string | none | Admin panel password | `secure-password` |
+| `EENGINE_APP_PASSWORD` | string | none | Admin panel password (deprecated, use access tokens) | `secure-password` |
 | `EENGINE_TIMEOUT` | number | `10000` | HTTP request timeout (ms) | `30000` |
+
+[Access token management →](./access-tokens)
 
 **Examples:**
 
@@ -91,11 +95,6 @@ REDIS_URL=rediss://redis.example.com:6380
 **With database selection:**
 ```bash
 REDIS_URL=redis://localhost:6379/8
-```
-
-**Multiple hosts (Sentinel):**
-```bash
-REDIS_URL="redis://sentinel1:26379,sentinel2:26379/mymaster"
 ```
 
 **Advanced configuration:**
@@ -255,7 +254,9 @@ EENGINE_OAUTH2_PROVIDER_OUTLOOK_AUTHORITY=https://login.microsoftonline.com/comm
 EENGINE_OAUTH2_CALLBACK_URL=https://emailengine.example.com/oauth/callback
 ```
 
-[Complete OAuth2 setup guide →](./oauth2-configuration.md)
+[Gmail OAuth2 setup →](../accounts/gmail-imap)
+[Outlook OAuth2 setup →](../accounts/outlook-365)
+[OAuth2 configuration guide →](../accounts/oauth2-setup)
 
 ## Security & Encryption
 
@@ -334,8 +335,7 @@ EENGINE_METRICS_SERVER=true
 EENGINE_METRICS_PORT=9090
 ```
 
-[Logging configuration →](./logging.md)
-[Monitoring setup →](./monitoring.md)
+[Monitoring and metrics →](../advanced/monitoring)
 
 ## Prepared Configuration
 
@@ -448,7 +448,7 @@ EENGINE_MAX_CONNECTIONS=20
 EENGINE_CHUNK_SIZE=5000
 
 # Limits
-EENGINE_MAX_ATTACHMENT_SIZE=20971520
+EENGINE_MAX_SIZE=20971520  # Max attachment size
 EENGINE_MAX_PAYLOAD_SIZE=20971520
 
 # Security
@@ -484,7 +484,7 @@ EENGINE_LOG_RAW=true
 DEBUG=emailengine:*
 
 # Relaxed limits for testing
-EENGINE_MAX_ATTACHMENT_SIZE=104857600  # 100 MB
+EENGINE_MAX_SIZE=104857600  # 100 MB
 EENGINE_IMAP_TIMEOUT=180000
 ```
 
