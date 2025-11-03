@@ -128,7 +128,11 @@ Direct the user to this URL to begin authentication.
 
 ### Implementation Example
 
-**Node.js:**
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="programming-language">
+<TabItem value="nodejs" label="Node.js">
 
 ```javascript
 const axios = require('axios');
@@ -165,7 +169,8 @@ app.get('/connect-email', async (req, res) => {
 });
 ```
 
-**Python:**
+</TabItem>
+<TabItem value="python" label="Python">
 
 ```python
 import requests
@@ -199,7 +204,8 @@ def connect_email():
     return redirect(auth_url)
 ```
 
-**PHP:**
+</TabItem>
+<TabItem value="php" label="PHP">
 
 ```php
 <?php
@@ -234,6 +240,9 @@ header("Location: $authUrl");
 exit;
 ```
 
+</TabItem>
+</Tabs>
+
 ## Handling Redirects
 
 ### Success Redirect
@@ -253,7 +262,8 @@ https://myapp.com/settings?account=user123&state=connected
 
 ### Handling the Redirect
 
-**Node.js/Express:**
+<Tabs groupId="programming-language">
+<TabItem value="nodejs" label="Node.js">
 
 ```javascript
 app.get('/settings', async (req, res) => {
@@ -283,7 +293,8 @@ app.get('/settings', async (req, res) => {
 });
 ```
 
-**Python/Flask:**
+</TabItem>
+<TabItem value="python" label="Python">
 
 ```python
 @app.route('/settings')
@@ -308,7 +319,8 @@ def settings():
     return render_template('settings.html')
 ```
 
-**PHP:**
+</TabItem>
+<TabItem value="php" label="PHP">
 
 ```php
 <?php
@@ -334,6 +346,9 @@ if ($state === 'connected') {
     $messageType = 'info';
 }
 ```
+
+</TabItem>
+</Tabs>
 
 ### Error Handling
 
