@@ -65,20 +65,14 @@ Virtual lists are perfect when you already have contact management in your appli
 
 ### Sending Flow
 
-```
-1. Send email via Mail Merge with listId
-      ↓
-2. EmailEngine adds List-Unsubscribe headers
-      ↓
-3. Recipient receives email with unsubscribe option
-      ↓
-4. Recipient clicks unsubscribe
-      ↓
-5. EmailEngine processes unsubscribe
-      ↓
-6. EmailEngine sends webhook notification
-      ↓
-7. Your app removes user from mailing list
+```mermaid
+flowchart TD
+    A[Send email via Mail Merge with listId] --> B[EmailEngine adds List-Unsubscribe headers]
+    B --> C[Recipient receives email with unsubscribe option]
+    C --> D[Recipient clicks unsubscribe]
+    D --> E[EmailEngine processes unsubscribe]
+    E --> F[EmailEngine sends webhook notification]
+    F --> G[Your app removes user from mailing list]
 ```
 
 ### List-Unsubscribe Headers

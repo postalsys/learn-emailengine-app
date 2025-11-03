@@ -20,18 +20,13 @@ The authentication server feature allows you to manage OAuth2 tokens externally 
 
 Normally with EmailEngine:
 
-```
-1. User clicks "Connect Email"
-   ↓
-2. Redirected to EmailEngine's hosted auth form
-   ↓
-3. EmailEngine redirects to Google/Microsoft OAuth
-   ↓
-4. User grants permissions
-   ↓
-5. EmailEngine stores tokens
-   ↓
-6. EmailEngine uses tokens for email access
+```mermaid
+flowchart TD
+    A[User clicks 'Connect Email'] --> B[Redirected to EmailEngine's hosted auth form]
+    B --> C[EmailEngine redirects to Google/Microsoft OAuth]
+    C --> D[User grants permissions]
+    D --> E[EmailEngine stores tokens]
+    E --> F[EmailEngine uses tokens for email access]
 ```
 
 EmailEngine manages the entire OAuth2 lifecycle.
@@ -40,17 +35,14 @@ EmailEngine manages the entire OAuth2 lifecycle.
 
 With an authentication server:
 
-```
-1. User authenticates via YOUR OAuth2 flow
-   ↓
-2. Your app stores tokens
-   ↓
-3. You register account in EmailEngine with useAuthServer: true
-   ↓
-4. When EmailEngine needs authentication:
-   - EmailEngine calls YOUR authentication server
-   - Your server returns current access token
-   - EmailEngine uses token for IMAP/SMTP/API
+```mermaid
+flowchart TD
+    A[User authenticates via YOUR OAuth2 flow] --> B[Your app stores tokens]
+    B --> C[You register account in EmailEngine with useAuthServer: true]
+    C --> D[When EmailEngine needs authentication]
+    D --> E[EmailEngine calls YOUR authentication server]
+    E --> F[Your server returns current access token]
+    F --> G[EmailEngine uses token for IMAP/SMTP/API]
 ```
 
 Your application manages tokens, EmailEngine just uses them.

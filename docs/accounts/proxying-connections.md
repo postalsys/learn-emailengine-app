@@ -34,12 +34,10 @@ However:
 
 EmailEngine's IMAP proxy provides a bridge:
 
-```
-Your Script/Client
-      ↓ (connects via IMAP using token as password)
-EmailEngine IMAP Proxy
-      ↓ (handles OAuth2, authenticates with provider)
-Gmail/Outlook IMAP Server
+```mermaid
+flowchart TD
+    A[Your Script/Client] -->|connects via IMAP using token as password| B[EmailEngine IMAP Proxy]
+    B -->|handles OAuth2, authenticates with provider| C[Gmail/Outlook IMAP Server]
 ```
 
 **Your client:**

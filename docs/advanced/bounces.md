@@ -46,22 +46,15 @@ EmailEngine continuously monitors the inbox for bounce messages (Delivery Status
 
 ### Bounce Detection Flow
 
-```
-Send Email
-    ↓
-Store Message-ID: <abc@example.com>
-    ↓
-Email Bounces
-    ↓
-Receive DSN (Delivery Status Notification)
-    ↓
-Parse Bounce Information
-    ↓
-Match to Original Message-ID
-    ↓
-Send messageBounce Webhook
-    ↓
-Add bounces[] array to message listing
+```mermaid
+flowchart TD
+    A[Send Email] --> B[Store Message-ID: &lt;abc@example.com&gt;]
+    B --> C[Email Bounces]
+    C --> D[Receive DSN - Delivery Status Notification]
+    D --> E[Parse Bounce Information]
+    E --> F[Match to Original Message-ID]
+    F --> G[Send messageBounce Webhook]
+    G --> H[Add bounces array to message listing]
 ```
 
 ## Bounce Types

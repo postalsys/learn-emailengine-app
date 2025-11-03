@@ -43,20 +43,14 @@ OAuth2 is an authorization framework that allows applications to access user dat
 
 Understanding the OAuth2 flow helps troubleshoot issues:
 
-```
-1. User clicks "Sign in with Google" (or Microsoft)
-   ↓
-2. Redirected to provider's consent screen
-   ↓
-3. User reviews permissions and approves
-   ↓
-4. Provider redirects back to your app with authorization code
-   ↓
-5. Your app exchanges code for access token + refresh token
-   ↓
-6. Access token used to authenticate IMAP/SMTP or API calls
-   ↓
-7. When access token expires, refresh token gets a new one
+```mermaid
+flowchart TD
+    A[User clicks 'Sign in with Google' or Microsoft] --> B[Redirected to provider's consent screen]
+    B --> C[User reviews permissions and approves]
+    C --> D[Provider redirects back to your app with authorization code]
+    D --> E[Your app exchanges code for access token + refresh token]
+    E --> F[Access token used to authenticate IMAP/SMTP or API calls]
+    F --> G[When access token expires, refresh token gets a new one]
 ```
 
 EmailEngine handles steps 4-7 automatically. You just need to:
