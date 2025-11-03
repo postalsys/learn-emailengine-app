@@ -37,6 +37,16 @@ https.get(SWAGGER_URL, (response) => {
       // Validate JSON
       const json = JSON.parse(data);
 
+      // Replace server URL with example domain
+      // EmailEngine is self-hosted, so we use an example domain instead of localhost
+      if (json.servers && Array.isArray(json.servers)) {
+        json.servers = json.servers.map(server => ({
+          ...server,
+          url: 'https://emailengine.example.com',
+          description: 'Your EmailEngine server (replace with your actual server URL)'
+        }));
+      }
+
       // Pretty print with 2-space indentation
       const formatted = JSON.stringify(json, null, 2);
 
@@ -52,6 +62,27 @@ https.get(SWAGGER_URL, (response) => {
       console.log('✅ swagger.json updated successfully');
       console.log(`   Version: ${json.info?.version || 'unknown'}`);
       console.log(`   Endpoints: ${Object.keys(json.paths || {}).length}`);
+
+      // Regenerate API docs and sidebar
+      console.log('\n🔄 Regenerating API documentation...');
+      const { execSync } = require('child_process');
+
+      try {
+        // Regenerate API docs from OpenAPI spec
+        execSync('npm run docusaurus gen-api-docs all', { stdio: 'inherit' });
+        console.log('✅ API docs regenerated');
+
+        // Regenerate API sidebar structure
+        console.log('\n🔄 Regenerating API sidebar...');
+        execSync('npm run generate-api-sidebar', { stdio: 'inherit' });
+        console.log('✅ API sidebar regenerated');
+        console.log('\n⚠️  NOTE: Review and commit the updated sidebars.ts file');
+      } catch (error) {
+        console.error('⚠️  Warning: Failed to regenerate API docs/sidebar:', error.message);
+        console.error('   You may need to run these commands manually:');
+        console.error('   - npm run docusaurus gen-api-docs all');
+        console.error('   - npm run generate-api-sidebar');
+      }
     } catch (error) {
       console.error('❌ Failed to parse or write swagger.json:', error.message);
       process.exit(1);

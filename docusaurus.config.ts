@@ -72,7 +72,10 @@ const config: Config = {
             outputDir: "docs/api",
             sidebarOptions: {
               groupPathsBy: "tag",
+              sidebarCollapsed: true,
+              sidebarCollapsible: true,
             },
+            hideSendButton: true, // Disable "Send API Request" button
             version: "2.57.0",
             label: "v2.57.0",
             baseUrl: "/docs/api",
@@ -96,6 +99,8 @@ const config: Config = {
       logo: {
         alt: 'EmailEngine Logo',
         src: 'img/logo.png',
+        href: 'https://emailengine.app',
+        target: '_blank',
       },
       items: [
         {

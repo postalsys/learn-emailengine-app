@@ -14,7 +14,8 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
-    "update-swagger": "node scripts/update-swagger.js"
+    "update-swagger": "node scripts/update-swagger.js",
+    "generate-api-sidebar": "node scripts/generate-api-sidebar.js"
   },
   "dependencies": {
     "@docusaurus/core": "3.9.1",

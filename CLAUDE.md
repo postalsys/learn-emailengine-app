@@ -32,14 +32,20 @@ This repository contains the **unified Docusaurus documentation site** for Email
 # Development server (hot reload)
 npm start                    # → http://localhost:3000
 
-# Production build
+# Production build (auto-updates API docs from emailengine.dev)
 npm run build                # Output: ./build/
 
 # Test production build locally
 npm run serve                # → http://localhost:3000
 
+# Update OpenAPI spec and regenerate API docs + sidebar
+npm run update-swagger       # Downloads latest, regenerates docs & sidebar
+
 # Generate API docs from OpenAPI spec
 npm run docusaurus gen-api-docs all
+
+# Generate API sidebar structure (outputs to console)
+npm run generate-api-sidebar
 
 # Clear cache (if build issues)
 npm run docusaurus clear
@@ -85,8 +91,10 @@ docs/
 
 3. **OpenAPI Integration** - API docs auto-generated from `sources/swagger.json`
    - Plugin: `docusaurus-plugin-openapi-docs`
-   - Output: `docs/api/` (73 endpoint files)
+   - Output: `docs/api/` (72 endpoint files)
    - Configuration: See `docusaurus.config.ts` plugins section
+   - "Send API Request" button disabled (`hideSendButton: true`) since EmailEngine is self-hosted
+   - Server URL automatically replaced with `https://emailengine.example.com`
 
 4. **Single Source of Truth** - Each topic has ONE authoritative page
    - No duplicate content between docs/blog/API
@@ -236,11 +244,50 @@ This feature requires a license key
 
 ### Updating API Documentation
 
-1. **Update `sources/swagger.json`** with new OpenAPI spec
-2. **Regenerate API docs:** `npm run docusaurus gen-api-docs all`
-3. **Review generated files** in `docs/api/`
-4. **Update API reference docs** in `docs/api-reference/` if needed
-5. **Test build:** `npm run build`
+The API documentation is automatically updated from the EmailEngine production API whenever you run a build.
+
+#### Automatic Updates (Recommended)
+
+When you run `npm run build`, the following happens automatically:
+
+1. **Downloads latest OpenAPI spec** from https://emailengine.dev/swagger.json
+2. **Replaces server URL** - Changes `http://0.0.0.0:6677` to `https://emailengine.example.com` (since EmailEngine is self-hosted)
+3. **Regenerates API docs** from the updated spec (73 endpoint files)
+4. **Regenerates API sidebar** with collapsible tag-based groups (17 categories)
+5. **Builds the site** with the latest API documentation
+
+This is handled by the `prebuild` script that runs `scripts/update-swagger.js`.
+
+**Note:** The server URL is automatically replaced because EmailEngine is self-hosted software. The documentation uses `https://emailengine.example.com` as a placeholder that users should replace with their actual server URL.
+
+#### Manual Updates
+
+If you need to update the API docs without building:
+
+```bash
+# Update swagger.json and regenerate everything
+npm run update-swagger
+
+# Or do it step by step:
+# 1. Download latest spec manually or edit sources/swagger.json
+# 2. Regenerate API docs
+npm run docusaurus gen-api-docs all
+# 3. Regenerate API sidebar structure
+npm run generate-api-sidebar
+# 4. Review and commit the updated sidebars.ts file
+```
+
+**Important:** The `generate-api-sidebar` script outputs the sidebar structure to the console. You must manually copy this into `sidebars.ts` to update the `apiSidebar` array.
+
+#### API Sidebar Structure
+
+The API sidebar is organized by OpenAPI tags into 17 collapsible categories:
+- Account (13 endpoints)
+- Mailbox (4 endpoints)
+- Message (10 endpoints)
+- Submit, Outbox, Delivery Test, Access Tokens, Settings, Templates, Logs, Stats, License, Webhooks, OAuth2 Applications, SMTP Gateway, Blocklists, Multi Message Actions
+
+The sidebar structure is manually maintained in `sidebars.ts` for full control over organization and ordering.
 
 ### Fixing Build Warnings
 
