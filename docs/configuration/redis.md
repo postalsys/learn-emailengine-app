@@ -326,265 +326,155 @@ dir /var/lib/redis
 redis-server /etc/redis/redis.conf
 ```
 
-## Testing Redis Connection
+## Verifying Connection
 
-### From Command Line
+### Test Redis Directly
 
 ```bash
-# Test basic connectivity
+# Test connectivity
 redis-cli -h localhost -p 6379 ping
 # Expected: PONG
 
-# Test with password
-redis-cli -h localhost -p 6379 -a mypassword ping
-
 # Check EmailEngine keys
-redis-cli -h localhost -p 6379 --scan --pattern "ee:*" | head -10
+redis-cli --scan --pattern "ee:*" | head -10
 ```
 
-### From EmailEngine
+### Check EmailEngine Logs
 
-Check the EmailEngine logs on startup. EmailEngine uses JSON logging (pino):
+EmailEngine uses JSON logging (pino). Log levels: `60`=FATAL, `50`=ERROR, `30`=INFO, `20`=DEBUG, `10`=TRACE.
 
-**Successful startup (Redis connected):**
+**Successful connection:**
 ```json
-{"level":30,"time":1762176419767,"pid":93728,"hostname":"server","msg":"EmailEngine starting up","version":"2.58.0","node":"22.20.0","workersImap":4,"workersWebhooks":1}
-{"level":30,"time":1762176421071,"pid":93728,"tid":1,"msg":"server started","host":"127.0.0.1","port":3000}
+{"level":30,"time":1762176419767,"pid":93728,"msg":"EmailEngine starting up","version":"2.58.0"}
+{"level":30,"time":1762176421071,"pid":93728,"msg":"server started","host":"127.0.0.1","port":3000}
 ```
 
-EmailEngine doesn't log explicit "Redis connected" messages. If it starts successfully and shows "server started", Redis connection is working.
+No explicit "Redis connected" message. If "server started" appears, Redis is connected.
 
-**If Redis connection fails:**
-
-EmailEngine shows a clear error message and exits:
-
+**Connection failure:**
 ```
 ============================================================================================================
 Failed to establish connection to Redis using "redis://127.0.0.1:16379"
-Can not connect to the database. Redis might not be running. Are you using correct hostname and port values?
-
-To run EmailEngine provide valid Redis configuration
-  $ node server.js --dbs.redis="redis://username:password@1.2.3.4:6379/0"
+Can not connect to the database. Redis might not be running.
 ============================================================================================================
 ```
 
-**Common error types in logs:**
+**Common errors:**
 
-Connection refused (Redis not running):
+Connection refused:
 ```json
 {"level":60,"time":1762176637410,"pid":2625,"msg":"EmailEngine starting up"}
 ```
-Followed by the error message above.
 
 Invalid hostname:
 ```json
-{"level":60,"time":1762176620348,"pid":506,"msg":false,"err":{"type":"Error","message":"getaddrinfo ENOTFOUND invalid-host","code":"ENOTFOUND","syscall":"getaddrinfo","hostname":"invalid-host"}}
-{"level":10,"time":1762176620349,"pid":506,"msg":"Connection retry","isMainThread":true,"threadId":0,"times":1,"delay":1000}
+{"level":60,"msg":false,"err":{"message":"getaddrinfo ENOTFOUND invalid-host","code":"ENOTFOUND"}}
+{"level":10,"msg":"Connection retry","times":1,"delay":1000}
 ```
 
-Log levels: `60`=FATAL, `50`=ERROR, `30`=INFO, `20`=DEBUG, `10`=TRACE
-
-**Pretty-printed logs (development):**
-
-Use `pino-pretty` to format logs for easier reading:
-
+**Pretty format (development):**
 ```bash
 emailengine | pino-pretty
 ```
 
-Output:
-```
-[13:26:59.767] INFO (93728): EmailEngine starting up
-    version: "2.58.0"
-    node: "22.20.0"
-    workersImap: 4
-```
-
-**Check connection:**
-1. Redis is running: `redis-cli ping`
-2. Connection string is correct in environment variable
-3. Firewall allows connection
-4. Redis is bound to correct interface
-
-**Monitor Redis metrics:**
-
-Once EmailEngine is running, check the Prometheus metrics endpoint for Redis stats:
-
-```bash
-curl http://localhost:3000/metrics | grep redis
-```
-
-Example output:
-```
-emailengine_redis_version{version="v7.2.4"} 1
-emailengine_redis_memory_used_bytes 47185920
-emailengine_redis_connected_clients 5
-emailengine_redis_uptime_in_seconds 86400
-```
-
 ## Data Stored in Redis
 
-EmailEngine stores the following data in Redis:
+| Data Type | Key Pattern | Typical Size |
+|-----------|-------------|--------------|
+| Mailbox indexes | `ee:account:{id}:mailbox:*` | 1-2 MiB/account |
+| OAuth tokens | `ee:account:{id}:oauth` | ~1 KiB/account |
+| Webhook queue | `ee:webhook:queue` | Varies |
+| Outbox queue | `ee:account:{id}:outbox:*` | Varies |
+| Account metadata | `ee:account:{id}:meta` | ~2 KiB/account |
+| Web sessions | `ee:session:*` | ~500 bytes/session |
 
-| Data Type | Key Pattern | Purpose | Size Impact |
-|-----------|-------------|---------|-------------|
-| Mailbox indexes | `ee:account:{id}:mailbox:*` | Message UIDs and flags | 1-2 MiB per account |
-| OAuth tokens | `ee:account:{id}:oauth` | Access and refresh tokens | ~1 KiB per account |
-| Webhook queue | `ee:webhook:queue` | Pending webhook deliveries | Varies by queue depth |
-| Outbox queue | `ee:account:{id}:outbox:*` | Pending email sends | Varies by queue depth |
-| Account metadata | `ee:account:{id}:meta` | Account configuration | ~2 KiB per account |
-| Session data | `ee:session:*` | Web UI sessions | ~500 bytes per session |
-
-**View EmailEngine keys:**
+**Inspect stored data:**
 ```bash
-# Count total EmailEngine keys
+# Count keys
 redis-cli --scan --pattern "ee:*" | wc -l
 
-# View key types
-redis-cli --scan --pattern "ee:*" | head -20 | xargs redis-cli TYPE
-
-# Check memory usage
-redis-cli INFO memory
+# Check memory
+redis-cli INFO memory | grep used_memory_human
 ```
 
-## General Redis Overview
+## Capacity Planning
 
-### Why Redis is Required
+### Memory Sizing
 
-EmailEngine stores mailbox indexes, OAuth credentials, job queues, and webhook events in Redis. Performance and data consistency therefore depend directly on the health and configuration of Redis. Treat Redis as a primary operational database, not as a transient cache.
+Allocate **1–2 MiB of RAM per account** and provision **2× the calculated baseline** to accommodate:
+- Copy-on-write memory during RDB snapshots
+- Webhook and outbox queue bursts
+- Keep usage below **80%** of provisioned memory
 
-### Redis Deployment Considerations
+**Example:**
 
-#### Minimize Network Latency
+| Accounts | Base RAM | Provision | Target Usage |
+|----------|----------|-----------|--------------|
+| 100 | 100-200 MiB | 400 MiB | < 320 MiB |
+| 1,000 | 1-2 GiB | 4 GiB | < 3.2 GiB |
+| 10,000 | 10-20 GiB | 40 GiB | < 32 GiB |
 
-Maintain a TCP round-trip time (RTT) below **5 ms**, preferably below **1 ms**.
+### Network Latency
 
-- Deploy Redis and EmailEngine in the same **availability zone** or **local network segment**
-- Avoid Internet-facing or cross-region endpoints
-- Measure RTT with:
+Deploy Redis and EmailEngine in the same availability zone. Target RTT < 5ms (ideally < 1ms).
 
+**Measure latency:**
 ```bash
 redis-cli --latency --raw -h <redis-host>
 ```
 
-#### Memory Sizing Guidelines
+### Backups
 
-**Baseline calculation:**
+Back up `dump.rdb` regularly:
 
-Allocate **1–2 MiB of RAM per mailbox**. The dominant factor is the count of message UIDs, not the aggregate mailbox size.
-
-**Provisioning rule:**
-
-Provision at least **2×** the calculated baseline and ensure normal utilization remains below **80%**. The additional capacity accommodates:
-
-1. Copy-on-write memory during RDB snapshots
-2. Short-lived workload spikes (for example, large webhook bursts)
-
-**Example calculations:**
-
-| Accounts | Base RAM | Provisioned RAM | Max Usage Target |
-|----------|----------|-----------------|------------------|
-| 100 | 100-200 MiB | 400 MiB | 320 MiB (80%) |
-| 1,000 | 1-2 GiB | 4 GiB | 3.2 GiB (80%) |
-| 10,000 | 10-20 GiB | 40 GiB | 32 GiB (80%) |
-
-#### Backups
-
-Back up `dump.rdb` (or `appendonly.aof`) regularly - daily or more frequently, depending on your recovery objectives.
-
-**Backup script example:**
 ```bash
 #!/bin/bash
-# Backup Redis data
 BACKUP_DIR="/backup/redis"
 DATE=$(date +%Y%m%d_%H%M%S)
-
-# Trigger RDB snapshot
 redis-cli BGSAVE
-
-# Wait for save to complete
-while [ $(redis-cli LASTSAVE) -eq $LASTSAVE ]; do
-  sleep 1
-done
-
-# Copy snapshot
+while [ $(redis-cli LASTSAVE) -eq $LASTSAVE ]; do sleep 1; done
 cp /var/lib/redis/dump.rdb "$BACKUP_DIR/dump-$DATE.rdb"
-
-# Keep last 7 days
 find "$BACKUP_DIR" -name "dump-*.rdb" -mtime +7 -delete
 ```
 
-## Redis Performance Tuning
+## Performance Tuning
 
-### Persistence Performance
+### Why AOF is Dangerous for EmailEngine
 
-**RDB Snapshots (Recommended for EmailEngine):**
-- Lower overhead than AOF
-- Can cause brief performance dips during save (typically < 1 second)
-- Recovery point objective (RPO) limited by save frequency (1-15 minutes)
-- Best choice for EmailEngine's write-heavy workload
+EmailEngine's write patterns make AOF persistence problematic:
 
-**Append-Only File (Dangerous for EmailEngine):**
-- Better RPO (up to 1 second with `appendfsync everysec`)
-- **Extremely high I/O overhead** for EmailEngine's workload
-- EmailEngine can generate **thousands of writes per second** during mailbox sync
-- AOF rewrites can cause Redis to hang for extended periods
-- Requires **20,000+ IOPS** sustained to avoid performance degradation
-- **Not recommended** unless you have enterprise NVMe storage
+- **Initial sync:** 5,000-10,000+ writes/second per account
+- **Continuous sync:** 100-1,000 writes/second per active account
+- **Large mailboxes:** Sustained high writes for hours
+- **Multiple accounts:** Write loads multiply
 
-**EmailEngine Write Patterns:**
-- Initial mailbox sync: 5,000-10,000+ writes/second per account
-- Continuous sync: 100-1,000 writes/second per active account
-- Large mailboxes (100,000+ messages): sustained high write rates for hours
-- Multiple accounts syncing simultaneously: multiplicative write load
+**AOF problems:**
+- Logs every write to disk (requires 20,000+ IOPS sustained)
+- AOF rewrites lock Redis, causing timeouts
+- Rapid disk space consumption
+- Performance degradation
 
-**Why AOF is problematic:**
-- AOF logs every write operation to disk
-- High write volume saturates disk I/O
-- AOF rewrite (triggered automatically) locks Redis during compaction
-- Can cause EmailEngine to timeout waiting for Redis responses
+**Solution:** Use RDB snapshots instead. Lower overhead, minimal performance impact.
 
-**Verify current settings:**
+### Memory Management
+
+**Monitor fragmentation:**
 ```bash
-redis-cli CONFIG GET appendonly
-redis-cli CONFIG GET appendfsync
-redis-cli CONFIG GET save
-redis-cli INFO persistence | grep aof_rewrite_in_progress
+redis-cli INFO memory | grep mem_fragmentation_ratio
 ```
 
-### Memory Optimization
-
-**Check memory usage:**
+Target: 1.0-1.5. If > 1.5, restart Redis to defragment:
 ```bash
-redis-cli INFO memory
+redis-cli SHUTDOWN SAVE && redis-server /etc/redis/redis.conf
 ```
 
-**Key metrics to monitor:**
-- `used_memory_human` - Current memory usage
-- `used_memory_peak_human` - Peak memory usage
-- `mem_fragmentation_ratio` - Should be between 1.0-1.5
+### Connection Health
 
-**If fragmentation is high (>1.5):**
-```bash
-# Restart Redis to defragment (requires downtime)
-redis-cli SHUTDOWN SAVE
-redis-server /etc/redis/redis.conf
-```
-
-### Connection Pooling
-
-EmailEngine maintains persistent connections to Redis. Monitor connection count:
+Normal: 2-5 connections per EmailEngine instance.
 
 ```bash
 redis-cli CLIENT LIST | wc -l
 ```
-
-**Normal connection count:** 2-5 connections per EmailEngine instance
-
-**If connections are excessive:**
-- Check for connection leaks
-- Verify EmailEngine isn't restarting frequently
-- Review application logs
 
 ## Managed Redis Services
 
@@ -684,36 +574,26 @@ EENGINE_REDIS="redis://:YOUR_PASSWORD@redis-12345.c1.region.cloud.redislabs.com:
 </TabItem>
 </Tabs>
 
-## Monitoring Redis Health
+## Monitoring
 
-### Key Metrics to Monitor
+### Key Metrics
 
 **Memory:**
 ```bash
 redis-cli INFO memory | grep used_memory_human
-redis-cli INFO memory | grep mem_fragmentation_ratio
 ```
 
-**Performance:**
+**Latency:**
 ```bash
-redis-cli INFO stats | grep instantaneous_ops_per_sec
 redis-cli --latency-history -i 1
 ```
 
 **Persistence:**
 ```bash
 redis-cli INFO persistence | grep rdb_last_save_time
-redis-cli INFO persistence | grep aof_enabled
-```
-
-**Connections:**
-```bash
-redis-cli INFO clients | grep connected_clients
 ```
 
 ### Alert Thresholds
-
-Set up monitoring alerts for:
 
 | Metric | Warning | Critical |
 |--------|---------|----------|
@@ -721,48 +601,38 @@ Set up monitoring alerts for:
 | Memory fragmentation | > 1.5 | > 2.0 |
 | Latency (p99) | > 10ms | > 50ms |
 | Persistence lag | > 60s | > 300s |
-| Connected clients | > 1000 | > 5000 |
 
-### EmailEngine Redis Metrics
+### EmailEngine Prometheus Metrics
 
-EmailEngine exposes Redis metrics via Prometheus endpoint (if enabled):
-
+```bash
+curl http://localhost:3000/metrics | grep redis
 ```
-# EmailEngine Redis connection status
-emailengine_redis_connected 1
 
-# EmailEngine Redis command duration
-emailengine_redis_command_duration_seconds{command="get"} 0.002
+Example output:
+```
+emailengine_redis_version{version="v7.2.4"} 1
+emailengine_redis_memory_used_bytes 47185920
+emailengine_redis_connected_clients 5
 ```
 
 ## Quick Reference
 
-**TL;DR:** Deploy Redis in the same data center as EmailEngine, allocate sufficient memory and durable storage, and set the memory policy to **noeviction**. Otherwise queued webhooks and mailbox indexes are at risk.
+Deploy Redis in the same data center as EmailEngine, allocate sufficient memory, enable RDB persistence, and set eviction policy to `noeviction`.
 
-### Essential Configuration Checklist
+**Essential checklist:**
+- Set `maxmemory-policy noeviction`
+- Enable RDB persistence (`save 60 10000 300 10 900 1`)
+- Set `tcp-keepalive 300`
+- Provision 2× base memory (1-2 MiB per account)
+- Keep usage < 80%
+- Target latency < 5ms
+- Avoid AOF (too high I/O overhead)
+- Avoid Redis Cluster (not supported)
 
-- ✅ Set `maxmemory-policy noeviction`
-- ✅ Enable persistence (RDB or AOF)
-- ✅ Set `tcp-keepalive 300`
-- ✅ Deploy in same region/zone as EmailEngine
-- ✅ Provision 2× base memory (1-2 MiB per account)
-- ✅ Keep memory usage below 80%
-- ✅ Configure regular backups
-- ✅ Monitor latency (target < 5ms)
-- ✅ Avoid Redis Cluster (not supported)
-
-### Connection String Quick Reference
-
+**Connection strings:**
 ```bash
-# Local
-redis://localhost:6379
-
-# Remote with password
-redis://:password@host:6379
-
-# Remote with TLS
-rediss://:password@host:6380
-
-# With database number
-redis://host:6379/8
+redis://localhost:6379              # Local
+redis://:password@host:6379         # With password
+rediss://:password@host:6380        # With TLS
+redis://host:6379/8                 # Specific database
 ```
