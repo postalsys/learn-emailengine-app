@@ -344,23 +344,60 @@ redis-cli -h localhost -p 6379 --scan --pattern "ee:*" | head -10
 
 ### From EmailEngine
 
-Check the EmailEngine logs on startup:
+Check the EmailEngine logs on startup. EmailEngine uses JSON logging (pino):
 
-```
-[2025-01-15 10:30:45] INFO: Redis connection established
-[2025-01-15 10:30:45] INFO: Redis info: redis_version=7.0.5, used_memory_human=45.2M
-```
-
-**If connection fails:**
-```
-[2025-01-15 10:30:45] ERROR: Failed to connect to Redis: ECONNREFUSED
+**Successful startup (Redis connected):**
+```json
+{"level":30,"time":1762176419767,"pid":93728,"hostname":"server","msg":"EmailEngine starting up","version":"2.58.0","node":"22.20.0","workersImap":4,"workersWebhooks":1}
+{"level":30,"time":1762176421071,"pid":93728,"tid":1,"msg":"server started","host":"127.0.0.1","port":3000}
 ```
 
-Check:
+EmailEngine doesn't log explicit "Redis connected" messages. If it starts successfully and shows "server started", Redis connection is working.
+
+**If Redis connection fails:**
+```json
+{"level":60,"time":1762176419800,"pid":93728,"msg":"Redis connection error","isMainThread":true,"threadId":0,"err":{"type":"Error","message":"connect ECONNREFUSED 127.0.0.1:6379","code":"ECONNREFUSED"}}
+```
+
+Log levels: `60`=FATAL, `50`=ERROR, `30`=INFO, `20`=DEBUG, `10`=TRACE
+
+**Pretty-printed logs (development):**
+
+Use `pino-pretty` to format logs for easier reading:
+
+```bash
+emailengine | pino-pretty
+```
+
+Output:
+```
+[13:26:59.767] INFO (93728): EmailEngine starting up
+    version: "2.58.0"
+    node: "22.20.0"
+    workersImap: 4
+```
+
+**Check connection:**
 1. Redis is running: `redis-cli ping`
-2. Connection string is correct
+2. Connection string is correct in environment variable
 3. Firewall allows connection
 4. Redis is bound to correct interface
+
+**Monitor Redis metrics:**
+
+Once EmailEngine is running, check the Prometheus metrics endpoint for Redis stats:
+
+```bash
+curl http://localhost:3000/metrics | grep redis
+```
+
+Example output:
+```
+emailengine_redis_version{version="v7.2.4"} 1
+emailengine_redis_memory_used_bytes 47185920
+emailengine_redis_connected_clients 5
+emailengine_redis_uptime_in_seconds 86400
+```
 
 ## Data Stored in Redis
 
