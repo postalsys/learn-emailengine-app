@@ -23,8 +23,8 @@ EmailEngine uses two distinct types of configuration:
 - Log levels
 
 **Configure via:**
-- Environment variables (recommended)
-- Command-line arguments
+- [Environment variables](/docs/configuration/environment-variables) (recommended)
+- [Command-line arguments](/docs/configuration/cli)
 - Configuration files
 
 ### 2. Runtime Configuration
@@ -40,7 +40,7 @@ EmailEngine uses two distinct types of configuration:
 **Configure via:**
 - Web interface (Settings page)
 - [Settings API endpoint](/docs/api/post-v-1-settings)
-- Prepared settings (environment variable)
+- [Prepared settings](/docs/configuration/prepared-settings) (environment variable)
 
 ## Configuration Methods
 
@@ -323,7 +323,7 @@ TLS/SSL settings for secure connections.
 ### Logging & Monitoring
 Log levels, metrics endpoints, monitoring.
 
-[View details →](./logging.md)
+[View details →](../advanced/monitoring)
 
 ### Prepared Configuration
 Pre-configured settings, tokens, and licenses.
