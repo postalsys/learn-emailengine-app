@@ -101,9 +101,15 @@ Email protocol timeouts and limits.
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
 | `EENGINE_MAX_SIZE` | bytes | `5242880` | Max attachment size (5 MB) | `10485760` |
+| `EENGINE_MAX_BODY_SIZE` | bytes | `52428800` | Max POST body size for message uploads (50 MB) | `104857600` |
+| `EENGINE_MAX_SMTP_MESSAGE_SIZE` | bytes | `26214400` | Max message size for SMTP submission (25 MB) | `52428800` |
+| `EENGINE_MAX_PAYLOAD_TIMEOUT` | ms | `10000` | Payload reception timeout for message uploads | `30000` |
 | `EENGINE_TIMEOUT` | ms | `10000` | General timeout for operations | `30000` |
 | `EENGINE_FETCH_TIMEOUT` | ms | `10000` | Timeout for HTTP fetch operations | `30000` |
+| `EENGINE_IMAP_SOCKET_TIMEOUT` | ms | none | Custom socket timeout for IMAP connections | `60000` |
 | `EENGINE_CONNECTION_SETUP_DELAY` | ms | `0` | Delay before setting up account connections | `5000` |
+| `EENGINE_CHUNK_SIZE` | bytes | `1000000` | Download chunk size for streaming attachments (1 MB) | `5000000` |
+| `EENGINE_MAX_IMAP_AUTH_FAILURE_TIME` | ms | `259200000` | Max time to wait before disabling IMAP on auth failures (3 days) | `86400000` |
 
 **Examples:**
 
@@ -250,6 +256,56 @@ EENGINE_TLS_MIN_DH_SIZE=2048
 **Custom cipher suite:**
 ```bash
 EENGINE_TLS_CIPHERS="TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256"
+```
+
+## Security & Access Control
+
+Security settings and access restrictions.
+
+| Variable | Type | Default | Description | Example |
+|----------|------|---------|-------------|---------|
+| `EENGINE_SECRET` | string | none | Encryption secret for credentials (required) | `your-random-secret-key` |
+| `EENGINE_ADMIN_ACCESS_ADDRESSES` | string | none | Comma-separated list of IP addresses allowed to access admin interface | `192.168.1.0/24,10.0.0.1` |
+
+**Examples:**
+
+**Set encryption secret:**
+```bash
+EENGINE_SECRET=$(openssl rand -hex 32)
+```
+
+**Restrict admin access to specific IPs:**
+```bash
+EENGINE_ADMIN_ACCESS_ADDRESSES="192.168.1.0/24,10.0.0.1"
+```
+
+## Advanced Settings
+
+Advanced configuration options for debugging and performance tuning.
+
+| Variable | Type | Default | Description | Example |
+|----------|------|---------|-------------|---------|
+| `EENGINE_LOG_RAW` | boolean | `false` | Log raw IMAP protocol traffic (debug only) | `true` |
+| `EENGINE_DISABLE_COMPRESSION` | boolean | `false` | Disable IMAP COMPRESS extension | `true` |
+| `EENGINE_DISABLE_MESSAGE_BROWSER` | boolean | `false` | Disable web-based message browser | `true` |
+| `EENGINE_CORS_ORIGIN` | string | none | CORS allowed origins (space or comma separated) | `https://app.example.com` |
+
+**Examples:**
+
+**Enable protocol debugging:**
+```bash
+EENGINE_LOG_RAW=true
+EENGINE_LOG_LEVEL=trace
+```
+
+**Enable CORS for API:**
+```bash
+EENGINE_CORS_ORIGIN="https://app.example.com https://admin.example.com"
+```
+
+**Disable IMAP compression (for debugging):**
+```bash
+EENGINE_DISABLE_COMPRESSION=true
 ```
 
 ## Logging & Monitoring
