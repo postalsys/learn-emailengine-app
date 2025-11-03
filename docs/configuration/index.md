@@ -27,7 +27,7 @@ EmailEngine uses two distinct types of configuration:
 
 - [Environment variables](/docs/configuration/environment-variables) (recommended)
 - [Command-line arguments](/docs/configuration/cli)
-- Configuration files
+- [Configuration files](/docs/configuration/cli#configuration-files) (TOML)
 
 ### 2. Runtime Configuration
 
