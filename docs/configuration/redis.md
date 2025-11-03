@@ -141,11 +141,12 @@ emailengine --dbs.redis="redis://:mypassword@redis.example.com:6379"
 For advanced Redis configurations, you can pass connection options as query parameters:
 
 ```bash
-# Connect with TLS and custom timeout
-EENGINE_REDIS="rediss://redis.example.com:6380?tls.rejectUnauthorized=false&connectTimeout=10000"
+# Connect with TLS
+EENGINE_REDIS="rediss://redis.example.com:6380"
 
-# Connect to Redis Sentinel
-EENGINE_REDIS="redis://sentinel1:26379,sentinel2:26379,sentinel3:26379?sentinelName=mymaster"
+# Specify IPv4 or IPv6
+EENGINE_REDIS="redis://redis.example.com:6379?family=4"  # Force IPv4
+EENGINE_REDIS="redis://redis.example.com:6379?family=6"  # Force IPv6
 ```
 
 ## Required Redis Configuration
@@ -491,7 +492,7 @@ redis-cli CLIENT LIST | wc -l
 | **Dragonfly** | Experimental | Requires `--default_lua_flags=allow-undeclared-keys`; validate against production workloads |
 | **KeyDB** | Experimental | Multi-threaded fork of Redis; monitor replication lag and memory stability |
 
-**Unsupported:** Redis Cluster is incompatible with EmailEngine's Lua scripts that reference dynamic keys. For high availability, use Redis Sentinel or a single-primary replication setup.
+**Unsupported:** Redis Cluster is incompatible with EmailEngine's Lua scripts that reference dynamic keys. Use a single Redis instance with persistence enabled.
 
 ### Service-Specific Configuration
 
@@ -574,33 +575,6 @@ EENGINE_REDIS="redis://:YOUR_PASSWORD@redis-12345.c1.region.cloud.redislabs.com:
 </TabItem>
 </Tabs>
 
-## High Availability Setup
-
-### Redis Sentinel
-
-Redis Sentinel provides automatic failover for Redis master-replica setups.
-
-**Connection string format:**
-```bash
-EENGINE_REDIS="redis://sentinel1:26379,sentinel2:26379,sentinel3:26379?sentinelName=mymaster&sentinelPassword=password"
-```
-
-**Sentinel configuration example:**
-```ini
-# sentinel.conf
-port 26379
-sentinel monitor mymaster 127.0.0.1 6379 2
-sentinel down-after-milliseconds mymaster 5000
-sentinel parallel-syncs mymaster 1
-sentinel failover-timeout mymaster 10000
-```
-
-### Single Primary with Replicas
-
-**Not supported for writes,** but useful for read scaling (if EmailEngine adds read replica support in future).
-
-**Current limitation:** EmailEngine performs both reads and writes, so all operations go to the primary.
-
 ## Monitoring Redis Health
 
 ### Key Metrics to Monitor
@@ -666,7 +640,7 @@ emailengine_redis_command_duration_seconds{command="get"} 0.002
 - ✅ Keep memory usage below 80%
 - ✅ Configure regular backups
 - ✅ Monitor latency (target < 5ms)
-- ✅ Avoid Redis Cluster (use Sentinel instead)
+- ✅ Avoid Redis Cluster (not supported)
 
 ### Connection String Quick Reference
 
@@ -679,9 +653,6 @@ redis://:password@host:6379
 
 # Remote with TLS
 rediss://:password@host:6380
-
-# Sentinel
-redis://sentinel1:26379,sentinel2:26379?sentinelName=mymaster
 
 # With database number
 redis://host:6379/8
