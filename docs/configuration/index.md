@@ -88,6 +88,42 @@ Environment variables and CLI arguments can be used together. CLI arguments take
 
 [Complete CLI reference →](./cli)
 
+### Configuration Files
+
+**TOML configuration files for persistent settings.**
+
+Create a TOML configuration file with your settings:
+
+```toml
+# config.toml
+[dbs]
+redis = "redis://localhost:6379"
+
+[api]
+host = "0.0.0.0"
+port = 3000
+
+[log]
+level = "info"
+
+[service]
+secret = "your-encryption-secret"
+```
+
+**Load configuration file:**
+```bash
+emailengine --config=/path/to/config.toml
+```
+
+:::tip TOML Mapping
+CLI arguments map directly to TOML keys. For example:
+- `--dbs.redis="redis://..."` → `[dbs]` section with `redis = "redis://..."`
+- `--api.port=3000` → `[api]` section with `port = 3000`
+- Boolean values use true TOML booleans: `true`/`false` (not strings)
+:::
+
+[TOML configuration guide →](./cli#configuration-files)
+
 ### Settings API
 
 **For runtime configuration.** (See: [Settings API](/docs/api/post-v-1-settings))
@@ -116,20 +152,30 @@ curl -X POST http://localhost:3000/v1/settings \
 
 When multiple configuration methods are used, they follow this precedence (highest to lowest):
 
-1. **Environment Variables** (highest priority)
-2. **Command-Line Arguments**
-3. **Configuration Files**
+1. **Command-Line Arguments** (highest priority)
+2. **Environment Variables**
+3. **Configuration Files** (TOML)
 4. **Default Values** (lowest priority)
 
 **Example:**
 ```bash
-# Environment variable takes precedence
-export EENGINE_PORT=8080
+# config.toml has: port = 3000
+# Environment variable: EENGINE_PORT=4000
+# CLI argument: --api.port=5000
 
-# This will be ignored
-emailengine --api.port=3000
+emailengine --config=config.toml --api.port=5000
 
-# EmailEngine starts on port 8080
+# Result: Port 5000 (CLI argument wins)
+```
+
+**Another example:**
+```bash
+# config.toml has: port = 3000
+# Environment variable: EENGINE_PORT=4000
+
+emailengine --config=config.toml
+
+# Result: Port 4000 (env variable wins over config file)
 ```
 
 ## Configuration Best Practices

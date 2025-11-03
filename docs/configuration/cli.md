@@ -154,6 +154,187 @@ All CLI arguments can also be set as environment variables. See [Environment Var
 
 ---
 
+## Configuration Files
+
+EmailEngine supports TOML configuration files for persistent settings.
+
+### Using Configuration Files
+
+**Create a TOML file:**
+
+```toml
+# /etc/emailengine/config.toml
+
+[dbs]
+redis = "redis://localhost:6379"
+
+[api]
+host = "0.0.0.0"
+port = 3000
+
+[log]
+level = "info"
+
+[service]
+secret = "your-encryption-secret"
+
+[workers]
+imap = 8
+webhooks = 2
+submit = 2
+```
+
+**Load the configuration:**
+
+```bash
+emailengine --config=/etc/emailengine/config.toml
+```
+
+### TOML Mapping Rules
+
+CLI arguments map directly to TOML structure by splitting on dots:
+
+| CLI Argument | TOML Equivalent |
+|--------------|-----------------|
+| `--dbs.redis="redis://..."` | `[dbs]`<br/>`redis = "redis://..."` |
+| `--api.host="0.0.0.0"` | `[api]`<br/>`host = "0.0.0.0"` |
+| `--api.port=3000` | `[api]`<br/>`port = 3000` |
+| `--log.level="info"` | `[log]`<br/>`level = "info"` |
+| `--workers.imap=8` | `[workers]`<br/>`imap = 8` |
+
+### Data Types in TOML
+
+**Strings:**
+```toml
+[dbs]
+redis = "redis://localhost:6379"
+```
+
+**Numbers:**
+```toml
+[api]
+port = 3000  # Integer
+```
+
+**Booleans:**
+```toml
+[api]
+proxy = true  # NOT "true" - use actual boolean
+```
+
+**Important:** Boolean values must be `true` or `false` (without quotes), not string values `"true"` or `"false"`.
+
+### Complete Configuration Example
+
+```toml
+# /etc/emailengine/production.toml
+
+# Database configuration
+[dbs]
+redis = "redis://redis-cluster.example.com:6379"
+
+# API server configuration
+[api]
+host = "0.0.0.0"
+port = 3000
+proxy = true
+maxSize = 20971520  # 20 MB
+
+# Worker configuration
+[workers]
+imap = 8
+webhooks = 4
+submit = 2
+
+# Logging
+[log]
+level = "info"
+
+# Service settings
+[service]
+secret = "your-encryption-secret-32-chars-min"
+commandTimeout = 30000
+
+# IMAP Proxy (optional)
+[imapProxy]
+enabled = true
+host = "0.0.0.0"
+port = 9993
+secret = "imap-proxy-secret"
+
+# SMTP Server (optional)
+[smtp]
+enabled = true
+host = "0.0.0.0"
+port = 2525
+secret = "smtp-server-secret"
+```
+
+**Run with config file:**
+```bash
+emailengine --config=/etc/emailengine/production.toml
+```
+
+### Configuration Precedence
+
+When multiple configuration sources are used:
+
+1. **CLI arguments** (highest priority)
+2. **Environment variables**
+3. **Configuration file**
+4. **Default values** (lowest priority)
+
+**Example:**
+```bash
+# Configuration file has: port = 3000
+# Environment variable: EENGINE_PORT=4000
+# CLI argument: --api.port=5000
+
+emailengine --config=config.toml --api.port=5000
+
+# Result: Port 5000 (CLI argument wins)
+```
+
+### Use Cases
+
+**Development:**
+```bash
+# dev.toml
+[dbs]
+redis = "redis://localhost:6379/8"
+
+[api]
+port = 3001
+
+[log]
+level = "trace"
+```
+
+**Production:**
+```bash
+# prod.toml
+[dbs]
+redis = "redis://prod-redis:6379"
+
+[api]
+port = 3000
+
+[log]
+level = "info"
+
+[service]
+secret = "production-secret-key"
+```
+
+**Docker:**
+```dockerfile
+# Dockerfile
+COPY config.toml /app/config.toml
+CMD ["emailengine", "--config=/app/config.toml"]
+```
+
+---
+
 ## Token Management
 
 Manage API access tokens for authentication.
