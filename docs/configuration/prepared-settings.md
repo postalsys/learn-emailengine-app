@@ -52,7 +52,11 @@ Any setting available via the `/v1/settings` API endpoint:
 
 ### Configuration Methods
 
-#### Environment Variable
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="config-method">
+<TabItem value="env" label="Environment Variable">
 
 Set the `EENGINE_SETTINGS` environment variable with a JSON string:
 
@@ -61,7 +65,8 @@ export EENGINE_SETTINGS='{"webhooks": "https://webhook.site/abc123","webhookEven
 emailengine
 ```
 
-#### Command-Line Argument
+</TabItem>
+<TabItem value="cli" label="Command-Line">
 
 Use the `--settings` flag:
 
@@ -69,14 +74,16 @@ Use the `--settings` flag:
 emailengine --settings='{"webhooks": "https://your-app.com/webhook","webhookEvents":["messageNew"]}'
 ```
 
-#### Docker
+</TabItem>
+<TabItem value="docker" label="Docker">
 
 **Single-line environment variable:**
 ```dockerfile
 ENV EENGINE_SETTINGS='{"webhooks":"https://your-app.com/webhook","webhookEvents":["messageNew","messageSent"]}'
 ```
 
-#### Docker Compose
+</TabItem>
+<TabItem value="docker-compose" label="Docker Compose">
 
 **Multi-line YAML format (recommended):**
 ```yaml
@@ -112,6 +119,9 @@ services:
 # config/emailengine.env
 EENGINE_SETTINGS={"webhooks":"https://your-app.com/webhook","webhookEvents":["messageNew"]}
 ```
+
+</TabItem>
+</Tabs>
 
 ### Examples
 
@@ -297,7 +307,8 @@ The original token value (the actual API key) is preserved during import.
 
 Load a token automatically on startup using the exported token string.
 
-#### Environment Variable
+<Tabs groupId="config-method">
+<TabItem value="env" label="Environment Variable">
 
 ```bash
 export EENGINE_PREPARED_TOKEN=hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxN...
@@ -309,19 +320,22 @@ emailengine
 {"level":20,"time":1638811265629,"msg":"Imported prepared token"}
 ```
 
-#### Command-Line Argument
+</TabItem>
+<TabItem value="cli" label="Command-Line">
 
 ```bash
 emailengine --preparedToken="hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxN..."
 ```
 
-#### Docker
+</TabItem>
+<TabItem value="docker" label="Docker">
 
 ```dockerfile
 ENV EENGINE_PREPARED_TOKEN=hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxN...
 ```
 
-#### Docker Compose
+</TabItem>
+<TabItem value="docker-compose" label="Docker Compose">
 
 ```yaml
 services:
@@ -335,6 +349,9 @@ services:
 # .env file
 PREPARED_TOKEN=hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxN...
 ```
+
+</TabItem>
+</Tabs>
 
 ### Complete Workflow
 
@@ -455,7 +472,8 @@ emailengine
 
 ### Configuration Methods
 
-#### Environment Variable
+<Tabs groupId="config-method">
+<TabItem value="env" label="Environment Variable">
 
 **PEM format (recommended):**
 ```bash
@@ -475,7 +493,8 @@ export EENGINE_PREPARED_LICENSE="i0-AgqFsxFWFoWvEDGC7..."
 emailengine
 ```
 
-#### Command-Line Argument
+</TabItem>
+<TabItem value="cli" label="Command-Line">
 
 **PEM format:**
 ```bash
@@ -492,7 +511,8 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9abcdefghijklmnopqrstuvwxyz...
 emailengine --preparedLicense="i0-AgqFsxFWFoWvEDGC7..."
 ```
 
-#### Docker
+</TabItem>
+<TabItem value="docker" label="Docker">
 
 **PEM format:**
 ```dockerfile
@@ -504,7 +524,8 @@ ENV EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----\nApplication: EmailEngine\
 ENV EENGINE_PREPARED_LICENSE="i0-AgqFsxFWFoWvEDGC7..."
 ```
 
-#### Docker Compose
+</TabItem>
+<TabItem value="docker-compose" label="Docker Compose">
 
 **PEM format (multiline YAML):**
 ```yaml
@@ -534,6 +555,9 @@ services:
 # .env
 LICENSE_KEY=i0-AgqFsxFWFoWvEDGC7...
 ```
+
+</TabItem>
+</Tabs>
 
 ### Verification
 
