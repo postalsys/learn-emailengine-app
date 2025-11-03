@@ -44,7 +44,11 @@ EmailEngine uses two distinct types of configuration:
 
 ## Configuration Methods
 
-### Environment Variables
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="config-method">
+<TabItem value="env" label="Environment Variables">
 
 **Recommended for production deployments.**
 
@@ -68,9 +72,14 @@ services:
       - REDIS_URL=redis://redis:6379
 ```
 
+:::tip Interchangeable Configuration
+Environment variables and CLI arguments can be used together. CLI arguments take precedence over environment variables. See the [mapping table](/docs/configuration/environment-variables#environment-variable-to-cli-mapping) for equivalents.
+:::
+
 [Complete environment variables reference →](./environment-variables.md)
 
-### Command-Line Arguments
+</TabItem>
+<TabItem value="cli" label="Command-Line Arguments">
 
 **Useful for development and testing.**
 
@@ -88,7 +97,8 @@ Environment variables and CLI arguments can be used together. CLI arguments take
 
 [Complete CLI reference →](./cli)
 
-### Configuration Files
+</TabItem>
+<TabItem value="toml" label="Configuration Files">
 
 **TOML configuration files for persistent settings.**
 
@@ -123,6 +133,9 @@ CLI arguments map directly to TOML keys. For example:
 :::
 
 [TOML configuration guide →](./cli#configuration-files)
+
+</TabItem>
+</Tabs>
 
 ### Settings API
 
