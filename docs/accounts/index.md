@@ -406,40 +406,6 @@ For advanced use cases, you can delegate the OAuth2 flow to an external authenti
 
 [Authentication Server Guide →](./authentication-server)
 
-## Best Practices
-
-### Security
-
-1. **Never log or expose access tokens** - Treat them like passwords
-2. **Use OAuth2 for user accounts** - More secure than storing passwords
-3. **Enable secret encryption** - Encrypts credentials in Redis
-4. **Rotate access tokens regularly** - Configure token policies
-5. **Use least-privilege scopes** - Only request necessary permissions
-
-[Learn about secret encryption →](/docs/configuration)
-
-### Performance
-
-1. **Use sub-connections sparingly** - Only for critical folders
-2. **Implement path filtering** - Don't sync unnecessary folders
-3. **Monitor connection limits** - Stay within provider limits
-4. **Use Gmail/Graph API for high volume** - Better than IMAP at scale
-
-[Learn about performance tuning →](/docs/advanced/performance-tuning)
-
-### Reliability
-
-1. **Handle webhook failures gracefully** - Implement retries in your app
-2. **Monitor account states** - Alert on authentication errors
-3. **Test reconnection logic** - Ensure accounts recover from errors
-4. **Keep EmailEngine updated** - Benefit from bug fixes
-
-### User Experience
-
-1. **Use hosted authentication forms** - Users enter credentials directly
-2. **Show clear error messages** - Help users resolve auth issues
-3. **Verify accounts after adding** - Use `/v1/verifyaccount` endpoint
-4. **Provide setup guides** - Link to provider-specific instructions
 
 ## Troubleshooting
 

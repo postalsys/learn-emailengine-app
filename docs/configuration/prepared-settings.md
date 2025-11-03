@@ -763,46 +763,10 @@ jobs:
           docker-compose up -d
 ```
 
-## Best Practices
+## Testing
 
-### Security
+Test prepared configuration before deployment:
 
-**Never hardcode secrets:**
-```yaml
-# BAD - hardcoded secret
-environment:
-  - EENGINE_PREPARED_TOKEN=hKJpZNlAMzAxZ...
-
-# GOOD - environment variable
-environment:
-  - EENGINE_PREPARED_TOKEN=${PREPARED_TOKEN}
-```
-
-**Use secret management:**
-- AWS Secrets Manager
-- Azure Key Vault
-- HashiCorp Vault
-- Kubernetes Secrets
-
-**Rotate regularly:**
-```bash
-# Generate new token
-NEW_TOKEN=$(emailengine tokens issue -d "API Token" -s "*")
-EXPORTED=$(emailengine tokens export -t $NEW_TOKEN)
-
-# Update secret
-aws secretsmanager update-secret \
-  --secret-id emailengine/api-token \
-  --secret-string $EXPORTED
-
-# Revoke old token via API
-curl -X DELETE http://localhost:3000/v1/token/old-token \
-  -H "Authorization: Bearer $NEW_TOKEN"
-```
-
-### Testing
-
-**Test prepared config before deployment:**
 ```bash
 # Validate settings JSON
 echo $EENGINE_SETTINGS | jq .

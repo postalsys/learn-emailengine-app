@@ -687,11 +687,7 @@ EENGINE_LOG_FILE=/var/log/emailengine/app.log
 EENGINE_LOG_RAW=false
 ```
 
-## Best Practices
 
-### 1. Use Appropriate Log Levels in Production
-
-```bash
 # Production
 EENGINE_LOG_LEVEL=info
 

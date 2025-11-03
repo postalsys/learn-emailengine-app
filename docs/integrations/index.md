@@ -168,35 +168,6 @@ Embed email functionality in business apps:
 - Document operational procedures
 - Plan for scaling
 
-## Best Practices
-
-### API Usage
-
-1. **Use Appropriate Endpoints**: Choose between Submit API (immediate) and Outbox API (queued) based on needs
-2. **Handle Rate Limits**: Implement backoff and retry logic
-3. **Optimize Pagination**: Use efficient pagination for listing operations
-4. **Cache When Possible**: Cache account information and frequently accessed data
-
-### Webhook Handling
-
-1. **Fast Response**: Return 2xx status quickly, process asynchronously
-2. **Verify Signatures**: Validate webhook authenticity (if configured)
-3. **Idempotent Processing**: Handle duplicate webhooks gracefully
-4. **Queue Processing**: Use message queues for reliable processing
-
-### Error Management
-
-1. **Graceful Degradation**: Handle API failures without breaking your application
-2. **Logging**: Log all API interactions and errors
-3. **Monitoring**: Track error rates and set up alerts
-4. **User Feedback**: Provide meaningful error messages to users
-
-### Performance Optimization
-
-1. **Minimize API Calls**: Batch operations when possible
-2. **Use Webhooks**: Prefer webhooks over polling
-3. **Optimize Queries**: Use filters and specific field selections
-4. **Connection Pooling**: Reuse HTTP connections
 
 ## Getting Started
 

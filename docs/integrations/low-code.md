@@ -516,66 +516,6 @@ journalctl -u emailengine
 tail -f /path/to/emailengine/logs/app.log
 ```
 
-## Best Practices
-
-### 1. Keep Filters Simple
-
-Complex filtering can slow down webhook processing. Keep filters focused and efficient.
-
-### 2. Return Quickly
-
-Mapping functions should execute quickly. Avoid:
-- Long API calls (unless necessary)
-- Complex computations
-- Large data transformations
-
-### 3. Handle Errors Gracefully
-
-Always handle potential errors:
-
-```javascript
-try {
-    const response = await fetch(externalAPI);
-    const data = await response.json();
-    return data;
-} catch (error) {
-    // Return fallback or null
-    return {
-        error: 'Failed to fetch external data',
-        original_payload: payload
-    };
-}
-```
-
-### 4. Test Thoroughly
-
-Test routes with:
-- Expected payloads
-- Edge cases (missing fields)
-- Different event types
-- Error conditions
-
-### 5. Monitor and Alert
-
-Set up monitoring for:
-- Webhook delivery failures
-- Filtering/mapping errors
-- Target service downtime
-
-### 6. Use Route Names
-
-Give routes descriptive names for easier management:
-- "Discord - Bounce Notifications"
-- "Zapier - New Invoices"
-- "Slack - VIP Alerts"
-
-### 7. Document Your Routes
-
-Maintain documentation of:
-- What each route does
-- Why specific filters are used
-- Expected payload format
-- Downstream dependencies
 
 ## Common Use Cases
 

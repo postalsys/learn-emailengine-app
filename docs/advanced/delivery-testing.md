@@ -667,63 +667,6 @@ function generateDeliveryReport(stats) {
 }
 ```
 
-## Best Practices
-
-### 1. Use Dedicated Test Accounts
-
-Don't use production accounts for delivery testing:
-
-```javascript
-const testAccounts = [
-  'delivery-test-1@gmail.com',
-  'delivery-test-2@outlook.com',
-  'delivery-test-3@yahoo.com'
-];
-```
-
-### 2. Monitor Connection Limits
-
-Stay within IMAP connection limits:
-
-```javascript
-// Maximum 2-3 sub-connections per account
-const maxSubConnections = 2;
-```
-
-### 3. Test Regularly
-
-Run tests periodically to track deliverability:
-
-```javascript
-// Run daily tests
-cron.schedule('0 9 * * *', () => {
-  runSeedListTest('Daily Delivery Test', 'Test content');
-});
-```
-
-### 4. Vary Test Content
-
-Test different email types:
-
-- Plain text vs HTML
-- With/without images
-- With/without links
-- Different subject lines
-- Different sender names
-
-### 5. Track Historical Data
-
-Store test results for trend analysis:
-
-```javascript
-await db.deliveryTests.insert({
-  testId,
-  date: new Date(),
-  inboxRate: stats.inboxRate,
-  spamRate: stats.spamRate,
-  results: testResults
-});
-```
 
 ## Troubleshooting
 

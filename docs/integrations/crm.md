@@ -784,12 +784,3 @@ Review what data is stored and your compliance obligations:
 3. Optimize database queries
 4. Add indexes on frequently queried fields
 
-## Best Practices
-
-1. **Quick Webhook Response**: Always return HTTP 2xx within milliseconds
-2. **Asynchronous Processing**: Use job queues for webhook processing
-3. **Deduplication**: Always check message registry before processing
-4. **Error Handling**: Log errors, don't fail silently
-5. **Monitoring**: Track webhook failures and processing times
-6. **User Feedback**: Provide clear status about email sync
-7. **Testing**: Test with multiple email providers (Gmail, Outlook, etc.)

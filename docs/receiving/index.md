@@ -249,35 +249,6 @@ This section covers all aspects of receiving and processing emails:
 7. **[Tracking Deleted Messages](./tracking-deleted)** - Monitoring message deletions
 8. **[Continuous Processing](./continuous-processing)** - Building real-time email processing pipelines
 
-## Best Practices
-
-### Webhook Security
-
-1. **Verify webhook signatures** (if configured)
-2. **Use HTTPS endpoints** for webhook URLs
-3. **Validate webhook payloads** before processing
-4. **Implement retry logic** for failures
-
-### Performance Optimization
-
-1. **Acknowledge webhooks immediately** (return 200 status)
-2. **Process events asynchronously** (don't block the webhook handler)
-3. **Use message IDs** for deduplication
-4. **Cache frequently accessed data**
-
-### Error Handling
-
-1. **Monitor webhook delivery** in Bull Board
-2. **Log processing errors** for debugging
-3. **Implement exponential backoff** for retries
-4. **Alert on persistent failures**
-
-### Scalability
-
-1. **Use a message queue** for high-volume processing
-2. **Process events in parallel** when possible
-3. **Implement rate limiting** for downstream services
-4. **Monitor resource usage** and scale accordingly
 
 ## Troubleshooting
 

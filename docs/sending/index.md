@@ -180,31 +180,6 @@ Integrate email into your application logic:
 6. **[Outbox Queue](./outbox-queue.md)** - Understanding the queue system
 7. **[SMTP Gateway](./smtp-gateway.md)** - Alternative SMTP integration
 
-## Best Practices
-
-### Delivery Optimization
-- Enable webhook notifications to track delivery
-- Set appropriate retry limits
-- Monitor the outbox queue
-- Handle delivery errors gracefully
-
-### Content Quality
-- Always provide both HTML and plain text versions
-- Test templates before bulk sending
-- Validate recipient addresses
-- Use proper subject lines
-
-### Rate Limiting
-- Respect provider rate limits
-- Use mail merge for bulk sending
-- Stagger large send jobs
-- Monitor delivery errors
-
-### Security
-- Use API tokens, not account credentials
-- Validate user permissions before sending
-- Sanitize template variables
-- Store sensitive data encrypted
 
 ## Troubleshooting
 

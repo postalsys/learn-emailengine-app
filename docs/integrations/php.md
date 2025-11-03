@@ -524,45 +524,6 @@ if ($automation->registerAccount(
 }
 ```
 
-## Best Practices
-
-### 1. Token Security
-
-- Never commit API tokens to version control
-- Use environment variables or secure configuration
-- Rotate tokens periodically
-- Use separate tokens for development and production
-
-```php
-<?php
-
-// Use environment variables
-$ee = new EmailEngine([
-    'access_token' => getenv('EMAILENGINE_TOKEN'),
-    'ee_base_url' => getenv('EMAILENGINE_URL'),
-]);
-```
-
-### 2. Error Handling
-
-- Always use try-catch blocks
-- Log errors for debugging
-- Provide user-friendly error messages
-- Implement retry logic for transient failures
-
-### 3. Performance
-
-- Cache account information
-- Reuse EmailEngine client instance
-- Use webhooks instead of polling
-- Implement connection pooling for high-volume scenarios
-
-### 4. Testing
-
-- Use test accounts during development
-- Test error scenarios
-- Validate email content before sending
-- Test webhook handling
 
 ## Troubleshooting
 

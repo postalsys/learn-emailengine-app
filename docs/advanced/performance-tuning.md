@@ -505,13 +505,3 @@ EENGINE_NOTIFY_QC=4
 - Reduce Redis latency
 - Check IMAP server performance
 
-## Best Practices Summary
-
-1. **Start Conservative**: Begin with default settings, scale up based on actual load
-2. **Monitor First**: Implement monitoring before tuning
-3. **Tune Incrementally**: Change one setting at a time, measure impact
-4. **Match Your Use Case**: Webhook-heavy vs API-heavy workloads need different tuning
-5. **Plan for Growth**: Leave headroom for traffic spikes
-6. **Keep Redis Local**: Minimize network latency to Redis
-7. **Lightweight Webhooks**: Queue payloads, process asynchronously
-8. **Scale Vertically**: Add more CPU and RAM rather than multiple instances
