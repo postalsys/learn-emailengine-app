@@ -183,14 +183,17 @@ Prepared settings are only applied once on first startup. To update:
 
 **Clear settings:**
 ```bash
-# Via API
+# Via API - Clear specific setting
 curl -X POST http://localhost:3000/v1/settings \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"webhooks": null}'
 
-# Via Redis CLI
-redis-cli DEL "{emailengine}:config"
+# Via Redis CLI - Delete specific setting field
+redis-cli HDEL settings webhooks
+
+# Via Redis CLI - Delete all settings
+redis-cli DEL settings
 ```
 
 ---
@@ -591,8 +594,8 @@ curl http://localhost:3000/v1/license \
 curl -X DELETE http://localhost:3000/v1/license \
   -H "Authorization: Bearer YOUR_TOKEN"
 
-# Via Redis CLI
-redis-cli DEL "{emailengine}:license"
+# Via Redis CLI - Delete license field from settings hash
+redis-cli HDEL settings license
 ```
 
 ---
