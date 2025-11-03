@@ -4,6 +4,9 @@ description: Redis configuration requirements, connection settings, and performa
 sidebar_position: 3
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Redis Configuration
 
 EmailEngine requires Redis as its primary data store for mailbox indexes, OAuth credentials, job queues, and webhook events. This guide covers how to configure Redis for EmailEngine and optimize its performance.
@@ -38,7 +41,10 @@ EENGINE_REDIS="redis://admin:mypassword@redis.example.com:6379"
 EENGINE_REDIS="rediss://redis.example.com:6380"
 ```
 
-### Docker Compose Example
+### Deployment Examples
+
+<Tabs groupId="deployment-platform">
+<TabItem value="docker" label="Docker Compose">
 
 ```yaml
 version: '3.8'
@@ -69,7 +75,8 @@ volumes:
   redis-data:
 ```
 
-### Kubernetes Example
+</TabItem>
+<TabItem value="kubernetes" label="Kubernetes">
 
 ```yaml
 apiVersion: v1
@@ -102,6 +109,32 @@ spec:
         ports:
         - containerPort: 3000
 ```
+
+</TabItem>
+<TabItem value="env" label="Environment Variable">
+
+```bash
+# .env file
+EENGINE_REDIS="redis://localhost:6379"
+
+# Or command line
+export EENGINE_REDIS="redis://localhost:6379"
+emailengine
+```
+
+</TabItem>
+<TabItem value="cli" label="CLI Argument">
+
+```bash
+# Start with CLI argument
+emailengine --dbs.redis="redis://localhost:6379"
+
+# With password
+emailengine --dbs.redis="redis://:mypassword@redis.example.com:6379"
+```
+
+</TabItem>
+</Tabs>
 
 ### Connection Options
 
@@ -150,7 +183,8 @@ maxmemory-policy volatile-lru
 
 Enable persistence to prevent data loss on Redis restarts.
 
-**Option 1: RDB Snapshots (Recommended)**
+<Tabs groupId="redis-persistence">
+<TabItem value="rdb" label="RDB Snapshots (Recommended)">
 
 ```ini
 # Save after 1 change in 15 minutes
@@ -163,9 +197,35 @@ save 300 10
 save 60 10000
 ```
 
-**Option 2: Append-Only File (AOF)**
+**Verification:**
+```bash
+redis-cli CONFIG GET save
+```
+
+</TabItem>
+<TabItem value="aof" label="Append-Only File">
 
 ```ini
+appendonly yes
+appendfsync everysec
+```
+
+**Verification:**
+```bash
+redis-cli CONFIG GET appendonly
+redis-cli CONFIG GET appendfsync
+```
+
+</TabItem>
+<TabItem value="both" label="Both (Maximum Safety)">
+
+```ini
+# RDB snapshots
+save 900 1
+save 300 10
+save 60 10000
+
+# AOF
 appendonly yes
 appendfsync everysec
 ```
@@ -175,6 +235,9 @@ appendfsync everysec
 redis-cli CONFIG GET save
 redis-cli CONFIG GET appendonly
 ```
+
+</TabItem>
+</Tabs>
 
 ### TCP Keep-Alive (Recommended)
 
@@ -430,7 +493,10 @@ redis-cli CLIENT LIST | wc -l
 
 **Unsupported:** Redis Cluster is incompatible with EmailEngine's Lua scripts that reference dynamic keys. For high availability, use Redis Sentinel or a single-primary replication setup.
 
-### Upstash Redis Configuration
+### Service-Specific Configuration
+
+<Tabs groupId="redis-service">
+<TabItem value="upstash" label="Upstash Redis">
 
 ```bash
 # Upstash connection string format
@@ -442,14 +508,15 @@ EENGINE_REDIS="rediss://:YOUR_PASSWORD@YOUR_ENDPOINT.upstash.io:6379"
 - Free tier: 10,000 commands/day is insufficient for production
 - Requires same-region deployment to minimize latency
 
-### Amazon ElastiCache Configuration
-
-**Important:** Enable Multi-AZ with automatic failover for data persistence.
+</TabItem>
+<TabItem value="elasticache" label="Amazon ElastiCache">
 
 ```bash
 # ElastiCache connection string
 EENGINE_REDIS="redis://master.your-cluster.cache.amazonaws.com:6379"
 ```
+
+**Important:** Enable Multi-AZ with automatic failover for data persistence.
 
 **Configuration checklist:**
 - ✅ Enable automatic backups
@@ -458,7 +525,8 @@ EENGINE_REDIS="redis://master.your-cluster.cache.amazonaws.com:6379"
 - ✅ Deploy in same VPC as EmailEngine
 - ✅ Configure security groups to allow EmailEngine access
 
-### Azure Cache for Redis
+</TabItem>
+<TabItem value="azure" label="Azure Cache for Redis">
 
 ```bash
 # Azure Redis connection string
@@ -472,6 +540,39 @@ EENGINE_REDIS="rediss://:YOUR_ACCESS_KEY@your-cache.redis.cache.windows.net:6380
 - Set eviction policy to `noeviction`
 - Enable TLS (port 6380)
 - Configure firewall rules
+
+</TabItem>
+<TabItem value="gcp" label="Google Cloud Memorystore">
+
+```bash
+# Memorystore connection string
+EENGINE_REDIS="redis://10.0.0.3:6379"
+```
+
+**Recommended tier:** Standard tier with replication
+
+**Configuration:**
+- Use Standard tier (not Basic)
+- Enable high availability
+- Configure VPC peering with EmailEngine
+- Set eviction policy to `noeviction`
+
+</TabItem>
+<TabItem value="redis-cloud" label="Redis Cloud">
+
+```bash
+# Redis Cloud connection string
+EENGINE_REDIS="redis://:YOUR_PASSWORD@redis-12345.c1.region.cloud.redislabs.com:12345"
+```
+
+**Configuration:**
+- Ensure persistence is enabled
+- Set eviction policy to `noeviction`
+- Enable TLS if required
+- Monitor memory usage
+
+</TabItem>
+</Tabs>
 
 ## High Availability Setup
 
