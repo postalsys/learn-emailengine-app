@@ -57,7 +57,7 @@ Redis database connection and configuration.
 |----------|------|---------|-------------|---------|
 | `REDIS_URL` | string | `redis://127.0.0.1:6379` | Redis connection URL | `redis://user:pass@redis.example.com:6379/0` |
 | `EENGINE_REDIS` | string | none | Alternative to REDIS_URL | `redis://localhost:6379` |
-| `EENGINE_REDIS_PREFIX` | string | `{emailengine}` | Key prefix for Redis keys | `{ee-prod}` |
+| `EENGINE_REDIS_PREFIX` | string | none | Optional key prefix for Redis keys | `{ee-prod}` |
 
 **Connection URL Format:**
 ```
