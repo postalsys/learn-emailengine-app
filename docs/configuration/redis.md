@@ -334,9 +334,6 @@ redis-server /etc/redis/redis.conf
 # Test connectivity
 redis-cli -h localhost -p 6379 ping
 # Expected: PONG
-
-# Check EmailEngine keys
-redis-cli --scan --pattern "ee:*" | head -10
 ```
 
 ### Check EmailEngine Logs
@@ -379,21 +376,17 @@ emailengine | pino-pretty
 
 ## Data Stored in Redis
 
-| Data Type | Key Pattern | Typical Size |
-|-----------|-------------|--------------|
-| Mailbox indexes | `ee:account:{id}:mailbox:*` | 1-2 MiB/account |
-| OAuth tokens | `ee:account:{id}:oauth` | ~1 KiB/account |
-| Webhook queue | `ee:webhook:queue` | Varies |
-| Outbox queue | `ee:account:{id}:outbox:*` | Varies |
-| Account metadata | `ee:account:{id}:meta` | ~2 KiB/account |
-| Web sessions | `ee:session:*` | ~500 bytes/session |
+| Data Type | Typical Size |
+|-----------|--------------|
+| Mailbox indexes | 1-2 MiB/account |
+| OAuth tokens | ~1 KiB/account |
+| Webhook queue | Varies |
+| Outbox queue | Varies |
+| Account metadata | ~2 KiB/account |
+| Web sessions | ~500 bytes/session |
 
-**Inspect stored data:**
+**Check memory usage:**
 ```bash
-# Count keys
-redis-cli --scan --pattern "ee:*" | wc -l
-
-# Check memory
 redis-cli INFO memory | grep used_memory_human
 ```
 
