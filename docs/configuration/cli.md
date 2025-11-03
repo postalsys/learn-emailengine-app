@@ -138,15 +138,15 @@ emailengine \
 
 **Common options:**
 
-| Option               | Environment Variable | Description          | Default     |
-| -------------------- | -------------------- | -------------------- | ----------- |
-| `--dbs.redis`        | `EENGINE_REDIS` | Redis connection URL | Required    |
-| `--api.host`         | `EENGINE_HOST` | API server host      | `127.0.0.1` |
-| `--api.port`         | `EENGINE_PORT` | API server port      | `3000`      |
-| `--workers.imap`     | `EENGINE_WORKERS` | IMAP worker count    | `4`         |
+| Option               | Environment Variable       | Description          | Default     |
+| -------------------- | -------------------------- | -------------------- | ----------- |
+| `--dbs.redis`        | `EENGINE_REDIS`            | Redis connection URL | Required    |
+| `--api.host`         | `EENGINE_HOST`             | API server host      | `127.0.0.1` |
+| `--api.port`         | `EENGINE_PORT`             | API server port      | `3000`      |
+| `--workers.imap`     | `EENGINE_WORKERS`          | IMAP worker count    | `4`         |
 | `--workers.webhooks` | `EENGINE_WORKERS_WEBHOOKS` | Webhook worker count | `1`         |
-| `--log.level`        | `EENGINE_LOG_LEVEL` | Log level            | `trace`     |
-| `--service.secret`   | `EENGINE_SECRET` | Encryption secret    | Optional    |
+| `--log.level`        | `EENGINE_LOG_LEVEL`        | Log level            | `trace`     |
+| `--service.secret`   | `EENGINE_SECRET`           | Encryption secret    | Optional    |
 
 :::tip Environment Variables
 All CLI arguments can also be set as environment variables. See [Environment Variables reference](/docs/configuration/environment-variables) for complete list.
@@ -189,40 +189,6 @@ submit = 2
 ```bash
 emailengine --config=/etc/emailengine/config.toml
 ```
-
-### TOML Mapping Rules
-
-CLI arguments map directly to TOML structure by splitting on dots:
-
-| CLI Argument | TOML Equivalent |
-|--------------|-----------------|
-| `--dbs.redis="redis://..."` | `[dbs]`<br/>`redis = "redis://..."` |
-| `--api.host="0.0.0.0"` | `[api]`<br/>`host = "0.0.0.0"` |
-| `--api.port=3000` | `[api]`<br/>`port = 3000` |
-| `--log.level="info"` | `[log]`<br/>`level = "info"` |
-| `--workers.imap=8` | `[workers]`<br/>`imap = 8` |
-
-### Data Types in TOML
-
-**Strings:**
-```toml
-[dbs]
-redis = "redis://localhost:6379"
-```
-
-**Numbers:**
-```toml
-[api]
-port = 3000  # Integer
-```
-
-**Booleans:**
-```toml
-[api]
-proxy = true  # NOT "true" - use actual boolean
-```
-
-**Important:** Boolean values must be `true` or `false` (without quotes), not string values `"true"` or `"false"`.
 
 ### Complete Configuration Example
 
@@ -271,6 +237,7 @@ secret = "smtp-server-secret"
 ```
 
 **Run with config file:**
+
 ```bash
 emailengine --config=/etc/emailengine/production.toml
 ```
@@ -285,6 +252,7 @@ When multiple configuration sources are used:
 4. **Default values** (lowest priority)
 
 **Example:**
+
 ```bash
 # Configuration file has: port = 3000
 # CLI argument: --api.port=4000
@@ -293,44 +261,6 @@ When multiple configuration sources are used:
 emailengine --config=config.toml --api.port=4000
 
 # Result: Port 5000 (environment variable wins)
-```
-
-### Use Cases
-
-**Development:**
-```bash
-# dev.toml
-[dbs]
-redis = "redis://localhost:6379/8"
-
-[api]
-port = 3001
-
-[log]
-level = "trace"
-```
-
-**Production:**
-```bash
-# prod.toml
-[dbs]
-redis = "redis://prod-redis:6379"
-
-[api]
-port = 3000
-
-[log]
-level = "info"
-
-[service]
-secret = "production-secret-key"
-```
-
-**Docker:**
-```dockerfile
-# Dockerfile
-COPY config.toml /app/config.toml
-CMD ["emailengine", "--config=/app/config.toml"]
 ```
 
 ---
@@ -917,4 +847,3 @@ else
   exit 1
 fi
 ```
-

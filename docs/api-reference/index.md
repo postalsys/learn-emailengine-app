@@ -92,7 +92,7 @@ emailengine tokens issue -d "Admin token" -s "*"
 emailengine tokens issue -d "User token" -s "api" -a "user123"
 ```
 
-See [Access Tokens](/docs/configuration/access-tokens) for complete documentation.
+See [Access Tokens](/docs/api-reference/access-tokens) for complete documentation.
 
 ### Token Types
 

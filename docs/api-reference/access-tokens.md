@@ -1,7 +1,7 @@
 ---
 title: Access Tokens
 description: Complete guide to managing API access tokens in EmailEngine
-sidebar_position: 7
+sidebar_position: 2
 ---
 
 # Access Tokens
@@ -261,7 +261,6 @@ emailengine --preparedToken="hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxN..."
 - CI/CD pipelines
 - Infrastructure as code
 
-See [Prepared Access Token](/docs/configuration/prepared-access-token) for details.
 
 ### Revoking Tokens
 

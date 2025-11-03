@@ -17,12 +17,14 @@ EmailEngine uses two distinct types of configuration:
 **Loaded at startup** and cannot be changed without restarting the application.
 
 **Examples:**
+
 - HTTP server port
 - Redis connection URL
 - Encryption secrets
 - Log levels
 
 **Configure via:**
+
 - [Environment variables](/docs/configuration/environment-variables) (recommended)
 - [Command-line arguments](/docs/configuration/cli)
 - Configuration files
@@ -32,12 +34,14 @@ EmailEngine uses two distinct types of configuration:
 **Can be updated** at any time via the Settings API or web interface.
 
 **Examples:**
+
 - Webhook URLs
 - Webhook event filters
 - OAuth2 application credentials
 - Email templates
 
 **Configure via:**
+
 - Web interface (Settings page)
 - [Settings API endpoint](/docs/api/post-v-1-settings)
 - [Prepared settings](/docs/configuration/prepared-settings) (environment variable)
@@ -61,8 +65,9 @@ emailengine
 ```
 
 **Docker Compose:**
+
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   emailengine:
     image: postalsys/emailengine:latest
@@ -121,16 +126,10 @@ secret = "your-encryption-secret"
 ```
 
 **Load configuration file:**
+
 ```bash
 emailengine --config=/path/to/config.toml
 ```
-
-:::tip TOML Mapping
-CLI arguments map directly to TOML keys. For example:
-- `--dbs.redis="redis://..."` → `[dbs]` section with `redis = "redis://..."`
-- `--api.port=3000` → `[api]` section with `port = 3000`
-- Boolean values use true TOML booleans: `true`/`false` (not strings)
-:::
 
 [TOML configuration guide →](./cli#configuration-files)
 
@@ -171,6 +170,7 @@ When multiple configuration methods are used, they follow this precedence (highe
 4. **Default Values** (lowest priority)
 
 **Example:**
+
 ```bash
 # config.toml has: port = 3000
 # CLI argument: --api.port=4000
@@ -182,6 +182,7 @@ emailengine --config=config.toml --api.port=4000
 ```
 
 **Another example:**
+
 ```bash
 # config.toml has: port = 3000
 # CLI argument: --api.port=4000
@@ -196,6 +197,7 @@ emailengine --config=config.toml --api.port=4000
 ### Production Deployments
 
 **Use environment variables:**
+
 ```yaml
 environment:
   - EENGINE_HOST=0.0.0.0
@@ -206,12 +208,14 @@ environment:
 ```
 
 **Keep secrets secure:**
+
 - Never commit secrets to version control
 - Use secret management systems (AWS Secrets Manager, HashiCorp Vault)
 - Use `.env` files only for development
 - Rotate secrets regularly
 
 **Document your configuration:**
+
 ```bash
 # .env.example (commit this)
 EENGINE_HOST=0.0.0.0
@@ -223,6 +227,7 @@ EENGINE_PREPARED_PASSWORD=change-me-in-production
 ### Development Setup
 
 **Use command-line arguments for flexibility:**
+
 ```bash
 emailengine \
   --dbs.redis="redis://localhost:6379/8" \
@@ -231,6 +236,7 @@ emailengine \
 ```
 
 **Or local `.env` file:**
+
 ```bash
 # .env (don't commit)
 EENGINE_PORT=3001
@@ -241,6 +247,7 @@ EENGINE_LOG_LEVEL=trace
 ### Docker Deployments
 
 **Use Docker Compose environment variables:**
+
 ```yaml
 services:
   emailengine:
@@ -252,6 +259,7 @@ services:
 ```
 
 **Multi-environment setup:**
+
 ```
 .env.development
 .env.staging
@@ -294,13 +302,13 @@ spec:
   template:
     spec:
       containers:
-      - name: emailengine
-        image: postalsys/emailengine:latest
-        envFrom:
-        - configMapRef:
-            name: emailengine-config
-        - secretRef:
-            name: emailengine-secrets
+        - name: emailengine
+          image: postalsys/emailengine:latest
+          envFrom:
+            - configMapRef:
+                name: emailengine-config
+            - secretRef:
+                name: emailengine-secrets
 ```
 
 ## Quick Reference
@@ -309,13 +317,14 @@ spec:
 
 **Minimal production setup:**
 
-| Setting | Environment Variable | Description |
-|---------|---------------------|-------------|
-| Redis URL | `REDIS_URL` | Redis connection string |
-| Server Host | `EENGINE_HOST` | Listen address (0.0.0.0) |
-| Server Port | `EENGINE_PORT` | HTTP port (default 3000) |
+| Setting     | Environment Variable | Description              |
+| ----------- | -------------------- | ------------------------ |
+| Redis URL   | `REDIS_URL`          | Redis connection string  |
+| Server Host | `EENGINE_HOST`       | Listen address (0.0.0.0) |
+| Server Port | `EENGINE_PORT`       | HTTP port (default 3000) |
 
 **Example:**
+
 ```bash
 REDIS_URL=redis://localhost:6379
 EENGINE_HOST=0.0.0.0
@@ -325,18 +334,21 @@ EENGINE_PORT=3000
 ### Common Configuration Scenarios
 
 **Behind Reverse Proxy:**
+
 ```bash
 EENGINE_HOST=127.0.0.1
 EENGINE_PORT=3000
 ```
 
 **With Redis Cluster:**
+
 ```bash
 REDIS_URL=redis://node1:6379,redis://node2:6379
 EENGINE_REDIS_PREFIX={ee-prod}
 ```
 
 **Development Mode:**
+
 ```bash
 EENGINE_LOG_LEVEL=trace
 NODE_ENV=development
@@ -345,46 +357,55 @@ NODE_ENV=development
 ## Configuration Categories
 
 ### Server & Connection
+
 Configure HTTP server, base URL, and proxy settings.
 
 [View details →](./environment-variables.md#server--connection)
 
 ### Redis
+
 Redis connection, clustering, and persistence.
 
 [View details →](./redis.md)
 
 ### Email Protocol Settings
+
 Email handling, attachment size limits, timeouts.
 
 [View details →](./environment-variables.md#email-protocol-settings)
 
 ### Worker Threads
+
 Worker thread configuration for processing workload.
 
 [View details →](./environment-variables.md#worker-threads)
 
 ### Queue Management
+
 Job queue retention and cleanup configuration.
 
 [View details →](./environment-variables.md#queue-management)
 
 ### OAuth2
+
 OAuth2 provider credentials and configuration.
 
 [View details →](./oauth2-configuration.md)
 
 ### TLS Configuration
+
 TLS/SSL settings for secure connections.
 
 [View details →](./environment-variables.md#tls-configuration)
 
 ### Logging & Monitoring
+
 Log levels, metrics endpoints, monitoring.
 
 [View details →](../advanced/monitoring)
 
 ### Prepared Configuration
+
 Pre-configured settings, tokens, and licenses.
 
 [View details →](./prepared-settings.md)
@@ -394,12 +415,14 @@ Pre-configured settings, tokens, and licenses.
 ### Check Configuration
 
 **View current settings via API:** (See: [Get Settings](/docs/api/get-v-1-settings))
+
 ```bash
 curl http://localhost:3000/v1/settings \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 **Check application config:**
+
 ```bash
 # View logs for configuration issues
 docker logs emailengine | grep -i config
@@ -408,26 +431,33 @@ docker logs emailengine | grep -i config
 ### Common Issues
 
 **Port already in use:**
+
 ```
 Error: listen EADDRINUSE: address already in use :::3000
 ```
+
 **Solution:** Change `EENGINE_PORT` to unused port.
 
 **Redis connection failed:**
+
 ```
 Error: connect ECONNREFUSED 127.0.0.1:6379
 ```
+
 **Solution:** Verify `REDIS_URL` is correct and Redis is running.
 
 **Invalid secret:**
+
 ```
 Error: EENGINE_SECRET must be at least 32 characters
 ```
+
 **Solution:** Generate longer secret key.
 
 ### Generate Secrets
 
 **Random secret key:**
+
 ```bash
 # OpenSSL
 openssl rand -hex 32
@@ -454,6 +484,7 @@ When upgrading EmailEngine:
 ### Configuration Migration
 
 **From v1.x to v2.x:**
+
 - Update environment variable names (see changelog)
 - Migrate runtime settings via Settings API
 - Update OAuth2 configuration format
