@@ -10,6 +10,9 @@ keywords:
   - attachment handling
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Working with Attachments
 
 <!--
@@ -156,7 +159,8 @@ curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE/attach
   --output invoice.pdf
 ```
 
-**JavaScript (Node.js):**
+<Tabs groupId="programming-language">
+<TabItem value="nodejs" label="Node.js">
 
 ```javascript
 const fs = require('fs');
@@ -193,7 +197,8 @@ const result = await downloadAttachment(
 console.log(`Downloaded to ${result.path} (${result.size} bytes)`);
 ```
 
-**Python:**
+</TabItem>
+<TabItem value="python" label="Python">
 
 ```python
 import requests
@@ -223,6 +228,9 @@ result = download_attachment(
 
 print(f"Downloaded to {result['path']} ({result['size']} bytes)")
 ```
+
+</TabItem>
+</Tabs>
 
 ### Download All Attachments
 

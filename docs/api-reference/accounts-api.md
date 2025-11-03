@@ -4,6 +4,9 @@ description: API endpoints for managing email accounts - register, update, delet
 sidebar_position: 2
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Accounts API
 
 The Accounts API allows you to programmatically manage email accounts in EmailEngine. You can register new accounts, update settings, monitor connection status, and handle OAuth2 authentication.
@@ -114,7 +117,9 @@ Register a new email account with EmailEngine.
 
 **Examples:**
 
-**cURL:**
+<Tabs groupId="programming-language">
+<TabItem value="curl" label="cURL">
+
 ```bash
 curl -X POST http://localhost:3000/v1/account \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -134,7 +139,9 @@ curl -X POST http://localhost:3000/v1/account \
   }'
 ```
 
-**Python:**
+</TabItem>
+<TabItem value="python" label="Python">
+
 ```python
 import requests
 
@@ -162,6 +169,9 @@ response = requests.post(
 result = response.json()
 print(f"Account registered: {result['account']}")
 ```
+
+</TabItem>
+</Tabs>
 
 **Pseudo code:**
 ```
@@ -233,13 +243,18 @@ Retrieve all registered accounts.
 
 **Examples:**
 
-**cURL:**
+<Tabs groupId="programming-language">
+<TabItem value="curl" label="cURL">
+
 ```bash
 curl "http://localhost:3000/v1/accounts?pageSize=50" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-**Pseudo code:**
+</TabItem>
+<TabItem value="pseudocode" label="Pseudo code">
+
+
 ```
 // List all accounts with pagination
 response = HTTP_GET("http://localhost:3000/v1/accounts?pageSize=50", {
@@ -255,6 +270,9 @@ for each account in data.accounts {
   PRINT(account.account + ": " + account.state)
 }
 ```
+
+</TabItem>
+</Tabs>
 
 **Response:**
 ```json
@@ -302,13 +320,18 @@ Retrieve detailed information about a specific account.
 
 **Examples:**
 
-**cURL:**
+<Tabs groupId="programming-language">
+<TabItem value="curl" label="cURL">
+
 ```bash
 curl "http://localhost:3000/v1/account/user@example.com" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-**Pseudo code:**
+</TabItem>
+<TabItem value="pseudocode" label="Pseudo code">
+
+
 ```
 // Get detailed information about a specific account
 account = "user@example.com"
@@ -326,6 +349,9 @@ details = PARSE_JSON(response.body)
 PRINT("Connection state: " + details.state)
 PRINT("Last sync: " + details.syncTime)
 ```
+
+</TabItem>
+</Tabs>
 
 **Response:**
 ```json
@@ -377,7 +403,9 @@ Update account settings or credentials.
 
 **Examples:**
 
-**cURL:**
+<Tabs groupId="programming-language">
+<TabItem value="curl" label="cURL">
+
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -392,7 +420,10 @@ curl -X PUT "http://localhost:3000/v1/account/user@example.com" \
   }'
 ```
 
-**Pseudo code:**
+</TabItem>
+<TabItem value="pseudocode" label="Pseudo code">
+
+
 ```
 // Update account settings or credentials
 account = "user@example.com"
@@ -419,6 +450,9 @@ result = PARSE_JSON(response.body)
 PRINT("Account updated: " + result.success)
 ```
 
+</TabItem>
+</Tabs>
+
 **Use Cases:**
 - Updating account credentials after password change
 - Changing display names
@@ -436,13 +470,18 @@ Remove an account and stop synchronization.
 
 **Examples:**
 
-**cURL:**
+<Tabs groupId="programming-language">
+<TabItem value="curl" label="cURL">
+
 ```bash
 curl -X DELETE "http://localhost:3000/v1/account/user@example.com" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-**Pseudo code:**
+</TabItem>
+<TabItem value="pseudocode" label="Pseudo code">
+
+
 ```
 // Delete an account
 account = "user@example.com"
@@ -459,6 +498,9 @@ response = HTTP_DELETE(
 result = PARSE_JSON(response.body)
 PRINT("Account deleted: " + result.success)
 ```
+
+</TabItem>
+</Tabs>
 
 **Response:**
 ```json
@@ -485,13 +527,18 @@ Force reconnection to mail server (useful after credential updates).
 
 **Examples:**
 
-**cURL:**
+<Tabs groupId="programming-language">
+<TabItem value="curl" label="cURL">
+
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com/reconnect" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-**Pseudo code:**
+</TabItem>
+<TabItem value="pseudocode" label="Pseudo code">
+
+
 ```
 // Force account reconnection
 account = "user@example.com"
@@ -508,6 +555,9 @@ response = HTTP_PUT(
 result = PARSE_JSON(response.body)
 PRINT("Reconnection initiated: " + result.success)
 ```
+
+</TabItem>
+</Tabs>
 
 **Use Cases:**
 - Testing connection after credential update

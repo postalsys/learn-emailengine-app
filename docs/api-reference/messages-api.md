@@ -4,6 +4,9 @@ description: API endpoints for message operations - list, search, read, update, 
 sidebar_position: 3
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Messages API
 
 The Messages API provides comprehensive access to email messages across all connected accounts. You can list, read, search, update, move, and delete messages programmatically.
@@ -103,13 +106,17 @@ Retrieve messages from a mailbox with filtering and pagination.
 
 **Examples:**
 
-**cURL:**
+<Tabs groupId="programming-language">
+<TabItem value="curl" label="cURL">
+
 ```bash
 curl "http://localhost:3000/v1/account/user@example.com/messages?path=INBOX&pageSize=50&unseen=true" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-**Python:**
+</TabItem>
+<TabItem value="python" label="Python">
+
 ```python
 from urllib.parse import quote
 
@@ -126,7 +133,10 @@ for msg in data['messages']:
     print(f"{msg['from']['address']}: {msg['subject']}")
 ```
 
-**Pseudo code:**
+</TabItem>
+<TabItem value="pseudocode" label="Pseudo code">
+
+
 ```
 // List messages from a mailbox with filtering
 account = "user@example.com"
@@ -145,6 +155,9 @@ for each msg in data.messages {
   PRINT(msg.from.address + ": " + msg.subject)
 }
 ```
+
+</TabItem>
+</Tabs>
 
 **Response:**
 ```json
@@ -201,13 +214,18 @@ Retrieve complete message information including body and attachments.
 
 **Examples:**
 
-**cURL:**
+<Tabs groupId="programming-language">
+<TabItem value="curl" label="cURL">
+
 ```bash
 curl "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-**Pseudo code:**
+</TabItem>
+<TabItem value="pseudocode" label="Pseudo code">
+
+
 ```
 // Get complete message details
 account = "user@example.com"
@@ -228,6 +246,9 @@ PRINT("From: " + message.from.address)
 PRINT("Text: " + message.text.plain)
 PRINT("Attachments: " + LENGTH(message.attachments))
 ```
+
+</TabItem>
+</Tabs>
 
 **Response:**
 ```json
@@ -276,14 +297,19 @@ Retrieve raw RFC822 message source.
 
 **Examples:**
 
-**cURL:**
+<Tabs groupId="programming-language">
+<TabItem value="curl" label="cURL">
+
 ```bash
 curl "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc/source" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -o message.eml
 ```
 
-**Pseudo code:**
+</TabItem>
+<TabItem value="pseudocode" label="Pseudo code">
+
+
 ```
 // Get raw RFC822 message source
 account = "user@example.com"
@@ -305,6 +331,9 @@ PRINT(source)
 // Can save to file or parse with email library
 SAVE_TO_FILE("message.eml", source)
 ```
+
+</TabItem>
+</Tabs>
 
 **Use Cases:**
 - Export messages in EML format
@@ -344,7 +373,9 @@ Change message flags like read/unread, flagged, etc.
 
 **Examples:**
 
-**cURL:**
+<Tabs groupId="programming-language">
+<TabItem value="curl" label="cURL">
+
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -356,7 +387,10 @@ curl -X PUT "http://localhost:3000/v1/account/user@example.com/message/AAAABAABN
   }'
 ```
 
-**Pseudo code:**
+</TabItem>
+<TabItem value="pseudocode" label="Pseudo code">
+
+
 ```
 // Example 1: Mark message as read and flagged
 account = "user@example.com"
@@ -397,6 +431,9 @@ response = HTTP_PUT(
 )
 ```
 
+</TabItem>
+</Tabs>
+
 **Use Cases:**
 - Mark messages as read/unread
 - Star/flag important messages
@@ -422,7 +459,9 @@ Move a message to a different mailbox.
 
 **Examples:**
 
-**cURL:**
+<Tabs groupId="programming-language">
+<TabItem value="curl" label="cURL">
+
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc/move" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -430,7 +469,10 @@ curl -X PUT "http://localhost:3000/v1/account/user@example.com/message/AAAABAABN
   -d '{"path": "Archive"}'
 ```
 
-**Pseudo code:**
+</TabItem>
+<TabItem value="pseudocode" label="Pseudo code">
+
+
 ```
 // Move message to a different mailbox
 account = "user@example.com"
@@ -453,6 +495,9 @@ result = PARSE_JSON(response.body)
 PRINT("Message moved: " + result.success)
 PRINT("New message ID: " + result.id)
 ```
+
+</TabItem>
+</Tabs>
 
 **Response:**
 ```json
@@ -489,7 +534,9 @@ Delete a message permanently or move to trash.
 
 **Examples:**
 
-**cURL:**
+<Tabs groupId="programming-language">
+<TabItem value="curl" label="cURL">
+
 ```bash
 # Soft delete (move to Trash)
 curl -X DELETE "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc" \
@@ -500,7 +547,10 @@ curl -X DELETE "http://localhost:3000/v1/account/user@example.com/message/AAAABA
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-**Pseudo code:**
+</TabItem>
+<TabItem value="pseudocode" label="Pseudo code">
+
+
 ```
 // Example 1: Soft delete (move to Trash)
 account = "user@example.com"
@@ -528,6 +578,9 @@ response = HTTP_DELETE(
   }
 )
 ```
+
+</TabItem>
+</Tabs>
 
 **Use Cases:**
 - Delete spam messages
@@ -580,7 +633,9 @@ Search messages using advanced query syntax.
 
 **Examples:**
 
-**cURL:**
+<Tabs groupId="programming-language">
+<TabItem value="curl" label="cURL">
+
 ```bash
 curl -X POST "http://localhost:3000/v1/account/user@example.com/search?path=INBOX" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -593,7 +648,10 @@ curl -X POST "http://localhost:3000/v1/account/user@example.com/search?path=INBO
   }'
 ```
 
-**Pseudo code:**
+</TabItem>
+<TabItem value="pseudocode" label="Pseudo code">
+
+
 ```
 // Example 1: Search for urgent unread messages from boss
 account = "user@example.com"
@@ -640,6 +698,9 @@ for each msg in results.messages {
   PRINT(msg.subject + " - " + msg.size + " bytes")
 }
 ```
+
+</TabItem>
+</Tabs>
 
 **Use Cases:**
 - Find messages from specific sender

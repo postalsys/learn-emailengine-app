@@ -4,6 +4,9 @@ description: API endpoints for managing webhooks and receiving real-time email n
 sidebar_position: 5
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Webhooks API
 
 The Webhooks API allows you to configure real-time event notifications from EmailEngine to your application. Instead of polling for changes, webhooks push notifications to your endpoint when events occur.
@@ -95,7 +98,9 @@ result = PARSE_JSON(response.body)
 PRINT("Webhook configured: " + result.success)
 ```
 
-**Python:**
+<Tabs groupId="programming-language">
+<TabItem value="python" label="Python">
+
 ```python
 response = requests.post(
     'http://localhost:3000/v1/settings',
@@ -113,7 +118,9 @@ result = response.json()
 print(f"Webhook configured: {result['success']}")
 ```
 
-**cURL:**
+</TabItem>
+<TabItem value="curl" label="cURL">
+
 ```bash
 curl -X POST http://localhost:3000/v1/settings \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -123,6 +130,9 @@ curl -X POST http://localhost:3000/v1/settings \
     "webhookEvents": ["messageNew", "messageSent"]
   }'
 ```
+
+</TabItem>
+</Tabs>
 
 **Response:**
 ```json
@@ -487,7 +497,9 @@ function handleWebhook(request, response) {
 }
 ```
 
-**Verify Signature (Python):**
+<Tabs groupId="programming-language">
+<TabItem value="python" label="Python">
+
 ```python
 import hmac
 import hashlib
@@ -515,6 +527,9 @@ def webhook():
     print(f"Event: {event['event']}")
     return jsonify({'success': True})
 ```
+
+</TabItem>
+</Tabs>
 
 ### IP Whitelisting
 
