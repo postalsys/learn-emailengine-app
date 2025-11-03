@@ -52,7 +52,7 @@ version: '3.8'
 services:
   redis:
     image: redis:7-alpine
-    command: redis-server --appendonly yes --maxmemory-policy noeviction
+    command: redis-server --save 60 1000 --save 300 10 --save 900 1 --maxmemory-policy noeviction
     volumes:
       - redis-data:/data
     ports:
@@ -198,27 +198,50 @@ save 300 10
 save 60 10000
 ```
 
+**Why recommended:** RDB creates periodic snapshots with minimal performance impact. Best for EmailEngine's write-heavy workload.
+
 **Verification:**
 ```bash
 redis-cli CONFIG GET save
 ```
 
 </TabItem>
-<TabItem value="aof" label="Append-Only File">
+<TabItem value="aof" label="Append-Only File (Use with Caution)">
 
 ```ini
 appendonly yes
 appendfsync everysec
 ```
 
+:::danger High I/O Risk for EmailEngine
+AOF can be **dangerous for EmailEngine** due to extremely high write volume:
+
+- EmailEngine performs **thousands of write operations per second** when syncing mailboxes
+- Each write is logged to disk with AOF enabled
+- Sustained high write rates (e.g., initial sync of large mailboxes) can:
+  - **Saturate disk I/O** (requires 10,000+ IOPS minimum)
+  - **Fill disk rapidly** with AOF logs
+  - **Cause Redis to slow down or hang** during AOF rewrites
+  - **Degrade EmailEngine performance significantly**
+
+**Only use AOF if:**
+- Your storage can sustain 20,000+ IOPS continuously
+- You monitor disk I/O and AOF rewrite duration closely
+- You have adequate disk space for rapid AOF growth
+- You understand the performance trade-offs
+
+**For most deployments, use RDB snapshots instead.**
+:::
+
 **Verification:**
 ```bash
 redis-cli CONFIG GET appendonly
 redis-cli CONFIG GET appendfsync
+redis-cli INFO persistence | grep aof_rewrite_in_progress
 ```
 
 </TabItem>
-<TabItem value="both" label="Both (Maximum Safety)">
+<TabItem value="both" label="Both (Not Recommended)">
 
 ```ini
 # RDB snapshots
@@ -230,6 +253,14 @@ save 60 10000
 appendonly yes
 appendfsync everysec
 ```
+
+:::warning Performance Impact
+Using both RDB and AOF provides maximum durability but doubles the I/O overhead.
+
+**Not recommended for EmailEngine** due to the extremely high write volume. The AOF overhead will likely cause performance issues.
+
+Use RDB only unless you have enterprise-grade storage (NVMe SSDs with 20,000+ IOPS).
+:::
 
 **Verification:**
 ```bash
@@ -267,14 +298,15 @@ maxmemory 2gb
 # Eviction policy - REQUIRED for EmailEngine
 maxmemory-policy noeviction
 
-# Persistence - RDB snapshots
+# Persistence - RDB snapshots (RECOMMENDED)
 save 900 1
 save 300 10
 save 60 10000
 
-# Persistence - AOF (optional, choose RDB or AOF)
-appendonly yes
-appendfsync everysec
+# Persistence - AOF (NOT RECOMMENDED for EmailEngine)
+# Only enable if you have high-performance storage (20,000+ IOPS)
+# and understand the performance impact
+appendonly no
 
 # TCP keep-alive
 tcp-keepalive 300
@@ -426,21 +458,38 @@ find "$BACKUP_DIR" -name "dump-*.rdb" -mtime +7 -delete
 
 ### Persistence Performance
 
-**RDB Snapshots:**
+**RDB Snapshots (Recommended for EmailEngine):**
 - Lower overhead than AOF
-- Can cause brief performance dips during save
-- Recovery point objective (RPO) limited by save frequency
+- Can cause brief performance dips during save (typically < 1 second)
+- Recovery point objective (RPO) limited by save frequency (1-15 minutes)
+- Best choice for EmailEngine's write-heavy workload
 
-**Append-Only File (AOF):**
+**Append-Only File (Dangerous for EmailEngine):**
 - Better RPO (up to 1 second with `appendfsync everysec`)
-- Higher I/O overhead
-- Only enable if storage can sustain **10,000+ IOPS**
+- **Extremely high I/O overhead** for EmailEngine's workload
+- EmailEngine can generate **thousands of writes per second** during mailbox sync
+- AOF rewrites can cause Redis to hang for extended periods
+- Requires **20,000+ IOPS** sustained to avoid performance degradation
+- **Not recommended** unless you have enterprise NVMe storage
+
+**EmailEngine Write Patterns:**
+- Initial mailbox sync: 5,000-10,000+ writes/second per account
+- Continuous sync: 100-1,000 writes/second per active account
+- Large mailboxes (100,000+ messages): sustained high write rates for hours
+- Multiple accounts syncing simultaneously: multiplicative write load
+
+**Why AOF is problematic:**
+- AOF logs every write operation to disk
+- High write volume saturates disk I/O
+- AOF rewrite (triggered automatically) locks Redis during compaction
+- Can cause EmailEngine to timeout waiting for Redis responses
 
 **Verify current settings:**
 ```bash
 redis-cli CONFIG GET appendonly
 redis-cli CONFIG GET appendfsync
 redis-cli CONFIG GET save
+redis-cli INFO persistence | grep aof_rewrite_in_progress
 ```
 
 ### Memory Optimization
