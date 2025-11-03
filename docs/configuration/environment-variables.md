@@ -161,18 +161,18 @@ Configure job queue retention and cleanup.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_QUEUE_REMOVE_AFTER` | number | `1000` | Number of completed jobs to keep in queue | `5000` |
+| `EENGINE_QUEUE_REMOVE_AFTER` | number | `0` | Number of completed jobs to keep in queue (0 = remove immediately) | `5000` |
 
 **Examples:**
 
-**Keep more job history:**
+**Keep job history (retain last 1000 completed jobs):**
 ```bash
-EENGINE_QUEUE_REMOVE_AFTER=10000
+EENGINE_QUEUE_REMOVE_AFTER=1000
 ```
 
-**Minimal job retention:**
+**Keep extensive job history:**
 ```bash
-EENGINE_QUEUE_REMOVE_AFTER=100
+EENGINE_QUEUE_REMOVE_AFTER=10000
 ```
 
 ## IMAP Proxy Server
