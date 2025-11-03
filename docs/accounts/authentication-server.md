@@ -87,7 +87,7 @@ Your application manages tokens, EmailEngine just uses them.
 - EmailEngine's built-in OAuth2 is sufficient
 
 :::tip Alternative Approach
-If you don't need external OAuth2 management, consider using [Hosted Authentication](/docs/accounts/oauth2-setup) instead. It's simpler and handles everything automatically.
+If you don't need external OAuth2 management, consider using [Hosted Authentication](/docs/accounts/managing-accounts#via-hosted-authentication-form) instead. It's simpler and handles everything automatically.
 :::
 
 ## How It Works
