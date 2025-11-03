@@ -314,7 +314,7 @@ Response:
 
 Direct the user to this URL to complete authentication.
 
-[Learn more about hosted authentication →](/docs/accounts/oauth2-setup)
+[Learn more about hosted authentication →](/docs/accounts/hosted-authentication)
 
 ### Option 3: Direct API Account Registration
 

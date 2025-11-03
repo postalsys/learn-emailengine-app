@@ -468,7 +468,7 @@ EmailEngine will generate a form URL where users can:
 
 EmailEngine can auto-detect settings for many common providers.
 
-[Learn more about hosted authentication →](/docs/accounts/oauth2-setup)
+[Learn more about hosted authentication →](/docs/accounts/hosted-authentication)
 
 ## Testing Connection
 

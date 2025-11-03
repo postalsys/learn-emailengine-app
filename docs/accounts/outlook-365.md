@@ -324,7 +324,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 
 Direct the user to the returned URL.
 
-[Learn more about hosted authentication →](/docs/accounts/oauth2-setup)
+[Learn more about hosted authentication →](/docs/accounts/hosted-authentication)
 
 ### Direct API Account Registration
 

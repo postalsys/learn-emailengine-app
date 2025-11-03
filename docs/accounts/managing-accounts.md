@@ -186,7 +186,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 
 Direct user to this URL. After completing setup, they'll be redirected to your `redirectUrl`.
 
-[Learn more about OAuth2 setup →](/docs/accounts/oauth2-setup)
+[Learn more about hosted authentication →](/docs/accounts/hosted-authentication)
 
 ### Via Web Dashboard
 
