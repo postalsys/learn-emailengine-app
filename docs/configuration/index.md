@@ -73,7 +73,7 @@ services:
 ```
 
 :::tip Interchangeable Configuration
-Environment variables and CLI arguments can be used together. CLI arguments take precedence over environment variables. See the [mapping table](/docs/configuration/environment-variables#environment-variable-to-cli-mapping) for equivalents.
+Environment variables and CLI arguments can be used together. Environment variables take precedence over CLI arguments. See the [mapping table](/docs/configuration/environment-variables#environment-variable-to-cli-mapping) for equivalents.
 :::
 
 [Complete environment variables reference →](./environment-variables.md)
@@ -92,7 +92,7 @@ emailengine \
 ```
 
 :::tip Interchangeable Configuration
-Environment variables and CLI arguments can be used together. CLI arguments take precedence over environment variables. See the [mapping table](/docs/configuration/environment-variables#environment-variable-to-cli-mapping) for equivalents.
+Environment variables and CLI arguments can be used together. Environment variables take precedence over CLI arguments. See the [mapping table](/docs/configuration/environment-variables#environment-variable-to-cli-mapping) for equivalents.
 :::
 
 [Complete CLI reference →](./cli)
@@ -165,30 +165,30 @@ curl -X POST http://localhost:3000/v1/settings \
 
 When multiple configuration methods are used, they follow this precedence (highest to lowest):
 
-1. **Command-Line Arguments** (highest priority)
-2. **Environment Variables**
+1. **Environment Variables** (highest priority)
+2. **Command-Line Arguments**
 3. **Configuration Files** (TOML)
 4. **Default Values** (lowest priority)
 
 **Example:**
 ```bash
 # config.toml has: port = 3000
-# Environment variable: EENGINE_PORT=4000
-# CLI argument: --api.port=5000
+# CLI argument: --api.port=4000
+# Environment variable: EENGINE_PORT=5000
 
-emailengine --config=config.toml --api.port=5000
+emailengine --config=config.toml --api.port=4000
 
-# Result: Port 5000 (CLI argument wins)
+# Result: Port 5000 (environment variable wins)
 ```
 
 **Another example:**
 ```bash
 # config.toml has: port = 3000
-# Environment variable: EENGINE_PORT=4000
+# CLI argument: --api.port=4000
 
-emailengine --config=config.toml
+emailengine --config=config.toml --api.port=4000
 
-# Result: Port 4000 (env variable wins over config file)
+# Result: Port 4000 (CLI argument wins over config file)
 ```
 
 ## Configuration Best Practices

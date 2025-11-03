@@ -279,20 +279,20 @@ emailengine --config=/etc/emailengine/production.toml
 
 When multiple configuration sources are used:
 
-1. **CLI arguments** (highest priority)
-2. **Environment variables**
+1. **Environment variables** (highest priority)
+2. **CLI arguments**
 3. **Configuration file**
 4. **Default values** (lowest priority)
 
 **Example:**
 ```bash
 # Configuration file has: port = 3000
-# Environment variable: EENGINE_PORT=4000
-# CLI argument: --api.port=5000
+# CLI argument: --api.port=4000
+# Environment variable: EENGINE_PORT=5000
 
-emailengine --config=config.toml --api.port=5000
+emailengine --config=config.toml --api.port=4000
 
-# Result: Port 5000 (CLI argument wins)
+# Result: Port 5000 (environment variable wins)
 ```
 
 ### Use Cases
