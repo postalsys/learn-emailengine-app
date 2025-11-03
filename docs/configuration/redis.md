@@ -355,8 +355,31 @@ Check the EmailEngine logs on startup. EmailEngine uses JSON logging (pino):
 EmailEngine doesn't log explicit "Redis connected" messages. If it starts successfully and shows "server started", Redis connection is working.
 
 **If Redis connection fails:**
+
+EmailEngine shows a clear error message and exits:
+
+```
+============================================================================================================
+Failed to establish connection to Redis using "redis://127.0.0.1:16379"
+Can not connect to the database. Redis might not be running. Are you using correct hostname and port values?
+
+To run EmailEngine provide valid Redis configuration
+  $ node server.js --dbs.redis="redis://username:password@1.2.3.4:6379/0"
+============================================================================================================
+```
+
+**Common error types in logs:**
+
+Connection refused (Redis not running):
 ```json
-{"level":60,"time":1762176419800,"pid":93728,"msg":"Redis connection error","isMainThread":true,"threadId":0,"err":{"type":"Error","message":"connect ECONNREFUSED 127.0.0.1:6379","code":"ECONNREFUSED"}}
+{"level":60,"time":1762176637410,"pid":2625,"msg":"EmailEngine starting up"}
+```
+Followed by the error message above.
+
+Invalid hostname:
+```json
+{"level":60,"time":1762176620348,"pid":506,"msg":false,"err":{"type":"Error","message":"getaddrinfo ENOTFOUND invalid-host","code":"ENOTFOUND","syscall":"getaddrinfo","hostname":"invalid-host"}}
+{"level":10,"time":1762176620349,"pid":506,"msg":"Connection retry","isMainThread":true,"threadId":0,"times":1,"delay":1000}
 ```
 
 Log levels: `60`=FATAL, `50`=ERROR, `30`=INFO, `20`=DEBUG, `10`=TRACE
