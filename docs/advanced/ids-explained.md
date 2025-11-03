@@ -122,17 +122,14 @@ This searches all messages with UID values from 100 to 500.
 
 Think of `uid` as a database table's auto-incrementing primary key:
 
-```
-Folder: INBOX (UIDValidity: 123456)
-┌─────┬──────────┬─────────┐
-│ UID │ Subject  │ From    │
-├─────┼──────────┼─────────┤
-│ 100 │ Hello    │ john@   │
-│ 101 │ Welcome  │ jane@   │
-│ 105 │ Update   │ bob@    │  ← UID 102-104 were deleted
-│ 106 │ Reminder │ alice@  │
-└─────┴──────────┴─────────┘
-```
+**Folder: INBOX (UIDValidity: 123456)**
+
+| UID | Subject  | From    | Notes |
+|-----|----------|---------|-------|
+| 100 | Hello    | john@   | |
+| 101 | Welcome  | jane@   | |
+| 105 | Update   | bob@    | UIDs 102-104 were deleted |
+| 106 | Reminder | alice@  | |
 
 **Key point**: UIDs 102-104 were deleted and will never be reused in this folder.
 
@@ -144,18 +141,16 @@ When you move a message:
 2. Message appears in destination folder with new UID
 3. Both old and new UIDs are unique and never reused
 
-```
-Move message UID 105 from INBOX to Archive:
+**Example: Move message UID 105 from INBOX to Archive**
 
-INBOX (before):          Archive (before):
-UID 105 → deleted        UID 50
-                         UID 51
+| Folder | Before Move | After Move |
+|--------|-------------|------------|
+| **INBOX** | UID 105 (to be moved) | UID 106<br/>UID 107 |
+| **Archive** | UID 50<br/>UID 51 | UID 50<br/>UID 51<br/>UID 52 (same message, new UID) |
 
-INBOX (after):           Archive (after):
-UID 106                  UID 50
-UID 107                  UID 51
-                         UID 52 ← same message, new UID
-```
+**What happened:**
+- INBOX: UID 105 was deleted
+- Archive: Message appeared as new UID 52
 
 ## The `emailId` Property
 
@@ -392,25 +387,28 @@ Seq 4: Message D
 
 ### Decision Tree
 
-```
-┌─────────────────────────────────┐
-│ What's your use case?           │
-└─────────────────────────────────┘
-           │
-           ├─→ EmailEngine API operations?
-           │   → Use `id`
-           │
-           ├─→ Range-based searches?
-           │   → Use `uid`
-           │
-           ├─→ Track across folder moves?
-           │   ├─→ Gmail/Yahoo account?
-           │   │   → Use `emailId`
-           │   └─→ Other providers?
-           │       → Use `messageId`
-           │
-           └─→ External system integration?
-               → Use `messageId`
+```mermaid
+graph TD
+    Start[What's your use case?]
+    Start --> API{EmailEngine API<br/>operations?}
+    Start --> Range{Range-based<br/>searches?}
+    Start --> Track{Track across<br/>folder moves?}
+    Start --> External{External system<br/>integration?}
+
+    API -->|Yes| UseId[Use id]
+    Range -->|Yes| UseUid[Use uid]
+    External -->|Yes| UseMessageId1[Use messageId]
+
+    Track -->|Yes| Provider{Gmail/Yahoo<br/>account?}
+    Provider -->|Yes| UseEmailId[Use emailId]
+    Provider -->|No| UseMessageId2[Use messageId]
+
+    style Start fill:#e1f5ff
+    style UseId fill:#e8f5e9
+    style UseUid fill:#e8f5e9
+    style UseEmailId fill:#e8f5e9
+    style UseMessageId1 fill:#e8f5e9
+    style UseMessageId2 fill:#e8f5e9
 ```
 
 ### Use Case Examples

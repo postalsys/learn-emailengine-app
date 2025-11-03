@@ -9,34 +9,35 @@ sidebar_position: 1
 Developer-focused comparison of EmailEngine and Nylas Email API without marketing fluff.
 
 :::info Summary
+
 - **Nylas:** Fully managed SaaS with advanced features and higher cost
 - **EmailEngine:** Self-hosted solution with flat pricing and data sovereignty
 
 Choose based on your priorities: operational overhead vs control and cost.
 :::
 
-
 ## Quick Comparison Table
 
-| Feature | EmailEngine | Nylas |
-|---------|-------------|-------|
-| **Hosting** | Self-hosted | Fully managed SaaS |
-| **Data Storage** | Metadata only (in Redis) | Full message copies in Nylas cloud |
-| **Pricing Model** | Flat yearly license | Per-mailbox + base fee |
-| **Setup Time** | 5-10 minutes | Instant (signup) |
-| **Data Residency** | Your infrastructure | Nylas cloud |
-| **Webhook Latency** | Near-instant | Slightly delayed (sync layer) |
-| **Read Performance** | Slightly slower (on-demand) | Very fast (cached) |
-| **Parallelism** | Queued per mailbox | Full parallelism |
-| **Advanced AI Features** | None | Sentiment, categorization, etc. |
-| **Compliance** | Full control (GDPR, HIPAA) | SOC 2, ISO 27001 |
-| **Support** | Community + Direct | Enterprise support |
+| Feature                  | EmailEngine                 | Nylas                              |
+| ------------------------ | --------------------------- | ---------------------------------- |
+| **Hosting**              | Self-hosted                 | Fully managed SaaS                 |
+| **Data Storage**         | Metadata only (in Redis)    | Full message copies in Nylas cloud |
+| **Pricing Model**        | Flat yearly license         | Per-account ($1.50/month)          |
+| **Setup Time**           | 5-10 minutes                | Instant (signup)                   |
+| **Data Residency**       | Your infrastructure         | Nylas cloud                        |
+| **Webhook Latency**      | Near-instant                | Slightly delayed (sync layer)      |
+| **Read Performance**     | Slightly slower (on-demand) | Very fast (cached)                 |
+| **Parallelism**          | Queued per mailbox          | Full parallelism                   |
+| **Advanced AI Features** | None                        | Sentiment, categorization, etc.    |
+| **Compliance**           | Full control (GDPR, HIPAA)  | SOC 2, ISO 27001                   |
+| **Support**              | Community + Direct          | Enterprise support                 |
 
 ## Key Architectural Differences
 
 ### Hosting Model
 
 **Nylas:**
+
 - Cloud-hosted service
 - No infrastructure management
 - Automatic scaling
@@ -44,12 +45,14 @@ Choose based on your priorities: operational overhead vs control and cost.
 - **Trade-off:** Vendor dependency, data leaves your network
 
 **EmailEngine:**
+
 - Self-hosted on your infrastructure
 - You manage servers, scaling, backups
 - Full control over deployment
 - **Trade-off:** Operational responsibility
 
 **Best for:**
+
 - **Nylas:** Teams without DevOps capacity
 - **EmailEngine:** Teams with existing infrastructure or strict data requirements
 
@@ -58,9 +61,22 @@ Choose based on your priorities: operational overhead vs control and cost.
 ### Data Storage Architecture
 
 **Nylas:**
-```
-User Mailbox → Sync → Nylas Database → API Response
-             (copies all messages)
+
+```mermaid
+graph LR
+    Mailbox[User Mailbox]
+    Sync[Sync<br/>copies all messages]
+    Database[Nylas Database]
+    API[API Response]
+
+    Mailbox --> Sync
+    Sync --> Database
+    Database --> API
+
+    style Mailbox fill:#e1f5ff
+    style Sync fill:#fff4e1
+    style Database fill:#f3e5f5
+    style API fill:#e8f5e9
 ```
 
 - **Stores:** Complete message copies, attachments, metadata
@@ -68,9 +84,20 @@ User Mailbox → Sync → Nylas Database → API Response
 - **Disadvantages:** Data stored on third-party servers
 
 **EmailEngine:**
-```
-User Mailbox → Metadata Index (Redis) → API fetches from mailbox
-             (stores UIDs, flags only)
+
+```mermaid
+graph LR
+    Mailbox[User Mailbox]
+    Index[Metadata Index Redis<br/>stores UIDs, flags only]
+    API[API fetches from mailbox]
+
+    Mailbox --> Index
+    Index --> API
+    API --> Mailbox
+
+    style Mailbox fill:#e1f5ff
+    style Index fill:#fff4e1
+    style API fill:#e8f5e9
 ```
 
 - **Stores:** Message UIDs, flags, folder structure only
@@ -78,185 +105,83 @@ User Mailbox → Metadata Index (Redis) → API fetches from mailbox
 - **Disadvantages:** Slightly slower first-time reads
 
 **Best for:**
+
 - **Nylas:** Performance-critical applications, heavy search
 - **EmailEngine:** Privacy-critical applications, compliance requirements
-
-## Performance Characteristics
-
-### Read Performance
-
-**Nylas:**
-- **First read:** ~50ms (from cache)
-- **Subsequent reads:** ~10ms
-- **Parallel requests:** Unlimited
-- **Search:** Very fast (indexed)
-
-**EmailEngine:**
-- **First read:** ~200-500ms (fetch from IMAP)
-- **Cached reads:** ~50-100ms (if recent)
-- **Parallel requests:** Queued per mailbox
-- **Search:** Depends on IMAP server
-
-**Impact:**
-```javascript
-// Fetching 100 messages in parallel
-
-// Nylas: ~1-2 seconds (all parallel)
-// EmailEngine: ~5-10 seconds (queued)
-```
-
-:::tip EmailEngine Optimization
-Design for idempotent webhooks rather than polling. Webhooks are faster than API reads.
-:::
-
-### Webhook Latency
-
-**EmailEngine:**
-```
-New Email → IMAP IDLE → Webhook fired
-           (< 1 second)
-```
-
-**Nylas:**
-```
-New Email → Nylas Sync → Database → Webhook fired
-           (5-30 seconds)
-```
-
-**Best for:**
-- **EmailEngine:** Real-time notifications, chat-like applications
-- **Nylas:** Standard email integration, not time-critical
 
 ### Concurrent Requests
 
 **Nylas:**
+
 - Fully parallel - no queueing
 - Multiple threads can read same mailbox simultaneously
 - No IMAP rate limits exposed to you
 
 **EmailEngine:**
+
 - One request at a time per mailbox
 - Subsequent requests wait in queue
 - Direct exposure to IMAP server limits
-
-**Example:**
-```javascript
-// 10 parallel API calls to same account
-
-// Nylas: All return in ~100ms
-// EmailEngine: Last one returns in ~1-2 seconds
-```
-
-**Design pattern for EmailEngine:**
-```javascript
-// WRONG: Don't do this
-for (const messageId of messageIds) {
-  await fetch(`/v1/account/${account}/message/${messageId}`);
-}
-
-// CORRECT: Do this instead
-const response = await fetch(`/v1/account/${account}/messages`, {
-  method: 'POST',
-  body: JSON.stringify({ search: { uid: messageIds } })
-});
-```
 
 ## Feature Comparison
 
 ### Core Email Features
 
-| Feature | EmailEngine | Nylas |
-|---------|-------------|-------|
-| IMAP/SMTP | Yes | Yes |
-| Gmail API | Yes | Yes |
-| Outlook/Exchange | Yes | Yes |
-| OAuth2 | Yes | Yes |
-| Webhooks | Yes | Yes |
-| Send emails | Yes | Yes |
-| Attachments | Yes | Yes |
-| Search | Yes (IMAP search) | Yes (Advanced) |
-| Labels/Tags | Yes | Yes |
-| Threading | Yes | Yes |
+| Feature          | EmailEngine                    | Nylas           |
+| ---------------- | ------------------------------ | --------------- |
+| IMAP/SMTP        | Yes                            | Yes             |
+| Gmail API        | Yes                            | Yes             |
+| Outlook/Exchange | Yes                            | Yes             |
+| OAuth2           | Yes                            | Yes             |
+| Webhooks         | Yes                            | Yes             |
+| Send emails      | Yes                            | Yes             |
+| Attachments      | Yes                            | Yes             |
+| Search           | Yes (IMAP search)              | Yes (Advanced)  |
+| Labels/Tags      | Yes                            | Yes             |
+| Threading        | Partial (Gmail/MS Graph/Yahoo) | Yes (Universal) |
 
-### Advanced Features
+:::info EmailEngine Threading Support
+EmailEngine only provides native threading support for specific providers:
 
-| Feature | EmailEngine | Nylas |
-|---------|-------------|-------|
-| AI Sentiment Analysis | No | Yes |
-| Smart Categorization | No | Yes |
-| Contact enrichment | No | Yes |
-| Flight/Event detection | No | Yes |
-| Calendar integration | Limited | Yes |
-| Contacts API | Basic | Advanced |
-| Neural API | No | Yes |
-| Scheduler | No | Yes |
+- **Gmail** (IMAP + OAuth2 or Gmail API): Full native threading with `threadId`
+- **Microsoft 365** (Graph API only): Full native threading - IMAP backend does NOT support threading
+- **Yahoo/AOL/Verizon** (IMAP): Native threading via OBJECTID extension (RFC 8474)
+- **Other IMAP providers**: No native threading - must build threads manually from Message-ID headers
 
-**When advanced features matter:**
-- **Choose Nylas:** Need built-in AI/ML features
-- **Choose EmailEngine:** Build features yourself or integrate third-party services
+Nylas provides universal threading across all email providers by managing thread relationships server-side.
 
----
+See [Threading Documentation](/docs/sending/threading/provider-support) for details.
+:::
 
 ### Integration Features
 
-| Feature | EmailEngine | Nylas |
-|---------|-------------|-------|
-| REST API | Yes | Yes |
-| Webhooks | Yes | Yes |
-| WebSocket | Yes | Yes |
-| Webhook retry | Yes | Yes |
-| Batch operations | Yes | Yes |
-| Rate limiting | Configure yourself | Built-in |
-| SDKs | Community | Official (multiple languages) |
-| API versioning | Single version | Versioned |
+| Feature          | EmailEngine        | Nylas                         |
+| ---------------- | ------------------ | ----------------------------- |
+| REST API         | Yes                | Yes                           |
+| Webhooks         | Yes                | Yes                           |
+| Webhook retry    | Yes                | Yes                           |
+| Batch operations | No                 | Yes                           |
+| Rate limiting    | Configure yourself | Built-in                      |
+| SDKs             | Community          | Official (multiple languages) |
 
 ## Pricing Deep Dive
 
 ### EmailEngine Pricing
 
 **Structure:**
+
 - **Annual license:** $995/year flat
 - **Unlimited mailboxes**
 - **Unlimited API calls**
 - **Unlimited instances**
 
 **Your costs:**
-```
-EmailEngine License:    $995/year
-+ Infrastructure:       $50-500/month (VPS/cloud)
-+ Your DevOps time:     Variable
-─────────────────────────────────────
-Total: ~$1,500-7,000/year
-```
 
-**Example scenarios:**
-
-**100 mailboxes:**
-```
-License:        $995/year
-Server (2GB):   $20/month = $240/year
-Redis (1GB):    $10/month = $120/year
-─────────────────────────────────────
-Total:          ~$1,355/year ($1.13/mailbox/month)
-```
-
-**1,000 mailboxes:**
-```
-License:        $995/year
-Server (8GB):   $80/month = $960/year
-Redis (4GB):    $40/month = $480/year
-─────────────────────────────────────
-Total:          ~$2,435/year ($0.20/mailbox/month)
-```
-
-**5,000 mailboxes:**
-```
-License:        $995/year
-Servers (3x):   $300/month = $3,600/year
-Redis (16GB):   $150/month = $1,800/year
-─────────────────────────────────────
-Total:          ~$6,395/year ($0.11/mailbox/month)
-```
+| Cost Component | Amount |
+|----------------|--------|
+| EmailEngine License | $995/year (flat) |
+| Infrastructure | $50-500/month (VPS/cloud) |
+| DevOps Time | Variable |
 
 **Cost scales with infrastructure, not mailbox count.**
 
@@ -264,342 +189,173 @@ Total:          ~$6,395/year ($0.11/mailbox/month)
 
 ### Nylas Pricing
 
-**Structure:** (as of 2025)
-- **Base platform fee:** ~$5,000-10,000/year minimum
-- **Per-mailbox fee:** ~$1-3/mailbox/month (volume discounts)
-- **Requires custom contract** - no public pricing
+**Structure:** (as of January 2025)
 
-**Example scenarios (estimated):**
+**Pricing Tiers:**
 
-**100 mailboxes:**
-```
-Base fee:       $5,000/year
-Mailboxes:      $1/mailbox/month × 100 × 12 = $1,200/year
-─────────────────────────────────────
-Total:          ~$6,200/year ($5.17/mailbox/month)
-```
+1. **Sandbox (Free)**
 
-**1,000 mailboxes:**
-```
-Base fee:       $5,000/year
-Mailboxes:      $1/mailbox/month × 1,000 × 12 = $12,000/year
-─────────────────────────────────────
-Total:          ~$17,000/year ($1.42/mailbox/month)
-```
+   - Cost: $0
+   - Accounts: 5 connected accounts
+   - Purpose: Testing and development
 
-**5,000 mailboxes:**
-```
-Base fee:       $10,000/year
-Mailboxes:      $0.80/mailbox/month × 5,000 × 12 = $48,000/year
-─────────────────────────────────────
-Total:          ~$58,000/year ($0.97/mailbox/month)
-```
+2. **Full Platform**
 
-:::info Negotiation Required
-Nylas pricing is contract-based and negotiable. Actual costs may vary significantly.
+   - Cost: $1.50 per account/month
+   - Minimum: $15/month (5 accounts minimum)
+   - Features: Email, Calendar, and full communication stack
+
+3. **Enterprise/Custom**
+   - Cost: Negotiable with volume discounts
+   - Contact: Sales team required
+   - Features: Custom arrangements for large deployments
+
+**Cost scales with mailbox count.**
+
+:::info Volume Pricing
+Enterprise customers can negotiate volume discounts. Actual costs may vary based on custom contracts.
 :::
 
 ---
 
-### Cost Comparison by Scale
+**Choose Nylas if:**
 
-| Scale | EmailEngine | Nylas | Winner |
-|-------|-------------|-------|--------|
-| **10 mailboxes** | ~$100/month | ~$500/month | EmailEngine (5x cheaper) |
-| **100 mailboxes** | ~$120/month | ~$520/month | EmailEngine (4x cheaper) |
-| **500 mailboxes** | ~$180/month | ~$2,000/month | EmailEngine (11x cheaper) |
-| **2,000 mailboxes** | ~$300/month | ~$5,000/month | EmailEngine (16x cheaper) |
-| **10,000 mailboxes** | ~$1,000/month | ~$15,000/month | EmailEngine (15x cheaper) |
-
-**Break-even point:** EmailEngine is almost always cheaper unless:
+- You have very few mailboxes (under 20)
 - You value zero DevOps time at extremely high premium
-- You need advanced AI features
-- You're under 10 mailboxes (but then why use either?)
+- You need advanced AI features (sentiment, categorization)
+- You prefer fully managed SaaS
+
+**Choose EmailEngine if:**
+
+- You have 30+ mailboxes
+- You have DevOps capacity or existing infrastructure
+- Data sovereignty and privacy are priorities
+- You want predictable, flat-rate pricing
 
 ## Operational Considerations
 
-### Setup and Maintenance
-
-**EmailEngine:**
-```
-Initial setup:     30-60 minutes
-Monthly maintenance: 1-2 hours
-Skills needed:     Linux, Docker, basic networking
-Backup responsibility: You
-Updates:           Manual (or automated via CI/CD)
-Monitoring:        Configure yourself
-```
-
-**Nylas:**
-```
-Initial setup:     10 minutes
-Monthly maintenance: 0 hours
-Skills needed:     API integration only
-Backup responsibility: Nylas
-Updates:           Automatic
-Monitoring:        Built-in dashboard
-```
-
-**Best for:**
-- **EmailEngine:** Teams with DevOps resources
-- **Nylas:** Teams focused purely on application code
-
----
-
 ### Scaling
 
-**EmailEngine:**
-```
-Vertical scaling:  Increase server resources (CPU, RAM)
-Horizontal scaling: NOT SUPPORTED (no built-in coordination)
-Manual sharding:   Possible but complex (separate Redis per instance)
-Bottleneck:        Usually Redis or network to IMAP servers
-Max scale:         Several thousand mailboxes per instance
-```
-
-**Nylas:**
-```
-Scaling:           Automatic, transparent
-Bottleneck:        API rate limits (generous)
-Max scale:         Hundreds of thousands of mailboxes
-```
+| Aspect | EmailEngine | Nylas |
+|--------|-------------|-------|
+| **Vertical Scaling** | Increase server resources (CPU, RAM) | Automatic, transparent |
+| **Horizontal Scaling** | NOT SUPPORTED (no built-in coordination) | Automatic, transparent |
+| **Manual Sharding** | Possible but complex (separate Redis per instance) | Not needed |
+| **Bottleneck** | Usually Redis or network to IMAP servers | API rate limits (generous) |
+| **Max Scale** | Several thousand mailboxes per instance | Hundreds of thousands of mailboxes |
+| **Scaling Effort** | Manual configuration required | Zero configuration |
 
 **Best for:**
-- **EmailEngine:** Small to medium scale (< 5,000 mailboxes per instance)
+
+- **EmailEngine:** Small to medium scale (under 5,000 mailboxes per instance)
 - **Nylas:** Any scale, especially large enterprises
 
 ---
 
 ### Data Sovereignty and Compliance
 
-**EmailEngine:**
-- YES: Data stays on your infrastructure
-- YES: You control encryption keys
-- YES: You control data retention
-- YES: Easier GDPR compliance (no third-party)
-- YES: Suitable for HIPAA (with proper setup)
-- NO: You responsible for compliance implementation
-
-**Nylas:**
-- YES: SOC 2 Type II certified
-- YES: ISO 27001 certified
-- YES: GDPR compliant (with DPA)
-- YES: BAA available for HIPAA
-- YES: Professional compliance support
-- NO: Data stored in Nylas cloud
+| Aspect                        | EmailEngine             | Nylas                |
+| ----------------------------- | ----------------------- | -------------------- |
+| **Data Location**             | Your infrastructure     | Nylas cloud          |
+| **Encryption Key Control**    | You control             | Nylas controls       |
+| **Data Retention Control**    | You control             | Nylas manages        |
+| **GDPR Compliance**           | Easier (no third-party) | Yes (with DPA)       |
+| **HIPAA Suitable**            | Yes (with proper setup) | Yes (BAA available)  |
+| **SOC 2 Type II**             | You must implement      | Certified            |
+| **ISO 27001**                 | You must implement      | Certified            |
+| **Compliance Implementation** | Your responsibility     | Professional support |
+| **Audit Support**             | Self-managed            | Provided             |
 
 **Best for:**
-- **EmailEngine:** Strict data residency (banking, healthcare, EU)
-- **Nylas:** Need compliance certifications documented
+
+- **EmailEngine:** Strict data residency requirements (banking, healthcare, EU), full data control
+- **Nylas:** Need pre-certified compliance, professional audit support
 
 ## Use Case Recommendations
 
 ### Choose EmailEngine If:
 
 **- You have DevOps capacity**
+
 - In-house infrastructure team
 - Comfortable with Docker/Kubernetes
 - Can monitor and maintain services
 
 **- Data sovereignty is critical**
+
 - Banking, healthcare, legal
 - European companies with GDPR concerns
 - Government contracts
 
 **- Cost is a major factor**
+
 - High mailbox count (500+)
 - Predictable flat pricing needed
 - Limited budget
 
 **- You need real-time webhooks**
+
 - Chat-like applications
 - Instant notification requirements
 - Time-critical workflows
 
-**- You prefer open source**
-- Want to inspect code
-- May need customizations
-- Community-driven development
+**- You want source-available code**
+
+- Want to audit and inspect code
+- Source code available for review
+- Licensed under commercial license (not open source)
+- Requires paid subscription to use
 
 ---
 
 ### Choose Nylas If:
 
 **- Zero DevOps overhead desired**
+
 - Small team focused on product
 - No infrastructure expertise
 - Want fully managed solution
 
 **- You need advanced AI features**
+
 - Sentiment analysis
 - Smart categorization
 - Contact enrichment
 - Event detection
 
 **- You need parallel performance**
+
 - High concurrent request volume
 - Multiple users per mailbox
 - Performance-critical application
 
 **- You want enterprise support**
+
 - SLA guarantees
 - Dedicated support team
 - Professional services
 - Compliance documentation
 
 **- You're building a calendar app**
+
 - Calendar API needed
 - Scheduler integration
 - Complex meeting workflows
 
-## Migration Guide
-
-### Migrating from Nylas to EmailEngine
-
-**1. Assess compatibility:**
-```javascript
-// Most Nylas API calls have EmailEngine equivalents
-
-// Nylas
-GET /messages?in=inbox
-
-// EmailEngine
-GET /v1/account/{account}/messages?path=INBOX
-```
-
-**2. Features to replace:**
-- **Neural API:** Integrate third-party AI service
-- **Contact enrichment:** Use Clearbit, FullContact, etc.
-- **Scheduler:** Build custom or use Calendly API
-
-**3. Migration steps:**
-1. Set up EmailEngine infrastructure
-2. Configure OAuth2 credentials
-3. Migrate account authentication
-4. Update API endpoints
-5. Test webhooks
-6. Cut over DNS/load balancer
-
-**Estimated time:** 1-2 weeks for typical application
-
----
-
-### Migrating from EmailEngine to Nylas
-
-**1. Sign up for Nylas account**
-
-**2. Configure OAuth2:**
-- Use Nylas provided credentials or
-- Bring your own OAuth2 app
-
-**3. API endpoint mapping:**
-```javascript
-// EmailEngine
-GET /v1/account/{account}/message/{message}
-
-// Nylas
-GET /messages/{id}
-```
-
-**4. Webhook adjustments:**
-- Different event payload structure
-- Adjust webhook handler
-
-**5. Migration steps:**
-1. Sign up for Nylas
-2. Parallel run both systems
-3. Migrate accounts gradually
-4. Update application code
-5. Cut over completely
-
-**Estimated time:** 1-2 weeks
-
-## Decision Matrix
-
-| Priority | Choose EmailEngine | Choose Nylas |
-|----------|-------------------|--------------|
-| **Lowest cost** | High | |
-| **Fastest setup** | | High |
-| **Data privacy** | High | |
-| **Zero maintenance** | | High |
-| **Real-time webhooks** | High | Yes |
-| **Parallel performance** | Yes | High |
-| **AI features** | | High |
-| **Calendar integration** | Yes | High |
-| **Compliance docs** | Yes | High |
-| **Customization** | High | Yes |
-| **Large scale (10k+)** | Yes | High |
-
-## Real-World Examples
-
-### Example 1: CRM with 500 users
-
-**Requirements:**
-- 500 mailboxes
-- Email sync
-- Webhooks for new emails
-- Send emails via API
-- Budget: $10,000/year
-
-**Recommendation: EmailEngine**
-- Cost: ~$2,000/year vs $17,000/year (Nylas)
-- Real-time webhooks beneficial for CRM
-- Can handle 500 mailboxes easily
-- **Savings: $15,000/year**
-
----
-
-### Example 2: Calendar scheduling SaaS
-
-**Requirements:**
-- 1,000 mailboxes
-- Calendar integration critical
-- Meeting scheduling
-- Need enterprise support
-- Budget: $30,000/year
-
-**Recommendation: Nylas**
-- Advanced calendar features
-- Scheduler API built-in
-- Enterprise support included
-- Worth the extra cost for features
-
----
-
-### Example 3: Healthcare email archive
-
-**Requirements:**
-- 100 doctor mailboxes
-- HIPAA compliance required
-- 7-year retention
-- Data must stay in EU
-- Budget: $5,000/year
-
-**Recommendation: EmailEngine**
-- Full data control for compliance
-- Host in EU datacenter
-- Encryption at rest
-- No third-party data storage
-- Fits budget
-
 ## Bottom Line
 
 **EmailEngine is best for:**
+
 - Cost-sensitive deployments
 - Data sovereignty requirements
 - Real-time webhook needs
 - Teams with DevOps capability
 
 **Nylas is best for:**
+
 - Zero-ops preference
 - Advanced AI/ML features
 - Calendar-heavy applications
 - Enterprise compliance needs
 
 **Both are excellent products** - choose based on your specific constraints and priorities, not generic "best" claims.
-
-## Further Reading
-
-- [Original blog post](https://emailengine.app/blog/2025-05-19-emailengine-vs-nylas)
-- [EmailEngine Documentation](https://docs.emailengine.app)
-- [Nylas Documentation](https://developer.nylas.com)

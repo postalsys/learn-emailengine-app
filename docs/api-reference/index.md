@@ -41,15 +41,6 @@ For production deployments, replace with your EmailEngine instance URL:
 https://emailengine.yourdomain.com/v1
 ```
 
-:::tip IPv6 Note
-If you encounter connection issues with `localhost`, try using `127.0.0.1` instead. On some systems, `localhost` resolves to IPv6 (`::1`) which may cause connection failures if EmailEngine is only listening on IPv4.
-
-```bash
-# Use 127.0.0.1 instead of localhost
-curl http://127.0.0.1:3000/v1/accounts
-```
-:::
-
 ### Versioning
 
 The API version is included in the URL path (`/v1`). This ensures backward compatibility when new versions are released.
@@ -68,35 +59,53 @@ Authorization: Bearer YOUR_ACCESS_TOKEN
 
 ### Creating Access Tokens
 
-**Via Settings Page:**
+**Via Settings Page (System-Wide Tokens):**
+
 1. Log in to the EmailEngine web interface
 2. Navigate to Settings > Access Tokens
 3. Click "Generate new token"
 4. Assign a description and optional scope
 5. Copy the generated token
 
-**Via API:**
+**Via API (Account-Specific Tokens Only):**
+
 ```bash
 curl -X POST http://localhost:3000/v1/token \
-  -H "Authorization: Bearer EXISTING_TOKEN" \
+  -H "Authorization: Bearer EXISTING_SYSTEM_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "description": "My API Token",
+    "account": "user123",
+    "description": "User API Token",
     "scopes": ["api"]
   }'
 ```
 
-**Via CLI:**
+**Important:** Tokens created via API are ALWAYS account-specific. The `account` field is required.
+
+**Via CLI (System-Wide or Account-Specific):**
+
 ```bash
-emailengine tokens issue -d "My token" -s "*"
+# System-wide token
+emailengine tokens issue -d "Admin token" -s "*"
+
+# Account-specific token
+emailengine tokens issue -d "User token" -s "api" -a "user123"
 ```
+
+See [Access Tokens](/docs/configuration/access-tokens) for complete documentation.
 
 ### Token Types
 
-- **Full access** (`"*"`): Unrestricted API access
-- **API only** (`"api"`): API calls only (no metrics)
-- **Metrics only** (`"metrics"`): Prometheus metrics endpoint only
-- **Account-specific**: Restricted to operations on a single account
+**System-Wide Tokens:**
+- Created via web interface or CLI
+- Access all accounts and endpoints
+- Scopes: `"*"` (full), `"api"`, `"metrics"`, `"smtp"`, `"imap-proxy"`
+
+**Account-Specific Tokens:**
+- Created via API (requires `account` field)
+- Restricted to single account only
+- Cannot create other tokens
+- Recommended for multi-tenant applications
 
 ### Security Best Practices
 
@@ -110,12 +119,12 @@ emailengine tokens issue -d "My token" -s "*"
 
 ### HTTP Methods
 
-| Method | Purpose | Example |
-|--------|---------|---------|
-| GET | Retrieve resources | Get account details |
-| POST | Create resources | Register new account |
-| PUT | Update resources | Update message flags |
-| DELETE | Remove resources | Delete account |
+| Method | Purpose            | Example              |
+| ------ | ------------------ | -------------------- |
+| GET    | Retrieve resources | Get account details  |
+| POST   | Create resources   | Register new account |
+| PUT    | Update resources   | Update message flags |
+| DELETE | Remove resources   | Delete account       |
 
 ### Request Headers
 
@@ -149,12 +158,14 @@ Use JSON for request bodies:
 ### Example Requests
 
 **cURL:**
+
 ```bash
 curl http://localhost:3000/v1/accounts \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 **Pseudo code:**
+
 ```
 // Make HTTP GET request to the accounts endpoint
 response = HTTP_GET("http://localhost:3000/v1/accounts", {
@@ -219,8 +230,12 @@ Most successful responses follow this structure:
 ```json
 {
   "success": true,
-  "data": { /* resource data */ },
-  "metadata": { /* pagination, timing, etc */ }
+  "data": {
+    /* resource data */
+  },
+  "metadata": {
+    /* pagination, timing, etc */
+  }
 }
 ```
 
@@ -228,15 +243,15 @@ Most successful responses follow this structure:
 
 ### HTTP Status Codes
 
-| Code | Meaning | Action |
-|------|---------|--------|
-| 400 | Bad Request | Check request parameters |
-| 401 | Unauthorized | Verify authentication token |
-| 403 | Forbidden | Check token permissions |
-| 404 | Not Found | Verify resource exists |
-| 429 | Too Many Requests | Implement retry with backoff |
-| 500 | Server Error | Retry after delay |
-| 503 | Service Unavailable | Service restarting, retry |
+| Code | Meaning             | Action                       |
+| ---- | ------------------- | ---------------------------- |
+| 400  | Bad Request         | Check request parameters     |
+| 401  | Unauthorized        | Verify authentication token  |
+| 403  | Forbidden           | Check token permissions      |
+| 404  | Not Found           | Verify resource exists       |
+| 429  | Too Many Requests   | Implement retry with backoff |
+| 500  | Server Error        | Retry after delay            |
+| 503  | Service Unavailable | Service restarting, retry    |
 
 ### Error Response Format
 
@@ -245,20 +260,22 @@ Most successful responses follow this structure:
   "error": "Human-readable error message",
   "code": "ERROR_CODE",
   "statusCode": 400,
-  "details": { /* optional additional context */ }
+  "details": {
+    /* optional additional context */
+  }
 }
 ```
 
 ### Common Error Codes
 
-| Code | Description | Solution |
-|------|-------------|----------|
-| `InvalidRequest` | Request validation failed | Check required fields |
-| `AuthenticationRequired` | Missing authentication | Provide valid token |
-| `AccountNotFound` | Account doesn't exist | Verify account ID |
-| `MessageNotFound` | Message doesn't exist | Check message ID |
-| `RateLimitExceeded` | Too many requests | Implement backoff |
-| `ConnectionError` | Can't connect to mail server | Check credentials |
+| Code                     | Description                  | Solution              |
+| ------------------------ | ---------------------------- | --------------------- |
+| `InvalidRequest`         | Request validation failed    | Check required fields |
+| `AuthenticationRequired` | Missing authentication       | Provide valid token   |
+| `AccountNotFound`        | Account doesn't exist        | Verify account ID     |
+| `MessageNotFound`        | Message doesn't exist        | Check message ID      |
+| `RateLimitExceeded`      | Too many requests            | Implement backoff     |
+| `ConnectionError`        | Can't connect to mail server | Check credentials     |
 
 ### Retry Strategies
 
@@ -294,11 +311,11 @@ For endpoints that return lists (accounts, messages, etc.), use pagination param
 
 ### Parameters
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `page` | number | 0 | Page number (0-indexed) |
-| `pageSize` | number | 20 | Items per page |
-| `cursor` | string | - | Paging cursor from nextPageCursor or prevPageCursor |
+| Parameter  | Type   | Default | Description                                         |
+| ---------- | ------ | ------- | --------------------------------------------------- |
+| `page`     | number | 0       | Page number (0-indexed)                             |
+| `pageSize` | number | 20      | Items per page                                      |
+| `cursor`   | string | -       | Paging cursor from nextPageCursor or prevPageCursor |
 
 ### Example Request
 
@@ -316,7 +333,9 @@ Paginated responses include navigation metadata:
   "total": 523,
   "page": 0,
   "pages": 11,
-  "messages": [ /* message objects */ ]
+  "messages": [
+    /* message objects */
+  ]
 }
 ```
 
@@ -406,11 +425,11 @@ X-RateLimit-Remaining: 985
 X-RateLimit-Reset: 1640995200
 ```
 
-| Header | Description |
-|--------|-------------|
-| `X-RateLimit-Limit` | Maximum requests per window |
-| `X-RateLimit-Remaining` | Requests remaining in window |
-| `X-RateLimit-Reset` | Unix timestamp when limit resets |
+| Header                  | Description                      |
+| ----------------------- | -------------------------------- |
+| `X-RateLimit-Limit`     | Maximum requests per window      |
+| `X-RateLimit-Remaining` | Requests remaining in window     |
+| `X-RateLimit-Reset`     | Unix timestamp when limit resets |
 
 ### Handling 429 Too Many Requests
 
@@ -454,6 +473,7 @@ Instead of polling the API, use webhooks to receive real-time notifications.
 ### Event-Driven Architecture
 
 Webhooks provide instant notifications when:
+
 - New messages arrive
 - Messages are deleted or updated
 - Accounts connect or disconnect
@@ -575,6 +595,7 @@ PRINT("Webhook configured")
 The EmailEngine API is organized into these main categories:
 
 ### Accounts API
+
 Manage email accounts, credentials, and connections.
 
 - Register and delete accounts
@@ -585,6 +606,7 @@ Manage email accounts, credentials, and connections.
 [View Accounts API documentation](./accounts-api.md)
 
 ### Messages API
+
 Read, search, and manage email messages.
 
 - List and filter messages
@@ -596,6 +618,7 @@ Read, search, and manage email messages.
 [View Messages API documentation](./messages-api.md)
 
 ### Sending API
+
 Send emails with attachments and templates.
 
 - Send immediate emails (Submit API)
@@ -606,6 +629,7 @@ Send emails with attachments and templates.
 [View Sending API documentation](./sending-api.md)
 
 ### Webhooks API
+
 Configure webhooks and event notifications.
 
 - Register webhook endpoints
@@ -616,6 +640,7 @@ Configure webhooks and event notifications.
 [View Webhooks API documentation](./webhooks-api.md)
 
 ### Full API Reference
+
 Complete auto-generated API documentation with all endpoints, parameters, and examples.
 
 [Browse full API reference](/docs/api-reference)

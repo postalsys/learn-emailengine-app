@@ -24,8 +24,21 @@ EmailEngine's webhook system provides:
 
 Webhooks enable event-driven architecture:
 
-```
-EmailEngine → Event occurs → HTTP POST → Your Application
+```mermaid
+graph LR
+    EmailEngine[EmailEngine]
+    Event[Event occurs]
+    POST[HTTP POST]
+    App[Your Application]
+
+    EmailEngine --> Event
+    Event --> POST
+    POST --> App
+
+    style EmailEngine fill:#e1f5ff
+    style Event fill:#fff4e1
+    style POST fill:#f3e5f5
+    style App fill:#e8f5e9
 ```
 
 Benefits:

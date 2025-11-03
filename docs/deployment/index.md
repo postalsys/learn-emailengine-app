@@ -255,26 +255,18 @@ Since EmailEngine doesn't support multiple instances, focus on Redis high availa
 
 ### Architecture Example
 
-```
-┌─────────────────────┐
-│ Health Monitor      │
-│ (Detects failures)  │
-└──────────┬──────────┘
-           │
-    ┌──────┴────────┐
-    │               │
-┌───▼─────────┐ ┌──▼──────────┐
-│ EE Primary  │ │ EE Standby  │
-│ (Active)    │ │ (Stopped)   │
-└───┬─────────┘ └──┬──────────┘
-    │              │
-    └──────┬───────┘
-           │
-    ┌──────▼───────────┐
-    │ Redis Sentinel   │
-    │  (Master + 2x    │
-    │   Replicas)      │
-    └──────────────────┘
+```mermaid
+graph TB
+    Monitor[Health Monitor<br/>Detects failures]
+    Monitor --> Primary[EE Primary<br/>Active]
+    Monitor --> Standby[EE Standby<br/>Stopped]
+    Primary --> Redis[Redis Sentinel<br/>Master + 2x Replicas]
+    Standby --> Redis
+
+    style Monitor fill:#e1f5ff
+    style Primary fill:#e8f5e9
+    style Standby fill:#fff4e1
+    style Redis fill:#f3e5f5
 ```
 
 **Failover Process:**
@@ -340,18 +332,18 @@ EENGINE_ENCRYPTION_SECRET=${ENCRYPTION_KEY}
 
 **Use case:** Small teams, < 100 accounts
 
-```
-┌──────────────────┐
-│   Nginx (SSL)    │
-└────────┬─────────┘
-         │
-┌────────▼─────────┐
-│   EmailEngine    │
-└────────┬─────────┘
-         │
-┌────────▼─────────┐
-│      Redis       │
-└──────────────────┘
+```mermaid
+graph TB
+    Nginx[Nginx SSL]
+    EmailEngine[EmailEngine]
+    Redis[Redis]
+
+    Nginx --> EmailEngine
+    EmailEngine --> Redis
+
+    style Nginx fill:#e1f5ff
+    style EmailEngine fill:#e8f5e9
+    style Redis fill:#f3e5f5
 ```
 
 [Setup guide →](./nginx-proxy.md)
@@ -362,17 +354,17 @@ EENGINE_ENCRYPTION_SECRET=${ENCRYPTION_KEY}
 
 **Use case:** Quick deployment, minimal DevOps
 
-```
-┌────────────────────┐
-│   Render.com       │
-│  ┌──────────────┐  │
-│  │ EmailEngine  │  │
-│  └──────┬───────┘  │
-│         │          │
-│  ┌──────▼───────┐  │
-│  │ Redis Add-on │  │
-│  └──────────────┘  │
-└────────────────────┘
+```mermaid
+graph TB
+    subgraph Render["Render.com"]
+        EmailEngine[EmailEngine]
+        Redis[Redis Add-on]
+        EmailEngine --> Redis
+    end
+
+    style EmailEngine fill:#e8f5e9
+    style Redis fill:#f3e5f5
+    style Render fill:#e1f5ff,stroke:#333,stroke-width:2px
 ```
 
 [Render deployment →](./render.md)
@@ -383,21 +375,18 @@ EENGINE_ENCRYPTION_SECRET=${ENCRYPTION_KEY}
 
 **Use case:** Enterprise, high availability
 
-```
-┌─────────────────────┐
-│  Ingress Controller │
-│      (SSL/LB)       │
-└─────────┬───────────┘
-          │
-┌─────────▼───────────┐
-│  EmailEngine Pods   │
-│  (3x replicas)      │
-└─────────┬───────────┘
-          │
-┌─────────▼───────────┐
-│  Redis StatefulSet  │
-│  (Master + Replica) │
-└─────────────────────┘
+```mermaid
+graph TB
+    Ingress[Ingress Controller<br/>SSL/LB]
+    EmailEngine[EmailEngine Pods<br/>3x replicas]
+    Redis[Redis StatefulSet<br/>Master + Replica]
+
+    Ingress --> EmailEngine
+    EmailEngine --> Redis
+
+    style Ingress fill:#e1f5ff
+    style EmailEngine fill:#e8f5e9
+    style Redis fill:#f3e5f5
 ```
 
 [Kubernetes guide →](./docker.md#kubernetes)

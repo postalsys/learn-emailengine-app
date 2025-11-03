@@ -111,19 +111,24 @@ Start using EmailEngine immediately. No sign-up, no credit card, no limitations 
 
 ### Subscription Model
 
-```
-┌─────────────────────────────────────────┐
-│  Annual Subscription                    │
-│  - Pay once per year                    │
-│  - Flat rate (see pricing page)         │
-└─────────────────────────────────────────┘
-            │
-            ├──> Generate License Key #1 (Production Server)
-            ├──> Generate License Key #2 (Staging Server)
-            ├──> Generate License Key #3 (Backup Instance)
-            ├──> Generate License Key #4 (Customer A deployment)
-            └──> Generate License Key #5 (Customer B deployment)
-                 ... unlimited keys
+```mermaid
+graph TB
+    Sub[Annual Subscription<br/>Pay once per year<br/>Flat rate]
+
+    Sub --> Key1[License Key #1<br/>Production Server]
+    Sub --> Key2[License Key #2<br/>Staging Server]
+    Sub --> Key3[License Key #3<br/>Backup Instance]
+    Sub --> Key4[License Key #4<br/>Customer A deployment]
+    Sub --> Key5[License Key #5<br/>Customer B deployment]
+    Sub -.-> More[... unlimited keys]
+
+    style Sub fill:#e1f5ff
+    style Key1 fill:#e8f5e9
+    style Key2 fill:#e8f5e9
+    style Key3 fill:#e8f5e9
+    style Key4 fill:#e8f5e9
+    style Key5 fill:#e8f5e9
+    style More fill:#f5f5f5,stroke-dasharray: 5 5
 ```
 
 **No additional costs for:**

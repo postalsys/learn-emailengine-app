@@ -42,6 +42,12 @@ Bull Board provides a web interface for:
 - Monitoring queue health
 - Debugging failures
 
+![Bull Board Queue Dashboard](/img/screenshots/17-bull-board-with-jobs.png)
+*Bull Board main dashboard showing all queues and their statistics*
+
+![Submit Queue Details](/img/screenshots/18-bull-board-submit-queue.png)
+*Submit queue showing email sending jobs and their status*
+
 ## Queue Types
 
 ### 1. Submit Queue
@@ -232,29 +238,31 @@ Every job moves through different states during its lifecycle.
 
 ## Job Lifecycle Diagram
 
-```
-┌─────────────┐
-│   Created   │
-└──────┬──────┘
-       │
-       ├─── sendAt in future ─────> DELAYED
-       │                                │
-       └─── sendAt now/past ─────> WAITING
-                                        │
-                                        v
-                                    ACTIVE
-                                        │
-                    ┌───────────────────┼───────────────────┐
-                    │                   │                   │
-                    v                   v                   v
-               SUCCESS            RETRY FAILURE      PERMANENT FAILURE
-                    │                   │                   │
-                    v                   v                   v
-              COMPLETED             DELAYED               FAILED
-                    │                   │
-                    │                   │
-                    v                   v
-              (Removed)            WAITING ──> ACTIVE (retry)
+```mermaid
+graph TD
+    Created[Created]
+    Created -->|sendAt in future| DELAYED1[DELAYED]
+    Created -->|sendAt now/past| WAITING1[WAITING]
+
+    DELAYED1 --> WAITING1
+    WAITING1 --> ACTIVE[ACTIVE]
+
+    ACTIVE -->|Success| COMPLETED[COMPLETED]
+    ACTIVE -->|Retry Failure| DELAYED2[DELAYED]
+    ACTIVE -->|Permanent Failure| FAILED[FAILED]
+
+    COMPLETED --> Removed[(Removed)]
+    DELAYED2 --> WAITING2[WAITING]
+    WAITING2 -->|Retry| ACTIVE
+
+    style Created fill:#e1f5ff
+    style ACTIVE fill:#fff4e1
+    style COMPLETED fill:#e8f5e9
+    style FAILED fill:#ffebee
+    style DELAYED1 fill:#f3e5f5
+    style DELAYED2 fill:#f3e5f5
+    style WAITING1 fill:#fff9c4
+    style WAITING2 fill:#fff9c4
 ```
 
 ## Monitoring Queue Health

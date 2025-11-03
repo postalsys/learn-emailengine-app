@@ -1,7 +1,7 @@
 {
   "info": {
     "title": "EmailEngine API",
-    "version": "2.57.3",
+    "version": "2.58.0",
     "description": "EmailEngine provides a RESTful API for managing email accounts, sending messages, and processing email data across multiple providers.\n\n<h3>Authentication</h3>\nAll API requests require authentication using an Access Token. You can generate and manage your tokens from the <a href=\"/admin/tokens\" target=\"_parent\"><strong>Access Tokens</strong></a> page.\n\nInclude your token in requests using one of these methods:\n- Query parameter: <code>?access_token=YOUR_TOKEN</code>\n- Authorization header: <code>Authorization: Bearer YOUR_TOKEN</code>\n\n<h3>Request Processing</h3>\n\n<strong>Sequential Processing:</strong> Requests to the same email account are processed sequentially to maintain data consistency. Multiple simultaneous requests will be queued.\n\n<strong>Timeouts:</strong> Long-running operations may cause queued requests to timeout. Configure appropriate timeout values using the <code>X-EE-Timeout</code> header (in milliseconds).\n\n<h3>Getting Started</h3>\n1. <a href=\"/admin/tokens\" target=\"_parent\">Generate an Access Token</a>\n2. <a href=\"/admin/accounts\" target=\"_parent\">Add an email account</a>\n3. Start making API requests using the endpoints below",
     "contact": {
       "name": "EmailEngine Support",
@@ -1620,7 +1620,7 @@
           "version": {
             "type": "string",
             "description": "EmailEngine version number",
-            "example": "2.57.3"
+            "example": "2.58.0"
           },
           "license": {
             "type": "string",

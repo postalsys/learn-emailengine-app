@@ -49,6 +49,12 @@ stateDiagram-v2
 
 ## Adding Accounts
 
+![Accounts List with Connected Accounts](/img/screenshots/11-accounts-with-data.png)
+*Accounts list showing connected email accounts*
+
+![Account Detail View](/img/screenshots/12-account-detail.png)
+*Detailed view of a connected account showing status, sync information, and configuration*
+
 ### Via API (Programmatic)
 
 #### IMAP/SMTP with Password

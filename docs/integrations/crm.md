@@ -20,18 +20,22 @@ When integrating email with a CRM system, it typically involves connecting the C
 
 ## Architecture Overview
 
-```
-┌─────────────────┐         ┌──────────────┐         ┌─────────────────┐
-│   CRM System    │◄───────►│ EmailEngine  │◄───────►│  Email Servers  │
-│                 │ Webhooks │              │  IMAP   │  (Gmail, etc.)  │
-│ - UI/UX         │   API    │ - Account    │  SMTP   │                 │
-│ - Contact DB    │          │   Management │         │                 │
-│ - Activities    │          │ - Email Sync │         │                 │
-└─────────────────┘          └──────────────┘         └─────────────────┘
-        │                            │
-        │                            │
-        └────────Message Registry────┘
-               (Track seen emails)
+```mermaid
+graph LR
+    CRM[CRM System<br/>- UI/UX<br/>- Contact DB<br/>- Activities]
+    EmailEngine[EmailEngine<br/>- Account Management<br/>- Email Sync]
+    Email[Email Servers<br/>Gmail, etc.]
+    Registry[Message Registry<br/>Track seen emails]
+
+    CRM <-->|Webhooks/API| EmailEngine
+    EmailEngine <-->|IMAP/SMTP| Email
+    CRM -.-> Registry
+    EmailEngine -.-> Registry
+
+    style CRM fill:#e1f5ff
+    style EmailEngine fill:#e8f5e9
+    style Email fill:#f3e5f5
+    style Registry fill:#fff9c4
 ```
 
 ### Data Flow

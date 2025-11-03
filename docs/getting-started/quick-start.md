@@ -42,6 +42,9 @@ EmailEngine will start on **http://localhost:3000**
 2. On first startup, you'll be prompted to create an admin account
 3. Set a secure password for the web admin UI
 
+![EmailEngine Main Dashboard](/img/screenshots/01-dashboard-main.png)
+*EmailEngine main dashboard after successful login*
+
 ## Step 3: Generate an API Access Token
 
 You need an access token to authenticate API requests.
@@ -101,6 +104,12 @@ The easiest way to add accounts is using EmailEngine's built-in hosted authentic
 5. Click **Authenticate** and follow the provider's OAuth2 flow
 6. EmailEngine will handle the rest automatically
 
+![Accounts List](/img/screenshots/02-accounts-list.png)
+*Accounts list page - add your first email account*
+
+![Add Account Form](/img/screenshots/03-account-add-form.png)
+*Add new account form with IMAP/SMTP configuration*
+
 **When to use the hosted form:**
 - Quick account setup during development
 - End-user account authentication in your application
@@ -123,6 +132,9 @@ For programmatic control or special requirements, register accounts directly via
 **Gmail Example:**
 
 **Prerequisites:** You need to set up OAuth2 credentials in Google Cloud Console. [See detailed guide →](/docs/accounts/gmail-imap)
+
+![Create Account API Request](/img/examples/api-create-account-request.png)
+*Example API request to create a new account*
 
 ```bash
 $ curl -XPOST "http://127.0.0.1:3000/v1/account" \
@@ -287,6 +299,10 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account/my-account/submit" \
 ```
 
 **Response:**
+
+![Send Email Response](/img/examples/api-send-email-response.png)
+*Example API response after sending an email*
+
 ```json
 {
   "response": "Queued for delivery",
@@ -312,6 +328,9 @@ Webhooks notify your application about email events in real-time.
 2. Enter your webhook URL (e.g., `https://your-app.com/webhooks`)
 3. Select events you want to receive
 4. Save settings
+
+![Webhooks Configuration](/img/screenshots/05-webhooks-config.png)
+*Webhooks configuration page in EmailEngine settings*
 
 #### Via API:
 
@@ -339,6 +358,10 @@ For testing, use [webhook.site](https://webhook.site) to see webhook payloads:
 ### Example Webhook Events
 
 **New Email Received:**
+
+![Webhook: messageNew Event](/img/examples/webhook-message-new.png)
+*Example webhook payload when a new email is received*
+
 ```json
 {
   "account": "my-account",
@@ -358,6 +381,10 @@ For testing, use [webhook.site](https://webhook.site) to see webhook payloads:
 ```
 
 **Email Sent Successfully:**
+
+![Webhook: messageSent Event](/img/examples/webhook-message-sent.png)
+*Example webhook payload when an email is successfully sent*
+
 ```json
 {
   "account": "my-account",
@@ -398,6 +425,10 @@ $ curl "http://127.0.0.1:3000/v1/account/my-account/messages?path=INBOX&pageSize
 ```
 
 **Response:**
+
+![List Messages API Response](/img/examples/api-list-messages.png)
+*Example API response showing list of messages*
+
 ```json
 {
   "total": 1234,
@@ -420,6 +451,9 @@ $ curl "http://127.0.0.1:3000/v1/account/my-account/messages?path=INBOX&pageSize
   ]
 }
 ```
+
+![Messages List UI](/img/screenshots/13-messages-list.png)
+*Messages list view in the EmailEngine web interface*
 
 ## Step 9: Read a Specific Message
 

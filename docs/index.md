@@ -12,6 +12,7 @@ slug: /
 ## What Can You Do With EmailEngine?
 
 ### Send Emails
+
 Send emails through any email provider with a single API endpoint. EmailEngine handles SMTP connections, OAuth2 authentication, retries, and delivery tracking.
 
 ```javascript
@@ -25,6 +26,7 @@ POST /v1/account/{account}/submit
 ```
 
 ### Receive Emails in Real-Time
+
 Get instant webhook notifications when new emails arrive, no polling required.
 
 ```javascript
@@ -41,6 +43,7 @@ Get instant webhook notifications when new emails arrive, no polling required.
 ```
 
 ### Manage Email Accounts
+
 Register and manage multiple email accounts with automatic connection handling.
 
 ```javascript
@@ -57,23 +60,27 @@ POST /v1/account
 ```
 
 ### Search and Organize
+
 Search messages, organize mailboxes, manage flags, and download attachments.
 
 ## Why EmailEngine?
 
 ### One API for All Providers
+
 - **IMAP/SMTP** - Works with any email provider
 - **Gmail API** - Native Gmail integration with Cloud Pub/Sub
 - **Microsoft Graph API** - Native Microsoft 365 and Outlook integration
 - **Consistent interface** across all provider types
 
 ### Built for SaaS Applications
+
 - **Multi-account** - Manage thousands of email accounts
 - **OAuth2 support** - Built-in OAuth2 for Gmail, Google Workspace, Microsoft 365
 - **Webhooks** - Real-time notifications for all email events
 - **Queue management** - Automatic retries and delivery tracking
 
 ### Production-Ready
+
 - **Self-hosted** - Full control over your data and privacy
 - **Scalable** - Vertical scaling with performance tuning
 - **Reliable** - Automatic reconnection and error recovery
@@ -91,28 +98,36 @@ Get your first email working in 10 minutes:
 ## Common Use Cases
 
 ### Email-Integrated SaaS
+
 Build email functionality into your SaaS application:
+
 - Send transactional emails from user accounts
 - Receive and process incoming emails
 - Integrate customer email into your CRM
 - [Read the CRM integration guide →](/docs/integrations/crm)
 
 ### Email Automation
+
 Automate email workflows:
+
 - Auto-respond to incoming emails
 - Forward emails based on rules
 - Track email threads and replies
 - [Learn about email threading →](/docs/sending/threading)
 
 ### Customer Support
+
 Integrate email into your support system:
+
 - Manage multiple support email accounts
 - Track email conversations
 - Send templated responses
 - [Explore mail merge →](/docs/sending/mail-merge)
 
 ### Email Analytics
+
 Analyze email communications:
+
 - Track email delivery and opens
 - Generate AI-powered email summaries
 - Monitor email activity across accounts
@@ -132,42 +147,18 @@ EmailEngine works as a middleware between your application and email providers:
 4. **Email Providers** - Gmail, Outlook, Microsoft 365, and any IMAP/SMTP server
 
 **Data flows:**
+
 - **API requests**: Your app calls EmailEngine REST API → EmailEngine connects to email providers or retrieves from Redis
 - **Webhooks**: Email providers send updates → EmailEngine processes → Your app receives webhook notifications
 - **Data storage**: EmailEngine stores metadata and queues in Redis (email content is not stored, only fetched on demand)
 
 **Key features:**
+
 - **Unified API** for all email providers (IMAP, SMTP, Gmail API, Microsoft Graph API)
 - **OAuth2 authentication** support for Gmail, Google Workspace, and Microsoft 365
 - **Real-time webhooks** for instant email notifications
 - **Automatic reconnection** and error recovery
 - **Queue management** with automatic retries
-
-## Popular Topics
-
-### Setting Up Email Accounts
-- [Gmail with OAuth2](/docs/accounts/gmail-imap) - Complete setup with Google Cloud Console
-- [Outlook/Microsoft 365](/docs/accounts/outlook-365) - Azure AD OAuth2 configuration
-- [Gmail API (Native)](/docs/accounts/gmail-api) - Gmail API with Cloud Pub/Sub
-- [Generic IMAP/SMTP](/docs/accounts/imap-smtp) - Any email provider
-
-### Sending Emails
-- [Basic Email Sending](/docs/sending/basic-sending) - Send your first email
-- [Replies and Forwards](/docs/sending/replies-forwards) - Maintain email threads
-- [Mail Merge](/docs/sending/mail-merge) - Send personalized bulk emails
-- [Email Templates](/docs/sending/templates) - Use Handlebars templates
-
-### Receiving Emails
-- [Webhooks](/docs/receiving/webhooks) - Real-time email notifications
-- [Debugging Webhooks](/docs/receiving/webhooks) - Troubleshoot webhook delivery
-- [Searching Messages](/docs/receiving/searching) - Find emails with queries
-- [Tracking Replies](/docs/receiving/tracking-replies) - Detect replies to sent emails
-
-### Advanced Features
-- [Performance Tuning](/docs/advanced/performance-tuning) - Optimize for high volume
-- [OAuth2 Token Management](/docs/accounts/oauth2-token-management) - Use tokens for other APIs
-- [Secret Encryption](/docs/deployment/security) - Encrypt stored credentials
-- [Queue System](/docs/sending/outbox-queue) - Understand email queues
 
 ## API Reference
 
@@ -196,6 +187,7 @@ EmailEngine provides a comprehensive REST API:
 ## License
 
 EmailEngine requires a license key for production use. Get a license:
+
 - **[Free Development License](https://postalsys.com/plans)** - For testing and development
 - **[Production License](https://postalsys.com/plans)** - For commercial use
 
@@ -204,16 +196,19 @@ EmailEngine requires a license key for production use. Get a license:
 ## Next Steps
 
 **New to EmailEngine?**
+
 1. [Read the introduction](/docs/getting-started/introduction) to understand what EmailEngine can do
 2. [Follow the quick start guide](/docs/getting-started/quick-start) to get your first email working
 3. [Set up OAuth2 for Gmail](/docs/accounts/gmail-imap) or [Outlook](/docs/accounts/outlook-365)
 
 **Ready to build?**
+
 - [Explore the API reference](/docs/api-reference) to see all available endpoints
 - [Check out integration examples](/docs/integrations) for PHP, CRM, AI, and more
 - [Read about performance tuning](/docs/advanced/performance-tuning) for production deployments
 
 **Need inspiration?**
+
 - [Browse the blog](/blog) for tutorials and real-world use cases
 - [See the CRM integration guide](/docs/integrations/crm) for a complete architecture example
 - [Compare EmailEngine vs Nylas](/docs/comparison/emailengine-vs-nylas) to understand the differences

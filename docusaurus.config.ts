@@ -28,6 +28,7 @@ const config: Config = {
   onBrokenMarkdownLinks: 'warn',
 
   markdown: {
+    mermaid: true,
     hooks: {
       onBrokenMarkdownImages: 'warn',
     },
@@ -82,7 +83,7 @@ const config: Config = {
     ],
   ],
 
-  themes: ["docusaurus-theme-openapi-docs"],
+  themes: ["docusaurus-theme-openapi-docs", "@docusaurus/theme-mermaid"],
 
   themeConfig: {
     // Social card for sharing

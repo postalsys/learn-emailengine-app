@@ -92,31 +92,29 @@ location /admin {
 
 **Isolate EmailEngine and Redis:**
 
-```
-┌─────────────────────────────────┐
-│    Public Network (Internet)    │
-└─────────────┬───────────────────┘
-              │
-┌─────────────▼───────────────────┐
-│         DMZ Zone                │
-│  ┌────────────────────────────┐ │
-│  │   Nginx Reverse Proxy      │ │
-│  │   (443/tcp)                │ │
-│  └─────────────┬──────────────┘ │
-└────────────────┼────────────────┘
-                 │
-┌────────────────▼────────────────┐
-│    Application Zone             │
-│  ┌──────────────────────────┐   │
-│  │   EmailEngine Instances  │   │
-│  │   (3000/tcp - internal)  │   │
-│  └─────────────┬────────────┘   │
-│                │                │
-│  ┌─────────────▼────────────┐   │
-│  │   Redis Database         │   │
-│  │   (6379/tcp - internal)  │   │
-│  └──────────────────────────┘   │
-└─────────────────────────────────┘
+```mermaid
+graph TB
+    Internet[Public Network<br/>Internet]
+
+    subgraph DMZ["DMZ Zone"]
+        Nginx[Nginx Reverse Proxy<br/>443/tcp]
+    end
+
+    subgraph AppZone["Application Zone"]
+        EmailEngine[EmailEngine Instances<br/>3000/tcp - internal]
+        Redis[Redis Database<br/>6379/tcp - internal]
+    end
+
+    Internet --> Nginx
+    Nginx --> EmailEngine
+    EmailEngine --> Redis
+
+    style Internet fill:#ffebee
+    style DMZ fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style AppZone fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style Nginx fill:#fff9c4
+    style EmailEngine fill:#e1f5ff
+    style Redis fill:#f3e5f5
 ```
 
 ## Authentication Security

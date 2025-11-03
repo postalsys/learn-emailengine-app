@@ -47,13 +47,18 @@ Continuous email processing enables you to build real-time pipelines that analyz
 
 ## Architecture Overview
 
-```
-┌──────────────┐     ┌─────────────────────┐     ┌──────────────────────┐
-│  IMAP / SMTP │     │     EmailEngine     │     │  Analyzing Service / │
-│ Gmail API /  ├────►│ (fetch, parse, send)├────►│  Vector Database /   │
-│ MS Graph API │     │   webhooks on new   │     │  Custom Processing   │
-└──────────────┘     │    + existing mail  │     └──────────────────────┘
-                     └─────────────────────┘
+```mermaid
+graph LR
+    Email[IMAP / SMTP<br/>Gmail API /<br/>MS Graph API]
+    EmailEngine[EmailEngine<br/>fetch, parse, send<br/>webhooks on new<br/>+ existing mail]
+    Processing[Analyzing Service /<br/>Vector Database /<br/>Custom Processing]
+
+    Email --> EmailEngine
+    EmailEngine --> Processing
+
+    style Email fill:#e1f5ff
+    style EmailEngine fill:#e8f5e9
+    style Processing fill:#f3e5f5
 ```
 
 **EmailEngine acts as the bridge:**

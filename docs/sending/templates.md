@@ -30,7 +30,11 @@ You can manage templates in two ways:
 1. **Templates API**: Programmatically create, update, and delete templates
 2. **Admin Interface**: Visual interface at **Email templates** in the side menu
 
-![Email Templates Interface](/img/external/okV3xd67hr.png)
+![Email Templates List](/img/screenshots/15-templates-with-data.png)
+*Email templates list in the admin interface*
+
+![Template Editor](/img/screenshots/16-template-editor.png)
+*Template editor showing Handlebars syntax and fields*
 
 ## Creating Templates
 
