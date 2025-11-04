@@ -177,23 +177,25 @@ Check your JSON syntax and setting values if you encounter errors.
 
 Prepared settings are only applied once on first startup. To update:
 
-1. Change the `EENGINE_SETTINGS` value
-2. Delete the settings from Redis (or use Settings API to update)
-3. Restart EmailEngine
+1. Use the Settings API to modify existing settings
+2. Or update the `EENGINE_SETTINGS` environment variable and restart
 
-**Clear settings:**
+**Update settings via API:**
 ```bash
-# Via API - Clear specific setting
+# Update specific setting
+curl -X POST http://localhost:3000/v1/settings \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhooks": "https://new-webhook-url.com/webhook",
+    "webhookEvents": ["messageNew", "messageSent"]
+  }'
+
+# Clear specific setting by setting to null
 curl -X POST http://localhost:3000/v1/settings \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"webhooks": null}'
-
-# Via Redis CLI - Delete specific setting field
-redis-cli HDEL settings webhooks
-
-# Via Redis CLI - Delete all settings
-redis-cli DEL settings
 ```
 
 ---
@@ -584,18 +586,15 @@ curl http://localhost:3000/v1/license \
 ### License Management
 
 **Update license:**
-1. Change `EENGINE_PREPARED_LICENSE` value
-2. Delete old license from Redis
-3. Restart EmailEngine
+1. Change `EENGINE_PREPARED_LICENSE` environment variable
+2. Restart EmailEngine
 
-**Remove license:**
+The new license will be automatically applied on startup.
+
+**Remove license via API:**
 ```bash
-# Via API
 curl -X DELETE http://localhost:3000/v1/license \
   -H "Authorization: Bearer YOUR_TOKEN"
-
-# Via Redis CLI - Delete license field from settings hash
-redis-cli HDEL settings license
 ```
 
 ---
