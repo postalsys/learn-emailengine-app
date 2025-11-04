@@ -169,9 +169,16 @@ curl http://localhost:3000/v1/license \
 ```json
 {
   "active": true,
-  "type": "EmailEngine License",
-  "expires": "2026-01-15T00:00:00.000Z",
-  "accounts": "unlimited"
+  "details": {
+    "application": "@postalsys/emailengine-app",
+    "key": "a1b2c3d4e5f6g7h8i9j0",
+    "licensedTo": "Example Corporation Inc",
+    "hostname": "mail.example.com",
+    "created": "2024-01-15T10:30:00.000Z",
+    "trial": false,
+    "expires": "2026-01-15T10:30:00.000Z"
+  },
+  "type": "EmailEngine License"
 }
 ```
 
