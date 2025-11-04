@@ -414,7 +414,7 @@ EENGINE_PREPARED_PASSWORD=your-secure-admin-password
 EENGINE_PREPARED_LICENSE=your-license-key-here
 ```
 
-[Prepared configuration guide →](./prepared-settings.md)
+[Prepared configuration guide →](./prepared-settings/)
 
 ## Complete Examples
 
@@ -577,6 +577,6 @@ Common environment variables and their command-line equivalents:
 
 - [CLI Reference](./cli) - Command-line arguments as an alternative to environment variables
 - [Redis Configuration](./redis.md) - Detailed Redis setup and optimization
-- [Prepared Settings](./prepared-settings.md) - Automated deployment configuration
+- [Prepared Settings](./prepared-settings/) - Automated deployment configuration
 - [Access Tokens](./access-tokens) - API authentication setup
 - [Monitoring](../advanced/monitoring) - Logging and monitoring setup

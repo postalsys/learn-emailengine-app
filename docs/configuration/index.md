@@ -408,7 +408,7 @@ Log levels, metrics endpoints, monitoring.
 
 Pre-configured settings, tokens, and licenses.
 
-[View details →](./prepared-settings.md)
+[View details →](./prepared-settings/)
 
 ## Validation
 
