@@ -765,6 +765,41 @@ jobs:
           docker-compose up -d
 ```
 
+## Complete Reset
+
+To completely reset EmailEngine (remove all settings, accounts, tokens, etc.), use Redis FLUSHDB:
+
+:::danger Destructive Operation
+This will **permanently delete all EmailEngine data** including accounts, settings, tokens, and license. Use only for development, testing, or when starting fresh.
+:::
+
+```bash
+# Connect to Redis and flush all data
+redis-cli FLUSHDB
+
+# Restart EmailEngine
+# All prepared configuration will be reapplied on startup
+```
+
+**When to use:**
+- Development environment reset
+- Testing fresh installation
+- Clearing corrupted data
+- Starting completely fresh
+
+**What gets deleted:**
+- All email account configurations
+- All access tokens
+- All settings (webhooks, OAuth2 apps, etc.)
+- License information
+- Message indexes and metadata
+- Queue data
+
+**What survives:**
+- Prepared configuration (environment variables)
+- Configuration files (TOML)
+- Redis data from other applications (if using different database)
+
 ## Testing
 
 Test prepared configuration before deployment:
