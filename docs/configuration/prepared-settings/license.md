@@ -1,6 +1,6 @@
 ---
-title: Prepared License
-sidebar_position: 7
+title: License Keys
+sidebar_position: 2
 description: Pre-configure license keys via environment variables
 ---
 
@@ -191,7 +191,7 @@ curl -X DELETE http://localhost:3000/v1/license \
 
 ## See Also
 
-- [Prepared Settings](/docs/configuration/prepared-settings) - Pre-configure runtime settings
-- [Prepared Access Tokens](/docs/configuration/prepared-tokens) - Pre-configure API access tokens
+- [Prepared Settings](./index) - Pre-configure runtime settings
+- [Prepared Access Tokens](./tokens) - Pre-configure API access tokens
 - [License API](/docs/api/license) - Programmatic license management
 - [Support & License](/docs/support/license) - License information and policies

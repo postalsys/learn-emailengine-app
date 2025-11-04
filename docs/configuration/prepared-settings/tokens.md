@@ -1,6 +1,6 @@
 ---
-title: Prepared Access Tokens
-sidebar_position: 6
+title: Access Tokens
+sidebar_position: 1
 description: Pre-configure API access tokens via environment variables
 ---
 
@@ -222,7 +222,7 @@ emailengine
 
 ## See Also
 
-- [Prepared Settings](/docs/configuration/prepared-settings) - Pre-configure runtime settings
-- [Prepared License](/docs/configuration/prepared-license) - Pre-configure license keys
-- [Access Tokens](/docs/configuration/access-tokens) - Access token management and security
+- [Prepared Settings](./index) - Pre-configure runtime settings
+- [Prepared License](./license) - Pre-configure license keys
+- [Access Tokens](/docs/api-reference/access-tokens) - Access token management and security
 - [API Authentication](/docs/api-reference/#authentication) - Using tokens for API access

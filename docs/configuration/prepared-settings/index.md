@@ -1,7 +1,7 @@
 ---
 title: Prepared Settings
 sidebar_position: 5
-description: Pre-configure runtime settings via environment variables
+description: Pre-configure runtime settings, access tokens, and license keys via environment variables
 ---
 
 # Prepared Settings
@@ -200,7 +200,7 @@ curl -X POST http://localhost:3000/v1/settings \
 
 ## See Also
 
-- [Prepared Access Tokens](/docs/configuration/prepared-tokens) - Pre-configure API access tokens
-- [Prepared License](/docs/configuration/prepared-license) - Pre-configure license keys
+- [Prepared Access Tokens](./tokens) - Pre-configure API access tokens
+- [Prepared License](./license) - Pre-configure license keys
 - [Environment Variables](/docs/configuration/environment-variables) - Complete environment variable reference
 - [Settings API](/docs/api-reference/settings) - Programmatic settings management
