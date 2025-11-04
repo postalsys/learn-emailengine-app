@@ -620,17 +620,6 @@
             "format": "date",
             "description": "License creation date",
             "example": "2021-10-13T07:47:42.695Z"
-          },
-          "trial": {
-            "type": "boolean",
-            "description": "Whether this is a trial license",
-            "example": false
-          },
-          "expires": {
-            "type": "string",
-            "format": "date",
-            "description": "License expiration date",
-            "example": "2025-11-11T12:11:26.038Z"
           }
         }
       },
