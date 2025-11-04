@@ -82,6 +82,69 @@ emailengine tokens issue -d "User Token" -a "user@example.com"
 
 **Important:** When running token CLI commands, database settings must be provided, but encryption keys are NOT needed (tokens are hashed, not encrypted).
 
+## Account-Bound Tokens
+
+The `-a` / `--account` flag creates tokens bound to a specific account, restricting their usage.
+
+### How Account-Bound Tokens Work
+
+When you bind a token to an account (e.g., `user@example.com`), the token can only be used for operations on that specific account:
+
+**✅ Allowed with account-bound tokens:**
+- **API scope** (`api`): Operations on the bound account only
+  - `GET /v1/account/user@example.com/messages`
+  - `POST /v1/account/user@example.com/submit`
+  - `GET /v1/account/user@example.com/mailboxes`
+- **SMTP scope** (`smtp`): SMTP authentication as the bound account
+  - Username must match the bound account
+  - `AUTH PLAIN user@example.com <token>`
+- **IMAP proxy scope** (`imap-proxy`): IMAP authentication as the bound account
+  - Username must match the bound account
+  - `LOGIN user@example.com <token>`
+
+**❌ NOT allowed with account-bound tokens:**
+- **Metrics scope** (`metrics`): Cannot access `/metrics` endpoint
+- **API operations on other accounts**:
+  - `GET /v1/account/other@example.com/messages` ← Forbidden
+- **Global operations**:
+  - `GET /v1/accounts` ← Forbidden
+  - `GET /v1/settings` ← Forbidden
+
+### Account-Bound Token Examples
+
+```bash
+# API access for specific account only
+emailengine tokens issue \
+  -d "user@example.com API Token" \
+  -s "api" \
+  -a "user@example.com"
+
+# SMTP access for specific account
+emailengine tokens issue \
+  -d "user@example.com SMTP" \
+  -s "smtp" \
+  -a "user@example.com"
+
+# IMAP proxy access for specific account
+emailengine tokens issue \
+  -d "user@example.com IMAP" \
+  -s "imap-proxy" \
+  -a "user@example.com"
+
+# Combined API and SMTP access for one account
+emailengine tokens issue \
+  -d "user@example.com Full Access" \
+  -s "*" \
+  -a "user@example.com"
+```
+
+### Use Cases for Account-Bound Tokens
+
+1. **Customer self-service portals**: Give customers tokens limited to their own account
+2. **Multi-tenant applications**: Isolate token access by customer/tenant
+3. **Security isolation**: Limit blast radius if a token is compromised
+4. **Delegated access**: Grant third parties access to specific accounts only
+
 ### 2. Export Token
 
 Export an existing token for import elsewhere:
