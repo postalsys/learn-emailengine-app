@@ -52,9 +52,11 @@ f05d76644ea39c4a2ee33e7bffe55808b716a34b51d67b388c7d60498b0f89bc
 | `-a` | `--account` | Bind to specific account | none |
 
 **Scopes:**
-- `*` - Full access (all operations)
-- `api` - API calls only
-- `metrics` - Prometheus metrics only
+- `*` - Full access (all operations, all scopes)
+- `api` - Standard API calls (account operations, messages, mailboxes, etc.)
+- `smtp` - SMTP proxy access only
+- `imap-proxy` - IMAP proxy access only
+- `metrics` - Prometheus metrics endpoint (`/metrics`) access only
 
 **Examples:**
 
@@ -63,13 +65,19 @@ f05d76644ea39c4a2ee33e7bffe55808b716a34b51d67b388c7d60498b0f89bc
 emailengine tokens issue -d "Production API" -s "*"
 
 # API-only token
-emailengine tokens issue -d "Read-Only API" -s "api"
+emailengine tokens issue -d "API Access" -s "api"
 
-# Account-specific token
-emailengine tokens issue -d "User Token" -a "user@example.com"
+# SMTP proxy token
+emailengine tokens issue -d "SMTP Proxy" -s "smtp"
+
+# IMAP proxy token
+emailengine tokens issue -d "IMAP Proxy" -s "imap-proxy"
 
 # Metrics token
 emailengine tokens issue -d "Monitoring" -s "metrics"
+
+# Account-specific token
+emailengine tokens issue -d "User Token" -a "user@example.com"
 ```
 
 **Important:** When running token CLI commands, database settings must be provided, but encryption keys are NOT needed (tokens are hashed, not encrypted).
