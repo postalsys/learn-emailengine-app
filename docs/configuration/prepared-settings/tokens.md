@@ -90,7 +90,7 @@ The `-a` / `--account` flag creates tokens bound to a specific account, restrict
 
 When you bind a token to an account (e.g., `user@example.com`), the token can only be used for operations on that specific account:
 
-**✅ Allowed with account-bound tokens:**
+**Allowed with account-bound tokens:**
 - **API scope** (`api`): Operations on the bound account only
   - `GET /v1/account/user@example.com/messages`
   - `POST /v1/account/user@example.com/submit`
@@ -102,13 +102,13 @@ When you bind a token to an account (e.g., `user@example.com`), the token can on
   - Username must match the bound account
   - `LOGIN user@example.com <token>`
 
-**❌ NOT allowed with account-bound tokens:**
+**NOT allowed with account-bound tokens:**
 - **Metrics scope** (`metrics`): Cannot access `/metrics` endpoint
 - **API operations on other accounts**:
-  - `GET /v1/account/other@example.com/messages` ← Forbidden
+  - `GET /v1/account/other@example.com/messages` (Forbidden)
 - **Global operations**:
-  - `GET /v1/accounts` ← Forbidden
-  - `GET /v1/settings` ← Forbidden
+  - `GET /v1/accounts` (Forbidden)
+  - `GET /v1/settings` (Forbidden)
 
 ### Account-Bound Token Examples
 
