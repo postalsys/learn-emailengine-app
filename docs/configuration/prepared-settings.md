@@ -774,12 +774,28 @@ This will **permanently delete all EmailEngine data** including accounts, settin
 :::
 
 ```bash
-# Connect to Redis and flush all data
+# Default (local Redis, database 0)
 redis-cli FLUSHDB
+
+# Specific database number
+redis-cli -n 3 FLUSHDB
+
+# Remote Redis with password
+redis-cli -h redis.example.com -p 6379 -a yourpassword FLUSHDB
+
+# Remote Redis with username and password (Redis 6+)
+redis-cli -h redis.example.com -p 6379 --user admin --pass yourpassword FLUSHDB
+
+# Using connection string from environment
+redis-cli -u $EENGINE_REDIS FLUSHDB
+# or
+redis-cli -u $REDIS_URL FLUSHDB
 
 # Restart EmailEngine
 # All prepared configuration will be reapplied on startup
 ```
+
+**Important:** Make sure you're connecting to the same Redis instance and database that EmailEngine uses. Check your `EENGINE_REDIS` or `REDIS_URL` environment variable to get the correct connection details.
 
 **When to use:**
 - Development environment reset
