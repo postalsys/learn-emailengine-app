@@ -9,6 +9,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Account",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -93,6 +95,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Mailbox",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -123,6 +127,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Message",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -189,6 +195,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Submit",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -201,6 +209,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Outbox",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -225,6 +235,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Delivery Test",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -243,6 +255,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Access Tokens",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -273,6 +287,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Settings",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -309,6 +325,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Templates",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -351,6 +369,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Logs",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -363,6 +383,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Stats",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -375,6 +397,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "License",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -399,6 +423,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Webhooks",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -417,6 +443,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "OAuth2 Applications",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -453,6 +481,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "SMTP Gateway",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -489,6 +519,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Blocklists",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
@@ -519,6 +551,8 @@ const sidebar: SidebarsConfig = {
     {
       type: "category",
       label: "Multi Message Actions",
+      collapsible: true,
+      collapsed: true,
       items: [
         {
           type: "doc",
