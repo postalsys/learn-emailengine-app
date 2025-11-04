@@ -225,8 +225,6 @@ EmailEngine includes [Arena](https://github.com/bee-queue/arena), a web UI for B
 - Pause/resume queues
 - View job logs
 
-![Arena Interface](/img/external/dTxpPiMO3S.png)
-
 ### API Access
 
 Query queue status via the [outbox API](/docs/api/get-v-1-outbox):

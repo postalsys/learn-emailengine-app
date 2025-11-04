@@ -36,8 +36,6 @@ EmailEngine integrates with OpenAI's API to provide AI-powered email processing 
 4. Select model (GPT-3.5 or GPT-4)
 5. Save configuration
 
-![LLM Integration Configuration](/img/screenshots/llm-config.png)
-
 ### Model Selection
 
 | Model | Speed | Cost | Context Window | Best For |

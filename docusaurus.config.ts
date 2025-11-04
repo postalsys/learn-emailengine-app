@@ -25,11 +25,11 @@ const config: Config = {
   projectName: 'emailengine',
 
   onBrokenLinks: 'warn',
-  onBrokenMarkdownLinks: 'warn',
 
   markdown: {
     mermaid: true,
     hooks: {
+      onBrokenMarkdownLinks: 'warn',
       onBrokenMarkdownImages: 'warn',
     },
   },
@@ -84,14 +84,6 @@ const config: Config = {
         } satisfies any,
       },
     ],
-  ],
-
-  themes: [
-    "docusaurus-theme-openapi-docs",
-    "@docusaurus/theme-mermaid",
-  ],
-
-  plugins: [
     [
       require.resolve("@cmfcmf/docusaurus-search-local"),
       {
@@ -112,6 +104,11 @@ const config: Config = {
         },
       },
     ],
+  ],
+
+  themes: [
+    "docusaurus-theme-openapi-docs",
+    "@docusaurus/theme-mermaid",
   ],
 
   themeConfig: {

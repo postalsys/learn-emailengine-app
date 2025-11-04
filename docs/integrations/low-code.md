@@ -112,8 +112,6 @@ The webhook endpoint URL of your target service.
 4. Set name (e.g., "EmailEngine") and channel
 5. Copy webhook URL
 
-![Discord Webhook Configuration](/img/screenshots/discord-webhook.png)
-
 ### Create EmailEngine Route
 
 **Filtering Function**:
@@ -167,9 +165,7 @@ https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN
 
 ### Result
 
-When an email bounces, EmailEngine sends a formatted message to Discord:
-
-![Discord Notification Example](/img/screenshots/discord-notification.png)
+When an email bounces, EmailEngine sends a formatted message to Discord with the account, recipient, message ID, and bounce reason displayed in an embedded card format.
 
 ## Example: Slack VIP Notifications
 
