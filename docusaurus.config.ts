@@ -89,18 +89,27 @@ const config: Config = {
   themes: [
     "docusaurus-theme-openapi-docs",
     "@docusaurus/theme-mermaid",
+  ],
+
+  plugins: [
     [
-      require.resolve("@easyops-cn/docusaurus-search-local"),
+      require.resolve("@cmfcmf/docusaurus-search-local"),
       {
-        hashed: true,
-        language: ["en"],
         indexDocs: true,
         indexBlog: false,
         indexPages: false,
-        docsRouteBasePath: "/docs",
-        highlightSearchTermsOnTargetPage: true,
-        searchResultLimits: 8,
-        searchResultContextMaxLength: 50,
+        language: "en",
+        style: undefined,
+        maxSearchResults: 8,
+        lunr: {
+          tokenizerSeparator: /[\s\-]+/,
+          b: 0.75,
+          k1: 1.2,
+          titleBoost: 5,
+          contentBoost: 1,
+          tagsBoost: 3,
+          parentCategoriesBoost: 2,
+        },
       },
     ],
   ],
