@@ -82,6 +82,44 @@ emailengine tokens issue -d "User Token" -a "user@example.com"
 
 **Important:** When running token CLI commands, database settings must be provided, but encryption keys are NOT needed (tokens are hashed, not encrypted).
 
+### 2. Export Token
+
+Export an existing token for import elsewhere:
+
+```bash
+emailengine tokens export -t f05d76644ea39c4a2...
+```
+
+**Output:**
+```
+hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxNTYzYTFlM2I1NjVkYmEzZWJjMzk4ZjI4OWZjNjgzN...
+```
+
+The exported string contains:
+- Token hash
+- Token metadata (description, scope, account)
+- Creation timestamp
+
+**Use cases:**
+- Share token between EmailEngine instances
+- Backup token for prepared configuration
+- Migrate token to different environment
+
+### 3. Import Token
+
+Import a previously exported token:
+
+```bash
+emailengine tokens import -t hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxN...
+```
+
+**Output:**
+```
+Token was imported
+```
+
+The original token value (the actual API key) is preserved during import.
+
 ## Account-Bound Tokens
 
 The `-a` / `--account` flag creates tokens bound to a specific account, restricting their usage.
@@ -144,44 +182,6 @@ emailengine tokens issue \
 2. **Multi-tenant applications**: Isolate token access by customer/tenant
 3. **Security isolation**: Limit blast radius if a token is compromised
 4. **Delegated access**: Grant third parties access to specific accounts only
-
-### 2. Export Token
-
-Export an existing token for import elsewhere:
-
-```bash
-emailengine tokens export -t f05d76644ea39c4a2...
-```
-
-**Output:**
-```
-hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxNTYzYTFlM2I1NjVkYmEzZWJjMzk4ZjI4OWZjNjgzN...
-```
-
-The exported string contains:
-- Token hash
-- Token metadata (description, scope, account)
-- Creation timestamp
-
-**Use cases:**
-- Share token between EmailEngine instances
-- Backup token for prepared configuration
-- Migrate token to different environment
-
-### 3. Import Token
-
-Import a previously exported token:
-
-```bash
-emailengine tokens import -t hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxN...
-```
-
-**Output:**
-```
-Token was imported
-```
-
-The original token value (the actual API key) is preserved during import.
 
 ## Prepared Token Configuration
 
