@@ -13,8 +13,8 @@ Pre-configure API access tokens for automated API access without manual token ge
 Manual token generation requires:
 1. Starting EmailEngine
 2. Logging into web interface
-3. Navigating to Settings
-4. Clicking "Generate token"
+3. Navigating to Access Tokens
+4. Clicking "Create new"
 5. Copying the token
 
 Prepared tokens eliminate these manual steps, enabling:
