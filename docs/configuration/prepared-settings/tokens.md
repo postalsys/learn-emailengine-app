@@ -1,31 +1,41 @@
 ---
-title: Access Tokens
+title: Prepared Tokens
 sidebar_position: 1
-description: Pre-configure API access tokens via environment variables
+description: Pre-configure API access tokens via environment variables for automated deployments
 ---
 
 # Prepared Access Tokens
 
-Pre-configure API access tokens for automated API access without manual token generation.
+Pre-configure API access tokens for fully automated deployments without manual token generation through the web interface.
+
+## Overview
+
+This guide covers the CLI-based token management workflow for:
+- Automated deployments (Docker, Kubernetes, cloud platforms)
+- Infrastructure-as-code setups
+- CI/CD pipelines
+- Automated testing environments
+
+For comprehensive token documentation including web UI management, API creation methods, security best practices, and authentication details, see [Access Tokens](/docs/api-reference/access-tokens).
 
 ## Why Prepared Tokens
 
-Manual token generation requires:
+Manual token generation through the web interface requires:
 1. Starting EmailEngine
 2. Logging into web interface
 3. Navigating to Access Tokens
 4. Clicking "Create new"
 5. Copying the token
 
-Prepared tokens eliminate these manual steps, enabling:
-- Fully automated deployments
-- Automated testing
-- CI/CD integration
-- Programmatic environment setup
+Prepared tokens eliminate these manual steps, enabling fully automated infrastructure deployment.
 
 ## Token Management via CLI
 
-EmailEngine CLI provides commands for token management:
+EmailEngine CLI provides commands for token management.
+
+:::tip CLI Documentation
+For complete CLI usage, installation, configuration options, and advanced examples, see the [Command Line Interface (CLI)](/docs/configuration/cli) documentation.
+:::
 
 ### 1. Issue New Token
 
@@ -58,6 +68,8 @@ f05d76644ea39c4a2ee33e7bffe55808b716a34b51d67b388c7d60498b0f89bc
 - `imap-proxy` - IMAP proxy access only
 - `metrics` - Prometheus metrics endpoint (`/metrics`) access only
 
+For detailed scope descriptions and security implications, see [Token Scopes](/docs/api-reference/access-tokens#token-scopes).
+
 **Examples:**
 
 ```bash
@@ -67,17 +79,8 @@ emailengine tokens issue -d "Production API" -s "*"
 # API-only token
 emailengine tokens issue -d "API Access" -s "api"
 
-# SMTP proxy token
-emailengine tokens issue -d "SMTP Proxy" -s "smtp"
-
-# IMAP proxy token
-emailengine tokens issue -d "IMAP Proxy" -s "imap-proxy"
-
-# Metrics token
-emailengine tokens issue -d "Monitoring" -s "metrics"
-
-# Account-specific token
-emailengine tokens issue -d "User Token" -a "user@example.com"
+# Account-specific token (see Account-Bound Tokens section below)
+emailengine tokens issue -d "User Token" -s "api" -a "user@example.com"
 ```
 
 **Important:** When running token CLI commands, database settings must be provided, but encryption keys are NOT needed (tokens are hashed, not encrypted).
@@ -122,33 +125,9 @@ The original token value (the actual API key) is preserved during import.
 
 ## Account-Bound Tokens
 
-The `-a` / `--account` flag creates tokens bound to a specific account, restricting their usage.
+The `-a` / `--account` flag creates tokens bound to a specific account, restricting their usage to operations on that single account only.
 
-### How Account-Bound Tokens Work
-
-When you bind a token to an account (e.g., `user@example.com`), the token can only be used for operations on that specific account:
-
-**Allowed with account-bound tokens:**
-- **API scope** (`api`): Operations on the bound account only
-  - `GET /v1/account/user@example.com/messages`
-  - `POST /v1/account/user@example.com/submit`
-  - `GET /v1/account/user@example.com/mailboxes`
-- **SMTP scope** (`smtp`): SMTP authentication as the bound account
-  - Username must match the bound account
-  - `AUTH PLAIN user@example.com <token>`
-- **IMAP proxy scope** (`imap-proxy`): IMAP authentication as the bound account
-  - Username must match the bound account
-  - `LOGIN user@example.com <token>`
-
-**NOT allowed with account-bound tokens:**
-- **Metrics scope** (`metrics`): Cannot access `/metrics` endpoint
-- **API operations on other accounts**:
-  - `GET /v1/account/other@example.com/messages` (Forbidden)
-- **Global operations**:
-  - `GET /v1/accounts` (Forbidden)
-  - `GET /v1/settings` (Forbidden)
-
-### Account-Bound Token Examples
+**Examples:**
 
 ```bash
 # API access for specific account only
@@ -163,12 +142,6 @@ emailengine tokens issue \
   -s "smtp" \
   -a "user@example.com"
 
-# IMAP proxy access for specific account
-emailengine tokens issue \
-  -d "user@example.com IMAP" \
-  -s "imap-proxy" \
-  -a "user@example.com"
-
 # Combined API and SMTP access for one account
 emailengine tokens issue \
   -d "user@example.com Full Access" \
@@ -176,16 +149,23 @@ emailengine tokens issue \
   -a "user@example.com"
 ```
 
-### Use Cases for Account-Bound Tokens
+**Key characteristics:**
+- Token can ONLY access the bound account's data
+- Cannot access system-wide endpoints or other accounts
+- Ideal for multi-tenant applications and customer self-service portals
+- Limits security blast radius if token is compromised
 
-1. **Customer self-service portals**: Give customers tokens limited to their own account
-2. **Multi-tenant applications**: Isolate token access by customer/tenant
-3. **Security isolation**: Limit blast radius if a token is compromised
-4. **Delegated access**: Grant third parties access to specific accounts only
+For complete details on account-specific tokens, restrictions, and use cases, see [Account-Specific Tokens](/docs/api-reference/access-tokens#account-specific-tokens).
 
 ## Prepared Token Configuration
 
-Load a token automatically on startup using the exported token string.
+Load a token automatically on startup using the exported token string. When EmailEngine starts, it checks for the `EENGINE_PREPARED_TOKEN` environment variable (or `--preparedToken` CLI flag) and automatically imports the token into the system without requiring manual web interface interaction.
+
+**How it works:**
+1. Export a token using `emailengine tokens export -t TOKEN_VALUE`
+2. Set the exported string as `EENGINE_PREPARED_TOKEN` environment variable
+3. When EmailEngine starts, it automatically imports the token
+4. The token is immediately available for API authentication
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -293,7 +273,9 @@ emailengine
 
 ## See Also
 
-- [Prepared Settings](./index) - Pre-configure runtime settings
-- [Prepared License](./license) - Pre-configure license keys
-- [Access Tokens](/docs/api-reference/access-tokens) - Access token management and security
-- [API Authentication](/docs/api-reference/#authentication) - Using tokens for API access
+- [Command Line Interface (CLI)](/docs/configuration/cli) - Complete CLI reference for token management and administration
+- [Access Tokens](/docs/api-reference/access-tokens) - Complete token guide (types, creation methods, security, authentication)
+- [Prepared Settings](./index) - Pre-configure runtime settings via environment variables
+- [Prepared License](./license) - Pre-configure license keys for automated deployments
+- [Docker Deployment](/docs/deployment/docker) - Containerized deployment with prepared configuration
+- [Security Best Practices](/docs/deployment/security) - Security guidelines for production deployments

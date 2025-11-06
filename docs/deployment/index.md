@@ -187,7 +187,7 @@ Before deploying to production, ensure you have:
 ### Configuration
 
 - [ ] Strong `EENGINE_SECRET` (32+ characters)
-- [ ] `EENGINE_ENCRYPTION_SECRET` for field encryption
+- [ ] `EENGINE_SECRET` for field encryption
 - [ ] OAuth2 credentials configured
 - [ ] Webhook endpoints configured
 - [ ] Base URL set correctly
@@ -311,7 +311,6 @@ NODE_ENV=production
 EENGINE_LOG_LEVEL=debug
 EENGINE_BASE_URL=https://staging-email.example.com
 REDIS_URL=redis://staging-redis:6379
-EENGINE_METRICS_SERVER=true
 ```
 
 ### Production
@@ -322,8 +321,7 @@ NODE_ENV=production
 EENGINE_LOG_LEVEL=info
 EENGINE_BASE_URL=https://emailengine.example.com
 REDIS_URL=redis://prod-redis:6379
-EENGINE_METRICS_SERVER=true
-EENGINE_ENCRYPTION_SECRET=${ENCRYPTION_KEY}
+EENGINE_SECRET=${ENCRYPTION_KEY}
 ```
 
 ## Common Deployment Patterns
@@ -455,7 +453,6 @@ cp /var/lib/redis/dump.rdb /backup/
 
 **Prometheus endpoint:**
 ```bash
-EENGINE_METRICS_SERVER=true
 EENGINE_METRICS_PORT=9090
 ```
 

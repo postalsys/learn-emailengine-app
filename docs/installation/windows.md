@@ -101,7 +101,7 @@ $secret = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 64 | ForEac
 $encSecret = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 64 | ForEach-Object {[char]$_})
 
 Write-Host "EENGINE_SECRET=$secret"
-Write-Host "EENGINE_ENCRYPTION_SECRET=$encSecret"
+Write-Host "EENGINE_SECRET=$encSecret"
 ```
 
 **Save these values securely!**
@@ -114,7 +114,7 @@ Create environment variables or a configuration file.
 # Set environment variables for this session
 $env:EENGINE_REDIS = "redis://127.0.0.1:6379"
 $env:EENGINE_SECRET = "your-secret-here"
-$env:EENGINE_ENCRYPTION_SECRET = "your-encryption-secret-here"
+$env:EENGINE_SECRET = "your-encryption-secret-here"
 $env:EENGINE_PORT = "3000"
 
 # Run EmailEngine
@@ -152,7 +152,7 @@ nssm install EmailEngine
 # Or via command line
 nssm install EmailEngine "C:\Program Files\EmailEngine\emailengine.exe"
 nssm set EmailEngine AppDirectory "C:\Program Files\EmailEngine"
-nssm set EmailEngine AppEnvironmentExtra EENGINE_REDIS=redis://127.0.0.1:6379 EENGINE_SECRET=your-secret EENGINE_ENCRYPTION_SECRET=your-encryption-secret EENGINE_WORKERS=4
+nssm set EmailEngine AppEnvironmentExtra EENGINE_REDIS=redis://127.0.0.1:6379 EENGINE_SECRET=your-secret-at-least-32-chars EENGINE_WORKERS=4
 nssm set EmailEngine DisplayName "EmailEngine"
 nssm set EmailEngine Description "EmailEngine IMAP/SMTP API service"
 nssm set EmailEngine Start SERVICE_AUTO_START
@@ -280,7 +280,7 @@ Set these in NSSM service configuration or `.env` file:
 # Required
 EENGINE_REDIS=redis://127.0.0.1:6379
 EENGINE_SECRET=your-secret-key-at-least-32-chars
-EENGINE_ENCRYPTION_SECRET=your-encryption-secret-32-chars
+EENGINE_SECRET=your-encryption-secret-32-chars
 
 # Optional
 EENGINE_WORKERS=4

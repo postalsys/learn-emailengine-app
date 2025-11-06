@@ -120,7 +120,6 @@ save 60 10000
 appendonly yes
 
 # Memory
-maxmemory 2gb
 maxmemory-policy noeviction
 ```
 
@@ -168,7 +167,7 @@ EENGINE_REDIS=redis://127.0.0.1:6379
 
 # Security secrets (generate secure values!)
 EENGINE_SECRET=your-secret-key-at-least-32-characters
-EENGINE_ENCRYPTION_SECRET=your-encryption-secret-32-chars
+EENGINE_SECRET=your-encryption-secret-32-chars
 
 # Performance
 EENGINE_WORKERS=4
@@ -180,17 +179,13 @@ EENGINE_LOG_RAW=false
 # API settings
 EENGINE_PORT=3000
 EENGINE_HOST=0.0.0.0
-
-# Optional: Enable metrics
-EENGINE_METRICS_SERVER=true
-EENGINE_METRICS_PORT=9090
 ```
 
 **Generate secure secrets:**
 ```bash
 # Generate random secrets
 openssl rand -hex 32  # Use for EENGINE_SECRET
-openssl rand -hex 32  # Use for EENGINE_ENCRYPTION_SECRET
+openssl rand -hex 32  # Use for EENGINE_SECRET
 ```
 
 #### Step 5: Test Installation
@@ -449,7 +444,7 @@ module.exports = {
       NODE_ENV: 'production',
       EENGINE_REDIS: 'redis://127.0.0.1:6379',
       EENGINE_SECRET: 'your-secret-here',
-      EENGINE_ENCRYPTION_SECRET: 'your-encryption-secret',
+      EENGINE_SECRET: 'your-encryption-secret',
       EENGINE_WORKERS: '4',
       EENGINE_PORT: '3000'
     },
@@ -531,7 +526,6 @@ services:
     environment:
       - EENGINE_REDIS=redis://redis:6379
       - EENGINE_SECRET=${EENGINE_SECRET}
-      - EENGINE_ENCRYPTION_SECRET=${EENGINE_ENCRYPTION_SECRET}
     depends_on:
       - redis
 
@@ -620,7 +614,7 @@ All configuration can be set via environment variables in `.env` file:
 # Core settings
 EENGINE_REDIS=redis://127.0.0.1:6379
 EENGINE_SECRET=your-secret-32-chars-min
-EENGINE_ENCRYPTION_SECRET=your-encryption-secret
+EENGINE_SECRET=your-encryption-secret
 
 # Performance
 EENGINE_WORKERS=4
@@ -635,8 +629,6 @@ EENGINE_LOG_LEVEL=info
 EENGINE_LOG_RAW=false
 
 # Features
-EENGINE_METRICS_SERVER=true
-EENGINE_METRICS_PORT=9090
 EENGINE_MAX_ATTACHMENT_SIZE=5242880
 ```
 
@@ -682,15 +674,14 @@ curl http://localhost:3000/health
 
 ### Prometheus Metrics
 
-Enable metrics in `.env`:
+Create a token with metrics scope:
 ```bash
-EENGINE_METRICS_SERVER=true
-EENGINE_METRICS_PORT=9090
+emailengine tokens issue -d "Prometheus" -s "metrics"
 ```
 
-Access metrics:
+Access metrics at `/metrics` endpoint:
 ```bash
-curl http://localhost:9090/metrics
+curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:3000/metrics
 ```
 
 ### Logs

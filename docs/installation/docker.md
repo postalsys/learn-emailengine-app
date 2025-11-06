@@ -29,7 +29,6 @@ docker run -d \
   -p 3000:3000 \
   -e EENGINE_REDIS="redis://redis-host:6379" \
   -e EENGINE_SECRET="your-secret-key-at-least-32-chars" \
-  -e EENGINE_ENCRYPTION_SECRET="your-encryption-secret-32-chars" \
   postalsys/emailengine:latest
 ```
 
@@ -76,7 +75,6 @@ services:
     environment:
       - EENGINE_REDIS=redis://redis:6379
       - EENGINE_SECRET=change-this-to-a-random-secret-at-least-32-chars
-      - EENGINE_ENCRYPTION_SECRET=change-this-to-another-random-secret-32-chars
       - EENGINE_WORKERS=4
       - EENGINE_LOG_LEVEL=info
     depends_on:
@@ -140,9 +138,8 @@ Create `.env` file:
 # Redis connection
 EENGINE_REDIS=redis://redis:6379
 
-# Security secrets (CHANGE THESE!)
+# Security secret (CHANGE THIS!)
 EENGINE_SECRET=generate-random-secret-at-least-32-characters
-EENGINE_ENCRYPTION_SECRET=generate-another-random-secret-32-chars
 
 # Performance
 EENGINE_WORKERS=4
@@ -155,9 +152,8 @@ EENGINE_LOG_RAW=false
 EENGINE_PORT=3000
 EENGINE_HOST=0.0.0.0
 
-# Optional: Enable metrics
-EENGINE_METRICS_SERVER=true
-EENGINE_METRICS_PORT=9090
+# Metrics are available at /metrics endpoint on the main API port
+# Requires authentication with a token that has 'metrics' scope
 ```
 
 **Generate secure secrets:**
@@ -178,7 +174,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: emailengine-redis
-    command: redis-server --appendonly yes --maxmemory-policy noeviction --maxmemory 2gb
+    command: redis-server --appendonly yes --maxmemory-policy noeviction
     volumes:
       - redis-data:/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
@@ -234,7 +230,6 @@ save 300 10
 save 60 10000
 
 # Memory
-maxmemory 2gb
 maxmemory-policy noeviction
 
 # Performance
@@ -438,7 +433,6 @@ docker run -d \
   -p 3000:3000 \
   -e EENGINE_REDIS="redis://redis-host:6379" \
   -e EENGINE_SECRET="your-secret-key" \
-  -e EENGINE_ENCRYPTION_SECRET="your-encryption-secret" \
   postalsys/emailengine:latest
 ```
 
@@ -461,7 +455,6 @@ services:
 ```bash
 EENGINE_REDIS=redis://redis:6379
 EENGINE_SECRET=your-secret-key-at-least-32-chars
-EENGINE_ENCRYPTION_SECRET=your-encryption-secret-32-chars
 ```
 
 ### Optional Variables
@@ -478,9 +471,7 @@ EENGINE_HOST=0.0.0.0          # Bind address
 EENGINE_LOG_LEVEL=info        # trace, debug, info, warn, error
 EENGINE_LOG_RAW=false         # Log raw IMAP/SMTP traffic
 
-# Metrics
-EENGINE_METRICS_SERVER=true   # Enable Prometheus metrics
-EENGINE_METRICS_PORT=9090     # Metrics port
+# Metrics available at /metrics endpoint (requires token with 'metrics' scope)
 
 # Queue settings
 EENGINE_QUEUE_NOTIFY=true     # Enable queue notifications
@@ -539,7 +530,6 @@ services:
     command: >
       redis-server
       --appendonly yes
-      --maxmemory 2gb
       --maxmemory-policy noeviction
       --tcp-backlog 511
       --timeout 300

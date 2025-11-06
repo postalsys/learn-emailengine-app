@@ -159,7 +159,7 @@ EmailEngine will not start without this. Generate a strong random value.
 
 #### Encryption Secret
 
-**Environment:** `EENGINE_ENCRYPTION_SECRET`
+**Environment:** `EENGINE_SECRET`
 **Command line:** `--encryptionSecret=...`
 **Config file:** `encryptionSecret`
 **Recommended:** Yes
@@ -167,7 +167,11 @@ EmailEngine will not start without this. Generate a strong random value.
 Secret for field encryption (passwords, tokens). **Minimum 32 characters.**
 
 ```bash
-EENGINE_ENCRYPTION_SECRET=$(openssl rand -hex 32)
+# Generate a secret and save it to .env file
+openssl rand -hex 32
+
+# Add to .env file:
+EENGINE_SECRET=generated-secret-value-here
 ```
 
 #### Encryption Enabled
@@ -462,31 +466,23 @@ Number of retry attempts for failed webhooks.
 
 ## Monitoring
 
-### Metrics Server
+### Metrics Endpoint
 
-**Environment:** `EENGINE_METRICS_SERVER`
-**Config file:** `metrics.enabled`
-**Default:** `false`
+The Prometheus metrics endpoint is available at `/metrics` on the main API server. It requires authentication with a token that has the `metrics` scope.
 
-Enable Prometheus metrics endpoint.
+**Endpoint:** `http://localhost:3000/metrics`
 
-```bash
-EENGINE_METRICS_SERVER=true
-```
-
-### Metrics Port
-
-**Environment:** `EENGINE_METRICS_PORT`
-**Config file:** `metrics.port`
-**Default:** `9090`
-
-Prometheus metrics HTTP port.
+**Authentication:** Requires API token with `metrics` scope (or `*` for full access)
 
 ```bash
-EENGINE_METRICS_PORT=9090
+# Create a metrics-only token
+emailengine tokens issue -d "Prometheus" -s "metrics"
+
+# Access metrics
+curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:3000/metrics
 ```
 
-**Access:** `http://localhost:9090/metrics`
+**Note:** There is no separate metrics server. Metrics are served on the same port as the main API (configured via `EENGINE_PORT` or `PORT` environment variable, default: 3000).
 
 ### Health Check
 
@@ -684,7 +680,7 @@ curl -X POST https://emailengine.example.com/v1/settings \
 | `EENGINE_BASE_URL` | Auto | Base URL |
 | `EENGINE_REDIS` | `redis://127.0.0.1:6379` | Redis URL |
 | `EENGINE_SECRET` | **Required** | Session secret |
-| `EENGINE_ENCRYPTION_SECRET` | Recommended | Field encryption secret |
+| `EENGINE_SECRET` | Recommended | Field encryption secret |
 | `EENGINE_WORKERS` | `1` | Worker threads |
 | `EENGINE_LOG_LEVEL` | `trace` | Log level |
 | `EENGINE_PREPARED_LICENSE` | None | License key (PEM or exported format) |
@@ -693,8 +689,6 @@ curl -X POST https://emailengine.example.com/v1/settings \
 | `EENGINE_OUTLOOK_CLIENT_ID` | None | Outlook OAuth2 client ID |
 | `EENGINE_OUTLOOK_CLIENT_SECRET` | None | Outlook OAuth2 secret |
 | `EENGINE_MAX_CONNECTIONS` | `10` | Max IMAP connections |
-| `EENGINE_METRICS_SERVER` | `false` | Enable metrics |
-| `EENGINE_METRICS_PORT` | `9090` | Metrics port |
 
 ## Configuration File Example
 
@@ -710,7 +704,7 @@ curl -X POST https://emailengine.example.com/v1/settings \
     "redis": "redis://localhost:6379"
   },
   "secret": "${EENGINE_SECRET}",
-  "encryptionSecret": "${EENGINE_ENCRYPTION_SECRET}",
+  "encryptionSecret": "${EENGINE_SECRET}",
   "workers": 4,
   "maxConnections": 20,
   "chunkSize": 5000,

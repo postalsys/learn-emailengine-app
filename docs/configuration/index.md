@@ -56,11 +56,19 @@ import TabItem from '@theme/TabItem';
 
 **Recommended for production deployments.**
 
-```bash
-export EENGINE_HOST="0.0.0.0"
-export EENGINE_PORT="3000"
-export REDIS_URL="redis://localhost:6379"
+Create a `.env` file in the working directory:
 
+```bash
+# .env file
+EENGINE_HOST=0.0.0.0
+EENGINE_PORT=3000
+EENGINE_REDIS=redis://localhost:6379
+EENGINE_SECRET=your-secret-at-least-32-chars
+```
+
+EmailEngine automatically loads environment variables from `.env` file in the current working directory:
+
+```bash
 emailengine
 ```
 

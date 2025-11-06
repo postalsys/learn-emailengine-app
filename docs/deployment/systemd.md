@@ -224,10 +224,8 @@ Edit `/etc/systemd/system/emailengine.service`:
 [Service]
 Environment="EENGINE_REDIS=redis://localhost:6379"
 Environment="EENGINE_SECRET=your-secret-key-at-least-32-characters"
-Environment="EENGINE_ENCRYPTION_SECRET=another-secret-for-encryption"
 Environment="EENGINE_WORKERS=4"
 Environment="EENGINE_LOG_LEVEL=info"
-Environment="EENGINE_METRICS_SERVER=true"
 ```
 
 **Apply changes:**
@@ -253,7 +251,7 @@ sudo systemctl restart emailengine
   "workers": 4,
   "maxConnections": 20,
   "secret": "${EENGINE_SECRET}",
-  "encryptionSecret": "${EENGINE_ENCRYPTION_SECRET}",
+  "encryptionSecret": "${EENGINE_SECRET}",
   "log": {
     "level": "info",
     "file": "/var/log/emailengine/app.log"
@@ -647,10 +645,15 @@ sudo systemctl show emailengine -p NRestarts
 
 **Prometheus metrics:**
 
-```ini
-[Service]
-Environment="EENGINE_METRICS_SERVER=true"
-Environment="EENGINE_METRICS_PORT=9090"
+Metrics are available at `/metrics` endpoint on the main API port. Create a token with metrics scope:
+
+```bash
+emailengine tokens issue -d "Prometheus" -s "metrics"
+```
+
+Access metrics:
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:3000/metrics
 ```
 
 **Export logs to external system:**
@@ -744,17 +747,15 @@ sudo mkdir -p /etc/emailengine /var/log/emailengine
 sudo chown emailengine:emailengine /var/log/emailengine
 ```
 
-**3. Generate secrets:**
+**3. Generate secret:**
 ```bash
-# Generate secrets (save these!)
-EENGINE_SECRET=$(openssl rand -hex 32)
-EENGINE_ENCRYPTION_SECRET=$(openssl rand -hex 32)
-
-echo "EENGINE_SECRET: $EENGINE_SECRET"
-echo "EENGINE_ENCRYPTION_SECRET: $EENGINE_ENCRYPTION_SECRET"
+# Generate a random secret (minimum 32 characters) and save it
+openssl rand -hex 32
 ```
 
-**4. Create service file (use the secrets from step 3):**
+**Save this value securely!** You'll use it in the service file below.
+
+**4. Create service file (use the secret from step 3):**
 ```bash
 sudo tee /etc/systemd/system/emailengine.service > /dev/null <<'EOF'
 [Unit]
@@ -768,10 +769,9 @@ User=emailengine
 Group=emailengine
 WorkingDirectory=/opt/emailengine
 
-# Replace with your actual secrets from step 3
+# Replace with your actual secret from step 3
 Environment="EENGINE_REDIS=redis://localhost:6379"
 Environment="EENGINE_SECRET=your-generated-secret-from-step-3"
-Environment="EENGINE_ENCRYPTION_SECRET=your-generated-encryption-secret-from-step-3"
 Environment="EENGINE_WORKERS=4"
 Environment="EENGINE_LOG_LEVEL=info"
 

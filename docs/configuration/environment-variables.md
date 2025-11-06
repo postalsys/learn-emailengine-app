@@ -8,6 +8,19 @@ sidebar_position: 2
 
 Complete reference for all EmailEngine environment variables. These settings are loaded at application startup and require a restart to take effect.
 
+:::info .env File Support
+EmailEngine automatically loads environment variables from a `.env` file located in the current working directory. This is the recommended way to configure EmailEngine as it ensures variables persist across restarts.
+
+```bash
+# Create .env file
+echo "EENGINE_REDIS=redis://localhost:6379" > .env
+echo "EENGINE_SECRET=$(openssl rand -hex 32)" >> .env
+
+# Start EmailEngine (will load .env automatically)
+emailengine
+```
+:::
+
 :::tip Command-Line Alternative
 Every environment variable can also be set via command-line arguments using the format `--section.key=value`. For example, `EENGINE_HOST=0.0.0.0` can be set as `--api.host=0.0.0.0`. [See CLI reference →](./cli)
 :::
@@ -284,7 +297,11 @@ Security settings and access restrictions.
 
 **Set encryption secret:**
 ```bash
-EENGINE_SECRET=$(openssl rand -hex 32)
+# Generate a secret
+openssl rand -hex 32
+
+# Add to .env file:
+EENGINE_SECRET=generated-value-here
 ```
 
 **Restrict admin access to specific IPs:**

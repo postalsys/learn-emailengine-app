@@ -87,8 +87,11 @@ emailengine --help
    **Solution:**
 
    ```bash
-   # Generate and set secret
-   export EENGINE_SECRET=$(openssl rand -hex 32)
+   # Generate a secret
+   openssl rand -hex 32
+
+   # Add it to your .env file or export it
+   echo "EENGINE_SECRET=generated-value-here" >> .env
    ```
 
 3. **Port already in use**
@@ -162,14 +165,17 @@ journalctl -u emailengine | grep -i "connection\|error"
    **Solution:**
 
    ```bash
-   # Increase Redis maxmemory
+   # Option 1: Add more memory to your server
+   # Redis will automatically use available memory if maxmemory is not set
+
+   # Option 2: If maxmemory is set and you need to increase it
    # Edit /etc/redis/redis.conf
-   maxmemory 2gb
+   # Increase maxmemory value or remove it entirely
 
    # Restart Redis
    sudo systemctl restart redis
 
-   # Or flush old data (WARNING: deletes data)
+   # Option 3: Clean up old data (WARNING: deletes data)
    redis-cli FLUSHDB
    ```
 

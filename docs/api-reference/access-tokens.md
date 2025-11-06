@@ -31,7 +31,7 @@ f05d76644ea39c4a2ee33e7bffe55808b716a34b51d67b388c7d60498b0f89bc
 
 **Created via:**
 
-- Web interface (Settings → Access Tokens)
+- Web interface (Dashboard side menu → Access Tokens)
 - CLI: `emailengine tokens issue`
 
 **Characteristics:**
@@ -39,7 +39,7 @@ f05d76644ea39c4a2ee33e7bffe55808b716a34b51d67b388c7d60498b0f89bc
 - Access all accounts
 - Access all API endpoints
 - Can create other tokens
-- Cannot be scoped to specific account
+- Can optionally be scoped to specific account using `-a` flag in CLI
 - Recommended for administrative tasks
 
 **Example use cases:**
@@ -78,10 +78,10 @@ f05d76644ea39c4a2ee33e7bffe55808b716a34b51d67b388c7d60498b0f89bc
 **Best for:** Manual token creation, administrative tokens
 
 1. Log in to EmailEngine web interface
-2. Navigate to **Settings** → **Access Tokens**
-3. Click **Generate new token**
+2. Navigate to **Dashboard side menu** → **Access Tokens**
+3. Click **Create new**
 4. Enter description and select scopes
-5. Click **Create**
+5. Click **Generate a token**
 6. Copy the token (shown only once)
 
 **Pros:**
@@ -97,7 +97,13 @@ f05d76644ea39c4a2ee33e7bffe55808b716a34b51d67b388c7d60498b0f89bc
 
 ### Method 2: CLI
 
-**Best for:** Automation, CI/CD, Docker deployments
+**Best for:** Automation, CI/CD, Docker deployments, infrastructure-as-code
+
+The EmailEngine CLI provides commands to generate, export, import, and manage tokens programmatically. This is particularly useful for automated deployments and prepared token configuration.
+
+:::tip CLI Documentation
+For complete CLI usage, installation, and configuration options, see the [Command Line Interface (CLI)](/docs/configuration/cli) documentation.
+:::
 
 **Generate system-wide token:**
 
@@ -118,22 +124,13 @@ emailengine tokens issue \
   --dbs.redis="redis://127.0.0.1:6379/8"
 ```
 
-**Parameters:**
-
-| Parameter       | Short | Description             | Values                                                |
-| --------------- | ----- | ----------------------- | ----------------------------------------------------- |
-| `--description` | `-d`  | Token description       | Any string                                            |
-| `--scope`       | `-s`  | Token scopes            | `"*"`, `"api"`, `"metrics"`, `"smtp"`, `"imap-proxy"` |
-| `--account`     | `-a`  | Account ID (optional)   | Account identifier                                    |
-| `--dbs.redis`   |       | Redis connection string | Required if not in env                                |
-
 **Output:**
 
 ```
 f05d76644ea39c4a2ee33e7bffe55808b716a34b51d67b388c7d60498b0f89bc
 ```
 
-**Important:** Use the same Redis database configuration as your main EmailEngine instance.
+For detailed CLI usage, export/import workflows, and prepared token configuration for automated deployments, see [Prepared Tokens](/docs/configuration/prepared-settings/tokens).
 
 ### Method 3: API
 
@@ -199,74 +196,27 @@ Scopes define what a token can access:
 
 ## Token Management
 
-### Exporting Tokens
+### Export and Import Tokens
 
-Export a token for backup or transfer to another instance:
+You can export tokens for backup or to transfer them between EmailEngine instances. Exported tokens can also be used as prepared tokens for automated deployments.
 
-```bash
-emailengine tokens export \
-  -t f05d76644ea39c4a2ee33e7bffe55808b716a34b51d67b388c7d60498b0f89bc
-```
-
-**Output:**
-
-```
-hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxNTYzYTFlM2I1NjVkYmEzZWJjMzk4ZjI4OWZjNjgzN...
-```
-
-**Use cases:**
-
-- Backup tokens before migration
-- Transfer tokens between instances
-- Pre-configure tokens via environment variables
-
-### Importing Tokens
-
-Import previously exported token data:
+**Important:** Exported tokens are data structures containing the token hash, NOT the actual token value. The exported data CANNOT be used directly as an API token. Only the original token value generated during creation can be used for API authentication.
 
 ```bash
-emailengine tokens import \
-  -t hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxNTYzYTFlM2I1NjVkYmEzZWJjMzk4ZjI4OWZjNjgzN...
+# Export a token (exports token metadata and hash)
+emailengine tokens export -t TOKEN_VALUE
+
+# Import a previously exported token
+emailengine tokens import -t EXPORTED_DATA
 ```
 
-**Output:**
-
-```
-Token was imported
-```
-
-**Important:** Use the exported base64-encoded data, not the original token.
-
-### Prepared Tokens
-
-Pre-configure tokens on application startup via environment variables:
-
-**Environment variable:**
-
-```bash
-export EENGINE_PREPARED_TOKEN="hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxN..."
-emailengine
-```
-
-**Command-line argument:**
-
-```bash
-emailengine --preparedToken="hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxN..."
-```
-
-**Use cases:**
-
-- Docker/container deployments
-- Automated testing
-- CI/CD pipelines
-- Infrastructure as code
-
+For complete export/import workflows and prepared token configuration, see [Prepared Tokens](/docs/configuration/prepared-settings/tokens).
 
 ### Revoking Tokens
 
 **Via web interface:**
 
-1. Navigate to **Settings** → **Access Tokens**
+1. Navigate to **Dashboard side menu** → **Access Tokens**
 2. Find the token to revoke
 3. Click **Delete**
 4. Confirm deletion
@@ -332,117 +282,11 @@ curl http://localhost:3000/v1/accounts
 3. Remove any unauthenticated API calls from your code
 4. Test with authentication enabled
 
-## Security Best Practices
+## See Also
 
-### 1. Never Expose Tokens Client-Side
-
-Tokens should never appear in:
-
-- Frontend JavaScript code
-- HTML source
-- Client-side configuration files
-- Browser localStorage/sessionStorage
-- URLs or query parameters
-
-**Correct approach:**
-
-- Store tokens server-side only
-- Use backend API proxy
-- Never send tokens to browsers
-
-### 2. Use Environment Variables
-
-Store tokens in environment variables, not code:
-
-```bash
-# .env file
-EMAILENGINE_TOKEN=f05d76644ea39c4a2ee33e7bffe55808b716a34b51d67b388c7d60498b0f89bc
-```
-
-```javascript
-// Node.js
-const token = process.env.EMAILENGINE_TOKEN;
-```
-
-**Never commit `.env` files to version control:**
-
-```.gitignore
-.env
-.env.local
-.env.*.local
-```
-
-### 3. Use Account-Specific Tokens
-
-For multi-tenant applications, create account-specific tokens:
-
-```javascript
-// When user signs up
-const response = await fetch("/v1/token", {
-  method: "POST",
-  headers: {
-    Authorization: `Bearer ${ADMIN_TOKEN}`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    account: userId,
-    description: `Token for user ${userId}`,
-    scopes: ["api"],
-  }),
-});
-
-const { token } = await response.json();
-
-// Store token in your database associated with user
-await db.users.update(userId, { emailEngineToken: token });
-```
-
-**Benefits:**
-
-- Limits blast radius if token is compromised
-- Users can only access their own data
-- Easier to audit and revoke individual users
-
-### 4. Rotate Tokens Periodically
-
-Implement token rotation:
-
-```javascript
-// Every 90 days
-async function rotateUserToken(userId) {
-  // Create new token
-  const newToken = await createToken(userId);
-
-  // Update user's token
-  await db.users.update(userId, { emailEngineToken: newToken });
-
-  // Delete old token (after grace period)
-  await deleteOldToken(oldToken);
-}
-```
-
-### 5. Monitor Token Usage
-
-Track token activity:
-
-- Log authentication attempts
-- Monitor unusual access patterns
-- Set up alerts for suspicious activity
-- Review token usage regularly
-
-### 6. Principle of Least Privilege
-
-Use minimal required scopes:
-
-```javascript
-// WRONG: Full access when only API is needed
-{
-  "scopes": ["*"]
-}
-
-// CORRECT: Minimal required scope
-{
-  "scopes": ["api"]
-}
-```
+- [Command Line Interface (CLI)](/docs/configuration/cli) - Complete CLI reference for token management and administration
+- [Prepared Tokens](/docs/configuration/prepared-settings/tokens) - CLI commands, export/import, and automated deployment configuration
+- [API Authentication](/docs/api-reference/#authentication) - Using tokens in API requests
+- [Account Management API](/docs/api-reference/accounts-api) - Managing email accounts with tokens
+- [Security Best Practices](/docs/deployment/security) - General security guidelines for EmailEngine deployment
 

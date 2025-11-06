@@ -235,8 +235,11 @@ Redis is critical for EmailEngine performance. Follow these best practices:
 **Redis configuration**:
 ```bash
 # redis.conf
-maxmemory 4gb
 maxmemory-policy noeviction  # or volatile-* policy
+
+# Note: It's generally better to leave maxmemory unset and let Redis
+# use all available system memory. Only set maxmemory if you need to
+# share the server with other applications.
 ```
 
 ### 3. Enable Persistence
@@ -326,7 +329,6 @@ EENGINE_SECRET=your-encryption-secret-here
 EENGINE_LOG_LEVEL=info
 
 # Monitoring
-EENGINE_METRICS_PORT=9090
 ```
 
 ## Scaling EmailEngine
@@ -428,15 +430,16 @@ curl http://localhost:3000/health
 
 ### Prometheus Metrics
 
-Enable Prometheus metrics:
+Metrics are available at `/metrics` endpoint on the main API server.
 
+Create a token with metrics scope:
 ```bash
-EENGINE_METRICS_PORT=9090
+emailengine tokens issue -d "Prometheus" -s "metrics"
 ```
 
 Access metrics:
 ```bash
-curl http://localhost:9090/metrics
+curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:3000/metrics
 ```
 
 **Read more**: [Monitoring](/docs/advanced/monitoring)

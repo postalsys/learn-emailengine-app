@@ -145,10 +145,8 @@ services:
     environment:
       - EENGINE_REDIS=redis://redis:6379
       - EENGINE_SECRET=${EENGINE_SECRET}
-      - EENGINE_ENCRYPTION_SECRET=${EENGINE_ENCRYPTION_SECRET}
       - EENGINE_WORKERS=4
       - EENGINE_LOG_LEVEL=info
-      - EENGINE_METRICS_SERVER=true
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
@@ -173,7 +171,6 @@ Create `.env` file:
 ```bash
 # EmailEngine Configuration
 EENGINE_SECRET=your-strong-secret-key-at-least-32-characters-long
-EENGINE_ENCRYPTION_SECRET=another-strong-secret-for-field-encryption
 
 # Optional: License key (PEM format - multiline)
 EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----

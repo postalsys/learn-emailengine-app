@@ -273,12 +273,15 @@ location /admin {
 **Enable field encryption:**
 
 ```bash
-# Set encryption secret
-export EENGINE_SECRET=$(openssl rand -hex 32)
+# Generate encryption secret (minimum 32 characters)
+openssl rand -hex 32
+
+# Add to your .env file or configuration
+echo "EENGINE_SECRET=generated-value-here" >> .env
 ```
 
 :::danger Store Secret Permanently
-This secret must be stored permanently. If lost, you cannot decrypt stored credentials. See the [EENGINE_SECRET section](#eengine_secret) above.
+This secret must be stored permanently in your configuration file or .env file. If lost, you cannot decrypt stored credentials. Never use `export` with `$(openssl rand)` as the secret will be lost when the session ends.
 :::
 
 **Encrypted fields:**
@@ -366,13 +369,13 @@ aws secretsmanager get-secret-value \
   --query SecretString \
   --output text > /tmp/secrets.json
 
-# Export to environment
-export EENGINE_SECRET=$(jq -r .secret /tmp/secrets.json)
+# Write to .env file (EmailEngine loads .env from current directory)
+echo "EENGINE_SECRET=$(jq -r .secret /tmp/secrets.json)" > .env
 
 # Clean up
 rm /tmp/secrets.json
 
-# Start EmailEngine
+# Start EmailEngine (will load .env automatically)
 /usr/local/bin/emailengine
 ```
 

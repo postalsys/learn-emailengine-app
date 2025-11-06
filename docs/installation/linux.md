@@ -161,7 +161,6 @@ Add or modify:
 ```
 # Production settings
 maxmemory-policy noeviction
-maxmemory 2gb
 
 # Persistence
 save 900 1
@@ -194,16 +193,13 @@ emailengine --version
 
 ### Step 4: Create Configuration
 
-**Generate secrets:**
+**Generate secret:**
 ```bash
-export EENGINE_SECRET=$(openssl rand -hex 32)
-export EENGINE_ENCRYPTION_SECRET=$(openssl rand -hex 32)
-
-echo "EENGINE_SECRET=$EENGINE_SECRET"
-echo "EENGINE_ENCRYPTION_SECRET=$EENGINE_ENCRYPTION_SECRET"
+# Generate a random secret (minimum 32 characters)
+openssl rand -hex 32
 ```
 
-**Save these values securely!**
+**Save this value securely!** You'll need to use it in the configuration below.
 
 ### Step 5: Test Run
 
@@ -244,7 +240,6 @@ WorkingDirectory=/opt/emailengine
 
 Environment="EENGINE_REDIS=redis://127.0.0.1:6379"
 Environment="EENGINE_SECRET=your-secret-here"
-Environment="EENGINE_ENCRYPTION_SECRET=your-encryption-secret"
 Environment="EENGINE_WORKERS=4"
 
 ExecStart=/usr/local/bin/emailengine
@@ -350,7 +345,6 @@ sudo nano /opt/emailengine/.env
 ```bash
 EENGINE_REDIS=redis://127.0.0.1:6379
 EENGINE_SECRET=your-secret-key-at-least-32-chars
-EENGINE_ENCRYPTION_SECRET=your-encryption-secret-32-chars
 EENGINE_WORKERS=4
 EENGINE_LOG_LEVEL=info
 EENGINE_PORT=3000
@@ -520,7 +514,6 @@ sudo nano /etc/redis/redis.conf
 
 ```
 # Memory
-maxmemory 4gb
 maxmemory-policy noeviction
 
 # Persistence
@@ -546,10 +539,6 @@ EENGINE_WORKERS=8
 # Increase file descriptor limit
 # In service file:
 LimitNOFILE=65536
-
-# Enable metrics
-EENGINE_METRICS_SERVER=true
-EENGINE_METRICS_PORT=9090
 ```
 
 ### Monitor Performance

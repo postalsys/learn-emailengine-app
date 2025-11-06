@@ -62,9 +62,19 @@ If you don't have any email accounts set up yet, this is the easiest approach.
 
 ### 1. Set Encryption Secret
 
+Create a `.env` file in your working directory:
+
 ```bash
-export EENGINE_SECRET="your-secret-password-here"
+echo "EENGINE_SECRET=your-secret-password-here" > .env
 ```
+
+Or generate a random secret:
+
+```bash
+echo "EENGINE_SECRET=$(openssl rand -hex 32)" > .env
+```
+
+**Note:** EmailEngine automatically loads environment variables from `.env` file in the current working directory.
 
 ### 2. Start EmailEngine
 

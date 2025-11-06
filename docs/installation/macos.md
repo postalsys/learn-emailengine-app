@@ -82,14 +82,13 @@ redis-cli ping  # Should return: PONG
 
 ### Configure and Run
 
-Generate secrets:
+Generate secret:
 ```bash
-export EENGINE_SECRET=$(openssl rand -hex 32)
-export EENGINE_ENCRYPTION_SECRET=$(openssl rand -hex 32)
-
-echo "EENGINE_SECRET=$EENGINE_SECRET"
-echo "EENGINE_ENCRYPTION_SECRET=$EENGINE_ENCRYPTION_SECRET"
+# Generate a random secret (minimum 32 characters)
+openssl rand -hex 32
 ```
+
+Save this value securely. You'll use it in the configuration below.
 
 **Save these values securely!**
 
@@ -130,7 +129,7 @@ Create `~/Library/LaunchAgents/com.emailengine.plist`:
         <string>redis://127.0.0.1:6379</string>
         <key>EENGINE_SECRET</key>
         <string>your-secret-here</string>
-        <key>EENGINE_ENCRYPTION_SECRET</key>
+        <key>EENGINE_SECRET</key>
         <string>your-encryption-secret-here</string>
         <key>EENGINE_WORKERS</key>
         <string>4</string>
@@ -203,11 +202,15 @@ emailengine --version
 
 ### Step 4: Configure and Run
 
-Generate secrets:
+Create a `.env` file in the directory where you'll run EmailEngine:
+
 ```bash
-export EENGINE_SECRET=$(openssl rand -hex 32)
-export EENGINE_ENCRYPTION_SECRET=$(openssl rand -hex 32)
+# Generate secret and save to .env file
+echo "EENGINE_SECRET=$(openssl rand -hex 32)" > .env
+echo "EENGINE_REDIS=redis://127.0.0.1:6379" >> .env
 ```
+
+**Note:** EmailEngine automatically loads environment variables from a `.env` file in the current working directory.
 
 Start EmailEngine:
 ```bash
@@ -305,7 +308,7 @@ Create `/opt/emailengine/.env`:
 ```bash
 EENGINE_REDIS=redis://127.0.0.1:6379
 EENGINE_SECRET=your-secret-key-at-least-32-chars
-EENGINE_ENCRYPTION_SECRET=your-encryption-secret-32-chars
+EENGINE_SECRET=your-encryption-secret-32-chars
 EENGINE_WORKERS=4
 EENGINE_LOG_LEVEL=info
 EENGINE_PORT=3000
@@ -314,7 +317,7 @@ EENGINE_PORT=3000
 Generate secrets:
 ```bash
 openssl rand -hex 32  # Use for EENGINE_SECRET
-openssl rand -hex 32  # Use for EENGINE_ENCRYPTION_SECRET
+openssl rand -hex 32  # Use for EENGINE_SECRET
 ```
 
 ### Step 5: Test Run
@@ -351,7 +354,7 @@ Create `~/Library/LaunchAgents/com.emailengine.plist`:
         <string>redis://127.0.0.1:6379</string>
         <key>EENGINE_SECRET</key>
         <string>your-secret-here</string>
-        <key>EENGINE_ENCRYPTION_SECRET</key>
+        <key>EENGINE_SECRET</key>
         <string>your-encryption-secret-here</string>
         <key>EENGINE_WORKERS</key>
         <string>4</string>

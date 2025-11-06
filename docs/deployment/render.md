@@ -112,7 +112,7 @@ Use the **Internal Connection String** for better performance and no data transf
    |-----|-------|----------|
    | `EENGINE_REDIS` | `redis://red-xxxxx:6379` | Yes |
    | `EENGINE_SECRET` | Generate random string (32+ chars) | Yes |
-   | `EENGINE_ENCRYPTION_SECRET` | Generate random string (32+ chars) | Recommended |
+   | `EENGINE_SECRET` | Generate random string (32+ chars) | Recommended |
    | `EENGINE_WORKERS` | `2` | Optional |
    | `NODE_ENV` | `production` | Recommended |
 
@@ -204,7 +204,6 @@ EENGINE_WORKERS=4
 EENGINE_MAX_CONNECTIONS=20
 
 # Monitoring
-EENGINE_METRICS_SERVER=true
 ```
 
 ### Health Checks
@@ -310,14 +309,17 @@ EmailEngine does NOT support horizontal scaling. Running multiple EmailEngine in
 
 **Prometheus metrics:**
 
-Enable EmailEngine metrics:
+Create a token with metrics scope:
 
 ```bash
-EENGINE_METRICS_SERVER=true
-EENGINE_METRICS_PORT=9090
+emailengine tokens issue -d "Prometheus" -s "metrics"
 ```
 
-Access at: `https://your-app.onrender.com:9090/metrics`
+Access at: `https://your-app.onrender.com/metrics`
+
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" https://your-app.onrender.com/metrics
+```
 
 ### Alerts
 
