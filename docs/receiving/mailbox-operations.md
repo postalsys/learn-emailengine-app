@@ -43,20 +43,25 @@ It's entirely valid for an account to have only INBOX and no other folders.
 
 Folders can be nested using a delimiter (usually `/` or `.`):
 
-```
-INBOX
-Work/
-  ├── Projects/
-  │   ├── ProjectA
-  │   └── ProjectB
-  └── Archive
-Personal/
-  ├── Family
-  └── Friends
-[Gmail]/
-  ├── All Mail
-  ├── Sent Mail
-  └── Spam
+```mermaid
+graph TD
+    Root[Email Account]
+    Root --> INBOX[INBOX]
+    Root --> Work[Work/]
+    Root --> Personal[Personal/]
+    Root --> Gmail["[Gmail]/"]
+
+    Work --> Projects[Projects/]
+    Work --> Archive[Archive]
+    Projects --> ProjectA[ProjectA]
+    Projects --> ProjectB[ProjectB]
+
+    Personal --> Family[Family]
+    Personal --> Friends[Friends]
+
+    Gmail --> AllMail[All Mail]
+    Gmail --> SentMail[Sent Mail]
+    Gmail --> Spam[Spam]
 ```
 
 Different providers use different conventions:
@@ -434,9 +439,11 @@ async function setCustomSentFolder(accountId, folderPath) {
 await setCustomSentFolder('example', 'My Company/Sent');
 ```
 
-## Working with Gmail Labels
+## Working with Gmail Labels and Outlook Categories
 
-### Labels vs Folders
+EmailEngine uses the `labels` array for both Gmail labels and Microsoft Outlook/Graph API categories.
+
+### Gmail Labels
 
 Gmail uses labels instead of folders. EmailEngine maps labels to the folder structure:
 
@@ -454,7 +461,7 @@ INBOX               (messages with \Inbox label)
 [Gmail]/Sent Mail   (messages with \Sent label)
 ```
 
-### Multiple Labels
+**Multiple Labels:**
 
 A Gmail message can have multiple labels, which EmailEngine represents in the `labels` array:
 
@@ -466,6 +473,33 @@ A Gmail message can have multiple labels, which EmailEngine represents in the `l
   "specialUse": "\\All"
 }
 ```
+
+**Gmail label characteristics:**
+- Labels must be pre-created in Gmail
+- Labels map to folders (e.g., label "Work" corresponds to a folder)
+- Used with Gmail IMAP and Gmail API accounts
+
+### Microsoft Outlook Categories
+
+For accounts using **Microsoft Graph API** backend, EmailEngine uses the `labels` array for Outlook categories:
+
+```json
+{
+  "id": "AAMkADU1...",
+  "path": "Inbox",
+  "labels": ["Blue category", "Red category"]
+}
+```
+
+**Outlook category characteristics:**
+- Categories are **automatically created** when you set them (no pre-creation needed)
+- Categories are **not folders** - they're an additional filter/tag
+- Categories don't map to mailbox folders (unlike Gmail labels)
+- Only available when using Microsoft Graph API backend
+
+:::info Important
+Outlook categories are **not a replacement for folders**. Unlike Gmail where a label creates a folder, Outlook categories are independent color-coded tags that don't affect folder structure.
+:::
 
 ### Listing Messages by Label
 
