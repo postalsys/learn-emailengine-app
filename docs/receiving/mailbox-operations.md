@@ -68,7 +68,7 @@ graph TD
 
 Different providers use different conventions:
 
-- **Gmail**: Uses `[Gmail]/` prefix for system folders
+- **Gmail** (IMAP and API): Exposes special-use flags natively (most reliable)
 - **Outlook IMAP**: Does NOT expose special-use flags over IMAP (uses heuristics instead)
 - **Outlook Graph API**: Provides special-use flags natively
 - **Generic IMAP**: Many servers expose special-use flags natively, some don't
