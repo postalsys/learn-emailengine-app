@@ -25,6 +25,7 @@ Mailbox operations in EmailEngine allow you to list, manage, and work with email
 ### What is a Mailbox?
 
 In IMAP terms, a "mailbox" is what most users think of as a "folder." Each mailbox can contain:
+
 - Email messages
 - Sub-mailboxes (nested folders)
 - Metadata (message count, flags, etc.)
@@ -32,6 +33,7 @@ In IMAP terms, a "mailbox" is what most users think of as a "folder." Each mailb
 ### The Special INBOX
 
 **INBOX is unique:**
+
 - It's the **only guaranteed folder** on every account
 - Name is **case-insensitive** (INBOX, Inbox, inbox all work)
 - All other folder names are **case-sensitive**
@@ -65,6 +67,7 @@ graph TD
 ```
 
 Different providers use different conventions:
+
 - **Gmail**: Uses `[Gmail]/` prefix for system folders
 - **Outlook**: Uses special-use flags extensively
 - **Generic IMAP**: Varies by server implementation
@@ -79,21 +82,22 @@ Special-use folders indicate a folder's intended purpose regardless of its name.
 
 EmailEngine recognizes these special-use flags:
 
-| Flag | Purpose | Example Names |
-|------|---------|---------------|
-| `\Inbox` | Main inbox | INBOX |
-| `\Sent` | Sent emails | Sent Mail, Saadetud kirjad, Enviados |
-| `\Drafts` | Draft emails | Drafts, Mustandid, Borradores |
-| `\Trash` | Deleted emails | Trash, Prügikast, Papelera |
-| `\Junk` | Spam emails | Junk, Rämps, Spam |
-| `\Archive` | Archived emails | Archive, Arhiiv, Archivo |
-| `\All` | All emails (virtual) | All Mail, Todos |
+| Flag       | Purpose              | Example Names                        |
+| ---------- | -------------------- | ------------------------------------ |
+| `\Inbox`   | Main inbox           | INBOX                                |
+| `\Sent`    | Sent emails          | Sent Mail, Saadetud kirjad, Enviados |
+| `\Drafts`  | Draft emails         | Drafts, Mustandid, Borradores        |
+| `\Trash`   | Deleted emails       | Trash, Prügikast, Papelera           |
+| `\Junk`    | Spam emails          | Junk, Rämps, Spam                    |
+| `\Archive` | Archived emails      | Archive, Arhiiv, Archivo             |
+| `\All`     | All emails (virtual) | All Mail, Todos                      |
 
 ### Special-Use Sources
 
 EmailEngine indicates how it determined a folder's special-use flag:
 
 **`extension`** - Server provided the hint (most reliable)
+
 ```json
 {
   "path": "[Gmail]/Sent Mail",
@@ -103,6 +107,7 @@ EmailEngine indicates how it determined a folder's special-use flag:
 ```
 
 **`name`** - Determined by folder name matching (fallback)
+
 ```json
 {
   "path": "Sent Items",
@@ -112,6 +117,7 @@ EmailEngine indicates how it determined a folder's special-use flag:
 ```
 
 **`user`** - You explicitly configured it (highest priority)
+
 ```json
 {
   "path": "My Custom Sent Folder",
@@ -199,19 +205,14 @@ Find the sent folder regardless of name:
 
 ```javascript
 async function getSentFolder(accountId) {
-  const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/mailboxes`,
-    {
-      headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
-    }
-  );
+  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}/mailboxes`, {
+    headers: { Authorization: "Bearer YOUR_ACCESS_TOKEN" },
+  });
 
   const data = await response.json();
 
   // Find folder with \Sent special-use flag
-  const sentFolder = data.mailboxes.find(
-    mailbox => mailbox.specialUse === '\\Sent'
-  );
+  const sentFolder = data.mailboxes.find((mailbox) => mailbox.specialUse === "\\Sent");
 
   return sentFolder ? sentFolder.path : null;
 }
@@ -224,15 +225,12 @@ async function listSentMessages(accountId) {
   const sentPath = await getSentFolder(accountId);
 
   if (!sentPath) {
-    throw new Error('Sent folder not found');
+    throw new Error("Sent folder not found");
   }
 
-  const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/messages?path=${encodeURIComponent(sentPath)}`,
-    {
-      headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
-    }
-  );
+  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}/messages?path=${encodeURIComponent(sentPath)}`, {
+    headers: { Authorization: "Bearer YOUR_ACCESS_TOKEN" },
+  });
 
   return await response.json();
 }
@@ -268,23 +266,20 @@ EmailEngine creates parent folders automatically if needed:
 
 ```javascript
 async function createFolder(accountId, folderPath) {
-  const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/mailbox`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ path: folderPath })
-    }
-  );
+  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}/mailbox`, {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ path: folderPath }),
+  });
 
   return await response.json();
 }
 
 // Creates Personal/Finance/2025 (and parents if needed)
-await createFolder('example', 'Personal/Finance/2025');
+await createFolder("example", "Personal/Finance/2025");
 ```
 
 ## Renaming Mailboxes
@@ -322,20 +317,17 @@ Renaming a parent folder renames all children automatically:
 //   Work/Projects/ProjectA → Work/Archive/ProjectA
 //   Work/Projects/ProjectB → Work/Archive/ProjectB
 
-await fetch(
-  `https://your-emailengine.com/v1/account/example/mailbox`,
-  {
-    method: 'PUT',
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      path: 'Work/Projects',
-      newPath: 'Work/Archive'
-    })
-  }
-);
+await fetch(`https://your-emailengine.com/v1/account/example/mailbox`, {
+  method: "PUT",
+  headers: {
+    Authorization: "Bearer YOUR_ACCESS_TOKEN",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    path: "Work/Projects",
+    newPath: "Work/Archive",
+  }),
+});
 ```
 
 ## Deleting Mailboxes
@@ -365,18 +357,20 @@ curl -X DELETE "https://your-emailengine.com/v1/account/example/mailbox" \
 ### Important Notes
 
 **Cannot delete INBOX:**
+
 ```javascript
 // This will fail
-await deleteFolder('example', 'INBOX');
+await deleteFolder("example", "INBOX");
 // Error: Cannot delete INBOX
 ```
 
 **Delete children first:**
+
 ```javascript
 // Must delete child folders before parent
-await deleteFolder('example', 'Work/Projects/ProjectA');
-await deleteFolder('example', 'Work/Projects/ProjectB');
-await deleteFolder('example', 'Work/Projects');
+await deleteFolder("example", "Work/Projects/ProjectA");
+await deleteFolder("example", "Work/Projects/ProjectB");
+await deleteFolder("example", "Work/Projects");
 ```
 
 **Messages are deleted:**
@@ -406,6 +400,7 @@ curl -X PUT "https://your-emailengine.com/v1/account/example" \
 **Important:** Always set `"partial": true` to merge with existing config. Otherwise, you'll overwrite the entire IMAP configuration.
 
 **Available Overrides:**
+
 - `sentMailPath` - Where sent messages go
 - `draftsMailPath` - Where drafts are saved
 - `junkMailPath` - Where spam goes
@@ -415,28 +410,25 @@ curl -X PUT "https://your-emailengine.com/v1/account/example" \
 
 ```javascript
 async function setCustomSentFolder(accountId, folderPath) {
-  const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}`,
-    {
-      method: 'PUT',
-      headers: {
-        'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-        'Content-Type': 'application/json'
+  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}`, {
+    method: "PUT",
+    headers: {
+      Authorization: "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      imap: {
+        partial: true,
+        sentMailPath: folderPath,
       },
-      body: JSON.stringify({
-        imap: {
-          partial: true,
-          sentMailPath: folderPath
-        }
-      })
-    }
-  );
+    }),
+  });
 
   return await response.json();
 }
 
 // Now all sent emails will go to "My Company/Sent"
-await setCustomSentFolder('example', 'My Company/Sent');
+await setCustomSentFolder("example", "My Company/Sent");
 ```
 
 ## Working with Gmail Labels and Outlook Categories
@@ -447,19 +439,12 @@ EmailEngine uses the `labels` array for both Gmail labels and Microsoft Outlook/
 
 Gmail uses labels instead of folders. EmailEngine maps labels to the folder structure:
 
-**Traditional IMAP:**
-```
-INBOX
-Sent Mail
-Drafts
-```
-
-**Gmail:**
-```
-[Gmail]/All Mail    (all messages)
-INBOX               (messages with \Inbox label)
-[Gmail]/Sent Mail   (messages with \Sent label)
-```
+| Traditional IMAP | Gmail | Description |
+|-----------------|-------|-------------|
+| INBOX | INBOX | Messages with `\Inbox` label |
+| Sent Mail | [Gmail]/Sent Mail | Messages with `\Sent` label |
+| Drafts | [Gmail]/Drafts | Messages with `\Drafts` label |
+| - | [Gmail]/All Mail | All messages (virtual folder) |
 
 **Multiple Labels:**
 
@@ -475,6 +460,7 @@ A Gmail message can have multiple labels, which EmailEngine represents in the `l
 ```
 
 **Gmail label characteristics:**
+
 - Labels must be pre-created in Gmail
 - Labels map to folders (e.g., label "Work" corresponds to a folder)
 - Used with Gmail IMAP and Gmail API accounts
@@ -492,6 +478,7 @@ For accounts using **Microsoft Graph API** backend, EmailEngine uses the `labels
 ```
 
 **Outlook category characteristics:**
+
 - Categories are **automatically created** when you set them (no pre-creation needed)
 - Categories are **not folders** - they're an additional filter/tag
 - Categories don't map to mailbox folders (unlike Gmail labels)
@@ -501,51 +488,20 @@ For accounts using **Microsoft Graph API** backend, EmailEngine uses the `labels
 Outlook categories are **not a replacement for folders**. Unlike Gmail where a label creates a folder, Outlook categories are independent color-coded tags that don't affect folder structure.
 :::
 
-### Listing Messages by Label
-
-To find all messages with a specific label:
-
-```javascript
-async function getMessagesByLabel(accountId, label) {
-  // For Gmail, All Mail contains everything
-  const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/messages?path=${encodeURIComponent('[Gmail]/All Mail')}`,
-    {
-      headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
-    }
-  );
-
-  const data = await response.json();
-
-  // Filter by label
-  return data.messages.filter(msg =>
-    msg.labels && msg.labels.includes(label)
-  );
-}
-
-// Get all messages with "Work" label
-const workMessages = await getMessagesByLabel('example', 'Work');
-```
-
 ## Common Folder Patterns
 
 ### Finding Inbox
 
 ```javascript
 async function getInboxPath(accountId) {
-  const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/mailboxes`,
-    {
-      headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
-    }
-  );
+  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}/mailboxes`, {
+    headers: { Authorization: "Bearer YOUR_ACCESS_TOKEN" },
+  });
 
   const data = await response.json();
 
   // INBOX is guaranteed to exist
-  const inbox = data.mailboxes.find(
-    m => m.path.toUpperCase() === 'INBOX'
-  );
+  const inbox = data.mailboxes.find((m) => m.path.toUpperCase() === "INBOX");
 
   return inbox.path; // Returns "INBOX" or "Inbox" etc.
 }
@@ -555,20 +511,17 @@ async function getInboxPath(accountId) {
 
 ```javascript
 async function getSpecialUseFolders(accountId) {
-  const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/mailboxes`,
-    {
-      headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
-    }
-  );
+  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}/mailboxes`, {
+    headers: { Authorization: "Bearer YOUR_ACCESS_TOKEN" },
+  });
 
   const data = await response.json();
 
   const specialFolders = {};
 
-  data.mailboxes.forEach(mailbox => {
+  data.mailboxes.forEach((mailbox) => {
     if (mailbox.specialUse) {
-      const key = mailbox.specialUse.replace(/\\/g, '').toLowerCase();
+      const key = mailbox.specialUse.replace(/\\/g, "").toLowerCase();
       specialFolders[key] = mailbox.path;
     }
   });
@@ -586,47 +539,3 @@ async function getSpecialUseFolders(accountId) {
 //   archive: "[Gmail]/All Mail"
 // }
 ```
-
-### Creating Year-Based Archive
-
-```javascript
-async function archiveToYearFolder(accountId, messageId, year) {
-  // Create archive folder for year if needed
-  const archivePath = `Archive/${year}`;
-
-  try {
-    await fetch(
-      `https://your-emailengine.com/v1/account/${accountId}/mailbox`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ path: archivePath })
-      }
-    );
-  } catch (err) {
-    // Folder might already exist, that's fine
-  }
-
-  // Move message to archive
-  await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}/move`,
-    {
-      method: 'PUT',
-      headers: {
-        'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ path: archivePath })
-    }
-  );
-
-  return archivePath;
-}
-
-// Archive message to Archive/2025
-await archiveToYearFolder('example', 'AAAAAQAAAeE', '2025');
-```
-
