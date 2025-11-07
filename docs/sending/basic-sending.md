@@ -581,9 +581,9 @@ curl "http://127.0.0.1:3000/v1/account/example/outbox" \
 **Problem**: Gmail, Outlook, and Yahoo may refuse SMTP logins that look like bots.
 
 **Solution**:
-- Switch to OAuth2 authentication
-- Use app-specific passwords
-- Enable "less secure app access" (not recommended)
+- **Gmail**: Use OAuth2 or app-specific passwords (account passwords no longer work)
+- **Outlook**: Use OAuth2 (password authentication completely disabled)
+- **Yahoo**: Use OAuth2 or app-specific passwords
 
 See [Gmail Setup](../accounts/gmail-imap.md) and [Outlook Setup](../accounts/outlook-365.md).
 

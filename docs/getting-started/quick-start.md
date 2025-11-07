@@ -515,9 +515,10 @@ You've successfully:
 ## Common Provider-Specific Notes
 
 ### Gmail
-- **OAuth2 recommended:** Use OAuth2 instead of username/password
-- **App passwords:** If using password auth, generate an app-specific password
-- **Less secure apps:** OAuth2 apps require verification if sending to many users
+- **Account passwords disabled:** Gmail has completely disabled account password authentication
+- **App passwords required:** Must enable 2FA and generate an app-specific password
+- **OAuth2 recommended:** OAuth2 provides the best experience (automatic token refresh)
+- **OAuth2 verification:** Public OAuth2 apps require verification if sending to many users
 - [Complete Gmail setup →](/docs/accounts/gmail-imap)
 
 ### Outlook/Microsoft 365

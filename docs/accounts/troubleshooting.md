@@ -71,20 +71,22 @@ tail -f /path/to/emailengine/logs/application.log
    ```
 
 2. **App password required but not used**
-   - Gmail, Yahoo, iCloud require app-specific passwords if 2FA is enabled
+   - Gmail: Account passwords completely disabled, app-specific passwords required for all accounts
+   - Yahoo, iCloud: App-specific passwords required if 2FA is enabled
 
    **Solution:**
    - Generate app-specific password from provider
    - Update account with app password instead of main password
-   - [Gmail app passwords](https://myaccount.google.com/apppasswords)
+   - [Gmail app passwords](https://myaccount.google.com/apppasswords) (requires 2FA enabled)
    - [Yahoo app passwords](https://login.yahoo.com/account/security)
    - [iCloud app passwords](https://appleid.apple.com/)
 
-3. **"Less secure apps" disabled (Gmail Workspace)**
-   - Google Workspace may block password authentication
+3. **Password authentication disabled (Gmail)**
+   - Gmail has completely disabled account password authentication for all accounts
+   - The "Less secure app access" feature is no longer available
 
    **Solution:**
-   - Enable "Less secure app access" in Google Workspace admin
+   - Use app-specific passwords (requires 2FA): [Gmail app passwords](https://myaccount.google.com/apppasswords)
    - Or switch to OAuth2: [Gmail OAuth2 guide](./gmail-imap)
 
 4. **IMAP/SMTP disabled (Microsoft 365)**
@@ -266,23 +268,17 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 
 ### Gmail Issues
 
-#### "Less Secure App Access" Error
+#### Account Password Authentication No Longer Supported
 
-**Error Message:** "Please log in via your web browser"
+**Error Message:** "Please log in via your web browser" or "Invalid credentials"
 
-**Solution:**
-1. Visit [Less secure apps setting](https://myaccount.google.com/lesssecureapps)
-2. Turn ON "Allow less secure apps"
-3. Or use OAuth2 instead: [Gmail OAuth2 guide](./gmail-imap)
-
-#### Account Unlock Required
-
-**Error Message:** "Please log in via your web browser and follow the instructions"
+:::danger Gmail Account Passwords Disabled
+Gmail has completely disabled account password authentication. The "Less secure app access" feature is no longer available. You **must** use app passwords or OAuth2.
+:::
 
 **Solution:**
-1. Visit [Account unlock page](https://accounts.google.com/b/0/displayunlockcaptcha)
-2. Click "Continue"
-3. Try reconnecting in EmailEngine
+1. **App Passwords (for testing):** Generate an [app-specific password](https://support.google.com/accounts/answer/185833) (requires 2FA enabled)
+2. **OAuth2 (recommended for production):** Follow the [Gmail OAuth2 guide](./gmail-imap)
 
 #### Rate Limits
 

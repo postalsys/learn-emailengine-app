@@ -19,9 +19,9 @@ EmailEngine provides a built-in IMAP proxy interface that allows you to connect 
 
 Major email providers (Gmail, Outlook) have disabled password-based authentication:
 
-- **Gmail**: Password authentication disabled for personal accounts (app-specific passwords required)
+- **Gmail**: Account password authentication completely disabled for all accounts (app-specific passwords required, 2FA must be enabled)
 - **Outlook/Microsoft 365**: OAuth2-only authentication (IMAP passwords completely disabled)
-- **iCloud**: Requires app-specific passwords
+- **iCloud**: Requires app-specific passwords when 2FA is enabled
 
 However:
 

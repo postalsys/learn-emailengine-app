@@ -38,17 +38,9 @@ Before we dive into OAuth2 setup, it's worth understanding all Gmail authenticat
 
 ### Account Password
 
-:::warning Deprecated for personal Gmail
-Google has disabled password authentication for regular Gmail accounts. It's still available for Google Workspace accounts without 2FA (until September 30, 2024), but OAuth2 is the recommended approach.
+:::danger No Longer Available
+Gmail has completely disabled account password authentication for all accounts. This authentication method can no longer be used. You must use app passwords or OAuth2 instead.
 :::
-
-Account passwords are the main password for your Google account. To use them:
-
-1. Navigate to [Google account management](https://myaccount.google.com/lesssecureapps)
-2. Enable "Less secure app access"
-3. You may need to [unlock your account](https://accounts.google.com/b/0/displayunlockcaptcha) if authentication fails
-
-**Not recommended** - Use OAuth2 or app passwords instead.
 
 ### App Passwords
 
@@ -59,6 +51,7 @@ If you have 2FA enabled and just need quick access for testing:
 3. Use this password instead of your main password
 
 **Downsides:**
+
 - If main password changes, all app passwords are invalidated
 - Users must manually generate and provide passwords
 - Not ideal for SaaS applications
@@ -68,6 +61,7 @@ If you have 2FA enabled and just need quick access for testing:
 OAuth2 provides the best experience for production applications:
 
 **Benefits:**
+
 - No password storage
 - Works with 2FA accounts
 - Automatic token refresh
@@ -77,11 +71,13 @@ OAuth2 provides the best experience for production applications:
 **Types of OAuth2 Apps:**
 
 1. **Internal Apps** - For Google Workspace organizations only
+
    - No security audit required
    - Only works for accounts in your organization
    - Best for enterprise deployments
 
 2. **Public Development Apps**
+
    - Up to 100 manually whitelisted accounts
    - OAuth2 grants expire after 7 days
    - Not suitable for production
@@ -99,16 +95,19 @@ OAuth2 provides the best experience for production applications:
 Go to [Google Cloud Console](https://console.cloud.google.com/) and open the project menu in the top navbar.
 
 ![Creating a new Google Cloud project](/img/external/6V0B1AgnvU.gif)
+
 <!-- Shows: Clicking "New project" button from project selector -->
 
 Click the "New project" button to start.
 
 ![Naming your project](/img/external/owSQLNV1_5.gif)
+
 <!-- Shows: Project creation form with name field -->
 
 On the project settings screen, name your project (e.g., "EmailEngine"). All other fields are pre-filled and cannot be changed.
 
 ![Waiting for project creation](/img/external/0B4b3JeP3t.gif)
+
 <!-- Shows: Project creation progress and selection -->
 
 Wait for the project to be created, then select it from the project menu.
@@ -120,11 +119,13 @@ Your new project is empty and needs API access configured.
 Click the hamburger menu (top-left) → **APIs & Services** → **Enabled APIs & Services**.
 
 ![Navigating to APIs & Services](/img/external/v3Flo-WBVG.gif)
+
 <!-- Shows: Navigation to API configuration -->
 
 Find and enable **Gmail API** for your project.
 
 ![Enabling Gmail API](/img/external/vz7Is1SAWe.gif)
+
 <!-- Shows: Searching for and enabling Gmail API -->
 
 :::info Why Enable Gmail API for IMAP?
@@ -134,6 +135,7 @@ If you want to use Gmail REST API instead of IMAP/SMTP, see the [Gmail API setup
 :::
 
 :::tip IMAP vs Gmail API
+
 - **IMAP/SMTP** (this guide): Standard email protocols, easier setup, works like any other email account
 - **Gmail API** (alternate): Faster, Gmail-specific features (labels, drafts), requires Cloud Pub/Sub setup
 
@@ -147,20 +149,24 @@ The consent screen is shown to users when they authorize EmailEngine to access t
 Click hamburger menu → **APIs & Services** → **OAuth consent screen**.
 
 ![Navigating to consent screen](/img/external/0h3kuzzsCN.gif)
+
 <!-- Shows: Navigation to OAuth consent screen -->
 
 ### Choose User Type
 
 ![Selecting user type](/img/external/mT6n2spEgt.gif)
+
 <!-- Shows: Internal vs External selection -->
 
 **Internal:**
+
 - Only accounts from your Google Workspace organization
 - No verification process required
 - Cannot add @gmail.com accounts or other organizations
 - Best for testing and enterprise apps
 
 **External:**
+
 - Any Gmail user can authenticate
 - Requires verification for production
 - Best for public applications
@@ -171,9 +177,11 @@ For this tutorial, we'll use **Internal**. For production public apps, select **
 ### Fill in App Information
 
 ![Configuring consent screen details](/img/external/FIRIMzunwz.gif)
+
 <!-- Shows: Filling app name, support email, etc. -->
 
 Provide:
+
 - **App name**: "EmailEngine" (or your application name)
 - **User support email**: Your email address
 - **Developer contact information**: Your email address
@@ -186,6 +194,7 @@ Click **Save and continue**.
 Click **Add or remove scopes** and find `https://mail.google.com/` from the list.
 
 ![Adding required scope](/img/external/BONjtoR9p6.gif)
+
 <!-- Shows: Adding https://mail.google.com/ scope -->
 
 :::important Required Scope for IMAP/SMTP
@@ -203,22 +212,26 @@ Scroll down and click **Save and continue** to finish consent screen setup.
 Navigate to **APIs & Services** → **Credentials**, then click **Create Credentials** → **OAuth client ID**.
 
 ![Creating OAuth credentials](/img/external/dd27iNGkH0.gif)
+
 <!-- Shows: Creating OAuth client ID -->
 
 ### Configure OAuth Client
 
 ![Configuring OAuth client details](/img/external/5gMPcI0kJe.gif)
+
 <!-- Shows: Setting application type and URIs -->
 
 **Application type:** Web application
 
 **Authorized JavaScript origins:**
 Add your EmailEngine URL without any path:
+
 - `http://127.0.0.1:3000` (for local testing)
 - `https://your-emailengine-domain.com` (for production)
 
 **Authorized redirect URIs:**
 Add your EmailEngine URL with the `/oauth` path:
+
 - `http://127.0.0.1:3000/oauth` (for local testing)
 - `https://your-emailengine-domain.com/oauth` (for production)
 
@@ -231,6 +244,7 @@ Click **Create**.
 ### Download Credentials
 
 ![Downloading OAuth credentials](/img/external/4UhRTwH9yL.gif)
+
 <!-- Shows: Downloading credentials JSON file -->
 
 Click the **Download** button to save the credentials JSON file. You'll need this file to configure EmailEngine.
@@ -246,11 +260,13 @@ Now that you have your Google Cloud project configured, let's set up EmailEngine
 3. Click **Add application** and select **Gmail**
 
 ![Creating Gmail OAuth2 app in EmailEngine](/img/external/tg5rojB4ov.gif)
+
 <!-- Shows: Navigating to OAuth2 configuration in EmailEngine -->
 
 ### Configure OAuth2 Settings
 
 ![Configuring OAuth2 application](/img/external/aMN66YONKa.gif)
+
 <!-- Shows: Uploading credentials file and configuring settings -->
 
 **Application name:** Give it a descriptive name (e.g., "Gmail OAuth2")
@@ -258,11 +274,13 @@ Now that you have your Google Cloud project configured, let's set up EmailEngine
 **Enable this app:** Check this box (otherwise it won't appear in authentication forms)
 
 **Credentials file:** Select the JSON file you downloaded from Google Cloud Console. This will auto-fill:
+
 - Client ID
 - Client Secret
 - Other OAuth2 parameters
 
 **Redirect URL:** Verify this matches exactly what you entered in Google Cloud Console
+
 - Example: `http://127.0.0.1:3000/oauth`
 
 **Base scope:** Select **IMAP and SMTP**
@@ -270,6 +288,7 @@ Now that you have your Google Cloud project configured, let's set up EmailEngine
 Click **Register app** to save.
 
 :::tip Base Scope Selection
+
 - **IMAP and SMTP**: EmailEngine uses IMAP for reading and SMTP for sending (this guide)
 - **Gmail API**: EmailEngine uses Gmail REST API for all operations (requires Cloud Pub/Sub)
 
@@ -283,6 +302,7 @@ Now you can add a Gmail account to test the OAuth2 flow.
 ### Option 1: Via Hosted Authentication Form
 
 ![Testing with hosted authentication](/img/external/EhohdYsEDc.gif)
+
 <!-- Shows: Using hosted authentication form to add account -->
 
 1. In EmailEngine, click **Add account**
@@ -306,6 +326,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 ```
 
 Response:
+
 ```json
 {
   "url": "https://your-ee.com/accounts/new?data=eyJhY2NvdW50..."
@@ -343,6 +364,7 @@ curl -X POST https://your-ee.com/v1/account \
 ### Label vs Folder Mapping
 
 Gmail uses labels, but IMAP presents them as folders:
+
 - Multiple labels = message appears in multiple folders
 - Moving messages between folders in IMAP = changing labels in Gmail
 - Some Gmail labels map to special IMAP folders (e.g., `[Gmail]/All Mail`)
@@ -350,6 +372,7 @@ Gmail uses labels, but IMAP presents them as folders:
 ### All Mail Folder
 
 The `[Gmail]/All Mail` folder contains all messages regardless of labels. Consider:
+
 - Syncing All Mail can be resource-intensive
 - Use path filtering to exclude it if not needed
 - Message operations work the same on labeled folders
@@ -357,11 +380,13 @@ The `[Gmail]/All Mail` folder contains all messages regardless of labels. Consid
 ### Gmail Throttling
 
 Gmail may throttle accounts with unusual activity:
+
 - Sudden large volume of operations
 - Many failed authentication attempts
 - Rapid folder syncing
 
 **Prevention:**
+
 - Implement gradual rollout for new accounts
 - Use exponential backoff on errors
 - Monitor account states for throttling indicators
@@ -373,16 +398,19 @@ Gmail may throttle accounts with unusual activity:
 If you need a public OAuth2 app accessible to any Gmail user:
 
 **Requirements:**
+
 1. **Security audit**: OWASP compliance, penetration testing
 2. **Use case validation**: Not all app types qualify (e.g., email exporters may be blocked)
 3. **Minimum permission set**: Google may reject `https://mail.google.com/` as too broad
 
 **Process:**
+
 - Audit costs significant money and time
 - Must demonstrate why IMAP access is necessary
 - Google may require you to use narrower scopes (which may not work with EmailEngine)
 
 **Alternatives if audit is not feasible:**
+
 - Use Internal apps (Google Workspace only)
 - Use app passwords
 - Consider if your use case can work with narrower scopes
@@ -390,6 +418,7 @@ If you need a public OAuth2 app accessible to any Gmail user:
 ### Managing Multiple OAuth2 Apps
 
 You can configure multiple Gmail OAuth2 applications in EmailEngine:
+
 - Different apps for different user segments
 - Separate testing and production apps
 - Organization-specific apps
@@ -399,11 +428,13 @@ Each app gets its own settings and can use different scopes or configurations.
 ### Token Management
 
 EmailEngine automatically:
+
 - Refreshes access tokens before expiration
 - Stores refresh tokens securely in Redis
 - Re-authenticates on token refresh failures
 
 You can:
+
 - Retrieve current access tokens via API for use with other Google APIs
 - Revoke access by deleting the account
 - Monitor token status via account state
