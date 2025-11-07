@@ -22,47 +22,9 @@ This guide covers using **Gmail REST API directly** as the email backend. EmailE
 
 ## Why Use Gmail API Instead of IMAP?
 
-Starting with v2.43.0, EmailEngine can operate Gmail mailboxes through the Gmail API, offering several advantages over IMAP/SMTP:
-
-### Benefits of Gmail API
-
-**Faster Performance:**
-
-- Batch requests fetch entire messages in single API calls
-- No sequential IMAP FETCH commands needed
-- Reduced latency for high-volume operations
-
-**Better Label Handling:**
-
-- Gmail's native label system works naturally
-- No folder/label translation layer needed
-- Multiple labels per message handled correctly
-
-**Reliable Push Notifications:**
-
-- Cloud Pub/Sub provides true push webhooks
-- No IMAP IDLE reconnections every few minutes
-- Lower CPU usage and connection overhead
-
-**Gmail-Specific Features:**
-
-- Access to Gmail drafts API
-- Better threading support
-- Native Gmail search capabilities
-
-**No Connection Limits:**
-
-- IMAP limits ~15 concurrent connections
-- Gmail API uses RESTful requests
-- Better scalability for high-volume accounts
-
-### When to Use Gmail API vs IMAP
-
 **Use Gmail API when:**
 
-- You need high-volume email processing
-- You want better Gmail label handling
-- You require Gmail-specific features (drafts API, threading)
+- You want better Gmail category handling
 - Google's verification process requires limited OAuth2 scopes
 - You want to avoid IMAP connection limits
 
@@ -76,14 +38,13 @@ Starting with v2.43.0, EmailEngine can operate Gmail mailboxes through the Gmail
 
 :::info OAuth2 Scope Requirements
 **IMAP/SMTP** requires the full `https://mail.google.com/` scope. **Gmail API** can use more granular scopes:
+
 - `https://www.googleapis.com/auth/gmail.readonly` - Read-only access
 - `https://www.googleapis.com/auth/gmail.modify` - Read, send, modify (can't permanently delete)
 - `https://www.googleapis.com/auth/gmail.send` - Send only
 
 During Google's OAuth2 app verification, they may require you to use limited scopes. If so, you must use Gmail API since these limited scopes don't work with IMAP/SMTP.
 :::
-
-The IMAP backend continues to receive full support and performance improvements.
 
 ## Overview of Setup Steps
 
@@ -92,8 +53,6 @@ Setting up Gmail API requires more steps than IMAP because you need:
 1. A regular OAuth2 app for user authentication
 2. A service account for managing Cloud Pub/Sub
 3. Cloud Pub/Sub API enabled for webhook notifications
-
-Don't worry - this guide walks through everything step by step.
 
 ## Step 1: Create a Google Cloud Project
 
@@ -507,7 +466,8 @@ You can:
 
 EmailEngine automatically:
 
-- Refreshes access tokens before expiration
+- Refreshes access tokens when they expire during API requests
+- Makes regular API requests (at least daily) even for idle accounts, keeping refresh tokens active
 - Stores refresh tokens securely
 - Re-authenticates on token failures
 

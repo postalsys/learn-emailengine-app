@@ -458,7 +458,8 @@ Each app gets its own settings and can use different scopes or configurations.
 
 EmailEngine automatically:
 
-- Refreshes access tokens before expiration
+- Refreshes access tokens when they expire during API requests
+- Makes regular API requests (at least daily) even for idle accounts, keeping refresh tokens active
 - Stores refresh tokens securely in Redis
 - Re-authenticates on token refresh failures
 

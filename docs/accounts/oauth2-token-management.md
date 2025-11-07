@@ -11,7 +11,7 @@ Sources merged:
 
 # OAuth2 Token Management
 
-EmailEngine automatically manages OAuth2 tokens for registered accounts, including refreshing expired access tokens. You can also retrieve these tokens to use with other Google or Microsoft APIs directly.
+EmailEngine automatically manages OAuth2 tokens for registered accounts, refreshing access tokens when they expire. You can also retrieve these tokens to use with other Google or Microsoft APIs directly.
 
 :::tip Quick Reference
 **API Endpoint:** [GET /v1/account/\{account\}/oauth-token](/docs/api/get-v-1-account-account-oauthtoken) - Retrieve a valid OAuth2 access token for any account
@@ -22,7 +22,8 @@ EmailEngine automatically manages OAuth2 tokens for registered accounts, includi
 When you register OAuth2 accounts in EmailEngine:
 
 - EmailEngine stores OAuth2 tokens in Redis
-- Access tokens are automatically refreshed before expiration
+- Access tokens are automatically refreshed when expired during API requests
+- EmailEngine makes regular API requests (at least daily) even for idle accounts, keeping refresh tokens active
 - You never need to handle token refresh logic
 - Tokens can be retrieved for use with other APIs via the [OAuth2 Token API](/docs/api/get-v-1-account-account-oauthtoken)
 
