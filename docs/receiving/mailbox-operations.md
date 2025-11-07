@@ -205,20 +205,20 @@ curl "https://your-emailengine.com/v1/account/example/mailboxes" \
 
 ### Response Fields
 
-| Field | Description |
-|-------|-------------|
-| `path` | Full folder path (use this for API calls) |
-| `delimiter` | Hierarchy delimiter (usually `/` or `.`) |
-| `parentPath` | Parent folder path (empty for top-level) |
-| `name` | Display name (last part of path) |
-| `listed` | Whether folder is listed (vs hidden) |
-| `subscribed` | Whether user is subscribed to folder |
-| `specialUse` | Special-use flag if applicable (`\Sent`, `\Drafts`, etc.) |
+| Field              | Description                                                  |
+| ------------------ | ------------------------------------------------------------ |
+| `path`             | Full folder path (use this for API calls)                    |
+| `delimiter`        | Hierarchy delimiter (usually `/` or `.`)                     |
+| `parentPath`       | Parent folder path (empty for top-level)                     |
+| `name`             | Display name (last part of path)                             |
+| `listed`           | Whether folder is listed (vs hidden)                         |
+| `subscribed`       | Whether user is subscribed to folder                         |
+| `specialUse`       | Special-use flag if applicable (`\Sent`, `\Drafts`, etc.)    |
 | `specialUseSource` | How special-use was determined (`extension`, `name`, `user`) |
-| `messages` | Total message count |
-| `uidNext` | Next expected UID |
-| `uidValidity` | Folder validity identifier |
-| `highestModseq` | Highest modification sequence (if supported) |
+| `messages`         | Total message count                                          |
+| `uidNext`          | Next expected UID                                            |
+| `uidValidity`      | Folder validity identifier                                   |
+| `highestModseq`    | Highest modification sequence (if supported)                 |
 
 ### Using Special-Use Folders
 
@@ -242,7 +242,7 @@ async function getSentFolder(accountId) {
 List all messages from the sent folder:
 
 ```javascript
-async function listSentMessages(accountId) {
+async function listSentMessagesManual(accountId) {
   const sentPath = await getSentFolder(accountId);
 
   if (!sentPath) {
@@ -256,6 +256,23 @@ async function listSentMessages(accountId) {
   return await response.json();
 }
 ```
+
+List all messages from the sent folder using special-use flag alias:
+
+```javascript
+async function listSentMessages(accountId) {
+  // Use special-use flag directly - EmailEngine resolves the actual path
+  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}/messages?path=${encodeURIComponent("\\Sent")}`, {
+    headers: { Authorization: "Bearer YOUR_ACCESS_TOKEN" },
+  });
+
+  return await response.json();
+}
+```
+
+:::tip Special-Use Flag Aliases
+EmailEngine allows using special-use flags (like `\Sent`, `\Drafts`, `\Trash`) directly as the `path` parameter. EmailEngine automatically resolves the flag to the actual folder path before executing the operation. This works regardless of the folder's actual name or location.
+:::
 
 ## Creating Mailboxes
 
