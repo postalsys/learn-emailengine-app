@@ -61,15 +61,15 @@ MS Graph API has **significantly more limited search capabilities** compared to 
 
 Go to [Azure Portal](https://portal.azure.com/) and navigate to **Microsoft Entra ID** → **App Registrations**.
 
-<!-- Shows: Navigation to Azure AD App Registrations -->
+![Navigate to Azure AD App Registrations](/img/outlook/out001.gif)
 
 Click **New registration**.
 
-<!-- Shows: Clicking "New registration" button -->
+![Click New registration button](/img/outlook/out002.gif)
 
 ## Step 2: Configure Application Registration
 
-<!-- Shows: Application registration form -->
+![Application registration form](/img/outlook/out003.gif)
 
 ### Application Name
 
@@ -122,7 +122,7 @@ Click **Register** to create the application.
 
 ## Step 3: Copy Application (Client) ID
 
-<!-- Shows: Application overview page with client ID -->
+![Application overview page with client ID](/img/outlook/out004.gif)
 
 On the application overview page, find and copy the **Application (client) ID**. You'll need this for EmailEngine configuration.
 
@@ -132,11 +132,11 @@ Keep this page open - you'll come back to it.
 
 Click **API permissions** in the left menu.
 
-<!-- Shows: API permissions page -->
+![API permissions page](/img/outlook/out005.gif)
 
 By default, only `User.Read` permission exists. Click **Add a permission**.
 
-<!-- Shows: Adding permission button -->
+![Adding permission button](/img/outlook/out006.gif)
 
 Select **Microsoft Graph** and then **Delegated permissions**.
 
@@ -144,7 +144,7 @@ Select **Microsoft Graph** and then **Delegated permissions**.
 
 Add these permissions:
 
-<!-- Shows: Searching for and selecting IMAP permissions -->
+![Searching for and selecting IMAP permissions](/img/outlook/out007.gif)
 
 - `IMAP.AccessAsUser.All` - For IMAP access
 - `SMTP.Send` - For sending emails via SMTP
@@ -179,9 +179,11 @@ Verify all required permissions are listed, then continue to the next step.
 
 Click **Certificates & secrets** in the left menu.
 
-<!-- Shows: Certificates & secrets page -->
+![Certificates & secrets page](/img/outlook/out008.gif)
 
 Click **New client secret**.
+
+![New client secret](/img/outlook/out009.gif)
 
 ### Configure Secret
 
@@ -216,7 +218,7 @@ Skip this step if you're using MS Graph API as your backend.
 
 If you're managing a Microsoft 365 organization and EmailEngine cannot connect via IMAP/SMTP, you may need to enable these protocols manually.
 
-<!-- Shows: Enabling IMAP and SMTP in Microsoft 365 admin center -->
+![Enabling IMAP and SMTP in Microsoft 365 admin center](/img/outlook/enable-imap-smtp.gif)
 
 1. Navigate to [https://admin.microsoft.com/](https://admin.microsoft.com/)
 2. Go to **Users** → **Active users**
@@ -232,7 +234,7 @@ Now configure EmailEngine with your Azure application credentials.
 
 ### Add Outlook OAuth2 Application
 
-<!-- Shows: Creating Outlook OAuth2 application in EmailEngine -->
+![Creating Outlook OAuth2 application in EmailEngine](/img/outlook/out010.gif)
 
 1. Open EmailEngine dashboard
 2. Navigate to **Configuration** → **OAuth2**
@@ -241,7 +243,7 @@ Now configure EmailEngine with your Azure application credentials.
 
 ### Configure OAuth2 Settings
 
-<!-- Shows: Outlook OAuth2 configuration form -->
+![Outlook OAuth2 configuration form](/img/outlook/out011.gif)
 
 **Application name:** Give it a descriptive name (e.g., "Outlook OAuth2")
 
@@ -288,7 +290,7 @@ Add an Outlook account to test the OAuth2 flow.
 
 ### Via Hosted Authentication Form
 
-<!-- Shows: Using hosted authentication form -->
+![Using hosted authentication form](/img/outlook/out012.gif)
 
 1. In EmailEngine, click **Add account**
 2. Click **Sign in with Microsoft**
