@@ -63,74 +63,14 @@ Choose between stable releases or development versions:
 
 ### Linux Installation
 
-#### Step 1: Install Node.js
+#### Prerequisites
 
-**Ubuntu/Debian (using NodeSource):**
-```bash
-# Install Node.js 24.x (recommended)
-curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
-sudo apt-get install -y nodejs
+Before installing EmailEngine from source, you need Node.js 24+ and Redis 6.0+:
 
-# Verify
-node --version  # Should be 24.x or higher
-npm --version
-```
+- **Node.js & Redis setup:** Follow Steps 1-2 in the [Linux Installation Guide](/docs/installation/linux#step-1-install-nodejs)
+- Returns to this guide after completing the prerequisites
 
-**CentOS/RHEL:**
-```bash
-curl -fsSL https://rpm.nodesource.com/setup_24.x | sudo bash -
-sudo yum install -y nodejs
-```
-
-**Alternative: Using NVM (Node Version Manager):**
-```bash
-# Install NVM
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-
-# Restart shell or source profile
-source ~/.bashrc
-
-# Install Node.js 24 (or latest LTS)
-nvm install 24
-nvm use 24
-nvm alias default 24
-```
-
-**Note:** Node.js 20+ is supported, but 24+ is recommended for better performance and latest features.
-
-#### Step 2: Install Redis
-
-```bash
-# Ubuntu/Debian
-sudo apt update
-sudo apt install redis-server
-
-# Start and enable Redis
-sudo systemctl start redis-server
-sudo systemctl enable redis-server
-
-# Verify
-redis-cli ping  # Should return: PONG
-```
-
-Configure Redis for production (`/etc/redis/redis.conf`):
-```conf
-# Persistence
-save 900 1
-save 300 10
-save 60 10000
-appendonly yes
-
-# Memory
-maxmemory-policy noeviction
-```
-
-Restart Redis:
-```bash
-sudo systemctl restart redis-server
-```
-
-#### Step 3: Setup Directory Structure
+#### Step 1: Setup Directory Structure
 
 ```bash
 # Create directories
@@ -138,7 +78,7 @@ sudo mkdir -p /opt/emailengine/app
 cd /opt/emailengine
 ```
 
-#### Step 4: Configure Environment
+#### Step 2: Configure Environment
 
 Create and populate `.env` file in `/opt/emailengine`:
 
@@ -169,7 +109,7 @@ sudo chmod 600 /opt/emailengine/.env
 
 **Important:** The `.env` file is stored outside the `app/` directory, making upgrades easier. Keep this file safe.
 
-#### Step 5: Download and Install EmailEngine
+#### Step 3: Download and Install EmailEngine
 
 ```bash
 cd /opt/emailengine
@@ -189,7 +129,7 @@ sudo rm source-dist.tar.gz
 The source-dist.tar.gz includes a complete `node_modules` folder with all production dependencies, so you don't need to run `npm install`.
 :::
 
-#### Step 6: Test Installation
+#### Step 4: Test Installation
 
 ```bash
 cd /opt/emailengine
@@ -204,7 +144,7 @@ curl http://localhost:3000/health
 
 Press `Ctrl+C` to stop.
 
-#### Step 7: Create System User
+#### Step 5: Create System User
 
 ```bash
 # Create dedicated user
@@ -215,7 +155,7 @@ sudo chown -R emailengine:emailengine /opt/emailengine
 sudo chmod 600 /opt/emailengine/.env
 ```
 
-#### Step 8: Set Up SystemD Service
+#### Step 6: Set Up SystemD Service
 
 Create service file:
 ```bash
@@ -280,56 +220,43 @@ sudo journalctl -u emailengine -f
 
 ### macOS Installation
 
-#### Step 1: Install Node.js
+#### Prerequisites
 
-**Using Homebrew (recommended):**
-```bash
-# Install Homebrew if needed
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+Before installing EmailEngine from source, you need Node.js 24+ and Redis:
 
-# Install latest Node.js (24+)
-brew install node
+- **Node.js & Redis setup:** Follow Steps 1-2 in the [macOS Installation Guide](/docs/installation/macos#step-1-install-nodejs)
+- Returns to this guide after completing the prerequisites
 
-# Verify
-node --version  # Should be 24.x or higher
-```
-
-**Using NVM (alternative):**
-```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-nvm install 24
-nvm use 24
-nvm alias default 24
-```
-
-**Note:** Node.js 20+ is supported, but 24+ is recommended for better performance and latest features.
-
-#### Step 2: Install Redis
+#### Step 1: Download and Install EmailEngine
 
 ```bash
-brew install redis
-brew services start redis
-
-# Verify
-redis-cli ping
-```
-
-#### Step 3: Download and Install EmailEngine
-
-```bash
-# Create directory
-sudo mkdir -p /opt/emailengine
+# Create directory structure
+sudo mkdir -p /opt/emailengine/app
 cd /opt/emailengine
 
 # Download source (includes node_modules)
-sudo curl -L https://go.emailengine.app/source-dist.tar.gz | sudo tar xz --strip-components=1
+sudo curl -L https://go.emailengine.app/source-dist.tar.gz | sudo tar xz -C app --strip-components=1
 ```
 
-#### Step 4: Configure Environment
+#### Step 2: Configure Environment
 
-Create `/opt/emailengine/.env` with the same configuration as Linux.
+Create `/opt/emailengine/.env`:
 
-#### Step 5: Run as Launch Agent
+```bash
+# Generate encryption secret and create .env file
+sudo bash -c "cat > /opt/emailengine/.env" <<EOF
+EENGINE_REDIS=redis://127.0.0.1:6379
+EENGINE_SECRET=$(openssl rand -hex 32)
+EENGINE_WORKERS=4
+EENGINE_PORT=3000
+EENGINE_LOG_LEVEL=info
+EOF
+
+# Secure the file
+sudo chmod 600 /opt/emailengine/.env
+```
+
+#### Step 3: Run as Launch Agent
 
 Create `~/Library/LaunchAgents/com.emailengine.plist`:
 
@@ -343,7 +270,7 @@ Create `~/Library/LaunchAgents/com.emailengine.plist`:
     <key>ProgramArguments</key>
     <array>
         <string>/usr/local/bin/node</string>
-        <string>/opt/emailengine/server.js</string>
+        <string>/opt/emailengine/app/server.js</string>
     </array>
     <key>WorkingDirectory</key>
     <string>/opt/emailengine</string>
