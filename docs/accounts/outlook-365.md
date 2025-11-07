@@ -25,7 +25,6 @@ EmailEngine has native support for Outlook and Microsoft 365 accounts with two b
 - Standard email protocols
 - Works like any other email account
 - Simpler setup
-- Compatible with EmailEngine v2.0+
 
 **Microsoft Graph API Backend:**
 
@@ -33,41 +32,42 @@ EmailEngine has native support for Outlook and Microsoft 365 accounts with two b
 - Better performance for high-volume accounts
 - Access to Microsoft-specific features
 - Supports shared mailboxes natively
-- Requires EmailEngine v2.44+
 
 This guide covers both options.
 
 ## Choosing IMAP/SMTP vs MS Graph API
 
-| Feature                         | IMAP/SMTP       | MS Graph API   |
-| ------------------------------- | --------------- | -------------- |
-| **Setup Complexity**            | Simple          | Moderate       |
-| **Performance**                 | Good            | Excellent      |
-| **Shared Mailboxes**            | Limited support | Native support |
-| **EmailEngine Version**         | v2.0+           | v2.44+         |
-| **Connection Protocol**         | IMAP/SMTP       | REST API       |
-| **Microsoft-Specific Features** | Limited         | Full access    |
-| **Works with other providers**  | Yes             | No             |
+| Feature                         | IMAP/SMTP       | MS Graph API          |
+| ------------------------------- | --------------- | --------------------- |
+| **Setup Complexity**            | Simple          | Moderate              |
+| **Performance**                 | Good            | Excellent             |
+| **Search Capabilities**         | Full text search| Very limited          |
+| **Shared Mailboxes**            | Limited support | Native support        |
+| **EmailEngine Version**         | v2.0+           | v2.44+                |
+| **Connection Protocol**         | IMAP/SMTP       | REST API              |
+| **Microsoft-Specific Features** | Limited         | Full access           |
+| **Works with other providers**  | Yes             | No                    |
+
+:::warning MS Graph API Search Limitations
+MS Graph API has **significantly more limited search capabilities** compared to IMAP. IMAP supports full-text search across message headers and body content, while MS Graph API search is much more restricted. If your application requires advanced message search functionality, use IMAP/SMTP instead.
+:::
 
 **Recommendation:**
 
-- Use **IMAP/SMTP** for simple setups and compatibility
-- Use **MS Graph API** for shared mailboxes and Microsoft 365 enterprise features
+- Use **IMAP/SMTP** for simple setups, compatibility, and when you need powerful search capabilities
+- Use **MS Graph API** for shared mailboxes and Microsoft 365 enterprise features (but be aware of search limitations)
 
 ## Step 1: Create Azure AD Application
 
 Go to [Azure Portal](https://portal.azure.com/) and navigate to **Microsoft Entra ID** → **App Registrations**.
 
-
 <!-- Shows: Navigation to Azure AD App Registrations -->
 
 Click **New registration**.
 
-
 <!-- Shows: Clicking "New registration" button -->
 
 ## Step 2: Configure Application Registration
-
 
 <!-- Shows: Application registration form -->
 
@@ -122,7 +122,6 @@ Click **Register** to create the application.
 
 ## Step 3: Copy Application (Client) ID
 
-
 <!-- Shows: Application overview page with client ID -->
 
 On the application overview page, find and copy the **Application (client) ID**. You'll need this for EmailEngine configuration.
@@ -133,11 +132,9 @@ Keep this page open - you'll come back to it.
 
 Click **API permissions** in the left menu.
 
-
 <!-- Shows: API permissions page -->
 
 By default, only `User.Read` permission exists. Click **Add a permission**.
-
 
 <!-- Shows: Adding permission button -->
 
@@ -146,7 +143,6 @@ Select **Microsoft Graph** and then **Delegated permissions**.
 ### For IMAP/SMTP Backend
 
 Add these permissions:
-
 
 <!-- Shows: Searching for and selecting IMAP permissions -->
 
@@ -175,7 +171,6 @@ You cannot use both IMAP/SMTP and Mail.\* scopes together. Choose one backend:
 Pick one approach and stick with it.
 :::
 
-
 <!-- Shows: All required permissions listed -->
 
 Verify all required permissions are listed, then continue to the next step.
@@ -183,7 +178,6 @@ Verify all required permissions are listed, then continue to the next step.
 ## Step 5: Create Client Secret
 
 Click **Certificates & secrets** in the left menu.
-
 
 <!-- Shows: Certificates & secrets page -->
 
@@ -222,7 +216,6 @@ Skip this step if you're using MS Graph API as your backend.
 
 If you're managing a Microsoft 365 organization and EmailEngine cannot connect via IMAP/SMTP, you may need to enable these protocols manually.
 
-
 <!-- Shows: Enabling IMAP and SMTP in Microsoft 365 admin center -->
 
 1. Navigate to [https://admin.microsoft.com/](https://admin.microsoft.com/)
@@ -239,7 +232,6 @@ Now configure EmailEngine with your Azure application credentials.
 
 ### Add Outlook OAuth2 Application
 
-
 <!-- Shows: Creating Outlook OAuth2 application in EmailEngine -->
 
 1. Open EmailEngine dashboard
@@ -248,7 +240,6 @@ Now configure EmailEngine with your Azure application credentials.
 4. Select **Outlook**
 
 ### Configure OAuth2 Settings
-
 
 <!-- Shows: Outlook OAuth2 configuration form -->
 
@@ -296,7 +287,6 @@ Click **Register app** to save.
 Add an Outlook account to test the OAuth2 flow.
 
 ### Via Hosted Authentication Form
-
 
 <!-- Shows: Using hosted authentication form -->
 
@@ -450,7 +440,6 @@ After adding a shared mailbox:
 3. Test sending an email from the shared mailbox
 4. Check webhooks are firing for new messages
 
-
 ## Performance Considerations
 
 ### IMAP/SMTP Limits
@@ -535,4 +524,3 @@ Set up alerts for:
 - Accounts entering error states
 - Token refresh failures
 - Client secret expiration approaching
-

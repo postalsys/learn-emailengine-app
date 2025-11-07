@@ -22,18 +22,21 @@ OAuth2 is an authorization framework that allows applications to access user dat
 ### Benefits of OAuth2
 
 **Better Security:**
+
 - No password storage required
 - Tokens can be revoked without changing passwords
 - Scoped permissions (request only what you need)
 - Works seamlessly with two-factor authentication
 
 **Better User Experience:**
+
 - Users authenticate directly with their provider (Google, Microsoft)
 - Familiar consent screens
 - Users can review and revoke access anytime
 - No need to share passwords with third parties
 
 **Better Compliance:**
+
 - Meets modern security standards
 - Supports enterprise security policies
 - Audit trail of access grants
@@ -54,6 +57,7 @@ flowchart TD
 ```
 
 EmailEngine handles steps 4-7 automatically. You just need to:
+
 - Set up the OAuth2 application (one-time)
 - Direct users to the authentication URL
 - EmailEngine handles the rest
@@ -65,10 +69,12 @@ EmailEngine supports OAuth2 for:
 ### Gmail / Google Workspace
 
 **Protocol Options:**
+
 - **IMAP/SMTP with OAuth2** - Standard protocols with OAuth2 authentication
 - **Gmail API** - Native Gmail REST API (faster, more features)
 
 **Account Types:**
+
 - **Internal Apps** - Google Workspace organization only
 - **Service Accounts** - Google Workspace with domain-wide delegation
 - **Public Apps** - Any Gmail user (requires security audit)
@@ -80,10 +86,12 @@ EmailEngine supports OAuth2 for:
 ### Outlook / Microsoft 365
 
 **Protocol Options:**
+
 - **IMAP/SMTP with OAuth2** - Standard protocols with OAuth2 authentication
-- **Microsoft Graph API** - Native Microsoft 365 API (requires EmailEngine v2.44+)
+- **Microsoft Graph API** - Native Microsoft 365 API
 
 **Account Types:**
+
 - **Single Tenant** - Your organization only
 - **Multi-Tenant** - Any Microsoft 365 organization
 - **Personal Accounts** - Outlook.com, Hotmail.com, Live.com
@@ -106,11 +114,13 @@ EmailEngine supports OAuth2 for:
 EmailEngine supports different OAuth2 application types:
 
 **Gmail:**
+
 - Gmail (IMAP/SMTP)
 - Gmail API
 - Gmail Service Accounts
 
 **Outlook:**
+
 - Outlook (IMAP/SMTP or MS Graph API)
 
 Each type has its own configuration page in EmailEngine.
@@ -120,11 +130,13 @@ Each type has its own configuration page in EmailEngine.
 When configuring OAuth2 in EmailEngine, you'll need:
 
 **From Provider (Google/Microsoft):**
+
 - **Client ID** - Identifies your application
 - **Client Secret** - Authenticates your application
 - **Redirect URI** - Where users return after consent
 
 **For EmailEngine:**
+
 - **Application Name** - Internal identifier
 - **Base Scope** - Protocol to use (IMAP/SMTP or API)
 - **Enabled** - Whether app shows in authentication forms
@@ -151,6 +163,7 @@ Navigate to **Configuration** → **OAuth2** in EmailEngine dashboard.
 Both Google and Microsoft allow downloading credentials as JSON files:
 
 **Google credentials file** (starts with `client_secret_`):
+
 ```json
 {
   "web": {
@@ -163,6 +176,7 @@ Both Google and Microsoft allow downloading credentials as JSON files:
 ```
 
 **Microsoft credentials** (entered manually):
+
 - Application (client) ID
 - Client secret value
 
@@ -175,18 +189,23 @@ Scopes define what your application can access.
 ### Gmail Scopes
 
 **For IMAP/SMTP:**
+
 ```
 https://mail.google.com/
 ```
+
 Required scope for IMAP and SMTP authentication.
 
 **For Gmail API:**
+
 ```
 gmail.modify
 ```
+
 Full Gmail API access (read, write, delete, but not admin functions).
 
 **Narrower Scopes (if required by Google):**
+
 ```
 gmail.readonly      - Read-only access
 gmail.send          - Send emails only
@@ -197,6 +216,7 @@ gmail.compose       - Create drafts
 ### Outlook Scopes
 
 **For IMAP/SMTP:**
+
 ```
 IMAP.AccessAsUser.All
 SMTP.Send
@@ -204,6 +224,7 @@ offline_access
 ```
 
 **For MS Graph API:**
+
 ```
 Mail.ReadWrite
 Mail.Send
@@ -219,6 +240,7 @@ The `offline_access` scope is required for both providers. It allows EmailEngine
 You can add extra scopes if you want to use OAuth2 tokens for other APIs:
 
 **Example - Add Google Calendar access:**
+
 ```
 https://www.googleapis.com/auth/calendar
 ```
@@ -232,6 +254,7 @@ Configure this in **Additional scopes** field in EmailEngine.
 If Google/Microsoft requires narrower scopes, you can disable the default wide scope:
 
 **Disabled scopes** field:
+
 ```
 https://mail.google.com/
 ```
@@ -243,16 +266,19 @@ This removes the wide scope from consent requests.
 ### Gmail Account Types
 
 **Internal Apps:**
+
 - Only for Google Workspace organizations
 - No security audit required
 - Limited to organization's domain
 
 **External Apps (Development):**
+
 - Limited to 100 manually whitelisted users
 - Grants expire after 7 days
 - Not suitable for production
 
 **External Apps (Production):**
+
 - Available to any Gmail user
 - Requires thorough security audit (expensive, time-consuming)
 - Google may reject broad scopes like `https://mail.google.com/`
@@ -268,12 +294,12 @@ Configure via **Supported account types** field:
 
 **Mapping to Azure:**
 
-| Azure Setting | EmailEngine Value |
-|---------------|-------------------|
-| Any org + personal | `common` |
-| Personal only | `consumers` |
-| Any organization | `organizations` |
-| Single organization | Use Directory ID |
+| Azure Setting       | EmailEngine Value |
+| ------------------- | ----------------- |
+| Any org + personal  | `common`          |
+| Personal only       | `consumers`       |
+| Any organization    | `organizations`   |
+| Single organization | Use Directory ID  |
 
 ## Redirect URLs
 
@@ -286,6 +312,7 @@ The redirect URL is where users return after granting consent.
 ```
 
 **Examples:**
+
 - `http://localhost:3000/oauth` (development)
 - `https://ee.company.com/oauth` (production)
 - `https://your-domain.com/oauth` (custom domain)
@@ -301,6 +328,7 @@ The redirect URL is where users return after granting consent.
 ### Common Issues
 
 **Redirect URL mismatch:**
+
 - Error: "redirect_uri_mismatch" (Google) or "AADSTS50011" (Microsoft)
 - Fix: Ensure exact match between provider console and EmailEngine
 - Check for http vs https, trailing slashes, port numbers
@@ -329,16 +357,19 @@ Before adding accounts:
 ### Common Test Issues
 
 **Redirect fails / "Authorization Error":**
+
 - Check browser console for errors
 - Verify redirect URL matches
 - Check provider app is enabled
 
 **Consent screen shows error:**
+
 - Verify all required APIs are enabled
 - Check scopes are configured correctly
 - Ensure app is not restricted to specific users (or you're in the allowed list)
 
 **Account stays in "connecting" or enters "authenticationError":**
+
 - Check EmailEngine logs
 - Verify credentials are correct
 - For Gmail API: check Pub/Sub is set up
@@ -351,20 +382,24 @@ Before adding accounts:
 If you need a public Gmail app:
 
 **Requirements:**
+
 1. **Security compliance** - OWASP, pentest, security review
 2. **Use case validation** - Must fit approved categories
 3. **Minimum scopes** - Google may reject `https://mail.google.com/`
 
 **Timeline:**
+
 - Can take 4-6 weeks or longer
 - Requires documentation and testing
 - May need to revise scope requests
 
 **Cost:**
+
 - Security audit: $15,000 - $75,000+ (varies by provider)
 - Annual re-certification may be required
 
 **Alternatives:**
+
 - Use Internal apps (organization only)
 - Use app passwords
 - Use narrower scopes if sufficient
@@ -374,11 +409,13 @@ If you need a public Gmail app:
 For multi-tenant Microsoft apps:
 
 **Publisher Verification:**
+
 - Verify domain ownership
 - Provide business information
 - Display verified badge in consent
 
 **Admin Consent:**
+
 - Organization admins can pre-approve your app
 - Simplifies user experience
 - Required for some permissions
@@ -388,16 +425,19 @@ For multi-tenant Microsoft apps:
 OAuth2 client secrets expire. Plan for rotation:
 
 **Google:**
+
 - Secrets don't expire by default
 - Can be rotated manually anytime
 - Old secrets remain valid until deleted
 
 **Microsoft:**
+
 - Secrets have expiration dates (6, 12, 24 months, or custom)
 - Must rotate before expiration
 - Set calendar reminders
 
 **Rotation Process:**
+
 1. Generate new secret in provider console
 2. Add new secret to EmailEngine (don't remove old one yet)
 3. Test with new secret
@@ -409,16 +449,19 @@ OAuth2 client secrets expire. Plan for rotation:
 Monitor these metrics:
 
 **Application Health:**
+
 - OAuth2 errors in EmailEngine logs
 - Token refresh success rate
 - Authentication error count
 
 **Account Health:**
+
 - Accounts in error states
 - Failed authentication attempts
 - Token expiration warnings
 
 **User Experience:**
+
 - Time to complete OAuth flow
 - Drop-off rate during consent
 - Support tickets related to authentication
@@ -436,6 +479,7 @@ Delegate OAuth2 management to an external server:
 ```
 
 Use this when:
+
 - You already manage OAuth2 in your app
 - Want centralized token management
 - Need custom authentication flows
@@ -493,5 +537,3 @@ Access any user's mailbox without individual consent:
 Requires domain-wide delegation setup.
 
 [Learn more about service accounts →](./google-service-accounts)
-
-
