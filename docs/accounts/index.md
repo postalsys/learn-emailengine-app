@@ -324,18 +324,29 @@ Limit which folders EmailEngine syncs and monitors to save resources:
 
 [Learn more in performance tuning →](/docs/advanced/performance-tuning#path-filtering)
 
-### Custom Sent Mail Path
+### Custom Special Folder Paths
 
-If EmailEngine doesn't correctly identify your Sent folder:
+If EmailEngine doesn't correctly identify your special folders (Sent, Drafts, Junk, Trash):
 
 ```json
 {
   "account": "user123",
   "imap": {
-    "sentMailPath": "Sent Items"  // Custom path
+    "sentMailPath": "Sent Items",
+    "draftsMailPath": "Draft Messages",
+    "junkMailPath": "Spam",
+    "trashMailPath": "Deleted Items"
   }
 }
 ```
+
+**Available overrides:**
+- `sentMailPath` - Where sent messages go
+- `draftsMailPath` - Where drafts are saved
+- `junkMailPath` - Where spam goes
+- `trashMailPath` - Where deleted messages go
+
+[Learn more about folder overrides →](/docs/receiving/mailbox-operations#override-special-folders)
 
 ## OAuth2 Token Management
 
