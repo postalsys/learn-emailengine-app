@@ -180,17 +180,13 @@ sudo wget https://go.emailengine.app/source-dist.tar.gz
 # Or download specific version (e.g., 2.55.4)
 sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
 
-# Extract to app directory
+# Extract to app directory (includes node_modules)
 sudo tar xzf source-dist.tar.gz -C app --strip-components=1
 sudo rm source-dist.tar.gz
-
-# Install dependencies (production only)
-cd app
-sudo npm install --production --ignore-scripts
 ```
 
-:::tip
-The `--production` flag installs only runtime dependencies, not development tools, reducing installation size and time.
+:::tip No npm install needed
+The source-dist.tar.gz includes a complete `node_modules` folder with all production dependencies, so you don't need to run `npm install`.
 :::
 
 #### Step 6: Test Installation
@@ -325,11 +321,8 @@ redis-cli ping
 sudo mkdir -p /opt/emailengine
 cd /opt/emailengine
 
-# Download source
+# Download source (includes node_modules)
 sudo curl -L https://go.emailengine.app/source-dist.tar.gz | sudo tar xz --strip-components=1
-
-# Install dependencies
-sudo npm install --production --ignore-scripts
 ```
 
 #### Step 4: Configure Environment
@@ -455,15 +448,12 @@ Run from source in Docker:
 Create `Dockerfile`:
 
 ```dockerfile
-FROM node:20-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 
-# Copy source
+# Copy source (source-dist.tar.gz includes node_modules)
 COPY . .
-
-# Install dependencies
-RUN npm install --production --ignore-scripts
 
 # Expose ports
 EXPOSE 3000
@@ -523,10 +513,6 @@ sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
 sudo tar xzf source-dist.tar.gz -C app --strip-components=1
 sudo rm source-dist.tar.gz
 
-# Install dependencies
-cd app
-sudo npm install --production --ignore-scripts
-
 # Restore ownership
 sudo chown -R emailengine:emailengine /opt/emailengine
 
@@ -563,10 +549,6 @@ sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
 sudo tar xzf source-dist.tar.gz -C app --strip-components=1
 sudo rm source-dist.tar.gz
 
-# Install dependencies
-cd app
-sudo npm install --production --ignore-scripts
-
 # Reload with zero-downtime
 pm2 reload emailengine
 ```
@@ -580,8 +562,7 @@ All configuration can be set via environment variables in `.env` file:
 ```bash
 # Core settings
 EENGINE_REDIS=redis://127.0.0.1:6379
-EENGINE_SECRET=your-secret-32-chars-min
-EENGINE_SECRET=your-encryption-secret
+EENGINE_SECRET=your-encryption-secret-at-least-32-chars
 
 # Performance
 EENGINE_WORKERS=4

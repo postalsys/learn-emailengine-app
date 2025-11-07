@@ -368,14 +368,14 @@ sudo wget https://go.emailengine.app/source-dist.tar.gz
 # Or download specific version (e.g., 2.55.4)
 sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
 
-# Extract to app directory
+# Extract to app directory (includes node_modules)
 sudo tar xzf source-dist.tar.gz -C app --strip-components=1
 sudo rm source-dist.tar.gz
-
-# Install dependencies
-cd app
-sudo npm install --production
 ```
+
+:::tip No npm install needed
+The source-dist.tar.gz includes a complete `node_modules` folder, so you don't need to run `npm install`.
+:::
 
 ### Step 6: Test Run
 
@@ -458,13 +458,9 @@ sudo wget https://go.emailengine.app/source-dist.tar.gz
 # Or download specific version (e.g., 2.55.4)
 sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
 
-# Extract to app directory
+# Extract to app directory (includes node_modules)
 sudo tar xzf source-dist.tar.gz -C app --strip-components=1
 sudo rm source-dist.tar.gz
-
-# Install dependencies
-cd app
-sudo npm install --production
 
 # Restore ownership
 sudo chown -R emailengine:emailengine /opt/emailengine
