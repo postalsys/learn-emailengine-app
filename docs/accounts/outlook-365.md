@@ -339,12 +339,16 @@ curl -X POST https://your-ee.com/v1/account \
     "name": "John Doe",
     "email": "user@outlook.com",
     "oauth2": {
-      "provider": "outlook",
+      "provider": "outlookOauth",
       "accessToken": "EwBIA8l6...",
       "refreshToken": "M.R3_BAY..."
     }
   }'
 ```
+
+:::info Provider ID
+The `provider` field should be the **OAuth2 application ID** from EmailEngine (e.g., `outlookOauth`), not the literal string "outlook". This is the ID you see in **Configuration → OAuth2 Apps** in the EmailEngine interface, not the Application (client) ID from Azure AD.
+:::
 
 [See full API documentation →](/docs/api/post-v-1-account)
 
