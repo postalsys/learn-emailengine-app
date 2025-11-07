@@ -80,24 +80,24 @@ When creating your OAuth2 application (Google Cloud Console or Azure AD), reques
 
 In Google Cloud Console, add all required scopes:
 
-```
-https://mail.google.com/                                    (for email)
-https://www.googleapis.com/auth/calendar                    (for calendar)
-https://www.googleapis.com/auth/postmaster.readonly         (for postmaster)
-https://www.googleapis.com/auth/drive.readonly              (for drive)
-```
+| Scope | Purpose |
+|-------|---------|
+| `https://mail.google.com/` | Email access |
+| `https://www.googleapis.com/auth/calendar` | Calendar access |
+| `https://www.googleapis.com/auth/postmaster.readonly` | Postmaster tools |
+| `https://www.googleapis.com/auth/drive.readonly` | Google Drive (read-only) |
 
 #### Microsoft Example
 
 In Azure AD, add all required permissions:
 
-```
-Mail.ReadWrite        (for email)
-Mail.Send             (for sending)
-Calendars.ReadWrite   (for calendar)
-Files.Read            (for OneDrive)
-offline_access        (for token refresh)
-```
+| Permission | Purpose |
+|------------|---------|
+| `Mail.ReadWrite` | Email access |
+| `Mail.Send` | Sending emails |
+| `Calendars.ReadWrite` | Calendar access |
+| `Files.Read` | OneDrive access |
+| `offline_access` | Token refresh capability |
 
 :::warning Microsoft Scope Compatibility
 Additional OAuth2 scopes with Microsoft accounts are only supported when using the **MS Graph API backend** (Mail.\* scopes). If you configure EmailEngine to use IMAP/SMTP (IMAP.AccessAsUser.All, SMTP.Send scopes), those access tokens are valid **only for IMAP/SMTP** and cannot be used with other Microsoft Graph APIs like Calendars or Files.
@@ -384,22 +384,22 @@ EmailEngine handles token refresh automatically:
 
 **When EmailEngine Refreshes Tokens:**
 
-- Before access token expires (proactive refresh)
-- When an API operation fails with token expiration error (reactive refresh)
+- When an API operation encounters an expired access token
 - During account reconnection
-- When you request a token via the API (if expired)
+- When you request a token via the API endpoint (if expired)
+- As part of regular daily operations (keeping refresh tokens active)
 
 **What EmailEngine Does:**
 
-1. Checks if access token is expired or about to expire
-2. Uses refresh token to get a new access token
+1. Detects expired access token during an API request
+2. Uses the refresh token to obtain a new access token
 3. Updates stored credentials in Redis
-4. Returns the fresh access token
+4. Retries the original operation with the new token
 
 **Your Responsibility:**
 
-- Nothing! EmailEngine handles everything
-- Just retrieve tokens when you need them
+- Nothing! EmailEngine handles everything automatically
+- Just retrieve tokens when you need them via the API endpoint
 - They'll always be valid and up-to-date
 
 :::tip Caching Tokens
