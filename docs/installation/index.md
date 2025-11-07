@@ -12,7 +12,7 @@ Choose your installation method based on your operating system and deployment re
 
 ```bash
 # Linux: Download binary
-wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
+wget https://go.emailengine.app/emailengine.tar.gz
 tar xzf emailengine.tar.gz
 sudo mv emailengine /usr/local/bin/
 
@@ -20,7 +20,7 @@ sudo mv emailengine /usr/local/bin/
 docker run -p 3000:3000 --env EENGINE_REDIS="redis://host.docker.internal:6379" postalsys/emailengine:v2
 
 # Source: Production deployment
-wget https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz
+wget https://go.emailengine.app/source-dist.tar.gz
 tar xzf source-dist.tar.gz && cd emailengine
 node server.js
 ```

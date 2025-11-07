@@ -14,7 +14,7 @@ Get EmailEngine up and running in 10 minutes. This guide walks you through insta
 
 ```bash
 # Download latest release
-$ wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
+$ wget https://go.emailengine.app/emailengine.tar.gz
 $ tar xzf emailengine.tar.gz
 $ chmod +x emailengine
 

@@ -80,7 +80,7 @@ Open PowerShell and download the Windows executable:
 
 ```powershell
 # Download latest version
-Invoke-WebRequest -Uri "https://github.com/postalsys/emailengine/releases/latest/download/emailengine-win-x64.exe" -OutFile "emailengine.exe"
+Invoke-WebRequest -Uri "https://go.emailengine.app/emailengine.exe" -OutFile "emailengine.exe"
 
 # Or for specific version (e.g., 2.55.4)
 Invoke-WebRequest -Uri "https://github.com/postalsys/emailengine/releases/download/v2.55.4/emailengine-win-x64.exe" -OutFile "emailengine.exe"
@@ -186,7 +186,7 @@ nssm remove EmailEngine confirm
 nssm stop EmailEngine
 
 # Download latest version
-Invoke-WebRequest -Uri "https://github.com/postalsys/emailengine/releases/latest/download/emailengine-win-x64.exe" -OutFile "emailengine.exe"
+Invoke-WebRequest -Uri "https://go.emailengine.app/emailengine.exe" -OutFile "emailengine.exe"
 
 # Replace existing binary
 Move-Item -Path "emailengine.exe" -Destination "C:\Program Files\EmailEngine\emailengine.exe" -Force
@@ -235,7 +235,7 @@ sudo ./install.sh
 # Or manual installation
 sudo apt update
 sudo apt install redis-server
-wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
+wget https://go.emailengine.app/emailengine.tar.gz
 tar xzf emailengine.tar.gz
 sudo mv emailengine /usr/local/bin/
 ```

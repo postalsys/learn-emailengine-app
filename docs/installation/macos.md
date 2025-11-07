@@ -42,12 +42,12 @@ The easiest way to install EmailEngine on macOS.
 
 **For Intel Macs:**
 ```bash
-curl -LO https://github.com/postalsys/emailengine/releases/latest/download/emailengine-macos-x64.pkg
+curl -LO https://go.emailengine.app/emailengine.pkg
 ```
 
 **For Apple Silicon (M1/M2/M3):**
 ```bash
-curl -LO https://github.com/postalsys/emailengine/releases/latest/download/emailengine-macos-arm64.pkg
+curl -LO https://go.emailengine.app/emailengine-arm.pkg
 ```
 
 ### Install
@@ -180,7 +180,7 @@ redis-cli ping
 
 **For Intel Macs:**
 ```bash
-curl -LO https://github.com/postalsys/emailengine/releases/latest/download/emailengine-macos-x64
+curl -LO https://go.emailengine.app/emailengine-macos-x64
 mv emailengine-macos-x64 emailengine
 chmod +x emailengine
 sudo mv emailengine /usr/local/bin/
@@ -188,7 +188,7 @@ sudo mv emailengine /usr/local/bin/
 
 **For Apple Silicon:**
 ```bash
-curl -LO https://github.com/postalsys/emailengine/releases/latest/download/emailengine-macos-arm64
+curl -LO https://go.emailengine.app/emailengine-macos-arm64
 mv emailengine-macos-arm64 emailengine
 chmod +x emailengine
 sudo mv emailengine /usr/local/bin/
@@ -229,7 +229,7 @@ curl http://localhost:3000/health
 
 ```bash
 # Download latest binary for your architecture
-curl -LO https://github.com/postalsys/emailengine/releases/latest/download/emailengine-macos-arm64
+curl -LO https://go.emailengine.app/emailengine-macos-arm64
 
 # Stop EmailEngine (if running as launch agent)
 launchctl stop com.emailengine
@@ -291,7 +291,7 @@ sudo mkdir -p /opt/emailengine
 cd /opt/emailengine
 
 # Download source distribution
-curl -L https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz | tar xz
+curl -L https://go.emailengine.app/source-dist.tar.gz | tar xz
 ```
 
 **Option B: From Git (development):**
@@ -391,7 +391,7 @@ git pull
 npm install --production
 
 # Or download new release
-# curl -L https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz | tar xz
+# curl -L https://go.emailengine.app/source-dist.tar.gz | tar xz
 
 # Start service
 launchctl start com.emailengine

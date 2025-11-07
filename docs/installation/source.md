@@ -136,7 +136,7 @@ sudo mkdir -p /opt/emailengine
 cd /opt/emailengine
 
 # Download latest source distribution
-sudo wget https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz
+sudo wget https://go.emailengine.app/source-dist.tar.gz
 
 # Extract
 sudo tar xzf source-dist.tar.gz --strip-components=1
@@ -323,7 +323,7 @@ sudo mkdir -p /opt/emailengine
 cd /opt/emailengine
 
 # Download source
-sudo curl -L https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz | sudo tar xz --strip-components=1
+sudo curl -L https://go.emailengine.app/source-dist.tar.gz | sudo tar xz --strip-components=1
 
 # Install dependencies
 sudo npm install --production --ignore-scripts
@@ -547,7 +547,7 @@ sudo systemctl stop emailengine
 sudo cp -r /opt/emailengine /opt/emailengine.backup.$(date +%Y%m%d)
 
 # Download new version
-sudo wget https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz
+sudo wget https://go.emailengine.app/source-dist.tar.gz
 
 # Extract (overwrites files)
 sudo tar xzf source-dist.tar.gz --strip-components=1

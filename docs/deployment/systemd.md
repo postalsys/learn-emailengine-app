@@ -40,7 +40,7 @@ Choose one of the following installation methods:
 
 ```bash
 # Download and extract
-wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
+wget https://go.emailengine.app/emailengine.tar.gz
 tar xzf emailengine.tar.gz
 sudo mv emailengine /usr/local/bin/
 sudo chmod +x /usr/local/bin/emailengine
@@ -65,7 +65,7 @@ emailengine --version
 
 ```bash
 # Download source distribution
-wget https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz
+wget https://go.emailengine.app/source-dist.tar.gz
 tar xzf source-dist.tar.gz
 cd emailengine
 
@@ -676,7 +676,7 @@ sudo journalctl -u emailengine -f -o json | \
 sudo systemctl stop emailengine
 
 # Download new version
-wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
+wget https://go.emailengine.app/emailengine.tar.gz
 tar xzf emailengine.tar.gz
 
 # Replace binary
@@ -734,7 +734,7 @@ sudo apt update
 sudo apt install -y redis-server
 
 # Download and install EmailEngine
-wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
+wget https://go.emailengine.app/emailengine.tar.gz
 tar xzf emailengine.tar.gz
 sudo mv emailengine /usr/local/bin/
 sudo chmod +x /usr/local/bin/emailengine

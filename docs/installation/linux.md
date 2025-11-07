@@ -177,7 +177,7 @@ sudo systemctl restart redis
 
 ```bash
 # Download latest binary
-wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
+wget https://go.emailengine.app/emailengine.tar.gz
 
 # Extract
 tar xzf emailengine.tar.gz
@@ -271,7 +271,7 @@ sudo systemctl status emailengine
 
 ```bash
 # Download latest
-wget https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz
+wget https://go.emailengine.app/emailengine.tar.gz
 
 # Extract and replace
 tar xzf emailengine.tar.gz
@@ -322,7 +322,7 @@ sudo mkdir -p /opt/emailengine
 cd /opt/emailengine
 
 # Download source distribution
-wget https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz
+wget https://go.emailengine.app/source-dist.tar.gz
 tar xzf source-dist.tar.gz
 rm source-dist.tar.gz
 ```
@@ -425,7 +425,7 @@ git pull
 npm install --production
 
 # Or download new release
-# wget https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz
+# wget https://go.emailengine.app/source-dist.tar.gz
 # tar xzf source-dist.tar.gz
 
 # Start service
