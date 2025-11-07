@@ -68,12 +68,14 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 **Best for:** High-volume Gmail operations, advanced features
 
 **Pros:**
-- Faster than IMAP
+- Generally faster than IMAP (except message listing)
 - Access to Gmail-specific features (labels, drafts)
 - Better threading support
 - No IMAP connection limits
+- Faster message fetching and sending
 
 **Cons:**
+- Message listing slower than IMAP (due to data enrichment)
 - Requires Cloud Pub/Sub setup
 - Only works with Gmail
 - More complex configuration
