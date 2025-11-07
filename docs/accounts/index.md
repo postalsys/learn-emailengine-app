@@ -119,6 +119,7 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 - Supports shared mailboxes natively
 
 **Cons:**
+- Very limited search capabilities compared to IMAP
 - Requires Microsoft Graph subscription setup
 - Only works with Microsoft 365
 - More complex configuration
