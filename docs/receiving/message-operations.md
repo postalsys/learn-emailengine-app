@@ -609,11 +609,24 @@ const messageIds = unread.messages.map(m => m.id);
 await markAllAsRead('example', messageIds);
 ```
 
-## Working with Gmail Labels
+## Working with Gmail Labels and Outlook Categories
 
-### Add Labels
+EmailEngine uses the `labels` array for both Gmail labels and Microsoft Outlook/Graph API categories.
 
-For Gmail accounts, add labels to a message:
+**Gmail Labels:**
+- Labels must be pre-created in Gmail
+- Labels map to folders (e.g., label "Work" corresponds to a folder)
+- Used with Gmail IMAP and Gmail API accounts
+
+**Microsoft Outlook Categories:**
+- Categories are **automatically created** when you set them (no pre-creation needed)
+- Categories are **not folders** - they're an additional filter/tag
+- Categories don't map to mailbox folders (unlike Gmail labels)
+- Only available when using **Microsoft Graph API** backend
+
+### Add Labels/Categories
+
+For Gmail or Microsoft Graph accounts, add labels or categories to a message:
 
 ```bash
 curl -X PUT "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE" \
@@ -626,7 +639,24 @@ curl -X PUT "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE
   }'
 ```
 
-### Remove Labels
+**Example - Add categories to Outlook message:**
+
+```bash
+curl -X PUT "https://your-emailengine.com/v1/account/outlook-account/message/AAMkADU" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "labels": {
+      "add": ["Blue category", "Red category"]
+    }
+  }'
+```
+
+:::tip Microsoft Graph Auto-Creation
+When using Microsoft Graph API, categories are automatically created if they don't exist. You don't need to pre-create them in Outlook.
+:::
+
+### Remove Labels/Categories
 
 ```javascript
 async function removeLabel(accountId, messageId, label) {
@@ -648,7 +678,7 @@ async function removeLabel(accountId, messageId, label) {
 }
 ```
 
-### Set Labels (Replace All)
+### Set Labels/Categories (Replace All)
 
 ```javascript
 async function setLabels(accountId, messageId, labels) {
@@ -685,6 +715,19 @@ async function setLabels(accountId, messageId, labels) {
 // Set exact labels (replaces all existing)
 await setLabels('example', 'AAAAAQAAAeE', ['Work', 'Urgent']);
 ```
+
+### Key Differences: Gmail Labels vs Outlook Categories
+
+| Feature | Gmail Labels | Outlook Categories |
+|---------|--------------|-------------------|
+| **Pre-creation required** | Yes - must exist in Gmail | No - auto-created when set |
+| **Folder mapping** | Yes - labels map to folders | No - separate filter/tag system |
+| **Backend support** | Gmail IMAP, Gmail API | Microsoft Graph API only |
+| **Use case** | Organize messages into folders | Add color-coded tags to messages |
+
+:::info Important
+Outlook categories are **not a replacement for folders**. They're an additional organizational layer. Unlike Gmail where a label creates a folder, Outlook categories are independent tags that don't affect folder structure.
+:::
 
 ## Common Patterns
 
