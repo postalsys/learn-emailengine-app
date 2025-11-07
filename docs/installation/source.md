@@ -493,7 +493,6 @@ EENGINE_SECRET=your-encryption-secret-at-least-32-chars
 
 # Performance
 EENGINE_WORKERS=4
-EENGINE_QUEUE_CONCURRENCY=4
 
 # API
 EENGINE_PORT=3000
@@ -529,7 +528,6 @@ EENGINE_WORKERS=4
 
 # For high-load servers
 EENGINE_WORKERS=8
-EENGINE_QUEUE_CONCURRENCY=8
 ```
 
 ### Redis Optimization
