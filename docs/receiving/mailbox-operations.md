@@ -69,8 +69,9 @@ graph TD
 Different providers use different conventions:
 
 - **Gmail**: Uses `[Gmail]/` prefix for system folders
-- **Outlook**: Uses special-use flags extensively
-- **Generic IMAP**: Varies by server implementation
+- **Outlook IMAP**: Does NOT expose special-use flags over IMAP (uses heuristics instead)
+- **Outlook Graph API**: Provides special-use flags natively
+- **Generic IMAP**: Many servers expose special-use flags natively, some don't
 
 ## Special-Use Folders
 
@@ -106,7 +107,12 @@ EmailEngine indicates how it determined a folder's special-use flag:
 }
 ```
 
-**`name`** - Determined by folder name matching (fallback)
+Available when:
+- Gmail (IMAP and API)
+- Microsoft Graph API
+- Many modern IMAP servers
+
+**`name`** - Determined by folder name matching using heuristics (fallback)
 
 ```json
 {
@@ -116,7 +122,12 @@ EmailEngine indicates how it determined a folder's special-use flag:
 }
 ```
 
-**`user`** - You explicitly configured it (highest priority)
+Used when:
+- **Outlook IMAP** (does not expose special-use flags)
+- Other IMAP servers without special-use extension
+- **May be incorrect on localized accounts** (e.g., "Gesendete Elemente" in German)
+
+**`user`** - You explicitly configured it (highest priority, always correct)
 
 ```json
 {
@@ -125,6 +136,10 @@ EmailEngine indicates how it determined a folder's special-use flag:
   "specialUseSource": "user"
 }
 ```
+
+:::warning Outlook IMAP and Localized Accounts
+Outlook does **not** expose special-use flags over IMAP. EmailEngine uses heuristics (folder name matching) which may fail on localized accounts. If EmailEngine incorrectly identifies special folders on your Outlook IMAP account, manually set the correct paths using `imap.sentMailPath`, `imap.draftsMailPath`, etc.
+:::
 
 ## Listing Mailboxes
 
