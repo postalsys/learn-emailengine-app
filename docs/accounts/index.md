@@ -65,7 +65,7 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 
 ### Gmail API (Native)
 
-**Best for:** High-volume Gmail operations, advanced features
+**Best for:** High-volume Gmail operations, when limited OAuth2 scopes are required
 
 **Pros:**
 - Generally faster than IMAP (except message listing)
@@ -73,6 +73,7 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 - Better threading support
 - No IMAP connection limits
 - Faster message fetching and sending
+- Can use granular OAuth2 scopes (`gmail.readonly`, `gmail.modify`, etc.)
 
 **Cons:**
 - Message listing slower than IMAP (due to data enrichment)
@@ -84,6 +85,11 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 - High-volume email processing
 - Applications needing Gmail-specific features
 - Systems requiring maximum performance
+- When Google requires limited OAuth2 scopes during app verification
+
+:::info OAuth2 Scope Requirements
+IMAP/SMTP requires the full `https://mail.google.com/` scope. Gmail API can use more limited scopes like `gmail.readonly` or `gmail.modify`. If Google's verification process requires you to use limited scopes, you must use Gmail API instead of IMAP/SMTP.
+:::
 
 [Gmail API Setup Guide →](./gmail-api)
 

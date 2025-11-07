@@ -56,14 +56,32 @@ Starting with v2.43.0, EmailEngine can operate Gmail mailboxes through the Gmail
 - Gmail API uses RESTful requests
 - Better scalability for high-volume accounts
 
-### When to Stick with IMAP
+### When to Use Gmail API vs IMAP
 
-IMAP/SMTP remains the better choice if:
+**Use Gmail API when:**
 
+- You need high-volume email processing
+- You want better Gmail label handling
+- You require Gmail-specific features (drafts API, threading)
+- Google's verification process requires limited OAuth2 scopes
+- You want to avoid IMAP connection limits
+
+**Use IMAP/SMTP when:**
+
+- You need the full `https://mail.google.com/` scope and can justify it to Google
 - Your organization restricts Cloud Pub/Sub permissions
 - You need raw SMTP features (e.g., custom envelope-from)
 - You want to avoid additional GCP setup complexity
 - You're migrating existing IMAP-based integrations
+
+:::info OAuth2 Scope Requirements
+**IMAP/SMTP** requires the full `https://mail.google.com/` scope. **Gmail API** can use more granular scopes:
+- `https://www.googleapis.com/auth/gmail.readonly` - Read-only access
+- `https://www.googleapis.com/auth/gmail.modify` - Read, send, modify (can't permanently delete)
+- `https://www.googleapis.com/auth/gmail.send` - Send only
+
+During Google's OAuth2 app verification, they may require you to use limited scopes. If so, you must use Gmail API since these limited scopes don't work with IMAP/SMTP.
+:::
 
 The IMAP backend continues to receive full support and performance improvements.
 

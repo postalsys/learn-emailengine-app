@@ -32,6 +32,35 @@ When you enable OAuth2 for Gmail with IMAP/SMTP:
 - Users authenticate once via OAuth2, and EmailEngine automatically refreshes tokens
 - No passwords are stored, and 2FA accounts work seamlessly
 
+### IMAP vs Gmail API: OAuth2 Scope Requirements
+
+Both IMAP and Gmail API provide the same functionality (both can access labels, messages, etc.). The key difference is in **OAuth2 scope requirements**:
+
+**IMAP/SMTP Requirements:**
+- Requires the widest scope: `https://mail.google.com/`
+- Full access to all Gmail operations
+- Simpler to set up (one scope for everything)
+
+**Gmail API Requirements:**
+- Can use more granular scopes based on your use case
+- Google prefers applications to request only the scopes they need
+- Example scopes:
+  - `gmail.readonly` - Read-only access to messages
+  - `gmail.modify` - Read, send, and modify emails (can move to trash but not permanently delete)
+  - `gmail.send` - Send emails only
+
+**Why This Matters:**
+
+During Google's OAuth2 app verification process, they may ask you to use more limited scopes that match your actual use case. For example:
+- If you never permanently delete emails, Google may request you use `gmail.modify` instead of the full `https://mail.google.com/` scope
+- However, **these limited scopes don't work with IMAP/SMTP** - they only work with Gmail API
+
+**Decision:**
+- **Use IMAP OAuth2** if: You need standard IMAP/SMTP and can justify the `https://mail.google.com/` scope to Google
+- **Use Gmail API** if: Google requires you to use more limited scopes during the verification process
+
+See the [Gmail API setup guide](./gmail-api) for native API integration.
+
 ## Authentication Options for Gmail
 
 Before we dive into OAuth2 setup, it's worth understanding all Gmail authentication options:
