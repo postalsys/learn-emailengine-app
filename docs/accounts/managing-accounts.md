@@ -392,7 +392,7 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 
 ### Configure Path Filtering
 
-Sync only specific folders:
+Sync and monitor only specific folders:
 
 ```bash
 curl -X PUT https://your-ee.com/v1/account/user123 \
@@ -408,7 +408,11 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
   }'
 ```
 
-All other folders will be ignored.
+**What this does:**
+- EmailEngine will **sync and monitor** only the listed folders
+- Unlisted folders will **not trigger webhooks** when messages change
+- You can still **access unlisted folders via API** (list messages, search, etc.)
+- Reduces resource usage by limiting what EmailEngine actively monitors
 
 [Learn more about path filtering →](/docs/advanced/performance-tuning#path-filtering)
 

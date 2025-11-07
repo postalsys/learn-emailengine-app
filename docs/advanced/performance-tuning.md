@@ -99,7 +99,11 @@ If you never care about the rest of the mailbox, limit indexing completely:
 }
 ```
 
-With this configuration, EmailEngine ignores every other folder, significantly reducing resource usage.
+**What this does:**
+- EmailEngine only **syncs and monitors** the listed folders (INBOX and \Sent)
+- Unlisted folders **will not trigger webhooks** when messages change
+- You can still **access unlisted folders via API** (list messages, search, send to them)
+- Significantly reduces resource usage by limiting active monitoring
 
 **Use case**: Support systems that only need Inbox and Sent Mail.
 
