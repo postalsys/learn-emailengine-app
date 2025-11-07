@@ -344,103 +344,15 @@ The `provider` field should be the **OAuth2 application ID** from EmailEngine, w
 
 [See full API documentation →](/docs/api/post-v-1-account)
 
-## Shared Mailboxes (Microsoft 365)
+## Shared Mailboxes
 
 Microsoft 365 shared mailboxes are mailboxes not bound to a specific user. Multiple users can access them using their own credentials.
 
-### How Shared Mailboxes Work with EmailEngine
+EmailEngine supports shared mailboxes through two approaches:
+- **Direct access** - Add shared mailbox with its own OAuth2 credentials
+- **Delegated access** - Add main account, then reference it for shared mailboxes (recommended)
 
-EmailEngine accesses shared mailboxes through OAuth2 authentication where:
-
-- The **shared mailbox** is the account being managed
-- A **user with access** provides the OAuth2 authentication
-
-### Important Limitation
-
-:::warning One Account Per OAuth2 User
-Currently, EmailEngine does not support credential re-use. If you authenticate `shared@host` using `user@host`, then you cannot use `user@host` to authenticate any other accounts, including their own primary account.
-
-This is a known limitation being considered for future updates.
-:::
-
-### Setting Up a Shared Mailbox
-
-Use the hosted authentication form with the `delegated` flag:
-
-```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "account": "shared-support",
-    "name": "Support Mailbox",
-    "email": "support@company.com",
-    "delegated": true,
-    "redirectUrl": "https://myapp.com/settings",
-    "type": "AAABiCtT7XUAAAAF"
-  }'
-```
-
-**Fields:**
-
-- `account`: The account ID you want to use
-- `name`: Display name of the shared mailbox
-- `email`: Email address of the shared mailbox (e.g., `info@company.com`, `sales@company.com`)
-- `delegated`: Must be `true` - indicates the authenticating user is not the mailbox owner
-- `redirectUrl`: Where to redirect after authentication
-- `type`: The ID of your OAuth2 application in EmailEngine
-
-![Finding OAuth2 app ID](/img/external/IVrLyCqaBc.png)
-
-<!-- Shows: OAuth2 app ID in EmailEngine configuration -->
-
-The "type" field value is the ID shown in the OAuth2 applications list in EmailEngine.
-
-### Authentication Flow for Shared Mailboxes
-
-1. User visits the generated authentication URL
-2. User signs in with their **own Microsoft 365 account** (not the shared mailbox)
-3. This account must have access to the shared mailbox
-4. EmailEngine stores the credentials associated with the shared mailbox email
-5. The shared mailbox appears in EmailEngine with the shared mailbox address
-
-:::important User Must Have Access
-The authenticating user must already have permissions to access the shared mailbox in Microsoft 365. Otherwise, authentication will succeed but EmailEngine won't be able to access the mailbox.
-:::
-
-### Via Direct API (Advanced)
-
-If managing OAuth2 tokens externally:
-
-```bash
-curl -X POST https://your-ee.com/v1/account \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "account": "shared-support",
-    "name": "Support Mailbox",
-    "email": "support@company.com",
-    "oauth2": {
-      "provider": "outlook",
-      "auth": {
-        "user": "admin@company.com"
-      },
-      "accessToken": "...",
-      "refreshToken": "..."
-    }
-  }'
-```
-
-The `auth.user` field indicates which user's credentials are being used to access the shared mailbox.
-
-### Verifying Shared Mailbox Access
-
-After adding a shared mailbox:
-
-1. Check account state in EmailEngine - should be "connected"
-2. Verify folders are loading
-3. Test sending an email from the shared mailbox
-4. Check webhooks are firing for new messages
+For detailed setup instructions, see the [Shared Mailboxes guide →](./shared-mailboxes)
 
 ## Performance Considerations
 

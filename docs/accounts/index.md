@@ -404,22 +404,14 @@ For Google Workspace domains, you can use service accounts with domain-wide dele
 
 ## Shared Mailboxes (Microsoft 365)
 
-Microsoft 365 shared mailboxes can be accessed through the primary user's credentials:
+Microsoft 365 shared mailboxes can be accessed through two approaches:
 
-```json
-{
-  "account": "shared-support",
-  "email": "support@company.com",
-  "oauth2": {
-    "provider": "outlook",
-    "auth": {
-      "user": "admin@company.com"  // User with access to shared mailbox
-    }
-  }
-}
-```
+- **Direct access** - Add shared mailbox with its own OAuth2 credentials
+- **Delegated access** - Add main account, then reference it for shared mailboxes (recommended)
 
-[Shared Mailboxes Guide →](./outlook-365#shared-mailboxes)
+Delegated access allows one user to manage multiple shared mailboxes without re-authenticating.
+
+[Complete Shared Mailboxes Guide →](./shared-mailboxes)
 
 ## Authentication Server (Custom OAuth2 Flow)
 
