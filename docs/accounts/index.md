@@ -332,6 +332,7 @@ If EmailEngine doesn't correctly identify your special folders (Sent, Drafts, Ju
 {
   "account": "user123",
   "imap": {
+    "partial": true,
     "sentMailPath": "Sent Items",
     "draftsMailPath": "Draft Messages",
     "junkMailPath": "Spam",
@@ -339,6 +340,10 @@ If EmailEngine doesn't correctly identify your special folders (Sent, Drafts, Ju
   }
 }
 ```
+
+:::warning Important
+Always include `"partial": true` when updating IMAP settings to avoid replacing the entire IMAP configuration and losing authentication credentials.
+:::
 
 **Available overrides:**
 - `sentMailPath` - Where sent messages go
