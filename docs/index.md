@@ -53,7 +53,7 @@ POST /v1/account
   "account": "user123",
   "email": "user@gmail.com",
   "oauth2": {
-    "provider": "gmailOauth",  // Your OAuth2 app ID from EmailEngine
+    "provider": "AAABlf_0iLgAAAAQ",  // OAuth2 app ID from EmailEngine (base64url encoded)
     "accessToken": "ya29.a0..."
   }
 }

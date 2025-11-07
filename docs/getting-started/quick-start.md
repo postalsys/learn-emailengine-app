@@ -145,7 +145,7 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account" \
     "name": "Your Name",
     "email": "you@gmail.com",
     "oauth2": {
-      "provider": "gmailOauth",
+      "provider": "AAABlf_0iLgAAAAQ",
       "accessToken": "ya29.a0...",
       "refreshToken": "1//0..."
     }
@@ -153,7 +153,7 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account" \
 ```
 
 :::info Provider ID
-The `provider` value should be your OAuth2 application ID from EmailEngine (found in **Configuration → OAuth2 Apps**), not a generic provider name.
+The `provider` value should be your OAuth2 application ID from EmailEngine, which is a base64url encoded string like `AAABlf_0iLgAAAAQ`. Find this in **Configuration → OAuth2 Apps**.
 :::
 
 **Outlook Example:**
@@ -169,7 +169,7 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account" \
     "name": "Your Name",
     "email": "you@outlook.com",
     "oauth2": {
-      "provider": "outlookOauth",
+      "provider": "AAABlf_0iLgAAAAQ",
       "accessToken": "EwB4A8l6...",
       "refreshToken": "M.C546_..."
     }
