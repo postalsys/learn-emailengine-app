@@ -39,26 +39,29 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 
 [Learn more about IMAP/SMTP accounts →](./imap-smtp)
 
-### OAuth2 (Gmail IMAP/SMTP)
+### OAuth2 (IMAP/SMTP)
 
-**Best for:** Gmail and Google Workspace accounts at scale
+**Best for:** Gmail and Outlook/Microsoft 365 accounts at scale
 
 **Pros:**
 - No password storage
 - Automatic token refresh
 - Works with 2FA-enabled accounts
 - Better security and user experience
+- Required for Outlook/Microsoft 365 IMAP access
 
 **Cons:**
-- Requires Google Cloud Console setup
+- Requires OAuth app registration (Google Cloud Console or Azure AD)
 - OAuth app verification needed for production
 
 **Use Cases:**
-- SaaS applications connecting user Gmail accounts
+- SaaS applications connecting user Gmail/Outlook accounts
 - CRM systems syncing customer emails
 - Email automation tools
 
-[Gmail OAuth2 Setup Guide →](./gmail-imap)
+**Setup Guides:**
+- [Gmail OAuth2 Setup →](./gmail-imap)
+- [Outlook OAuth2 Setup →](./outlook-365)
 
 ### Gmail API (Native)
 
