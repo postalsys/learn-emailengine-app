@@ -66,18 +66,20 @@ graph TD
     Gmail --> Spam[Spam]
 ```
 
-Different providers use different conventions:
-
-- **Gmail** (IMAP and API): Exposes special-use flags natively (most reliable)
-- **Outlook IMAP**: Does NOT expose special-use flags over IMAP (uses heuristics instead)
-- **Outlook Graph API**: Provides special-use flags natively
-- **Generic IMAP**: Many servers expose special-use flags natively, some don't
-
 ## Special-Use Folders
 
 ### What are Special-Use Folders?
 
 Special-use folders indicate a folder's intended purpose regardless of its name. This solves the multi-language problem where "Sent Mail" might be "Saadetud kirjad" in Estonian or "Correo enviado" in Spanish.
+
+**Provider Support:**
+
+Different providers handle special-use folder detection differently:
+
+- **Gmail** (IMAP and API): Exposes special-use flags natively (most reliable)
+- **Outlook IMAP**: Does NOT expose special-use flags over IMAP (EmailEngine uses heuristics instead)
+- **Outlook Graph API**: Provides special-use flags natively
+- **Generic IMAP**: Many servers expose special-use flags natively, some don't
 
 ### Special-Use Flags
 
@@ -108,6 +110,7 @@ EmailEngine indicates how it determined a folder's special-use flag:
 ```
 
 Available when:
+
 - Gmail (IMAP and API)
 - Microsoft Graph API
 - Many modern IMAP servers
@@ -123,6 +126,7 @@ Available when:
 ```
 
 Used when:
+
 - **Outlook IMAP** (does not expose special-use flags)
 - Other IMAP servers without special-use extension
 - **May be incorrect on localized accounts** (e.g., "Gesendete Elemente" in German)
@@ -454,12 +458,12 @@ EmailEngine uses the `labels` array for both Gmail labels and Microsoft Outlook/
 
 Gmail uses labels instead of folders. EmailEngine maps labels to the folder structure:
 
-| Traditional IMAP | Gmail | Description |
-|-----------------|-------|-------------|
-| INBOX | INBOX | Messages with `\Inbox` label |
-| Sent Mail | [Gmail]/Sent Mail | Messages with `\Sent` label |
-| Drafts | [Gmail]/Drafts | Messages with `\Drafts` label |
-| - | [Gmail]/All Mail | All messages (virtual folder) |
+| Traditional IMAP | Gmail             | Description                   |
+| ---------------- | ----------------- | ----------------------------- |
+| INBOX            | INBOX             | Messages with `\Inbox` label  |
+| Sent Mail        | [Gmail]/Sent Mail | Messages with `\Sent` label   |
+| Drafts           | [Gmail]/Drafts    | Messages with `\Drafts` label |
+| -                | [Gmail]/All Mail  | All messages (virtual folder) |
 
 **Multiple Labels:**
 
