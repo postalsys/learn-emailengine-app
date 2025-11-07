@@ -389,17 +389,21 @@ Update account settings or credentials.
 {
   "name": "New Display Name",
   "imap": {
-    "auth": {
-      "pass": "new_password"
-    }
+    "partial": true,
+    "port": 993
   },
   "smtp": {
-    "auth": {
-      "pass": "new_password"
-    }
+    "partial": true,
+    "port": 465
   }
 }
 ```
+
+:::tip Partial Updates
+Use `"partial": true` inside `imap`, `smtp`, or `oauth2` objects to update only the specified fields instead of replacing the entire configuration. Without this flag, the entire object will be replaced, potentially losing existing settings.
+
+**Note:** The `partial` flag only works for main-level objects (`imap`, `smtp`, `oauth2`), not for nested objects like `imap.auth`.
+:::
 
 **Examples:**
 
@@ -413,9 +417,8 @@ curl -X PUT "http://localhost:3000/v1/account/user@example.com" \
   -d '{
     "name": "Updated Name",
     "imap": {
-      "auth": {
-        "pass": "new_password"
-      }
+      "partial": true,
+      "port": 993
     }
   }'
 ```
@@ -438,9 +441,8 @@ response = HTTP_PUT(
     body: {
       name: "Updated Name",
       imap: {
-        auth: {
-          pass: "new_password"
-        }
+        partial: true,
+        port: 993
       }
     }
   }

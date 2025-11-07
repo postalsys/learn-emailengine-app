@@ -307,6 +307,23 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 
 ### Update IMAP/SMTP Settings
 
+**Update specific IMAP properties (recommended):**
+
+```bash
+curl -X PUT https://your-ee.com/v1/account/user123 \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "imap": {
+      "partial": true,
+      "port": 993,
+      "secure": true
+    }
+  }'
+```
+
+**Replace entire IMAP configuration:**
+
 ```bash
 curl -X PUT https://your-ee.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -323,6 +340,12 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
     }
   }'
 ```
+
+:::warning Partial Updates
+Use `"partial": true` inside the `imap` or `smtp` object to update only specific fields. Without it, you'll replace the entire configuration, which may lose existing settings like auth credentials or special folder paths.
+
+Note: The `partial` flag only works for main-level objects (`imap`, `smtp`, `oauth2`), not for nested objects like `imap.auth`.
+:::
 
 ### Update OAuth2 Tokens
 
