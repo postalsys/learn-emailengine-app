@@ -146,10 +146,12 @@ graph TD
 
     Gmail --> GmailPerf{Need maximum performance?}
     Gmail --> GmailOAuth{Connecting user accounts?}
+    Gmail --> GmailVerify{Can verify OAuth app?}
     Gmail --> GmailTest{Quick testing?}
     GmailPerf -->|Yes| GmailAPI[Gmail API]
     GmailOAuth -->|Yes| GmailOAuth2[Gmail OAuth2 IMAP]
-    GmailTest -->|Yes| GmailIMAPApp[IMAP with app password]
+    GmailVerify -->|No| GmailIMAPApp[IMAP with app password]
+    GmailTest -->|Yes| GmailIMAPApp2[IMAP with app password]
 
     M365 --> M365Shared{Need shared mailboxes?}
     M365 --> M365Enterprise{Enterprise features?}
