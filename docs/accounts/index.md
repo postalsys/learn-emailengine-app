@@ -19,18 +19,18 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 
 ### IMAP/SMTP (Standard Protocol)
 
-**Best for:** Any email provider, simple setup
+**Best for:** Self-hosted email servers, simple setup (except Gmail/Outlook)
 
 **Pros:**
-- Works with virtually any email provider
-- No OAuth2 configuration required
+- Works with most email providers
+- Simple username/password authentication
 - Immediate setup
 
 **Cons:**
 - Requires username and password
 - Some providers block IMAP access
-- Gmail requires app-specific password
-- Outlook/Microsoft 365 requires OAuth2 (IMAP passwords disabled)
+- Gmail requires app-specific password (not regular password)
+- Outlook/Microsoft 365 not supported (OAuth2 required)
 
 **Supported Providers:**
 - Gmail (with app password)
