@@ -17,10 +17,10 @@ EmailEngine provides a built-in IMAP proxy interface that allows you to connect 
 
 ### The Problem
 
-Major email providers (Gmail, Outlook) are deprecating password-based authentication:
+Major email providers (Gmail, Outlook) have disabled password-based authentication:
 
-- **Gmail**: Password authentication disabled for personal accounts
-- **Outlook**: Moving to OAuth2-only authentication
+- **Gmail**: Password authentication disabled for personal accounts (app-specific passwords required)
+- **Outlook/Microsoft 365**: OAuth2-only authentication (IMAP passwords completely disabled)
 - **iCloud**: Requires app-specific passwords
 
 However:

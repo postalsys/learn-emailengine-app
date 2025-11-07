@@ -29,11 +29,12 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 **Cons:**
 - Requires username and password
 - Some providers block IMAP access
-- Gmail and Outlook may require app-specific passwords
+- Gmail requires app-specific password
+- Outlook/Microsoft 365 requires OAuth2 (IMAP passwords disabled)
 
 **Supported Providers:**
 - Gmail (with app password)
-- Any IMAP/SMTP server
+- Any IMAP/SMTP server (except Outlook/Microsoft 365)
 - Self-hosted email
 
 [Learn more about IMAP/SMTP accounts →](./imap-smtp)
@@ -145,11 +146,9 @@ graph TD
     M365 --> M365Shared{Need shared mailboxes?}
     M365 --> M365Enterprise{Enterprise features?}
     M365 --> M365OAuth{Connecting user accounts?}
-    M365 --> M365Test{Quick testing?}
     M365Shared -->|Yes| GraphAPI[Microsoft Graph API]
     M365Enterprise -->|Yes| GraphAPI2[Microsoft Graph API]
     M365OAuth -->|Yes| OutlookOAuth2[Outlook OAuth2 IMAP]
-    M365Test -->|Yes| M365IMAP[IMAP with password]
 
     Yahoo --> YahooIMAP[IMAP/SMTP with app password]
     iCloud --> iCloudIMAP[IMAP/SMTP with app-specific password]
