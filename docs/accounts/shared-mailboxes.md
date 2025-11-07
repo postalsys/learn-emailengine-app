@@ -117,7 +117,8 @@ curl -X POST https://your-ee.com/v1/account \
     "oauth2": {
       "provider": "AAABlf_0iLgAAAAQ",
       "auth": {
-        "user": "admin@company.com"
+        "user": "admin@company.com",
+        "delegatedUser": "support@company.com"
       },
       "accessToken": "EwBIA8l6...",
       "refreshToken": "M.R3_BAY..."
@@ -125,8 +126,9 @@ curl -X POST https://your-ee.com/v1/account \
   }'
 ```
 
-**Key field:**
-- `oauth2.auth.user`: Email address of the user whose credentials are being used to access the shared mailbox
+**Key fields:**
+- `oauth2.auth.user`: Email address of the user whose credentials are being used (the user with access)
+- `oauth2.auth.delegatedUser`: Email address or Microsoft 365 user ID of the shared mailbox being accessed
 
 :::warning One Account Per OAuth2 User
 With direct access, if you authenticate `shared@company.com` using `user@company.com`, then you cannot use `user@company.com` to authenticate any other accounts, including their own primary account. This is a known limitation.
