@@ -205,18 +205,20 @@ curl "https://your-emailengine.com/v1/account/example/mailboxes" \
 
 ### Response Fields
 
-**path** - Full folder path (use this for API calls)
-**delimiter** - Hierarchy delimiter (usually `/` or `.`)
-**parentPath** - Parent folder path (empty for top-level)
-**name** - Display name (last part of path)
-**listed** - Whether folder is listed (vs hidden)
-**subscribed** - Whether user is subscribed to folder
-**specialUse** - Special-use flag if applicable
-**specialUseSource** - How special-use was determined
-**messages** - Total message count
-**uidNext** - Next expected UID
-**uidValidity** - Folder validity identifier
-**highestModseq** - Highest modification sequence (if supported)
+| Field | Description |
+|-------|-------------|
+| `path` | Full folder path (use this for API calls) |
+| `delimiter` | Hierarchy delimiter (usually `/` or `.`) |
+| `parentPath` | Parent folder path (empty for top-level) |
+| `name` | Display name (last part of path) |
+| `listed` | Whether folder is listed (vs hidden) |
+| `subscribed` | Whether user is subscribed to folder |
+| `specialUse` | Special-use flag if applicable (`\Sent`, `\Drafts`, etc.) |
+| `specialUseSource` | How special-use was determined (`extension`, `name`, `user`) |
+| `messages` | Total message count |
+| `uidNext` | Next expected UID |
+| `uidValidity` | Folder validity identifier |
+| `highestModseq` | Highest modification sequence (if supported) |
 
 ### Using Special-Use Folders
 
