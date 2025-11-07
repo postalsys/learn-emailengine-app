@@ -304,7 +304,7 @@ By default, EmailEngine monitors the INBOX folder in real-time but polls other f
 
 ### Path Filtering
 
-Limit which folders EmailEngine syncs to save resources:
+Limit which folders EmailEngine syncs and monitors to save resources:
 
 ```json
 {
@@ -317,7 +317,10 @@ Limit which folders EmailEngine syncs to save resources:
 }
 ```
 
-EmailEngine will ignore all other folders.
+**What this does:**
+- EmailEngine syncs and monitors only the listed folders
+- Unlisted folders won't trigger webhooks
+- API access to unlisted folders still works
 
 [Learn more in performance tuning →](/docs/advanced/performance-tuning#path-filtering)
 
