@@ -285,7 +285,7 @@ curl -X POST "https://your-emailengine.com/v1/account/example/mailbox" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "Work/NewProject"
+    "path": ["Work", "NewProject"]
   }'
 ```
 
@@ -297,6 +297,24 @@ curl -X POST "https://your-emailengine.com/v1/account/example/mailbox" \
   "created": true
 }
 ```
+
+:::tip Array Syntax for Subfolders
+Use array syntax `["Parent", "Child"]` instead of string `"Parent/Child"` when creating nested folders. Different servers use different delimiters (`/` vs `.`), and the array syntax works universally across all IMAP servers.
+:::
+
+### Automatic Namespace Handling
+
+EmailEngine automatically adds the server's namespace prefix if missing:
+
+```javascript
+// If server namespace is "INBOX." and you create:
+{ "path": "test" }
+
+// EmailEngine creates:
+"INBOX.test"
+```
+
+This ensures folder paths are always valid for the specific IMAP server configuration.
 
 ### Create Nested Folders
 
@@ -317,7 +335,7 @@ async function createFolder(accountId, folderPath) {
 }
 
 // Creates Personal/Finance/2025 (and parents if needed)
-await createFolder("example", "Personal/Finance/2025");
+await createFolder("example", ["Personal", "Finance", "2025"]);
 ```
 
 ## Renaming Mailboxes
@@ -331,8 +349,8 @@ curl -X PUT "https://your-emailengine.com/v1/account/example/mailbox" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "Work/OldProject",
-    "newPath": "Work/CompletedProject"
+    "path": ["Work", "OldProject"],
+    "newPath": ["Work", "CompletedProject"]
   }'
 ```
 
@@ -362,8 +380,8 @@ await fetch(`https://your-emailengine.com/v1/account/example/mailbox`, {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    path: "Work/Projects",
-    newPath: "Work/Archive",
+    path: ["Work", "Projects"],
+    newPath: ["Work", "Archive"],
   }),
 });
 ```
@@ -379,7 +397,7 @@ curl -X DELETE "https://your-emailengine.com/v1/account/example/mailbox" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "Work/OldProject"
+    "path": ["Work", "OldProject"]
   }'
 ```
 
@@ -406,9 +424,9 @@ await deleteFolder("example", "INBOX");
 
 ```javascript
 // Must delete child folders before parent
-await deleteFolder("example", "Work/Projects/ProjectA");
-await deleteFolder("example", "Work/Projects/ProjectB");
-await deleteFolder("example", "Work/Projects");
+await deleteFolder("example", ["Work", "Projects", "ProjectA"]);
+await deleteFolder("example", ["Work", "Projects", "ProjectB"]);
+await deleteFolder("example", ["Work", "Projects"]);
 ```
 
 **Messages are deleted:**
