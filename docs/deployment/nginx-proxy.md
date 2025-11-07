@@ -80,8 +80,23 @@ server {
     ssl_certificate_key /etc/ssl/private/emailengine-privkey.pem;
     ssl_certificate /etc/ssl/certs/emailengine-fullchain.pem;
 
+    # EventSource endpoint for real-time updates (no gzip)
+    location /admin/changes {
+        gzip off;
+        proxy_http_version 1.1;
+        proxy_set_header Connection '';
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header Host $http_host;
+        proxy_pass http://127.0.0.1:3000;
+        proxy_buffering off;
+        proxy_cache off;
+        chunked_transfer_encoding off;
+    }
+
     location / {
-        client_max_body_size 50M;
+        client_max_body_size 100M;  # Allow large email submissions with attachments
         proxy_http_version 1.1;
         proxy_redirect off;
         proxy_set_header X-Real-IP $remote_addr;
@@ -232,6 +247,22 @@ server {
     access_log /var/log/nginx/emailengine-access.log combined;
     error_log /var/log/nginx/emailengine-error.log warn;
 
+    # EventSource endpoint for real-time admin updates (no gzip, no buffering)
+    location /admin/changes {
+        gzip off;
+        proxy_pass http://emailengine_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Connection '';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 24h;
+        chunked_transfer_encoding off;
+    }
+
     # Main location block
     location / {
         # Rate limiting
@@ -242,13 +273,13 @@ server {
         proxy_http_version 1.1;
         proxy_redirect off;
 
-        # Client body size (for attachments)
-        client_max_body_size 50M;
+        # Client body size (for large email submissions with attachments)
+        client_max_body_size 100M;
 
-        # Timeouts
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        # Timeouts (increased for large uploads)
+        proxy_connect_timeout 90s;
+        proxy_send_timeout 90s;
+        proxy_read_timeout 90s;
 
         # Headers
         proxy_set_header Host $host;
@@ -627,7 +658,7 @@ http {
 
     # Buffers
     client_body_buffer_size 128k;
-    client_max_body_size 50m;
+    client_max_body_size 100m;  # Allow large email submissions
     client_header_buffer_size 1k;
     large_client_header_buffers 4 16k;
 
@@ -685,7 +716,23 @@ server {
     ssl_certificate /etc/ssl/certs/emailengine-fullchain.pem;
     ssl_certificate_key /etc/ssl/private/emailengine-privkey.pem;
 
+    # EventSource endpoint (no gzip)
+    location /admin/changes {
+        gzip off;
+        proxy_pass http://emailengine;
+        proxy_http_version 1.1;
+        proxy_set_header Connection '';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 24h;
+    }
+
     location / {
+        client_max_body_size 100M;
         proxy_pass http://emailengine;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

@@ -33,6 +33,7 @@ docker run -d \
 ```
 
 Test the installation:
+
 ```bash
 curl http://localhost:3000/health
 # Should return: {"success":true}
@@ -44,12 +45,86 @@ Access web interface at: `http://localhost:3000`
 
 Use Docker Compose to run EmailEngine with Redis.
 
-### Basic Setup
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs>
+<TabItem value="official" label="Official Configuration" default>
+
+### Quick Start with Official docker-compose.yml
+
+Download and run the official configuration:
+
+```bash
+# Download official docker-compose.yml
+curl -LO https://go.emailengine.app/docker-compose.yml
+
+# Generate a secure encryption secret
+echo "EENGINE_SECRET=$(openssl rand -hex 32)" > .env
+
+# Start EmailEngine
+docker-compose up -d
+```
+
+#### What's Included
+
+The official configuration includes:
+
+- **EmailEngine** with API, SMTP, and IMAP proxy ports
+- **Redis** with production settings and persistence
+- **Health checks** and automatic restarts
+- **Environment variable** configuration via `.env` file
+- **Logging** with rotation and compression
+
+#### Access Points
+
+After starting:
+
+- **Web UI & API:** http://localhost:3000
+- **SMTP Server:** localhost:2525 (for message submission)
+- **IMAP Proxy:** localhost:9993 (optional IMAP access)
+
+#### Environment Configuration
+
+Customize settings in `.env` file:
+
+```bash
+# Required: Encryption secret (generate with: openssl rand -hex 32)
+EENGINE_SECRET=your-generated-secret-here
+
+# Recommended: Redis password for security
+REDIS_PASSWORD=your-redis-password
+
+# Optional: Version pinning
+EMAILENGINE_VERSION=latest
+
+# Optional: Custom port bindings (default: 127.0.0.1)
+EMAILENGINE_API_BIND=0.0.0.0
+EMAILENGINE_API_PORT=3000
+EMAILENGINE_SMTP_BIND=0.0.0.0
+EMAILENGINE_SMTP_PORT=2525
+EMAILENGINE_IMAP_BIND=0.0.0.0
+EMAILENGINE_IMAP_PORT=9993
+
+# Optional: Performance tuning
+EENGINE_WORKERS=4
+EENGINE_LOG_LEVEL=info
+
+# Optional: Restart policy
+RESTART_POLICY=unless-stopped
+```
+
+</TabItem>
+<TabItem value="custom" label="Custom Configuration">
+
+### Custom docker-compose.yml
+
+If you prefer to create your own configuration:
 
 Create `docker-compose.yml`:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   redis:
@@ -84,7 +159,7 @@ services:
       - emailengine
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -97,6 +172,17 @@ volumes:
   redis-data:
     driver: local
 ```
+
+**Generate secure secret:**
+
+```bash
+openssl rand -hex 32
+```
+
+Update `EENGINE_SECRET` in the docker-compose.yml with the generated value.
+
+</TabItem>
+</Tabs>
 
 ### Start Services
 
@@ -128,93 +214,74 @@ docker-compose down
 docker-compose down -v
 ```
 
-## Production Setup
+## Production Deployment
 
-### With Environment File
+For production deployments, we recommend using the official docker-compose.yml (see "Official Configuration" tab above) with a properly configured `.env` file.
 
-Create `.env` file:
+### Production Environment Configuration
+
+Create a production-ready `.env` file:
 
 ```bash
-# Redis connection
-EENGINE_REDIS=redis://redis:6379
+# Required: Encryption secret (generate with: openssl rand -hex 32)
+EENGINE_SECRET=your-generated-secret-here
 
-# Security secret (CHANGE THIS!)
-EENGINE_SECRET=generate-random-secret-at-least-32-characters
+# Recommended: Redis password for security
+REDIS_PASSWORD=your-secure-redis-password
 
-# Performance
-EENGINE_WORKERS=4
+# Version pinning for stability
+EMAILENGINE_VERSION=v2.57.0
 
-# Logging
-EENGINE_LOG_LEVEL=info
-EENGINE_LOG_RAW=false
+# Bind to all interfaces (if behind reverse proxy)
+EMAILENGINE_API_BIND=0.0.0.0
+EMAILENGINE_SMTP_BIND=0.0.0.0
+EMAILENGINE_IMAP_BIND=0.0.0.0
 
-# API settings
-EENGINE_PORT=3000
-EENGINE_HOST=0.0.0.0
+# Performance tuning (adjust based on server resources)
+EENGINE_WORKERS=8
+EENGINE_LOG_LEVEL=warn
 
-# Metrics are available at /metrics endpoint on the main API port
-# Requires authentication with a token that has 'metrics' scope
+# Automatic restart policy
+RESTART_POLICY=unless-stopped
 ```
 
-**Generate secure secrets:**
-```bash
-# Linux/macOS
-openssl rand -hex 32
+### Security Recommendations
 
-# Or using Docker
-docker run --rm alpine sh -c "head -c 32 /dev/urandom | xxd -p -c 32"
-```
+1. **Use Redis password:** Set `REDIS_PASSWORD` for production
+2. **Pin versions:** Specify exact versions (e.g., `EMAILENGINE_VERSION=v2.57.0`)
+3. **Bind to localhost:** If using reverse proxy, keep default `127.0.0.1` binding
+4. **Restrict access:** Use firewall rules to limit port access
+5. **Enable TLS:** Use reverse proxy (Nginx/Caddy) with HTTPS
 
-Update `docker-compose.yml`:
+### Resource Requirements
+
+For production deployments:
+
+- **Minimum:** 8GB RAM, 4 CPU cores
+- **Recommended:** 16GB+ RAM, 8+ CPU cores
+- Monitor memory usage: `docker stats emailengine`
+
+### Volumes and Persistence
+
+With the official configuration, redis data is stored in `redis-data` volume:
 
 ```yaml
-version: '3.8'
-
-services:
-  redis:
-    image: redis:7-alpine
-    container_name: emailengine-redis
-    command: redis-server --appendonly yes --maxmemory-policy noeviction
-    volumes:
-      - redis-data:/data
-      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
-    networks:
-      - emailengine
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  emailengine:
-    image: postalsys/emailengine:latest
-    container_name: emailengine
-    ports:
-      - "3000:3000"
-      - "9090:9090"  # Metrics port
-    env_file:
-      - .env
-    depends_on:
-      redis:
-        condition: service_healthy
-    networks:
-      - emailengine
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-networks:
-  emailengine:
-    driver: bridge
-
 volumes:
   redis-data:
     driver: local
+```
+
+To backup redis data:
+
+```bash
+# Create backup
+docker-compose exec redis redis-cli SAVE
+docker cp emailengine-redis:/data/dump.rdb ./backup-$(date +%Y%m%d).rdb
+
+# Restore backup
+docker-compose stop redis
+docker cp ./backup-20231201.rdb emailengine-redis:/data/dump.rdb
+docker-compose start redis
 ```
 
 ### With Custom Redis Configuration
@@ -245,6 +312,7 @@ maxclients 10000
 ```
 
 If using Redis password, update `.env`:
+
 ```bash
 EENGINE_REDIS=redis://:your-redis-password@redis:6379
 ```
@@ -319,12 +387,14 @@ EmailEngine offers various tag types:
 ### Image Sources
 
 **Docker Hub (primary):**
+
 ```bash
 docker pull postalsys/emailengine:latest
 docker pull postalsys/emailengine:v2.55.4
 ```
 
 **GitHub Container Registry (alternative):**
+
 ```bash
 docker pull ghcr.io/postalsys/emailengine:latest
 ```
@@ -332,8 +402,9 @@ docker pull ghcr.io/postalsys/emailengine:latest
 ### Multi-Architecture Support
 
 Images support both AMD64 and ARM64 architectures:
+
 - Intel/AMD processors (x86_64)
-- Apple Silicon (M1/M2/M3)
+- Apple Silicon (M1 and newer)
 - ARM servers
 
 Docker automatically pulls the correct architecture.
@@ -501,37 +572,4 @@ docker run --rm -v emailengine_redis-data:/data -v $(pwd):/backup alpine tar czf
 
 # Restore volume
 docker run --rm -v emailengine_redis-data:/data -v $(pwd):/backup alpine tar xzf /backup/redis-backup.tar.gz -C /
-```
-
-## Performance Tuning
-
-### Resource Limits
-
-Add to `docker-compose.yml`:
-
-```yaml
-services:
-  emailengine:
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 2G
-        reservations:
-          cpus: '1'
-          memory: 1G
-```
-
-### Optimize Redis
-
-```yaml
-services:
-  redis:
-    command: >
-      redis-server
-      --appendonly yes
-      --maxmemory-policy noeviction
-      --tcp-backlog 511
-      --timeout 300
-      --tcp-keepalive 300
 ```

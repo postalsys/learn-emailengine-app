@@ -12,7 +12,7 @@ Comprehensive reference for all EmailEngine configuration options.
 EmailEngine can be configured via:
 1. **Environment variables** (highest priority)
 2. **Command-line arguments**
-3. **Configuration file** (config.json)
+3. **Configuration file** (config.toml)
 :::
 
 ## Configuration Types
@@ -143,14 +143,16 @@ EENGINE_REDIS=redis://sentinel1:26379,sentinel2:26379/mymaster
 #### Secret
 
 **Environment:** `EENGINE_SECRET`
-**Command line:** `--secret=...`
-**Config file:** `secret`
+**Command line:** `--service.secret=...`
+**Config file:** `service.secret`
 **Required:** Yes
 
-Secret for encrypting session tokens. **Minimum 32 characters.**
+Secret for encrypting session tokens and account credentials. **Minimum 32 characters.**
 
+**Generate and save:**
 ```bash
-EENGINE_SECRET=$(openssl rand -hex 32)
+# Generate and save to .env file
+echo "EENGINE_SECRET=$(openssl rand -hex 32)" > .env
 ```
 
 :::danger Required
@@ -692,52 +694,52 @@ curl -X POST https://emailengine.example.com/v1/settings \
 
 ## Configuration File Example
 
-### Complete config.json
+### Complete config.toml
 
-```json
-{
-  "api": {
-    "port": 3000,
-    "host": "127.0.0.1"
-  },
-  "dbs": {
-    "redis": "redis://localhost:6379"
-  },
-  "secret": "${EENGINE_SECRET}",
-  "encryptionSecret": "${EENGINE_SECRET}",
-  "workers": 4,
-  "maxConnections": 20,
-  "chunkSize": 5000,
-  "log": {
-    "level": "info",
-    "file": "/var/log/emailengine/app.log"
-  },
-  "gmail": {
-    "clientId": "${GMAIL_CLIENT_ID}",
-    "clientSecret": "${GMAIL_CLIENT_SECRET}"
-  },
-  "outlook": {
-    "authority": "https://login.microsoftonline.com/common",
-    "clientId": "${OUTLOOK_CLIENT_ID}",
-    "clientSecret": "${OUTLOOK_CLIENT_SECRET}"
-  },
-  "webhooks": {
-    "timeout": 10000,
-    "retry": 3
-  },
-  "metrics": {
-    "enabled": true,
-    "port": 9090
-  },
-  "imap": {
-    "connectionTimeout": 90000
-  },
-  "poolSize": 10
-}
+```toml
+[service]
+secret = "your-encryption-secret-at-least-64-chars"
+
+[api]
+port = 3000
+host = "127.0.0.1"
+
+[dbs]
+redis = "redis://localhost:6379"
+
+workers = 4
+maxConnections = 20
+chunkSize = 5000
+
+[log]
+level = "info"
+file = "/var/log/emailengine/app.log"
+
+[gmail]
+clientId = "your-gmail-client-id"
+clientSecret = "your-gmail-client-secret"
+
+[outlook]
+authority = "https://login.microsoftonline.com/common"
+clientId = "your-outlook-client-id"
+clientSecret = "your-outlook-client-secret"
+
+[webhooks]
+timeout = 10000
+retry = 3
+
+[metrics]
+enabled = true
+port = 9090
+
+[imap]
+connectionTimeout = 90000
+
+poolSize = 10
 ```
 
-:::tip Environment Substitution
-Use `${VAR_NAME}` syntax to reference environment variables in config.json.
+:::tip Using TOML Config
+TOML is the native configuration format for EmailEngine. All settings including `service.secret` can be stored in the config file.
 :::
 
 ## Priority Order

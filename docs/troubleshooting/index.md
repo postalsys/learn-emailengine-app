@@ -816,7 +816,7 @@ When requesting support, provide:
 
    ```bash
    # Sanitize sensitive data before sharing
-   cat /etc/emailengine/config.json
+   cat /etc/emailengine/config.toml
    ```
 
 4. **Logs:**

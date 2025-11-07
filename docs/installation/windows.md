@@ -36,6 +36,7 @@ EmailEngine requires Redis, which doesn't officially support Windows. Use one of
 3. Memurai starts automatically as a Windows service
 
 **Verify installation:**
+
 ```powershell
 # Using Memurai CLI
 memurai-cli ping
@@ -83,45 +84,47 @@ Open PowerShell and download the Windows executable:
 Invoke-WebRequest -Uri "https://go.emailengine.app/emailengine.exe" -OutFile "emailengine.exe"
 
 # Or for specific version (e.g., 2.55.4)
-Invoke-WebRequest -Uri "https://github.com/postalsys/emailengine/releases/download/v2.55.4/emailengine-win-x64.exe" -OutFile "emailengine.exe"
+Invoke-WebRequest -Uri "https://go.emailengine.app/download/v2.55.4/emailengine.exe" -OutFile "emailengine.exe"
 ```
 
 **Alternative: Browser download**
+
 1. Visit [https://github.com/postalsys/emailengine/releases/latest](https://github.com/postalsys/emailengine/releases/latest)
-2. Download `emailengine-win-x64.exe`
+2. Download `emailengine.exe`
 3. Save to a permanent location (e.g., `C:\Program Files\EmailEngine\`)
 
 ### Step 3: Configure EmailEngine
 
-Generate secrets using PowerShell:
+Generate secrets and create `.env` file in the same directory as `emailengine.exe`:
 
 ```powershell
-# Generate random secrets
+# Generate random secret (64 characters)
 $secret = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 64 | ForEach-Object {[char]$_})
-$encSecret = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 64 | ForEach-Object {[char]$_})
 
+# Create .env file with configuration
+@"
+EENGINE_REDIS=redis://127.0.0.1:6379
+EENGINE_SECRET=$secret
+EENGINE_WORKERS=4
+EENGINE_PORT=3000
+EENGINE_LOG_LEVEL=info
+"@ | Out-File -FilePath ".env" -Encoding UTF8
+
+Write-Host "Configuration saved to .env file"
 Write-Host "EENGINE_SECRET=$secret"
-Write-Host "EENGINE_SECRET=$encSecret"
 ```
 
-**Save these values securely!**
-
-Create environment variables or a configuration file.
+**Important:** The `.env` file is created in the current directory and will be automatically loaded by `emailengine.exe` when it starts. Keep this file secure and back it up.
 
 ### Step 4: Test Run
 
 ```powershell
-# Set environment variables for this session
-$env:EENGINE_REDIS = "redis://127.0.0.1:6379"
-$env:EENGINE_SECRET = "your-secret-here"
-$env:EENGINE_SECRET = "your-encryption-secret-here"
-$env:EENGINE_PORT = "3000"
-
-# Run EmailEngine
+# Run EmailEngine (it will automatically load .env file)
 .\emailengine.exe
 ```
 
 In another PowerShell window:
+
 ```powershell
 Invoke-WebRequest -Uri "http://localhost:3000/health" | Select-Object -Expand Content
 # Should return: {"success":true}
@@ -132,6 +135,7 @@ Invoke-WebRequest -Uri "http://localhost:3000/health" | Select-Object -Expand Co
 To run EmailEngine as a Windows service, use [NSSM (Non-Sucking Service Manager)](https://nssm.cc/).
 
 **Install NSSM:**
+
 ```powershell
 # Using Chocolatey
 choco install nssm
@@ -140,19 +144,13 @@ choco install nssm
 ```
 
 **Create service:**
+
+First, ensure your `.env` file is in `C:\Program Files\EmailEngine\` directory.
+
 ```powershell
-# Open NSSM service installer
-nssm install EmailEngine
-
-# In the NSSM GUI:
-# - Path: C:\Program Files\EmailEngine\emailengine.exe
-# - Startup directory: C:\Program Files\EmailEngine
-# - Service name: EmailEngine
-
-# Or via command line
+# Install service via command line
 nssm install EmailEngine "C:\Program Files\EmailEngine\emailengine.exe"
 nssm set EmailEngine AppDirectory "C:\Program Files\EmailEngine"
-nssm set EmailEngine AppEnvironmentExtra EENGINE_REDIS=redis://127.0.0.1:6379 EENGINE_SECRET=your-secret-at-least-32-chars EENGINE_WORKERS=4
 nssm set EmailEngine DisplayName "EmailEngine"
 nssm set EmailEngine Description "EmailEngine IMAP/SMTP API service"
 nssm set EmailEngine Start SERVICE_AUTO_START
@@ -164,7 +162,10 @@ nssm start EmailEngine
 nssm status EmailEngine
 ```
 
+**Note:** EmailEngine will automatically load configuration from the `.env` file in its working directory (`C:\Program Files\EmailEngine\`). No need to set environment variables in NSSM.
+
 **Service management:**
+
 ```powershell
 # Start service
 nssm start EmailEngine
@@ -243,6 +244,7 @@ sudo mv emailengine /usr/local/bin/
 ### Step 3: Access from Windows
 
 EmailEngine running in WSL2 is accessible from Windows at:
+
 - `http://localhost:3000` (if configured on port 3000)
 
 ### Step 4: Auto-start with Windows
@@ -258,6 +260,7 @@ wsl sudo service emailengine start
 ```
 
 **Add to Windows startup:**
+
 1. Press `Win + R`
 2. Type `shell:startup` and press Enter
 3. Create a shortcut to `start-emailengine.bat`
@@ -272,15 +275,14 @@ wsl sudo service emailengine start
 
 ## Configuration Options
 
-### Environment Variables
+### Using .env File (Recommended)
 
-Set these in NSSM service configuration or `.env` file:
+Create `.env` file in the same directory as `emailengine.exe`:
 
 ```bash
 # Required
 EENGINE_REDIS=redis://127.0.0.1:6379
-EENGINE_SECRET=your-secret-key-at-least-32-chars
-EENGINE_SECRET=your-encryption-secret-32-chars
+EENGINE_SECRET=your-secret-key-at-least-64-chars
 
 # Optional
 EENGINE_WORKERS=4
@@ -289,45 +291,34 @@ EENGINE_LOG_LEVEL=info
 EENGINE_LOG_RAW=false
 ```
 
-### Using Configuration File
+EmailEngine automatically loads this file on startup. This is the recommended approach for Windows installations.
 
-Create `config.json` in the same directory as `emailengine.exe`:
+### Alternative: TOML Configuration File
 
-```json
-{
-  "dbs": {
-    "redis": "redis://127.0.0.1:6379"
-  },
-  "api": {
-    "port": 3000,
-    "host": "0.0.0.0"
-  },
-  "workers": 4,
-  "log": {
-    "level": "info",
-    "raw": false
-  }
-}
+You can also use `config.toml` in the same directory as `emailengine.exe`:
+
+```toml
+[service]
+secret = "your-secret-key-at-least-64-chars"
+
+[dbs]
+redis = "redis://127.0.0.1:6379"
+
+[api]
+port = 3000
+host = "0.0.0.0"
+
+workers = 4
+
+[log]
+level = "info"
+raw = false
 ```
 
 Run with config file:
+
 ```powershell
-.\emailengine.exe --config=config.json --secret=your-secret
+.\emailengine.exe --config=config.toml
 ```
 
-## Performance Considerations
-
-### Windows vs WSL2
-
-| Feature | Native Windows | WSL2 |
-|---------|---------------|------|
-| Performance | Good | Better |
-| Memory usage | Higher | Lower (with source) |
-| Compatibility | Limited | Full |
-| Updates | Manual | Easy |
-| Production use | Development only | Recommended |
-
-### RAM Usage
-
-- **Windows executable**: ~200-400 MB base memory
-- **Source in WSL2**: ~100-200 MB base memory (recommended for production)
+**Note:** TOML config files can include all settings including `service.secret`, so you don't need separate environment variables or CLI arguments.

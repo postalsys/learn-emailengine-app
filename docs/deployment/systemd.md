@@ -10,7 +10,7 @@ Run EmailEngine as a background service on Linux systems using SystemD.
 
 :::info Prerequisites
 - Linux system with SystemD (Ubuntu 16.04+, Debian 8+, CentOS 7+, RHEL 7+)
-- Node.js 20+ installed (for source installation)
+- Node.js 20+ installed (24+ recommended) for source installation
 - Redis 6.0+ installed and running
 - EmailEngine binary installed in `/usr/local/bin/` or `/opt/emailengine`
 :::
@@ -149,7 +149,7 @@ Group=emailengine
 WorkingDirectory=/opt/emailengine
 
 # Start command
-ExecStart=/usr/bin/emailengine --config=/etc/emailengine/config.json
+ExecStart=/usr/bin/emailengine --config=/etc/emailengine/config.toml
 
 # Restart policy
 Restart=always
@@ -325,7 +325,7 @@ sudo systemctl show emailengine
     Tasks: 15 (limit: 4915)
    Memory: 512.5M (limit: 2.0G)
    CGroup: /system.slice/emailengine.service
-           └─12345 /usr/bin/node /usr/local/bin/emailengine --config=/etc/emailengine/config.json
+           └─12345 /usr/bin/node /usr/local/bin/emailengine --config=/etc/emailengine/config.toml
 ```
 
 ## Log Management
@@ -426,7 +426,7 @@ Type=simple
 User=emailengine
 Group=emailengine
 WorkingDirectory=/opt/emailengine
-ExecStart=/usr/bin/emailengine --config=/etc/emailengine/config.json
+ExecStart=/usr/bin/emailengine --config=/etc/emailengine/config.toml
 Restart=always
 
 # Security

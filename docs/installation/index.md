@@ -102,7 +102,7 @@ Run in containers with Docker or Docker Compose.
 
 #### [Source Installation](/docs/installation/source)
 
-Run from source code (Node.js 20+ required).
+Run from source code (Node.js 20+ required, 24+ recommended).
 
 [View source guide →](/docs/installation/source)
 

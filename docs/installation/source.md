@@ -47,7 +47,7 @@ For production environments, especially those managing many email accounts or ru
 
 ### Required Software
 
-- **Node.js 20+** (LTS version recommended)
+- **Node.js 20+** (24+ recommended for best performance)
 - **Redis 6.0+** (stand-alone mode, persistence enabled)
 - **Git** (for cloning repository) or **wget/curl** (for release tarballs)
 - **Build tools** (for native dependencies)
@@ -63,22 +63,22 @@ Choose between stable releases or development versions:
 
 ### Linux Installation
 
-#### Step 1: Install Node.js 20+
+#### Step 1: Install Node.js
 
 **Ubuntu/Debian (using NodeSource):**
 ```bash
-# Install Node.js 20.x
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+# Install Node.js 24.x (recommended)
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 # Verify
-node --version  # Should be 20.x or higher
+node --version  # Should be 24.x or higher
 npm --version
 ```
 
 **CentOS/RHEL:**
 ```bash
-curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+curl -fsSL https://rpm.nodesource.com/setup_24.x | sudo bash -
 sudo yum install -y nodejs
 ```
 
@@ -90,11 +90,13 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 # Restart shell or source profile
 source ~/.bashrc
 
-# Install Node.js 20
-nvm install 20
-nvm use 20
-nvm alias default 20
+# Install Node.js 24 (or latest LTS)
+nvm install 24
+nvm use 24
+nvm alias default 24
 ```
+
+**Note:** Node.js 20+ is supported, but 24+ is recommended for better performance and latest features.
 
 #### Step 2: Install Redis
 
@@ -128,46 +130,26 @@ Restart Redis:
 sudo systemctl restart redis-server
 ```
 
-#### Step 3: Download and Install EmailEngine
+#### Step 3: Setup Directory Structure
 
 ```bash
-# Create installation directory
-sudo mkdir -p /opt/emailengine
+# Create directories
+sudo mkdir -p /opt/emailengine/app
 cd /opt/emailengine
-
-# Download latest source distribution
-sudo wget https://go.emailengine.app/source-dist.tar.gz
-
-# Extract
-sudo tar xzf source-dist.tar.gz --strip-components=1
-sudo rm source-dist.tar.gz
-
-# Install dependencies (production only)
-sudo npm install --production --ignore-scripts
-
-# Or for specific version
-# sudo wget https://github.com/postalsys/emailengine/releases/download/v2.55.4/source-dist.tar.gz
 ```
-
-:::tip
-The `--production` flag installs only runtime dependencies, not development tools, reducing installation size and time.
-:::
 
 #### Step 4: Configure Environment
 
-Create `.env` file:
-```bash
-sudo nano /opt/emailengine/.env
-```
+Create and populate `.env` file in `/opt/emailengine`:
 
-Add configuration:
 ```bash
+# Generate encryption secret and create .env file
+sudo bash -c "cat > /opt/emailengine/.env" <<EOF
 # Redis connection
 EENGINE_REDIS=redis://127.0.0.1:6379
 
-# Security secrets (generate secure values!)
-EENGINE_SECRET=your-secret-key-at-least-32-characters
-EENGINE_SECRET=your-encryption-secret-32-chars
+# Security secret (auto-generated)
+EENGINE_SECRET=$(openssl rand -hex 32)
 
 # Performance
 EENGINE_WORKERS=4
@@ -179,20 +161,43 @@ EENGINE_LOG_RAW=false
 # API settings
 EENGINE_PORT=3000
 EENGINE_HOST=0.0.0.0
+EOF
+
+# Secure the file
+sudo chmod 600 /opt/emailengine/.env
 ```
 
-**Generate secure secrets:**
-```bash
-# Generate random secrets
-openssl rand -hex 32  # Use for EENGINE_SECRET
-openssl rand -hex 32  # Use for EENGINE_SECRET
-```
+**Important:** The `.env` file is stored outside the `app/` directory, making upgrades easier. Keep this file safe.
 
-#### Step 5: Test Installation
+#### Step 5: Download and Install EmailEngine
 
 ```bash
 cd /opt/emailengine
-node server.js
+
+# Download latest source distribution
+sudo wget https://go.emailengine.app/source-dist.tar.gz
+
+# Or download specific version (e.g., 2.55.4)
+sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
+
+# Extract to app directory
+sudo tar xzf source-dist.tar.gz -C app --strip-components=1
+sudo rm source-dist.tar.gz
+
+# Install dependencies (production only)
+cd app
+sudo npm install --production --ignore-scripts
+```
+
+:::tip
+The `--production` flag installs only runtime dependencies, not development tools, reducing installation size and time.
+:::
+
+#### Step 6: Test Installation
+
+```bash
+cd /opt/emailengine
+node app/server.js
 ```
 
 In another terminal:
@@ -203,7 +208,7 @@ curl http://localhost:3000/health
 
 Press `Ctrl+C` to stop.
 
-#### Step 6: Create System User
+#### Step 7: Create System User
 
 ```bash
 # Create dedicated user
@@ -214,7 +219,7 @@ sudo chown -R emailengine:emailengine /opt/emailengine
 sudo chmod 600 /opt/emailengine/.env
 ```
 
-#### Step 7: Set Up SystemD Service
+#### Step 8: Set Up SystemD Service
 
 Create service file:
 ```bash
@@ -239,7 +244,7 @@ WorkingDirectory=/opt/emailengine
 EnvironmentFile=/opt/emailengine/.env
 
 # Start command
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/bin/node app/server.js
 
 # Restart policy
 Restart=always
@@ -279,31 +284,29 @@ sudo journalctl -u emailengine -f
 
 ### macOS Installation
 
-#### Step 1: Install Node.js 20+
+#### Step 1: Install Node.js
 
-**Using Homebrew:**
+**Using Homebrew (recommended):**
 ```bash
 # Install Homebrew if needed
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Install Node.js 20
-brew install node@20
-
-# Add to PATH
-echo 'export PATH="/usr/local/opt/node@20/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
+# Install latest Node.js (24+)
+brew install node
 
 # Verify
-node --version
+node --version  # Should be 24.x or higher
 ```
 
 **Using NVM (alternative):**
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-nvm install 20
-nvm use 20
-nvm alias default 20
+nvm install 24
+nvm use 24
+nvm alias default 24
 ```
+
+**Note:** Node.js 20+ is supported, but 24+ is recommended for better performance and latest features.
 
 #### Step 2: Install Redis
 
@@ -379,42 +382,6 @@ For Windows, use **WSL2** (Windows Subsystem for Linux) and follow the Linux ins
 
 See [Windows Installation Guide](/docs/installation/windows) for WSL2 setup.
 
-## Method 2: Git Repository
-
-For development or tracking the latest features:
-
-### Clone Repository
-
-```bash
-# Clone repository
-sudo git clone https://github.com/postalsys/emailengine.git /opt/emailengine
-cd /opt/emailengine
-
-# Install all dependencies (including dev dependencies)
-sudo npm install
-
-# For production use
-sudo npm install --production
-```
-
-### Update from Git
-
-```bash
-cd /opt/emailengine
-
-# Stop service
-sudo systemctl stop emailengine
-
-# Pull latest changes
-sudo git pull
-
-# Install/update dependencies
-sudo npm install --production
-
-# Start service
-sudo systemctl start emailengine
-```
-
 ## Alternative Process Managers
 
 ### PM2 (Production Process Manager)
@@ -435,18 +402,13 @@ Create `/opt/emailengine/ecosystem.config.js`:
 module.exports = {
   apps: [{
     name: 'emailengine',
-    script: './server.js',
+    script: './app/server.js',
     cwd: '/opt/emailengine',
     instances: 1,
     exec_mode: 'cluster',
     watch: false,
     env: {
-      NODE_ENV: 'production',
-      EENGINE_REDIS: 'redis://127.0.0.1:6379',
-      EENGINE_SECRET: 'your-secret-here',
-      EENGINE_SECRET: 'your-encryption-secret',
-      EENGINE_WORKERS: '4',
-      EENGINE_PORT: '3000'
+      NODE_ENV: 'production'
     },
     error_file: '/var/log/emailengine/error.log',
     out_file: '/var/log/emailengine/out.log',
@@ -458,6 +420,8 @@ module.exports = {
   }]
 };
 ```
+
+**Note:** Environment variables are loaded from `/opt/emailengine/.env` automatically.
 
 #### Start with PM2
 
@@ -535,7 +499,7 @@ volumes:
 
 ## Upgrading
 
-### From Release Tarball
+The directory structure makes upgrades simple - just replace the `app/` directory while keeping your `.env` file intact.
 
 ```bash
 cd /opt/emailengine
@@ -543,17 +507,24 @@ cd /opt/emailengine
 # Stop service
 sudo systemctl stop emailengine
 
-# Backup current installation
-sudo cp -r /opt/emailengine /opt/emailengine.backup.$(date +%Y%m%d)
+# Backup current version (optional)
+sudo mv app app.backup.$(date +%Y%m%d)
 
-# Download new version
+# Create new app directory
+sudo mkdir -p app
+
+# Download new version (latest)
 sudo wget https://go.emailengine.app/source-dist.tar.gz
 
-# Extract (overwrites files)
-sudo tar xzf source-dist.tar.gz --strip-components=1
+# Or download specific version (e.g., 2.55.4)
+sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
+
+# Extract to app directory
+sudo tar xzf source-dist.tar.gz -C app --strip-components=1
 sudo rm source-dist.tar.gz
 
-# Update dependencies
+# Install dependencies
+cd app
 sudo npm install --production --ignore-scripts
 
 # Restore ownership
@@ -567,38 +538,34 @@ sudo systemctl status emailengine
 curl http://localhost:3000/health
 ```
 
-### From Git Repository
-
-```bash
-cd /opt/emailengine
-
-# Stop service
-sudo systemctl stop emailengine
-
-# Backup (optional)
-sudo cp -r /opt/emailengine /opt/emailengine.backup.$(date +%Y%m%d)
-
-# Update from Git
-sudo git pull
-
-# Update dependencies
-sudo npm install --production
-
-# Restore ownership
-sudo chown -R emailengine:emailengine /opt/emailengine
-
-# Start service
-sudo systemctl start emailengine
-```
+**Note:** Your `.env` file in `/opt/emailengine/` is preserved during upgrades.
 
 ### With PM2
 
+The PM2 upgrade process is the same as SystemD - just replace the `app/` directory and reload PM2.
+
 ```bash
 cd /opt/emailengine
 
-# Update source
-sudo git pull
-sudo npm install --production
+# Backup current version (optional)
+sudo mv app app.backup.$(date +%Y%m%d)
+
+# Create new app directory
+sudo mkdir -p app
+
+# Download new version (latest)
+sudo wget https://go.emailengine.app/source-dist.tar.gz
+
+# Or download specific version (e.g., 2.55.4)
+sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
+
+# Extract to app directory
+sudo tar xzf source-dist.tar.gz -C app --strip-components=1
+sudo rm source-dist.tar.gz
+
+# Install dependencies
+cd app
+sudo npm install --production --ignore-scripts
 
 # Reload with zero-downtime
 pm2 reload emailengine

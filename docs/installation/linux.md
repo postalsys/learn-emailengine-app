@@ -14,7 +14,7 @@ EmailEngine can be installed on Linux using three methods:
 
 1. **Automated Installer** (Ubuntu/Debian) - One-click script for fresh servers
 2. **Binary Installation** - Standalone executable (all distributions)
-3. **Source Installation** - Run from source for production (requires Node.js 20+)
+3. **Source Installation** - Run from source for production (requires Node.js 20+, recommended 24+)
 
 ### System Requirements
 
@@ -31,7 +31,7 @@ EmailEngine can be installed on Linux using three methods:
 ### Required Software
 
 - **Redis 6.0+** (stand-alone mode, persistence enabled)
-- **Node.js 20+** (only for source installation)
+- **Node.js 20+** (only for source installation, recommended 24+)
 - **OpenSSL** (for generating secrets)
 
 ## Method 1: Automated Installer (Ubuntu/Debian)
@@ -179,6 +179,9 @@ sudo systemctl restart redis
 # Download latest binary
 wget https://go.emailengine.app/emailengine.tar.gz
 
+# Or download specific version (e.g., 2.55.4)
+wget https://go.emailengine.app/download/v2.55.4/emailengine.tar.gz
+
 # Extract
 tar xzf emailengine.tar.gz
 rm emailengine.tar.gz
@@ -193,21 +196,29 @@ emailengine --version
 
 ### Step 4: Create Configuration
 
-**Generate secret:**
+**Generate and save encryption secret:**
 ```bash
-# Generate a random secret (minimum 32 characters)
-openssl rand -hex 32
+# Generate a random secret (minimum 32 characters) and save to .env file
+mkdir -p /etc/emailengine
+echo "EENGINE_SECRET=$(openssl rand -hex 32)" > /etc/emailengine/.env
+echo "EENGINE_REDIS=redis://127.0.0.1:6379" >> /etc/emailengine/.env
+
+# Secure the file
+chmod 600 /etc/emailengine/.env
 ```
 
-**Save this value securely!** You'll need to use it in the configuration below.
+**Important:** Save this file permanently. You must use the same secret every time EmailEngine starts.
 
 ### Step 5: Test Run
 
 ```bash
+# Load environment variables
+source /etc/emailengine/.env
+
 # Start EmailEngine
 emailengine \
-  --dbs.redis="redis://127.0.0.1:6379" \
-  --secret="$EENGINE_SECRET" \
+  --dbs.redis="$EENGINE_REDIS" \
+  --service.secret="$EENGINE_SECRET" \
   --api.port=3000
 
 # In another terminal, test
@@ -273,6 +284,9 @@ sudo systemctl status emailengine
 # Download latest
 wget https://go.emailengine.app/emailengine.tar.gz
 
+# Or download specific version (e.g., 2.55.4)
+wget https://go.emailengine.app/download/v2.55.4/emailengine.tar.gz
+
 # Extract and replace
 tar xzf emailengine.tar.gz
 sudo systemctl stop emailengine
@@ -290,71 +304,84 @@ emailengine --version
 
 Running from source is recommended for production as it requires less RAM.
 
-### Step 1: Install Node.js 20+
+### Step 1: Install Node.js
 
 **Ubuntu/Debian (using NodeSource):**
 ```bash
-# Install Node.js 20.x
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+# Install Node.js 24.x (recommended)
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 # Verify
-node --version  # Should be 20.x
+node --version  # Should be 24.x or higher
 npm --version
 ```
 
 **CentOS/RHEL:**
 ```bash
-curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+curl -fsSL https://rpm.nodesource.com/setup_24.x | sudo bash -
 sudo yum install -y nodejs
 ```
+
+**Note:** Node.js 20+ is supported, but 24+ is recommended for better performance and latest features.
 
 ### Step 2: Install Redis
 
 Same as binary installation method (see above).
 
-### Step 3: Download Source
+### Step 3: Setup Directory Structure
 
-**Option A: From releases (stable):**
 ```bash
-# Create directory
-sudo mkdir -p /opt/emailengine
+# Create directories
+sudo mkdir -p /opt/emailengine/app
 cd /opt/emailengine
-
-# Download source distribution
-wget https://go.emailengine.app/source-dist.tar.gz
-tar xzf source-dist.tar.gz
-rm source-dist.tar.gz
-```
-
-**Option B: From Git (development):**
-```bash
-git clone https://github.com/postalsys/emailengine.git /opt/emailengine
-cd /opt/emailengine
-npm install --production
 ```
 
 ### Step 4: Configure Environment
 
-Create `/opt/emailengine/.env`:
+Generate and create `.env` file in `/opt/emailengine`:
 
 ```bash
-sudo nano /opt/emailengine/.env
-```
-
-```bash
+# Generate encryption secret and create .env file
+sudo bash -c "cat > /opt/emailengine/.env" <<EOF
 EENGINE_REDIS=redis://127.0.0.1:6379
-EENGINE_SECRET=your-secret-key-at-least-32-chars
+EENGINE_SECRET=$(openssl rand -hex 32)
 EENGINE_WORKERS=4
 EENGINE_LOG_LEVEL=info
 EENGINE_PORT=3000
+EOF
+
+# Secure the file
+sudo chmod 600 /opt/emailengine/.env
 ```
 
-### Step 5: Test Run
+**Important:** The `.env` file is stored outside the `app/` directory, making upgrades easier. Keep this file safe.
+
+### Step 5: Download Source
 
 ```bash
 cd /opt/emailengine
-node server.js
+
+# Download source distribution (latest)
+sudo wget https://go.emailengine.app/source-dist.tar.gz
+
+# Or download specific version (e.g., 2.55.4)
+sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
+
+# Extract to app directory
+sudo tar xzf source-dist.tar.gz -C app --strip-components=1
+sudo rm source-dist.tar.gz
+
+# Install dependencies
+cd app
+sudo npm install --production
+```
+
+### Step 6: Test Run
+
+```bash
+cd /opt/emailengine
+node app/server.js
 ```
 
 In another terminal:
@@ -362,7 +389,7 @@ In another terminal:
 curl http://localhost:3000/health
 ```
 
-### Step 6: Run as Service
+### Step 7: Run as Service
 
 Create `/etc/systemd/system/emailengine.service`:
 
@@ -380,7 +407,7 @@ WorkingDirectory=/opt/emailengine
 
 EnvironmentFile=/opt/emailengine/.env
 
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/bin/node app/server.js
 Restart=always
 RestartSec=10
 
@@ -411,55 +438,123 @@ sudo systemctl status emailengine
 
 ### Upgrading Source Installation
 
+The directory structure makes upgrades simple - just replace the `app/` directory while keeping your `.env` file intact.
+
 ```bash
 cd /opt/emailengine
 
 # Stop service
 sudo systemctl stop emailengine
 
-# Backup
-sudo cp -r /opt/emailengine /opt/emailengine.backup
+# Backup current version (optional)
+sudo mv app app.backup.$(date +%Y%m%d)
 
-# Update (Git)
-git pull
-npm install --production
+# Create new app directory
+sudo mkdir -p app
 
-# Or download new release
-# wget https://go.emailengine.app/source-dist.tar.gz
-# tar xzf source-dist.tar.gz
+# Download new version (latest)
+sudo wget https://go.emailengine.app/source-dist.tar.gz
+
+# Or download specific version (e.g., 2.55.4)
+sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
+
+# Extract to app directory
+sudo tar xzf source-dist.tar.gz -C app --strip-components=1
+sudo rm source-dist.tar.gz
+
+# Install dependencies
+cd app
+sudo npm install --production
+
+# Restore ownership
+sudo chown -R emailengine:emailengine /opt/emailengine
 
 # Start service
 sudo systemctl start emailengine
+
+# Verify
+sudo systemctl status emailengine
+curl http://localhost:3000/health
 ```
+
+**Note:** Your `.env` file in `/opt/emailengine/` is preserved during upgrades.
 
 ## Post-Installation
 
-### 1. Set Up Reverse Proxy
+### 1. Set Up Reverse Proxy with HTTPS
 
-For production, use Nginx or Caddy as a reverse proxy.
+For production, use Nginx or Caddy as a reverse proxy with automatic HTTPS.
 
-**Quick Nginx setup:**
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs>
+<TabItem value="nginx" label="Nginx + acme.sh" default>
+
+#### Install Nginx
+
 ```bash
 sudo apt install nginx
-
-# Create config
-sudo nano /etc/nginx/sites-available/emailengine
 ```
+
+#### Create Nginx Configuration
+
+Create `/etc/nginx/sites-available/emailengine`:
 
 ```nginx
 server {
     listen 80;
     server_name emailengine.example.com;
 
+    # Allow large email submissions with attachments
+    client_max_body_size 100M;
+    client_body_timeout 90s;
+
+    # EventSource endpoint for admin UI updates
+    location /admin/changes {
+        proxy_pass http://localhost:3000;
+
+        # Disable gzip for EventSource streaming
+        gzip off;
+
+        # HTTP/1.1 required for EventSource
+        proxy_http_version 1.1;
+        proxy_set_header Connection '';
+
+        # Disable buffering for real-time updates
+        proxy_buffering off;
+        proxy_cache off;
+
+        # Keep connection alive for long-polling
+        proxy_read_timeout 24h;
+
+        # Disable chunked encoding
+        chunked_transfer_encoding off;
+
+        # Standard proxy headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # All other requests
     location / {
         proxy_pass http://localhost:3000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Timeouts for large uploads
+        proxy_connect_timeout 90s;
+        proxy_send_timeout 90s;
+        proxy_read_timeout 90s;
     }
 }
 ```
+
+Enable the configuration:
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/emailengine /etc/nginx/sites-enabled/
@@ -467,14 +562,183 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### 2. Enable HTTPS
+#### Install and Configure acme.sh
 
 ```bash
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d emailengine.example.com
+# Install acme.sh
+curl https://get.acme.sh | sh -s email=admin@example.com
+
+# Reload shell to enable acme.sh
+source ~/.bashrc
+
+# Set Let's Encrypt as the default CA (instead of ZeroSSL)
+~/.acme.sh/acme.sh --set-default-ca --server letsencrypt
+
+# Create SSL directory
+sudo mkdir -p /etc/nginx/ssl
+
+# Issue certificate (Nginx mode)
+sudo ~/.acme.sh/acme.sh --issue -d emailengine.example.com --nginx
+
+# Install certificate to Nginx
+sudo ~/.acme.sh/acme.sh --install-cert -d emailengine.example.com \
+  --key-file /etc/nginx/ssl/emailengine.key \
+  --fullchain-file /etc/nginx/ssl/emailengine.crt \
+  --reloadcmd "systemctl reload nginx"
 ```
 
-### 3. Configure Firewall
+#### Update Nginx for HTTPS
+
+Edit `/etc/nginx/sites-available/emailengine` to add SSL configuration:
+
+```nginx
+server {
+    listen 80;
+    server_name emailengine.example.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name emailengine.example.com;
+
+    # SSL certificates
+    ssl_certificate /etc/nginx/ssl/emailengine.crt;
+    ssl_certificate_key /etc/nginx/ssl/emailengine.key;
+
+    # SSL security settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    # Allow large email submissions with attachments
+    client_max_body_size 100M;
+    client_body_timeout 90s;
+
+    # EventSource endpoint for admin UI updates
+    location /admin/changes {
+        proxy_pass http://localhost:3000;
+
+        # Disable gzip for EventSource streaming
+        gzip off;
+
+        # HTTP/1.1 required for EventSource
+        proxy_http_version 1.1;
+        proxy_set_header Connection '';
+
+        # Disable buffering for real-time updates
+        proxy_buffering off;
+        proxy_cache off;
+
+        # Keep connection alive for long-polling
+        proxy_read_timeout 24h;
+
+        # Disable chunked encoding
+        chunked_transfer_encoding off;
+
+        # Standard proxy headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # All other requests
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Timeouts for large uploads
+        proxy_connect_timeout 90s;
+        proxy_send_timeout 90s;
+        proxy_read_timeout 90s;
+    }
+}
+```
+
+Reload Nginx:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+</TabItem>
+<TabItem value="caddy" label="Caddy (Automatic HTTPS)">
+
+#### Install Caddy
+
+```bash
+# Add Caddy repository
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo apt update
+sudo apt install caddy
+```
+
+#### Configure Caddy
+
+Create `/etc/caddy/Caddyfile`:
+
+```caddy
+emailengine.example.com {
+    # Automatic HTTPS via Let's Encrypt
+
+    # Allow large email submissions with attachments
+    request_body {
+        max_size 100MB
+    }
+
+    # EventSource endpoint for admin UI updates
+    @eventsource path /admin/changes
+    handle @eventsource {
+        reverse_proxy localhost:3000 {
+            # Disable buffering for EventSource streaming
+            flush_interval -1
+
+            # Long timeout for EventSource
+            transport http {
+                read_timeout 24h
+            }
+        }
+    }
+
+    # All other requests
+    reverse_proxy localhost:3000 {
+        # Standard headers
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+
+        # Timeouts for large uploads
+        transport http {
+            dial_timeout 90s
+            response_header_timeout 90s
+            read_timeout 90s
+        }
+    }
+}
+```
+
+#### Start Caddy
+
+```bash
+sudo systemctl enable caddy
+sudo systemctl start caddy
+sudo systemctl status caddy
+```
+
+Caddy will automatically obtain and renew SSL certificates from Let's Encrypt.
+
+</TabItem>
+</Tabs>
+
+### 2. Configure Firewall
 
 ```bash
 # Allow HTTP/HTTPS
@@ -488,7 +752,7 @@ sudo ufw deny 3000/tcp
 sudo ufw enable
 ```
 
-### 4. Verify Installation
+### 3. Verify Installation
 
 ```bash
 # Check service

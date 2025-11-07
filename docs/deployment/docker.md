@@ -166,26 +166,32 @@ networks:
 
 ### Environment File
 
-Create `.env` file:
+Generate and create `.env` file with encryption secret:
 
 ```bash
-# EmailEngine Configuration
-EENGINE_SECRET=your-strong-secret-key-at-least-32-characters-long
+# Generate encryption secret and create .env file
+cat > .env <<EOF
+# EmailEngine Configuration (auto-generated secret)
+EENGINE_SECRET=$(openssl rand -hex 32)
 
 # Optional: License key (PEM format - multiline)
-EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----
-Application: EmailEngine
-Licensed to: Your Company
-
-your-license-key-data-here...
------END LICENSE-----"
+# EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----
+# Application: EmailEngine
+# Licensed to: Your Company
+#
+# your-license-key-data-here...
+# -----END LICENSE-----"
 
 # Optional: OAuth2 configuration
-EENGINE_GMAIL_CLIENT_ID=your-gmail-client-id
-EENGINE_GMAIL_CLIENT_SECRET=your-gmail-client-secret
+# EENGINE_GMAIL_CLIENT_ID=your-gmail-client-id
+# EENGINE_GMAIL_CLIENT_SECRET=your-gmail-client-secret
 
 # Optional: Webhook configuration
-EENGINE_WEBHOOK_URL=https://your-app.com/webhooks
+# EENGINE_WEBHOOK_URL=https://your-app.com/webhooks
+EOF
+
+# Secure the file
+chmod 600 .env
 ```
 
 :::warning Security
@@ -229,7 +235,7 @@ services:
 **Directory structure:**
 ```
 ./config/
-  ├── config.json       # Main configuration
+  ├── config.toml       # Main configuration
   └── prepared-settings/
       └── settings.json
 ./logs/
@@ -238,23 +244,24 @@ services:
 
 ### Configuration File Example
 
-`./config/config.json`:
+`./config/config.toml`:
 
-```json
-{
-  "dbs": {
-    "redis": "redis://redis:6379"
-  },
-  "api": {
-    "port": 3000,
-    "host": "0.0.0.0"
-  },
-  "workers": 4,
-  "gmail": {
-    "clientId": "your-client-id",
-    "clientSecret": "your-client-secret"
-  }
-}
+```toml
+[service]
+secret = "your-encryption-secret-at-least-64-chars"
+
+[dbs]
+redis = "redis://redis:6379"
+
+[api]
+port = 3000
+host = "0.0.0.0"
+
+workers = 4
+
+[gmail]
+clientId = "your-client-id"
+clientSecret = "your-client-secret"
 ```
 
 ## Advanced Docker Configuration

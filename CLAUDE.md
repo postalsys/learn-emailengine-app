@@ -100,6 +100,40 @@ docs/
    - No duplicate content between docs/blog/API
    - Cross-references use relative links
 
+## Download Links
+
+EmailEngine provides shortened download URLs that redirect to the latest GitHub releases:
+
+| File | Short URL (Latest) | Versioned URL Format | Full GitHub URL |
+|------|-------------------|---------------------|-----------------|
+| **macOS PKG (Intel)** | https://go.emailengine.app/emailengine.pkg | https://go.emailengine.app/download/v2.55.4/emailengine.pkg | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.pkg |
+| **macOS PKG (Apple Silicon)** | https://go.emailengine.app/emailengine-arm.pkg | https://go.emailengine.app/download/v2.55.4/emailengine-arm.pkg | https://github.com/postalsys/emailengine/releases/latest/download/emailengine-arm.pkg |
+| **Linux Binary (tar.gz)** | https://go.emailengine.app/emailengine.tar.gz | https://go.emailengine.app/download/v2.55.4/emailengine.tar.gz | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz |
+| **Source Distribution** | https://go.emailengine.app/source-dist.tar.gz | https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz | https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz |
+| **Windows Executable** | https://go.emailengine.app/emailengine.exe | https://go.emailengine.app/download/v2.55.4/emailengine.exe | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.exe |
+
+**Download URL Formats:**
+
+1. **Latest version (recommended for most docs):**
+   - Format: `https://go.emailengine.app/<filename>`
+   - Example: `https://go.emailengine.app/emailengine.exe`
+   - Always downloads the latest release
+
+2. **Specific version (when version pinning is needed):**
+   - Format: `https://go.emailengine.app/download/vX.X.X/<filename>`
+   - Example: `https://go.emailengine.app/download/v2.55.4/emailengine.exe`
+   - Downloads a specific release version
+
+**Important Notes:**
+- **PKG installers (macOS only):** Architecture-specific binaries
+  - `emailengine.pkg` - Intel x86
+  - `emailengine-arm.pkg` - Apple Silicon (M1 and newer)
+- **Binary (Linux only):** `emailengine.tar.gz` - Linux x86 only (no ARM binary available)
+- **Source distribution:** `source-dist.tar.gz` - Platform-independent, requires Node.js 24+, works on any platform
+- **Windows:** `emailengine.exe` - Windows executable (NOT `emailengine-win-x64.exe`)
+- Always use the short URLs in documentation (they're easier to remember and maintain)
+- The installer script is available at: https://go.emailengine.app (redirects to install.sh)
+
 ## Important Files
 
 ### Configuration Files
@@ -122,14 +156,44 @@ docs/
 
 ### Source Files
 
-- **`sources/swagger.json`** - EmailEngine OpenAPI 3.1 specification (v2.57.0)
-  - 73 API endpoints
-  - Used to generate `docs/api/` content
-  - Update this to refresh API docs
+The `sources/` directory contains original reference materials used to create the unified documentation. These files are kept for historical reference and should NOT be edited directly.
 
-- **`sources/` directory** - Contains converted HTML docs and original blog posts
-  - These were used to create unified documentation
-  - DO NOT edit these - they are historical sources only
+**Directory Structure:**
+
+- **`sources/swagger.json`** - EmailEngine OpenAPI 3.1 specification (v2.58.0)
+  - 73 API endpoints
+  - Auto-downloaded from https://emailengine.dev/swagger.json during build
+  - Used to generate `docs/api/` content (72 endpoint files)
+  - Run `npm run update-swagger` to update from production
+
+- **`sources/openapi/`** - OpenAPI schema definitions
+  - Contains API schema files and specifications
+  - Used as reference for API documentation structure
+  - DO NOT edit - historical reference only
+
+- **`sources/blog/`** - Original blog articles (Ghost CMS format)
+  - 43+ blog posts covering tutorials and detailed guides
+  - Topics include OAuth2 setup, mail merge, encryption, etc.
+  - Content has been merged into unified topic-based docs
+  - DO NOT edit - historical reference only
+
+- **`sources/website-md/`** - Old documentation website (Markdown)
+  - 33 HTML/Markdown files from previous documentation site
+  - General documentation covering features and configuration
+  - Content has been unified into current `docs/` structure
+  - DO NOT edit - historical reference only
+
+**Important Notes:**
+- All content from these sources has been merged into the unified `docs/` directory
+- When updating documentation, edit files in `docs/`, not in `sources/`
+- The sources are kept for reference and to track content origin
+- Only `sources/swagger.json` is actively updated (automatically during build)
+
+**Reference Locations:**
+- EmailEngine source code: `/Users/andris/Projects/emailengine`
+- API schema definitions: `./sources/openapi/`
+- Blog articles: `./sources/blog/`
+- Old documentation: `./sources/website-md/`
 
 ### Documentation Reports
 
