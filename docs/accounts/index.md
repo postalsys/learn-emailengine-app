@@ -110,24 +110,26 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 
 ### Microsoft Graph API (Native)
 
-**Best for:** Microsoft 365 advanced features
+**Best for:** Microsoft 365 and Outlook.com advanced features
 
 **Pros:**
 - Faster than IMAP
 - Access to Microsoft 365 features
 - Better integration with Outlook features
 - Supports shared mailboxes natively
+- Works with both Microsoft 365 and Outlook.com (Hotmail)
 
 **Cons:**
 - Very limited search capabilities compared to IMAP
 - Requires Microsoft Graph subscription setup
-- Only works with Microsoft 365
+- Only works with Microsoft accounts
 - More complex configuration
 
 **Use Cases:**
 - Enterprise applications on Microsoft stack
 - Shared mailbox management
 - Advanced Microsoft 365 integrations
+- Outlook.com and Hotmail accounts
 
 [Microsoft Graph Setup →](./outlook-365#ms-graph-api)
 
