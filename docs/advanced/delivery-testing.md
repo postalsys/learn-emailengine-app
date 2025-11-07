@@ -41,7 +41,7 @@ IMAP clients can only subscribe to **one folder at a time** for real-time update
 - EmailEngine subscribes to INBOX (or Gmail's "All Mail") for live updates
 - Other folders (Spam, Junk, etc.) are **polled periodically**
 - Polling introduces delays (typically 1-5 minutes)
-- Gmail's "All Mail" **doesn't include Spam folder**, requiring polling
+- Gmail's "All Mail" **doesn't include Spam or Trash folders**, requiring polling
 
 This is fine for normal operations but problematic for delivery testing where you need **immediate results**.
 

@@ -37,11 +37,13 @@ When you enable OAuth2 for Gmail with IMAP/SMTP:
 Both IMAP and Gmail API provide the same functionality (both can access labels, messages, etc.). The key difference is in **OAuth2 scope requirements**:
 
 **IMAP/SMTP Requirements:**
+
 - Requires the widest scope: `https://mail.google.com/`
 - Full access to all Gmail operations
 - Simpler to set up (one scope for everything)
 
 **Gmail API Requirements:**
+
 - Can use more granular scopes based on your use case
 - Google prefers applications to request only the scopes they need
 - Example scopes:
@@ -52,10 +54,12 @@ Both IMAP and Gmail API provide the same functionality (both can access labels, 
 **Why This Matters:**
 
 During Google's OAuth2 app verification process, they may ask you to use more limited scopes that match your actual use case. For example:
+
 - If you never permanently delete emails, Google may request you use `gmail.modify` instead of the full `https://mail.google.com/` scope
 - However, **these limited scopes don't work with IMAP/SMTP** - they only work with Gmail API
 
 **Decision:**
+
 - **Use IMAP OAuth2** if: You need standard IMAP/SMTP and can justify the `https://mail.google.com/` scope to Google
 - **Use Gmail API** if: Google requires you to use more limited scopes during the verification process
 
@@ -404,11 +408,7 @@ Gmail uses labels, but IMAP presents them as folders:
 
 ### All Mail Folder
 
-The `[Gmail]/All Mail` folder contains all messages regardless of labels. Consider:
-
-- Syncing All Mail can be resource-intensive
-- Use path filtering to exclude it if not needed
-- Message operations work the same on labeled folders
+The `[Gmail]/All Mail` folder is a virtual folder that contains all messages regardless of labels, **except** messages in Trash and Spam folders.
 
 ### Gmail Throttling
 

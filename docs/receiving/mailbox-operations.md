@@ -495,12 +495,12 @@ EmailEngine uses the `labels` array for both Gmail labels and Microsoft Outlook/
 
 Gmail uses labels instead of folders. EmailEngine maps labels to the folder structure:
 
-| Traditional IMAP | Gmail             | Description                   |
-| ---------------- | ----------------- | ----------------------------- |
-| INBOX            | INBOX             | Messages with `\Inbox` label  |
-| Sent Mail        | [Gmail]/Sent Mail | Messages with `\Sent` label   |
-| Drafts           | [Gmail]/Drafts    | Messages with `\Drafts` label |
-| -                | [Gmail]/All Mail  | All messages (virtual folder) |
+| Traditional IMAP | Gmail             | Description                                        |
+| ---------------- | ----------------- | -------------------------------------------------- |
+| INBOX            | INBOX             | Messages with `\Inbox` label                       |
+| Sent Mail        | [Gmail]/Sent Mail | Messages with `\Sent` label                        |
+| Drafts           | [Gmail]/Drafts    | Messages with `\Drafts` label                      |
+| -                | [Gmail]/All Mail  | All messages except Trash and Spam (virtual folder)|
 
 **Multiple Labels:**
 
