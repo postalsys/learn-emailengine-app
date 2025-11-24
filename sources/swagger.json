@@ -1,7 +1,7 @@
 {
   "info": {
     "title": "EmailEngine API",
-    "version": "2.58.0",
+    "version": "2.58.2",
     "description": "EmailEngine provides a RESTful API for managing email accounts, sending messages, and processing email data across multiple providers.\n\n<h3>Authentication</h3>\nAll API requests require authentication using an Access Token. You can generate and manage your tokens from the <a href=\"/admin/tokens\" target=\"_parent\"><strong>Access Tokens</strong></a> page.\n\nInclude your token in requests using one of these methods:\n- Query parameter: <code>?access_token=YOUR_TOKEN</code>\n- Authorization header: <code>Authorization: Bearer YOUR_TOKEN</code>\n\n<h3>Request Processing</h3>\n\n<strong>Sequential Processing:</strong> Requests to the same email account are processed sequentially to maintain data consistency. Multiple simultaneous requests will be queued.\n\n<strong>Timeouts:</strong> Long-running operations may cause queued requests to timeout. Configure appropriate timeout values using the <code>X-EE-Timeout</code> header (in milliseconds).\n\n<h3>Getting Started</h3>\n1. <a href=\"/admin/tokens\" target=\"_parent\">Generate an Access Token</a>\n2. <a href=\"/admin/accounts\" target=\"_parent\">Add an email account</a>\n3. Start making API requests using the endpoints below",
     "contact": {
       "name": "EmailEngine Support",
@@ -1296,6 +1296,12 @@
             "minimum": 0,
             "maximum": 1
           },
+          "openAiMaxTokens": {
+            "type": "number",
+            "description": "Maximum tokens limit for OpenAI API requests (defaults: GPT-5: 18000, GPT-4: 6500, GPT-3.5: 3000)",
+            "example": 3000,
+            "minimum": 0
+          },
           "openAiPrompt": {
             "type": "string",
             "description": "Custom system prompt to guide AI behavior when processing emails",
@@ -1621,7 +1627,7 @@
           "version": {
             "type": "string",
             "description": "EmailEngine version number",
-            "example": "2.58.0"
+            "example": "2.58.2"
           },
           "license": {
             "type": "string",
@@ -2225,15 +2231,6 @@
             "description": "OAuth2 refresh token for obtaining new access tokens",
             "example": "1//09Ie3CtORQYm...",
             "maxLength": 16384
-          },
-          "authority": {
-            "type": "string",
-            "description": "Microsoft account type: \"consumers\" (personal), \"organizations\" (work/school), \"common\" (both), or a specific tenant ID",
-            "example": "consumers",
-            "maxLength": 1024,
-            "x-convert": {
-              "trim": true
-            }
           },
           "expires": {
             "type": "string",
@@ -4193,15 +4190,6 @@
             "example": "1//09Ie3CtORQYm...",
             "maxLength": 16384
           },
-          "authority": {
-            "type": "string",
-            "description": "Microsoft account type: \"consumers\" (personal), \"organizations\" (work/school), \"common\" (both), or a specific tenant ID",
-            "example": "consumers",
-            "maxLength": 1024,
-            "x-convert": {
-              "trim": true
-            }
-          },
           "expires": {
             "type": "string",
             "format": "date-time",
@@ -4845,6 +4833,12 @@
             "example": 0.1,
             "minimum": 0,
             "maximum": 1
+          },
+          "openAiMaxTokens": {
+            "type": "number",
+            "description": "Maximum tokens limit for OpenAI API requests (defaults: GPT-5: 18000, GPT-4: 6500, GPT-3.5: 3000)",
+            "example": 3000,
+            "minimum": 0
           },
           "openAiPrompt": {
             "type": "string",
@@ -7434,15 +7428,6 @@
             "example": "1//09Ie3CtORQYm...",
             "maxLength": 16384
           },
-          "authority": {
-            "type": "string",
-            "description": "Microsoft account type: \"consumers\" (personal), \"organizations\" (work/school), \"common\" (both), or a specific tenant ID",
-            "example": "consumers",
-            "maxLength": 1024,
-            "x-convert": {
-              "trim": true
-            }
-          },
           "expires": {
             "type": "string",
             "format": "date-time",
@@ -9307,6 +9292,14 @@
           },
           {
             "name": "openAiTopP",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "openAiMaxTokens",
             "in": "query",
             "schema": {
               "type": "boolean",

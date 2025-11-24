@@ -175,7 +175,7 @@ const config: Config = {
           items: [
             {
               label: 'Support',
-              to: '/docs/support',
+              to: '/docs/support/license',
             },
             {
               label: 'GitHub',

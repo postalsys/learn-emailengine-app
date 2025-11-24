@@ -26,7 +26,7 @@ redis://[[username:]password@]host[:port][/database]
 
 ```bash
 # Local Redis (default port 6379, database 0)
-EENGINE_REDIS="redis://localhost:6379"
+EENGINE_REDIS="redis://localhost:6379/8"
 
 # Local Redis with database 8
 EENGINE_REDIS="redis://localhost:6379/8"
@@ -115,10 +115,10 @@ spec:
 
 ```bash
 # .env file
-EENGINE_REDIS="redis://localhost:6379"
+EENGINE_REDIS="redis://localhost:6379/8"
 
 # Or command line
-export EENGINE_REDIS="redis://localhost:6379"
+export EENGINE_REDIS="redis://localhost:6379/8"
 emailengine
 ```
 
@@ -127,7 +127,7 @@ emailengine
 
 ```bash
 # Start with CLI argument
-emailengine --dbs.redis="redis://localhost:6379"
+emailengine --dbs.redis="redis://localhost:6379/8"
 
 # With password
 emailengine --dbs.redis="redis://:mypassword@redis.example.com:6379"

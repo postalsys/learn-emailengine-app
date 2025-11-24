@@ -201,7 +201,7 @@ emailengine --version
 # Generate a random secret (minimum 32 characters) and save to .env file
 mkdir -p /etc/emailengine
 echo "EENGINE_SECRET=$(openssl rand -hex 32)" > /etc/emailengine/.env
-echo "EENGINE_REDIS=redis://127.0.0.1:6379" >> /etc/emailengine/.env
+echo "EENGINE_REDIS=redis://127.0.0.1:6379/8" >> /etc/emailengine/.env
 
 # Secure the file
 chmod 600 /etc/emailengine/.env
@@ -249,7 +249,7 @@ User=emailengine
 Group=emailengine
 WorkingDirectory=/opt/emailengine
 
-Environment="EENGINE_REDIS=redis://127.0.0.1:6379"
+Environment="EENGINE_REDIS=redis://127.0.0.1:6379/8"
 Environment="EENGINE_SECRET=your-secret-here"
 Environment="EENGINE_WORKERS=4"
 
@@ -810,6 +810,6 @@ sudo systemctl status emailengine | grep -E 'CPU|Memory'
 # Redis stats
 redis-cli INFO stats
 
-# Prometheus metrics (if enabled)
-curl http://localhost:9090/metrics
+# Prometheus metrics (available on API port with metrics token)
+curl http://localhost:3000/metrics -H "Authorization: Bearer YOUR_METRICS_TOKEN"
 ```

@@ -567,15 +567,29 @@ Monitor additional folders in real-time:
 
 ### Proxy Configuration
 
-Route connections through a proxy:
+Route connections through a proxy (configured at the account level, not inside imap/smtp objects):
 
 ```json
 {
+  "account": "example",
+  "proxy": "socks5://proxy.example.com:1080",
   "imap": {
-    "proxy": "socks://proxy.example.com:1080"
+    "host": "imap.example.com",
+    "port": 993,
+    "secure": true,
+    "auth": {
+      "user": "user@example.com",
+      "pass": "password"
+    }
   },
   "smtp": {
-    "proxy": "socks://proxy.example.com:1080"
+    "host": "smtp.example.com",
+    "port": 587,
+    "secure": false,
+    "auth": {
+      "user": "user@example.com",
+      "pass": "password"
+    }
   }
 }
 ```

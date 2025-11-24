@@ -313,7 +313,7 @@ You can invite teammates to help manage license keys and billing:
 
 2. **Invoice generated:**
 
-   - Payment due within 28 days
+   - Payment due within 30 days
    - Late payment grace period
 
 3. **View invoice:**
@@ -321,7 +321,7 @@ You can invite teammates to help manage license keys and billing:
    - Log in to [https://postalsys.com/](https://postalsys.com/)
    - Warning banner displayed with link to invoice
 
-4. **During 28-day grace period:**
+4. **During 30-day grace period:**
 
    - All license keys remain valid
    - EmailEngine continues working normally
@@ -342,7 +342,7 @@ You can invite teammates to help manage license keys and billing:
 
 ### Grace Period Expiration
 
-**If invoice remains unpaid after 28 days:**
+**If invoice remains unpaid after 30 days:**
 
 1. **Subscription canceled automatically**
 2. **All license keys revoked**

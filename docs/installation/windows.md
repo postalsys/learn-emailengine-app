@@ -302,7 +302,7 @@ You can also use `config.toml` in the same directory as `emailengine.exe`:
 secret = "your-secret-key-at-least-64-chars"
 
 [dbs]
-redis = "redis://127.0.0.1:6379"
+redis = "redis://127.0.0.1:6379/8"
 
 [api]
 port = 3000

@@ -93,7 +93,7 @@ Generate and save encryption secret:
 ```bash
 # Generate a random secret (minimum 32 characters) and save to environment file
 echo "EENGINE_SECRET=$(openssl rand -hex 32)" > ~/.emailengine.env
-echo "EENGINE_REDIS=redis://127.0.0.1:6379" >> ~/.emailengine.env
+echo "EENGINE_REDIS=redis://127.0.0.1:6379/8" >> ~/.emailengine.env
 
 # Load the environment variables
 source ~/.emailengine.env

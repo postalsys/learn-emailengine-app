@@ -155,7 +155,7 @@ emailengine encrypt --any.command.line.options
 **Example with options**:
 ```bash
 export EENGINE_SECRET="my-encryption-key-2023"
-export REDIS_URL="redis://localhost:6379"
+export REDIS_URL="redis://localhost:6379/8"
 emailengine encrypt
 ```
 

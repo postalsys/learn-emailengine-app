@@ -295,7 +295,10 @@ This allows using Gmail's powerful search operators directly. See [Gmail search 
 - `gmailRaw`: Gmail API only
 - `emailId`, `threadId`, `emailIds`: Gmail and modern IMAP servers with RFC 8474 support
 - `seq`, `modseq`, `deleted`: Traditional IMAP only
-- Not all operators work with Microsoft Graph API
+- **Microsoft Graph API limitations:**
+  - `to`, `cc`, `bcc` fields are **not supported** for search
+  - Use `from` and `subject` for filtering, or search `body` for recipient names
+  - Consider using IMAP/SMTP mode for Outlook accounts if recipient search is required
 :::
 
 ## Combined Searches

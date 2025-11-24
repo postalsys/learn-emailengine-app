@@ -161,16 +161,16 @@ response = HTTP_GET(
   }
 )
 
-routes = PARSE_JSON(response.body)
-for each route in routes.routes {
-  PRINT(route.id + ": " + route.targetUrl)
+data = PARSE_JSON(response.body)
+for each webhook in data.webhooks {
+  PRINT(webhook.id + ": " + webhook.targetUrl)
 }
 ```
 
 **Response:**
 ```json
 {
-  "routes": [
+  "webhooks": [
     {
       "id": "route_123abc",
       "targetUrl": "https://your-app.com/webhook",

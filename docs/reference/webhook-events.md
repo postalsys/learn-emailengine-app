@@ -56,7 +56,7 @@ EmailEngine includes diagnostic headers in every webhook HTTP request:
 |--------|------|---------|-------------|
 | `X-EE-Wh-Event-Id` | string | `af8435d9-ceee-4715-be71-08ac9d2dc04a` | **Unique event identifier (UUID).** Use for idempotency - all retries share the same ID. **This is the ONLY place eventId is available** - it's NOT in the JSON payload. |
 | `X-EE-Wh-Id` | string | `907889` | Internal BullMQ job ID of the queued webhook entry |
-| `X-EE-Wh-Attempts-Made` | string | `1` | Delivery attempt counter (starts at 1, increases with retries) |
+| `X-EE-Wh-Attempts-Made` | string | `0` | Delivery attempt counter (starts at 0, increases with retries) |
 | `X-EE-Wh-Queued-Time` | string | `5s` | Time the event spent in queue before delivery |
 | `X-EE-Wh-Custom-Route` | string | `AAABiL8tBKsAAAAG` | Identifier of the custom webhook route (only present for webhook routes) |
 | `X-EE-Wh-Signature` | string | `dGhpcyBpcyBh...` | HMAC-SHA256 signature (base64url) of the JSON body using EENGINE_SECRET |
@@ -165,23 +165,21 @@ Triggered when an account successfully connects for the first time and completes
   "account": "user@example.com",
   "date": "2025-01-15T10:30:00.000Z",
   "data": {
-    "account": "user@example.com",
-    "state": "connected",
-    "syncTime": 1640995200000
+    "initialized": true
   }
 }
 ```
 
 **Fields:**
-- `data.account` (string) - Account identifier
-- `data.state` (string) - Connection state (usually "connected")
-- `data.syncTime` (number) - Unix timestamp (milliseconds) of first successful sync
+- `data.initialized` (boolean) - Always `true`, indicates account has completed initialization
 
 **Use Cases:**
 - Notify user that account is ready
 - Start background processing
 - Enable account features
 - Trigger initial data import
+
+**Note:** To get full account details after initialization, query the account API endpoint (`GET /v1/account/:account`) which returns the account state, connection status, and other metadata.
 
 ---
 

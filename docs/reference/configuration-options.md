@@ -114,22 +114,22 @@ EENGINE_WORKERS=$(nproc)
 
 #### Connection URL
 
-**Environment:** `EENGINE_REDIS` or `EENGINE_DBS_REDIS`
-**Command line:** `--dbs.redis=redis://localhost:6379`
+**Environment:** `EENGINE_REDIS`
+**Command line:** `--dbs.redis=redis://localhost:6379/8`
 **Config file:** `dbs.redis`
-**Default:** `redis://127.0.0.1:6379`
+**Default:** `redis://127.0.0.1:6379/8`
 
-Redis connection URL.
+Redis connection URL. The default database number is 8.
 
 ```bash
-# Basic
-EENGINE_REDIS=redis://localhost:6379
+# Default (database 8)
+EENGINE_REDIS=redis://localhost:6379/8
 
 # With password
-EENGINE_REDIS=redis://:password@localhost:6379
+EENGINE_REDIS=redis://:password@localhost:6379/8
 
-# With database number
-EENGINE_REDIS=redis://localhost:6379/7
+# With different database number
+EENGINE_REDIS=redis://localhost:6379/5
 
 # TLS
 EENGINE_REDIS=rediss://localhost:6379
@@ -396,16 +396,16 @@ EENGINE_CHUNK_SIZE=2500
 **Lower values:** Slower sync, less memory
 **Higher values:** Faster sync, more memory
 
-### Connection Timeout
+### Fetch Timeout
 
-**Environment:** `EENGINE_IMAP_CONNECTION_TIMEOUT`
-**Config file:** `imap.connectionTimeout`
+**Environment:** `EENGINE_FETCH_TIMEOUT`
+**Config file:** `fetchTimeout`
 **Default:** `90000` (90 seconds)
 
-IMAP connection timeout in milliseconds.
+Timeout for fetching message content in milliseconds.
 
 ```bash
-EENGINE_IMAP_CONNECTION_TIMEOUT=60000
+EENGINE_FETCH_TIMEOUT=120000
 ```
 
 ### Pool Size
@@ -680,10 +680,9 @@ curl -X POST https://emailengine.example.com/v1/settings \
 | `EENGINE_PORT` | `3000` | HTTP port |
 | `EENGINE_HOST` | `127.0.0.1` | Bind address |
 | `EENGINE_BASE_URL` | Auto | Base URL |
-| `EENGINE_REDIS` | `redis://127.0.0.1:6379` | Redis URL |
-| `EENGINE_SECRET` | **Required** | Session secret |
-| `EENGINE_SECRET` | Recommended | Field encryption secret |
-| `EENGINE_WORKERS` | `1` | Worker threads |
+| `EENGINE_REDIS` | `redis://127.0.0.1:6379/8` | Redis URL |
+| `EENGINE_SECRET` | Recommended | Encryption secret |
+| `EENGINE_WORKERS` | `4` | Worker threads |
 | `EENGINE_LOG_LEVEL` | `trace` | Log level |
 | `EENGINE_PREPARED_LICENSE` | None | License key (PEM or exported format) |
 | `EENGINE_GMAIL_CLIENT_ID` | None | Gmail OAuth2 client ID |
@@ -705,7 +704,7 @@ port = 3000
 host = "127.0.0.1"
 
 [dbs]
-redis = "redis://localhost:6379"
+redis = "redis://localhost:6379/8"
 
 workers = 4
 maxConnections = 20

@@ -57,13 +57,14 @@ Email accounts are the core resource in EmailEngine. Each account represents a c
 
 | State | Description |
 |-------|-------------|
-| `init` | Account registered, connection not attempted |
+| `init` | Account registered, connection not yet attempted |
 | `connecting` | Attempting to connect to mail server |
-| `connected` | Successfully connected and syncing |
-| `authenticationError` | Authentication failed (invalid credentials) |
+| `syncing` | Connected and synchronizing mailboxes |
+| `connected` | Successfully connected and fully synced |
+| `authenticationError` | Authentication failed (invalid credentials or expired token) |
 | `connectError` | Connection failed (network or server issue) |
-| `disconnected` | Manually disconnected |
-| `suspended` | Temporarily suspended due to repeated errors |
+| `disconnected` | Connection closed or lost |
+| `unset` | Initial state before any connection attempt |
 
 ## Common Operations
 

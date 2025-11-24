@@ -114,18 +114,23 @@ emailengine --help
 4. **Node.js version incompatible**
 
    ```
-   Error: Node.js version 14.x is not supported
+   Error: Node.js version must be 20.x or higher
    ```
 
    **Solution:**
+
+   EmailEngine requires Node.js 20 or higher. Update your Node.js installation:
 
    ```bash
    # Check version
    node --version
 
-   # Update Node.js
-   nvm install 18
-   nvm use 18
+   # Update Node.js (using nvm)
+   nvm install 20
+   nvm use 20
+
+   # Or install latest LTS
+   nvm install --lts
    ```
 
 #### Accounts Stay Disconnected
@@ -253,10 +258,11 @@ traceroute imap.gmail.com
 
 **Solutions:**
 
-1. **Increase timeout:**
+1. **Increase fetch timeout:**
 
    ```bash
-   export EENGINE_IMAP_CONNECTION_TIMEOUT=120000  # 120 seconds
+   # Increase the fetch timeout (default is 90 seconds)
+   export EENGINE_FETCH_TIMEOUT=180000  # 180 seconds
    ```
 
 2. **Check network quality:**

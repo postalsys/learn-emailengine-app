@@ -47,14 +47,17 @@ Get instant webhook notifications when new emails arrive, no polling required.
 Register and manage multiple email accounts with automatic connection handling.
 
 ```javascript
-// Register an email account
+// Register an email account with OAuth2
 POST /v1/account
 {
   "account": "user123",
   "email": "user@gmail.com",
   "oauth2": {
     "provider": "AAABlf_0iLgAAAAQ",  // OAuth2 app ID from EmailEngine (base64url encoded)
-    "accessToken": "ya29.a0..."
+    "refreshToken": "1//0gF...",       // Refresh token from OAuth2 flow
+    "auth": {
+      "user": "user@gmail.com"         // Email address (required)
+    }
   }
 }
 ```
@@ -175,12 +178,11 @@ EmailEngine provides a comprehensive REST API:
 - **[Troubleshooting Guide](/docs/troubleshooting)** - Common issues and solutions
 - **[GitHub Issues](https://github.com/postalsys/emailengine/issues)** - Report bugs and request features
 - **[Support](/docs/support/license)** - Get professional support
-- **[Blog](/blog)** - Tutorials, guides, and use case examples
 
 ## System Requirements
 
 - **Node.js** 20.x or higher
-- **Redis** 6.x or higher (or Redis-compatible service like Upstash)
+- **Redis** Any version (or Redis-compatible service like Upstash)
 - **Memory** Minimum 2GB RAM (4GB+ recommended for production)
 - **OS** Linux, macOS, or Windows
 
@@ -188,7 +190,7 @@ EmailEngine provides a comprehensive REST API:
 
 EmailEngine requires a license key for production use. Get a license:
 
-- **[Free Development License](https://postalsys.com/plans)** - For testing and development
+- **[14-Day Free Trial](https://postalsys.com/plans)** - Full features, no credit card required
 - **[Production License](https://postalsys.com/plans)** - For commercial use
 
 ---
@@ -209,6 +211,6 @@ EmailEngine requires a license key for production use. Get a license:
 
 **Need inspiration?**
 
-- [Browse the blog](/blog) for tutorials and real-world use cases
 - [See the CRM integration guide](/docs/integrations/crm) for a complete architecture example
+- [Explore AI integration](/docs/integrations/ai-chatgpt) for email summarization and automation
 - [Compare EmailEngine vs Nylas](/docs/comparison/emailengine-vs-nylas) to understand the differences

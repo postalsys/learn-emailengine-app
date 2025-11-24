@@ -16,15 +16,261 @@ This repository contains the **unified Docusaurus documentation site** for Email
 **CRITICAL - Read These First:**
 
 1. **Git Commit Messages** - DO NOT include Claude Code attribution or co-authorship
+
    - ❌ Never add: "Generated with Claude Code"
    - ❌ Never add: "Co-Authored-By: Claude"
    - ✅ Write clear, professional commit messages without AI attribution
 
 2. **No Emojis in Documentation** - Never use emojis in documentation files
+
    - ❌ Don't use: ✅ ❌ 🚀 💡 ⚠️ etc. in markdown files
    - ✅ Exception: Only if explicitly needed for visual indicators (e.g., alert symbols in admonitions)
    - ✅ Use text instead: "Success", "Warning", "Important", etc.
    - Note: Existing emojis in CLAUDE.md itself are acceptable for this meta-documentation file
+
+3. **Screenshot Automation** - When generating screenshots for documentation
+
+   **Environment Variables for Automation:**
+
+   - Set `EENGINE_DISABLE_SETUP_WARNINGS=true` to disable admin password warnings
+   - Set `EENGINE_REQUIRE_API_AUTH=false` to allow API calls without access tokens
+   - This enables fully automated EmailEngine startup without web sessions or API authentication
+   - Without admin password, the dashboard is accessible without logging in
+   - Makes it easy to capture screenshots programmatically or via automation tools
+
+   **Starting EmailEngine for Screenshots and Testing:**
+
+   Always run EmailEngine from source for screenshots, testing, and development:
+
+   ```bash
+   # Step 0: Clean up any existing processes (prevent port conflicts)
+   # Kill any existing EmailEngine processes on port 7003
+   lsof -ti:7003 | xargs kill -9 2>/dev/null || true
+
+   # Kill any existing SSH tunnels to kreata.ee
+   pkill -f "ssh.*kreata.ee" 2>/dev/null || true
+
+   # Wait a moment for ports to be released
+   sleep 1
+
+   # Step 1: Set up SSH reverse proxy to expose over HTTPS
+   # This creates https://localdev.kreata.ee → localhost:7003
+   ssh -R 7003:localhost:7003 kreata.ee -f -N
+
+   # Step 2: Clear Redis database (start fresh)
+   redis-cli -n 5 FLUSHDB
+
+   # Step 3: Start EmailEngine from source (foreground process)
+   # No need to change directories - run from documentation folder
+
+   # Set environment variables as needed:
+   # - EE_OPENAPI_VERBOSE=true - Verbose OpenAPI logging
+   # - EENGINE_DISABLE_SETUP_WARNINGS=true - No admin password warnings
+   # - EENGINE_REQUIRE_API_AUTH=false - Allow API calls without tokens
+   # - EENGINE_LICENSE_KEY - License key (REQUIRED for IMAP workers to start)
+   # - EENGINE_SETTINGS - JSON configuration including serviceUrl
+   # - Add other environment variables as needed for specific features
+
+   EE_OPENAPI_VERBOSE=true \
+   EENGINE_DISABLE_SETUP_WARNINGS=true \
+   EENGINE_REQUIRE_API_AUTH=false \
+   EENGINE_LICENSE_KEY="$(cat /Users/andris/Downloads/license-B841200C688A23F553E0DC45.txt)" \
+   EENGINE_SETTINGS='{"serviceUrl":"https://localdev.kreata.ee","webhooks":"https://kreata.ee/s","webhookEvents":["*"],"webhooksEnabled]":true}' \
+   node /Users/andris/Projects/emailengine/server.js \
+     --dbs.redis='redis://127.0.0.1:6379/5' \
+     --api.port=7003 \
+     --api.host=0.0.0.0
+
+   # EmailEngine will start and display logs in the terminal
+   # Wait a few seconds for it to fully initialize
+   # Once you see "Server started" or similar, it's ready for testing/screenshots
+   # Leave this terminal running - use a new terminal for other commands
+   ```
+
+   **Important - EmailEngine Process Behavior:**
+
+   - EmailEngine runs as a **foreground process**, not a background daemon
+   - Logs are printed directly to stdout in the terminal
+   - Keep the terminal running while testing or taking screenshots
+   - Use a separate terminal window for running screenshot scripts or API calls
+   - Stop EmailEngine with `Ctrl+C` when done
+   - Wait 3-5 seconds after startup before accessing the UI or API
+
+   **Key Points:**
+
+   - Access to latest unreleased features and source code
+   - OAuth2 credentials available in `/Users/andris/Projects/emailengine/.env`
+   - HTTPS access via SSH tunnel required for OAuth2 callbacks
+   - Webhook testing with `https://kreata.ee/s` webhook sink
+   - Full control over environment and debugging
+   - Always clear Redis database before starting to ensure clean state
+   - Port 7003 avoids conflict with Docusaurus (port 3000)
+
+   **Screenshot Capture Scripts:**
+
+   - Location: `scripts/` directory
+   - Tool: Playwright (Chromium browser automation)
+   - Viewport size: **1600x900** (standard resolution for documentation screenshots)
+   - Browser: Chromium in headless mode with `--ignore-certificate-errors` flag
+
+   **Available Scripts:**
+
+   - `scripts/capture-screenshots.js` - Basic screenshot capture without authentication
+
+     - Captures 10 main UI pages (dashboard, accounts, settings, webhooks, templates, etc.)
+     - Uses `fullPage: false` for viewport screenshots, `fullPage: true` for scrollable pages
+     - Target URL configured in script (default: `https://localdev.kreata.ee`)
+
+   - `scripts/capture-screenshots-authenticated.js` - Full screenshot capture with login
+
+     - Captures 22 screenshots including authenticated pages
+     - Includes login flow with username/password
+     - Captures pages with test data (accounts with data, message lists, queue details)
+
+   - `scripts/capture-api-examples.js` - API response and webhook payload screenshots
+     - Creates syntax-highlighted code examples for API responses
+     - Makes actual API calls to capture real responses
+     - Renders JSON responses as styled code blocks using highlight.js
+     - GitHub Dark theme for consistent appearance
+
+   **Output Directories:**
+
+   - UI screenshots: `static/img/screenshots/`
+   - API examples: `static/img/examples/`
+
+   **Screenshot Timing:**
+
+   - Uses `waitUntil: 'networkidle'` or `'domcontentloaded'` for page load
+   - Adds `waitForTimeout(1000-3000ms)` for dynamic content to render
+   - Longer waits for Bull Board queues (2000ms) due to animation/loading
+
+   **Running Screenshot Capture:**
+
+   ```bash
+   # Basic capture (no authentication needed if EENGINE_REQUIRE_API_AUTH=false)
+   node scripts/capture-screenshots.js
+
+   # Full authenticated capture (requires login)
+   node scripts/capture-screenshots-authenticated.js
+
+   # API examples capture
+   node scripts/capture-api-examples.js
+   ```
+
+   **Testing Resources:**
+
+   **Ethereal Email (Test IMAP/SMTP Accounts)**
+
+   Create temporary test email accounts for development and screenshots:
+
+   ```bash
+   # Create a new Ethereal test account
+   curl -X POST https://api.nodemailer.com/user \
+     -H "Content-type: application/json" \
+     -d '{
+       "requestor": "emailengine-dev",
+       "version": "0.0.1"
+     }'
+   ```
+
+   Example response:
+
+   ```json
+   {
+     "status": "success",
+     "user": "kua5fisxkbcwqe6a@ethereal.email",
+     "pass": "CKrU9TCXK6Zn1N3NkF",
+     "smtp": {
+       "host": "smtp.ethereal.email",
+       "port": 587,
+       "secure": false
+     },
+     "imap": {
+       "host": "imap.ethereal.email",
+       "port": 993,
+       "secure": true
+     },
+     "pop3": {
+       "host": "pop3.ethereal.email",
+       "port": 995,
+       "secure": true
+     },
+     "web": "https://ethereal.email"
+   }
+   ```
+
+   **Important Ethereal Email Behavior:**
+
+   - Does NOT send real emails to external addresses
+   - Emails sent via SMTP are added to the sender's INBOX instead
+   - Perfect for testing: sending triggers both `messageSent` and `messageNew` webhooks
+   - No email delivery to real recipients - safe for testing
+
+   **OAuth2 Credentials**
+
+   Gmail OAuth2 credentials are stored in:
+
+   - `/Users/andris/Projects/emailengine/.env`
+   - Use these credentials for testing OAuth2 account setup
+   - Required for OAuth2 flow screenshots
+
+   **Webhook Testing**
+
+   Use the webhook helper service for testing webhook delivery:
+
+   ```bash
+   # Read latest webhooks (newest first)
+   curl https://kreata.ee/r
+
+   # Read N newest webhooks
+   curl https://kreata.ee/r?lines=10
+
+   # Clear all webhooks
+   curl https://kreata.ee/r/clear
+
+   # Configure EmailEngine to send webhooks to this sink
+   # Set webhook URL to: https://kreata.ee/s
+   ```
+
+   **Special Cases:**
+
+   - **Authentication Form Screenshot (03-account-add-form.png):**
+
+     - Cannot use `/admin/accounts/new` URL (doesn't exist)
+     - Must use the "Generate authentication link" API endpoint: `POST /v1/authentication/form`
+     - **Important:** Set `EENGINE_SETTINGS='{"serviceUrl":"https://localdev.kreata.ee"}'` when starting EmailEngine, otherwise the form URLs will be invalid
+     - Example process:
+
+       ```bash
+       # 1. Generate authentication form link for IMAP
+       curl -X POST "https://localdev.kreata.ee/v1/authentication/form" \
+         -H "Content-Type: application/json" \
+         -d '{
+           "account": "test-imap",
+           "type": "imap",
+           "name": "Test Account",
+           "redirectUrl": "https://localdev.kreata.ee/admin/accounts"
+         }'
+
+       # 2. Response includes the form URL: {"url": "https://localdev.kreata.ee/accounts/new?data=..."}
+       # 3. Open the URL in Playwright with certificate error ignoring
+       # 4. Capture screenshot at 1600x900 resolution with fullPage: true
+       ```
+
+     - The authentication form API creates a temporary hosted form
+     - `redirectUrl` is a required field - user is redirected here after authentication
+     - Use `type: "imap"` to show IMAP/SMTP configuration fields
+     - Use `type: "oauth2"` with `provider` to show OAuth2 flow
+     - Form URL is time-limited and single-use
+
+   **Notes:**
+
+   - Screenshots are automatically overwritten if they exist
+   - Failed captures show warnings but don't stop the script
+   - Browser closes automatically after completion
+   - Uses HTTPS with certificate error ignoring for local development
+   - All scripts create output directories if they don't exist
+   - Update script URLs to point to `http://localhost:3030` when using Docker container
 
 ## Quick Commands
 
@@ -56,6 +302,7 @@ npm run docusaurus clear
 ### Documentation Structure
 
 This is a **unified documentation system** where each feature/topic is covered by a single comprehensive document that merges:
+
 - API documentation (from OpenAPI spec)
 - Blog post content (practical tutorials, examples)
 - General documentation (concepts, configuration)
@@ -82,14 +329,17 @@ docs/
 ### Key Architectural Decisions
 
 1. **Blog Disabled** - All blog content has been elevated to unified documentation
+
    - `docusaurus.config.ts` has `blog: false`
    - Blog posts were merged into topic-based docs (e.g., OAuth2 setup, mail merge)
 
 2. **Auto-Generated Sidebars** - No manual `_category_.json` files
+
    - Sidebar structure comes from file organization and frontmatter
    - `sidebar_position` in frontmatter controls order
 
 3. **OpenAPI Integration** - API docs auto-generated from `sources/swagger.json`
+
    - Plugin: `docusaurus-plugin-openapi-docs`
    - Output: `docs/api/` (72 endpoint files)
    - Configuration: See `docusaurus.config.ts` plugins section
@@ -104,17 +354,18 @@ docs/
 
 EmailEngine provides shortened download URLs that redirect to the latest GitHub releases:
 
-| File | Short URL (Latest) | Versioned URL Format | Full GitHub URL |
-|------|-------------------|---------------------|-----------------|
-| **macOS PKG (Intel)** | https://go.emailengine.app/emailengine.pkg | https://go.emailengine.app/download/v2.55.4/emailengine.pkg | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.pkg |
+| File                          | Short URL (Latest)                             | Versioned URL Format                                            | Full GitHub URL                                                                       |
+| ----------------------------- | ---------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **macOS PKG (Intel)**         | https://go.emailengine.app/emailengine.pkg     | https://go.emailengine.app/download/v2.55.4/emailengine.pkg     | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.pkg     |
 | **macOS PKG (Apple Silicon)** | https://go.emailengine.app/emailengine-arm.pkg | https://go.emailengine.app/download/v2.55.4/emailengine-arm.pkg | https://github.com/postalsys/emailengine/releases/latest/download/emailengine-arm.pkg |
-| **Linux Binary (tar.gz)** | https://go.emailengine.app/emailengine.tar.gz | https://go.emailengine.app/download/v2.55.4/emailengine.tar.gz | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz |
-| **Source Distribution** | https://go.emailengine.app/source-dist.tar.gz | https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz | https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz |
-| **Windows Executable** | https://go.emailengine.app/emailengine.exe | https://go.emailengine.app/download/v2.55.4/emailengine.exe | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.exe |
+| **Linux Binary (tar.gz)**     | https://go.emailengine.app/emailengine.tar.gz  | https://go.emailengine.app/download/v2.55.4/emailengine.tar.gz  | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz  |
+| **Source Distribution**       | https://go.emailengine.app/source-dist.tar.gz  | https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz  | https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz  |
+| **Windows Executable**        | https://go.emailengine.app/emailengine.exe     | https://go.emailengine.app/download/v2.55.4/emailengine.exe     | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.exe     |
 
 **Download URL Formats:**
 
 1. **Latest version (recommended for most docs):**
+
    - Format: `https://go.emailengine.app/<filename>`
    - Example: `https://go.emailengine.app/emailengine.exe`
    - Always downloads the latest release
@@ -125,6 +376,7 @@ EmailEngine provides shortened download URLs that redirect to the latest GitHub 
    - Downloads a specific release version
 
 **Important Notes:**
+
 - **PKG installers (macOS only):** Architecture-specific binaries
   - `emailengine.pkg` - Intel x86
   - `emailengine-arm.pkg` - Apple Silicon (M1 and newer)
@@ -139,6 +391,7 @@ EmailEngine provides shortened download URLs that redirect to the latest GitHub 
 ### Configuration Files
 
 - **`docusaurus.config.ts`** - Main Docusaurus configuration
+
   - Site metadata (title, URL, organization)
   - OpenAPI plugin configuration (sources/swagger.json → docs/api/)
   - Navigation (navbar, footer)
@@ -146,6 +399,7 @@ EmailEngine provides shortened download URLs that redirect to the latest GitHub 
   - Blog disabled: `blog: false`
 
 - **`sidebars.ts`** - Sidebar configuration
+
   - `docsSidebar`: Auto-generated from docs/ structure
   - `apiSidebar`: Auto-generated from OpenAPI spec
 
@@ -161,17 +415,20 @@ The `sources/` directory contains original reference materials used to create th
 **Directory Structure:**
 
 - **`sources/swagger.json`** - EmailEngine OpenAPI 3.1 specification (v2.58.0)
+
   - 73 API endpoints
   - Auto-downloaded from https://emailengine.dev/swagger.json during build
   - Used to generate `docs/api/` content (72 endpoint files)
   - Run `npm run update-swagger` to update from production
 
 - **`sources/openapi/`** - OpenAPI schema definitions
+
   - Contains API schema files and specifications
   - Used as reference for API documentation structure
   - DO NOT edit - historical reference only
 
 - **`sources/blog/`** - Original blog articles (Ghost CMS format)
+
   - 43+ blog posts covering tutorials and detailed guides
   - Topics include OAuth2 setup, mail merge, encryption, etc.
   - Content has been merged into unified topic-based docs
@@ -184,16 +441,139 @@ The `sources/` directory contains original reference materials used to create th
   - DO NOT edit - historical reference only
 
 **Important Notes:**
+
 - All content from these sources has been merged into the unified `docs/` directory
 - When updating documentation, edit files in `docs/`, not in `sources/`
 - The sources are kept for reference and to track content origin
 - Only `sources/swagger.json` is actively updated (automatically during build)
 
 **Reference Locations:**
+
 - EmailEngine source code: `/Users/andris/Projects/emailengine`
 - API schema definitions: `./sources/openapi/`
 - Blog articles: `./sources/blog/`
 - Old documentation: `./sources/website-md/`
+
+## EmailEngine Source Code Reference
+
+The EmailEngine application source code is located at `/Users/andris/Projects/emailengine` and can be used as a reference when writing documentation.
+
+### Source Code Structure
+
+```
+/Users/andris/Projects/emailengine/
+├── server.js                 # Main server entry point (110KB - core application)
+├── package.json              # Application metadata (v2.58.1)
+├── lib/                      # Core library modules
+│   ├── account.js           # Account management logic (106KB)
+│   ├── schemas.js           # API validation schemas (78KB)
+│   ├── routes-ui.js         # Web UI routes (382KB)
+│   ├── tools.js             # Utility functions (74KB)
+│   ├── oauth2-apps.js       # OAuth2 application handling (49KB)
+│   ├── webhooks.js          # Webhook management (21KB)
+│   ├── get-raw-email.js     # Email retrieval logic (18KB)
+│   ├── autodetect-imap-settings.js  # IMAP autodiscovery (23KB)
+│   ├── bounce-detect.js     # Bounce detection (25KB)
+│   ├── arf-detect.js        # ARF (Abuse Report Format) detection
+│   ├── es.js                # Elasticsearch integration (19KB)
+│   ├── gateway.js           # SMTP gateway functionality
+│   ├── templates.js         # Email template management
+│   ├── threads.js           # Email threading logic
+│   ├── tokens.js            # API token management (10KB)
+│   ├── settings.js          # Application settings (9KB)
+│   ├── metrics-collector.js # Metrics and monitoring (7KB)
+│   ├── encrypt.js           # Encryption utilities (5KB)
+│   ├── db.js                # Database abstraction (9KB)
+│   ├── logger.js            # Logging utilities
+│   ├── consts.js            # Application constants (8KB)
+│   ├── api-routes/          # API endpoint route handlers
+│   ├── email-client/        # Email client implementations
+│   ├── oauth/               # OAuth2 authentication modules
+│   ├── imapproxy/           # IMAP proxy functionality
+│   └── lua/                 # Redis Lua scripts
+├── workers/                  # Background worker processes
+│   ├── api.js               # API worker (362KB - main API logic)
+│   ├── documents.js         # Document indexing worker (45KB)
+│   ├── imap.js              # IMAP sync worker (32KB)
+│   ├── smtp.js              # SMTP submission worker (18KB)
+│   ├── submit.js            # Email submission logic (15KB)
+│   ├── webhooks.js          # Webhook delivery worker (20KB)
+│   └── imap-proxy.js        # IMAP proxy worker
+├── views/                    # Handlebars templates for web UI
+├── static/                   # Static assets (CSS, JS, images)
+├── config/                   # Configuration files
+├── test/                     # Test suite
+├── scripts/                  # Build and deployment scripts
+├── systemd/                  # SystemD service files
+├── examples/                 # Example configurations and code
+├── data/                     # Runtime data directory
+└── translations/             # i18n translation files
+```
+
+### Key Source Files for Documentation Reference
+
+**Core Application:**
+
+- `server.js` - Main entry point, server initialization
+- `lib/account.js` - Account creation, management, authentication
+- `lib/schemas.js` - Complete API request/response schemas (use for API documentation)
+- `workers/api.js` - Main API endpoint implementations
+
+**Email Operations:**
+
+- `lib/get-raw-email.js` - Email fetching and processing
+- `workers/imap.js` - IMAP synchronization logic
+- `workers/smtp.js` - SMTP submission handling
+- `lib/threads.js` - Email threading algorithm
+- `lib/bounce-detect.js` - Bounce detection and handling
+
+**Authentication & Security:**
+
+- `lib/oauth2-apps.js` - OAuth2 application management (Gmail, Outlook)
+- `lib/oauth/` - OAuth2 provider implementations
+- `lib/encrypt.js` - Encryption utilities
+- `lib/tokens.js` - API token management
+
+**Configuration & Settings:**
+
+- `lib/settings.js` - Application settings management
+- `lib/autodetect-imap-settings.js` - IMAP server autodiscovery
+- `config/` - Default configuration files
+
+**Integration & Extensions:**
+
+- `lib/webhooks.js` - Webhook configuration and management
+- `workers/webhooks.js` - Webhook delivery implementation
+- `lib/gateway.js` - SMTP gateway functionality
+- `lib/templates.js` - Email template system
+- `lib/es.js` - Elasticsearch integration
+
+**Utilities:**
+
+- `lib/tools.js` - General utility functions
+- `lib/db.js` - Database/Redis abstraction
+- `lib/logger.js` - Logging infrastructure
+- `lib/metrics-collector.js` - Metrics and monitoring
+
+### Using Source Code as Reference
+
+When documenting EmailEngine features:
+
+1. **Check implementation details** - Review the actual source code to understand how features work
+2. **Find examples** - Look in `examples/` directory for real-world usage patterns
+3. **Verify API schemas** - Use `lib/schemas.js` for accurate API documentation
+4. **Understand OAuth2 flows** - Reference `lib/oauth2-apps.js` and `lib/oauth/` for OAuth2 setup
+5. **Worker architecture** - Review `workers/` directory to understand background processing
+6. **Configuration options** - Check `lib/settings.js` and `config/` for all available settings
+7. **Test cases** - Review `test/` directory for usage examples and edge cases
+
+### Important Notes
+
+- The source code is actively developed - check version in `package.json` (currently v2.58.1)
+- OpenAPI spec is generated from this codebase - available at https://emailengine.dev/swagger.json
+- Web UI templates in `views/` use Handlebars templating
+- Background workers use Bull queues (BullMQ) for job processing
+- Redis is the primary data store - Lua scripts in `lib/lua/` for atomic operations
 
 ### Documentation Reports
 
@@ -346,6 +726,7 @@ npm run generate-api-sidebar
 #### API Sidebar Structure
 
 The API sidebar is organized by OpenAPI tags into 17 collapsible categories:
+
 - Account (13 endpoints)
 - Mailbox (4 endpoints)
 - Message (10 endpoints)
@@ -397,6 +778,7 @@ npm run serve
 ### Documentation Quality Standards
 
 Every page should:
+
 - ✅ Have complete frontmatter (title, sidebar_position, description)
 - ✅ Include practical code examples
 - ✅ Provide step-by-step procedures where applicable
@@ -457,6 +839,7 @@ npm run docusaurus gen-api-docs all
 ## Project History
 
 This documentation was created by:
+
 1. **Setting up Docusaurus 3.9.1** with TypeScript and OpenAPI plugin
 2. **Migrating 33 HTML docs** from EmailEngine website to Markdown
 3. **Converting 43 blog posts** from Ghost CMS format to Docusaurus

@@ -234,7 +234,7 @@ EENGINE_ADMIN_ACCESS_ADDRESSES=10.0.0.0/8,192.168.1.0/24,203.0.113.42
 [Service]
 Environment="EENGINE_SECRET=your-secret-here"
 Environment="EENGINE_ADMIN_ACCESS_ADDRESSES=127.0.0.0/8,10.0.0.0/8"
-Environment="EENGINE_REDIS=redis://localhost:6379"
+Environment="EENGINE_REDIS=redis://localhost:6379/8"
 ```
 
 **Common use cases:**
@@ -350,7 +350,7 @@ EENGINE_REDIS=rediss://localhost:6379  # Note: rediss:// (with 's')
 # Edit /etc/systemd/system/emailengine.service
 [Service]
 Environment="EENGINE_SECRET=your-permanent-secret-here"
-Environment="EENGINE_REDIS=redis://localhost:6379"
+Environment="EENGINE_REDIS=redis://localhost:6379/8"
 
 # Then reload and restart
 sudo systemctl daemon-reload

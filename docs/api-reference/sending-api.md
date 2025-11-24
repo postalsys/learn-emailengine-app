@@ -6,30 +6,25 @@ sidebar_position: 4
 
 # Sending API
 
-The Sending API provides two methods for sending emails through EmailEngine: the Submit API for immediate delivery and the Outbox API for queued delivery with automatic retry logic.
+The Sending API provides endpoints for sending emails through EmailEngine with support for immediate and scheduled delivery, automatic retries, and queue management.
 
 ## Overview
 
-EmailEngine offers two approaches to sending emails:
+EmailEngine sends emails through the **Submit API** endpoint, which handles both immediate and scheduled delivery with automatic retry logic.
 
-1. **Submit API** - Send immediately with real-time webhooks
-2. **Outbox API** - Queue for delivery with automatic retries
+### Key Features
 
-### When to Use Each Method
+| Feature | Description |
+|---------|-------------|
+| Immediate delivery | Emails sent right away |
+| Scheduled sends | Use `sendAt` parameter for future delivery |
+| Automatic retries | Built-in retry logic (configurable attempts) |
+| Real-time webhooks | Delivery status notifications |
+| Queue management | View, monitor, and cancel queued emails |
 
-| Use Case | Recommended Method |
-|----------|-------------------|
-| Interactive email (user clicking "send") | Submit API |
-| Bulk email campaigns | Outbox API |
-| Transactional emails (receipts, confirmations) | Submit API |
-| Scheduled sends | Outbox API |
-| High-volume sending | Outbox API |
-| Real-time delivery status needed | Submit API |
-| Retry logic required | Outbox API |
+## Submit API
 
-## Submit API (Immediate Send)
-
-The Submit API sends emails immediately and provides real-time delivery status via webhooks.
+The Submit API sends emails and provides real-time delivery status via webhooks. Emails can be sent immediately or scheduled for later using the `sendAt` parameter.
 
 ### Endpoint
 
@@ -239,60 +234,20 @@ The Submit API triggers these webhook events:
 
 ---
 
-## Outbox API (Queued Send)
+## Scheduling Emails
 
-The Outbox API queues emails for delivery with automatic retry logic and rate limiting.
+To schedule emails for future delivery, use the Submit API with the `sendAt` parameter.
 
-### Add to Outbox
-
-**Endpoint:** `POST /v1/account/:account/outbox`
-
-**Request Parameters:**
-Same as Submit API, plus:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `sendAt` | string | ISO date to send at (schedule) |
-| `deliveryAttempts` | number | Max delivery attempts (default 3) |
-
-**Examples:**
-
-**Queue Immediate Send:**
+### Schedule Email Example
 
 **Pseudo code:**
 ```
-// Queue email for immediate delivery
-account = "user@example.com"
-
-response = HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/outbox",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      to: [{ address: "subscriber@example.com" }],
-      subject: "Newsletter January 2025",
-      html: "<h1>This month in news...</h1>"
-    }
-  }
-)
-
-result = PARSE_JSON(response.body)
-PRINT("Queued: " + result.queueId)
-```
-
-**Schedule Email:**
-
-**Pseudo code:**
-```
-// Schedule email for future delivery
+// Schedule email for future delivery using Submit API
 account = "user@example.com"
 sendAt = "2025-01-20T09:00:00Z"  // ISO 8601 timestamp
 
 response = HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/outbox",
+  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
   {
     headers: {
       "Authorization": "Bearer YOUR_ACCESS_TOKEN",
@@ -311,14 +266,24 @@ response = HTTP_POST(
 **Response:**
 ```json
 {
-  "success": true,
-  "queueId": "outbox_789ghi"
+  "response": "Queued for delivery",
+  "messageId": "<abc123@example.com>",
+  "sendAt": "2025-01-20T09:00:00.000Z",
+  "queueId": "queue_789ghi"
 }
 ```
 
+---
+
+## Outbox Management
+
+The outbox contains queued messages waiting to be sent. Use these endpoints to view and manage queued messages.
+
 ### List Outbox
 
-**Endpoint:** `GET /v1/account/:account/outbox`
+**Endpoint:** `GET /v1/outbox`
+
+Lists all queued messages across all accounts.
 
 **Query Parameters:**
 
@@ -331,11 +296,9 @@ response = HTTP_POST(
 
 **Pseudo code:**
 ```
-// List outbox messages with pagination
-account = "user@example.com"
-
+// List all queued messages
 response = HTTP_GET(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/outbox?pageSize=50",
+  "http://localhost:3000/v1/outbox?pageSize=50",
   {
     headers: {
       "Authorization": "Bearer YOUR_ACCESS_TOKEN"
@@ -347,26 +310,7 @@ data = PARSE_JSON(response.body)
 PRINT("Queued messages: " + data.total)
 
 for each msg in data.messages {
-  PRINT(msg.queueId + ": " + msg.subject + " - " + msg.status)
-}
-```
-
-**Response:**
-```json
-{
-  "total": 5,
-  "page": 0,
-  "pages": 1,
-  "messages": [
-    {
-      "queueId": "outbox_789ghi",
-      "account": "user@example.com",
-      "subject": "Newsletter January 2025",
-      "status": "queued",
-      "created": "2025-01-15T10:00:00.000Z",
-      "sendAt": "2025-01-15T10:00:00.000Z"
-    }
-  ]
+  PRINT(msg.queueId + ": " + msg.subject + " - " + msg.scheduled)
 }
 ```
 
@@ -444,31 +388,7 @@ PRINT("Message cancelled: " + result.success)
 | `sent` | Successfully sent |
 | `failed` | Failed after max attempts |
 
-### Use Cases
-
-- **Bulk campaigns**: Newsletter sends
-- **Scheduled emails**: Reminders, follow-ups
-- **Rate-limited sending**: Avoid provider limits
-- **Reliable delivery**: Automatic retry on failure
-- **Background processing**: Queue and forget
-
 [Detailed API reference →](/docs/api/get-v-1-outbox)
-
----
-
-## Comparison Table
-
-| Feature | Submit API | Outbox API |
-|---------|-----------|------------|
-| **Delivery** | Immediate | Queued |
-| **Webhooks** | Real-time | On completion |
-| **Retries** | Manual | Automatic (up to 3x) |
-| **Scheduling** | No | Yes (`sendAt`) |
-| **Rate Limiting** | None | Built-in |
-| **Cancellation** | No | Yes (before sending) |
-| **Best For** | Interactive sends | Bulk sends |
-| **Latency** | Low (~seconds) | Variable (queue dependent) |
-| **Reliability** | Depends on network | High (retry logic) |
 
 ## Message Format
 
@@ -762,18 +682,18 @@ HTTP_POST(
 )
 ```
 
-### Bulk Sending with Outbox
+### Bulk Sending
 
 **Pseudo code:**
 ```
-// Send bulk campaign by queuing individual emails
+// Send bulk campaign by submitting individual emails
 function sendBulkCampaign(account, recipients, content) {
   queued = []
 
-  // Queue email for each recipient
+  // Submit email for each recipient
   for each recipient in recipients {
     response = HTTP_POST(
-      "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/outbox",
+      "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
       {
         headers: {
           "Authorization": "Bearer YOUR_ACCESS_TOKEN",
@@ -791,7 +711,7 @@ function sendBulkCampaign(account, recipients, content) {
     queued.append(result.queueId)
   }
 
-  PRINT("Queued " + LENGTH(queued) + " emails")
+  PRINT("Sent/queued " + LENGTH(queued) + " emails")
   return queued
 }
 
@@ -801,7 +721,7 @@ account = "user@example.com"
 recipients = [
   { email: "user1@example.com", name: "User 1" },
   { email: "user2@example.com", name: "User 2" }
-  // ... thousands more
+  // ... more recipients
 ]
 
 queueIds = sendBulkCampaign(account, recipients, {
@@ -809,3 +729,7 @@ queueIds = sendBulkCampaign(account, recipients, {
   html: "<h1>Hi {{name}}</h1>"
 })
 ```
+
+:::tip Mail Merge
+For true bulk sending with personalization, consider using [Mail Merge](/docs/sending/mail-merge) which sends to multiple recipients in a single API call.
+:::

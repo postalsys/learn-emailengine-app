@@ -64,7 +64,7 @@ Response when healthy:
 Get more detailed status information:
 
 ```bash
-curl http://localhost:3000/admin/stats \
+curl http://localhost:3000/v1/stats \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -789,7 +789,7 @@ TOKEN="$1"
 HOST="${2:-localhost:3000}"
 
 STATS=$(curl -s -H "Authorization: Bearer $TOKEN" \
-  "http://$HOST/admin/stats")
+  "http://$HOST/v1/stats")
 
 # Check webhook queue
 QUEUE_SIZE=$(echo $STATS | jq -r '.queues.webhook.waiting')

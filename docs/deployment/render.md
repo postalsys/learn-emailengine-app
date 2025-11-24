@@ -100,7 +100,7 @@ Use the **Internal Connection String** for better performance and no data transf
    | **Region** | Same as Redis | **Important** for latency |
    | **Branch** | `master` | Or specific version tag |
    | **Environment** | `Node` | Required |
-   | **Build Command** | `npm install --production` | Installs dependencies |
+   | **Build Command** | `npm install --omit=dev` | Installs dependencies |
    | **Start Command** | `npm start` | Starts EmailEngine |
    | **Plan** | Starter (1GB RAM+) | Minimum recommended |
 
@@ -110,9 +110,8 @@ Use the **Internal Connection String** for better performance and no data transf
 
    | Key | Value | Required |
    |-----|-------|----------|
-   | `EENGINE_REDIS` | `redis://red-xxxxx:6379` | Yes |
+   | `EENGINE_REDIS` | `redis://red-xxxxx:6379/8` | Yes |
    | `EENGINE_SECRET` | Generate random string (32+ chars) | Yes |
-   | `EENGINE_SECRET` | Generate random string (32+ chars) | Recommended |
    | `EENGINE_WORKERS` | `2` | Optional |
    | `NODE_ENV` | `production` | Recommended |
 
@@ -223,7 +222,7 @@ services:
     name: emailengine
     env: node
     healthCheckPath: /health
-    buildCommand: npm install --production
+    buildCommand: npm install --omit=dev
     startCommand: npm start
     envVars:
       - key: EENGINE_REDIS
@@ -426,7 +425,7 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: npm install --production
+    buildCommand: npm install --omit=dev
     startCommand: npm start
     healthCheckPath: /health
     envVars:

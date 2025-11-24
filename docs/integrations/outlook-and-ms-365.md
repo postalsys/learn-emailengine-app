@@ -24,7 +24,7 @@ Navigate to _API Permissions_ and click _Add a permission_. This step grants you
 8.  **Enable Microsoft Graph Permissions**
 -   Select _Microsoft Graph_ → _Delegated permissions_.
 -   Search for and enable the following permissions to allow your app to interact with the user's email:
--   If you want to use **IMAP and SMPT** as the base scopes:
+-   If you want to use **IMAP and SMTP** as the base scopes:
 -   _IMAP.AccessAsUser.All_ (for IMAP access)
 -   _SMTP.Send_ (for sending emails via SMTP)
 -   _offline\_access_ (for long-term access to accounts)

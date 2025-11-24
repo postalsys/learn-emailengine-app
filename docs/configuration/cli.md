@@ -166,7 +166,7 @@ EmailEngine supports TOML configuration files for persistent settings.
 # /etc/emailengine/config.toml
 
 [dbs]
-redis = "redis://localhost:6379"
+redis = "redis://localhost:6379/8"
 
 [api]
 host = "0.0.0.0"

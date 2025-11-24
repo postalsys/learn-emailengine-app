@@ -27,7 +27,7 @@ Run EmailEngine with an external Redis instance:
 docker run -d \
   --name emailengine \
   -p 3000:3000 \
-  -e EENGINE_REDIS="redis://redis-host:6379" \
+  -e EENGINE_REDIS="redis://redis-host:6379/8" \
   -e EENGINE_SECRET="your-secret-key-at-least-32-chars" \
   postalsys/emailengine:latest
 ```
@@ -502,7 +502,7 @@ docker rm emailengine
 docker run -d \
   --name emailengine \
   -p 3000:3000 \
-  -e EENGINE_REDIS="redis://redis-host:6379" \
+  -e EENGINE_REDIS="redis://redis-host:6379/8" \
   -e EENGINE_SECRET="your-secret-key" \
   postalsys/emailengine:latest
 ```
@@ -546,7 +546,7 @@ EENGINE_LOG_RAW=false         # Log raw IMAP/SMTP traffic
 
 # Queue settings
 EENGINE_QUEUE_NOTIFY=true     # Enable queue notifications
-EENGINE_MAX_ATTACHMENT_SIZE=5242880  # 5MB in bytes
+EENGINE_MAX_SIZE=5242880  # 5MB in bytes
 
 # Authentication
 EENGINE_APP_NAME=EmailEngine  # Application name

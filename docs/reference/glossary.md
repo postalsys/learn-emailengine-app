@@ -1,0 +1,254 @@
+---
+title: Glossary
+sidebar_position: 10
+description: Technical terms and definitions used in EmailEngine documentation
+---
+
+# Glossary
+
+Technical terms and definitions used throughout the EmailEngine documentation.
+
+## Email Protocol Terms
+
+### IMAP (Internet Message Access Protocol)
+
+A protocol for accessing email messages stored on a mail server. IMAP allows multiple clients to access the same mailbox and keeps messages on the server. EmailEngine maintains persistent IMAP connections to sync email data.
+
+### SMTP (Simple Mail Transfer Protocol)
+
+The standard protocol for sending emails across the internet. EmailEngine uses SMTP connections to submit outgoing messages through email providers.
+
+### IDLE
+
+An IMAP extension that allows the server to notify the client immediately when new messages arrive or existing messages change, without the client having to poll repeatedly. EmailEngine uses IDLE for real-time email notifications.
+
+### UID (Unique Identifier)
+
+A unique number assigned to each message in an IMAP mailbox. UIDs persist across sessions and are used to identify specific messages. EmailEngine uses UIDs internally but exposes its own ID system to users.
+
+### UIDVALIDITY
+
+A value that indicates whether the UIDs in a mailbox are still valid. If UIDVALIDITY changes (e.g., after mailbox reconstruction), all UIDs become invalid and messages must be re-synced. EmailEngine handles UIDVALIDITY changes automatically.
+
+### MODSEQ (Modification Sequence)
+
+A counter that increases each time any message in a mailbox is modified. Used for efficient synchronization - EmailEngine only fetches changes since the last known MODSEQ value.
+
+### Envelope
+
+The metadata of an email message including From, To, Subject, Date, and Message-ID headers. Distinguished from the message body and attachments.
+
+### MIME (Multipurpose Internet Mail Extensions)
+
+A standard for formatting non-ASCII content in email messages, including attachments, HTML content, and international characters.
+
+### Special-Use Folders
+
+Mailboxes with specific purposes defined by the IMAP server, such as Sent, Drafts, Trash, Junk, and Archive. EmailEngine detects these automatically using IMAP SPECIAL-USE extension.
+
+## OAuth2 Terms
+
+### OAuth2 (Open Authorization 2.0)
+
+An authorization framework that allows applications to access user accounts without handling passwords directly. EmailEngine uses OAuth2 for Gmail, Outlook, and other providers.
+
+### Access Token
+
+A short-lived credential (typically 1 hour) that grants access to a user's account. EmailEngine automatically refreshes access tokens before they expire.
+
+### Refresh Token
+
+A long-lived credential used to obtain new access tokens without requiring the user to re-authenticate. EmailEngine stores refresh tokens securely and uses them to maintain persistent access.
+
+### OAuth2 Scope
+
+Permissions that define what actions an application can perform. Examples:
+- `https://mail.google.com/` - Full Gmail access (IMAP/SMTP)
+- `https://www.googleapis.com/auth/gmail.modify` - Gmail API read/write access
+- `https://outlook.office.com/IMAP.AccessAsUser.All` - Outlook IMAP access
+
+### Consent Screen
+
+The authorization page shown to users where they grant permission for an application to access their account. Configured in Google Cloud Console or Azure Portal.
+
+### Client ID / Client Secret
+
+Credentials that identify your application to OAuth2 providers. The Client ID is public; the Client Secret must be kept confidential.
+
+### Service Account
+
+A special type of Google account for applications (not users) that can access resources without user interaction. Requires Google Workspace and domain-wide delegation.
+
+### Domain-Wide Delegation
+
+A feature that allows a service account to impersonate any user in a Google Workspace domain. Configured by organization admins.
+
+### Two-Legged OAuth2
+
+OAuth2 flow where the application authenticates directly without user interaction, typically using service accounts.
+
+### Three-Legged OAuth2
+
+Standard OAuth2 flow involving user consent, where the user authorizes the application through a consent screen.
+
+## EmailEngine Terms
+
+### Account
+
+An email account registered with EmailEngine. Each account represents a connection to one email address and can be accessed via the EmailEngine API.
+
+### Account ID
+
+A unique identifier for an account in EmailEngine. Can be auto-generated or specified during account creation. Used in API endpoints like `/v1/account/{accountId}/...`.
+
+### Message ID
+
+EmailEngine's unique identifier for a message, formatted as a Base64url-encoded string. Different from the email's Message-ID header.
+
+### Sub-connection
+
+Additional IMAP connections that EmailEngine opens to improve performance when syncing large mailboxes. Configured via `subconnections` setting.
+
+### Path
+
+The full path to a mailbox folder, such as `INBOX`, `Sent`, or `Work/Projects`. Used to identify folders in API requests.
+
+### Special Path
+
+A logical folder identifier that maps to actual folder names. Examples: `\Sent`, `\Trash`, `\Drafts`, `\Junk`. EmailEngine resolves these to actual paths automatically.
+
+### Webhook
+
+An HTTP callback that EmailEngine sends to your application when events occur (new message, status change, etc.). Configured globally or per-account.
+
+### Webhook Event
+
+A specific type of notification, such as `messageNew`, `messageSent`, `accountError`. See [Webhook Events Reference](/docs/reference/webhook-events) for complete list.
+
+### Token (API)
+
+An authentication credential for accessing the EmailEngine API. Created in the web interface under Settings > Access Tokens.
+
+### Token Scope
+
+Permissions assigned to an API token. Examples: `api` (full access), `metrics` (Prometheus metrics only), `api.accountId` (single account access).
+
+### Service URL
+
+The public URL where EmailEngine is accessible. Required for OAuth2 callbacks and hosted authentication forms. Set via `serviceUrl` setting.
+
+### Prepared Settings
+
+Configuration values that can be set via environment variables before EmailEngine starts, useful for automated deployments.
+
+## Queue Terms
+
+### Bull / BullMQ
+
+The job queue system used by EmailEngine for background processing. Handles webhooks, email sending, and other async tasks.
+
+### Queue
+
+A named list of jobs waiting to be processed. EmailEngine uses separate queues for different task types (notify, submit, documents).
+
+### Job
+
+A single task in a queue, such as sending a webhook or submitting an email. Jobs can be delayed, retried, or failed.
+
+### Worker
+
+A process that consumes jobs from a queue and executes them. EmailEngine runs multiple workers for parallel processing.
+
+### Dead Letter Queue
+
+Where failed jobs go after exhausting retry attempts. Accessible via Bull Board for debugging.
+
+## Gmail-Specific Terms
+
+### Gmail API
+
+Google's REST API for accessing Gmail, as opposed to IMAP/SMTP access. Provides native support for Gmail labels and categories.
+
+### Cloud Pub/Sub
+
+Google's messaging service used for Gmail API webhooks. Gmail pushes notifications to a Pub/Sub topic, which EmailEngine subscribes to.
+
+### Gmail Labels
+
+Gmail's tagging system for organizing emails. Unlike folders, a single email can have multiple labels. Exposed in EmailEngine webhooks for Gmail API accounts.
+
+### Gmail Categories
+
+Automatic inbox categorization (Primary, Social, Promotions, Updates, Forums). Available through Gmail API integration.
+
+## Microsoft-Specific Terms
+
+### Microsoft Graph API
+
+Microsoft's unified API for accessing Microsoft 365 services including Outlook mail. EmailEngine can use Graph API instead of IMAP/SMTP.
+
+### Azure AD / Entra ID
+
+Microsoft's identity platform for OAuth2 authentication. Required for Outlook/Microsoft 365 OAuth2 integration.
+
+### Shared Mailbox
+
+A mailbox that multiple users can access, common in Microsoft 365. Configured using `delegatedUser` parameter in EmailEngine.
+
+## Performance Terms
+
+### Connection Pool
+
+A set of reusable connections to email servers. EmailEngine maintains connection pools to reduce overhead of establishing new connections.
+
+### Rate Limiting
+
+Restrictions on how many requests can be made in a time period. Email providers enforce rate limits; EmailEngine handles them automatically with backoff.
+
+### Backoff
+
+A strategy for handling rate limits or errors by waiting progressively longer between retry attempts.
+
+### Sync
+
+The process of downloading message metadata and flags from an email server. EmailEngine performs initial sync when an account is added, then incremental syncs for changes.
+
+### Full Sync
+
+Re-downloading all message metadata for a mailbox, typically triggered by UIDVALIDITY changes or mailbox reconstruction.
+
+## Security Terms
+
+### TLS (Transport Layer Security)
+
+Encryption protocol for secure communication. EmailEngine uses TLS for IMAP/SMTP connections and HTTPS for API access.
+
+### STARTTLS
+
+A method to upgrade a plain-text connection to TLS. Used by some IMAP/SMTP servers on standard ports.
+
+### Encryption Secret
+
+A key used by EmailEngine to encrypt sensitive data (passwords, tokens) stored in Redis. Set via `EENGINE_SECRET` environment variable.
+
+### TOTP (Time-based One-Time Password)
+
+A method for two-factor authentication using time-based codes. EmailEngine supports TOTP for admin login.
+
+## Monitoring Terms
+
+### Prometheus
+
+An open-source monitoring system that collects metrics. EmailEngine exposes metrics at `/metrics` endpoint.
+
+### Grafana
+
+A visualization platform commonly used with Prometheus to create dashboards. Can display EmailEngine metrics.
+
+### Health Check
+
+An endpoint (`/health`) that returns EmailEngine's operational status, used by load balancers and monitoring systems.
+
+### Metrics Token
+
+An API token with only `metrics` scope, used by Prometheus to scrape the `/metrics` endpoint securely.

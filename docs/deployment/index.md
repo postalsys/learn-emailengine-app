@@ -142,7 +142,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REDIS_URL=redis://redis:6379
+      - EENGINE_REDIS=redis://redis:6379/8
 ```
 
 **Why:** Quick setup, easy to tear down, includes all dependencies.
@@ -300,7 +300,7 @@ curl http://localhost:3000/health
 NODE_ENV=development
 EENGINE_LOG_LEVEL=trace
 EENGINE_PORT=3001
-REDIS_URL=redis://localhost:6379/8
+EENGINE_REDIS=redis://localhost:6379/8
 ```
 
 ### Staging
@@ -310,7 +310,7 @@ REDIS_URL=redis://localhost:6379/8
 NODE_ENV=production
 EENGINE_LOG_LEVEL=debug
 EENGINE_BASE_URL=https://staging-email.example.com
-REDIS_URL=redis://staging-redis:6379
+EENGINE_REDIS=redis://staging-redis:6379/8
 ```
 
 ### Production

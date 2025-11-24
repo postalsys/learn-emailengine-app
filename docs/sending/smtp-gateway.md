@@ -31,37 +31,37 @@ When the SMTP gateway is enabled:
 
 ## Enabling the SMTP Gateway
 
-### Via Environment Variables
+### Via Settings API (Recommended)
+
+Configure the SMTP gateway using the Settings API:
 
 ```bash
-# Enable SMTP gateway
-EENGINE_SMTP_GATEWAY_ENABLED=true
-EENGINE_SMTP_GATEWAY_PORT=2525
-EENGINE_SMTP_GATEWAY_HOST=0.0.0.0
-
-# Optional: Enable authentication
-EENGINE_SMTP_GATEWAY_AUTH=true
-
-# Optional: TLS/SSL
-EENGINE_SMTP_GATEWAY_SECURE=false
-```
-
-### Via Configuration API
-
-```bash
-curl -XPUT "https://ee.example.com/v1/settings" \
+curl -XPOST "https://ee.example.com/v1/settings" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "smtpGateway": {
-      "enabled": true,
-      "port": 2525,
-      "host": "0.0.0.0",
-      "auth": true,
-      "secure": false
-    }
+    "smtpServerEnabled": true,
+    "smtpServerPort": 2525,
+    "smtpServerHost": "0.0.0.0",
+    "smtpServerAuthEnabled": true,
+    "smtpServerPassword": "optional-global-password"
   }'
 ```
+
+### Via Web Interface
+
+Navigate to **Configuration > SMTP Server** in the EmailEngine admin panel to configure the SMTP gateway settings.
+
+### Configuration Options
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `smtpServerEnabled` | Enable/disable SMTP gateway | `false` |
+| `smtpServerPort` | Port to listen on | `2525` |
+| `smtpServerHost` | Host/interface to bind | `0.0.0.0` |
+| `smtpServerAuthEnabled` | Require authentication | `true` |
+| `smtpServerPassword` | Optional global password | - |
+| `smtpServerTLSEnabled` | Enable TLS/STARTTLS | `false` |
 
 ### Restart EmailEngine
 

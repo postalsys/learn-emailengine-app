@@ -70,7 +70,7 @@ tar xzf source-dist.tar.gz
 cd emailengine
 
 # Install dependencies
-npm install --production
+npm install --omit=dev
 
 # Make globally available
 sudo npm link
@@ -103,31 +103,40 @@ sudo chown emailengine:emailengine /etc/emailengine
 sudo chown emailengine:emailengine /var/log/emailengine
 ```
 
-### 4. Create Configuration File
+### 4. Configuration Options
 
-Create `/etc/emailengine/config.json`:
+EmailEngine can be configured via environment variables (recommended for SystemD) or a TOML configuration file.
 
-```json
-{
-  "dbs": {
-    "redis": "redis://localhost:6379"
-  },
-  "api": {
-    "port": 3000,
-    "host": "127.0.0.1"
-  },
-  "workers": 4,
-  "log": {
-    "level": "info"
-  }
-}
+:::info Environment Variables Recommended
+For SystemD deployments, environment variables in the service file are simpler and more secure than config files. See the service file example below.
+:::
+
+**Optional: Create TOML configuration file** `/etc/emailengine/config.toml`:
+
+```toml
+[dbs]
+redis = "redis://localhost:6379/8"
+
+[api]
+port = 3000
+host = "127.0.0.1"
+
+[service]
+workers = 4
+
+[log]
+level = "info"
 ```
 
 **Set permissions:**
 ```bash
-sudo chown emailengine:emailengine /etc/emailengine/config.json
-sudo chmod 640 /etc/emailengine/config.json
+sudo chown emailengine:emailengine /etc/emailengine/config.toml
+sudo chmod 640 /etc/emailengine/config.toml
 ```
+
+:::warning TOML Format Required
+EmailEngine uses TOML configuration files, NOT JSON. If using a config file, it must have `.toml` extension and use TOML syntax.
+:::
 
 ### 5. Create SystemD Service File
 
@@ -145,22 +154,26 @@ Type=simple
 User=emailengine
 Group=emailengine
 
-# Working directory
+# Working directory (where EmailEngine is installed)
 WorkingDirectory=/opt/emailengine
 
-# Start command
-ExecStart=/usr/bin/emailengine --config=/etc/emailengine/config.toml
+# Start command - use binary directly, no --config flag
+ExecStart=/usr/local/bin/emailengine
 
 # Restart policy
 Restart=always
-RestartSec=10
+RestartSec=5
 StartLimitInterval=300
 StartLimitBurst=5
 
-# Environment variables
+# Environment variables (recommended configuration method)
 Environment="NODE_ENV=production"
-Environment="EENGINE_REDIS=redis://localhost:6379"
+Environment="EENGINE_REDIS=redis://localhost:6379/8"
 Environment="EENGINE_SECRET=your-secret-key-at-least-32-characters"
+Environment="EENGINE_WORKERS=4"
+
+# Optional: Use config file instead of environment variables
+# Environment="NODE_CONFIG_PATH=/etc/emailengine/config.toml"
 
 # Logging
 StandardOutput=journal
@@ -175,9 +188,9 @@ ProtectHome=true
 ReadWritePaths=/var/log/emailengine
 
 # Resource limits
-LimitNOFILE=65536
-MemoryLimit=2G
-CPUQuota=200%
+LimitNOFILE=500000
+LimitNPROC=500000
+LimitFSIZE=infinity
 
 [Install]
 WantedBy=multi-user.target
@@ -211,7 +224,7 @@ sudo systemctl status emailengine
 
 ```ini
 [Service]
-Environment="EENGINE_REDIS=redis://localhost:6379"
+Environment="EENGINE_REDIS=redis://localhost:6379/8"
 Environment="EENGINE_SECRET=your-secret-key"
 Environment="EENGINE_WORKERS=4"
 ```
@@ -222,7 +235,7 @@ Edit `/etc/systemd/system/emailengine.service`:
 
 ```ini
 [Service]
-Environment="EENGINE_REDIS=redis://localhost:6379"
+Environment="EENGINE_REDIS=redis://localhost:6379/8"
 Environment="EENGINE_SECRET=your-secret-key-at-least-32-characters"
 Environment="EENGINE_WORKERS=4"
 Environment="EENGINE_LOG_LEVEL=info"
@@ -234,41 +247,28 @@ sudo systemctl daemon-reload
 sudo systemctl restart emailengine
 ```
 
-### Configuration File
+### Configuration File (TOML)
 
-**Complete `/etc/emailengine/config.json`:**
+**Optional: Complete `/etc/emailengine/config.toml`:**
 
-```json
-{
-  "dbs": {
-    "redis": "redis://localhost:6379"
-  },
-  "api": {
-    "port": 3000,
-    "host": "127.0.0.1",
-    "proxy": true
-  },
-  "workers": 4,
-  "maxConnections": 20,
-  "secret": "${EENGINE_SECRET}",
-  "encryptionSecret": "${EENGINE_SECRET}",
-  "log": {
-    "level": "info",
-    "file": "/var/log/emailengine/app.log"
-  },
-  "webhooks": {
-    "enabled": true,
-    "timeout": 10000
-  },
-  "gmail": {
-    "clientId": "${GMAIL_CLIENT_ID}",
-    "clientSecret": "${GMAIL_CLIENT_SECRET}"
-  }
-}
+```toml
+[dbs]
+redis = "redis://localhost:6379/8"
+
+[api]
+port = 3000
+host = "127.0.0.1"
+proxy = true
+
+[service]
+workers = 4
+
+[log]
+level = "info"
 ```
 
-:::tip Environment Substitution
-Use `${VAR_NAME}` syntax to reference environment variables in config.json.
+:::tip Environment Variables Preferred
+For sensitive values like secrets and OAuth credentials, use environment variables in the service file rather than config files. This is more secure and easier to manage.
 :::
 
 ## Service Management
@@ -325,7 +325,7 @@ sudo systemctl show emailengine
     Tasks: 15 (limit: 4915)
    Memory: 512.5M (limit: 2.0G)
    CGroup: /system.slice/emailengine.service
-           └─12345 /usr/bin/node /usr/local/bin/emailengine --config=/etc/emailengine/config.toml
+           └─12345 /usr/bin/node /usr/local/bin/emailengine
 ```
 
 ## Log Management
@@ -376,19 +376,18 @@ sudo systemctl restart systemd-journald
 
 ### File-Based Logging
 
-**Configure in config.json:**
+**Configure via environment variables:**
 
-```json
-{
-  "log": {
-    "level": "info",
-    "file": "/var/log/emailengine/app.log",
-    "rotate": {
-      "maxFiles": 10,
-      "maxSize": "100m"
-    }
-  }
-}
+```ini
+[Service]
+Environment="EENGINE_LOG_LEVEL=info"
+```
+
+Or in TOML config file:
+
+```toml
+[log]
+level = "info"
 ```
 
 **Set up logrotate:**
@@ -426,7 +425,7 @@ Type=simple
 User=emailengine
 Group=emailengine
 WorkingDirectory=/opt/emailengine
-ExecStart=/usr/bin/emailengine --config=/etc/emailengine/config.toml
+ExecStart=/usr/local/bin/emailengine
 Restart=always
 
 # Security
@@ -463,9 +462,9 @@ WantedBy=multi-user.target
 # Service file
 sudo chmod 644 /etc/systemd/system/emailengine.service
 
-# Configuration files (secrets)
-sudo chmod 640 /etc/emailengine/config.json
-sudo chown root:emailengine /etc/emailengine/config.json
+# Configuration files (if using TOML config)
+sudo chmod 640 /etc/emailengine/config.toml
+sudo chown root:emailengine /etc/emailengine/config.toml
 
 # Environment file (secrets)
 sudo chmod 640 /etc/emailengine/environment
@@ -495,8 +494,9 @@ MemoryHigh=1.5G        # Soft limit (throttling)
 **File descriptor limits:**
 ```ini
 [Service]
-LimitNOFILE=65536      # Max open files
-LimitNPROC=512         # Max processes
+LimitNOFILE=500000     # Max open files (matches official config)
+LimitNPROC=500000      # Max processes
+LimitFSIZE=infinity    # No file size limit
 ```
 
 **IO limits:**
@@ -770,7 +770,7 @@ Group=emailengine
 WorkingDirectory=/opt/emailengine
 
 # Replace with your actual secret from step 3
-Environment="EENGINE_REDIS=redis://localhost:6379"
+Environment="EENGINE_REDIS=redis://localhost:6379/8"
 Environment="EENGINE_SECRET=your-generated-secret-from-step-3"
 Environment="EENGINE_WORKERS=4"
 Environment="EENGINE_LOG_LEVEL=info"

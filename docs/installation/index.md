@@ -17,7 +17,7 @@ tar xzf emailengine.tar.gz
 sudo mv emailengine /usr/local/bin/
 
 # Docker: Run container
-docker run -p 3000:3000 --env EENGINE_REDIS="redis://host.docker.internal:6379" postalsys/emailengine:v2
+docker run -p 3000:3000 --env EENGINE_REDIS="redis://host.docker.internal:6379/8" postalsys/emailengine:v2
 
 # Source: Production deployment
 wget https://go.emailengine.app/source-dist.tar.gz
