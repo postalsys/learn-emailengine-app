@@ -12,24 +12,27 @@ Comprehensive reference for all EmailEngine configuration options.
 EmailEngine can be configured via:
 1. **Environment variables** (highest priority)
 2. **Command-line arguments**
-3. **Configuration file** (config.toml)
+3. **Configuration file** (TOML format)
 :::
 
 ## Configuration Types
 
-### Application Configuration
+### Startup Configuration
 Loaded at startup. Requires restart to apply changes.
 - HTTP port, workers, Redis connection
-- OAuth2 credentials
+- Secret for encryption
 - License key
 - Logging settings
+- TLS settings
 
 ### Runtime Configuration
 Can be updated via Settings API or web interface without restart.
-- Webhook URLs
+- Service URL
+- Webhook URLs and settings
 - Email sending limits
 - SMTP gateways
-- Queue settings
+- Proxy settings
+- OAuth2 applications (configured via API, not environment variables)
 
 ## Core Settings
 
@@ -38,7 +41,7 @@ Can be updated via Settings API or web interface without restart.
 #### Port
 
 **Environment:** `EENGINE_PORT` or `EENGINE_API_PORT`
-**Command line:** `--port=3000` or `--api.port=3000`
+**Command line:** `--api.port=3000`
 **Config file:** `api.port`
 **Default:** `3000`
 
@@ -49,20 +52,19 @@ HTTP port for the web interface and API.
 export EENGINE_PORT=8080
 
 # Command line
-emailengine --port=8080
+emailengine --api.port=8080
+```
 
-# Config file
-{
-  "api": {
-    "port": 8080
-  }
-}
+```toml
+# Config file (config.toml)
+[api]
+port = 8080
 ```
 
 #### Host
 
 **Environment:** `EENGINE_HOST` or `EENGINE_API_HOST`
-**Command line:** `--host=0.0.0.0` or `--api.host=0.0.0.0`
+**Command line:** `--api.host=0.0.0.0`
 **Config file:** `api.host`
 **Default:** `127.0.0.1`
 
@@ -76,39 +78,60 @@ EENGINE_HOST=0.0.0.0
 Only use `0.0.0.0` if behind a reverse proxy. Otherwise, bind to `127.0.0.1`.
 :::
 
-#### Base URL
+#### Service URL
 
-**Environment:** `EENGINE_BASE_URL`
-**Command line:** `--baseUrl=https://example.com`
-**Default:** Auto-detected
+**Runtime config:** Settings API or web interface
+**Setting name:** `serviceUrl`
 
-Base URL for generating links (OAuth redirects, etc.).
+Base URL for generating links (OAuth redirects, webhook URLs, authentication forms). This is a **runtime setting**, not an environment variable.
 
 ```bash
-EENGINE_BASE_URL=https://emailengine.example.com
+# Configure via API
+curl -X POST https://emailengine.example.com/v1/settings \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{"serviceUrl": "https://emailengine.example.com"}'
+
+# Or via EENGINE_SETTINGS environment variable at startup
+EENGINE_SETTINGS='{"serviceUrl":"https://emailengine.example.com"}'
 ```
 
 ### Workers
 
-#### Worker Threads
+#### IMAP Worker Threads
 
 **Environment:** `EENGINE_WORKERS`
-**Command line:** `--workers=4`
-**Config file:** `workers`
-**Default:** `1`
+**Command line:** `--workers.imap=4`
+**Config file:** `workers.imap`
+**Default:** `4`
 
-Number of worker threads for processing accounts.
+Number of IMAP worker threads for processing accounts.
 
 ```bash
-EENGINE_WORKERS=4
+EENGINE_WORKERS=8
 ```
 
-**Recommendation:** Set to number of CPU cores.
+**Recommendation:** Set to number of CPU cores for optimal performance.
 
 ```bash
-# Auto-detect CPU cores
+# Auto-detect CPU cores (Linux)
 EENGINE_WORKERS=$(nproc)
 ```
+
+#### Webhook Workers
+
+**Environment:** `EENGINE_WORKERS_WEBHOOKS`
+**Config file:** `workers.webhooks`
+**Default:** `1`
+
+Number of webhook delivery worker threads.
+
+#### Submit Workers
+
+**Environment:** `EENGINE_WORKERS_SUBMIT`
+**Config file:** `workers.submit`
+**Default:** `1`
+
+Number of email submission worker threads.
 
 ### Redis Configuration
 
@@ -128,14 +151,28 @@ EENGINE_REDIS=redis://localhost:6379/8
 # With password
 EENGINE_REDIS=redis://:password@localhost:6379/8
 
+# With username and password
+EENGINE_REDIS=redis://username:password@localhost:6379/8
+
 # With different database number
 EENGINE_REDIS=redis://localhost:6379/5
 
-# TLS
-EENGINE_REDIS=rediss://localhost:6379
+# TLS connection
+EENGINE_REDIS=rediss://localhost:6379/8
 
-# Sentinel
-EENGINE_REDIS=redis://sentinel1:26379,sentinel2:26379/mymaster
+# IPv6 only
+EENGINE_REDIS=redis://localhost:6379/8?family=6
+```
+
+#### Redis Key Prefix
+
+**Environment:** `EENGINE_REDIS_PREFIX`
+**Default:** Empty
+
+Prefix for all Redis keys. Useful when sharing a Redis instance.
+
+```bash
+EENGINE_REDIS_PREFIX=ee1:
 ```
 
 ### Security
@@ -145,47 +182,32 @@ EENGINE_REDIS=redis://sentinel1:26379,sentinel2:26379/mymaster
 **Environment:** `EENGINE_SECRET`
 **Command line:** `--service.secret=...`
 **Config file:** `service.secret`
-**Required:** Yes
+**Required:** Yes (for production)
 
-Secret for encrypting session tokens and account credentials. **Minimum 32 characters.**
+Secret used for encrypting session tokens AND account credentials (passwords, OAuth tokens). This is a single secret that serves both purposes.
 
 **Generate and save:**
 ```bash
-# Generate and save to .env file
-echo "EENGINE_SECRET=$(openssl rand -hex 32)" > .env
-```
-
-:::danger Required
-EmailEngine will not start without this. Generate a strong random value.
-:::
-
-#### Encryption Secret
-
-**Environment:** `EENGINE_SECRET`
-**Command line:** `--encryptionSecret=...`
-**Config file:** `encryptionSecret`
-**Recommended:** Yes
-
-Secret for field encryption (passwords, tokens). **Minimum 32 characters.**
-
-```bash
-# Generate a secret and save it to .env file
+# Generate a 64-character hex secret
 openssl rand -hex 32
 
-# Add to .env file:
-EENGINE_SECRET=generated-secret-value-here
+# Add to environment or .env file
+EENGINE_SECRET=your-generated-secret-here
 ```
 
-#### Encryption Enabled
+:::danger Required for Production
+EmailEngine will start without this secret in development mode, but **all sensitive data will be stored unencrypted**. Always set a strong secret in production.
+:::
 
-**Environment:** `EENGINE_ENCRYPT`
-**Config file:** `encrypt`
-**Default:** `true` (if encryptionSecret set)
+:::warning Secret Management
+- Keep a secure backup of your secret
+- If lost, encrypted credentials cannot be recovered
+- Changing the secret requires re-encrypting existing data using the `encrypt` command
+:::
 
-Enable field-level encryption.
-
+**Re-encrypting data after secret change:**
 ```bash
-EENGINE_ENCRYPT=true
+emailengine encrypt --dbs.redis="redis://url" --service.secret="new-secret" --decrypt="old-secret"
 ```
 
 ### Logging
@@ -212,18 +234,6 @@ EENGINE_LOG_LEVEL=trace
 EENGINE_LOG_LEVEL=warn
 ```
 
-#### Log File
-
-**Environment:** `EENGINE_LOG_FILE`
-**Config file:** `log.file`
-**Default:** None (stdout only)
-
-Log file path.
-
-```bash
-EENGINE_LOG_FILE=/var/log/emailengine/app.log
-```
-
 #### Log Raw
 
 **Environment:** `EENGINE_LOG_RAW`
@@ -242,228 +252,303 @@ Enabling this creates very large log files. Only use for debugging.
 
 ## OAuth2 Configuration
 
-### Gmail OAuth2
+OAuth2 applications (Gmail, Outlook, Mail.ru) are configured via the **Settings API or web interface**, not environment variables.
 
-#### Client ID
+### Configuring OAuth2 via API
 
-**Environment:** `EENGINE_GMAIL_CLIENT_ID`
-**Config file:** `gmail.clientId`
+**Endpoint:** `POST /v1/oauth2` - [API Reference](/docs/api/post-v-1-oauth-2)
 
-Google OAuth2 client ID.
-
-```bash
-EENGINE_GMAIL_CLIENT_ID=123456789.apps.googleusercontent.com
-```
-
-#### Client Secret
-
-**Environment:** `EENGINE_GMAIL_CLIENT_SECRET`
-**Config file:** `gmail.clientSecret`
-
-Google OAuth2 client secret.
+**Supported providers:**
+- `gmail` - Gmail with 3-legged OAuth2 (user consent)
+- `gmailService` - Gmail with service account (2-legged OAuth2)
+- `outlook` - Microsoft 365 / Outlook
+- `mailRu` - Mail.ru
 
 ```bash
-EENGINE_GMAIL_CLIENT_SECRET=GOCSPX-xxxxxxxxxxxxx
+# Create Gmail OAuth2 application (3-legged OAuth2)
+curl -X POST https://emailengine.example.com/v1/oauth2 \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Gmail",
+    "provider": "gmail",
+    "clientId": "123456789.apps.googleusercontent.com",
+    "clientSecret": "GOCSPX-xxxxxxxxxxxxx",
+    "baseScopes": "imap",
+    "enabled": true
+  }'
+
+# Create Outlook OAuth2 application
+curl -X POST https://emailengine.example.com/v1/oauth2 \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Outlook",
+    "provider": "outlook",
+    "clientId": "12345678-1234-1234-1234-123456789012",
+    "clientSecret": "your-azure-secret",
+    "authority": "common",
+    "enabled": true
+  }'
+
+# Create Gmail Service Account application (2-legged OAuth2)
+curl -X POST https://emailengine.example.com/v1/oauth2 \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Gmail Service Account",
+    "provider": "gmailService",
+    "serviceClient": "123456789012345678901",
+    "serviceClientEmail": "myapp@project-123.iam.gserviceaccount.com",
+    "serviceKey": "-----BEGIN PRIVATE KEY-----\nMIIEv...\n-----END PRIVATE KEY-----",
+    "enabled": true
+  }'
 ```
 
-#### Service Client
+**Key fields:**
+- `name` - Display name for the application
+- `provider` - One of: `gmail`, `gmailService`, `outlook`, `mailRu`
+- `clientId` / `clientSecret` - OAuth2 credentials (for 3-legged OAuth2)
+- `serviceClient` / `serviceClientEmail` / `serviceKey` - Service account credentials (for Gmail service accounts)
+- `authority` - Microsoft tenant: `common`, `organizations`, `consumers`, or tenant ID
+- `baseScopes` - Connection type: `imap`, `api`, or `pubsub`
+- `enabled` - Whether the application is active
 
-**Environment:** `EENGINE_GMAIL_SERVICE_CLIENT`
-**Config file:** `gmail.serviceClient`
+### Configuring OAuth2 via Web Interface
 
-Path to Google Service Account JSON file.
+1. Navigate to **Configuration > OAuth2**
+2. Click **Register new application**
+3. Select provider (Gmail, Outlook, Gmail Service Account, or Mail.ru)
+4. Enter your OAuth2 credentials
+5. Click **Register application**
 
-```bash
-EENGINE_GMAIL_SERVICE_CLIENT=/etc/emailengine/service-account.json
-```
+### Related API Endpoints
 
-#### Service Key
+- [List OAuth2 applications](/docs/api/get-v-1-oauth-2) - `GET /v1/oauth2`
+- [Register OAuth2 application](/docs/api/post-v-1-oauth-2) - `POST /v1/oauth2`
+- [Get OAuth2 application](/docs/api/get-v-1-oauth-2-app) - `GET /v1/oauth2/{app}`
+- [Update OAuth2 application](/docs/api/put-v-1-oauth-2-app) - `PUT /v1/oauth2/{app}`
+- [Delete OAuth2 application](/docs/api/delete-v-1-oauth-2-app) - `DELETE /v1/oauth2/{app}`
 
-**Environment:** `EENGINE_GMAIL_SERVICE_KEY`
-**Config file:** `gmail.serviceKey`
-
-Google Service Account private key (PEM format).
-
-### Outlook/Office 365 OAuth2
-
-#### Authority
-
-**Environment:** `EENGINE_OUTLOOK_AUTHORITY`
-**Config file:** `outlook.authority`
-**Default:** `https://login.microsoftonline.com/common`
-
-Microsoft OAuth2 authority URL.
-
-```bash
-# Multi-tenant (default)
-EENGINE_OUTLOOK_AUTHORITY=https://login.microsoftonline.com/common
-
-# Single tenant
-EENGINE_OUTLOOK_AUTHORITY=https://login.microsoftonline.com/{tenant-id}
-```
-
-#### Client ID
-
-**Environment:** `EENGINE_OUTLOOK_CLIENT_ID`
-**Config file:** `outlook.clientId`
-
-Microsoft OAuth2 application ID.
-
-```bash
-EENGINE_OUTLOOK_CLIENT_ID=12345678-1234-1234-1234-123456789012
-```
-
-#### Client Secret
-
-**Environment:** `EENGINE_OUTLOOK_CLIENT_SECRET`
-**Config file:** `outlook.clientSecret`
-
-Microsoft OAuth2 client secret.
-
-```bash
-EENGINE_OUTLOOK_CLIENT_SECRET=abc~123456789
-```
-
-### Generic OAuth2
-
-#### Provider
-
-**Config file:** `oauth2.{provider}.provider`
-
-OAuth2 provider type: `gmail`, `outlook`, or `custom`.
-
-#### Auth URL
-
-**Config file:** `oauth2.{provider}.authUrl`
-
-Authorization endpoint URL.
-
-#### Token URL
-
-**Config file:** `oauth2.{provider}.tokenUrl`
-
-Token endpoint URL.
-
-#### Scopes
-
-**Config file:** `oauth2.{provider}.scopes`
-
-OAuth2 scopes array.
-
-```json
-{
-  "oauth2": {
-    "custom-provider": {
-      "provider": "custom",
-      "clientId": "...",
-      "clientSecret": "...",
-      "authUrl": "https://oauth.example.com/auth",
-      "tokenUrl": "https://oauth.example.com/token",
-      "scopes": ["email", "profile"]
-    }
-  }
-}
-```
+For detailed OAuth2 setup instructions, see:
+- [Gmail OAuth2 Setup](/docs/accounts/gmail-oauth2)
+- [Outlook OAuth2 Setup](/docs/accounts/outlook-oauth2)
 
 ## Performance Tuning
 
-### Max Connections
+### Command Timeout
 
-**Environment:** `EENGINE_MAX_CONNECTIONS`
-**Config file:** `maxConnections`
-**Default:** `10`
+**Environment:** `EENGINE_TIMEOUT`
+**Command line:** `--service.commandTimeout=10000`
+**Config file:** `service.commandTimeout`
+**Default:** `10000` (10 seconds)
 
-Maximum concurrent IMAP connections per account.
+Timeout for IMAP commands in milliseconds.
 
 ```bash
-EENGINE_MAX_CONNECTIONS=20
+EENGINE_TIMEOUT=30000
 ```
 
-**Recommendation:** 10-20 for most use cases.
+### Fetch Batch Size
 
-### Chunk Size
+**Environment:** `EENGINE_FETCH_BATCH_SIZE`
+**Command line:** `--service.fetchBatchSize=1000`
+**Config file:** `service.fetchBatchSize`
+**Default:** `1000`
+
+Number of messages to fetch per batch during synchronization.
+
+```bash
+EENGINE_FETCH_BATCH_SIZE=500
+```
+
+**Lower values:** Slower sync, less memory usage
+**Higher values:** Faster sync, more memory usage
+
+### Download Chunk Size
 
 **Environment:** `EENGINE_CHUNK_SIZE`
-**Config file:** `chunkSize`
-**Default:** `5000`
+**Default:** `1000000` (1 MB)
 
-Number of messages to fetch per batch during initial sync.
+Chunk size for streaming large message downloads.
 
 ```bash
-EENGINE_CHUNK_SIZE=2500
+EENGINE_CHUNK_SIZE=2000000
 ```
 
-**Lower values:** Slower sync, less memory
-**Higher values:** Faster sync, more memory
-
-### Fetch Timeout
+### URL Fetch Timeout
 
 **Environment:** `EENGINE_FETCH_TIMEOUT`
-**Config file:** `fetchTimeout`
 **Default:** `90000` (90 seconds)
 
-Timeout for fetching message content in milliseconds.
+Timeout for fetching external URLs (attachments, templates) in milliseconds.
 
 ```bash
 EENGINE_FETCH_TIMEOUT=120000
 ```
 
-### Pool Size
+### Connection Setup Delay
 
-**Environment:** `EENGINE_POOL_SIZE`
-**Config file:** `poolSize`
-**Default:** `10`
+**Environment:** `EENGINE_CONNECTION_SETUP_DELAY`
+**Default:** `0`
 
-Redis connection pool size.
+Delay in milliseconds between setting up account connections. Useful for rate limiting during startup.
 
 ```bash
-EENGINE_POOL_SIZE=20
+EENGINE_CONNECTION_SETUP_DELAY=100
 ```
+
+## API Server Settings
+
+### Max Body Size
+
+**Environment:** `EENGINE_MAX_BODY_SIZE`
+**Default:** `50MB`
+
+Maximum request body size for API requests.
+
+```bash
+EENGINE_MAX_BODY_SIZE=100MB
+```
+
+### Max Payload Timeout
+
+**Environment:** `EENGINE_MAX_PAYLOAD_TIMEOUT`
+**Default:** `10000` (10 seconds)
+
+Timeout for receiving request payloads.
+
+```bash
+EENGINE_MAX_PAYLOAD_TIMEOUT=30000
+```
+
+### CORS Configuration
+
+#### CORS Origin
+
+**Environment:** `EENGINE_CORS_ORIGIN`
+**Default:** None (CORS disabled)
+
+Allowed CORS origins. Set to `*` for all origins or specific domain.
+
+```bash
+EENGINE_CORS_ORIGIN=https://your-app.com
+```
+
+#### CORS Max Age
+
+**Environment:** `EENGINE_CORS_MAX_AGE`
+**Default:** `60`
+
+CORS preflight cache duration in seconds.
+
+```bash
+EENGINE_CORS_MAX_AGE=3600
+```
+
+### API Authentication
+
+#### Require API Authentication
+
+**Environment:** `EENGINE_REQUIRE_API_AUTH`
+**Default:** `true`
+
+Whether API requests require authentication tokens.
+
+```bash
+# Disable for development only
+EENGINE_REQUIRE_API_AUTH=false
+```
+
+:::danger Security
+Never disable API authentication in production.
+:::
+
+### TLS Configuration
+
+#### Enable API TLS
+
+**Environment:** `EENGINE_API_TLS`
+**Default:** `false`
+
+Enable TLS for the API server.
+
+```bash
+EENGINE_API_TLS=true
+```
+
+#### TLS Minimum Version
+
+**Environment:** `EENGINE_TLS_MIN_VERSION`
+**Default:** `TLSv1`
+
+Minimum TLS version to accept.
+
+```bash
+EENGINE_TLS_MIN_VERSION=TLSv1.2
+```
+
+#### TLS Ciphers
+
+**Environment:** `EENGINE_TLS_CIPHERS`
+**Default:** `DEFAULT@SECLEVEL=0`
+
+TLS cipher suites to use.
+
+```bash
+EENGINE_TLS_CIPHERS=ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384
+```
+
+#### TLS Min DH Size
+
+**Environment:** `EENGINE_TLS_MIN_DH_SIZE`
+**Default:** `1024`
+
+Minimum DH parameter size.
+
+```bash
+EENGINE_TLS_MIN_DH_SIZE=2048
+```
+
+### Reverse Proxy Mode
+
+**Environment:** `EENGINE_API_PROXY`
+**Default:** `false`
+
+When enabled, client IP addresses are read from the `X-Forwarded-For` header instead of the socket connection. Enable this when running EmailEngine behind a reverse proxy (Nginx, HAProxy, load balancer, etc.).
+
+```bash
+EENGINE_API_PROXY=true
+```
+
+:::warning Security
+Only enable this if EmailEngine is behind a trusted reverse proxy. Otherwise, clients could spoof their IP address by setting the `X-Forwarded-For` header.
+:::
 
 ## Webhooks
 
-### Webhook URL
+Webhook settings are configured via the **Settings API or web interface**.
 
-**Runtime config:** Settings API or web interface
-**Default:** None
-
-Webhook destination URL.
+### Configure Webhooks via API
 
 ```bash
-# Via API
+# Set webhook URL and events
 curl -X POST https://emailengine.example.com/v1/settings \
   -H "Authorization: Bearer TOKEN" \
-  -d '{"webhooksUrl": "https://your-app.com/webhooks"}'
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhooks": "https://your-app.com/webhooks",
+    "webhooksEnabled": true,
+    "webhookEvents": ["messageNew", "messageDeleted", "accountAuthenticationError"]
+  }'
 ```
 
-### Webhook Timeout
+### Pre-configure Webhooks at Startup
 
-**Config file:** `webhooks.timeout`
-**Default:** `10000` (10 seconds)
+Use `EENGINE_SETTINGS` to configure webhooks at startup:
 
-Webhook request timeout in milliseconds.
-
-```json
-{
-  "webhooks": {
-    "timeout": 15000
-  }
-}
-```
-
-### Webhook Retry
-
-**Config file:** `webhooks.retry`
-**Default:** `3`
-
-Number of retry attempts for failed webhooks.
-
-```json
-{
-  "webhooks": {
-    "retry": 5
-  }
-}
+```bash
+EENGINE_SETTINGS='{"webhooks":"https://your-app.com/webhooks","webhooksEnabled":true,"webhookEvents":["*"]}'
 ```
 
 ## Monitoring
@@ -477,19 +562,22 @@ The Prometheus metrics endpoint is available at `/metrics` on the main API serve
 **Authentication:** Requires API token with `metrics` scope (or `*` for full access)
 
 ```bash
-# Create a metrics-only token
+# Create a metrics-only token via CLI
 emailengine tokens issue -d "Prometheus" -s "metrics"
 
-# Access metrics
-curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:3000/metrics
-```
+# Or create via API
+curl -X POST https://emailengine.example.com/v1/token \
+  -H "Authorization: Bearer ADMIN_TOKEN" \
+  -d '{"description": "Prometheus", "scopes": ["metrics"]}'
 
-**Note:** There is no separate metrics server. Metrics are served on the same port as the main API (configured via `EENGINE_PORT` or `PORT` environment variable, default: 3000).
+# Access metrics
+curl -H "Authorization: Bearer METRICS_TOKEN" http://localhost:3000/metrics
+```
 
 ### Health Check
 
 **Endpoint:** `/health`
-**Always enabled**
+**Always enabled, no authentication required**
 
 Returns health status.
 
@@ -503,173 +591,330 @@ curl http://localhost:3000/health
 
 **Environment:** `EENGINE_PREPARED_LICENSE`
 **Command line:** `--preparedLicense=...`
+**Config file:** `preparedLicense`
 **Default:** 14-day trial
 
-Production license key in PEM format or exported format.
+Production license key.
 
 ```bash
-# PEM format (recommended)
+# From file
+EENGINE_PREPARED_LICENSE="$(cat /path/to/license.txt)"
+
+# Inline (PEM format)
 EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----
 Application: EmailEngine
 Licensed to: Your Company
 
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 -----END LICENSE-----"
-
-# Exported format
-EENGINE_PREPARED_LICENSE="i0-AgqFsxFWFoWvEDGC7..."
 ```
 
 :::info Trial Mode
-Without a license key, EmailEngine runs in 14-day trial mode with full functionality. Activate trial via dashboard button.
+Without a license key, EmailEngine runs in 14-day trial mode with full functionality. Activate trial via the dashboard.
 :::
 
-## Advanced Settings
+## Pre-configured Settings
 
-### Pre-processing
+### Prepared Settings
 
-**Config file:** `preProcessing`
+**Environment:** `EENGINE_SETTINGS`
 
-JavaScript code for pre-processing incoming messages.
-
-```json
-{
-  "preProcessing": "if (payload.from.address === 'spam@example.com') { return false; }"
-}
-```
-
-### Local Addresses
-
-**Config file:** `localAddresses`
-
-Array of local IP addresses for outbound connections.
-
-```json
-{
-  "localAddresses": [
-    "192.0.2.1",
-    "192.0.2.2",
-    "192.0.2.3"
-  ]
-}
-```
-
-### Proxy
-
-#### IMAP Proxy
-
-**Config file:** `imap.proxy`
-
-SOCKS5 proxy for IMAP connections.
-
-```json
-{
-  "imap": {
-    "proxy": "socks5://proxy.example.com:1080"
-  }
-}
-```
-
-#### SMTP Proxy
-
-**Config file:** `smtp.proxy`
-
-SOCKS5 proxy for SMTP connections.
-
-```json
-{
-  "smtp": {
-    "proxy": "socks5://proxy.example.com:1080"
-  }
-}
-```
-
-### Custom Headers
-
-#### IMAP Headers
-
-**Config file:** `imap.headers`
-
-Custom headers to fetch.
-
-```json
-{
-  "imap": {
-    "headers": ["X-Custom-Header", "X-Priority"]
-  }
-}
-```
-
-### Queue Settings
-
-#### Queue Concurrency
-
-**Runtime config:** Settings API
-**Default:** `4`
-
-Number of concurrent webhook/email processing jobs.
+JSON string of runtime settings to apply at startup.
 
 ```bash
-curl -X PUT https://emailengine.example.com/v1/settings/queue/webhooks \
-  -d '{"concurrency": 8}'
+EENGINE_SETTINGS='{"serviceUrl":"https://emailengine.example.com","webhooks":"https://your-app.com/webhooks","webhooksEnabled":true}'
 ```
 
-#### Queue Timeout
+### Prepared API Token
 
-**Runtime config:** Settings API
-**Default:** `10000` (10 seconds)
+**Environment:** `EENGINE_PREPARED_TOKEN`
+**Command line:** `--preparedToken=...`
+**Config file:** `preparedToken`
 
-Job timeout in milliseconds.
+Pre-configure an API access token at startup. This accepts an **exported token hash**, not the actual access token value.
 
-## Email Sending
-
-### SMTP Server
-
-#### Default SMTP
-
-**Config file:** `smtp`
-
-Default SMTP settings for sending.
-
-```json
-{
-  "smtp": {
-    "host": "smtp.gmail.com",
-    "port": 587,
-    "secure": false,
-    "auth": {
-      "user": "user@gmail.com",
-      "pass": "password"
-    }
-  }
-}
-```
-
-### Sending Limits
-
-#### Daily Limit
-
-**Runtime config:** Settings API
-**Default:** Unlimited
-
-Maximum emails per account per day.
+**Workflow:**
+1. Generate a token: `emailengine tokens issue -d "API Token" -s "*"`
+2. Export the token: `emailengine tokens export -t <token-value>`
+3. Use the exported string (not the original token) as `EENGINE_PREPARED_TOKEN`
 
 ```bash
-curl -X POST https://emailengine.example.com/v1/settings \
-  -d '{"sendingLimitDaily": 500}'
+# The value is an exported token hash from "emailengine tokens export"
+EENGINE_PREPARED_TOKEN=hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxNTYzYTFlM2I1NjVkYmEzZWJjMzk4ZjI4OWZjNjgzN...
 ```
 
-#### Rate Limit
+For complete token management workflow, see [Prepared Tokens](/docs/configuration/prepared-settings/tokens).
 
-**Runtime config:** Settings API
-**Default:** Unlimited
+### Prepared Admin Password
 
-Maximum emails per account per hour.
+**Environment:** `EENGINE_PREPARED_PASSWORD`
+**Command line:** `--preparedPassword=...`
+**Config file:** `preparedPassword`
+
+Pre-configure the admin password at startup. This accepts a **base64url-encoded password hash**, not a plain password.
+
+**Workflow:**
+1. Generate a password hash: `emailengine password -p "your-password" --hash`
+2. Use the returned hash as `EENGINE_PREPARED_PASSWORD`
 
 ```bash
-curl -X POST https://emailengine.example.com/v1/settings \
-  -d '{"sendingLimitHourly": 50}'
+# Generate hash
+emailengine password -p "my-secure-password" --hash
+# Output: JHBia2RmMi1zaGE1MTIkaTEwMDAwMCRhYmNkZWYxMjM0NTY3ODkw...
+
+# Use the hash (not the plain password)
+EENGINE_PREPARED_PASSWORD=JHBia2RmMi1zaGE1MTIkaTEwMDAwMCRhYmNkZWYxMjM0NTY3ODkw...
 ```
+
+### Disable Setup Warnings
+
+**Environment:** `EENGINE_DISABLE_SETUP_WARNINGS`
+**Default:** `false`
+
+Disable admin password setup warnings.
+
+```bash
+EENGINE_DISABLE_SETUP_WARNINGS=true
+```
+
+## Admin Access Control
+
+### Admin Access Addresses
+
+**Environment:** `EENGINE_ADMIN_ACCESS_ADDRESSES`
+**Default:** All addresses
+
+Comma-separated list of IP addresses allowed to access admin interface.
+
+```bash
+EENGINE_ADMIN_ACCESS_ADDRESSES=127.0.0.1,10.0.0.0/8
+```
+
+### Disable Message Browser
+
+**Environment:** `EENGINE_DISABLE_MESSAGE_BROWSER`
+**Default:** `false`
+
+Disable the message browser in the admin interface.
+
+```bash
+EENGINE_DISABLE_MESSAGE_BROWSER=true
+```
+
+## IMAP Settings
+
+### Disable IMAP Compression
+
+**Environment:** `EENGINE_DISABLE_COMPRESSION`
+**Default:** `false`
+
+Disable IMAP COMPRESS extension.
+
+```bash
+EENGINE_DISABLE_COMPRESSION=true
+```
+
+### IMAP Socket Timeout
+
+**Environment:** `EENGINE_IMAP_SOCKET_TIMEOUT`
+**Default:** None (system default)
+
+Socket timeout for IMAP connections in milliseconds.
+
+```bash
+EENGINE_IMAP_SOCKET_TIMEOUT=300000
+```
+
+### Max IMAP Auth Failure Time
+
+**Environment:** `EENGINE_MAX_IMAP_AUTH_FAILURE_TIME`
+**Default:** `3d` (3 days)
+
+Time before disabling IMAP connections after repeated auth failures.
+
+```bash
+EENGINE_MAX_IMAP_AUTH_FAILURE_TIME=1d
+```
+
+## Queue Settings
+
+### Submit Queue Concurrency
+
+**Environment:** `EENGINE_SUBMIT_QC`
+**Default:** `1`
+
+Concurrency for email submission queue.
+
+```bash
+EENGINE_SUBMIT_QC=4
+```
+
+### Submit Delay
+
+**Environment:** `EENGINE_SUBMIT_DELAY`
+**Default:** None
+
+Delay between email submissions in milliseconds.
+
+```bash
+EENGINE_SUBMIT_DELAY=1000
+```
+
+### Notify Queue Concurrency
+
+**Environment:** `EENGINE_NOTIFY_QC`
+**Default:** `1`
+
+Concurrency for notification/webhook queue.
+
+```bash
+EENGINE_NOTIFY_QC=4
+```
+
+### Queue Cleanup Time
+
+**Environment:** `EENGINE_QUEUE_REMOVE_AFTER`
+**Default:** `0` (no cleanup)
+
+Time to keep completed jobs before cleanup.
+
+```bash
+EENGINE_QUEUE_REMOVE_AFTER=86400000
+```
+
+## SMTP Proxy Server
+
+EmailEngine can run an SMTP proxy server that accepts SMTP connections and routes them through configured accounts.
+
+### Enable SMTP Proxy
+
+**Environment:** `EENGINE_SMTP_ENABLED`
+**Default:** `false`
+
+```bash
+EENGINE_SMTP_ENABLED=true
+```
+
+### SMTP Proxy Port
+
+**Environment:** `EENGINE_SMTP_PORT`
+**Default:** `2525`
+
+```bash
+EENGINE_SMTP_PORT=587
+```
+
+### SMTP Proxy Host
+
+**Environment:** `EENGINE_SMTP_HOST`
+**Default:** `127.0.0.1`
+
+```bash
+EENGINE_SMTP_HOST=0.0.0.0
+```
+
+### SMTP Proxy Secret
+
+**Environment:** `EENGINE_SMTP_SECRET`
+**Default:** Empty
+
+Password for SMTP proxy authentication. If not set, API access tokens with the `smtp` scope can be used for authentication instead.
+
+```bash
+EENGINE_SMTP_SECRET=your-smtp-password
+```
+
+### SMTP PROXY Protocol
+
+**Environment:** `EENGINE_SMTP_PROXY`
+**Default:** `false`
+
+Enable PROXY protocol for SMTP proxy server.
+
+```bash
+EENGINE_SMTP_PROXY=true
+```
+
+### SMTP Max Message Size
+
+**Environment:** `EENGINE_MAX_SMTP_MESSAGE_SIZE`
+**Default:** `25MB`
+
+Maximum message size the SMTP proxy server accepts for delivery.
+
+```bash
+EENGINE_MAX_SMTP_MESSAGE_SIZE=50MB
+```
+
+## IMAP Proxy Server
+
+EmailEngine can run an IMAP proxy server that accepts IMAP connections and routes them through configured accounts.
+
+### Enable IMAP Proxy
+
+**Environment:** `EENGINE_IMAP_PROXY_ENABLED`
+**Default:** `false`
+
+```bash
+EENGINE_IMAP_PROXY_ENABLED=true
+```
+
+### IMAP Proxy Port
+
+**Environment:** `EENGINE_IMAP_PROXY_PORT`
+**Default:** `2993`
+
+```bash
+EENGINE_IMAP_PROXY_PORT=993
+```
+
+### IMAP Proxy Host
+
+**Environment:** `EENGINE_IMAP_PROXY_HOST`
+**Default:** `127.0.0.1`
+
+```bash
+EENGINE_IMAP_PROXY_HOST=0.0.0.0
+```
+
+### IMAP Proxy Secret
+
+**Environment:** `EENGINE_IMAP_PROXY_SECRET`
+**Default:** Empty
+
+Password for IMAP proxy authentication. If not set, API access tokens with the `imap-proxy` scope can be used for authentication instead.
+
+```bash
+EENGINE_IMAP_PROXY_SECRET=your-imap-password
+```
+
+### IMAP PROXY Protocol
+
+**Environment:** `EENGINE_IMAP_PROXY_PROXY`
+**Default:** `false`
+
+Enable PROXY protocol for IMAP proxy.
+
+```bash
+EENGINE_IMAP_PROXY_PROXY=true
+```
+
+## OAuth Token Access
+
+### Enable OAuth Tokens API
+
+**Environment:** `EENGINE_ENABLE_OAUTH_TOKENS_API`
+**Default:** `false`
+
+Allow retrieving raw OAuth tokens via API.
+
+```bash
+EENGINE_ENABLE_OAUTH_TOKENS_API=true
+```
+
+:::warning Security
+Only enable if you need to access raw OAuth tokens. This exposes sensitive credentials.
+:::
 
 ## Environment Variable Reference
 
@@ -679,25 +924,39 @@ curl -X POST https://emailengine.example.com/v1/settings \
 |---------------------|---------|-------------|
 | `EENGINE_PORT` | `3000` | HTTP port |
 | `EENGINE_HOST` | `127.0.0.1` | Bind address |
-| `EENGINE_BASE_URL` | Auto | Base URL |
 | `EENGINE_REDIS` | `redis://127.0.0.1:6379/8` | Redis URL |
-| `EENGINE_SECRET` | Recommended | Encryption secret |
-| `EENGINE_WORKERS` | `4` | Worker threads |
+| `EENGINE_SECRET` | None | Encryption secret (required for production) |
+| `EENGINE_WORKERS` | `4` | IMAP worker threads |
 | `EENGINE_LOG_LEVEL` | `trace` | Log level |
-| `EENGINE_PREPARED_LICENSE` | None | License key (PEM or exported format) |
-| `EENGINE_GMAIL_CLIENT_ID` | None | Gmail OAuth2 client ID |
-| `EENGINE_GMAIL_CLIENT_SECRET` | None | Gmail OAuth2 secret |
-| `EENGINE_OUTLOOK_CLIENT_ID` | None | Outlook OAuth2 client ID |
-| `EENGINE_OUTLOOK_CLIENT_SECRET` | None | Outlook OAuth2 secret |
-| `EENGINE_MAX_CONNECTIONS` | `10` | Max IMAP connections |
+| `EENGINE_TIMEOUT` | `10000` | Command timeout (ms) |
+| `EENGINE_FETCH_BATCH_SIZE` | `1000` | Messages per sync batch |
+| `EENGINE_PREPARED_LICENSE` | None | License key |
+| `EENGINE_SETTINGS` | None | Pre-configured settings JSON |
+| `EENGINE_PREPARED_TOKEN` | None | Exported token hash (not raw token) |
+| `EENGINE_PREPARED_PASSWORD` | None | Password hash (not plain password) |
+| `EENGINE_REQUIRE_API_AUTH` | `true` | Require API authentication |
+| `EENGINE_CORS_ORIGIN` | None | CORS allowed origin |
+| `EENGINE_SMTP_ENABLED` | `false` | Enable SMTP proxy |
+| `EENGINE_IMAP_PROXY_ENABLED` | `false` | Enable IMAP proxy |
 
 ## Configuration File Example
 
 ### Complete config.toml
 
 ```toml
+# EmailEngine Configuration File
+# Place in working directory or specify with --config
+
 [service]
-secret = "your-encryption-secret-at-least-64-chars"
+# Encryption secret - required for production
+# Generate with: openssl rand -hex 32
+secret = "your-64-character-hex-secret-here"
+
+# Command timeout in milliseconds
+commandTimeout = 10000
+
+# Messages per sync batch
+fetchBatchSize = 1000
 
 [api]
 port = 3000
@@ -706,39 +965,18 @@ host = "127.0.0.1"
 [dbs]
 redis = "redis://localhost:6379/8"
 
-workers = 4
-maxConnections = 20
-chunkSize = 5000
+[workers]
+imap = 4
+webhooks = 1
+submit = 1
 
 [log]
 level = "info"
-file = "/var/log/emailengine/app.log"
-
-[gmail]
-clientId = "your-gmail-client-id"
-clientSecret = "your-gmail-client-secret"
-
-[outlook]
-authority = "https://login.microsoftonline.com/common"
-clientId = "your-outlook-client-id"
-clientSecret = "your-outlook-client-secret"
-
-[webhooks]
-timeout = 10000
-retry = 3
-
-[metrics]
-enabled = true
-port = 9090
-
-[imap]
-connectionTimeout = 90000
-
-poolSize = 10
+# raw = true  # Enable for debugging only
 ```
 
 :::tip Using TOML Config
-TOML is the native configuration format for EmailEngine. All settings including `service.secret` can be stored in the config file.
+TOML is the native configuration format for EmailEngine. Use `--config=/path/to/config.toml` to specify a custom config file location.
 :::
 
 ## Priority Order
@@ -751,9 +989,16 @@ When the same setting is configured in multiple ways:
 
 Example:
 ```bash
-# Config file: port = 3000
-# Command line: --port=4000
+# Config file: api.port = 3000
+# Command line: --api.port=4000
 # Environment: EENGINE_PORT=5000
 
 # Result: Port 5000 (environment wins)
 ```
+
+## See Also
+
+- [Environment Variables Guide](/docs/configuration/environment-variables)
+- [Redis Configuration](/docs/configuration/redis)
+- [Security Best Practices](/docs/deployment/security)
+- [Docker Deployment](/docs/deployment/docker)

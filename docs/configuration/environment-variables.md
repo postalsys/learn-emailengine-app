@@ -131,7 +131,8 @@ Email protocol timeouts and limits.
 | `EENGINE_MAX_SMTP_MESSAGE_SIZE` | bytes | `26214400` | Max message size for SMTP submission (25 MB) | `52428800` |
 | `EENGINE_MAX_PAYLOAD_TIMEOUT` | ms | `10000` | Payload reception timeout for message uploads | `30000` |
 | `EENGINE_TIMEOUT` | ms | `10000` | General timeout for operations | `30000` |
-| `EENGINE_FETCH_TIMEOUT` | ms | `10000` | Timeout for HTTP fetch operations | `30000` |
+| `EENGINE_FETCH_TIMEOUT` | ms | `90000` | Timeout for HTTP fetch operations (90 seconds) | `120000` |
+| `EENGINE_FETCH_BATCH_SIZE` | number | `1000` | Messages per batch during synchronization | `500` |
 | `EENGINE_IMAP_SOCKET_TIMEOUT` | ms | none | Custom socket timeout for IMAP connections | `60000` |
 | `EENGINE_CONNECTION_SETUP_DELAY` | ms | `0` | Delay before setting up account connections | `5000` |
 | `EENGINE_CHUNK_SIZE` | bytes | `1000000` | Download chunk size for streaming attachments (1 MB) | `5000000` |
@@ -161,9 +162,9 @@ Control worker thread configuration for processing workload.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_WORKERS` | number | CPU count | General worker thread count | `4` |
-| `EENGINE_WORKERS_SUBMIT` | number | CPU count | Worker threads for email submission | `2` |
-| `EENGINE_WORKERS_WEBHOOKS` | number | CPU count | Worker threads for webhook delivery | `2` |
+| `EENGINE_WORKERS` | number | `4` | IMAP worker thread count | `8` |
+| `EENGINE_WORKERS_SUBMIT` | number | `1` | Worker threads for email submission | `2` |
+| `EENGINE_WORKERS_WEBHOOKS` | number | `1` | Worker threads for webhook delivery | `2` |
 
 **Examples:**
 
@@ -183,11 +184,14 @@ EENGINE_WORKERS_WEBHOOKS=1
 
 ## Queue Management
 
-Configure job queue retention and cleanup.
+Configure job queue retention, cleanup, and concurrency.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
 | `EENGINE_QUEUE_REMOVE_AFTER` | number | `0` | Number of completed jobs to keep in queue (0 = remove immediately) | `5000` |
+| `EENGINE_SUBMIT_QC` | number | `1` | Concurrency for email submission queue | `4` |
+| `EENGINE_NOTIFY_QC` | number | `1` | Concurrency for notification/webhook queue | `4` |
+| `EENGINE_SUBMIT_DELAY` | ms | none | Delay between email submissions | `1000` |
 
 **Examples:**
 
@@ -196,9 +200,15 @@ Configure job queue retention and cleanup.
 EENGINE_QUEUE_REMOVE_AFTER=1000
 ```
 
-**Keep extensive job history:**
+**Higher queue concurrency:**
 ```bash
-EENGINE_QUEUE_REMOVE_AFTER=10000
+EENGINE_SUBMIT_QC=4
+EENGINE_NOTIFY_QC=4
+```
+
+**Rate limit email submissions:**
+```bash
+EENGINE_SUBMIT_DELAY=1000  # 1 second between submissions
 ```
 
 ## IMAP Proxy Server
@@ -209,41 +219,44 @@ Enable and configure the built-in IMAP proxy server feature.
 |----------|------|---------|-------------|---------|
 | `EENGINE_IMAP_PROXY_ENABLED` | boolean | `false` | Enable IMAP proxy server | `true` |
 | `EENGINE_IMAP_PROXY_HOST` | string | `127.0.0.1` | IMAP proxy bind address | `0.0.0.0` |
-| `EENGINE_IMAP_PROXY_PORT` | number | `9993` | IMAP proxy server port | `1993` |
-| `EENGINE_IMAP_PROXY_SECRET` | string | random | IMAP proxy authentication secret | `your-secret-key` |
-| `EENGINE_IMAP_PROXY_PROXY` | string | none | Proxy server for IMAP proxy connections | `socks5://proxy:1080` |
+| `EENGINE_IMAP_PROXY_PORT` | number | `2993` | IMAP proxy server port | `993` |
+| `EENGINE_IMAP_PROXY_SECRET` | string | none | IMAP proxy authentication password. If not set, API tokens with `imap-proxy` scope can be used | `your-secret-key` |
+| `EENGINE_IMAP_PROXY_PROXY` | boolean | `false` | Enable PROXY protocol for IMAP proxy server | `true` |
 
 **Examples:**
 
-**Enable IMAP proxy:**
+**Enable IMAP proxy with shared secret:**
 ```bash
 EENGINE_IMAP_PROXY_ENABLED=true
 EENGINE_IMAP_PROXY_HOST=0.0.0.0
-EENGINE_IMAP_PROXY_PORT=9993
+EENGINE_IMAP_PROXY_PORT=2993
 EENGINE_IMAP_PROXY_SECRET=my-secure-secret-key
 ```
 
-**IMAP proxy with upstream proxy:**
+**Enable IMAP proxy with API token authentication:**
 ```bash
+# No secret set - use API tokens with "imap-proxy" scope for authentication
 EENGINE_IMAP_PROXY_ENABLED=true
-EENGINE_IMAP_PROXY_PROXY=socks5://upstream-proxy:1080
+EENGINE_IMAP_PROXY_HOST=0.0.0.0
+EENGINE_IMAP_PROXY_PORT=2993
 ```
 
-## SMTP Submission Server
+## SMTP Proxy Server
 
-Enable and configure the built-in SMTP submission server feature.
+Enable and configure the built-in SMTP proxy server feature.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_SMTP_ENABLED` | boolean | `false` | Enable SMTP submission server | `true` |
+| `EENGINE_SMTP_ENABLED` | boolean | `false` | Enable SMTP proxy server | `true` |
 | `EENGINE_SMTP_HOST` | string | `127.0.0.1` | SMTP server bind address | `0.0.0.0` |
 | `EENGINE_SMTP_PORT` | number | `2525` | SMTP server port | `587` |
-| `EENGINE_SMTP_SECRET` | string | random | SMTP authentication secret | `your-secret-key` |
-| `EENGINE_SMTP_PROXY` | string | none | Proxy server for SMTP connections | `http://proxy:8080` |
+| `EENGINE_SMTP_SECRET` | string | none | SMTP authentication password. If not set, API tokens with `smtp` scope can be used | `your-secret-key` |
+| `EENGINE_SMTP_PROXY` | boolean | `false` | Enable PROXY protocol for SMTP proxy server | `true` |
+| `EENGINE_MAX_SMTP_MESSAGE_SIZE` | bytes | `26214400` | Max message size the SMTP proxy accepts (25 MB) | `52428800` |
 
 **Examples:**
 
-**Enable SMTP submission server:**
+**Enable SMTP proxy with shared secret:**
 ```bash
 EENGINE_SMTP_ENABLED=true
 EENGINE_SMTP_HOST=0.0.0.0
@@ -251,10 +264,12 @@ EENGINE_SMTP_PORT=2525
 EENGINE_SMTP_SECRET=my-secure-secret-key
 ```
 
-**SMTP with upstream proxy:**
+**Enable SMTP proxy with API token authentication:**
 ```bash
+# No secret set - use API tokens with "smtp" scope for authentication
 EENGINE_SMTP_ENABLED=true
-EENGINE_SMTP_PROXY=http://corporate-proxy:8080
+EENGINE_SMTP_HOST=0.0.0.0
+EENGINE_SMTP_PORT=2525
 ```
 
 ## TLS Configuration
@@ -263,15 +278,16 @@ Configure TLS/SSL settings for secure connections.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_TLS_MIN_VERSION` | string | `TLSv1.2` | Minimum TLS version | `TLSv1.3` |
+| `EENGINE_TLS_MIN_VERSION` | string | `TLSv1` | Minimum TLS version | `TLSv1.2` |
 | `EENGINE_TLS_MIN_DH_SIZE` | number | `1024` | Minimum Diffie-Hellman key size | `2048` |
-| `EENGINE_TLS_CIPHERS` | string | system default | TLS cipher suite list | `TLS_AES_256_GCM_SHA384` |
+| `EENGINE_TLS_CIPHERS` | string | `DEFAULT@SECLEVEL=0` | TLS cipher suite list | `TLS_AES_256_GCM_SHA384` |
+| `EENGINE_API_TLS` | boolean | `false` | Enable TLS for the API server | `true` |
 
 **Examples:**
 
-**Enforce TLS 1.3 only:**
+**Enforce TLS 1.2 minimum:**
 ```bash
-EENGINE_TLS_MIN_VERSION=TLSv1.3
+EENGINE_TLS_MIN_VERSION=TLSv1.2
 ```
 
 **Stronger DH parameters:**
@@ -290,8 +306,11 @@ Security settings and access restrictions.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_SECRET` | string | none | Encryption secret for credentials (required) | `your-random-secret-key` |
-| `EENGINE_ADMIN_ACCESS_ADDRESSES` | string | none | Comma-separated list of IP addresses allowed to access admin interface | `192.168.1.0/24,10.0.0.1` |
+| `EENGINE_SECRET` | string | none | Encryption secret for credentials and sessions (required for production) | `your-random-secret-key` |
+| `EENGINE_ADMIN_ACCESS_ADDRESSES` | string | all | Comma-separated list of IP addresses allowed to access admin interface | `192.168.1.0/24,10.0.0.1` |
+| `EENGINE_REQUIRE_API_AUTH` | boolean | `true` | Require API authentication tokens | `false` |
+| `EENGINE_ENABLE_OAUTH_TOKENS_API` | boolean | `false` | Allow retrieving raw OAuth tokens via API | `true` |
+| `EENGINE_DISABLE_SETUP_WARNINGS` | boolean | `false` | Disable admin password setup warnings | `true` |
 
 **Examples:**
 
@@ -307,6 +326,12 @@ EENGINE_SECRET=generated-value-here
 **Restrict admin access to specific IPs:**
 ```bash
 EENGINE_ADMIN_ACCESS_ADDRESSES="192.168.1.0/24,10.0.0.1"
+```
+
+**Development mode (disable API auth):**
+```bash
+# WARNING: Never use in production
+EENGINE_REQUIRE_API_AUTH=false
 ```
 
 ## Advanced Settings
@@ -344,7 +369,7 @@ Logging configuration and error tracking.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_LOG_LEVEL` | string | `info` | Log level (trace, debug, info, warn, error, fatal) | `debug` |
+| `EENGINE_LOG_LEVEL` | string | `trace` | Log level (trace, debug, info, warn, error, fatal) | `info` |
 | `BUGSNAG_API_KEY` | string | none | Bugsnag API key for error tracking | `your-bugsnag-key` |
 | `NODE_ENV` | string | `production` | Node.js environment | `development` |
 
@@ -384,8 +409,8 @@ Pre-configured settings for automated deployments.
 | Variable | Type | Description | Example |
 |----------|------|-------------|---------|
 | `EENGINE_SETTINGS` | JSON | Pre-configured runtime settings | See below |
-| `EENGINE_PREPARED_TOKEN` | string | Pre-configured API access token | `base64-encoded-token` |
-| `EENGINE_PREPARED_PASSWORD` | string | Pre-configured admin password | `secure-password` |
+| `EENGINE_PREPARED_TOKEN` | string | Exported token hash (from `emailengine tokens export`) | `hKJpZNlAMzAxZThjNTFh...` |
+| `EENGINE_PREPARED_PASSWORD` | string | Password hash (from `emailengine password --hash`) | `JHBia2RmMi1zaGE1MTIk...` |
 | `EENGINE_PREPARED_LICENSE` | string | Pre-configured license key | `license-key-string` |
 
 **Examples:**
@@ -412,18 +437,26 @@ environment:
     }
 ```
 
-**Prepared token:**
+**Prepared token (requires exported hash, not the raw token):**
 ```bash
-# Generate and export token
+# 1. Generate token
 TOKEN=$(emailengine tokens issue -d "API Token" -s "*")
+
+# 2. Export token to get the hash
 EXPORTED=$(emailengine tokens export -t $TOKEN)
 
+# 3. Use the exported hash (not the raw token)
 EENGINE_PREPARED_TOKEN=$EXPORTED
 ```
 
-**Prepared password (for admin panel):**
+**Prepared password (requires password hash, not plain password):**
 ```bash
-EENGINE_PREPARED_PASSWORD=your-secure-admin-password
+# Generate password hash
+emailengine password -p "your-secure-password" --hash
+# Output: JHBia2RmMi1zaGE1MTIkaTEwMDAwMCRhYmNkZWYx...
+
+# Use the hash
+EENGINE_PREPARED_PASSWORD=JHBia2RmMi1zaGE1MTIkaTEwMDAwMCRhYmNkZWYx...
 ```
 
 **Prepared license:**
@@ -558,14 +591,14 @@ EENGINE_REDIS=redis://localhost:6379
 # IMAP Proxy
 EENGINE_IMAP_PROXY_ENABLED=true
 EENGINE_IMAP_PROXY_HOST=0.0.0.0
-EENGINE_IMAP_PROXY_PORT=9993
+EENGINE_IMAP_PROXY_PORT=2993
 EENGINE_IMAP_PROXY_SECRET=imap-proxy-secret
 
-# SMTP Server
+# SMTP Proxy
 EENGINE_SMTP_ENABLED=true
 EENGINE_SMTP_HOST=0.0.0.0
 EENGINE_SMTP_PORT=2525
-EENGINE_SMTP_SECRET=smtp-server-secret
+EENGINE_SMTP_SECRET=smtp-proxy-secret
 
 # Logging
 EENGINE_LOG_LEVEL=info
