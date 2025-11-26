@@ -99,10 +99,17 @@ Your authentication server is a simple HTTP endpoint:
 **Request from EmailEngine:**
 
 ```http
-GET /authenticate?account=user123
+GET /authenticate?account=user123&proto=imap
 ```
 
-**Response from your server:**
+**Query Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `account` | Account ID in EmailEngine |
+| `proto` | Protocol being authenticated: `imap`, `smtp`, or `api` |
+
+**Response from your server (OAuth2):**
 
 ```json
 {
@@ -111,18 +118,41 @@ GET /authenticate?account=user123
 }
 ```
 
+**Response from your server (Password):**
+
+```json
+{
+  "user": "user@example.com",
+  "pass": "secretpassword"
+}
+```
+
+**Response Fields:**
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `user` | Yes | Email address or username for authentication |
+| `accessToken` | Conditional | OAuth2 access token (required if `pass` not provided) |
+| `pass` | Conditional | Password (required if `accessToken` not provided) |
+
 **Key Points:**
 
 - EmailEngine calls your server when it needs to authenticate
-- You must return a **currently valid** (not expired) access token
-- Your server handles token refresh logic
-- EmailEngine doesn't store tokens, it fetches them on-demand
+- Return either `accessToken` (OAuth2) or `pass` (password) - not both
+- For OAuth2: return a **currently valid** (not expired) access token
+- For passwords: return the current password for the account
+- Your server handles credential management (token refresh, password storage, etc.)
+- EmailEngine doesn't store credentials when using auth server - it fetches them on-demand
 
 ## Setup Guide
 
-### Step 1: Configure OAuth2 App with Provider
+### Step 1: Configure Credentials
 
-First, set up your OAuth2 application with Google or Microsoft.
+The authentication server can return either OAuth2 tokens or regular passwords, depending on your account type.
+
+#### For OAuth2 Accounts (Gmail, Outlook)
+
+Set up your OAuth2 application with Google or Microsoft.
 
 #### For Outlook/Microsoft 365
 
@@ -165,11 +195,69 @@ gmail.modify
 [See Gmail OAuth2 setup guide for details →](./gmail-imap)
 [See Outlook OAuth2 setup guide for details →](./outlook-365)
 
+#### For Password-Based Accounts
+
+For regular IMAP/SMTP accounts that use password authentication (not OAuth2), your authentication server simply returns the username and password. No OAuth2 setup is required.
+
+This is useful for:
+- Self-hosted email servers
+- Email providers that don't support OAuth2
+- Centralized password management across multiple EmailEngine instances
+- Dynamic credential rotation
+
 ### Step 2: Build Authentication Server
 
-Create an HTTP endpoint that returns access tokens for accounts.
+Create an HTTP endpoint that returns credentials for accounts.
 
-#### Example Implementation (Node.js)
+#### Example: Password-Based Authentication Server
+
+For IMAP/SMTP accounts using regular password authentication:
+
+```javascript
+const express = require("express");
+const app = express();
+
+// Your credential storage (e.g., database, vault, secrets manager)
+const credentialStore = {
+  user123: {
+    email: "user@example.com",
+    password: "secretpassword",
+  },
+  user456: {
+    email: "another@company.com",
+    password: "anotherpassword",
+  },
+};
+
+app.get("/authenticate", async (req, res) => {
+  const { account, proto } = req.query;
+
+  if (!account) {
+    return res.status(400).json({ error: "Missing account parameter" });
+  }
+
+  // Fetch credentials for this account
+  const credentials = credentialStore[account];
+
+  if (!credentials) {
+    return res.status(404).json({ error: "Account not found" });
+  }
+
+  // Return username and password
+  res.json({
+    user: credentials.email,
+    pass: credentials.password,
+  });
+});
+
+app.listen(3001, () => {
+  console.log("Authentication server running on port 3001");
+});
+```
+
+#### Example: OAuth2 Authentication Server
+
+For OAuth2 accounts (Gmail, Outlook) where you manage tokens externally:
 
 ```javascript
 const express = require("express");
@@ -178,6 +266,7 @@ const app = express();
 // Your token storage (e.g., database, Redis)
 const tokenStore = {
   user123: {
+    email: "user@gmail.com",
     accessToken: "ya29.a0AWY7Ckl...",
     refreshToken: "1//0gDj5...",
     expiresAt: "2024-01-15T10:30:00Z",
@@ -185,7 +274,7 @@ const tokenStore = {
 };
 
 app.get("/authenticate", async (req, res) => {
-  const { account } = req.query;
+  const { account, proto } = req.query;
 
   if (!account) {
     return res.status(400).json({ error: "Missing account parameter" });
@@ -204,7 +293,10 @@ app.get("/authenticate", async (req, res) => {
     const newTokens = await refreshAccessToken(tokens.refreshToken);
 
     // Update storage
-    tokenStore[account] = newTokens;
+    tokenStore[account] = {
+      ...tokens,
+      ...newTokens,
+    };
 
     return res.json({
       user: tokens.email,
@@ -237,11 +329,84 @@ async function refreshAccessToken(refreshToken) {
 
   return {
     accessToken: data.access_token,
-    refreshToken: refreshToken,
     expiresAt: new Date(Date.now() + data.expires_in * 1000).toISOString(),
-    email: data.email,
   };
 }
+
+app.listen(3001, () => {
+  console.log("Authentication server running on port 3001");
+});
+```
+
+#### Example: Combined Authentication Server
+
+Handle both password and OAuth2 accounts in a single server:
+
+```javascript
+const express = require("express");
+const app = express();
+
+// Account types: 'password' or 'oauth2'
+const accountStore = {
+  // Password-based account
+  user123: {
+    type: "password",
+    email: "user@example.com",
+    password: "secretpassword",
+  },
+  // OAuth2 account
+  user456: {
+    type: "oauth2",
+    email: "user@gmail.com",
+    accessToken: "ya29.a0AWY7Ckl...",
+    refreshToken: "1//0gDj5...",
+    expiresAt: "2024-01-15T10:30:00Z",
+  },
+};
+
+app.get("/authenticate", async (req, res) => {
+  const { account, proto } = req.query;
+
+  if (!account) {
+    return res.status(400).json({ error: "Missing account parameter" });
+  }
+
+  const accountData = accountStore[account];
+
+  if (!accountData) {
+    return res.status(404).json({ error: "Account not found" });
+  }
+
+  if (accountData.type === "password") {
+    // Return password credentials
+    return res.json({
+      user: accountData.email,
+      pass: accountData.password,
+    });
+  }
+
+  if (accountData.type === "oauth2") {
+    // Check if token needs refresh
+    if (new Date(accountData.expiresAt) <= new Date()) {
+      const newTokens = await refreshAccessToken(accountData.refreshToken);
+      accountStore[account] = { ...accountData, ...newTokens };
+      return res.json({
+        user: accountData.email,
+        accessToken: newTokens.accessToken,
+      });
+    }
+
+    // Return OAuth2 credentials
+    return res.json({
+      user: accountData.email,
+      accessToken: accountData.accessToken,
+    });
+  }
+
+  res.status(400).json({ error: "Unknown account type" });
+});
+
+// ... refreshAccessToken function same as above ...
 
 app.listen(3001, () => {
   console.log("Authentication server running on port 3001");
@@ -254,7 +419,9 @@ See the [test implementation on GitHub](https://github.com/postalsys/emailengine
 
 #### Response Format
 
-Your authentication server must return:
+Your authentication server must return one of the following:
+
+**For OAuth2 accounts:**
 
 ```json
 {
@@ -263,12 +430,24 @@ Your authentication server must return:
 }
 ```
 
+**For password-based accounts:**
+
+```json
+{
+  "user": "user@example.com",
+  "pass": "secretpassword"
+}
+```
+
 **Fields:**
 
-- `user` - Email address of the account
-- `accessToken` - Currently valid OAuth2 access token (must not be expired)
+| Field | Required | Description |
+|-------|----------|-------------|
+| `user` | Yes | Email address or username for authentication |
+| `accessToken` | Conditional | OAuth2 access token (required if `pass` not provided) |
+| `pass` | Conditional | Password (required if `accessToken` not provided) |
 
-**Important:** EmailEngine expects the token to be valid immediately. If it's expired, authentication will fail.
+**Important:** For OAuth2, EmailEngine expects the access token to be valid immediately. If it's expired, authentication will fail. Your server must handle token refresh before returning.
 
 ### Step 3: Configure EmailEngine
 
@@ -283,13 +462,40 @@ curl -X POST https://your-ee.com/v1/settings \
   }'
 ```
 
-This tells EmailEngine where to fetch access tokens.
+This tells EmailEngine where to fetch credentials (passwords or access tokens).
 
 ### Step 4: Register Accounts
 
-#### For IMAP/SMTP (Outlook Example)
+#### For Password-Based IMAP/SMTP
 
-Register accounts using the [Register Account API endpoint](/docs/api/post-v-1-account):
+Register accounts where your authentication server returns passwords:
+
+```bash
+curl -X POST https://your-ee.com/v1/account \
+  -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "user123",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "imap": {
+      "useAuthServer": true,
+      "host": "imap.example.com",
+      "port": 993,
+      "secure": true
+    },
+    "smtp": {
+      "useAuthServer": true,
+      "host": "smtp.example.com",
+      "port": 587,
+      "secure": false
+    }
+  }'
+```
+
+#### For OAuth2 IMAP/SMTP (Outlook Example)
+
+Register accounts where your authentication server returns OAuth2 tokens:
 
 ```bash
 curl -X POST https://your-ee.com/v1/account \
@@ -319,6 +525,7 @@ curl -X POST https://your-ee.com/v1/account \
 - Set `useAuthServer: true` in both `imap` and `smtp` sections
 - No credentials provided (EmailEngine fetches them from your server)
 - Specify IMAP/SMTP host and port normally
+- Works with both password and OAuth2 - EmailEngine uses whatever your server returns
 
 #### For Gmail API or MS Graph API
 

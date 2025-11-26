@@ -33,6 +33,17 @@ EmailEngine can be installed on macOS using two methods:
 - **Node.js 20+** (only for source installation, recommended 24+)
 - **Homebrew** (recommended for Redis installation)
 
+### Privileges
+
+EmailEngine does not require administrator privileges to run. You can run it as a regular user on any unprivileged port (e.g., 3000).
+
+Administrator access is only needed during initial setup to:
+- Install the PKG package to `/usr/local/bin`
+- Create directories in `/opt` (if using source installation)
+- Bind the SMTP or IMAP proxy to privileged ports (below 1024, such as 465 or 993)
+
+Once installed, EmailEngine runs as an unprivileged user. For privileged ports, consider using a reverse proxy (Nginx, Caddy) to forward traffic from privileged ports to EmailEngine.
+
 ## Method 1: PKG Installer
 
 The easiest way to install EmailEngine on macOS.
@@ -170,165 +181,7 @@ tail -f /usr/local/var/log/emailengine.log
 
 ## Method 2: Source Installation
 
-Running from source is recommended for production as it uses less RAM than the binary.
+Running from source is recommended for production as it uses less memory than the binary. The binary uses a virtual filesystem that loads all files into memory at startup, while source installation keeps files on disk.
 
-### Step 1: Install Node.js
-
-**Using Homebrew (recommended):**
-```bash
-# Install latest Node.js (24+)
-brew install node
-
-# Verify
-node --version  # Should be 24.x or higher
-npm --version
-```
-
-**Using NVM (alternative):**
-```bash
-# Install NVM
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-
-# Install Node.js 24 (or latest LTS)
-nvm install 24
-nvm use 24
-nvm alias default 24
-```
-
-**Note:** Node.js 20+ is supported, but 24+ is recommended for better performance and latest features.
-
-### Step 2: Install Redis
-
-```bash
-brew install redis
-brew services start redis
-```
-
-### Step 3: Setup Directory Structure
-
-```bash
-# Create directories
-sudo mkdir -p /opt/emailengine/app
-cd /opt/emailengine
-```
-
-### Step 4: Configure Environment
-
-Generate and create `.env` file in `/opt/emailengine`:
-
-```bash
-# Generate encryption secret and create .env file
-sudo bash -c "cat > /opt/emailengine/.env" <<EOF
-EENGINE_REDIS=redis://127.0.0.1:6379
-EENGINE_SECRET=$(openssl rand -hex 32)
-EENGINE_WORKERS=4
-EENGINE_LOG_LEVEL=info
-EENGINE_PORT=3000
-EOF
-
-# Secure the file
-sudo chmod 600 /opt/emailengine/.env
-```
-
-**Important:** The `.env` file is stored outside the `app/` directory, making upgrades easier. Keep this file safe.
-
-### Step 5: Download Source
-
-```bash
-cd /opt/emailengine
-
-# Download and extract to app directory (latest)
-sudo curl -L https://go.emailengine.app/source-dist.tar.gz | sudo tar xz -C app --strip-components=1
-
-# Or download specific version (e.g., 2.55.4)
-sudo curl -L https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz | sudo tar xz -C app --strip-components=1
-```
-
-### Step 6: Test Run
-
-```bash
-cd /opt/emailengine
-node app/server.js
-```
-
-In another terminal:
-```bash
-curl http://localhost:3000/health
-```
-
-### Step 7: Run as Launch Agent
-
-Create `~/Library/LaunchAgents/com.emailengine.plist`:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.emailengine</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/usr/local/bin/node</string>
-        <string>app/server.js</string>
-    </array>
-    <key>WorkingDirectory</key>
-    <string>/opt/emailengine</string>
-    <key>EnvironmentVariables</key>
-    <dict>
-        <key>NODE_ENV</key>
-        <string>production</string>
-    </dict>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <true/>
-    <key>StandardOutPath</key>
-    <string>/usr/local/var/log/emailengine.log</string>
-    <key>StandardErrorPath</key>
-    <string>/usr/local/var/log/emailengine.error.log</string>
-</dict>
-</plist>
-```
-
-**Note:**
-- Working directory is `/opt/emailengine` where the `.env` file is located
-- EmailEngine runs from `app/server.js`
-- This structure makes upgrades easy - just replace the `app/` directory
-
-Load and start:
-```bash
-launchctl load ~/Library/LaunchAgents/com.emailengine.plist
-```
-
-### Upgrading Source Installation
-
-The directory structure makes upgrades simple - just replace the `app/` directory while keeping your `.env` file intact.
-
-```bash
-cd /opt/emailengine
-
-# Stop service
-launchctl stop com.emailengine
-
-# Backup current version (optional)
-sudo mv app app.backup.$(date +%Y%m%d)
-
-# Create new app directory
-sudo mkdir -p app
-
-# Download and extract new version (latest)
-sudo curl -L https://go.emailengine.app/source-dist.tar.gz | sudo tar xz -C app --strip-components=1
-
-# Or download specific version (e.g., 2.55.4)
-sudo curl -L https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz | sudo tar xz -C app --strip-components=1
-
-# Start service
-launchctl start com.emailengine
-
-# Verify
-curl http://localhost:3000/health
-```
-
-**Note:** Your `.env` file in `/opt/emailengine/` is preserved during upgrades.
+For complete source installation instructions, including Node.js setup, Launch Agent configuration, and upgrade procedures, see the dedicated **[Source Installation Guide](/docs/installation/source)**.
 

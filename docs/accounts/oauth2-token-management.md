@@ -126,19 +126,22 @@ Additional Microsoft Graph scopes are automatically included if you add them as 
 
 ### Step 3: Enable OAuth2 Token API Endpoint
 
-For security, the OAuth2 token API endpoint is disabled by default.
+For security, the OAuth2 token API endpoint is **disabled by default**.
 
-Enable it in EmailEngine:
+**To enable via Web UI:**
 
-1. Navigate to **Configuration** → **Service**
-2. Find the **Security** section
-3. Check **Allow the API endpoint for fetching OAuth2 access tokens**
-4. Save settings
+1. Navigate to **Configuration** > **Service Configuration**
+2. Check **Allow OAuth2 Token Access via API**
+3. Click **Save**
 
-<!-- Shows: Security settings with OAuth2 API endpoint checkbox -->
+**To enable via environment variable:**
+
+Set `EENGINE_ENABLE_OAUTH_TOKENS_API=true` when starting EmailEngine.
 
 :::warning Security Consideration
 The OAuth2 token endpoint returns access tokens that can access user data. Only enable this if you need it, and ensure your EmailEngine API is properly secured with strong access tokens and appropriate access controls.
+
+This setting **cannot be changed via the API** - it must be configured through the web interface or environment variable.
 :::
 
 ### Step 4: Enable Required APIs
@@ -183,6 +186,7 @@ curl https://your-ee.com/v1/account/example/oauth-token \
   "account": "example",
   "user": "user@example.com",
   "accessToken": "ya29.a0AVA9y1sXQ....CP1A",
+  "provider": "gmail",
   "registeredScopes": ["https://www.googleapis.com/auth/postmaster.readonly", "https://mail.google.com/"],
   "expires": "2022-07-08T14:25:27.780Z"
 }
@@ -193,6 +197,7 @@ curl https://your-ee.com/v1/account/example/oauth-token \
 - `account` - Account ID in EmailEngine
 - `user` - Email address of the account
 - `accessToken` - Currently valid OAuth2 access token
+- `provider` - OAuth2 provider type (`gmail`, `outlook`, `gmailService`, `mailRu`)
 - `registeredScopes` - List of scopes this token has access to
 - `expires` - When the access token expires (ISO 8601)
 

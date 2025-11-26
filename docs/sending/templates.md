@@ -43,15 +43,18 @@ You can manage templates in two ways:
 Create a template using the [create template API](/docs/api/post-v-1-templates-template):
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/{account}/template" \
+curl -XPOST "https://ee.example.com/v1/templates/template" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
+    "account": "example",
     "name": "Welcome Email",
     "description": "Welcome new users to the platform",
-    "subject": "Welcome to {{{params.companyName}}}!",
-    "text": "Hello {{params.firstName}},\n\nWelcome to {{params.companyName}}!",
-    "html": "<h1>Hello {{params.firstName}}</h1><p>Welcome to <strong>{{params.companyName}}</strong>!</p>"
+    "content": {
+      "subject": "Welcome to {{{params.companyName}}}!",
+      "text": "Hello {{params.firstName}},\n\nWelcome to {{params.companyName}}!",
+      "html": "<h1>Hello {{params.firstName}}</h1><p>Welcome to <strong>{{params.companyName}}</strong>!</p>"
+    }
   }'
 ```
 
@@ -59,11 +62,9 @@ curl -XPOST "https://ee.example.com/v1/account/{account}/template" \
 
 ```json
 {
-  "id": "AAABgUIbuG0AAAAE",
-  "name": "Welcome Email",
-  "description": "Welcome new users to the platform",
-  "subject": "Welcome to {{{params.companyName}}}!",
-  "created": "2025-05-14T10:00:00.000Z"
+  "created": true,
+  "account": "example",
+  "id": "AAABgUIbuG0AAAAE"
 }
 ```
 
@@ -374,7 +375,7 @@ HTML:
 Retrieve all templates using the [list templates API](/docs/api/get-v-1-templates):
 
 ```bash
-curl "https://ee.example.com/v1/account/{account}/templates" \
+curl "https://ee.example.com/v1/templates?account=example" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -382,18 +383,26 @@ curl "https://ee.example.com/v1/account/{account}/templates" \
 
 ```json
 {
+  "account": "example",
+  "total": 2,
+  "page": 0,
+  "pages": 1,
   "templates": [
     {
       "id": "AAABgUIbuG0AAAAE",
       "name": "Welcome Email",
       "description": "Welcome new users",
-      "created": "2025-05-14T10:00:00.000Z"
+      "format": "html",
+      "created": "2025-05-14T10:00:00.000Z",
+      "updated": "2025-05-14T12:00:00.000Z"
     },
     {
       "id": "AAABgUIbuG0AAAAF",
       "name": "Order Confirmation",
       "description": "Confirm orders",
-      "created": "2025-05-14T11:00:00.000Z"
+      "format": "html",
+      "created": "2025-05-14T11:00:00.000Z",
+      "updated": "2025-05-14T11:00:00.000Z"
     }
   ]
 }
@@ -404,7 +413,7 @@ curl "https://ee.example.com/v1/account/{account}/templates" \
 Use the [get template API](/docs/api/get-v-1-templates-template-template):
 
 ```bash
-curl "https://ee.example.com/v1/account/{account}/template/AAABgUIbuG0AAAAE" \
+curl "https://ee.example.com/v1/templates/template/AAABgUIbuG0AAAAE" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -412,14 +421,18 @@ curl "https://ee.example.com/v1/account/{account}/template/AAABgUIbuG0AAAAE" \
 
 ```json
 {
+  "account": "example",
   "id": "AAABgUIbuG0AAAAE",
   "name": "Welcome Email",
   "description": "Welcome new users to the platform",
-  "subject": "Welcome to {{{params.companyName}}}!",
-  "text": "Hello {{params.firstName}}...",
-  "html": "<h1>Hello {{params.firstName}}</h1>...",
+  "format": "html",
   "created": "2025-05-14T10:00:00.000Z",
-  "updated": "2025-05-14T12:00:00.000Z"
+  "updated": "2025-05-14T12:00:00.000Z",
+  "content": {
+    "subject": "Welcome to {{{params.companyName}}}!",
+    "text": "Hello {{params.firstName}}...",
+    "html": "<h1>Hello {{params.firstName}}</h1>..."
+  }
 }
 ```
 
@@ -428,12 +441,14 @@ curl "https://ee.example.com/v1/account/{account}/template/AAABgUIbuG0AAAAE" \
 Use the [update template API](/docs/api/put-v-1-templates-template-template):
 
 ```bash
-curl -XPUT "https://ee.example.com/v1/account/{account}/template/AAABgUIbuG0AAAAE" \
+curl -XPUT "https://ee.example.com/v1/templates/template/AAABgUIbuG0AAAAE" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "subject": "Welcome to {{{params.companyName}}}, {{{params.firstName}}}!",
-    "html": "<h1>Updated content</h1>"
+    "content": {
+      "subject": "Welcome to {{{params.companyName}}}, {{{params.firstName}}}!",
+      "html": "<h1>Updated content</h1>"
+    }
   }'
 ```
 
@@ -444,7 +459,7 @@ Only include fields you want to update.
 Use the [delete template API](/docs/api/delete-v-1-templates-template-template):
 
 ```bash
-curl -XDELETE "https://ee.example.com/v1/account/{account}/template/AAABgUIbuG0AAAAE" \
+curl -XDELETE "https://ee.example.com/v1/templates/template/AAABgUIbuG0AAAAE" \
   -H "Authorization: Bearer <token>"
 ```
 

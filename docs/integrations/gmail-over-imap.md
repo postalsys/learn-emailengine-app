@@ -4,7 +4,7 @@ description: Connect Gmail accounts via IMAP with OAuth2 authentication
 sidebar_position: 3
 ---
 
-> Click [here](/oauth2-configuration) to see other types of OAuth2 configurations or follow [this tutorial](https://docs.emailengine.app/setting-up-gmail-oauth2-for-imap-api/) for a detailed step-by-step guide.
+> Click [here](/docs/accounts/oauth2-setup) to see other types of OAuth2 configurations or see the complete [Gmail OAuth2 Setup Guide](/docs/accounts/gmail-imap) for detailed instructions.
 ### Setting up Gmail IMAP integration with EmailEngine
 Follow these steps to configure Gmail IMAP with EmailEngine using OAuth2 authentication:
 1.  **Open the Google Cloud Console**  

@@ -517,27 +517,30 @@ end function
 
 ### CAN-SPAM Act (USA)
 
-Requirements:
-- [YES] Include unsubscribe mechanism (provided by virtual lists)
-- [YES] Honor unsubscribes within 10 business days (you must implement)
-- [YES] Include physical postal address in emails (you must add)
-- [YES] Identify message as advertisement (you must add if applicable)
+| Requirement | Provided By |
+|-------------|-------------|
+| Include unsubscribe mechanism | Virtual lists |
+| Honor unsubscribes within 10 business days | You must implement |
+| Include physical postal address in emails | You must add |
+| Identify message as advertisement | You must add if applicable |
 
 ### GDPR (EU)
 
-Requirements:
-- [YES] Obtain consent before sending (you must implement)
-- [YES] Provide easy unsubscribe method (provided by virtual lists)
-- [YES] Honor unsubscribes immediately (you must implement)
-- [YES] Keep records of consent and unsubscribes (you must implement)
+| Requirement | Provided By |
+|-------------|-------------|
+| Obtain consent before sending | You must implement |
+| Provide easy unsubscribe method | Virtual lists |
+| Honor unsubscribes immediately | You must implement |
+| Keep records of consent and unsubscribes | You must implement |
 
 ### CASL (Canada)
 
-Requirements:
-- [YES] Obtain express consent (you must implement)
-- [YES] Include unsubscribe mechanism (provided by virtual lists)
-- [YES] Honor unsubscribes within 10 days (you must implement)
-- [YES] Include sender information (you must add)
+| Requirement | Provided By |
+|-------------|-------------|
+| Obtain express consent | You must implement |
+| Include unsubscribe mechanism | Virtual lists |
+| Honor unsubscribes within 10 days | You must implement |
+| Include sender information | You must add |
 
 ## Limitations
 

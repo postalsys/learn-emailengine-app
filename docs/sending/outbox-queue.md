@@ -85,7 +85,7 @@ Jobs in the submit queue move through different states:
 
 ```bash
 # View waiting jobs
-curl "https://ee.example.com/v1/account/example/outbox?state=waiting" \
+curl "https://ee.example.com/v1/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -104,8 +104,8 @@ curl "https://ee.example.com/v1/account/example/outbox?state=waiting" \
 - **Permanent failure** (retries exhausted) → Moved to *Failed*
 
 ```bash
-# View active jobs
-curl "https://ee.example.com/v1/account/example/outbox?state=active" \
+# View active jobs (these are currently being processed)
+curl "https://ee.example.com/v1/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -122,7 +122,7 @@ curl "https://ee.example.com/v1/account/example/outbox?state=active" \
 
 ```bash
 # View completed jobs (if enabled)
-curl "https://ee.example.com/v1/account/example/outbox?state=completed" \
+curl "https://ee.example.com/v1/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -146,7 +146,7 @@ curl "https://ee.example.com/v1/account/example/outbox?state=completed" \
 
 ```bash
 # View failed jobs
-curl "https://ee.example.com/v1/account/example/outbox?state=failed" \
+curl "https://ee.example.com/v1/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -173,7 +173,7 @@ curl "https://ee.example.com/v1/account/example/outbox?state=failed" \
 
 ```bash
 # View delayed jobs
-curl "https://ee.example.com/v1/account/example/outbox?state=delayed" \
+curl "https://ee.example.com/v1/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -231,7 +231,7 @@ Query queue status via the [outbox API](/docs/api/get-v-1-outbox):
 
 ```bash
 # Get queue summary
-curl "https://ee.example.com/v1/account/example/outbox" \
+curl "https://ee.example.com/v1/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -255,7 +255,7 @@ curl "https://ee.example.com/v1/account/example/outbox" \
 
 ```bash
 # List waiting jobs
-curl "https://ee.example.com/v1/account/example/outbox?state=waiting&pageSize=10" \
+curl "https://ee.example.com/v1/outbox?pageSize=10" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -284,7 +284,7 @@ curl "https://ee.example.com/v1/account/example/outbox?state=waiting&pageSize=10
 
 ```bash
 # Get specific job
-curl "https://ee.example.com/v1/account/example/outbox/abc123" \
+curl "https://ee.example.com/v1/outbox/abc123" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -311,21 +311,13 @@ curl "https://ee.example.com/v1/account/example/outbox/abc123" \
 
 ## Managing Queue Jobs
 
-### Retry a Failed Job
-
-```bash
-# Retry specific job
-curl -XPOST "https://ee.example.com/v1/account/example/outbox/abc123/retry" \
-  -H "Authorization: Bearer <token>"
-```
-
-The job moves back to *Waiting* and will be processed again.
-
 ### Delete a Job
+
+Use the [delete outbox entry API](/docs/api/delete-v-1-outbox-queueid):
 
 ```bash
 # Delete job from queue
-curl -XDELETE "https://ee.example.com/v1/account/example/outbox/abc123" \
+curl -XDELETE "https://ee.example.com/v1/outbox/abc123" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -334,15 +326,9 @@ Useful for:
 - Canceling scheduled sends
 - Clearing failed jobs
 
-### Clear Jobs by State
-
-```bash
-# Clear all failed jobs
-curl -XDELETE "https://ee.example.com/v1/account/example/outbox?state=failed" \
-  -H "Authorization: Bearer <token>"
-```
-
-**Warning**: This permanently deletes jobs. Use with caution.
+:::info Retrying Failed Jobs
+To retry a failed job, you need to delete it from the queue and resubmit the message using the submit API. The outbox API does not support automatic retry of individual jobs.
+:::
 
 ## Configuration
 

@@ -56,6 +56,7 @@ npm install -g .
 ```bash
 emailengine --help
 emailengine -h
+emailengine help
 ```
 
 View command-specific help:
@@ -63,6 +64,20 @@ View command-specific help:
 ```bash
 emailengine tokens --help
 emailengine license --help
+```
+
+### Version Information
+
+```bash
+emailengine --version
+emailengine -v
+emailengine version
+```
+
+**Output:**
+
+```
+EmailEngine v2.58.2 (LICENSE_EMAILENGINE)
 ```
 
 ## Configuration Arguments
@@ -575,7 +590,7 @@ Manage field-level encryption for account credentials.
 
 ### Encrypt Command
 
-Migrate encryption settings:
+Migrate encryption settings. This command can be run from any machine with network access to the Redis database - it does not need to run on the EmailEngine server itself.
 
 ```bash
 emailengine encrypt [options]
@@ -587,7 +602,7 @@ emailengine encrypt [options]
 | ------------------ | --------------------------------------------------------- |
 | `--service.secret` | New encryption secret                                     |
 | `--decrypt`        | Old secret(s) for decrypting (can be used multiple times) |
-| `--dbs.redis`      | Redis connection                                          |
+| `--dbs.redis`      | Redis connection (required)                               |
 
 **Use cases:**
 

@@ -215,10 +215,19 @@ Category detection requires **additional IMAP commands per email**, which can sl
 
 ![Enable Category Detection](/img/external/Screenshot-2023-02-27-at-11.50.10.png)
 
-#### Enable via Environment Variable
+#### Enable via Settings API
 
 ```bash
-EENGINE_GMAIL_CATEGORIES=true node server.js
+curl -X POST "http://localhost:3000/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"resolveGmailCategories": true}'
+```
+
+Or pre-configure at startup using the `EENGINE_SETTINGS` environment variable:
+
+```bash
+EENGINE_SETTINGS='{"resolveGmailCategories":true}' node server.js
 ```
 
 ### Category in Webhooks

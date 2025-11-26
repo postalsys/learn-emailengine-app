@@ -39,11 +39,15 @@ This guide covers using **Gmail REST API directly** as the email backend. EmailE
 :::info OAuth2 Scope Requirements
 **IMAP/SMTP** requires the full `https://mail.google.com/` scope. **Gmail API** can use more granular scopes:
 
-- `https://www.googleapis.com/auth/gmail.readonly` - Read-only access
-- `https://www.googleapis.com/auth/gmail.modify` - Read, send, modify (can't permanently delete)
-- `https://www.googleapis.com/auth/gmail.send` - Send only
+| Scope | Access Level | Use Case |
+|-------|--------------|----------|
+| `gmail.readonly` | Read-only | Applications that only need to read emails |
+| `gmail.modify` | Read, send, modify | Full email access except permanent deletion |
+| `gmail.send` | Send only | Applications that only send emails |
 
-During Google's OAuth2 app verification, they may require you to use limited scopes. If so, you must use Gmail API since these limited scopes don't work with IMAP/SMTP.
+**Google's Principle of Least Privilege:** For public production apps, Google requires you to request only the minimum scopes needed for your use case. If your application only reads emails, you will not be granted `gmail.modify`. If you only send emails, you will not be granted read access.
+
+EmailEngine can be configured to work with these limited scopes - select the appropriate **Base Scopes** setting when creating your Gmail OAuth2 application in EmailEngine.
 :::
 
 ## Overview of Setup Steps
@@ -344,6 +348,22 @@ Now configure the user OAuth application that will authenticate Gmail accounts.
 :::important Link Service Account
 You must select the service account application you created in Step 6. This tells EmailEngine which credentials to use for managing Pub/Sub resources.
 :::
+
+### Configuring Limited Scopes
+
+If Google requires you to use limited scopes during verification, you can configure EmailEngine to request only the scopes you need.
+
+**Default scope:** By default, Gmail API mode requests `gmail.modify` which provides read, send, and modify access (but not permanent deletion).
+
+**Using more limited scopes:** If your application only needs to read emails or only send emails, you can exclude scopes using the **Skip scopes** field when configuring your OAuth2 application:
+
+| Your Use Case | Skip Scopes | Resulting Access |
+|---------------|-------------|------------------|
+| Read and send | (none) | Full `gmail.modify` access |
+| Read only | `gmail.send` | Read-only access |
+| Send only | `gmail.readonly` | Send-only access |
+
+**Example:** If Google grants you only `gmail.readonly` during verification, configure EmailEngine to skip the `gmail.send` scope to match your granted permissions.
 
 Click **Register app** to save.
 

@@ -4,7 +4,7 @@ description: Integrate Microsoft 365 and Outlook accounts with OAuth2 and Graph 
 sidebar_position: 4
 ---
 
-> Click [here](/oauth2-configuration) to see other types of OAuth2 configurations, or follow [this tutorial](https://docs.emailengine.app/setting-up-oauth2-with-outlook/) for a detailed step-by-step guide.
+> Click [here](/docs/accounts/oauth2-setup) to see other types of OAuth2 configurations or see the complete [Outlook OAuth2 Setup Guide](/docs/accounts/outlook-365) for detailed instructions.
 ### Setting up MS Graph API integration with EmailEngine
 Follow these steps to integrate Outlook and MS365 email accounts with EmailEngine using OAuth2 and Microsoft Graph API:
 1.  **Open Azure Portal**  

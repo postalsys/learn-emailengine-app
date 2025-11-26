@@ -36,7 +36,7 @@ EmailEngine can be deployed in various ways depending on your infrastructure and
 
 **When to use:** Quick start, development, simple production
 
-[Docker deployment guide →](./docker.md)
+[Docker deployment guide →](/docs/installation/docker)
 
 ---
 
@@ -53,7 +53,7 @@ EmailEngine can be deployed in various ways depending on your infrastructure and
 
 **When to use:** Development, staging, small production
 
-[Docker Compose setup →](./docker.md#docker-compose)
+[Docker Compose setup →](/docs/installation/docker#docker-compose-recommended)
 
 ---
 
@@ -71,7 +71,7 @@ EmailEngine can be deployed in various ways depending on your infrastructure and
 
 **When to use:** Enterprise, large scale, cloud deployments
 
-[Kubernetes deployment →](./docker.md#kubernetes)
+[Kubernetes deployment →](/docs/installation/docker#production-deployment)
 
 ---
 
@@ -138,7 +138,7 @@ services:
   redis:
     image: redis:7-alpine
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     ports:
       - "3000:3000"
     environment:
@@ -387,7 +387,7 @@ graph TB
     style Redis fill:#f3e5f5
 ```
 
-[Kubernetes guide →](./docker.md#kubernetes)
+[Kubernetes guide →](/docs/installation/docker#production-deployment)
 
 ## Migration & Updates
 
@@ -395,10 +395,10 @@ graph TB
 
 **Docker:**
 ```bash
-docker pull postalsys/emailengine:latest
+docker pull postalsys/emailengine:v2
 docker stop emailengine
 docker rm emailengine
-docker run ... postalsys/emailengine:latest
+docker run ... postalsys/emailengine:v2
 ```
 
 **SystemD:**
@@ -416,7 +416,7 @@ systemctl restart emailengine
 **Kubernetes:**
 ```bash
 kubectl set image deployment/emailengine \
-  emailengine=postalsys/emailengine:latest
+  emailengine=postalsys/emailengine:v2
 ```
 
 ### Zero-Downtime Updates
@@ -451,14 +451,12 @@ cp /var/lib/redis/dump.rdb /backup/
 
 ### Metrics
 
-**Prometheus endpoint:**
-```bash
-EENGINE_METRICS_PORT=9090
-```
+The Prometheus metrics endpoint is available at `/metrics` on the main API server (same port as the web interface and API). It requires authentication with a token that has the `metrics` scope.
 
 **Access metrics:**
 ```bash
-curl http://localhost:9090/metrics
+curl http://localhost:3000/metrics \
+  -H "Authorization: Bearer YOUR_METRICS_TOKEN"
 ```
 
 ### Logging

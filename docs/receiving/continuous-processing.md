@@ -170,11 +170,11 @@ curl -X PUT "https://your-emailengine.com/admin/config" \
 For pure processing pipelines (no UI needed), use "fast" indexing:
 
 ```bash
-curl -X PUT "https://your-emailengine.com/admin/config" \
+curl -X POST "https://your-emailengine.com/v1/settings" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "imapStrategy": "fast"
+    "imapIndexer": "fast"
   }'
 ```
 
@@ -182,10 +182,10 @@ curl -X PUT "https://your-emailengine.com/admin/config" \
 
 | Feature | Full | Fast |
 |---------|------|------|
-| New message webhooks | [YES] | [YES] |
-| Message update webhooks | [YES] | [NO] |
-| Message delete webhooks | [YES] | [NO] |
-| Flag change webhooks | [YES] | [NO] |
+| New message webhooks | Yes | Yes |
+| Message update webhooks | Yes | No |
+| Message delete webhooks | Yes | No |
+| Flag change webhooks | Yes | No |
 | Processing speed | Slower | Faster |
 | Use case | Full sync | Processing only |
 

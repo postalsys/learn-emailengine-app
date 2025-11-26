@@ -411,61 +411,6 @@ Some endpoints support sorting:
 curl "http://localhost:3000/v1/account/user@example.com/messages?sort=date:desc"
 ```
 
-## Rate Limiting
-
-EmailEngine implements rate limiting to ensure fair usage and system stability.
-
-### Rate Limit Headers
-
-All responses include rate limit information:
-
-```http
-X-RateLimit-Limit: 1000
-X-RateLimit-Remaining: 985
-X-RateLimit-Reset: 1640995200
-```
-
-| Header                  | Description                      |
-| ----------------------- | -------------------------------- |
-| `X-RateLimit-Limit`     | Maximum requests per window      |
-| `X-RateLimit-Remaining` | Requests remaining in window     |
-| `X-RateLimit-Reset`     | Unix timestamp when limit resets |
-
-### Handling 429 Too Many Requests
-
-When rate limited, you'll receive:
-
-```json
-{
-  "error": "Rate limit exceeded",
-  "code": "RateLimitExceeded",
-  "statusCode": 429,
-  "retryAfter": 60
-}
-```
-
-Implement exponential backoff:
-
-```
-// Pseudo code: Handle rate limiting with backoff
-function makeRequestWithBackoff(url, options) {
-  response = HTTP_REQUEST(url, options)
-
-  if (response.status == 429) {
-    // Get retry delay from header or use default
-    retryAfter = response.headers['Retry-After'] OR 60
-
-    // Wait before retrying
-    SLEEP(retryAfter * 1000)  // Convert to milliseconds
-
-    // Recursive retry
-    return makeRequestWithBackoff(url, options)
-  }
-
-  return response
-}
-```
-
 ## Webhooks
 
 Instead of polling the API, use webhooks to receive real-time notifications.
@@ -643,7 +588,7 @@ Configure webhooks and event notifications.
 
 Complete auto-generated API documentation with all endpoints, parameters, and examples.
 
-[Browse full API reference](/docs/api-reference)
+[Browse full API reference](/docs/api)
 
 ## Support
 

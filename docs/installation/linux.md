@@ -34,6 +34,20 @@ EmailEngine can be installed on Linux using three methods:
 - **Node.js 20+** (only for source installation, recommended 24+)
 - **OpenSSL** (for generating secrets)
 
+### Privileges
+
+EmailEngine does not require root or administrator privileges to run. You can run it as any unprivileged user (e.g., a dedicated `emailengine` user) on any unprivileged port (e.g., 3000).
+
+Root access is only needed during initial setup to:
+- Create the SystemD service file
+- Create a dedicated system user
+- Bind the SMTP or IMAP proxy to privileged ports (below 1024, such as 465 or 993)
+
+Once installed, EmailEngine runs as an unprivileged user. For privileged ports, instead of running as root, consider these safer alternatives:
+- Use a reverse proxy (Nginx, Caddy) to forward traffic
+- Use `setcap` to grant port binding capabilities: `sudo setcap 'cap_net_bind_service=+ep' /path/to/emailengine`
+- Use iptables/nftables to redirect ports
+
 ## Method 1: Automated Installer (Ubuntu/Debian)
 
 The easiest way to install EmailEngine on Ubuntu 20.04+ or Debian 11+.
@@ -302,178 +316,9 @@ emailengine --version
 
 ## Method 3: Source Installation (Production)
 
-Running from source is recommended for production as it requires less RAM.
+Running from source is recommended for production as it uses less memory than the binary. The binary uses a virtual filesystem that loads all files into memory at startup, while source installation keeps files on disk.
 
-### Step 1: Install Node.js
-
-**Ubuntu/Debian (using NodeSource):**
-```bash
-# Install Node.js 24.x (recommended)
-curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Verify
-node --version  # Should be 24.x or higher
-npm --version
-```
-
-**CentOS/RHEL:**
-```bash
-curl -fsSL https://rpm.nodesource.com/setup_24.x | sudo bash -
-sudo yum install -y nodejs
-```
-
-**Note:** Node.js 20+ is supported, but 24+ is recommended for better performance and latest features.
-
-### Step 2: Install Redis
-
-Same as binary installation method (see above).
-
-### Step 3: Setup Directory Structure
-
-```bash
-# Create directories
-sudo mkdir -p /opt/emailengine/app
-cd /opt/emailengine
-```
-
-### Step 4: Configure Environment
-
-Generate and create `.env` file in `/opt/emailengine`:
-
-```bash
-# Generate encryption secret and create .env file
-sudo bash -c "cat > /opt/emailengine/.env" <<EOF
-EENGINE_REDIS=redis://127.0.0.1:6379
-EENGINE_SECRET=$(openssl rand -hex 32)
-EENGINE_WORKERS=4
-EENGINE_LOG_LEVEL=info
-EENGINE_PORT=3000
-EOF
-
-# Secure the file
-sudo chmod 600 /opt/emailengine/.env
-```
-
-**Important:** The `.env` file is stored outside the `app/` directory, making upgrades easier. Keep this file safe.
-
-### Step 5: Download Source
-
-```bash
-cd /opt/emailengine
-
-# Download source distribution (latest)
-sudo wget https://go.emailengine.app/source-dist.tar.gz
-
-# Or download specific version (e.g., 2.55.4)
-sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
-
-# Extract to app directory (includes node_modules)
-sudo tar xzf source-dist.tar.gz -C app --strip-components=1
-sudo rm source-dist.tar.gz
-```
-
-:::tip No npm install needed
-The source-dist.tar.gz includes a complete `node_modules` folder, so you don't need to run `npm install`.
-:::
-
-### Step 6: Test Run
-
-```bash
-cd /opt/emailengine
-node app/server.js
-```
-
-In another terminal:
-```bash
-curl http://localhost:3000/health
-```
-
-### Step 7: Run as Service
-
-Create `/etc/systemd/system/emailengine.service`:
-
-```ini
-[Unit]
-Description=EmailEngine
-After=redis.service
-Requires=redis.service
-
-[Service]
-Type=simple
-User=emailengine
-Group=emailengine
-WorkingDirectory=/opt/emailengine
-
-EnvironmentFile=/opt/emailengine/.env
-
-ExecStart=/usr/bin/node app/server.js
-Restart=always
-RestartSec=10
-
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=emailengine
-
-LimitNOFILE=65536
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-# Create user
-sudo useradd --system --home /opt/emailengine --shell /bin/false emailengine
-
-# Set ownership
-sudo chown -R emailengine:emailengine /opt/emailengine
-sudo chmod 600 /opt/emailengine/.env
-
-# Enable and start
-sudo systemctl daemon-reload
-sudo systemctl enable emailengine
-sudo systemctl start emailengine
-sudo systemctl status emailengine
-```
-
-### Upgrading Source Installation
-
-The directory structure makes upgrades simple - just replace the `app/` directory while keeping your `.env` file intact.
-
-```bash
-cd /opt/emailengine
-
-# Stop service
-sudo systemctl stop emailengine
-
-# Backup current version (optional)
-sudo mv app app.backup.$(date +%Y%m%d)
-
-# Create new app directory
-sudo mkdir -p app
-
-# Download new version (latest)
-sudo wget https://go.emailengine.app/source-dist.tar.gz
-
-# Or download specific version (e.g., 2.55.4)
-sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
-
-# Extract to app directory (includes node_modules)
-sudo tar xzf source-dist.tar.gz -C app --strip-components=1
-sudo rm source-dist.tar.gz
-
-# Restore ownership
-sudo chown -R emailengine:emailengine /opt/emailengine
-
-# Start service
-sudo systemctl start emailengine
-
-# Verify
-sudo systemctl status emailengine
-curl http://localhost:3000/health
-```
-
-**Note:** Your `.env` file in `/opt/emailengine/` is preserved during upgrades.
+For complete source installation instructions, including Node.js setup, SystemD service configuration, and upgrade procedures, see the dedicated **[Source Installation Guide](/docs/installation/source)**.
 
 ## Post-Installation
 

@@ -283,6 +283,8 @@ The outbox contains queued messages waiting to be sent. Use these endpoints to v
 
 **Endpoint:** `GET /v1/outbox`
 
+[Detailed API reference →](/docs/api/get-v-1-outbox)
+
 Lists all queued messages across all accounts.
 
 **Query Parameters:**
@@ -317,6 +319,8 @@ for each msg in data.messages {
 ### Get Outbox Message
 
 **Endpoint:** `GET /v1/outbox/:queueId`
+
+[Detailed API reference →](/docs/api/get-v-1-outbox-queueid)
 
 **Example:**
 
@@ -356,6 +360,8 @@ PRINT("Attempts: " + message.attempts)
 ### Cancel Outbox Message
 
 **Endpoint:** `DELETE /v1/outbox/:queueId`
+
+[Detailed API reference →](/docs/api/delete-v-1-outbox-queueid)
 
 **Example:**
 

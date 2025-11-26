@@ -138,6 +138,8 @@ For detailed CLI usage, export/import workflows, and prepared token configuratio
 
 **Endpoint:** `POST /v1/token`
 
+[Detailed API reference →](/docs/api/post-v-1-token)
+
 **Authentication:** Requires existing valid token
 
 ```bash
@@ -234,6 +236,8 @@ emailengine tokens delete \
 curl -X DELETE http://localhost:3000/v1/token/TOKEN_HASH \
   -H "Authorization: Bearer ADMIN_TOKEN"
 ```
+
+[Detailed API reference →](/docs/api/delete-v-1-token-token)
 
 ## Disabling Authentication (Development Only)
 

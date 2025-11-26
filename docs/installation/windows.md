@@ -19,6 +19,17 @@ EmailEngine can be installed on Windows using two methods:
 For production deployments on Windows Server, consider using **WSL2** or running EmailEngine on a dedicated Linux VM for better performance and reliability.
 :::
 
+### Privileges
+
+EmailEngine does not require administrator privileges to run. You can run it as a regular user on any unprivileged port (e.g., 3000).
+
+Administrator access is only needed during initial setup to:
+- Install Memurai/Redis as a Windows service
+- Create a Windows service for EmailEngine (optional)
+- Bind the SMTP or IMAP proxy to privileged ports (below 1024, such as 465 or 993)
+
+Once installed, EmailEngine can run as an unprivileged user. For privileged ports, consider using a reverse proxy to forward traffic from privileged ports to EmailEngine.
+
 ## Method 1: Windows Executable
 
 Native Windows installation using the standalone executable.

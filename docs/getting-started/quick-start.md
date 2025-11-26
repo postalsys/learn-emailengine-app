@@ -148,7 +148,7 @@ _Auto-detected IMAP/SMTP configuration showing server settings, ports, and TLS o
 - When you don't need programmatic control over OAuth2 tokens
 
 :::tip Using in Your Application
-You can redirect users to the hosted authentication form from your application. The form will redirect users to the OAuth2 provider's permission page (which must open in a main window, not an iframe due to security restrictions). After authentication, users are redirected back to your application. See the [Authentication Form API](/docs/api/get-v-1-authentication-form) for details.
+You can redirect users to the hosted authentication form from your application. The form will redirect users to the OAuth2 provider's permission page (which must open in a main window, not an iframe due to security restrictions). After authentication, users are redirected back to your application. See the [Authentication Form API](/docs/api/post-v-1-authentication-form) for details.
 :::
 
 ### Option B: API with OAuth2 Tokens (Advanced)
@@ -381,7 +381,7 @@ _Webhooks configuration page in EmailEngine settings_
 Use the [update settings API](/docs/api/post-v-1-settings):
 
 ```bash
-$ curl -XPUT "http://127.0.0.1:3000/v1/settings" \
+$ curl -XPOST "http://127.0.0.1:3000/v1/settings" \
   -H "Authorization: Bearer ${EMAILENGINE_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -522,7 +522,7 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account/my-account/search" \
 ### Production Deployment
 
 - **[Docker Deployment](/docs/deployment/docker)** - Production Docker setup
-- **[Environment Variables](/docs/configuration/environment-variables)** - Complete configuration reference
+- **[Environment Variables](/docs/configuration/environment-variables)** - Configuration Reference
 - **[Performance Tuning](/docs/advanced/performance-tuning)** - Optimize for high volume
 - **[Security Best Practices](/docs/deployment/security)** - Secure your deployment
 

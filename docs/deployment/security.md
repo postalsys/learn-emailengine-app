@@ -55,9 +55,9 @@ sudo iptables -A INPUT -p tcp --dport 6379 -s 127.0.0.1 -j ACCEPT
 sudo iptables -A INPUT -p tcp --dport 6379 -j DROP
 ```
 
-### VPN Access
+### VPN Setup
 
-**Use VPN for admin access:**
+For secure remote access to the admin interface, consider using a VPN:
 
 ```bash
 # WireGuard example
@@ -77,16 +77,7 @@ PublicKey = <client-public-key>
 AllowedIPs = 10.0.0.2/32
 ```
 
-**Restrict admin interface to VPN:**
-
-```nginx
-# Nginx configuration
-location /admin {
-    allow 10.0.0.0/24;  # VPN network
-    deny all;
-    proxy_pass http://localhost:3000;
-}
-```
+Once your VPN is configured, restrict admin interface access to VPN IP ranges using the methods described in [Admin Interface Access Control](#admin-interface-access-control) below.
 
 ### Network Segmentation
 
@@ -97,7 +88,7 @@ graph TB
     Internet[Public Network<br/>Internet]
 
     subgraph DMZ["DMZ Zone"]
-        Nginx[Nginx Reverse Proxy<br/>443/tcp]
+        Proxy[Reverse Proxy<br/>443/tcp]
     end
 
     subgraph AppZone["Application Zone"]
@@ -105,14 +96,14 @@ graph TB
         Redis[Redis Database<br/>6379/tcp - internal]
     end
 
-    Internet --> Nginx
-    Nginx --> EmailEngine
+    Internet --> Proxy
+    Proxy --> EmailEngine
     EmailEngine --> Redis
 
     style Internet fill:#ffebee
     style DMZ fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     style AppZone fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
-    style Nginx fill:#fff9c4
+    style Proxy fill:#fff9c4
     style EmailEngine fill:#e1f5ff
     style Redis fill:#f3e5f5
 ```
@@ -121,15 +112,31 @@ graph TB
 
 ### EENGINE_SECRET
 
-EmailEngine uses `EENGINE_SECRET` for encrypting stored credentials and OAuth tokens.
+EmailEngine uses `EENGINE_SECRET` as the master encryption key for all sensitive data stored in Redis. This environment variable is critical for security and data recovery.
 
-**Generate and store secret:**
+:::danger Critical - Store This Secret Permanently
+The `EENGINE_SECRET` must be stored permanently in your configuration. If lost, you cannot decrypt any stored credentials and must re-authenticate all accounts. Never generate it inline with `export EENGINE_SECRET=$(openssl rand -hex 32)` as the secret will be lost when the session ends.
+:::
+
+**What EENGINE_SECRET encrypts:**
+
+- Account passwords (IMAP/SMTP credentials)
+- OAuth2 access tokens
+- OAuth2 refresh tokens
+- OAuth2 application client secrets
+
+**Generate a secure secret:**
 
 ```bash
-# Generate secret
+# Generate a 32-byte (256-bit) secret
 openssl rand -hex 32
+# Example output: a1b2c3d4e5f6...64 hex characters
+```
 
-# Store permanently in SystemD service file
+**Store permanently (choose one method):**
+
+```bash
+# Option 1: SystemD service file (recommended for Linux servers)
 # Edit /etc/systemd/system/emailengine.service
 [Service]
 Environment="EENGINE_SECRET=your-generated-secret-here"
@@ -138,22 +145,28 @@ Environment="EENGINE_SECRET=your-generated-secret-here"
 sudo systemctl daemon-reload
 sudo systemctl restart emailengine
 
-# Or use secret management service
-# AWS Secrets Manager, HashiCorp Vault, etc.
+# Option 2: Environment file
+echo "EENGINE_SECRET=your-generated-secret-here" >> /etc/emailengine/.env
+
+# Option 3: Secret management service (production)
+# AWS Secrets Manager, HashiCorp Vault, Azure Key Vault, etc.
 ```
 
-**What EENGINE_SECRET encrypts:**
+**Requirements:**
 
-- Account passwords
-- OAuth2 access tokens
-- OAuth2 refresh tokens
-- SMTP credentials
+- Minimum 32 characters (64 hex characters recommended)
+- Must remain constant across restarts
+- Must be backed up securely
+- Same secret required for all EmailEngine instances sharing the same Redis database
+
+For migrating existing data, rotating secrets, and detailed encryption procedures, see the [Secret Encryption](/docs/advanced/encryption) guide.
 
 ### API Token Management
 
-**API tokens are always bound to specific email accounts.**
+EmailEngine supports two types of tokens:
 
-All management tokens must be generated from the web UI. You cannot create account-level API tokens programmatically.
+1. **System-wide tokens**: Full access to all accounts and endpoints
+2. **Account-specific tokens**: Restricted to a single account
 
 **Generate tokens via web UI:**
 
@@ -162,6 +175,18 @@ All management tokens must be generated from the web UI. You cannot create accou
 3. Click **Generate New Token**
 4. Set description and permissions
 5. Copy the token immediately (shown only once)
+
+**Generate tokens via CLI:**
+
+```bash
+# System-wide token
+emailengine tokens issue -d "Admin token" -s "*" --dbs.redis="redis://127.0.0.1:6379/8"
+
+# Account-specific token
+emailengine tokens issue -d "User token" -s "api" -a "account_id" --dbs.redis="redis://127.0.0.1:6379/8"
+```
+
+For complete token management details including scopes, export/import, and revocation, see [Access Tokens](/docs/api-reference/access-tokens).
 
 **Store tokens securely:**
 
@@ -175,42 +200,75 @@ export EMAILENGINE_API_TOKEN=your-generated-token
 
 ### OAuth2 Security
 
-EmailEngine manages OAuth2 credentials internally. You only need to configure OAuth2 client credentials once via environment variables.
+EmailEngine supports multiple OAuth2 applications, configured through the web UI or API. OAuth2 credentials are stored encrypted in Redis, not in environment variables.
 
-**Configure OAuth2 app credentials:**
+**Managing OAuth2 applications:**
+
+- **Web UI:** Navigate to **Settings** > **OAuth2** to create and manage OAuth2 apps
+- **API:** Use the `/v1/oauth2` endpoints to create, list, update, and delete OAuth2 apps
+
+**Creating an OAuth2 app via API:**
 
 ```bash
-# Gmail
-EENGINE_GMAIL_CLIENT_ID=xxx.apps.googleusercontent.com
-EENGINE_GMAIL_CLIENT_SECRET=GOCSPX-xxx
-
-# Outlook
-EENGINE_OUTLOOK_CLIENT_ID=xxx
-EENGINE_OUTLOOK_CLIENT_SECRET=xxx
+curl -X POST https://emailengine.example.com/v1/oauth2 \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Gmail App",
+    "provider": "gmail",
+    "clientId": "xxx.apps.googleusercontent.com",
+    "clientSecret": "GOCSPX-xxx",
+    "enabled": true
+  }'
 ```
 
 :::info OAuth2 Credential Storage
-Once users authenticate via OAuth2, EmailEngine automatically stores and manages access tokens, refresh tokens, and handles token refresh. You do not need to manage these tokens manually.
+OAuth2 app credentials are encrypted at rest using [`EENGINE_SECRET`](#eengine_secret). EmailEngine automatically manages access tokens, refresh tokens, and handles token refresh.
 :::
 
 **OAuth2 redirect URI restrictions:**
 
+| Redirect URI | Allowed | Reason |
+|--------------|---------|--------|
+| `https://emailengine.example.com/oauth` | Yes | Valid HTTPS endpoint |
+| `https://emailengine.example.com/oauth/callback` | Yes | Valid HTTPS callback |
+| `http://emailengine.example.com/oauth` | No | Missing HTTPS |
+| `https://*/oauth` | No | Wildcards not permitted |
+| `http://localhost/oauth` | Dev only | Acceptable for local development |
+
+**Microsoft Graph webhook subscriptions:**
+
+When using Microsoft Graph API for Outlook accounts, Microsoft sends webhook notifications to EmailEngine for real-time updates. These URLs must be publicly accessible:
+
+| Endpoint | Purpose |
+|----------|---------|
+| `/oauth/msg/notification` | Receives change notifications for messages |
+| `/oauth/msg/lifecycle` | Receives subscription lifecycle events |
+
+By default, EmailEngine uses `serviceUrl` for these webhook URLs. If EmailEngine is fully firewalled but you need to expose only the webhook endpoints, configure a separate `notificationBaseUrl`:
+
+```bash
+# In Settings > Service Configuration, or via API:
+# serviceUrl: https://internal.example.com (firewalled)
+# notificationBaseUrl: https://webhooks.example.com (publicly accessible)
 ```
-Allowed redirect URIs:
-YES: https://emailengine.example.com/oauth
-YES: https://emailengine.example.com/oauth/callback
 
-Not allowed:
-NO: http://emailengine.example.com/oauth  (no HTTPS)
-NO: https://*/oauth  (wildcard)
-NO: http://localhost/oauth  (except for development)
-```
+This allows you to:
+- Keep EmailEngine's main interface and API behind a firewall
+- Expose only `/oauth/msg/*` endpoints via a dedicated reverse proxy
+- Use a separate domain specifically for Microsoft webhook callbacks
 
-### Access Control
+### Admin Interface Access Control
 
-**Restrict admin interface access by IP:**
+Restrict access to the EmailEngine admin interface (`/admin/*` routes) using IP-based filtering. You can use EmailEngine's built-in filtering, reverse proxy rules, or both for defense in depth.
 
-EmailEngine provides built-in IP address filtering for admin pages using the `EENGINE_ADMIN_ACCESS_ADDRESSES` environment variable.
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs>
+<TabItem value="emailengine" label="EmailEngine Built-in" default>
+
+Use the `EENGINE_ADMIN_ACCESS_ADDRESSES` environment variable to restrict admin interface access:
 
 ```bash
 # Allow only specific IPs and CIDRs to access admin interface
@@ -224,18 +282,8 @@ EENGINE_ADMIN_ACCESS_ADDRESSES=10.0.0.0/8,192.168.1.0/24,203.0.113.42
 
 - Only IP addresses matching the list can access admin pages
 - Non-matching visitors receive an error message
-- API endpoints are not affected (use Nginx for API access control)
+- API endpoints are not affected (protected by API tokens instead)
 - Supports both individual IPs and CIDR notation
-
-**Example configuration:**
-
-```bash
-# /etc/systemd/system/emailengine.service
-[Service]
-Environment="EENGINE_SECRET=your-secret-here"
-Environment="EENGINE_ADMIN_ACCESS_ADDRESSES=127.0.0.0/8,10.0.0.0/8"
-Environment="EENGINE_REDIS=redis://localhost:6379/8"
-```
 
 **Common use cases:**
 
@@ -250,46 +298,63 @@ EENGINE_ADMIN_ACCESS_ADDRESSES=203.0.113.0/24,10.8.0.0/24
 EENGINE_ADMIN_ACCESS_ADDRESSES=198.51.100.1,198.51.100.2,198.51.100.3
 ```
 
-:::tip Combine with Nginx
-For production, combine `EENGINE_ADMIN_ACCESS_ADDRESSES` with Nginx IP restrictions for defense in depth.
-:::
+**SystemD service configuration:**
 
-**Nginx additional protection:**
+```bash
+# /etc/systemd/system/emailengine.service
+[Service]
+Environment="EENGINE_SECRET=your-secret-here"
+Environment="EENGINE_ADMIN_ACCESS_ADDRESSES=127.0.0.0/8,10.0.0.0/8"
+Environment="EENGINE_REDIS=redis://localhost:6379/8"
+```
+
+</TabItem>
+<TabItem value="nginx" label="Nginx">
+
+If using Nginx as a reverse proxy, you can restrict access at the proxy level:
 
 ```nginx
 # Nginx configuration
 location /admin {
     allow 10.0.0.0/8;      # VPN network
     allow 203.0.113.0/24;  # Office network
+    allow 127.0.0.1;       # Localhost
     deny all;
     proxy_pass http://localhost:3000;
 }
 ```
 
+</TabItem>
+<TabItem value="caddy" label="Caddy">
+
+If using Caddy as a reverse proxy, use the `remote_ip` matcher:
+
+```caddyfile
+emailengine.example.com {
+    @blocked_admin {
+        path /admin/*
+        not remote_ip 127.0.0.1 10.0.0.0/24 203.0.113.0/24
+    }
+    respond @blocked_admin 403
+
+    reverse_proxy localhost:3000
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::tip Defense in Depth
+For production deployments, combine `EENGINE_ADMIN_ACCESS_ADDRESSES` with reverse proxy IP restrictions. This provides multiple layers of protection in case one layer is misconfigured.
+:::
+
 ## Encryption
 
 ### Encryption at Rest
 
-**Enable field encryption:**
+EmailEngine encrypts all sensitive credentials using the [`EENGINE_SECRET`](#eengine_secret) environment variable. All account passwords, OAuth2 tokens, and application secrets are automatically encrypted before storage in Redis using AES-256-GCM.
 
-```bash
-# Generate encryption secret (minimum 32 characters)
-openssl rand -hex 32
-
-# Add to your .env file or configuration
-echo "EENGINE_SECRET=generated-value-here" >> .env
-```
-
-:::danger Store Secret Permanently
-This secret must be stored permanently in your configuration file or .env file. If lost, you cannot decrypt stored credentials. Never use `export` with `$(openssl rand)` as the secret will be lost when the session ends.
-:::
-
-**Encrypted fields:**
-
-- Account passwords
-- OAuth2 access tokens
-- OAuth2 refresh tokens
-- SMTP credentials
+For detailed information on enabling encryption, migrating existing data, rotating secrets, and secret management best practices, see the [Secret Encryption](/docs/advanced/encryption) guide.
 
 ### Encryption in Transit
 
@@ -344,26 +409,15 @@ EENGINE_REDIS=rediss://localhost:6379  # Note: rediss:// (with 's')
 
 ### Secret Management
 
-**Use SystemD service file (basic):**
+For `EENGINE_SECRET` storage options (SystemD, environment files, etc.), see [EENGINE_SECRET](#eengine_secret).
 
-```bash
-# Edit /etc/systemd/system/emailengine.service
-[Service]
-Environment="EENGINE_SECRET=your-permanent-secret-here"
-Environment="EENGINE_REDIS=redis://localhost:6379/8"
-
-# Then reload and restart
-sudo systemctl daemon-reload
-sudo systemctl restart emailengine
-```
-
-**Use secret management service (production):**
+**Production secret management with external services:**
 
 ```bash
 #!/bin/bash
-# fetch-secrets.sh
+# fetch-secrets.sh - Example using AWS Secrets Manager
 
-# AWS Secrets Manager
+# Fetch secrets from AWS
 aws secretsmanager get-secret-value \
   --secret-id emailengine/production \
   --query SecretString \
@@ -371,6 +425,7 @@ aws secretsmanager get-secret-value \
 
 # Write to .env file (EmailEngine loads .env from current directory)
 echo "EENGINE_SECRET=$(jq -r .secret /tmp/secrets.json)" > .env
+echo "EENGINE_REDIS=$(jq -r .redis /tmp/secrets.json)" >> .env
 
 # Clean up
 rm /tmp/secrets.json
@@ -379,28 +434,47 @@ rm /tmp/secrets.json
 /usr/local/bin/emailengine
 ```
 
+Similar patterns apply to HashiCorp Vault, Azure Key Vault, and Google Secret Manager.
+
 ## API Security
 
-### Rate Limiting
+:::tip Internal API
+The EmailEngine API is designed to be an internal resource, accessed only by your backend services. It should not be exposed directly to the public internet. Keep the API behind a firewall or restrict access to trusted IP addresses. With this architecture, API rate limiting is typically unnecessary.
+:::
 
-**Nginx rate limiting:**
+### Per-Token Rate Limiting
 
-```nginx
-limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
-limit_req_zone $http_authorization zone=token_limit:10m rate=100r/s;
+If you need to expose the API with account-specific tokens (rare use case), EmailEngine supports optional per-token rate limiting. Configure rate limits when creating access tokens:
 
-server {
-    location /v1/ {
-        limit_req zone=api_limit burst=20 nodelay;
-        limit_req zone=token_limit burst=200 nodelay;
-        proxy_pass http://localhost:3000;
+```bash
+curl -X POST http://localhost:3000/v1/token \
+  -H "Authorization: Bearer ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "user123",
+    "description": "Rate-limited user token",
+    "scopes": ["api"],
+    "restrictions": {
+      "rateLimit": {
+        "maxRequests": 100,
+        "timeWindow": 60
+      }
     }
-}
+  }'
 ```
 
-:::info No Built-in Rate Limiting
-EmailEngine does not have built-in rate limiting. Implement rate limiting at the reverse proxy level (Nginx, HAProxy) or API gateway.
-:::
+| Field | Description |
+|-------|-------------|
+| `maxRequests` | Maximum requests allowed in the time window |
+| `timeWindow` | Time window duration in seconds |
+
+When rate limited, the API returns `429 Too Many Requests` with headers:
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Maximum requests per window |
+| `X-RateLimit-Remaining` | Requests remaining in window |
+| `X-RateLimit-Reset` | Seconds until limit resets |
 
 ### IP Whitelisting
 
@@ -531,11 +605,13 @@ curl -X DELETE https://emailengine.example.com/v1/account/account_1234 \
 # This deletes:
 # - Account credentials
 # - OAuth tokens
-# - Webhook history
+# - Account sync state
 ```
 
-:::info No Built-in Data Retention
-EmailEngine does not implement automatic data retention policies. Email messages are not stored by EmailEngine - it only maintains account credentials and webhook delivery history. Implement data retention policies at your application level if needed.
+:::info What EmailEngine Stores
+EmailEngine stores account credentials, OAuth tokens, and sync state in Redis. Email messages themselves are not stored - EmailEngine reads them from the mail server on demand.
+
+Optionally, EmailEngine can be configured to retain the last N queue job entries (including webhook deliveries) as a FIFO buffer for debugging. By default, no job history is stored.
 :::
 
 ## Security Checklist

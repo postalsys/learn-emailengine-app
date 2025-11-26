@@ -15,9 +15,7 @@ Running EmailEngine from source provides several advantages over binary distribu
 ### Production Benefits
 
 **Lower Memory Usage:**
-- **Binary**: ~200-400 MB base memory consumption
-- **Source**: ~100-200 MB base memory consumption
-- **Savings**: Up to 50% less RAM usage
+The pre-built binary uses a virtual filesystem where all application files are loaded into memory at startup. When running from source, files remain on disk and are only loaded when needed, resulting in lower base memory consumption.
 
 **Better Performance:**
 - Native Node.js execution without packaging overhead
@@ -49,8 +47,22 @@ For production environments, especially those managing many email accounts or ru
 
 - **Node.js 20+** (24+ recommended for best performance)
 - **Redis 6.0+** (stand-alone mode, persistence enabled)
-- **Git** (for cloning repository) or **wget/curl** (for release tarballs)
-- **Build tools** (for native dependencies)
+- **wget/curl** (for downloading release tarballs)
+
+### Privileges
+
+EmailEngine does not require root or administrator privileges to run. You can run it as any unprivileged user (e.g., a dedicated `emailengine` user) on any unprivileged port (e.g., 3000).
+
+Root access is only needed during initial setup to:
+- Create directories in `/opt` and set ownership
+- Create the SystemD service file or Launch Agent
+- Create a dedicated system user
+- Bind the SMTP or IMAP proxy to privileged ports (below 1024, such as 465 or 993)
+
+Once installed, EmailEngine runs as an unprivileged user. For privileged ports, instead of running as root, consider these safer alternatives:
+- Use a reverse proxy (Nginx, Caddy) to forward traffic
+- Use `setcap` to grant port binding capabilities: `sudo setcap 'cap_net_bind_service=+ep' $(which node)`
+- Use iptables/nftables to redirect ports
 
 ## Installation Methods
 
@@ -65,7 +77,7 @@ Choose between stable releases or development versions:
 
 #### Prerequisites
 
-Before installing EmailEngine from source, you need Node.js 24+ and Redis 6.0+:
+Before installing EmailEngine from source, you need Node.js 20+ (24+ recommended) and Redis 6.0+:
 
 - **Node.js & Redis setup:** Follow Steps 1-2 in the [Linux Installation Guide](/docs/installation/linux#step-1-install-nodejs)
 - Returns to this guide after completing the prerequisites
@@ -222,7 +234,7 @@ sudo journalctl -u emailengine -f
 
 #### Prerequisites
 
-Before installing EmailEngine from source, you need Node.js 24+ and Redis:
+Before installing EmailEngine from source, you need Node.js 20+ (24+ recommended) and Redis:
 
 - **Node.js & Redis setup:** Follow Steps 1-2 in the [macOS Installation Guide](/docs/installation/macos#step-1-install-nodejs)
 - Returns to this guide after completing the prerequisites
@@ -368,51 +380,28 @@ pm2 restart emailengine
 pm2 stop emailengine
 ```
 
-### Docker Compose with Source
+### Docker with Source
 
-Run from source in Docker:
+If you want to build your own Docker image from source, the EmailEngine repository includes a production-ready `Dockerfile`. Clone the repository and build:
 
-Create `Dockerfile`:
+```bash
+# Clone the repository
+git clone https://github.com/postalsys/emailengine.git
+cd emailengine
 
-```dockerfile
-FROM node:24-alpine
+# Build the Docker image
+docker build -t emailengine:custom .
 
-WORKDIR /app
-
-# Copy source (source-dist.tar.gz includes node_modules)
-COPY . .
-
-# Expose ports
-EXPOSE 3000
-
-# Start EmailEngine
-CMD ["node", "server.js"]
+# Run with Redis
+docker run -d \
+  --name emailengine \
+  -p 3000:3000 \
+  -e EENGINE_REDIS="redis://redis-host:6379" \
+  -e EENGINE_SECRET="your-secret-key" \
+  emailengine:custom
 ```
 
-Create `docker-compose.yml`:
-
-```yaml
-version: '3.8'
-
-services:
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis-data:/data
-
-  emailengine:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - EENGINE_REDIS=redis://redis:6379
-      - EENGINE_SECRET=${EENGINE_SECRET}
-    depends_on:
-      - redis
-
-volumes:
-  redis-data:
-```
+The official Dockerfile includes security best practices like running as a non-root user and using `dumb-init` for proper signal handling.
 
 ## Upgrading
 

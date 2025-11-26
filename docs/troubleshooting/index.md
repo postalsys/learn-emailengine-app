@@ -164,7 +164,8 @@ journalctl -u emailengine | grep -i "connection\|error"
    redis-cli INFO memory | grep maxmemory_human
 
    # Via monitoring endpoint
-   curl http://localhost:3000/admin/stats | jq '.redis'
+   curl http://localhost:3000/v1/stats \
+     -H "Authorization: Bearer TOKEN" | jq '.redis'
    ```
 
    **Solution:**
@@ -293,12 +294,13 @@ traceroute imap.gmail.com
 **Diagnostic:**
 
 ```bash
-# Check OAuth2 credentials
-echo $EENGINE_GMAIL_CLIENT_ID
-echo $EENGINE_GMAIL_CLIENT_SECRET
+# Check OAuth2 applications via API
+curl http://localhost:3000/v1/oauth2 \
+  -H "Authorization: Bearer TOKEN" | jq '.'
 
-# Check redirect URI
-curl http://localhost:3000/admin/config | jq '.gmail'
+# Check specific OAuth2 app configuration
+curl http://localhost:3000/v1/oauth2/gmail \
+  -H "Authorization: Bearer TOKEN" | jq '.'
 
 # Test OAuth2 endpoint
 curl https://oauth2.googleapis.com/token
@@ -503,8 +505,9 @@ journalctl -u emailengine -f | grep webhook
 ps aux | grep emailengine
 top -p $(pgrep emailengine)
 
-# Check Node.js heap
-curl http://localhost:9090/metrics | grep heap
+# Check Node.js heap via Prometheus metrics endpoint
+curl http://localhost:3000/metrics \
+  -H "Authorization: Bearer TOKEN" | grep heap
 
 # Check account count
 curl http://localhost:3000/v1/accounts \

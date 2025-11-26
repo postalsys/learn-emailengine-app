@@ -557,7 +557,7 @@ Deleting an account cannot be undone. You'll need to re-add the account if neede
 Before adding an account, verify credentials work:
 
 ```bash
-curl -X POST https://your-ee.com/v1/verifyaccount \
+curl -X POST https://your-ee.com/v1/verifyAccount \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

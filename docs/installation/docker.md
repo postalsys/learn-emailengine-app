@@ -29,7 +29,7 @@ docker run -d \
   -p 3000:3000 \
   -e EENGINE_REDIS="redis://redis-host:6379/8" \
   -e EENGINE_SECRET="your-secret-key-at-least-32-chars" \
-  postalsys/emailengine:latest
+  postalsys/emailengine:v2
 ```
 
 Test the installation:
@@ -96,7 +96,7 @@ EENGINE_SECRET=your-generated-secret-here
 REDIS_PASSWORD=your-redis-password
 
 # Optional: Version pinning
-EMAILENGINE_VERSION=latest
+EMAILENGINE_VERSION=v2
 
 # Optional: Custom port bindings (default: 127.0.0.1)
 EMAILENGINE_API_BIND=0.0.0.0
@@ -143,7 +143,7 @@ services:
       retries: 3
 
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     container_name: emailengine
     ports:
       - "3000:3000"
@@ -379,24 +379,23 @@ http {
 
 EmailEngine offers various tag types:
 
-1. **`latest`**: Most recent stable release (recommended)
-2. **`v2`**: Latest release in the v2 branch
-3. **`v2.x.x`**: Specific version (e.g., `v2.55.4`)
-4. **`master`**: Latest commit (unstable, development only)
+1. **`latest`**: Latest commit from the master branch (development builds)
+2. **`v2`**: Latest tagged release (recommended for production, currently the latest stable version as there is no v3 or later)
+3. **`v2.x.x`**: Specific version (e.g., `v2.55.4`) - pin to a specific release for maximum stability
 
 ### Image Sources
 
 **Docker Hub (primary):**
 
 ```bash
-docker pull postalsys/emailengine:latest
+docker pull postalsys/emailengine:v2
 docker pull postalsys/emailengine:v2.55.4
 ```
 
 **GitHub Container Registry (alternative):**
 
 ```bash
-docker pull ghcr.io/postalsys/emailengine:latest
+docker pull ghcr.io/postalsys/emailengine:v2
 ```
 
 ### Multi-Architecture Support
@@ -444,14 +443,14 @@ docker logs --tail 100 emailengine  # Last 100 lines
 # List images
 docker images
 
-# Pull latest image
-docker pull postalsys/emailengine:latest
+# Pull latest tagged release
+docker pull postalsys/emailengine:v2
 
 # Pull specific version
 docker pull postalsys/emailengine:v2.55.4
 
 # Remove image
-docker rmi postalsys/emailengine:latest
+docker rmi postalsys/emailengine:v2
 
 # Remove unused images
 docker image prune
@@ -478,7 +477,7 @@ docker exec emailengine curl -f http://localhost:3000/health
 ### Docker Compose Upgrade
 
 ```bash
-# Pull latest image
+# Pull latest tagged release
 docker-compose pull
 
 # Restart with new image
@@ -491,8 +490,8 @@ docker-compose logs -f emailengine
 ### Docker Run Upgrade
 
 ```bash
-# Pull latest image
-docker pull postalsys/emailengine:latest
+# Pull latest tagged release
+docker pull postalsys/emailengine:v2
 
 # Stop and remove old container
 docker stop emailengine
@@ -504,7 +503,7 @@ docker run -d \
   -p 3000:3000 \
   -e EENGINE_REDIS="redis://redis-host:6379/8" \
   -e EENGINE_SECRET="your-secret-key" \
-  postalsys/emailengine:latest
+  postalsys/emailengine:v2
 ```
 
 ### Specific Version
@@ -548,8 +547,6 @@ EENGINE_LOG_RAW=false         # Log raw IMAP/SMTP traffic
 EENGINE_QUEUE_NOTIFY=true     # Enable queue notifications
 EENGINE_MAX_SIZE=5242880  # 5MB in bytes
 
-# Authentication
-EENGINE_APP_NAME=EmailEngine  # Application name
 ```
 
 See [Configuration Options](/docs/configuration) for complete list.

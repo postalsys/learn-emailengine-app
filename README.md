@@ -5,9 +5,10 @@ This is the comprehensive documentation website for EmailEngine, built with Docu
 ## Overview
 
 This documentation site includes:
+
 - **Getting Started Guide** - Introduction and quick start guides
 - **Installation Instructions** - Multiple deployment options
-- **Configuration Documentation** - Complete configuration reference
+- **Configuration Documentation** - Configuration Reference
 - **Usage Guides** - How to use EmailEngine features
 - **API Reference** - Auto-generated from OpenAPI specification (74 endpoints)
 - **Integration Guides** - Gmail, Outlook, and other providers
@@ -55,6 +56,7 @@ npm start
 The site will be available at `http://localhost:3000/`
 
 Features in development mode:
+
 - Hot reload for instant preview
 - Fast refresh
 - Error overlay
@@ -69,6 +71,7 @@ npm run build
 ```
 
 The build automatically:
+
 1. Downloads the latest OpenAPI spec from https://emailengine.dev/swagger.json
 2. Updates `sources/swagger.json`
 3. Builds the static site
@@ -130,6 +133,7 @@ npm run docusaurus gen-api-docs emailengine
 49+ articles covering tutorials, use cases, integration guides, and best practices.
 
 Authors are defined in `blog/authors.yml`:
+
 - **andris** - Andris Reinman (Creator of EmailEngine)
 - **emailengine** - EmailEngine Team
 
@@ -199,6 +203,7 @@ npm run build
 ### Site Metadata
 
 Edit `docusaurus.config.ts` for site configuration:
+
 - Title, tagline, URL
 - Navigation items
 - Footer links
@@ -212,6 +217,7 @@ Edit `src/css/custom.css` for custom styles.
 ### Components
 
 Customize React components in `src/components/`:
+
 - `HomepageFeatures/` - Landing page features
 - Additional components can be swizzled from the theme
 
@@ -220,6 +226,7 @@ Customize React components in `src/components/`:
 ### Build Errors
 
 If build fails:
+
 1. Clear cache: `npm run clear`
 2. Reinstall dependencies: `rm -rf node_modules && npm install`
 3. Check for syntax errors in markdown files
@@ -251,6 +258,7 @@ If build fails:
 ### Problematic Blog Posts
 
 The following blog posts were moved to `blog-backup/` due to MDX parsing issues:
+
 - `2023-03-10-packaging-and-selling-a-node-js-app.md`
 - `2025-03-27-data-compliance.md`
 - `2023-03-14-making-email-html-webpage-compatible-with-emailengine.md`
@@ -263,6 +271,7 @@ These can be fixed by escaping JSX-like syntax or converting to proper fenced co
 ### Image Placeholders
 
 Some blog posts reference images with `__GHOST_URL__` placeholders. These should be:
+
 1. Downloaded from the original Ghost blog
 2. Placed in `static/img/blog/`
 3. Referenced with proper paths in the markdown
@@ -270,16 +279,19 @@ Some blog posts reference images with `__GHOST_URL__` placeholders. These should
 ## Dependencies
 
 ### Core
+
 - `@docusaurus/core`: ^3.9.1
 - `@docusaurus/preset-classic`: ^3.9.1
 - `react`: ^19.2.0
 - `react-dom`: ^19.2.0
 
 ### OpenAPI
+
 - `docusaurus-plugin-openapi-docs`: ^4.5.1
 - `docusaurus-theme-openapi-docs`: ^4.5.1
 
 ### Development
+
 - `jsdom`: ^25.0.1
 - `turndown`: ^7.2.0
 - `js-yaml`: ^4.1.0

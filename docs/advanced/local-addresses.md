@@ -107,16 +107,27 @@ curl -XPOST "http://localhost:3000/v1/account" \
 - `imap.localAddress` - IP for IMAP connections
 - `smtp.localAddress` - IP for SMTP connections
 
-### Method 2: Global Default
+### Method 2: Global Default via Settings
 
-Set default local address for all accounts:
+Configure default local addresses via the Settings API or web interface (**Configuration** > **Network**). Local addresses are configured as an array that can be assigned to IMAP and SMTP connections:
 
 ```bash
-# Environment variable
-EENGINE_LOCAL_ADDRESS=192.168.1.100 node server.js
+curl -X POST "http://localhost:3000/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "localAddresses": ["192.168.1.100", "192.168.1.101", "192.168.1.102"]
+  }'
 ```
 
-Accounts without explicit `localAddress` will use this default.
+Alternatively, add to your TOML configuration file:
+
+```toml
+# config.toml
+localAddresses = "192.168.1.100,192.168.1.101,192.168.1.102"
+```
+
+Accounts without explicit `localAddress` will use addresses from this pool.
 
 ### Method 3: Multiple IPs with Round-Robin
 

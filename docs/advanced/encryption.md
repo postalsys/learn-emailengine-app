@@ -8,12 +8,12 @@ description: Enable field-level encryption for sensitive data like passwords and
 
 Learn how to enable field-level encryption for sensitive data stored by EmailEngine, including passwords, OAuth tokens, and API secrets.
 
-
 ## Overview
 
 By default, EmailEngine stores all data in cleartext in Redis. This is fine for testing but not recommended for production environments.
 
 EmailEngine offers **field-level encryption** that encrypts all sensitive fields using the **AES-256-GCM** cipher:
+
 - Account passwords
 - OAuth access and refresh tokens
 - Google OAuth client secrets
@@ -31,17 +31,20 @@ EmailEngine offers **field-level encryption** that encrypts all sensitive fields
 ### What Gets Encrypted
 
 **Account credentials**:
+
 - IMAP passwords
 - SMTP passwords
 - OAuth access tokens
 - OAuth refresh tokens
 
 **Configuration**:
+
 - OAuth client secrets
 - Webhook secrets
 - API secrets
 
 **Not encrypted**:
+
 - Email content (not stored by default)
 - Metadata (subject lines, senders, etc.)
 - Account IDs
@@ -50,11 +53,20 @@ EmailEngine offers **field-level encryption** that encrypts all sensitive fields
 ## Important Considerations
 
 :::warning
-Encryption settings cannot be changed during runtime. To enable, disable, or change encryption, you must:
-1. Stop EmailEngine
-2. Run encryption migration
-3. Start EmailEngine with new encryption options
+To fully encrypt all existing credentials, you must run the encryption migration tool. Simply enabling `EENGINE_SECRET` without migration leaves existing credentials unencrypted.
 :::
+
+### How Encryption Works with Existing Data
+
+When you enable `EENGINE_SECRET` on an instance with existing accounts:
+
+- **Existing accounts continue working** - EmailEngine can read both encrypted and unencrypted credentials
+- **Existing credentials remain unencrypted** - They are not automatically migrated
+- **New accounts get encrypted credentials** - Any account added after enabling encryption stores credentials encrypted
+- **OAuth2 tokens encrypt on renewal** - When EmailEngine refreshes an OAuth2 access token, the new tokens are stored encrypted
+- **IMAP/SMTP passwords stay unencrypted** - Until you run the migration tool, these remain in cleartext
+
+This means you can enable encryption without downtime, but for full protection you should run the `emailengine encrypt` migration tool to encrypt all existing credentials.
 
 ## Enabling Encryption on New Instance
 
@@ -90,12 +102,14 @@ That's it! All new accounts will have encrypted secrets automatically.
 Don't provide environment variables using the `export` command in production. Instead:
 
 **SystemD Service**:
+
 ```ini
 [Service]
 Environment="EENGINE_SECRET=secret-password"
 ```
 
 **Docker Compose**:
+
 ```yaml
 services:
   emailengine:
@@ -104,15 +118,18 @@ services:
 ```
 
 **Docker Run**:
+
 ```bash
 docker run -e EENGINE_SECRET=secret-password emailengine/emailengine
 ```
 
 **.env File**:
+
 ```bash
 # .env file in working directory
 EENGINE_SECRET=secret-password
 ```
+
 :::
 
 ## Enabling Encryption on Existing Instance
@@ -145,21 +162,28 @@ pkill emailengine
 
 #### 2. Run Encryption Migration
 
-The encryption migration tool is the same `emailengine` command with the `encrypt` argument:
+The encryption migration tool is the same `emailengine` command with the `encrypt` argument. You can run this command from any machine that has network access to the Redis database.
+
+```bash
+emailengine encrypt \
+  --dbs.redis="redis://localhost:6379/8" \
+  --service.secret="your-secret-password-here"
+```
+
+Or using environment variables:
 
 ```bash
 export EENGINE_SECRET="your-secret-password-here"
-emailengine encrypt --any.command.line.options
-```
-
-**Example with options**:
-```bash
-export EENGINE_SECRET="my-encryption-key-2023"
-export REDIS_URL="redis://localhost:6379/8"
+export EENGINE_REDIS="redis://localhost:6379/8"
 emailengine encrypt
 ```
 
+:::tip Run From Anywhere
+The `encrypt` command only needs Redis connectivity. You can run it from your local machine, a CI/CD pipeline, or any server with access to the Redis database.
+:::
+
 The tool will:
+
 - Connect to Redis
 - Find all unencrypted secrets
 - Encrypt them with the provided secret
@@ -174,28 +198,16 @@ emailengine
 ```
 
 **SystemD**:
+
 ```bash
 sudo systemctl start emailengine
 ```
 
 **Docker**:
+
 ```bash
 docker start emailengine
 ```
-
-### Verification
-
-Check logs to verify encryption is enabled:
-
-```bash
-# Look for encryption-related messages
-tail -f /var/log/emailengine/app.log
-
-# Docker
-docker logs emailengine
-```
-
-You should see messages indicating secrets are being decrypted when accounts connect.
 
 ## Changing Encryption Secret
 
@@ -217,20 +229,24 @@ sudo systemctl stop emailengine
 #### 2. Run Migration with Old and New Secret
 
 ```bash
-export EENGINE_SECRET="new-secret-password"
-emailengine encrypt --decrypt="old-secret-password"
+emailengine encrypt \
+  --dbs.redis="redis://localhost:6379/8" \
+  --service.secret="new-secret-password" \
+  --decrypt="old-secret-password"
 ```
 
 This will:
+
 - Decrypt using old secret
 - Re-encrypt using new secret
 - Store updated values
 
 #### 3. Start EmailEngine with New Secret
 
+Update your EmailEngine configuration to use the new secret, then start:
+
 ```bash
-export EENGINE_SECRET="new-secret-password"
-emailengine
+sudo systemctl start emailengine
 ```
 
 ### Multiple Old Secrets
@@ -238,8 +254,9 @@ emailengine
 If you have accounts encrypted with different secrets (after a botched migration), you can provide multiple old secrets:
 
 ```bash
-export EENGINE_SECRET="new-secret"
 emailengine encrypt \
+  --dbs.redis="redis://localhost:6379/8" \
+  --service.secret="new-secret" \
   --decrypt="old-secret-1" \
   --decrypt="old-secret-2" \
   --decrypt="old-secret-3"
@@ -252,6 +269,7 @@ The tool will try each old secret until one works for each account.
 ### When to Disable
 
 Generally not recommended for production, but valid for:
+
 - Moving to development environment
 - Testing unencrypted performance
 - Troubleshooting encryption issues
@@ -266,21 +284,23 @@ sudo systemctl stop emailengine
 
 #### 2. Run Decryption Migration
 
-Provide old secrets but no new secret:
+Provide old secret with `--decrypt` but no new secret:
 
 ```bash
-emailengine encrypt --decrypt="old-secret-password"
+emailengine encrypt \
+  --dbs.redis="redis://localhost:6379/8" \
+  --decrypt="old-secret-password"
 ```
 
 This decrypts all secrets and stores them in cleartext.
 
 #### 3. Start EmailEngine Without Secret
 
-```bash
-emailengine
-```
+Remove `EENGINE_SECRET` from your EmailEngine configuration, then start:
 
-(No `EENGINE_SECRET` environment variable)
+```bash
+sudo systemctl start emailengine
+```
 
 ## Secret Management Best Practices
 
@@ -295,35 +315,24 @@ pwgen -s 64 1
 ```
 
 **Requirements**:
+
 - Minimum 32 characters
 - Mix of uppercase, lowercase, numbers, symbols
 - Not reused elsewhere
 - Not based on dictionary words
 
-### 2. Secure Storage
-
-**Never**:
-- [NO] Commit to version control
-- [NO] Include in Docker images
-- [NO] Hard-code in configuration files
-- [NO] Share via unsecured channels (email, Slack, etc.)
-
-**Instead**:
-- [YES] Use environment variables
-- [YES] Use secret management systems (Vault, AWS Secrets Manager, etc.)
-- [YES] Use orchestration secrets (Kubernetes Secrets, Docker Secrets)
-- [YES] Restrict access to authorized personnel only
-
-### 3. Secret Rotation
+### 2. Secret Rotation
 
 Implement regular rotation schedule:
 
 **Recommended schedule**:
+
 - **High security**: Every 30-90 days
 - **Normal security**: Every 6-12 months
 - **After incidents**: Immediately
 
 **Process**:
+
 1. Generate new secret
 2. Schedule maintenance window
 3. Run migration (see "Changing Encryption Secret")
@@ -331,17 +340,10 @@ Implement regular rotation schedule:
 5. Verify all services working
 6. Document change
 
-### 4. Access Control
-
-Limit who can access encryption secrets:
-
-- Production secrets: DevOps/Security team only
-- Staging secrets: Development team
-- Development secrets: All developers
-
-### 5. Backup Considerations
+### 3. Backup Considerations
 
 **Encrypted backups**: Redis backups contain encrypted data, but you MUST securely store:
+
 - The encryption secret itself
 - Recovery procedures
 - Documentation of encryption status
@@ -388,14 +390,14 @@ metadata:
   name: emailengine
 spec:
   containers:
-  - name: emailengine
-    image: emailengine/emailengine
-    env:
-    - name: EENGINE_SECRET
-      valueFrom:
-        secretKeyRef:
-          name: emailengine-secrets
-          key: encryption-key
+    - name: emailengine
+      image: emailengine/emailengine
+      env:
+        - name: EENGINE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: emailengine-secrets
+              key: encryption-key
 ```
 
 ### Docker Secrets
@@ -414,25 +416,16 @@ docker service create \
 
 ## Migration Planning
 
-### Pre-Migration Checklist
-
-- [ ] Backup Redis database
-- [ ] Generate strong encryption secret
-- [ ] Store secret in secure location (Vault, etc.)
-- [ ] Document secret storage location
-- [ ] Plan maintenance window
-- [ ] Test migration in staging environment
-- [ ] Communicate downtime to users
-- [ ] Prepare rollback plan
-
 ### Migration Steps
 
 1. **Backup** Redis database
+
    ```bash
    redis-cli --rdb /backup/redis-backup-$(date +%Y%m%d).rdb
    ```
 
 2. **Test in staging**
+
    ```bash
    # Restore backup to staging
    # Run migration
@@ -440,44 +433,55 @@ docker service create \
    ```
 
 3. **Schedule maintenance**
+
    - Choose low-traffic period
    - Allow 15-30 minutes for migration
    - Have team on standby
 
 4. **Execute migration**
+
    ```bash
    sudo systemctl stop emailengine
-   export EENGINE_SECRET="..."
-   emailengine encrypt
+
+   # If enabling encryption for the first time (no existing encryption):
+   emailengine encrypt \
+     --dbs.redis="redis://localhost:6379/8" \
+     --service.secret="your-new-secret"
+
+   # If changing an existing encryption secret:
+   emailengine encrypt \
+     --dbs.redis="redis://localhost:6379/8" \
+     --service.secret="your-new-secret" \
+     --decrypt="your-old-secret"
+
    sudo systemctl start emailengine
    ```
 
 5. **Verify**
+
    - Check logs for errors
    - Test account connections
    - Verify emails sending/receiving
    - Monitor for issues
-
-6. **Document**
-   - Update runbooks
-   - Document secret location
-   - Update disaster recovery procedures
 
 ### Rollback Plan
 
 If migration fails:
 
 1. **Stop EmailEngine**
+
    ```bash
    sudo systemctl stop emailengine
    ```
 
 2. **Restore Redis backup**
+
    ```bash
    redis-cli --rdb /backup/redis-backup-20231001.rdb
    ```
 
 3. **Start without encryption**
+
    ```bash
    unset EENGINE_SECRET
    sudo systemctl start emailengine
@@ -488,6 +492,7 @@ If migration fails:
 ## Conclusion
 
 :::tip Key Points
+
 - Encryption is essential for production environments
 - Must stop EmailEngine to enable/change encryption
 - Use strong, securely-stored secrets
@@ -495,4 +500,4 @@ If migration fails:
 - Always backup before migration
 - Document secret storage location
 - Implement regular rotation schedule
-:::
+  :::

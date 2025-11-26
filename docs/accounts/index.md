@@ -226,6 +226,10 @@ const { url } = await formResponse.json();
 
 Navigate to **Email Accounts** → **Add Account** in the EmailEngine dashboard.
 
+:::note
+The web interface is a shorthand for the hosted authentication form. When you click "Add Account", EmailEngine generates a hosted authentication form URL and redirects your browser to that form. The experience is identical to what end users see when your application generates the URL via API and redirects them to complete the authentication flow.
+:::
+
 ### Updating Accounts
 
 Use the [update account API](/docs/api/put-v-1-account-account):
@@ -244,6 +248,27 @@ await fetch('https://your-ee.com/v1/account/user123', {
   })
 });
 ```
+
+:::warning Partial Updates for Nested Objects
+When updating fields within nested objects (like `imap`, `smtp`, or `oauth2`), you must set `{subobject}.partial = true` to perform a partial update. Otherwise, the entire sub-object is replaced with only the fields you provide.
+
+```javascript
+// Correct: Update only imap.sentMailPath, keep other IMAP settings
+{
+  "imap": {
+    "partial": true,
+    "sentMailPath": "Sent Items"
+  }
+}
+
+// Wrong: This replaces the entire imap object, losing host, port, auth, etc.
+{
+  "imap": {
+    "sentMailPath": "Sent Items"
+  }
+}
+```
+:::
 
 ### Account States
 
@@ -267,6 +292,52 @@ If an account enters an error state, you can trigger a reconnection using the [r
 curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
+
+### Flushing Accounts
+
+The [flush API](/docs/api/put-v-1-account-account-flush) resets the internal email index for an account and re-syncs from scratch. This is useful for:
+
+- **Resetting corrupted index** - Fix sync issues by rebuilding the index
+- **Processing existing emails** - Trigger `messageNew` webhooks for existing emails (IMAP only)
+- **Changing indexer type** - Switch between full and fast indexing strategies
+
+```bash
+# Basic flush - reset index, only notify about new messages going forward
+curl -X PUT https://your-ee.com/v1/account/user123/flush \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "flush": true
+  }'
+
+# Flush with options - process existing emails and change indexer
+curl -X PUT https://your-ee.com/v1/account/user123/flush \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "flush": true,
+    "notifyFrom": "2024-01-01T00:00:00.000Z",
+    "imapIndexer": "full"
+  }'
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `flush` | boolean | Must be `true` to confirm the flush operation |
+| `notifyFrom` | string | Only send webhooks for messages after this date (IMAP only). Defaults to current time, so only new messages trigger webhooks. Set to a past date like `"1970-01-01T00:00:00.000Z"` to process existing emails |
+| `imapIndexer` | string | Set indexing strategy: `"full"` or `"fast"` (IMAP only) |
+
+:::warning Single Operation at a Time
+You can only run one flush operation at a time. Wait for the previous flush to complete before starting a new one.
+:::
+
+:::note API-Based Backends
+For Gmail API and MS Graph accounts, `notifyFrom` has no effect. These backends only notify about new emails arriving after the account was connected, not existing emails.
+:::
+
+[Learn more about IMAP indexers →](./imap-indexers)
 
 ### Deleting Accounts
 
@@ -332,7 +403,20 @@ Limit which folders EmailEngine syncs and monitors to save resources:
 
 ### Custom Special Folder Paths
 
-If EmailEngine doesn't correctly identify your special folders (Sent, Drafts, Junk, Trash):
+EmailEngine automatically detects special-use folders (Sent, Drafts, Junk, Trash, Archive) using the following priority order:
+
+1. **User-configured paths** (`specialUseSource: "user"`) - Highest priority. Paths you explicitly set via API.
+2. **Server SPECIAL-USE extension** (`specialUseSource: "extension"`) - Folder flags provided by the IMAP server.
+3. **Folder name heuristics** (`specialUseSource: "name"`) - Lowest priority. EmailEngine guesses based on common folder names.
+
+**Why custom paths are needed:**
+
+- **Outlook IMAP** does not expose SPECIAL-USE flags, so EmailEngine relies on folder name matching
+- **Localized accounts** may have folder names in different languages (e.g., "Gesendete Elemente" in German, "Saadetud kirjad" in Estonian)
+- **Non-standard servers** may use unusual folder names like "Outbox" instead of "Sent"
+- **Custom folder structures** where you want sent emails stored in a specific location
+
+If EmailEngine doesn't correctly identify your special folders, override them explicitly:
 
 ```json
 {
@@ -342,7 +426,8 @@ If EmailEngine doesn't correctly identify your special folders (Sent, Drafts, Ju
     "sentMailPath": "Sent Items",
     "draftsMailPath": "Draft Messages",
     "junkMailPath": "Spam",
-    "trashMailPath": "Deleted Items"
+    "trashMailPath": "Deleted Items",
+    "archiveMailPath": "Archive"
   }
 }
 ```
@@ -352,12 +437,15 @@ Always include `"partial": true` when updating IMAP settings to avoid replacing 
 :::
 
 **Available overrides:**
-- `sentMailPath` - Where sent messages go
+- `sentMailPath` - Where sent messages are stored
 - `draftsMailPath` - Where drafts are saved
-- `junkMailPath` - Where spam goes
+- `junkMailPath` - Where spam/junk goes
 - `trashMailPath` - Where deleted messages go
+- `archiveMailPath` - Where archived messages are stored
 
-[Learn more about folder overrides →](/docs/receiving/mailbox-operations#override-special-folders)
+You can check how EmailEngine detected each folder's special-use status by looking at the `specialUseSource` field in the [mailbox listing response](/docs/api/get-v-1-account-account-mailboxes).
+
+[Learn more about special-use folders →](/docs/receiving/mailbox-operations#special-use-folders)
 
 ## OAuth2 Token Management
 
@@ -383,6 +471,20 @@ const apiResponse = await fetch('https://www.googleapis.com/gmail/v1/users/me/pr
   headers: { 'Authorization': `Bearer ${accessToken}` }
 });
 ```
+
+:::warning Endpoint Disabled by Default
+The `/v1/account/{account}/oauth-token` endpoint is **disabled by default** for security reasons. You must explicitly enable it before use.
+
+**To enable via Web UI:**
+1. Navigate to **Configuration** > **Service Configuration**
+2. Check **Allow OAuth2 Token Access via API**
+3. Click **Save**
+
+**To enable via environment variable:**
+Set `EENGINE_ENABLE_OAUTH_TOKENS_API=true` when starting EmailEngine.
+
+This setting cannot be changed via the API - it must be configured through the web interface or environment variable.
+:::
 
 [Learn more about OAuth2 token management →](./oauth2-token-management)
 
@@ -413,22 +515,63 @@ Delegated access allows one user to manage multiple shared mailboxes without re-
 
 [Complete Shared Mailboxes Guide →](./shared-mailboxes)
 
-## Authentication Server (Custom OAuth2 Flow)
+## Authentication Server (External Token Management)
 
-For advanced use cases, you can delegate the OAuth2 flow to an external authentication server:
+For advanced use cases where you already manage OAuth2 tokens in your application, you can use an external authentication server. EmailEngine will call your server to fetch access tokens instead of managing them internally.
+
+**Step 1: Configure the authentication server URL globally:**
+
+```bash
+curl -X POST https://your-ee.com/v1/settings \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "authServer": "https://your-auth-server.com/authenticate"
+  }'
+```
+
+**Step 2: Register accounts with `useAuthServer: true`:**
+
+For IMAP/SMTP accounts:
 
 ```json
 {
   "account": "user123",
+  "name": "John Doe",
+  "email": "john@outlook.com",
+  "imap": {
+    "useAuthServer": true,
+    "host": "outlook.office365.com",
+    "port": 993,
+    "secure": true
+  },
+  "smtp": {
+    "useAuthServer": true,
+    "host": "smtp-mail.outlook.com",
+    "port": 587,
+    "secure": false
+  }
+}
+```
+
+For Gmail API or MS Graph API accounts:
+
+```json
+{
+  "account": "user123",
+  "name": "John Doe",
+  "email": "john@gmail.com",
   "oauth2": {
-    "provider": "gmail",
+    "useAuthServer": true,
+    "provider": "<oauth2-app-id>",
     "auth": {
-      "authUrl": "https://your-auth-server.com/auth",
-      "tokenUrl": "https://your-auth-server.com/token"
+      "user": "john@gmail.com"
     }
   }
 }
 ```
+
+When EmailEngine needs to authenticate, it calls your server at `GET {authServer}?account={account}` and expects a response with `user` and `accessToken` fields.
 
 [Authentication Server Guide →](./authentication-server)
 

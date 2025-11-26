@@ -51,16 +51,23 @@ Both IMAP and Gmail API provide the same functionality (both can access labels, 
   - `gmail.modify` - Read, send, and modify emails (can move to trash but not permanently delete)
   - `gmail.send` - Send emails only
 
-**Why This Matters:**
+:::warning The mail.google.com Scope is Restricted
+The `https://mail.google.com/` scope is classified as **restricted** by Google. This affects when you can use it:
 
-During Google's OAuth2 app verification process, they may ask you to use more limited scopes that match your actual use case. For example:
+| App Type | mail.google.com Scope | Notes |
+|----------|----------------------|-------|
+| Internal apps (Workspace) | Allowed | No restrictions for your organization's users |
+| Development/Testing | Allowed | Up to 100 test users, tokens expire after 7 days |
+| Public production apps | Usually rejected | Google requires justification for full access |
 
-- If you never permanently delete emails, Google may request you use `gmail.modify` instead of the full `https://mail.google.com/` scope
-- However, **these limited scopes don't work with IMAP/SMTP** - they only work with Gmail API
+For **public production apps**, Google enforces a principle of least privilege. During verification, they will ask why you need full access. Unless your use case explicitly requires permanent email deletion (not just moving to trash), Google will likely reject the `mail.google.com` scope and ask you to use `gmail.modify` instead.
+
+**If Google rejects your scope request**, you must use the Gmail API backend instead of IMAP/SMTP, as the limited scopes don't work with IMAP.
+:::
 
 **Decision:**
 
-- **Use IMAP OAuth2** if: You need standard IMAP/SMTP and can justify the `https://mail.google.com/` scope to Google
+- **Use IMAP OAuth2** if: You have an internal app, are in development, or can justify the `https://mail.google.com/` scope to Google
 - **Use Gmail API** if: Google requires you to use more limited scopes during the verification process
 
 See the [Gmail API setup guide](./gmail-api) for native API integration.
@@ -77,17 +84,24 @@ Gmail has completely disabled account password authentication for all accounts. 
 
 ### App Passwords
 
-If you have 2FA enabled and just need quick access for testing:
+App passwords provide IMAP/SMTP access without OAuth2:
 
 1. App passwords are only available with 2FA enabled
 2. Generate an [application-specific password](https://support.google.com/accounts/answer/185833)
 3. Use this password instead of your main password
 
+**When to use:**
+
+- Quick access for testing and development
+- **Fallback when Google rejects your OAuth2 application** - If Google denies access to Gmail API scopes entirely (e.g., your use case is not supported), app passwords allow users to still connect their accounts to EmailEngine
+- Internal tools where OAuth2 setup is not justified
+
 **Downsides:**
 
 - If main password changes, all app passwords are invalidated
 - Users must manually generate and provide passwords
-- Not ideal for SaaS applications
+- Less convenient user experience than OAuth2
+- Not ideal for SaaS applications with many users
 
 ### OAuth2 (This Guide)
 
@@ -233,7 +247,7 @@ Click **Add or remove scopes** and find `https://mail.google.com/` from the list
 :::important Required Scope for IMAP/SMTP
 The `https://mail.google.com/` scope is **required for IMAP and SMTP access**.
 
-If you were using Gmail REST API instead (covered in a different guide), the scope would be `gmail.modify`.
+If you were using [Gmail REST API](./gmail-api) instead, the scope would be `gmail.modify`.
 :::
 
 Check the scope and click **Update** to apply changes.
@@ -268,8 +282,10 @@ Add your EmailEngine URL with the `/oauth` path:
 - `http://127.0.0.1:3000/oauth` (for local testing)
 - `https://your-emailengine-domain.com/oauth` (for production)
 
+You can add multiple redirect URIs if you want to use the same OAuth2 app with multiple EmailEngine instances (e.g., development, staging, and production environments).
+
 :::warning Redirect URL Must Match Exactly
-The redirect URL you enter here must **exactly match** the URL you'll configure in EmailEngine later. Mismatches will cause OAuth flow failures.
+The redirect URL configured in EmailEngine must **exactly match** one of the URLs listed here. Mismatches will cause OAuth flow failures.
 :::
 
 Click **Create**.
@@ -354,9 +370,19 @@ curl -X POST https://your-ee.com/v1/authentication/form \
   -d '{
     "account": "user123",
     "email": "user@gmail.com",
+    "type": "gmail_oauth_app_id",
     "redirectUrl": "https://myapp.com/settings"
   }'
 ```
+
+| Field | Description |
+|-------|-------------|
+| `account` | Unique account identifier in EmailEngine |
+| `email` | Pre-fill email field (optional) |
+| `type` | OAuth2 application ID from EmailEngine (optional) - skips account type selection |
+| `redirectUrl` | Where to redirect after authentication |
+
+The `type` parameter is the Provider ID of your OAuth2 application in EmailEngine (visible in the OAuth2 settings page), not the Google client ID. When specified, users are sent directly to the Google authorization page without seeing the account type selection screen.
 
 Response:
 

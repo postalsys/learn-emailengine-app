@@ -101,29 +101,26 @@ See [Webhook Events Reference](/docs/reference/webhook-events) for complete payl
 | `EENGINE_WORKERS` | `4` | IMAP worker threads |
 | `EENGINE_LOG_LEVEL` | `trace` | Log level (trace/debug/info/warn/error) |
 
-### OAuth2 Configuration
-
-| Variable | Description |
-|----------|-------------|
-| `EENGINE_GMAIL_CLIENT_ID` | Gmail OAuth2 client ID |
-| `EENGINE_GMAIL_CLIENT_SECRET` | Gmail OAuth2 client secret |
-| `EENGINE_OUTLOOK_CLIENT_ID` | Outlook OAuth2 client ID |
-| `EENGINE_OUTLOOK_CLIENT_SECRET` | Outlook OAuth2 client secret |
-
 ### Feature Flags
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `EENGINE_DISABLE_SETUP_WARNINGS` | `false` | Disable admin password warnings |
 | `EENGINE_REQUIRE_API_AUTH` | `true` | Require API authentication |
-| `EENGINE_LOG_RAW` | `false` | Log raw IMAP/SMTP traffic |
+| `EENGINE_LOG_RAW` | `false` | Log raw IMAP/SMTP traffic (includes unmasked credentials - debug only) |
 
-### Webhook Configuration
+### Pre-configured Settings
 
 | Variable | Description |
 |----------|-------------|
-| `EENGINE_WEBHOOK_URL` | Default webhook URL |
-| `EENGINE_WEBHOOK_EVENTS` | Comma-separated event list |
+| `EENGINE_SETTINGS` | JSON string of runtime settings (webhooks, serviceUrl, etc.) |
+| `EENGINE_PREPARED_LICENSE` | License key |
+| `EENGINE_PREPARED_TOKEN` | Pre-configured API token (exported hash) |
+| `EENGINE_PREPARED_PASSWORD` | Pre-configured admin password (hash) |
+
+:::info OAuth2 and Webhooks
+OAuth2 applications and webhooks are configured via the [Settings API](/docs/api/post-v-1-settings) or web interface, not environment variables. Use `EENGINE_SETTINGS` to pre-configure them at startup.
+:::
 
 See [Environment Variables](/docs/configuration/environment-variables) for complete list.
 
@@ -294,7 +291,7 @@ curl "http://localhost:3000/v1/account/user123/search?search[subject]=invoice" \
 ### Configure Webhooks
 
 ```bash
-curl -X PUT http://localhost:3000/v1/settings \
+curl -X POST http://localhost:3000/v1/settings \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

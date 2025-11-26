@@ -68,6 +68,8 @@ Configure a webhook endpoint to receive events.
 
 **Endpoint:** `POST /v1/settings`
 
+[Detailed API reference →](/docs/api/post-v-1-settings)
+
 **Request Parameters:**
 
 | Field | Type | Required | Description |
@@ -147,6 +149,8 @@ Retrieve all configured webhook routes.
 
 **Endpoint:** `GET /v1/webhookRoutes`
 
+[Detailed API reference →](/docs/api/get-v-1-webhookroutes)
+
 **Example:**
 
 **Pseudo code:**
@@ -186,6 +190,8 @@ for each webhook in data.webhooks {
 Retrieve details of a specific webhook route.
 
 **Endpoint:** `GET /v1/webhookRoutes/webhookRoute/:webhookRoute`
+
+[Detailed API reference →](/docs/api/get-v-1-webhookroutes-webhookroute-webhookroute)
 
 **Example:**
 

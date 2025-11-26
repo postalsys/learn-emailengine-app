@@ -221,9 +221,9 @@ async function fetchFullMessage(accountId, messageId) {
 Process message attachments using the [Get Attachment API endpoint](/docs/api/get-v-1-account-account-attachment-attachment):
 
 ```javascript
-async function downloadAttachment(accountId, messageId, attachmentId) {
+async function downloadAttachment(accountId, attachmentId) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}/attachment/${attachmentId}`,
+    `https://your-emailengine.com/v1/account/${accountId}/attachment/${attachmentId}`,
     {
       headers: {
         'Authorization': 'Bearer YOUR_ACCESS_TOKEN'

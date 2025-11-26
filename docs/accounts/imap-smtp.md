@@ -475,7 +475,7 @@ EmailEngine can auto-detect settings for many common providers.
 Before adding an account, verify credentials work:
 
 ```bash
-curl -X POST https://your-ee.com/v1/verifyaccount \
+curl -X POST https://your-ee.com/v1/verifyAccount \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

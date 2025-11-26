@@ -448,7 +448,8 @@ curl -X PUT "https://your-emailengine.com/v1/account/example" \
       "sentMailPath": "Custom/Sent Emails",
       "draftsMailPath": "Custom/Drafts",
       "junkMailPath": "Custom/Spam",
-      "trashMailPath": "Custom/Trash"
+      "trashMailPath": "Custom/Trash",
+      "archiveMailPath": "Custom/Archive"
     }
   }'
 ```
@@ -457,10 +458,11 @@ curl -X PUT "https://your-emailengine.com/v1/account/example" \
 
 **Available Overrides:**
 
-- `sentMailPath` - Where sent messages go
+- `sentMailPath` - Where sent messages are stored
 - `draftsMailPath` - Where drafts are saved
-- `junkMailPath` - Where spam goes
+- `junkMailPath` - Where spam/junk goes
 - `trashMailPath` - Where deleted messages go
+- `archiveMailPath` - Where archived messages are stored
 
 **Example:**
 

@@ -124,7 +124,37 @@ Direct the user to this URL to begin authentication.
 | `account` | Yes | Unique account identifier (your internal ID) |
 | `email` | No | Pre-fill email address on form |
 | `name` | No | Pre-fill display name on form |
+| `type` | No | Pre-select account type (skips selection screen) |
 | `redirectUrl` | Yes | Where to send user after completion |
+
+### Skipping Account Type Selection
+
+Use the `type` parameter to bypass the account type selection screen and send users directly to the authentication flow:
+
+```bash
+curl -X POST https://your-ee.com/v1/authentication/form \
+  -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "user123",
+    "email": "john@gmail.com",
+    "type": "AAABhaBPHsc",
+    "redirectUrl": "https://myapp.com/settings"
+  }'
+```
+
+**Values for `type`:**
+
+| Value | Effect |
+|-------|--------|
+| `"imap"` | Direct to manual IMAP/SMTP configuration form |
+| OAuth2 App ID | Direct to that provider's OAuth2 authorization page |
+
+The OAuth2 App ID (Provider ID) is visible in EmailEngine's **Configuration** > **OAuth2** settings page. This is EmailEngine's internal ID for the OAuth2 application, not the provider's client ID.
+
+:::tip Better User Experience
+Using the `type` parameter provides a smoother experience - users go directly to Google or Microsoft authorization without seeing an intermediate selection screen.
+:::
 
 ### Implementation Example
 
@@ -250,7 +280,7 @@ exit;
 After successful authentication, EmailEngine redirects to your `redirectUrl` with query parameters:
 
 ```
-https://myapp.com/settings?account=user123&state=connected
+https://myapp.com/settings?account=user123&state=new
 ```
 
 **Query Parameters:**
@@ -258,7 +288,15 @@ https://myapp.com/settings?account=user123&state=connected
 | Parameter | Description |
 |-----------|-------------|
 | `account` | The account ID you provided |
-| `state` | Account state: `connected`, `connecting`, or `authenticationError` |
+| `state` | Result of the operation: `new` (account was created) or `existing` (existing account was updated) |
+
+:::note Error Handling
+If authentication fails (OAuth2 error, user cancellation, etc.), EmailEngine displays an error page rather than redirecting to your `redirectUrl`. Your application only receives a redirect on successful authentication.
+:::
+
+:::info Account Initialization
+The redirect happens immediately after authentication completes, but the account may still be initializing (syncing mailboxes, etc.). EmailEngine sends an `accountInitialized` webhook once the account is fully processed and ready to accept API calls. If you need to make API calls immediately after redirect, either wait for this webhook or poll the account status endpoint until the state is `connected`.
+:::
 
 ### Handling the Redirect
 
@@ -269,8 +307,8 @@ https://myapp.com/settings?account=user123&state=connected
 app.get('/settings', async (req, res) => {
   const { account, state } = req.query;
 
-  if (state === 'connected') {
-    // Account successfully connected
+  if (state === 'new') {
+    // New account was created
     await db.users.update(
       { id: account },
       { emailConnected: true }
@@ -279,15 +317,10 @@ app.get('/settings', async (req, res) => {
     res.render('settings', {
       message: 'Email account connected successfully!'
     });
-  } else if (state === 'authenticationError') {
-    // Authentication failed
+  } else if (state === 'existing') {
+    // Existing account was updated
     res.render('settings', {
-      error: 'Failed to connect email account. Please try again.'
-    });
-  } else {
-    // Still connecting
-    res.render('settings', {
-      message: 'Connecting to your email account...'
+      message: 'Email account credentials updated successfully!'
     });
   }
 });
@@ -302,19 +335,16 @@ def settings():
     account = request.args.get('account')
     state = request.args.get('state')
 
-    if state == 'connected':
-        # Account successfully connected
+    if state == 'new':
+        # New account was created
         db.users.update(
             {'id': account},
             {'email_connected': True}
         )
         flash('Email account connected successfully!', 'success')
-    elif state == 'authenticationError':
-        # Authentication failed
-        flash('Failed to connect email account. Please try again.', 'error')
-    else:
-        # Still connecting
-        flash('Connecting to your email account...', 'info')
+    elif state == 'existing':
+        # Existing account was updated
+        flash('Email account credentials updated successfully!', 'success')
 
     return render_template('settings.html')
 ```
@@ -329,39 +359,26 @@ def settings():
 $account = $_GET['account'] ?? null;
 $state = $_GET['state'] ?? null;
 
-if ($state === 'connected') {
-    // Account successfully connected
+if ($state === 'new') {
+    // New account was created
     $stmt = $pdo->prepare('UPDATE users SET email_connected = 1 WHERE id = ?');
     $stmt->execute([$account]);
 
     $message = 'Email account connected successfully!';
     $messageType = 'success';
-} elseif ($state === 'authenticationError') {
-    // Authentication failed
-    $message = 'Failed to connect email account. Please try again.';
-    $messageType = 'error';
-} else {
-    // Still connecting
-    $message = 'Connecting to your email account...';
-    $messageType = 'info';
+} elseif ($state === 'existing') {
+    // Existing account was updated
+    $message = 'Email account credentials updated successfully!';
+    $messageType = 'success';
 }
 ```
 
 </TabItem>
 </Tabs>
 
-### Error Handling
+### Retry Flow
 
-**Connection failures:**
-- Network issues
-- OAuth2 errors
-- User cancellation
-
-**Best practices:**
-- Show clear error messages
-- Provide retry option
-- Log errors for debugging
-- Offer support contact
+If authentication fails, users see an error page on EmailEngine and can retry. Consider providing a "Connect Email" button on your settings page that generates a new authentication form URL, allowing users to attempt connection again.
 
 ## Pre-filling Information
 
@@ -422,27 +439,6 @@ User will authenticate with their personal account but access the shared mailbox
 
 [Learn more about shared mailboxes →](/docs/accounts/outlook-365#shared-mailboxes)
 
-### Specific Provider
-
-Force a specific OAuth2 provider:
-
-```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "account": "user123",
-    "email": "john@gmail.com",
-    "provider": "gmail",  # Force Gmail OAuth2
-    "redirectUrl": "https://myapp.com/settings"
-  }'
-```
-
-Available providers:
-- `gmail` - Gmail IMAP/SMTP with OAuth2
-- `gmailApi` - Gmail API
-- `outlook` - Outlook IMAP/SMTP or MS Graph API
-
 ### Custom Redirect Path
 
 Redirect to different paths based on success/failure:
@@ -464,21 +460,25 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 
 ### What Users See
 
-1. **Authentication Form**
-   - EmailEngine branding
-   - Sign in with Google button
-   - Sign in with Microsoft button
-   - Manual IMAP/SMTP option (if enabled)
+**1. Account Type Selection**
 
-2. **Provider Consent Screen**
-   - Provider's OAuth2 consent page
-   - Requested permissions
-   - Allow/Deny buttons
+When multiple authentication options are available, users first choose their provider:
 
-3. **Success/Error Message**
-   - Connection status
-   - Redirect countdown
-   - Or immediate redirect
+![Account type selection form](/img/screenshots/03-account-type-selection.png)
+
+**2. IMAP/SMTP Configuration (if selected)**
+
+For manual IMAP setup, users enter their server credentials:
+
+![IMAP/SMTP configuration form](/img/screenshots/04-account-add-form.png)
+
+**3. OAuth2 Consent Screen (if selected)**
+
+For OAuth2 providers, users are redirected to Google or Microsoft to grant permissions.
+
+**4. Redirect Back**
+
+After successful authentication, users are automatically redirected to your application's `redirectUrl`.
 
 ### Customization Options
 

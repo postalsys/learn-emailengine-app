@@ -623,11 +623,6 @@ Detailed state descriptions:
 - Not syncing messages
 - Can be reconnected
 
-**`suspended`**
-- Too many repeated errors
-- Automatic safety mechanism
-- Requires manual intervention
-
 ## Common Patterns
 
 ### Bulk Account Registration

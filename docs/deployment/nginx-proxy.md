@@ -346,47 +346,6 @@ This configuration:
 - Both instances should NOT run simultaneously (standby should be stopped unless primary fails)
 - Both need separate Redis instances OR the standby stays stopped
 
-### Rate Limiting
-
-**Configure rate limits:**
-
-```nginx
-# Define zones
-limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
-limit_req_zone $binary_remote_addr zone=login_limit:10m rate=5r/m;
-
-server {
-    # API endpoints
-    location /v1/ {
-        limit_req zone=api_limit burst=20 nodelay;
-        proxy_pass http://emailengine_backend;
-    }
-
-    # Login endpoint (stricter)
-    location /login {
-        limit_req zone=login_limit burst=5 nodelay;
-        proxy_pass http://emailengine_backend;
-    }
-}
-```
-
-**Rate limit by API key:**
-
-```nginx
-# Use API key from header for rate limiting
-map $http_authorization $api_key {
-    "~^Bearer (.+)$" $1;
-    default "";
-}
-
-limit_req_zone $api_key zone=api_key_limit:10m rate=100r/s;
-
-location /v1/ {
-    limit_req zone=api_key_limit burst=200 nodelay;
-    proxy_pass http://emailengine_backend;
-}
-```
-
 ### IP Whitelisting
 
 **Restrict access by IP:**

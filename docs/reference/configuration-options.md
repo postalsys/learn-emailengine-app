@@ -4,21 +4,24 @@ description: Complete reference of all configuration options and settings
 sidebar_position: 3
 ---
 
-# Complete Configuration Reference
+# Configuration Reference
 
 Comprehensive reference for all EmailEngine configuration options.
 
 :::info Configuration Methods
 EmailEngine can be configured via:
+
 1. **Environment variables** (highest priority)
 2. **Command-line arguments**
 3. **Configuration file** (TOML format)
-:::
+   :::
 
 ## Configuration Types
 
 ### Startup Configuration
+
 Loaded at startup. Requires restart to apply changes.
+
 - HTTP port, workers, Redis connection
 - Secret for encryption
 - License key
@@ -26,7 +29,9 @@ Loaded at startup. Requires restart to apply changes.
 - TLS settings
 
 ### Runtime Configuration
+
 Can be updated via Settings API or web interface without restart.
+
 - Service URL
 - Webhook URLs and settings
 - Email sending limits
@@ -187,6 +192,7 @@ EENGINE_REDIS_PREFIX=ee1:
 Secret used for encrypting session tokens AND account credentials (passwords, OAuth tokens). This is a single secret that serves both purposes.
 
 **Generate and save:**
+
 ```bash
 # Generate a 64-character hex secret
 openssl rand -hex 32
@@ -200,12 +206,14 @@ EmailEngine will start without this secret in development mode, but **all sensit
 :::
 
 :::warning Secret Management
+
 - Keep a secure backup of your secret
 - If lost, encrypted credentials cannot be recovered
 - Changing the secret requires re-encrypting existing data using the `encrypt` command
-:::
+  :::
 
 **Re-encrypting data after secret change:**
+
 ```bash
 emailengine encrypt --dbs.redis="redis://url" --service.secret="new-secret" --decrypt="old-secret"
 ```
@@ -240,14 +248,24 @@ EENGINE_LOG_LEVEL=warn
 **Config file:** `log.raw`
 **Default:** `false`
 
-Log raw IMAP/SMTP protocol messages.
+Log raw IMAP/SMTP protocol traffic and OAuth2 API requests.
 
 ```bash
 EENGINE_LOG_RAW=true
 ```
 
+:::danger Security Warning - Contains Unmasked Credentials
+When enabled, logs contain **unmasked sensitive data**:
+
+- **IMAP/SMTP traffic**: Base64-encoded protocol data includes plaintext passwords in AUTH commands
+- **OAuth2 API requests**: Access tokens, refresh tokens, and client secrets are logged without filtering
+- **All credentials are visible**: Nothing is redacted or masked
+
+**Never enable in production.** Use only for local debugging, and delete logs immediately after troubleshooting.
+:::
+
 :::warning Performance
-Enabling this creates very large log files. Only use for debugging.
+Enabling this creates very large log files due to the volume of protocol data.
 :::
 
 ## OAuth2 Configuration
@@ -259,6 +277,7 @@ OAuth2 applications (Gmail, Outlook, Mail.ru) are configured via the **Settings 
 **Endpoint:** `POST /v1/oauth2` - [API Reference](/docs/api/post-v-1-oauth-2)
 
 **Supported providers:**
+
 - `gmail` - Gmail with 3-legged OAuth2 (user consent)
 - `gmailService` - Gmail with service account (2-legged OAuth2)
 - `outlook` - Microsoft 365 / Outlook
@@ -306,6 +325,7 @@ curl -X POST https://emailengine.example.com/v1/oauth2 \
 ```
 
 **Key fields:**
+
 - `name` - Display name for the application
 - `provider` - One of: `gmail`, `gmailService`, `outlook`, `mailRu`
 - `clientId` / `clientSecret` - OAuth2 credentials (for 3-legged OAuth2)
@@ -331,6 +351,7 @@ curl -X POST https://emailengine.example.com/v1/oauth2 \
 - [Delete OAuth2 application](/docs/api/delete-v-1-oauth-2-app) - `DELETE /v1/oauth2/{app}`
 
 For detailed OAuth2 setup instructions, see:
+
 - [Gmail OAuth2 Setup](/docs/accounts/gmail-oauth2)
 - [Outlook OAuth2 Setup](/docs/accounts/outlook-oauth2)
 
@@ -634,6 +655,7 @@ EENGINE_SETTINGS='{"serviceUrl":"https://emailengine.example.com","webhooks":"ht
 Pre-configure an API access token at startup. This accepts an **exported token hash**, not the actual access token value.
 
 **Workflow:**
+
 1. Generate a token: `emailengine tokens issue -d "API Token" -s "*"`
 2. Export the token: `emailengine tokens export -t <token-value>`
 3. Use the exported string (not the original token) as `EENGINE_PREPARED_TOKEN`
@@ -654,6 +676,7 @@ For complete token management workflow, see [Prepared Tokens](/docs/configuratio
 Pre-configure the admin password at startup. This accepts a **base64url-encoded password hash**, not a plain password.
 
 **Workflow:**
+
 1. Generate a password hash: `emailengine password -p "your-password" --hash`
 2. Use the returned hash as `EENGINE_PREPARED_PASSWORD`
 
@@ -920,24 +943,24 @@ Only enable if you need to access raw OAuth tokens. This exposes sensitive crede
 
 ### Quick Reference Table
 
-| Environment Variable | Default | Description |
-|---------------------|---------|-------------|
-| `EENGINE_PORT` | `3000` | HTTP port |
-| `EENGINE_HOST` | `127.0.0.1` | Bind address |
-| `EENGINE_REDIS` | `redis://127.0.0.1:6379/8` | Redis URL |
-| `EENGINE_SECRET` | None | Encryption secret (required for production) |
-| `EENGINE_WORKERS` | `4` | IMAP worker threads |
-| `EENGINE_LOG_LEVEL` | `trace` | Log level |
-| `EENGINE_TIMEOUT` | `10000` | Command timeout (ms) |
-| `EENGINE_FETCH_BATCH_SIZE` | `1000` | Messages per sync batch |
-| `EENGINE_PREPARED_LICENSE` | None | License key |
-| `EENGINE_SETTINGS` | None | Pre-configured settings JSON |
-| `EENGINE_PREPARED_TOKEN` | None | Exported token hash (not raw token) |
-| `EENGINE_PREPARED_PASSWORD` | None | Password hash (not plain password) |
-| `EENGINE_REQUIRE_API_AUTH` | `true` | Require API authentication |
-| `EENGINE_CORS_ORIGIN` | None | CORS allowed origin |
-| `EENGINE_SMTP_ENABLED` | `false` | Enable SMTP proxy |
-| `EENGINE_IMAP_PROXY_ENABLED` | `false` | Enable IMAP proxy |
+| Environment Variable         | Default                    | Description                                 |
+| ---------------------------- | -------------------------- | ------------------------------------------- |
+| `EENGINE_PORT`               | `3000`                     | HTTP port                                   |
+| `EENGINE_HOST`               | `127.0.0.1`                | Bind address                                |
+| `EENGINE_REDIS`              | `redis://127.0.0.1:6379/8` | Redis URL                                   |
+| `EENGINE_SECRET`             | None                       | Encryption secret (required for production) |
+| `EENGINE_WORKERS`            | `4`                        | IMAP worker threads                         |
+| `EENGINE_LOG_LEVEL`          | `trace`                    | Log level                                   |
+| `EENGINE_TIMEOUT`            | `10000`                    | Command timeout (ms)                        |
+| `EENGINE_FETCH_BATCH_SIZE`   | `1000`                     | Messages per sync batch                     |
+| `EENGINE_PREPARED_LICENSE`   | None                       | License key                                 |
+| `EENGINE_SETTINGS`           | None                       | Pre-configured settings JSON                |
+| `EENGINE_PREPARED_TOKEN`     | None                       | Exported token hash (not raw token)         |
+| `EENGINE_PREPARED_PASSWORD`  | None                       | Password hash (not plain password)          |
+| `EENGINE_REQUIRE_API_AUTH`   | `true`                     | Require API authentication                  |
+| `EENGINE_CORS_ORIGIN`        | None                       | CORS allowed origin                         |
+| `EENGINE_SMTP_ENABLED`       | `false`                    | Enable SMTP proxy                           |
+| `EENGINE_IMAP_PROXY_ENABLED` | `false`                    | Enable IMAP proxy                           |
 
 ## Configuration File Example
 
@@ -988,6 +1011,7 @@ When the same setting is configured in multiple ways:
 3. **Configuration file** (lowest priority)
 
 Example:
+
 ```bash
 # Config file: api.port = 3000
 # Command line: --api.port=4000

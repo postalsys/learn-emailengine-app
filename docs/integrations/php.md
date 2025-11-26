@@ -372,15 +372,16 @@ function handleBounce($payload) {
 
 ### Webhook Configuration
 
-Configure webhook URL in EmailEngine:
+Configure webhook URL in EmailEngine via the Settings API:
 
 ```php
 <?php
 
-// Register webhook URL
-$ee->request('post', '/v1/webhooks', [
-    'url' => 'https://yourdomain.com/webhook.php',
-    'events' => ['messageNew', 'messageBounce'],
+// Configure webhook URL via Settings API
+$ee->request('post', '/v1/settings', [
+    'webhooks' => 'https://yourdomain.com/webhook.php',
+    'webhookEvents' => ['messageNew', 'messageBounce'],
+    'webhooksEnabled' => true,
 ]);
 ```
 

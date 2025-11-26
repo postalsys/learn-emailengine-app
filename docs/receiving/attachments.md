@@ -154,7 +154,7 @@ const largeFiles = filterAttachments(message.attachments, {
 Download an attachment by its ID:
 
 ```bash
-curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE/attachment/AAAAAgAAAeEBAAAAAQAAAeE" \
+curl "https://your-emailengine.com/v1/account/example/attachment/AAAAAgAAAeEBAAAAAQAAAeE" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   --output invoice.pdf
 ```
@@ -167,7 +167,7 @@ const fs = require('fs');
 
 async function downloadAttachment(accountId, messageId, attachmentId, outputPath) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}/attachment/${attachmentId}`,
+    `https://your-emailengine.com/v1/account/${accountId}/attachment/${attachmentId}`,
     {
       headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
     }
@@ -204,7 +204,7 @@ console.log(`Downloaded to ${result.path} (${result.size} bytes)`);
 import requests
 
 def download_attachment(account_id, message_id, attachment_id, output_path):
-    url = f"https://your-emailengine.com/v1/account/{account_id}/message/{message_id}/attachment/{attachment_id}"
+    url = f"https://your-emailengine.com/v1/account/{account_id}/attachment/{attachment_id}"
     headers = {"Authorization": "Bearer YOUR_ACCESS_TOKEN"}
 
     response = requests.get(url, headers=headers)
@@ -303,7 +303,7 @@ For processing without saving to disk:
 ```javascript
 async function downloadToMemory(accountId, messageId, attachmentId) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}/attachment/${attachmentId}`,
+    `https://your-emailengine.com/v1/account/${accountId}/attachment/${attachmentId}`,
     {
       headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
     }
@@ -483,7 +483,7 @@ Handle large attachments with streaming:
 ```javascript
 async function downloadLargeAttachment(accountId, messageId, attachmentId, outputPath) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}/attachment/${attachmentId}`,
+    `https://your-emailengine.com/v1/account/${accountId}/attachment/${attachmentId}`,
     {
       headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
     }
@@ -637,7 +637,7 @@ Track download progress for large files:
 ```javascript
 async function downloadWithProgress(accountId, messageId, attachmentId, outputPath, onProgress) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}/attachment/${attachmentId}`,
+    `https://your-emailengine.com/v1/account/${accountId}/attachment/${attachmentId}`,
     {
       headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
     }

@@ -283,13 +283,13 @@ function searchGraphThread(accountId, threadId):
 ```
 // Pseudo code
 function searchYahooThread(accountId, threadId):
-    // Multiple requests per folder
+    // Multiple requests per folder (Yahoo doesn't support \All)
     folders = ['INBOX', 'Sent']
     allMessages = []
 
     for each folder in folders:
         response = HTTP_POST(
-            url: "https://ee.example.com/v1/account/" + accountId + "/search?path=%5CAll",
+            url: "https://ee.example.com/v1/account/" + accountId + "/search?path=" + encodeURIComponent(folder),
             headers: {
                 "Authorization": "Bearer " + token,
                 "Content-Type": "application/json"
@@ -320,13 +320,12 @@ function searchGenericThread(accountId, subject):
 
     for each folder in folders:
         response = HTTP_POST(
-            url: "https://ee.example.com/v1/account/" + accountId + "/search?path=%5CAll",
+            url: "https://ee.example.com/v1/account/" + accountId + "/search?path=" + encodeURIComponent(folder),
             headers: {
                 "Authorization": "Bearer " + token,
                 "Content-Type": "application/json"
             },
             body: {
-                path: folder,
                 search: { subject: subject }
             }
         )

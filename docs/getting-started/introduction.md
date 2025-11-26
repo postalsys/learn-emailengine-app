@@ -71,7 +71,7 @@ Get started with EmailEngine in just a few steps:
 
 ## System Requirements
 
-- **Redis** 6.x or higher
+- **Redis** Any version (or Redis-compatible service like Upstash)
 - **Memory** Minimum 2GB RAM recommended
 - **OS** Linux, macOS, or Windows
 

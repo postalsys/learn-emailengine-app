@@ -160,7 +160,7 @@ See [Threading Documentation](/docs/sending/threading/provider-support) for deta
 | REST API         | Yes                | Yes                           |
 | Webhooks         | Yes                | Yes                           |
 | Webhook retry    | Yes                | Yes                           |
-| Batch operations | No                 | Yes                           |
+| Batch operations | Yes (mail merge, bulk updates) | Yes                           |
 | Rate limiting    | Configure yourself | Built-in                      |
 | SDKs             | Community          | Official (multiple languages) |
 
@@ -170,7 +170,7 @@ See [Threading Documentation](/docs/sending/threading/provider-support) for deta
 
 **Structure:**
 
-- **Annual license:** $995/year flat
+- **Annual license:** See [postalsys.com/plans](https://postalsys.com/plans) for current pricing
 - **Unlimited mailboxes**
 - **Unlimited API calls**
 - **Unlimited instances**
@@ -179,7 +179,7 @@ See [Threading Documentation](/docs/sending/threading/provider-support) for deta
 
 | Cost Component | Amount |
 |----------------|--------|
-| EmailEngine License | $995/year (flat) |
+| EmailEngine License | Flat annual fee (see [pricing](https://postalsys.com/plans)) |
 | Infrastructure | $50-500/month (VPS/cloud) |
 | DevOps Time | Variable |
 
