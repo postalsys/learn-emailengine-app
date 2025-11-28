@@ -490,6 +490,8 @@ Common variations:
 - `Sent Items` (Microsoft Exchange)
 - `[Gmail]/Sent Mail` (Gmail)
 
+[Learn more about custom special folder paths →](/docs/accounts#custom-special-folder-paths)
+
 ### Path Filtering
 
 Sync only specific folders:
