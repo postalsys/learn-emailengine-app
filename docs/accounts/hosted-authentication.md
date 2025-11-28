@@ -511,15 +511,8 @@ These can be configured via:
 </style>
 ```
 
-**EmailEngine settings:**
-- Enable/disable manual IMAP configuration
-- Configure available OAuth2 providers
-- Customize redirect messages
-- Set session timeouts
-
-**OAuth2 app settings:**
-- App name (shown in consent screen)
-- App logo (Google/Microsoft)
-- Privacy policy link
-- Terms of service link
+**OAuth2 provider settings (configured in Google Cloud Console / Azure AD):**
+- App name displayed in consent screen
+- App logo
+- Privacy policy and terms of service links
 
