@@ -511,6 +511,10 @@ These can be configured via:
 </style>
 ```
 
+:::tip Bootstrap 4 Framework
+EmailEngine's hosted pages use Bootstrap 4. You can use Bootstrap 4 classes and override its variables in your custom CSS. See [Bootstrap 4 documentation](https://getbootstrap.com/docs/4.6/) for available classes and components.
+:::
+
 **OAuth2 provider settings (configured in Google Cloud Console / Azure AD):**
 - App name displayed in consent screen
 - App logo
