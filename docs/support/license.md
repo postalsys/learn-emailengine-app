@@ -462,4 +462,4 @@ A: See https://postalsys.com/plans for currency options. Credit card payments au
 
 ## Need Help?
 
-For support options and contact information, see the [Support page](/docs/support/support).
+For support options and contact information, see the [Support page](/docs/support).

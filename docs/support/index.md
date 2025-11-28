@@ -1,7 +1,7 @@
 ---
 title: Support
 description: Get help with EmailEngine - support channels, bug reports, and feature requests
-sidebar_position: 2
+sidebar_position: 0
 ---
 
 # Support
