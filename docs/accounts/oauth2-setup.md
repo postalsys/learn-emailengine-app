@@ -237,8 +237,10 @@ The `gmail.readonly` scope alone cannot list labels (mailboxes). Since EmailEngi
 | Scope | Purpose |
 |-------|---------|
 | `IMAP.AccessAsUser.All` | Read and manage emails via IMAP |
-| `SMTP.Send` | Send emails via SMTP |
+| `SMTP.Send` | Send emails via SMTP (enabled by default) |
 | `offline_access` | Allow token refresh (required) |
+
+If your application doesn't need sending capabilities, you can disable `SMTP.Send` via the **Disabled scopes** field in EmailEngine's OAuth2 app settings.
 
 **For MS Graph API:**
 
