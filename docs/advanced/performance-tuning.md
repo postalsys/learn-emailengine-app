@@ -87,6 +87,11 @@ If you need near real-time updates for specific folders (e.g., Inbox and Sent), 
 - Most servers limit parallel connections (typically 3-5)
 - Only use for folders you genuinely need instant updates
 
+**Ignored paths**: EmailEngine silently ignores sub-connection entries that:
+- Do not exist on the server
+- Are already covered by the default connection (INBOX)
+- For Gmail accounts: any folder except Trash and Junk, because the All Mail folder that EmailEngine monitors already covers all other mailboxes
+
 ### Limiting Indexed Folders
 
 If you never care about the rest of the mailbox, limit indexing completely:
