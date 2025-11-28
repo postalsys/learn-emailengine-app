@@ -522,7 +522,11 @@ Monitor additional folders in real-time:
 
 ### Proxy Configuration
 
-Route connections through a proxy (configured at the account level, not inside imap/smtp objects):
+Route EmailEngine's outbound IMAP/SMTP connections through a SOCKS or HTTP proxy server.
+
+**Per-account proxy:**
+
+Set the `proxy` field at the account level (not inside imap/smtp objects):
 
 ```json
 {
@@ -549,7 +553,28 @@ Route connections through a proxy (configured at the account level, not inside i
 }
 ```
 
-[Learn more about proxying connections →](./proxying-connections)
+**Global proxy for all accounts:**
+
+Configure a default proxy for all accounts via the settings API:
+
+```bash
+curl -X POST https://your-ee.com/v1/settings \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "proxyEnabled": true,
+    "proxyUrl": "socks5://proxy.example.com:1080"
+  }'
+```
+
+**Supported proxy protocols:**
+
+- `socks5://` - SOCKS5 proxy (recommended)
+- `socks4://` - SOCKS4 proxy
+- `http://` - HTTP proxy
+- `https://` - HTTPS proxy
+
+Per-account proxy settings override the global proxy setting.
 
 ## Security Best Practices
 
