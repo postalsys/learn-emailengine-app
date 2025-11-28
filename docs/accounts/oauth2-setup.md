@@ -54,8 +54,7 @@ flowchart TD
     D --> E[4. EmailEngine exchanges code for tokens]
     E --> F[5. EmailEngine stores tokens and connects to mailbox]
     F -->|6. redirects user to redirectUrl| G[Your Application]
-
-    H[Ongoing: EmailEngine auto-refreshes tokens before expiry]
+    F --- H[Ongoing: auto-refreshes tokens before expiry]
 ```
 
 EmailEngine handles the token exchange and refresh automatically. You just need to:
