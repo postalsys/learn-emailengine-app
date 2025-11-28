@@ -92,6 +92,8 @@ If you need near real-time updates for specific folders (e.g., Inbox and Sent), 
 - Are already covered by the default connection (INBOX)
 - For Gmail accounts: any folder except Trash and Junk, because the All Mail folder that EmailEngine monitors already covers all other mailboxes
 
+**Best effort**: Sub-connections are non-blocking. If a sub-connection fails (e.g., server rejects due to too many concurrent connections), EmailEngine continues working normally. The only impact is slightly slower webhook delivery for messages in those folders, as EmailEngine falls back to polling instead of real-time IDLE notifications.
+
 ### Limiting Indexed Folders
 
 If you never care about the rest of the mailbox, limit indexing completely:
