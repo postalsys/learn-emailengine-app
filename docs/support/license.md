@@ -460,24 +460,6 @@ Note: If automatic renewal fails on a regular plan, an invoice is generated for 
 
 A: See https://postalsys.com/plans for currency options. Credit card payments auto-convert.
 
-## Support
+## Need Help?
 
-### What's Included
-
-**Community support:**
-
-- Documentation
-
-**Email support:**
-
-- support@postalsys.com
-- Response time: Usually within 24 hours
-- Bug reports prioritized
-
-### Not Included
-
-- Custom development
-- On-site training
-- Consulting services
-- Architecture review
-- White-glove support
+For support options and contact information, see the [Support page](/docs/support/support).
