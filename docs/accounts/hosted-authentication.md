@@ -482,6 +482,35 @@ After successful authentication, users are automatically redirected to your appl
 
 ### Customization Options
 
+**Page Branding:**
+
+| Setting | Purpose | Example |
+|---------|---------|---------|
+| `templateHeader` | HTML block appended to top of page | App logo, instructions, welcome message |
+| `templateHtmlHead` | Custom `<head>` content | CSS style overrides, custom fonts |
+
+These can be configured via:
+- **Configuration** → **Service** page in the EmailEngine dashboard
+- Settings API (`POST /v1/settings`)
+
+**Example - Add custom header with logo:**
+
+```html
+<div style="text-align: center; padding: 20px;">
+  <img src="https://your-app.com/logo.png" alt="Your App" height="40">
+  <p>Connect your email account to get started</p>
+</div>
+```
+
+**Example - Add custom CSS:**
+
+```html
+<style>
+  .btn-primary { background-color: #your-brand-color; }
+  .card { border-radius: 12px; }
+</style>
+```
+
 **EmailEngine settings:**
 - Enable/disable manual IMAP configuration
 - Configure available OAuth2 providers
