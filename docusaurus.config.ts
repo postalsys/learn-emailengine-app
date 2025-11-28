@@ -230,6 +230,11 @@ const config: Config = {
       src: 'https://cdn.jsdelivr.net/npm/biel-search/dist/biel-search/biel-search.esm.js',
       type: 'module',
     },
+    {
+      src: 'https://plausible.emailengine.dev/js/script.js',
+      defer: true,
+      'data-domain': 'learn.emailengine.app',
+    },
   ],
 
   clientModules: [
