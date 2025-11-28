@@ -208,19 +208,15 @@ Scopes define what your application can access.
 
 **For IMAP/SMTP:**
 
-```
-https://mail.google.com/
-```
-
-Required scope for IMAP and SMTP authentication.
+| Scope | Purpose |
+|-------|---------|
+| `https://mail.google.com/` | Full IMAP and SMTP access (required) |
 
 **For Gmail API:**
 
-```
-gmail.modify
-```
-
-Full Gmail API access (read, write, delete, but not admin functions).
+| Scope | Purpose |
+|-------|---------|
+| `gmail.modify` | Full Gmail API access (read, write, delete, but not admin functions) |
 
 **Narrower Scopes (if required by Google):**
 
@@ -238,22 +234,22 @@ The `gmail.readonly` scope alone cannot list labels (mailboxes). Since EmailEngi
 
 **For IMAP/SMTP:**
 
-```
-IMAP.AccessAsUser.All
-SMTP.Send
-offline_access
-```
+| Scope | Purpose |
+|-------|---------|
+| `IMAP.AccessAsUser.All` | Read and manage emails via IMAP |
+| `SMTP.Send` | Send emails via SMTP |
+| `offline_access` | Allow token refresh (required) |
 
 **For MS Graph API:**
 
-```
-Mail.ReadWrite
-Mail.Send
-offline_access
-```
+| Scope | Purpose |
+|-------|---------|
+| `Mail.ReadWrite` | Read and manage emails |
+| `Mail.Send` | Send emails |
+| `offline_access` | Allow token refresh (required) |
 
 :::important offline_access Required
-The `offline_access` scope is required for both providers. It allows EmailEngine to refresh access tokens in the background without user interaction.
+The `offline_access` scope is required for both Gmail and Outlook. It allows EmailEngine to refresh access tokens in the background without user interaction.
 :::
 
 ### Additional Scopes
