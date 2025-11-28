@@ -48,12 +48,14 @@ Understanding the OAuth2 flow helps troubleshoot issues:
 
 ```mermaid
 flowchart TD
-    A[Your Application] -->|generates authentication URL| B[EmailEngine]
-    B -->|redirects user| C[Provider consent screen]
-    C -->|user approves| D[Provider redirects to EmailEngine with auth code]
-    D --> E[EmailEngine exchanges code for tokens]
-    E --> F[EmailEngine stores tokens and connects to mailbox]
-    F --> G[EmailEngine auto-refreshes tokens before expiry]
+    A[Your Application] -->|1. generates authentication URL| B[EmailEngine]
+    B -->|2. redirects user| C[Provider consent screen]
+    C -->|3. user approves| D[Provider redirects to EmailEngine]
+    D --> E[4. EmailEngine exchanges code for tokens]
+    E --> F[5. EmailEngine stores tokens and connects to mailbox]
+    F -->|6. redirects user to redirectUrl| G[Your Application]
+
+    H[Ongoing: EmailEngine auto-refreshes tokens before expiry]
 ```
 
 EmailEngine handles the token exchange and refresh automatically. You just need to:
