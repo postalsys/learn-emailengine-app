@@ -269,6 +269,10 @@ https://www.googleapis.com/auth/calendar
 
 Configure this in **Additional scopes** field in EmailEngine.
 
+:::warning Microsoft Additional Scopes
+For Microsoft accounts, additional scopes only work when using **MS Graph API** as the base scope. If you're using **IMAP/SMTP**, additional scopes won't be usable because IMAP/SMTP uses the Outlook API, not MS Graph API. You can still add the scopes, but you won't be able to make API requests to those endpoints.
+:::
+
 [Learn more about using tokens for other APIs →](./oauth2-token-management)
 
 ### Disabled Scopes
