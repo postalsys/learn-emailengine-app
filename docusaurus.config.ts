@@ -124,7 +124,7 @@ const config: Config = {
         alt: 'EmailEngine Logo',
         src: 'img/logo.png',
         href: 'https://emailengine.app',
-        target: '_blank',
+        target: '_self',
       },
       items: [
         {
