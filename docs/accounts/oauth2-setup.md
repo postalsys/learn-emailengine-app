@@ -146,18 +146,35 @@ When configuring OAuth2 in EmailEngine, you'll need:
 
 Navigate to **Configuration** → **OAuth2** in EmailEngine dashboard.
 
+![OAuth2 configuration page](/img/oauth2-setup/01-oauth2-config-empty.png)
+
 **Add New Application:**
 
-1. Click **Add application**
-2. Select provider type (Gmail or Outlook)
-3. Enter application details:
-   - **Name**: Internal identifier (e.g., "Production Gmail")
+1. Click the **Add application** dropdown and select the provider type (Gmail or Outlook)
+
+![Add application dropdown menu](/img/oauth2-setup/02-oauth2-add-app-menu.png)
+
+2. Fill in the application details:
+
+![Outlook OAuth2 form](/img/oauth2-setup/03-oauth2-outlook-form-empty.png)
+
+   - **Name**: Internal identifier (e.g., "Production Outlook")
    - **Enabled**: Check to make available to users
-   - **Client ID**: From provider console
+   - **Client ID**: From provider console (Azure AD Application ID or Google Client ID)
    - **Client Secret**: From provider console
    - **Redirect URL**: Your EmailEngine URL + `/oauth`
-   - **Base Scope**: Choose protocol (IMAP/SMTP or API)
-4. Click **Register app**
+   - **Base Scope**: Choose protocol (IMAP/SMTP or MS Graph API)
+   - **Authority** (Outlook): Tenant configuration (`common`, `organizations`, `consumers`, or specific tenant ID)
+
+![Filled OAuth2 form](/img/oauth2-setup/04-oauth2-outlook-form-filled.png)
+
+3. Click **Register app** to save
+
+![OAuth2 app created](/img/oauth2-setup/05-oauth2-app-created.png)
+
+The application now appears in your OAuth2 configuration list:
+
+![OAuth2 configuration with app](/img/oauth2-setup/06-oauth2-config-with-app.png)
 
 ### Credentials File Upload
 
