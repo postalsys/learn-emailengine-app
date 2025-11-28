@@ -183,5 +183,5 @@ Choose your integration path:
 
 - **API Documentation**: [Complete API Reference](https://api.emailengine.app/)
 - **Community**: GitHub Issues and Discussions
-- **Professional Support**: [Contact Support](/docs/support/license)
+- **Professional Support**: [Contact Support](/docs/licensing)
 - **Examples**: GitHub repository with integration examples

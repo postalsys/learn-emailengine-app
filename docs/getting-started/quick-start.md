@@ -537,7 +537,7 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account/my-account/search" \
 - **[Documentation](/docs)** - Complete guides and API reference
 - **[Troubleshooting Guide](/docs/troubleshooting)** - Common issues and solutions
 - **[GitHub Issues](https://github.com/postalsys/emailengine/issues)** - Report bugs
-- **[Support](/docs/support/license)** - Get professional help
+- **[Support](/docs/licensing)** - Get professional help
 
 ## Common Provider-Specific Notes
 

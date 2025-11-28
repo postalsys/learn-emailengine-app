@@ -201,4 +201,4 @@ curl -X DELETE http://localhost:3000/v1/license \
 - [Prepared Settings](./index) - Pre-configure runtime settings
 - [Prepared Access Tokens](./tokens) - Pre-configure API access tokens
 - [License API](/docs/api/license) - Programmatic license management
-- [Support & License](/docs/support/license) - License information and policies
+- [Support & License](/docs/licensing) - License information and policies

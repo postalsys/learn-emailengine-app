@@ -209,4 +209,4 @@ If you encounter issues during installation:
 3. **Check GitHub issues** for known problems
 4. **Contact support** for assistance
 
-[Support page →](/docs/support/license)
+[Support page →](/docs/licensing)

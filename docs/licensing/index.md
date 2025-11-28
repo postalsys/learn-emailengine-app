@@ -1,6 +1,6 @@
 ---
-title: License Information
-description: License information, subscription plans, and how to get a production license key
+title: Pricing & Licensing
+description: EmailEngine subscription plans, pricing, free trial, and license key management
 sidebar_position: 1
 ---
 

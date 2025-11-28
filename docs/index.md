@@ -177,7 +177,7 @@ EmailEngine provides a comprehensive REST API:
 
 - **[Troubleshooting Guide](/docs/troubleshooting)** - Common issues and solutions
 - **[GitHub Issues](https://github.com/postalsys/emailengine/issues)** - Report bugs and request features
-- **[Support](/docs/support/license)** - Get professional support
+- **[Support](/docs/licensing)** - Get professional support
 
 ## System Requirements
 
