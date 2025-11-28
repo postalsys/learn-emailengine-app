@@ -221,31 +221,19 @@ const config: Config = {
     },
   } satisfies Preset.ThemeConfig,
 
-  headTags: [
+  stylesheets: [
+    'https://cdn.jsdelivr.net/npm/biel-search/dist/biel-search/biel-search.css',
+  ],
+
+  scripts: [
     {
-      tagName: 'link',
-      attributes: {
-        rel: 'stylesheet',
-        href: 'https://cdn.jsdelivr.net/npm/biel-search/dist/biel-search/biel-search.css',
-      },
+      src: 'https://cdn.jsdelivr.net/npm/biel-search/dist/biel-search/biel-search.esm.js',
+      type: 'module',
     },
-    {
-      tagName: 'script',
-      attributes: {
-        type: 'module',
-        src: 'https://cdn.jsdelivr.net/npm/biel-search/dist/biel-search/biel-search.esm.js',
-      },
-    },
-    {
-      tagName: 'biel-button',
-      attributes: {
-        project: 'ctd51bpdtp',
-        'header-title': 'Biel.ai Chatbot',
-        'button-position': 'bottom-right',
-        'modal-position': 'sidebar-right',
-        'button-style': 'dark',
-      },
-    },
+  ],
+
+  clientModules: [
+    './src/biel-widget.js',
   ],
 };
 
