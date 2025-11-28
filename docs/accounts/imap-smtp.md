@@ -506,7 +506,7 @@ Sync only specific folders:
 }
 ```
 
-[Learn more about path filtering →](/docs/advanced/performance-tuning#path-filtering)
+[Learn more about limiting indexed folders →](/docs/advanced/performance-tuning#limiting-indexed-folders)
 
 ### Sub-Connections
 
@@ -518,7 +518,7 @@ Monitor additional folders in real-time:
 }
 ```
 
-[Learn more about sub-connections →](/docs/advanced/performance-tuning#sub-connections)
+[Learn more about sub-connections →](/docs/advanced/performance-tuning#sub-connections-for-selected-folders)
 
 ### Proxy Configuration
 
