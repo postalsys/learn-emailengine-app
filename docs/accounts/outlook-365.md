@@ -105,6 +105,23 @@ Choose who can use this application:
 For maximum compatibility, select **"Accounts in any organizational directory and personal Microsoft accounts"** unless you have specific requirements.
 :::
 
+### Microsoft Cloud Environments
+
+EmailEngine supports multiple Microsoft cloud environments beyond the standard commercial cloud:
+
+| Cloud | Value | IMAP/SMTP Host | Use Case |
+|-------|-------|----------------|----------|
+| **Commercial** | `global` | outlook.office365.com | Standard Microsoft 365 (default) |
+| **GCC High** | `gcc-high` | outlook.office365.us | US Government Community Cloud High |
+| **DoD** | `dod` | outlook-dod.office365.us | US Department of Defense |
+| **China** | `china` | partner.outlook.cn | China (operated by 21Vianet) |
+
+When configuring the OAuth2 application in EmailEngine, select the appropriate cloud environment. EmailEngine automatically uses the correct endpoints for authentication and email access.
+
+:::info Government and Sovereign Clouds
+For government clouds (GCC High, DoD) and sovereign clouds (China), you must register your Azure AD application in the corresponding Azure portal for that cloud environment, not the standard Azure portal.
+:::
+
 ### Redirect URI
 
 **Platform:** Select **Web**
