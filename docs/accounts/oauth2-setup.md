@@ -250,8 +250,11 @@ If your application doesn't need sending capabilities, you can disable `SMTP.Sen
 | `Mail.Send` | Send emails |
 | `offline_access` | Allow token refresh (required) |
 
-:::important offline_access Required
-The `offline_access` scope is required for both Gmail and Outlook. It allows EmailEngine to refresh access tokens in the background without user interaction.
+:::info offline_access Scope
+The `offline_access` scope allows EmailEngine to refresh access tokens in the background without user interaction.
+
+- **Gmail**: Enabled by default, no configuration needed
+- **Outlook**: Must be explicitly requested (EmailEngine handles this automatically)
 :::
 
 ### Additional Scopes
