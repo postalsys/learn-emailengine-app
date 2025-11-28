@@ -224,12 +224,16 @@ Full Gmail API access (read, write, delete, but not admin functions).
 
 **Narrower Scopes (if required by Google):**
 
-```
-gmail.readonly      - Read-only access
-gmail.send          - Send emails only
-gmail.labels        - Manage labels
-gmail.compose       - Create drafts
-```
+| Scope | Access | Notes |
+|-------|--------|-------|
+| `gmail.readonly` | Read-only access | Must be combined with `gmail.labels` (see below) |
+| `gmail.send` | Send emails only | Cannot read emails |
+| `gmail.labels` | Manage labels | Required for listing mailboxes |
+| `gmail.compose` | Create drafts | Cannot send directly |
+
+:::warning gmail.readonly requires gmail.labels
+The `gmail.readonly` scope alone cannot list labels (mailboxes). Since EmailEngine requires mailbox information to access emails, you must combine `gmail.readonly` with `gmail.labels` for read-only access to work.
+:::
 
 ### Outlook Scopes
 
