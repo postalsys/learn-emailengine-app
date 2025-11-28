@@ -116,7 +116,9 @@ const config: Config = {
     // Social card for sharing
     image: 'img/logo.png',
     colorMode: {
-      respectPrefersColorScheme: true,
+      defaultMode: 'light',
+      disableSwitch: true,
+      respectPrefersColorScheme: false,
     },
     navbar: {
       title: 'EmailEngine',
