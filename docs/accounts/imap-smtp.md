@@ -473,17 +473,21 @@ Response if successful:
 
 ### Custom Sent Mail Path
 
-Some providers use non-standard names for the Sent folder:
+Override the Sent folder path when EmailEngine's auto-detection fails. This can happen when:
+
+- The server doesn't support the SPECIAL-USE extension and uses a folder name that EmailEngine's heuristics don't recognize
+- The server uses localized folder names (e.g., Microsoft 365 over IMAP without SPECIAL-USE support may use language-specific names)
+- A mail client created a Sent folder at a different path than the server default, and you want sent emails stored there
 
 ```json
 {
   "imap": {
-    "sentMailPath": "Sent Items" // Microsoft Exchange
+    "sentMailPath": "Sent Items"
   }
 }
 ```
 
-Common variations:
+Common folder name variations:
 
 - `Sent` (most providers)
 - `Sent Messages` (some providers)
