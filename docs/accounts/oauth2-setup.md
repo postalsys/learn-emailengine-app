@@ -158,13 +158,13 @@ Navigate to **Configuration** → **OAuth2** in EmailEngine dashboard.
 
 ![Outlook OAuth2 form](/img/oauth2-setup/03-oauth2-outlook-form-empty.png)
 
-   - **Name**: Internal identifier (e.g., "Production Outlook")
-   - **Enabled**: Check to make available to users
-   - **Client ID**: From provider console (Azure AD Application ID or Google Client ID)
-   - **Client Secret**: From provider console
-   - **Redirect URL**: Your EmailEngine URL + `/oauth`
-   - **Base Scope**: Choose protocol (IMAP/SMTP or MS Graph API)
-   - **Authority** (Outlook): Tenant configuration (`common`, `organizations`, `consumers`, or specific tenant ID)
+- **Name**: Internal identifier (e.g., "Production Outlook")
+- **Enabled**: Check to make available to users
+- **Client ID**: From provider console (Azure AD Application ID or Google Client ID)
+- **Client Secret**: From provider console
+- **Redirect URL**: Your EmailEngine URL + `/oauth`
+- **Base Scope**: Choose protocol (IMAP/SMTP or MS Graph API)
+- **Authority** (Outlook): Tenant configuration (`common`, `organizations`, `consumers`, or specific tenant ID)
 
 ![Filled OAuth2 form](/img/oauth2-setup/04-oauth2-outlook-form-filled.png)
 
@@ -208,23 +208,23 @@ Scopes define what your application can access.
 
 **For IMAP/SMTP:**
 
-| Scope | Purpose |
-|-------|---------|
+| Scope                      | Purpose                              |
+| -------------------------- | ------------------------------------ |
 | `https://mail.google.com/` | Full IMAP and SMTP access (required) |
 
 **For Gmail API:**
 
-| Scope | Purpose |
-|-------|---------|
+| Scope          | Purpose                                                              |
+| -------------- | -------------------------------------------------------------------- |
 | `gmail.modify` | Full Gmail API access (read, write, delete, but not admin functions) |
 
 **Narrower Scopes (if required by Google):**
 
-| Scope | Access | Notes |
-|-------|--------|-------|
-| `gmail.readonly` | Read-only access | Must be combined with `gmail.labels` (see below) |
-| `gmail.send` | Send emails only | Cannot read emails |
-| `gmail.labels` | List and manage labels | Required with `gmail.readonly` |
+| Scope            | Access                 | Notes                                            |
+| ---------------- | ---------------------- | ------------------------------------------------ |
+| `gmail.readonly` | Read-only access       | Must be combined with `gmail.labels` (see below) |
+| `gmail.send`     | Send emails only       | Cannot read emails                               |
+| `gmail.labels`   | List and manage labels | Required with `gmail.readonly`                   |
 
 :::warning gmail.readonly requires gmail.labels
 The `gmail.readonly` scope alone cannot list labels (mailboxes). Since EmailEngine requires mailbox information to access emails, you must combine `gmail.readonly` with `gmail.labels` for read-only access to work.
@@ -234,20 +234,20 @@ The `gmail.readonly` scope alone cannot list labels (mailboxes). Since EmailEngi
 
 **For IMAP/SMTP:**
 
-| Scope | Purpose |
-|-------|---------|
-| `IMAP.AccessAsUser.All` | Read and manage emails via IMAP |
-| `SMTP.Send` | Send emails via SMTP (enabled by default) |
-| `offline_access` | Allow token refresh (required) |
+| Scope                   | Purpose                                   |
+| ----------------------- | ----------------------------------------- |
+| `IMAP.AccessAsUser.All` | Read and manage emails via IMAP           |
+| `SMTP.Send`             | Send emails via SMTP (enabled by default) |
+| `offline_access`        | Allow token refresh (required)            |
 
 If your application doesn't need sending capabilities, you can disable `SMTP.Send` via the **Disabled scopes** field in EmailEngine's OAuth2 app settings.
 
 **For MS Graph API:**
 
-| Scope | Purpose |
-|-------|---------|
-| `Mail.ReadWrite` | Read and manage emails |
-| `Mail.Send` | Send emails |
+| Scope            | Purpose                        |
+| ---------------- | ------------------------------ |
+| `Mail.ReadWrite` | Read and manage emails         |
+| `Mail.Send`      | Send emails                    |
 | `offline_access` | Allow token refresh (required) |
 
 :::info offline_access Scope
@@ -255,7 +255,7 @@ The `offline_access` scope allows EmailEngine to refresh access tokens in the ba
 
 - **Gmail**: Enabled by default, no configuration needed
 - **Outlook**: Must be explicitly requested (EmailEngine handles this automatically)
-:::
+  :::
 
 ### Additional Scopes
 
@@ -350,101 +350,6 @@ The redirect URL is where users return after granting consent.
 - Case-sensitive
 - No trailing slashes
 - Must be publicly accessible (for user redirects)
-
-### Common Issues
-
-**Redirect URL mismatch:**
-
-- Error: "redirect_uri_mismatch" (Google) or "AADSTS50011" (Microsoft)
-- Fix: Ensure exact match between provider console and EmailEngine
-- Check for http vs https, trailing slashes, port numbers
-
-## Testing OAuth2 Setup
-
-### Verification Checklist
-
-Before adding accounts:
-
-- [ ] OAuth2 app enabled in EmailEngine
-- [ ] Redirect URL matches exactly
-- [ ] Required scopes configured in provider console
-- [ ] Client ID and secret are correct
-- [ ] Provider APIs are enabled (Gmail API, Cloud Pub/Sub, etc.)
-
-### Test Authentication Flow
-
-1. In EmailEngine, go to **Add account**
-2. Click provider button (e.g., "Sign in with Google")
-3. Should redirect to provider's consent screen
-4. Grant permissions
-5. Should redirect back to EmailEngine
-6. Account should enter "connecting" then "connected" state
-
-### Common Test Issues
-
-**Redirect fails / "Authorization Error":**
-
-- Check browser console for errors
-- Verify redirect URL matches
-- Check provider app is enabled
-
-**Consent screen shows error:**
-
-- Verify all required APIs are enabled
-- Check scopes are configured correctly
-- Ensure app is not restricted to specific users (or you're in the allowed list)
-
-**Account stays in "connecting" or enters "authenticationError":**
-
-- Check EmailEngine logs
-- Verify credentials are correct
-- For Gmail API: check Pub/Sub is set up
-- For IMAP/SMTP: verify protocols are enabled on account
-
-## Production Considerations
-
-### Security Audit (Google)
-
-If you need a public Gmail app:
-
-**Requirements:**
-
-1. **Security compliance** - OWASP, pentest, security review
-2. **Use case validation** - Must fit approved categories
-3. **Minimum scopes** - Google may reject `https://mail.google.com/`
-
-**Timeline:**
-
-- Can take 4-6 weeks or longer
-- Requires documentation and testing
-- May need to revise scope requests
-
-**Cost:**
-
-- Security audit: $15,000 - $75,000+ (varies by provider)
-- Annual re-certification may be required
-
-**Alternatives:**
-
-- Use Internal apps (organization only)
-- Use app passwords
-- Use narrower scopes if sufficient
-
-### Microsoft Verification
-
-For multi-tenant Microsoft apps:
-
-**Publisher Verification:**
-
-- Verify domain ownership
-- Provide business information
-- Display verified badge in consent
-
-**Admin Consent:**
-
-- Organization admins can pre-approve your app
-- Simplifies user experience
-- Required for some permissions
 
 ## Advanced OAuth2 Features
 

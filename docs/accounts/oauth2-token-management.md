@@ -377,12 +377,12 @@ const eventResponse = await fetch("https://www.googleapis.com/calendar/v3/calend
   body: JSON.stringify({
     summary: "Team Meeting",
     start: {
-      dateTime: "2024-01-15T10:00:00-07:00",
-      timeZone: "America/Los_Angeles",
+      dateTime: "2024-01-15T10:00:00+02:00",
+      timeZone: "Europe/Tallinn",
     },
     end: {
-      dateTime: "2024-01-15T11:00:00-07:00",
-      timeZone: "America/Los_Angeles",
+      dateTime: "2024-01-15T11:00:00+02:00",
+      timeZone: "Europe/Tallinn",
     },
     attendees: [{ email: "colleague@example.com" }],
   }),

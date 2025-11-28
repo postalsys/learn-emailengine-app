@@ -21,11 +21,13 @@ Microsoft 365 shared mailboxes are mailboxes not bound to a specific user. Multi
 Add the shared mailbox directly with its own OAuth2 credentials and mark it as shared.
 
 **Best for:**
+
 - Single shared mailbox setups
 - Testing and evaluation
 - Simple use cases
 
 **How it works:**
+
 1. User authenticates with the shared mailbox through OAuth2
 2. EmailEngine marks the account as shared
 3. Account appears as a regular account in EmailEngine
@@ -35,11 +37,13 @@ Add the shared mailbox directly with its own OAuth2 credentials and mark it as s
 Add a main account normally, then add shared mailboxes that reference the main account's credentials.
 
 **Best for:**
+
 - Multiple shared mailboxes accessed by the same user
 - Production environments
 - Better credential management
 
 **How it works:**
+
 1. Add the main user account with OAuth2
 2. Add shared mailbox accounts that reference the main account
 3. EmailEngine uses the main account's credentials to access shared mailboxes
@@ -127,6 +131,7 @@ curl -X POST https://your-ee.com/v1/account \
 ```
 
 **Key fields:**
+
 - `oauth2.auth.user`: Email address of the user whose credentials are being used (the user with access)
 - `oauth2.auth.delegatedUser`: Email address or Microsoft 365 user ID of the shared mailbox being accessed
 
@@ -253,10 +258,12 @@ All three shared mailboxes use the same main account credentials (`my-account`).
 ### IMAP/SMTP Backend
 
 **IMAP Access:**
+
 - Works out of the box
 - EmailEngine accesses shared mailbox emails via IMAP
 
 **SMTP Limitations:**
+
 - Shared mailboxes without a full Microsoft 365 subscription lack SMTP access
 - EmailEngine uses main account's SMTP credentials
 - Sets "From" address to the shared mailbox email
@@ -265,6 +272,7 @@ All three shared mailboxes use the same main account credentials (`my-account`).
 ### Microsoft Graph API Backend
 
 **Better Native Support:**
+
 - Shared mailboxes fully supported
 - No SMTP limitations
 - Cleaner sent email handling
@@ -317,54 +325,15 @@ curl -X POST https://your-ee.com/v1/account/shared-support/submit \
   }'
 ```
 
-## Troubleshooting
-
-### Account Shows "authenticationError"
-
-**Cause:** Main account credentials expired or user doesn't have access to shared mailbox
-
-**Solution:**
-1. Verify main account is in "connected" state
-2. Check user has permissions in Microsoft 365 admin center
-3. Reconnect the main account if needed
-
-### "Permission denied" errors
-
-**Cause:** User doesn't have access to the shared mailbox in Microsoft 365
-
-**Solution:**
-1. Open Microsoft 365 admin center
-2. Navigate to **Teams & groups** → **Shared mailboxes**
-3. Select the shared mailbox
-4. Add the user under **Members**
-5. Wait a few minutes for permissions to propagate
-
-### Sent emails not appearing in shared mailbox
-
-**IMAP/SMTP Backend:**
-- This is expected behavior
-- Sent emails appear in both main account and shared mailbox "Sent Items"
-- Microsoft 365 handles this duplication automatically
-
-**MS Graph API Backend:**
-- Sent emails should appear only in shared mailbox "Sent Items"
-- If not, check application permissions in Azure AD
-
-### Cannot add multiple shared mailboxes with direct access
-
-**Cause:** One account per OAuth2 user limitation
-
-**Solution:** Switch to delegated access approach (Option 2)
-
 ## Comparison: Direct vs Delegated Access
 
-| Feature | Direct Access | Delegated Access |
-|---------|--------------|------------------|
-| **Setup Complexity** | Simpler | Slightly more complex |
-| **Multiple Shared Mailboxes** | Requires re-auth for each | Reuses main account |
-| **Credential Management** | Separate for each | Centralized |
-| **Main Account Access** | Cannot be accessed | Fully accessible |
-| **Best For** | Single mailbox, testing | Production, multiple mailboxes |
+| Feature                       | Direct Access             | Delegated Access               |
+| ----------------------------- | ------------------------- | ------------------------------ |
+| **Setup Complexity**          | Simpler                   | Slightly more complex          |
+| **Multiple Shared Mailboxes** | Requires re-auth for each | Reuses main account            |
+| **Credential Management**     | Separate for each         | Centralized                    |
+| **Main Account Access**       | Cannot be accessed        | Fully accessible               |
+| **Best For**                  | Single mailbox, testing   | Production, multiple mailboxes |
 
 ## See Also
 
