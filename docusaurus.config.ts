@@ -220,6 +220,33 @@ const config: Config = {
       ],
     },
   } satisfies Preset.ThemeConfig,
+
+  headTags: [
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'stylesheet',
+        href: 'https://cdn.jsdelivr.net/npm/biel-search/dist/biel-search/biel-search.css',
+      },
+    },
+    {
+      tagName: 'script',
+      attributes: {
+        type: 'module',
+        src: 'https://cdn.jsdelivr.net/npm/biel-search/dist/biel-search/biel-search.esm.js',
+      },
+    },
+    {
+      tagName: 'biel-button',
+      attributes: {
+        project: 'ctd51bpdtp',
+        'header-title': 'Biel.ai Chatbot',
+        'button-position': 'bottom-right',
+        'modal-position': 'sidebar-right',
+        'button-style': 'dark',
+      },
+    },
+  ],
 };
 
 export default config;
