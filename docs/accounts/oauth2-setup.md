@@ -48,19 +48,19 @@ Understanding the OAuth2 flow helps troubleshoot issues:
 
 ```mermaid
 flowchart TD
-    A[User clicks 'Sign in with Google' or Microsoft] --> B[Redirected to provider's consent screen]
-    B --> C[User reviews permissions and approves]
-    C --> D[Provider redirects back to your app with authorization code]
-    D --> E[Your app exchanges code for access token + refresh token]
-    E --> F[Access token used to authenticate IMAP/SMTP or API calls]
-    F --> G[When access token expires, refresh token gets a new one]
+    A[Your Application] -->|generates authentication URL| B[EmailEngine]
+    B -->|redirects user| C[Provider consent screen]
+    C -->|user approves| D[Provider redirects to EmailEngine with auth code]
+    D --> E[EmailEngine exchanges code for tokens]
+    E --> F[EmailEngine stores tokens and connects to mailbox]
+    F --> G[EmailEngine auto-refreshes tokens before expiry]
 ```
 
-EmailEngine handles steps 4-7 automatically. You just need to:
+EmailEngine handles the token exchange and refresh automatically. You just need to:
 
-- Set up the OAuth2 application (one-time)
-- Direct users to the authentication URL
-- EmailEngine handles the rest
+- Set up the OAuth2 application with the provider (one-time)
+- Direct users to the EmailEngine authentication URL
+- EmailEngine handles token exchange, storage, and refresh
 
 ## Supported Providers in EmailEngine
 
