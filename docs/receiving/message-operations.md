@@ -724,9 +724,15 @@ await setLabels('example', 'AAAAAQAAAeE', ['Work', 'Urgent']);
 | **Folder mapping** | Yes - labels map to folders | No - separate filter/tag system |
 | **Backend support** | Gmail IMAP, Gmail API | Microsoft Graph API only |
 | **Use case** | Organize messages into folders | Add color-coded tags to messages |
+| **Color support** | No colors | Colors assigned by Outlook (not via API) |
+| **Delete/rename** | Yes - via Gmail | No - use Outlook directly |
 
 :::info Important
 Outlook categories are **not a replacement for folders**. They're an additional organizational layer. Unlike Gmail where a label creates a folder, Outlook categories are independent tags that don't affect folder structure.
+:::
+
+:::note Outlook Category Limitations
+EmailEngine can only work with category **names**, not colors. When you assign a new category name to a message, Outlook automatically creates the category with a default color. To change colors, rename, or delete categories, you must use Outlook directly - these operations are not available through EmailEngine.
 :::
 
 ## Common Patterns

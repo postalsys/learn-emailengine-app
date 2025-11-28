@@ -1490,7 +1490,37 @@ Events from shared mailboxes include the same fields. Use `account` to identify 
 
 ### Categories
 
-Outlook categories appear in `data.flags` as custom flags when supported by the IMAP implementation.
+For **Microsoft Graph API** accounts, Outlook categories appear in the `data.labels` array (the same field used for Gmail labels):
+
+```json
+{
+  "account": "outlook-user",
+  "path": "Inbox",
+  "data": {
+    "id": "AAMkADU1...",
+    "labels": ["Blue category", "Red category"],
+    "subject": "Meeting notes"
+  }
+}
+```
+
+**Key differences from Gmail labels:**
+
+| Feature | Gmail Labels | Outlook Categories |
+|---------|--------------|-------------------|
+| **Pre-creation required** | Yes - must exist in Gmail | No - auto-created when set |
+| **Folder mapping** | Yes - labels map to folders | No - separate tag system |
+| **Backend support** | Gmail IMAP, Gmail API | Microsoft Graph API only |
+| **Color support** | No colors | Colors assigned by Outlook (not via API) |
+| **Delete/rename via API** | Yes | No - use Outlook directly |
+
+:::note IMAP Backend
+When using Outlook with **IMAP/SMTP backend** (not Graph API), categories are not available. IMAP does not expose Outlook categories.
+:::
+
+:::note Category Limitations
+EmailEngine works with category **names only**. Colors are assigned by Outlook when categories are created. EmailEngine can create new categories (by setting a non-existent name) but cannot delete, rename, or change colors - use Outlook directly for category management.
+:::
 
 ## AI Features
 

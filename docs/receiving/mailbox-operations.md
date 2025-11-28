@@ -542,6 +542,12 @@ For accounts using **Microsoft Graph API** backend, EmailEngine uses the `labels
 - Categories don't map to mailbox folders (unlike Gmail labels)
 - Only available when using Microsoft Graph API backend
 
+**Limitations:**
+
+- **Names only** - EmailEngine only works with category names, not colors. Colors are assigned by Outlook when categories are created.
+- **Create only** - EmailEngine can create new categories (by assigning a non-existent category name to a message) but cannot delete or rename categories.
+- **No category management** - To manage category colors, rename, or delete categories, use Outlook directly.
+
 :::info Important
 Outlook categories are **not a replacement for folders**. Unlike Gmail where a label creates a folder, Outlook categories are independent color-coded tags that don't affect folder structure.
 :::

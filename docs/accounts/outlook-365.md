@@ -37,16 +37,16 @@ This guide covers both options.
 
 ## Choosing IMAP/SMTP vs MS Graph API
 
-| Feature                         | IMAP/SMTP       | MS Graph API          |
-| ------------------------------- | --------------- | --------------------- |
-| **Setup Complexity**            | Simple          | Moderate              |
-| **Performance**                 | Good            | Excellent             |
-| **Search Capabilities**         | Full text search| Very limited          |
-| **Shared Mailboxes**            | Limited support | Native support        |
-| **EmailEngine Version**         | v2.0+           | v2.44+                |
-| **Connection Protocol**         | IMAP/SMTP       | REST API              |
-| **Microsoft-Specific Features** | Limited         | Full access           |
-| **Works with other providers**  | Yes             | No                    |
+| Feature                         | IMAP/SMTP        | MS Graph API           |
+| ------------------------------- | ---------------- | ---------------------- |
+| **Setup Complexity**            | Simple           | Moderate               |
+| **Performance**                 | Good             | Excellent              |
+| **Search Capabilities**         | Full text search | Very limited           |
+| **Shared Mailboxes**            | Limited support  | Native support         |
+| **Outlook Categories**          | Not available    | Supported via `labels` |
+| **Connection Protocol**         | IMAP/SMTP        | REST API               |
+| **Microsoft-Specific Features** | Limited          | Full access            |
+| **Works with other providers**  | Yes              | No                     |
 
 :::warning MS Graph API Search Limitations
 MS Graph API has **significantly more limited search capabilities** compared to IMAP. IMAP supports full-text search across message headers and body content, while MS Graph API search is much more restricted. If your application requires advanced message search functionality, use IMAP/SMTP instead.
@@ -349,6 +349,7 @@ The `provider` field should be the **OAuth2 application ID** from EmailEngine, w
 Microsoft 365 shared mailboxes are mailboxes not bound to a specific user. Multiple users can access them using their own credentials.
 
 EmailEngine supports shared mailboxes through two approaches:
+
 - **Direct access** - Add shared mailbox with its own OAuth2 credentials
 - **Delegated access** - Add main account, then reference it for shared mailboxes (recommended)
 
@@ -405,36 +406,37 @@ For single-tenant or organization apps, an admin can grant consent for all users
 
 This pre-approves the app for all users in the organization.
 
-### Multi-Tenant Apps
+### Token Management
 
-If your app supports multiple organizations:
+EmailEngine automatically:
 
-- Each organization's admin must grant consent
-- Or users can self-consent (if allowed by admin)
-- Consider different consent experiences per tenant
+- Refreshes access tokens when they expire during API requests
+- Makes regular API requests (at least daily) even for idle accounts, keeping refresh tokens active
+- Stores refresh tokens securely
+- Re-authenticates on token failures
 
-### Client Secret Rotation
+You can:
 
-Client secrets expire. Plan for rotation:
+- Retrieve current access tokens for other Microsoft API calls
+- Monitor token status via account state
+- Revoke access by deleting the account
 
-1. Generate a new secret in Azure before the old one expires
-2. Update EmailEngine configuration with new secret
-3. Test that new secret works
-4. Remove old secret after transition period
+:::warning Refresh Token Expiration
+Microsoft refresh tokens can expire under certain conditions:
 
-Set calendar reminders well before expiration.
+- **90 days of inactivity** - If not used to obtain new access tokens
+- **Maximum ~1 year** - Rolling lifetime limit even if used regularly (may vary by tenant configuration)
+- **User revokes consent** - Via https://myapps.microsoft.com
+- **Admin revokes app** - Via Azure AD Enterprise Applications
+- **Password change** - Invalidates existing refresh tokens
+- **Policy changes** - New MFA or conditional access policies invalidate old tokens
+- **"Sign out everywhere"** - User action that kills all refresh tokens
 
-### Monitoring
+EmailEngine keeps tokens active by making regular API requests, but if an account is deleted from EmailEngine and re-added later, a new consent flow is required.
+:::
 
-Monitor these metrics:
+:::danger Client Secret Expiration
+Microsoft OAuth2 **client secrets expire** (90 days to 2 years max). When expired, **all accounts** using that OAuth2 app fail immediately. Monitor expiration dates in Azure AD and rotate secrets before they expire.
+:::
 
-- Account connection states
-- Authentication error rates
-- Token refresh success rates
-- API rate limit warnings
-
-Set up alerts for:
-
-- Accounts entering error states
-- Token refresh failures
-- Client secret expiration approaching
+[Learn more about OAuth2 token management →](./oauth2-token-management)

@@ -355,15 +355,20 @@ If Google requires you to use limited scopes during verification, you can config
 
 **Default scope:** By default, Gmail API mode requests `gmail.modify` which provides read, send, and modify access (but not permanent deletion).
 
-**Using more limited scopes:** If your application only needs to read emails or only send emails, you can exclude scopes using the **Skip scopes** field when configuring your OAuth2 application:
+**Using more limited scopes:** To use scopes other than `gmail.modify`, you need to:
+1. Add the required scopes to **Additional scopes**
+2. Add `gmail.modify` to **Disabled scopes** (to skip the default scope)
 
-| Your Use Case | Skip Scopes | Resulting Access |
-|---------------|-------------|------------------|
-| Read and send | (none) | Full `gmail.modify` access |
-| Read only | `gmail.send` | Read-only access |
-| Send only | `gmail.readonly` | Send-only access |
+| Your Use Case | Additional Scopes | Disabled Scopes | Resulting Access |
+|---------------|-------------------|-----------------|------------------|
+| Read and send (default) | (none) | (none) | Full `gmail.modify` access |
+| Read only | `gmail.readonly`, `gmail.labels` | `gmail.modify` | Read-only access with folder listing |
+| Send only | `gmail.send` | `gmail.modify` | Send-only access |
+| Read and send (granular) | `gmail.readonly`, `gmail.send`, `gmail.labels` | `gmail.modify` | Read and send with separate scopes |
 
-**Example:** If Google grants you only `gmail.readonly` during verification, configure EmailEngine to skip the `gmail.send` scope to match your granted permissions.
+:::info Why gmail.labels?
+When using `gmail.readonly` instead of `gmail.modify`, you should also add `gmail.labels` to see the folder/label structure. Without it, EmailEngine cannot list mailboxes properly.
+:::
 
 Click **Register app** to save.
 
@@ -415,33 +420,60 @@ Check the account status in EmailEngine:
 
 If you have a public OAuth2 application and Google requires narrower scopes than `gmail.modify`, you can configure custom scopes.
 
-For example, if Google requires:
-
-- `gmail.readonly`
-- `gmail.send`
-- `gmail.labels`
-
 ### Configure Custom Scopes in EmailEngine
 
-In the Gmail OAuth2 application form in EmailEngine, scroll to the bottom to find:
+In the Gmail OAuth2 application configuration in EmailEngine, scroll to the bottom to find the **Additional scopes** and **Disabled scopes** fields.
 
-**Additional scopes:** Add your preferred scopes:
+**Example: Read-only access**
 
+If Google only grants `gmail.readonly` and `gmail.labels`:
+
+**Additional scopes:**
+```
+https://www.googleapis.com/auth/gmail.readonly
+https://www.googleapis.com/auth/gmail.labels
+```
+
+**Disabled scopes:**
+```
+https://www.googleapis.com/auth/gmail.modify
+```
+
+**Example: Read and send with granular scopes**
+
+If Google requires separate read and send scopes instead of `gmail.modify`:
+
+**Additional scopes:**
 ```
 https://www.googleapis.com/auth/gmail.readonly
 https://www.googleapis.com/auth/gmail.send
 https://www.googleapis.com/auth/gmail.labels
 ```
 
-**Disabled scopes:** Add `gmail.modify` to disable it:
-
+**Disabled scopes:**
 ```
 https://www.googleapis.com/auth/gmail.modify
 ```
 
-<!-- Shows: OAuth permission screen with custom scopes -->
+**Example: Send-only access**
 
-When users authenticate, the permissions screen will only request the selected scopes.
+If your application only sends emails:
+
+**Additional scopes:**
+```
+https://www.googleapis.com/auth/gmail.send
+```
+
+**Disabled scopes:**
+```
+https://www.googleapis.com/auth/gmail.modify
+```
+
+:::warning Important
+You must add `gmail.modify` to **Disabled scopes** when using custom scopes. Otherwise, EmailEngine will request both `gmail.modify` AND your additional scopes, which defeats the purpose of using limited scopes.
+:::
+
+When users authenticate, the Google permissions screen will only show the scopes you configured.
 
 ## Production Considerations
 
@@ -496,5 +528,17 @@ You can:
 - Retrieve current access tokens for other Google API calls
 - Monitor token status via account state
 - Revoke access by deleting the account
+
+:::warning Refresh Token Expiration
+Google refresh tokens can expire under certain conditions:
+
+- **6 months of inactivity** - If not used to obtain new access tokens
+- **7 days** - If your OAuth app is in "Testing" mode (not published to production)
+- **User revokes access** - Via Google account settings
+- **Password change** - When Gmail scopes are present
+- **Token limit exceeded** - Google allows ~50 refresh tokens per user/client; oldest tokens are invalidated
+
+EmailEngine keeps tokens active by making regular API requests, but if an account is deleted from EmailEngine and re-added later, a new consent flow is required.
+:::
 
 [Learn more about OAuth2 token management →](./oauth2-token-management)

@@ -26,6 +26,7 @@ Unlike OAuth2-based setups, IMAP/SMTP accounts require direct credentials (usern
 ## When to Use IMAP/SMTP
 
 **Best for:**
+
 - Email providers without OAuth2 support
 - Self-hosted mail servers
 - Regional email providers
@@ -33,12 +34,14 @@ Unlike OAuth2-based setups, IMAP/SMTP accounts require direct credentials (usern
 - Legacy systems
 
 **Advantages:**
+
 - Universal compatibility
 - Immediate setup (no OAuth2 app configuration)
 - Works with virtually any provider
 - Simple authentication
 
 **Disadvantages:**
+
 - Requires storing passwords
 - May not work with accounts that have 2FA without app passwords
 - Some providers (Gmail, Outlook) may block standard authentication
@@ -50,155 +53,85 @@ EmailEngine's IMAP/SMTP support works with hundreds of providers. Here are commo
 ### Major Providers with App Passwords
 
 **Gmail:**
+
 - Requires app-specific password if 2FA is enabled
 - See [Gmail IMAP guide](./gmail-imap) for OAuth2 alternative
 
-**Outlook.com / Hotmail.com:**
-- May require app-specific password
-- See [Outlook guide](./outlook-365) for OAuth2 alternative
+**Outlook.com / Hotmail.com / Live.com:**
+
+- **OAuth2 required** - Microsoft has disabled regular password authentication
+- Use [Outlook OAuth2 guide](./outlook-365) to set up OAuth2 for IMAP/SMTP
 
 **Yahoo Mail:**
+
 - Requires app-specific password
 - Generate at [Yahoo Account Security](https://login.yahoo.com/account/security)
 
 **iCloud Mail:**
+
 - Requires app-specific password
 - Generate at [Apple ID Account](https://appleid.apple.com/)
-
-**AOL Mail:**
-- Requires app-specific password
-- Generate at AOL Account Security settings
-
-### Providers with Standard Authentication
-
-These typically work with regular passwords:
-
-- **Fastmail**
-- **ProtonMail Bridge** (requires local bridge software)
-- **Zoho Mail**
-- **Mail.ru**
-- **Yandex Mail**
-- **GMX Mail**
-- **Mail.com**
-- Self-hosted mail servers (Postfix, Dovecot, Exchange, etc.)
 
 ### Self-Hosted Servers
 
 IMAP/SMTP works with any standard-compliant mail server:
+
 - **Postfix + Dovecot**
 - **Microsoft Exchange**
 - **Zimbra**
 - **MDaemon**
 - **MailEnable**
 - **hMailServer**
+- _etc._
 
-## Common IMAP/SMTP Settings
+## Server Settings Auto-Detection
 
-### Gmail
+EmailEngine can **automatically detect IMAP/SMTP server settings** for most email providers.
 
-```
-IMAP:
-  Host: imap.gmail.com
-  Port: 993
-  Secure: true (SSL/TLS)
+### Via Hosted Authentication Form
 
-SMTP:
-  Host: smtp.gmail.com
-  Port: 587
-  Secure: false (STARTTLS)
+When users add accounts through the [hosted authentication form](/docs/accounts/hosted-authentication), EmailEngine attempts to automatically detect the correct server settings based on the email address. In most cases, users only need to enter their email and password. For self-hosted servers or less common providers where auto-detection fails, manual server configuration is required.
 
-Authentication: App password required if 2FA enabled
-```
+### Via API
 
-### Outlook.com / Hotmail.com / Live.com
+Use the [autoconfig endpoint](/docs/api/get-v-1-autoconfig) to detect server settings programmatically:
 
-```
-IMAP:
-  Host: outlook.office365.com
-  Port: 993
-  Secure: true (SSL/TLS)
-
-SMTP:
-  Host: smtp-mail.outlook.com
-  Port: 587
-  Secure: false (STARTTLS)
+```bash
+curl "https://your-ee.com/v1/autoconfig?email=user@example.com" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-### Yahoo Mail
+Response includes detected IMAP and SMTP settings:
 
-```
-IMAP:
-  Host: imap.mail.yahoo.com
-  Port: 993
-  Secure: true (SSL/TLS)
-
-SMTP:
-  Host: smtp.mail.yahoo.com
-  Port: 587
-  Secure: false (STARTTLS)
-
-Authentication: App password required
-```
-
-### iCloud Mail
-
-```
-IMAP:
-  Host: imap.mail.me.com
-  Port: 993
-  Secure: true (SSL/TLS)
-
-SMTP:
-  Host: smtp.mail.me.com
-  Port: 587
-  Secure: false (STARTTLS)
-
-Authentication: App-specific password required
+```json
+{
+  "imap": {
+    "host": "imap.example.com",
+    "port": 993,
+    "secure": true
+  },
+  "smtp": {
+    "host": "smtp.example.com",
+    "port": 587,
+    "secure": false
+  }
+}
 ```
 
-### AOL Mail
+You can then use these settings when [registering an account](/docs/api/post-v-1-account).
 
-```
-IMAP:
-  Host: imap.aol.com
-  Port: 993
-  Secure: true (SSL/TLS)
+:::warning Outlook.com / Hotmail.com / Live.com
+Microsoft has **disabled regular password authentication** for consumer accounts. You must use OAuth2 authentication. See the [Outlook OAuth2 guide](./outlook-365) for setup instructions.
+:::
 
-SMTP:
-  Host: smtp.aol.com
-  Port: 587
-  Secure: false (STARTTLS)
+:::info Understanding the "secure" Setting
+The `secure` setting controls how TLS is established:
 
-Authentication: App password required
-```
+- **`secure: true`** (ports 993/465) - TLS is used from the start of the connection (implicit TLS)
+- **`secure: false`** (ports 143/587) - Connection starts unencrypted, then EmailEngine automatically upgrades to TLS using STARTTLS if the server supports it
 
-### Fastmail
-
-```
-IMAP:
-  Host: imap.fastmail.com
-  Port: 993
-  Secure: true (SSL/TLS)
-
-SMTP:
-  Host: smtp.fastmail.com
-  Port: 587
-  Secure: false (STARTTLS)
-```
-
-### Zoho Mail
-
-```
-IMAP:
-  Host: imap.zoho.com
-  Port: 993
-  Secure: true (SSL/TLS)
-
-SMTP:
-  Host: smtp.zoho.com
-  Port: 587
-  Secure: false (STARTTLS)
-```
+Setting `secure: false` does **not** mean the connection is unencrypted. EmailEngine will use TLS in both cases - the difference is only in how TLS is negotiated.
+:::
 
 ## Authentication Methods
 
@@ -251,7 +184,7 @@ For providers requiring app passwords (Gmail, Yahoo, iCloud, AOL):
     "secure": true,
     "auth": {
       "user": "john@gmail.com",
-      "pass": "abcd efgh ijkl mnop"  // App password
+      "pass": "abcd efgh ijkl mnop" // App password
     }
   },
   "smtp": {
@@ -260,7 +193,7 @@ For providers requiring app passwords (Gmail, Yahoo, iCloud, AOL):
     "secure": false,
     "auth": {
       "user": "john@gmail.com",
-      "pass": "abcd efgh ijkl mnop"  // Same app password
+      "pass": "abcd efgh ijkl mnop" // Same app password
     }
   }
 }
@@ -293,6 +226,7 @@ Some providers use different credentials for IMAP and SMTP:
 ### Port and Security Options
 
 **Port 993 with SSL/TLS (IMAP):**
+
 ```json
 {
   "imap": {
@@ -303,16 +237,18 @@ Some providers use different credentials for IMAP and SMTP:
 ```
 
 **Port 143 with STARTTLS (IMAP):**
+
 ```json
 {
   "imap": {
     "port": 143,
-    "secure": false  // STARTTLS will be used
+    "secure": false // STARTTLS will be used
   }
 }
 ```
 
 **Port 465 with SSL/TLS (SMTP):**
+
 ```json
 {
   "smtp": {
@@ -323,28 +259,23 @@ Some providers use different credentials for IMAP and SMTP:
 ```
 
 **Port 587 with STARTTLS (SMTP):**
+
 ```json
 {
   "smtp": {
     "port": 587,
-    "secure": false  // STARTTLS will be used
-  }
-}
-```
-
-**Port 25 (SMTP, usually for server-to-server):**
-```json
-{
-  "smtp": {
-    "port": 25,
-    "secure": false
+    "secure": false // STARTTLS will be used
   }
 }
 ```
 
 ### Self-Signed Certificates
 
-For development or self-hosted servers with self-signed certificates:
+For development or self-hosted servers with self-signed certificates, you can disable certificate verification.
+
+**Per-account setting:**
+
+Set `tls.rejectUnauthorized: false` when registering the account:
 
 ```json
 {
@@ -353,11 +284,34 @@ For development or self-hosted servers with self-signed certificates:
     "port": 993,
     "secure": true,
     "tls": {
-      "rejectUnauthorized": false  // Accept self-signed certificates
+      "rejectUnauthorized": false
+    }
+  },
+  "smtp": {
+    "host": "mail.example.com",
+    "port": 587,
+    "secure": false,
+    "tls": {
+      "rejectUnauthorized": false
     }
   }
 }
 ```
+
+**Global setting for all accounts:**
+
+To disable certificate verification for all IMAP/SMTP connections, set the `ignoreMailCertErrors` setting:
+
+```bash
+curl -X POST https://your-ee.com/v1/settings \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ignoreMailCertErrors": true
+  }'
+```
+
+Or via environment variable: `EENGINE_SETTINGS='{"ignoreMailCertErrors": true}'`
 
 :::warning Security Warning
 Only disable certificate verification for development/testing. In production, use proper SSL/TLS certificates (e.g., from Let's Encrypt).
@@ -462,6 +416,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 ```
 
 EmailEngine will generate a form URL where users can:
+
 1. Enter their IMAP/SMTP settings
 2. Test the connection
 3. Complete setup
@@ -502,6 +457,7 @@ curl -X POST https://your-ee.com/v1/verifyAccount \
 ```
 
 Response if successful:
+
 ```json
 {
   "imap": {
@@ -522,12 +478,13 @@ Some providers use non-standard names for the Sent folder:
 ```json
 {
   "imap": {
-    "sentMailPath": "Sent Items"  // Microsoft Exchange
+    "sentMailPath": "Sent Items" // Microsoft Exchange
   }
 }
 ```
 
 Common variations:
+
 - `Sent` (most providers)
 - `Sent Messages` (some providers)
 - `Sent Items` (Microsoft Exchange)
@@ -539,12 +496,7 @@ Sync only specific folders:
 
 ```json
 {
-  "path": [
-    "INBOX",
-    "\\Sent",
-    "\\Drafts",
-    "Important"
-  ]
+  "path": ["INBOX", "\\Sent", "\\Drafts", "Important"]
 }
 ```
 
@@ -556,10 +508,7 @@ Monitor additional folders in real-time:
 
 ```json
 {
-  "subconnections": [
-    "\\Sent",
-    "Important"
-  ]
+  "subconnections": ["\\Sent", "Important"]
 }
 ```
 
@@ -626,6 +575,7 @@ Route connections through a proxy (configured at the account level, not inside i
 ### Connection Pooling
 
 EmailEngine maintains persistent connections to IMAP servers:
+
 - Reduces connection overhead
 - Enables real-time IMAP IDLE notifications
 - Respects provider connection limits (typically 10-15 concurrent connections)
@@ -635,15 +585,18 @@ EmailEngine maintains persistent connections to IMAP servers:
 Be aware of provider limits:
 
 **Gmail:**
+
 - 15 concurrent connections
 - 2500 MB download/day
 - 500 MB upload/day
 
 **Outlook.com:**
+
 - 15 concurrent connections
 - Various rate limits on operations
 
 **Self-hosted:**
+
 - Limits depend on server configuration
 - Monitor server resources
 

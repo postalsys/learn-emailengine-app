@@ -499,4 +499,16 @@ You can:
 - Revoke access by deleting the account
 - Monitor token status via account state
 
+:::warning Refresh Token Expiration
+Google refresh tokens can expire under certain conditions:
+
+- **6 months of inactivity** - If not used to obtain new access tokens
+- **7 days** - If your OAuth app is in "Testing" mode (not published to production)
+- **User revokes access** - Via Google account settings
+- **Password change** - When Gmail scopes are present
+- **Token limit exceeded** - Google allows ~50 refresh tokens per user/client; oldest tokens are invalidated
+
+EmailEngine keeps tokens active by making regular API requests, but if an account is deleted from EmailEngine and re-added later, a new consent flow is required.
+:::
+
 [Learn more about OAuth2 token management →](./oauth2-token-management)
