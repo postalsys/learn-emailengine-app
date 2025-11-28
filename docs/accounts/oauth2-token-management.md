@@ -63,7 +63,16 @@ Some applications need to access multiple Google/Microsoft services:
 - Your app accesses OneDrive API
 - All using the same OAuth2 tokens
 
-Instead of implementing separate OAuth2 flows, you can:
+Instead of implementing separate OAuth2 flows, you can use EmailEngine as your central OAuth2 manager:
+
+```mermaid
+flowchart LR
+    A[User] -->|authenticates once| B[EmailEngine]
+    B -->|email operations| C[Gmail/Outlook]
+    B -->|provides tokens| D[Your App]
+    D -->|calendar API| E[Google Calendar / MS Calendar]
+    D -->|storage API| F[Google Drive / OneDrive]
+```
 
 1. Use EmailEngine for OAuth2 authentication
 2. Request additional scopes during setup
