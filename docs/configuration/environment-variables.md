@@ -567,8 +567,9 @@ services:
       # Settings
       - EENGINE_SETTINGS=${EENGINE_SETTINGS}
 
-      # Credentials
-      - EENGINE_PREPARED_PASSWORD=${ADMIN_PASSWORD}
+      # Credentials (EENGINE_PREPARED_PASSWORD requires hash, not plain password)
+      # Generate hash: emailengine password -p "your-password" --hash
+      - EENGINE_PREPARED_PASSWORD=${ADMIN_PASSWORD_HASH}
       - EENGINE_PREPARED_LICENSE=${LICENSE_KEY}
 
       # Logging

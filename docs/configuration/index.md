@@ -211,9 +211,16 @@ environment:
   - EENGINE_HOST=0.0.0.0
   - EENGINE_PORT=3000
   - REDIS_URL=redis://redis:6379
-  - EENGINE_PREPARED_PASSWORD=${ADMIN_PASSWORD}
+  - EENGINE_PREPARED_PASSWORD=${ADMIN_PASSWORD_HASH}
   - EENGINE_PREPARED_LICENSE=${LICENSE_KEY}
 ```
+
+:::warning Password Hash Required
+`EENGINE_PREPARED_PASSWORD` requires a **password hash**, not a plain password. Generate it with:
+```bash
+emailengine password -p "your-password" --hash
+```
+:::
 
 **Keep secrets secure:**
 
@@ -229,7 +236,8 @@ environment:
 EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
 REDIS_URL=redis://localhost:6379
-EENGINE_PREPARED_PASSWORD=change-me-in-production
+# Generate hash: emailengine password -p "your-password" --hash
+EENGINE_PREPARED_PASSWORD=JHBia2RmMi1zaGE1MTIk...
 ```
 
 ### Development Setup

@@ -24,7 +24,7 @@ EmailEngine offers **field-level encryption** that encrypts all sensitive fields
 ### Security Benefits
 
 1. **Data at Rest Protection**: Even if Redis is compromised, encrypted data remains secure
-2. **Compliance**: Meets security requirements for many regulations (GDPR, HIPAA, etc.)
+2. **Compliance**: Meets security requirements for many regulations
 3. **Defense in Depth**: Additional security layer beyond network security
 4. **Peace of Mind**: Production-ready security posture
 

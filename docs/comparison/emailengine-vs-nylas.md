@@ -25,11 +25,11 @@ Choose based on your priorities: operational overhead vs control and cost.
 | **Pricing Model**        | Flat yearly license         | Per-account ($1.50/month)          |
 | **Setup Time**           | 5-10 minutes                | Instant (signup)                   |
 | **Data Residency**       | Your infrastructure         | Nylas cloud                        |
-| **Webhook Latency**      | Near-instant                | Slightly delayed (sync layer)      |
+| **Webhook Latency**      | Near-instant                | Similar                            |
 | **Read Performance**     | Slightly slower (on-demand) | Very fast (cached)                 |
 | **Parallelism**          | Queued per mailbox          | Full parallelism                   |
 | **Advanced AI Features** | None                        | Sentiment, categorization, etc.    |
-| **Compliance**           | Full control (GDPR, HIPAA)  | SOC 2, ISO 27001                   |
+| **Compliance**           | Full control                | SOC 2, ISO 27001                   |
 | **Support**              | Community + Direct          | Enterprise support                 |
 
 ## Key Architectural Differences
@@ -155,14 +155,14 @@ See [Threading Documentation](/docs/sending/threading/provider-support) for deta
 
 ### Integration Features
 
-| Feature          | EmailEngine        | Nylas                         |
-| ---------------- | ------------------ | ----------------------------- |
-| REST API         | Yes                | Yes                           |
-| Webhooks         | Yes                | Yes                           |
-| Webhook retry    | Yes                | Yes                           |
+| Feature          | EmailEngine                    | Nylas                         |
+| ---------------- | ------------------------------ | ----------------------------- |
+| REST API         | Yes                            | Yes                           |
+| Webhooks         | Yes                            | Yes                           |
+| Webhook retry    | Yes                            | Yes                           |
 | Batch operations | Yes (mail merge, bulk updates) | Yes                           |
-| Rate limiting    | Configure yourself | Built-in                      |
-| SDKs             | Community          | Official (multiple languages) |
+| Rate limiting    | Configure yourself             | Built-in                      |
+| SDKs             | Community                      | Official (multiple languages) |
 
 ## Pricing Deep Dive
 
@@ -177,11 +177,11 @@ See [Threading Documentation](/docs/sending/threading/provider-support) for deta
 
 **Your costs:**
 
-| Cost Component | Amount |
-|----------------|--------|
+| Cost Component      | Amount                                                       |
+| ------------------- | ------------------------------------------------------------ |
 | EmailEngine License | Flat annual fee (see [pricing](https://postalsys.com/plans)) |
-| Infrastructure | $50-500/month (VPS/cloud) |
-| DevOps Time | Variable |
+| Infrastructure      | $50-500/month (VPS/cloud)                                    |
+| DevOps Time         | Variable                                                     |
 
 **Cost scales with infrastructure, not mailbox count.**
 
@@ -236,14 +236,14 @@ Enterprise customers can negotiate volume discounts. Actual costs may vary based
 
 ### Scaling
 
-| Aspect | EmailEngine | Nylas |
-|--------|-------------|-------|
-| **Vertical Scaling** | Increase server resources (CPU, RAM) | Automatic, transparent |
-| **Horizontal Scaling** | NOT SUPPORTED (no built-in coordination) | Automatic, transparent |
-| **Manual Sharding** | Possible but complex (separate Redis per instance) | Not needed |
-| **Bottleneck** | Usually Redis or network to IMAP servers | API rate limits (generous) |
-| **Max Scale** | Several thousand mailboxes per instance | Hundreds of thousands of mailboxes |
-| **Scaling Effort** | Manual configuration required | Zero configuration |
+| Aspect                 | EmailEngine                                        | Nylas                              |
+| ---------------------- | -------------------------------------------------- | ---------------------------------- |
+| **Vertical Scaling**   | Increase server resources (CPU, RAM)               | Automatic, transparent             |
+| **Horizontal Scaling** | NOT SUPPORTED (no built-in coordination)           | Automatic, transparent             |
+| **Manual Sharding**    | Possible but complex (separate Redis per instance) | Not needed                         |
+| **Bottleneck**         | Usually Redis or network to IMAP servers           | API rate limits (generous)         |
+| **Max Scale**          | Several thousand mailboxes per instance            | Hundreds of thousands of mailboxes |
+| **Scaling Effort**     | Manual configuration required                      | Zero configuration                 |
 
 **Best for:**
 
