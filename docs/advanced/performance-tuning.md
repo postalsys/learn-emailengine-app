@@ -348,6 +348,12 @@ EENGINE_LOG_LEVEL=info
 
 :::warning No Horizontal Scaling
 EmailEngine does NOT support horizontal scaling. Running multiple EmailEngine instances that connect to the same Redis will cause each instance to attempt syncing every account independently, leading to conflicts and increased load.
+
+**Kubernetes/Container Orchestration:**
+- Set `replicas: 1` in your Deployment - only a single pod can run
+- Do NOT configure Horizontal Pod Autoscaler (HPA) for EmailEngine
+- Do NOT use auto-scaling groups or similar mechanisms
+- If you need more capacity, use vertical scaling (more CPU/RAM) or manual sharding (see below)
 :::
 
 ### Vertical Scaling (Recommended)
