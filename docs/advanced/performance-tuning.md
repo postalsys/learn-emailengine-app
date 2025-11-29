@@ -395,12 +395,28 @@ If you need to support more accounts than a single instance can handle, you can 
 REDIS_PREFIX=ee-shard-a
 REDIS_URL=redis://redis-a:6379
 EENGINE_PORT=3000
+# Service URL must be unique per instance
+EENGINE_SETTINGS='{"serviceUrl":"https://ee-a.example.com"}'
 
 # Instance B - Accounts 1000-1999
 REDIS_PREFIX=ee-shard-b
 REDIS_URL=redis://redis-b:6379
 EENGINE_PORT=3001
+EENGINE_SETTINGS='{"serviceUrl":"https://ee-b.example.com"}'
 ```
+
+**OAuth2 Configuration for Sharded Deployments:**
+
+The same OAuth2 application (in Azure AD or Google Cloud Console) can be used across all EmailEngine instances. Each instance needs a unique `serviceUrl`, and all callback URLs must be registered in the OAuth2 app settings.
+
+In your OAuth2 app configuration, add all instance redirect URLs:
+```
+https://ee-a.example.com/oauth
+https://ee-b.example.com/oauth
+https://ee-c.example.com/oauth
+```
+
+Both Azure AD and Google Cloud Console support multiple redirect URIs per OAuth2 application.
 
 Your application must:
 1. Maintain a mapping of which accounts belong to which shard
