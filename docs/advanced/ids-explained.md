@@ -383,6 +383,10 @@ Seq 4: Message D
 
 **Solution**: EmailEngine uses `uid` instead, which never changes.
 
+:::info Internal Implementation
+While EmailEngine doesn't expose sequence numbers through the API, it must still handle them internally. IMAP servers push update and delete notifications using sequence numbers (e.g., `123 EXPUNGE` means the message at position 123 was deleted, and message 124 is now 123). EmailEngine maintains sequence-to-UID mappings to correctly translate these notifications into stable UID-based operations.
+:::
+
 ## Choosing the Right Identifier
 
 ### Decision Tree
