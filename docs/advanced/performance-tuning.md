@@ -484,12 +484,24 @@ curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:3000/metrics
 ### High CPU Usage
 
 **Possible causes**:
-1. Too many accounts for available workers
-2. Frequent account reconnections
-3. Heavy API request load
+1. **Memory exhaustion** - The most common cause of constant 100% CPU load is running out of RAM. When free memory is depleted, the system frantically tries to manage the few remaining bytes, causing CPU to spike and stay at maximum.
+2. Too many accounts for available workers
+3. Frequent account reconnections
+4. Heavy API request load
 
 **Solutions**:
 ```bash
+# First: Check memory usage
+free -h
+# or
+docker stats
+
+# If memory is exhausted:
+# - Add more RAM to the server
+# - Reduce number of accounts
+# - Scale up Redis memory
+
+# If memory is fine, try:
 # Increase workers
 EENGINE_WORKERS=16
 
