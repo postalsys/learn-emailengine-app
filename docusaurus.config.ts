@@ -105,6 +105,16 @@ const config: Config = {
         },
       },
     ],
+    [
+      'docusaurus-biel',
+      {
+        project: 'ctd51bpdtp',
+        headerTitle: 'EmailEngine Assistant',
+        buttonPosition: 'bottom-right',
+        modalPosition: 'sidebar-right',
+        buttonStyle: 'dark',
+      },
+    ],
   ],
 
   themes: [
@@ -223,24 +233,12 @@ const config: Config = {
     },
   } satisfies Preset.ThemeConfig,
 
-  stylesheets: [
-    'https://cdn.jsdelivr.net/npm/biel-search/dist/biel-search/biel-search.css',
-  ],
-
   scripts: [
-    {
-      src: 'https://cdn.jsdelivr.net/npm/biel-search/dist/biel-search/biel-search.esm.js',
-      type: 'module',
-    },
     {
       src: 'https://plausible.emailengine.dev/js/script.js',
       defer: true,
       'data-domain': 'learn.emailengine.app',
     },
-  ],
-
-  clientModules: [
-    './src/biel-widget.js',
   ],
 };
 

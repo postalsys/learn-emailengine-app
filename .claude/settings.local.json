@@ -8,7 +8,9 @@
       "Bash(git push:*)",
       "Bash(git remote rename:*)",
       "Bash(git remote add:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "WebFetch(domain:docs.biel.ai)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
