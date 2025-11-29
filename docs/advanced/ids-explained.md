@@ -103,10 +103,15 @@ The IMAP **Unique Identifier** (UID) is an auto-incrementing integer within each
 - **Auto-incrementing**: New messages get higher UIDs than existing ones
 - **Never reused**: Deleted UIDs cannot be reassigned within the same folder
 - **Changes on move**: Moving to another folder assigns a new UID
+- **IMAP only**: UIDs are an IMAP protocol concept and are not available for API backends
+
+:::warning IMAP Only
+UID is a native IMAP protocol concept. API backends (Gmail API, MS Graph) do not support UIDs, so range-based searches using `uid` are not available for accounts connected via OAuth2 API backends. For API accounts, use `id` or provider-specific identifiers like `emailId`.
+:::
 
 ### When to Use
 
-Use `uid` for range-based operations:
+Use `uid` for range-based operations (IMAP accounts only):
 
 ```json
 {
