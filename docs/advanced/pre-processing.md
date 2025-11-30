@@ -497,7 +497,6 @@ Pre-processing functions run in a secure sandbox with limited access:
 - `URL` - URL parsing and manipulation
 - `logger` - Pino.js logger instance for structured logging
 - `env` - The `scriptEnv` settings object (configure via Settings API)
-- `console.log()` for debugging
 
 **Not Available:**
 - `require()` - Cannot import modules
@@ -691,22 +690,21 @@ return true;
 
 ## Debugging
 
-### Enable Console Logging
+### Using the Logger
 
-Use `console.log()` to debug:
+Use `logger` (Pino.js) for debugging:
 
 ```javascript
-console.log('Processing webhook for account:', data.account);
-console.log('Message path:', data.path);
-console.log('Has auto-submitted header:', !!data.headers?.['auto-submitted']);
+logger.info({ account: data.account, path: data.path }, 'Processing webhook');
+logger.debug({ autoSubmitted: !!data.headers?.['auto-submitted'] }, 'Header check');
 
 const result = data.path === 'INBOX';
-console.log('Filter result:', result);
+logger.info({ result }, 'Filter decision');
 
 return result;
 ```
 
-View logs in EmailEngine logs or UI test console.
+View logs in EmailEngine logs.
 
 ### Check EmailEngine Logs
 
@@ -729,7 +727,7 @@ const start = Date.now();
 data.customField = 'processed';
 
 const duration = Date.now() - start;
-console.log(`Processing took ${duration}ms`);
+logger.info({ duration }, 'Processing completed');
 
 return data;
 ```
