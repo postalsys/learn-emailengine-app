@@ -539,8 +539,8 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
 **Using `logger` for Structured Logging:**
 
 ```javascript
-logger.info({ account: data.account, path: data.path }, 'Processing webhook');
-logger.warn({ subject: data.subject }, 'Suspicious email detected');
+logger.info({ account: data.account, path: data.path, msg: 'Processing webhook' });
+logger.warn({ subject: data.subject, msg: 'Suspicious email detected' });
 
 return true;
 ```
@@ -695,11 +695,11 @@ return true;
 Use `logger` (Pino.js) for debugging:
 
 ```javascript
-logger.info({ account: data.account, path: data.path }, 'Processing webhook');
-logger.debug({ autoSubmitted: !!data.headers?.['auto-submitted'] }, 'Header check');
+logger.info({ account: data.account, path: data.path, msg: 'Processing webhook' });
+logger.debug({ autoSubmitted: !!data.headers?.['auto-submitted'], msg: 'Header check' });
 
 const result = data.path === 'INBOX';
-logger.info({ result }, 'Filter decision');
+logger.info({ result, msg: 'Filter decision' });
 
 return result;
 ```
@@ -727,7 +727,7 @@ const start = Date.now();
 data.customField = 'processed';
 
 const duration = Date.now() - start;
-logger.info({ duration }, 'Processing completed');
+logger.info({ duration, msg: 'Processing completed' });
 
 return data;
 ```
