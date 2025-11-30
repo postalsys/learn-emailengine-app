@@ -491,14 +491,60 @@ Pre-processing functions run in a secure sandbox with limited access:
 
 **Available:**
 - Standard JavaScript (ES6+)
+- Top-level `await` is supported
 - `Date`, `Math`, `JSON`, `RegExp`
+- `fetch` - Make HTTP requests to external services
+- `URL` - URL parsing and manipulation
+- `logger` - Pino.js logger instance for structured logging
+- `env` - The `scriptEnv` settings object (configure via Settings API)
 - `console.log()` for debugging
 
 **Not Available:**
 - `require()` - Cannot import modules
-- `fs`, `http`, `net` - No filesystem or network access
+- `fs` - No filesystem access
 - `process`, `child_process` - No system access
-- External variables - Functions are isolated
+
+**Using `env` for Configuration:**
+
+Store sensitive values like API keys in `scriptEnv` settings rather than hardcoding them:
+
+```javascript
+// Access values from scriptEnv settings
+const apiKey = env.MY_API_KEY;
+const webhookSecret = env.WEBHOOK_SECRET;
+
+if (apiKey) {
+  // Use the API key
+  const response = await fetch('https://api.example.com/validate', {
+    headers: { 'Authorization': `Bearer ${apiKey}` }
+  });
+}
+
+return true;
+```
+
+Configure `scriptEnv` via the Settings API:
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scriptEnv": {
+      "MY_API_KEY": "your-api-key-here",
+      "WEBHOOK_SECRET": "your-secret"
+    }
+  }'
+```
+
+**Using `logger` for Structured Logging:**
+
+```javascript
+logger.info({ account: data.account, path: data.path }, 'Processing webhook');
+logger.warn({ subject: data.subject }, 'Suspicious email detected');
+
+return true;
+```
 
 **Performance:**
 - Timeout: 1000ms (1 second)
