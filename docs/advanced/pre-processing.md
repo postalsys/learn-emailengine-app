@@ -495,7 +495,7 @@ Pre-processing functions run in a secure sandbox with limited access:
 - `Date`, `Math`, `JSON`, `RegExp`
 - `fetch` - Make HTTP requests to external services
 - `URL` - URL parsing and manipulation
-- `logger` - Pino.js logger instance for structured logging
+- `logger` - Pino.js logger instance (logs to EmailEngine's stdout)
 - `env` - The `scriptEnv` settings object (configure via Settings API)
 
 **Not Available:**
@@ -704,7 +704,7 @@ logger.info({ result, msg: 'Filter decision' });
 return result;
 ```
 
-View logs in EmailEngine logs.
+Log entries appear in EmailEngine's stdout alongside other application logs.
 
 ### Check EmailEngine Logs
 
