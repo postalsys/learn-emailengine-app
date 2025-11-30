@@ -60,14 +60,6 @@ Handles all webhook delivery jobs.
 - **Jobs**: Webhook HTTP requests
 - **Retries**: Automatic retry on webhook failures
 
-### 3. Documents Queue
-
-Handles ElasticSearch indexing (if document store enabled).
-
-- **Purpose**: Index messages for search
-- **Jobs**: Document indexing operations
-- **Dependencies**: Requires ElasticSearch
-
 ## Job Lifecycle
 
 Jobs in the submit queue move through different states:
@@ -202,12 +194,6 @@ curl -XPOST "https://ee.example.com/v1/admin/queue/submit/pause" \
 curl -XPOST "https://ee.example.com/v1/admin/queue/submit/resume" \
   -H "Authorization: Bearer <token>"
 ```
-
-### 7. Waiting-Children
-
-**Description**: Special state for ElasticSearch indexing jobs with dependencies.
-
-**Relevance**: Only applies to the Documents queue, not Submit queue.
 
 ## Monitoring the Queue
 

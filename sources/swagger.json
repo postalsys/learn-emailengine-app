@@ -13128,7 +13128,7 @@
       "put": {
         "summary": "Request account flush",
         "operationId": "putV1AccountAccountFlush",
-        "description": "Deletes all email indexes from Redis and ElasticSearch and re-creates the index for that account. You can only run a single flush operation at a time, so you must wait until the previous flush has finished before initiating a new one.",
+        "description": "Deletes all email indexes from Redis and re-creates the index for that account. You can only run a single flush operation at a time, so you must wait until the previous flush has finished before initiating a new one.",
         "parameters": [
           {
             "name": "x-ee-timeout",

@@ -23,11 +23,10 @@ EmailEngine uses [BullMQ](https://docs.bullmq.io/) for background task processin
 
 ## Overview
 
-EmailEngine manages three primary queues for different operations:
+EmailEngine manages two primary queues for different operations:
 
 - **Submit Queue**: Email sending jobs
 - **Notify Queue**: Webhook delivery jobs
-- **Documents Queue**: ElasticSearch indexing jobs
 
 All queues are backed by Redis and monitored through Bull Board (previously Arena), accessible via **Tools → Bull Board** in the EmailEngine interface.
 
@@ -105,29 +104,6 @@ Bull Board provides a web interface for:
 
 **Failure Outcome**: Job retries or fails, webhook not delivered
 
-### 3. Documents Queue
-
-**Purpose**: Indexes emails in ElasticSearch for search and Document Store features.
-
-**Job Creation**: Created when:
-- New email arrives (if Document Store enabled)
-- Email updated (flags/labels changed)
-- Account flushed and re-indexed
-
-**Job Data**:
-```json
-{
-  "account": "example",
-  "messageId": "AAAAGQAACeE",
-  "operation": "index",
-  "document": { ... }
-}
-```
-
-**Success Outcome**: Email indexed in ElasticSearch, available for search
-
-**Failure Outcome**: Job retries or fails, email not searchable
-
 ## Job Lifecycle
 
 Every job moves through different states during its lifecycle.
@@ -156,7 +132,6 @@ Every job moves through different states during its lifecycle.
 **What Happens**:
 - Email sending: SMTP connection established, message transmitted
 - Webhook delivery: HTTP POST request sent to your endpoint
-- Document indexing: Data sent to ElasticSearch
 
 **Exit Paths**:
 - **Success**: Move to Completed
@@ -210,7 +185,6 @@ Every job moves through different states during its lifecycle.
 - SMTP authentication failed
 - Recipient address invalid
 - Webhook endpoint unreachable
-- ElasticSearch connection failed
 
 **Example**: Email rejected by SMTP server with "User unknown" error after all retries.
 
@@ -225,16 +199,6 @@ Every job moves through different states during its lifecycle.
 **Use Case**: Temporarily stop processing for maintenance or debugging.
 
 **Example**: Queue paused via Bull Board, new emails accumulate here.
-
-#### 7. Waiting-Children
-
-**Description**: Jobs waiting for child jobs to complete (used for ElasticSearch indexing).
-
-**How Jobs Enter**: Parent job creates child jobs and waits for completion.
-
-**What Happens**: Once all children complete, parent job continues processing.
-
-**Usage**: Not used for Submit or Notify queues, only for Documents queue with complex indexing operations.
 
 ## Job Lifecycle Diagram
 
@@ -410,20 +374,6 @@ Error: Timeout: webhook endpoint did not respond within 5000ms
 Error: Unexpected status code: 500
 ```
 **Solution**: Check webhook handler logs for errors
-
-#### Documents Queue
-
-**ElasticSearch Unavailable**:
-```
-Error: ECONNREFUSED connect to elasticsearch:9200
-```
-**Solution**: Check ElasticSearch running, connection settings
-
-**Indexing Failure**:
-```
-Error: mapper_parsing_exception: failed to parse field
-```
-**Solution**: Check document structure, ElasticSearch mapping
 
 ## Queue Management Operations
 

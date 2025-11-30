@@ -91,7 +91,6 @@ Find all messages in a conversation thread:
 
 - Using the `\All` folder (Gmail, Graph API)
 - Folder-by-folder search (Yahoo, generic IMAP)
-- ElasticSearch-based search
 - Building threads manually from headers
 - Provider-specific search strategies
 

@@ -446,15 +446,15 @@ Pre-processing functions receive the complete webhook payload. The payload has a
 
 ```javascript
 // Top-level properties (webhook metadata)
-payload.event      // "messageNew"
-payload.account    // "testaccount"
-payload.path       // "INBOX"
+payload.event; // "messageNew"
+payload.account; // "testaccount"
+payload.path; // "INBOX"
 
 // Message properties (inside payload.data)
-payload.data.subject     // "Important Message"
-payload.data.from        // { name: "...", address: "..." }
-payload.data.headers     // { "auto-submitted": [...], ... }
-payload.data.attachments // [...]
+payload.data.subject; // "Important Message"
+payload.data.from; // { name: "...", address: "..." }
+payload.data.headers; // { "auto-submitted": [...], ... }
+payload.data.attachments; // [...]
 ```
 
 ## Sandbox Environment
@@ -519,102 +519,6 @@ logger.warn({ subject: payload.data.subject, msg: "Suspicious email detected" })
 return true;
 ```
 
-**Performance:**
-
-- Timeout: 1000ms (1 second)
-- Memory limit: 50MB
-- CPU limit: Moderate
-
-Functions that exceed limits are terminated and the event is discarded.
-
-## Testing
-
-### Test in UI
-
-Use the built-in test feature:
-
-1. Write your function
-2. Click **Test**
-3. Provide sample data
-4. View results and console output
-
-### Test Locally
-
-Create a test script:
-
-```javascript
-// test-preprocessing.js
-
-// Your pre-processing function
-function filterWebhook(data) {
-  if (data.headers && data.headers["auto-submitted"]) {
-    return false;
-  }
-  return data.path === "INBOX";
-}
-
-function mapWebhook(data) {
-  data.customId = `${data.account}-${Date.now()}`;
-  return data;
-}
-
-// Test cases
-const testCases = [
-  {
-    name: "Normal inbox message",
-    data: {
-      account: "john@example.com",
-      path: "INBOX",
-      subject: "Hello",
-      from: { address: "jane@example.com" },
-    },
-    expectedFilter: true,
-  },
-  {
-    name: "Auto-reply message",
-    data: {
-      account: "john@example.com",
-      path: "INBOX",
-      subject: "Auto-reply",
-      headers: { "auto-submitted": ["auto-replied"] },
-      from: { address: "jane@example.com" },
-    },
-    expectedFilter: false,
-  },
-  {
-    name: "Sent folder message",
-    data: {
-      account: "john@example.com",
-      path: "Sent",
-      subject: "Reply",
-      from: { address: "john@example.com" },
-    },
-    expectedFilter: false,
-  },
-];
-
-// Run tests
-for (const test of testCases) {
-  console.log(`\nTest: ${test.name}`);
-
-  const shouldSend = filterWebhook(test.data);
-  console.log(`  Filter result: ${shouldSend}`);
-  console.log(`  Expected: ${test.expectedFilter}`);
-  console.log(`  ${shouldSend === test.expectedFilter ? "PASS" : "FAIL"}`);
-
-  if (shouldSend) {
-    const mapped = mapWebhook(test.data);
-    console.log(`  Mapped data:`, mapped);
-  }
-}
-```
-
-Run tests:
-
-```bash
-node test-preprocessing.js
-```
-
 ## Performance Considerations
 
 ### 1. Keep Functions Fast
@@ -627,10 +531,25 @@ return payload.path === "INBOX" && !payload.data.headers["auto-submitted"];
 ```
 
 ```javascript
-// Slow - avoid expensive operations (if text content is available)
-const words = (payload.data.text?.plain || "").split(/\s+/);
-return words.length > 10;
+// Slow - avoid external requests in pre-processing
+const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    model: "gpt-4",
+    messages: [{ role: "user", content: `Is this spam? ${payload.data.subject}` }],
+  }),
+});
+const result = await response.json();
+return result.choices[0].message.content.includes("not spam");
 ```
+
+:::tip Use Webhooks for Slow Operations
+Instead of calling external APIs in pre-processing, let the webhook pass through and handle AI classification in your webhook handler. This keeps EmailEngine responsive while your application handles the slow operations asynchronously.
+:::
 
 ### 2. Cache Computed Values
 
@@ -857,22 +776,6 @@ end function
   height: auto;
 }
 ```
-
-### Pre-Processing with ElasticSearch
-
-If ElasticSearch is enabled, pre-processing is even faster:
-
-```bash
-curl "https://ee.example.com/v1/account/example/message/AAAAGQAACeE?embedAttachedImages=true&preProcessHtml=true&documentStore=true&textType=*" \
-  -H "Authorization: Bearer TOKEN"
-```
-
-**Benefits with ElasticSearch**:
-
-- No IMAP requests needed
-- Embedded images cached in ElasticSearch
-- Significantly faster response times
-- Reduced load on IMAP server
 
 ### Attachment Handling
 

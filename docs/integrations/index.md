@@ -133,7 +133,7 @@ Embed email functionality in business apps:
 
 ### Data Management
 
-- **Message Storage**: Decide between IMAP-only or ElasticSearch indexing
+- **Message Storage**: Messages are stored on the IMAP server
 - **Attachment Handling**: Consider storage requirements for attachments
 - **Data Retention**: Implement appropriate retention policies
 - **Privacy Compliance**: Ensure GDPR and privacy regulation compliance
