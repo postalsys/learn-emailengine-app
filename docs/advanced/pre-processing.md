@@ -31,6 +31,26 @@ Pre-processing functions are small JavaScript snippets that run in a secure sand
 
 ## Function Types
 
+:::warning Code Format
+Pre-processing code is **function body content**, not a full function definition. The code runs in the main scope and must return a value directly.
+
+**Correct:**
+```javascript
+if (data.path === 'INBOX') {
+  return true;
+}
+return false;
+```
+
+**Incorrect:**
+```javascript
+function myFilter(data) {  // Wrong! Don't define a function
+  return true;
+}
+// Nothing calls this function, so it does nothing
+```
+:::
+
 ### 1. Filter Functions
 
 Filter functions determine whether an event should be processed or discarded.
@@ -48,20 +68,19 @@ Filter functions determine whether an event should be processed or discarded.
 
 ```javascript
 // Return true to send webhook, false to skip
-function filterWebhook(data) {
-  // Skip auto-replies
-  if (data.headers && data.headers['auto-submitted']) {
-    return false;
-  }
 
-  // Skip out-of-office messages
-  if (data.subject && /out of office/i.test(data.subject)) {
-    return false;
-  }
-
-  // Process all other webhooks
-  return true;
+// Skip auto-replies
+if (data.headers && data.headers['auto-submitted']) {
+  return false;
 }
+
+// Skip out-of-office messages
+if (data.subject && /out of office/i.test(data.subject)) {
+  return false;
+}
+
+// Process all other webhooks
+return true;
 ```
 
 ### 2. Mapping Functions
@@ -81,24 +100,22 @@ Mapping functions modify the structure or content of data before processing.
 **Example - Add custom fields:**
 
 ```javascript
-function mapWebhook(data) {
-  // Add custom tracking ID
-  data.customId = `${data.account}-${Date.now()}`;
+// Add custom tracking ID
+data.customId = `${data.account}-${Date.now()}`;
 
-  // Add priority based on subject
-  if (data.subject && /urgent/i.test(data.subject)) {
-    data.priority = 'high';
-  } else {
-    data.priority = 'normal';
-  }
-
-  // Redact sensitive content
-  if (data.text) {
-    data.text = data.text.replace(/ssn:\s*\d{3}-\d{2}-\d{4}/gi, 'ssn: [REDACTED]');
-  }
-
-  return data;
+// Add priority based on subject
+if (data.subject && /urgent/i.test(data.subject)) {
+  data.priority = 'high';
+} else {
+  data.priority = 'normal';
 }
+
+// Redact sensitive content
+if (data.text) {
+  data.text = data.text.replace(/ssn:\s*\d{3}-\d{2}-\d{4}/gi, 'ssn: [REDACTED]');
+}
+
+return data;
 ```
 
 ## Configuration
@@ -116,70 +133,60 @@ Configure pre-processing for webhook routes in the EmailEngine UI.
 #### Step 2: Add Filter Function
 
 ```javascript
-/**
- * Filter function for webhooks
- * @param {Object} data - Webhook payload
- * @returns {Boolean} - true to send webhook, false to skip
- */
-function filterWebhook(data) {
-  // Only send webhooks for inbox messages
-  if (data.path !== 'INBOX') {
-    return false;
-  }
+// Filter: return true to send webhook, false to skip
 
-  // Skip notifications (usually automated)
-  if (data.from && /noreply|no-reply/i.test(data.from.address)) {
-    return false;
-  }
-
-  // Skip old messages (older than 1 hour)
-  if (data.date) {
-    const messageAge = Date.now() - new Date(data.date).getTime();
-    if (messageAge > 3600000) { // 1 hour in milliseconds
-      return false;
-    }
-  }
-
-  return true;
+// Only send webhooks for inbox messages
+if (data.path !== 'INBOX') {
+  return false;
 }
+
+// Skip notifications (usually automated)
+if (data.from && /noreply|no-reply/i.test(data.from.address)) {
+  return false;
+}
+
+// Skip old messages (older than 1 hour)
+if (data.date) {
+  const messageAge = Date.now() - new Date(data.date).getTime();
+  if (messageAge > 3600000) { // 1 hour in milliseconds
+    return false;
+  }
+}
+
+return true;
 ```
 
 #### Step 3: Add Mapping Function
 
 ```javascript
-/**
- * Mapping function for webhooks
- * @param {Object} data - Webhook payload
- * @returns {Object} - Modified webhook payload
- */
-function mapWebhook(data) {
-  // Add custom fields
-  data.metadata = {
-    receivedAt: new Date().toISOString(),
-    environment: 'production',
-    version: '1.0'
-  };
+// Mapping: modify data and return it
 
-  // Categorize by subject
-  if (data.subject) {
-    const subject = data.subject.toLowerCase();
-    if (subject.includes('invoice') || subject.includes('payment')) {
-      data.category = 'billing';
-    } else if (subject.includes('support') || subject.includes('help')) {
-      data.category = 'support';
-    } else {
-      data.category = 'general';
-    }
+// Add custom fields
+data.metadata = {
+  receivedAt: new Date().toISOString(),
+  environment: 'production',
+  version: '1.0'
+};
+
+// Categorize by subject
+if (data.subject) {
+  const subject = data.subject.toLowerCase();
+  if (subject.includes('invoice') || subject.includes('payment')) {
+    data.category = 'billing';
+  } else if (subject.includes('support') || subject.includes('help')) {
+    data.category = 'support';
+  } else {
+    data.category = 'general';
   }
-
-  // Extract ticket ID from subject
-  const ticketMatch = data.subject && data.subject.match(/#(\d+)/);
-  if (ticketMatch) {
-    data.ticketId = ticketMatch[1];
-  }
-
-  return data;
 }
+
+// Extract ticket ID from subject
+const ticketMatch = data.subject && data.subject.match(/#(\d+)/);
+if (ticketMatch) {
+  data.ticketId = ticketMatch[1];
+}
+
+return data;
 ```
 
 #### Step 4: Test Function
@@ -214,220 +221,208 @@ console.log('Mapped data:', mapped);
 ### 1. Skip Automated Emails
 
 ```javascript
-function filterWebhook(data) {
-  // Check Auto-Submitted header
-  if (data.headers && data.headers['auto-submitted'] &&
-      data.headers['auto-submitted'][0] !== 'no') {
-    return false;
-  }
-
-  // Check for common automated addresses
-  const automatedPatterns = [
-    /noreply/i,
-    /no-reply/i,
-    /donotreply/i,
-    /notifications?/i,
-    /mailer-daemon/i,
-    /postmaster/i
-  ];
-
-  if (data.from && data.from.address) {
-    for (const pattern of automatedPatterns) {
-      if (pattern.test(data.from.address)) {
-        return false;
-      }
-    }
-  }
-
-  // Check subject for automated patterns
-  const automatedSubjects = [
-    /out of office/i,
-    /automatic reply/i,
-    /auto-reply/i,
-    /mail delivery fail/i
-  ];
-
-  if (data.subject) {
-    for (const pattern of automatedSubjects) {
-      if (pattern.test(data.subject)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
+// Check Auto-Submitted header
+if (data.headers && data.headers['auto-submitted'] &&
+    data.headers['auto-submitted'][0] !== 'no') {
+  return false;
 }
+
+// Check for common automated addresses
+const automatedPatterns = [
+  /noreply/i,
+  /no-reply/i,
+  /donotreply/i,
+  /notifications?/i,
+  /mailer-daemon/i,
+  /postmaster/i
+];
+
+if (data.from && data.from.address) {
+  for (const pattern of automatedPatterns) {
+    if (pattern.test(data.from.address)) {
+      return false;
+    }
+  }
+}
+
+// Check subject for automated patterns
+const automatedSubjects = [
+  /out of office/i,
+  /automatic reply/i,
+  /auto-reply/i,
+  /mail delivery fail/i
+];
+
+if (data.subject) {
+  for (const pattern of automatedSubjects) {
+    if (pattern.test(data.subject)) {
+      return false;
+    }
+  }
+}
+
+return true;
 ```
 
 ### 2. Extract and Normalize Data
 
 ```javascript
-function mapWebhook(data) {
-  // Extract email addresses from CC and BCC
-  const allRecipients = [
-    ...(data.to || []),
-    ...(data.cc || []),
-    ...(data.bcc || [])
-  ].map(r => r.address);
+// Extract email addresses from CC and BCC
+const allRecipients = [
+  ...(data.to || []),
+  ...(data.cc || []),
+  ...(data.bcc || [])
+].map(r => r.address);
 
-  data.allRecipients = [...new Set(allRecipients)]; // Remove duplicates
+data.allRecipients = [...new Set(allRecipients)]; // Remove duplicates
 
-  // Parse subject line for ticket/order numbers
-  if (data.subject) {
-    // Extract ticket ID (e.g., "#12345", "TICKET-12345")
-    const ticketMatch = data.subject.match(/#(\d+)|TICKET-(\d+)/i);
-    if (ticketMatch) {
-      data.ticketId = ticketMatch[1] || ticketMatch[2];
-    }
-
-    // Extract order ID (e.g., "Order #12345", "Order ID: 12345")
-    const orderMatch = data.subject.match(/order\s*#?:?\s*(\d+)/i);
-    if (orderMatch) {
-      data.orderId = orderMatch[1];
-    }
+// Parse subject line for ticket/order numbers
+if (data.subject) {
+  // Extract ticket ID (e.g., "#12345", "TICKET-12345")
+  const ticketMatch = data.subject.match(/#(\d+)|TICKET-(\d+)/i);
+  if (ticketMatch) {
+    data.ticketId = ticketMatch[1] || ticketMatch[2];
   }
 
-  // Normalize sender domain
-  if (data.from && data.from.address) {
-    const domain = data.from.address.split('@')[1];
-    data.senderDomain = domain.toLowerCase();
-
-    // Flag internal emails
-    data.isInternal = ['example.com', 'company.com'].includes(domain);
+  // Extract order ID (e.g., "Order #12345", "Order ID: 12345")
+  const orderMatch = data.subject.match(/order\s*#?:?\s*(\d+)/i);
+  if (orderMatch) {
+    data.orderId = orderMatch[1];
   }
-
-  return data;
 }
+
+// Normalize sender domain
+if (data.from && data.from.address) {
+  const domain = data.from.address.split('@')[1];
+  data.senderDomain = domain.toLowerCase();
+
+  // Flag internal emails
+  data.isInternal = ['example.com', 'company.com'].includes(domain);
+}
+
+return data;
 ```
 
 ### 3. Priority and Categorization
 
 ```javascript
-function mapWebhook(data) {
-  // Determine priority
-  data.priority = 'normal';
+// Determine priority
+data.priority = 'normal';
 
-  // High priority indicators
-  const urgentKeywords = ['urgent', 'asap', 'important', 'critical'];
-  const subject = (data.subject || '').toLowerCase();
+// High priority indicators
+const urgentKeywords = ['urgent', 'asap', 'important', 'critical'];
+const subject = (data.subject || '').toLowerCase();
 
-  for (const keyword of urgentKeywords) {
+for (const keyword of urgentKeywords) {
+  if (subject.includes(keyword)) {
+    data.priority = 'high';
+    break;
+  }
+}
+
+// VIP senders
+const vipDomains = ['important-client.com', 'executive.com'];
+if (data.from && data.from.address) {
+  const domain = data.from.address.split('@')[1];
+  if (vipDomains.includes(domain)) {
+    data.priority = 'high';
+    data.isVip = true;
+  }
+}
+
+// Categorize by content
+const categories = {
+  billing: ['invoice', 'payment', 'receipt', 'billing'],
+  support: ['support', 'help', 'question', 'issue'],
+  sales: ['quote', 'proposal', 'pricing', 'demo'],
+  hr: ['benefits', 'payroll', 'pto', 'vacation']
+};
+
+for (const [category, keywords] of Object.entries(categories)) {
+  for (const keyword of keywords) {
     if (subject.includes(keyword)) {
-      data.priority = 'high';
+      data.category = category;
       break;
     }
   }
-
-  // VIP senders
-  const vipDomains = ['important-client.com', 'executive.com'];
-  if (data.from && data.from.address) {
-    const domain = data.from.address.split('@')[1];
-    if (vipDomains.includes(domain)) {
-      data.priority = 'high';
-      data.isVip = true;
-    }
-  }
-
-  // Categorize by content
-  const categories = {
-    billing: ['invoice', 'payment', 'receipt', 'billing'],
-    support: ['support', 'help', 'question', 'issue'],
-    sales: ['quote', 'proposal', 'pricing', 'demo'],
-    hr: ['benefits', 'payroll', 'pto', 'vacation']
-  };
-
-  for (const [category, keywords] of Object.entries(categories)) {
-    for (const keyword of keywords) {
-      if (subject.includes(keyword)) {
-        data.category = category;
-        break;
-      }
-    }
-    if (data.category) break;
-  }
-
-  data.category = data.category || 'general';
-
-  return data;
+  if (data.category) break;
 }
+
+data.category = data.category || 'general';
+
+return data;
 ```
 
 ### 4. Redact Sensitive Information
 
 ```javascript
-function mapWebhook(data) {
-  // Patterns for sensitive data
-  const patterns = {
-    ssn: /\b\d{3}-\d{2}-\d{4}\b/g,
-    creditCard: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g,
-    phone: /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g,
-    email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g
-  };
+// Patterns for sensitive data
+const patterns = {
+  ssn: /\b\d{3}-\d{2}-\d{4}\b/g,
+  creditCard: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g,
+  phone: /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g,
+  email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g
+};
 
-  // Redact from text
-  if (data.text) {
-    data.text = data.text.replace(patterns.ssn, 'SSN:[REDACTED]');
-    data.text = data.text.replace(patterns.creditCard, 'CARD:[REDACTED]');
-  }
-
-  // Redact from HTML
-  if (data.html) {
-    data.html = data.html.replace(patterns.ssn, 'SSN:[REDACTED]');
-    data.html = data.html.replace(patterns.creditCard, 'CARD:[REDACTED]');
-  }
-
-  // Flag as containing sensitive data
-  const originalText = data.text || '';
-  if (patterns.ssn.test(originalText) || patterns.creditCard.test(originalText)) {
-    data.containsSensitiveData = true;
-  }
-
-  return data;
+// Redact from text
+if (data.text) {
+  data.text = data.text.replace(patterns.ssn, 'SSN:[REDACTED]');
+  data.text = data.text.replace(patterns.creditCard, 'CARD:[REDACTED]');
 }
+
+// Redact from HTML
+if (data.html) {
+  data.html = data.html.replace(patterns.ssn, 'SSN:[REDACTED]');
+  data.html = data.html.replace(patterns.creditCard, 'CARD:[REDACTED]');
+}
+
+// Flag as containing sensitive data
+const originalText = data.text || '';
+if (patterns.ssn.test(originalText) || patterns.creditCard.test(originalText)) {
+  data.containsSensitiveData = true;
+}
+
+return data;
 ```
 
 ### 5. Add Metadata and Context
 
 ```javascript
-function mapWebhook(data) {
-  // Add processing metadata
-  data.processing = {
-    receivedAt: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'production',
-    serverHostname: require('os').hostname(),
-    version: '2.0'
+// Add processing metadata
+data.processing = {
+  receivedAt: new Date().toISOString(),
+  version: '2.0'
+};
+
+// Calculate message size
+const textSize = (data.text || '').length;
+const htmlSize = (data.html || '').length;
+data.sizeBytes = textSize + htmlSize;
+
+// Count attachments by type
+if (data.attachments) {
+  data.attachmentStats = {
+    total: data.attachments.length,
+    images: data.attachments.filter(a => a.contentType?.startsWith('image/')).length,
+    documents: data.attachments.filter(a => a.contentType?.includes('pdf') ||
+                                             a.contentType?.includes('word')).length,
+    totalSize: data.attachments.reduce((sum, a) => sum + (a.size || 0), 0)
   };
-
-  // Calculate message size
-  const textSize = (data.text || '').length;
-  const htmlSize = (data.html || '').length;
-  data.sizeBytes = textSize + htmlSize;
-
-  // Count attachments by type
-  if (data.attachments) {
-    data.attachmentStats = {
-      total: data.attachments.length,
-      images: data.attachments.filter(a => a.contentType?.startsWith('image/')).length,
-      documents: data.attachments.filter(a => a.contentType?.includes('pdf') ||
-                                               a.contentType?.includes('word')).length,
-      totalSize: data.attachments.reduce((sum, a) => sum + (a.size || 0), 0)
-    };
-  }
-
-  // Detect language (simple heuristic)
-  const text = data.text || '';
-  if (/[а-яА-Я]/.test(text)) {
-    data.language = 'ru';
-  } else if (/[à-ÿÀ-Ÿ]/.test(text)) {
-    data.language = 'fr';
-  } else if (/[äöüßÄÖÜ]/.test(text)) {
-    data.language = 'de';
-  } else {
-    data.language = 'en';
-  }
-
-  return data;
 }
+
+// Detect language (simple heuristic)
+const text = data.text || '';
+if (/[а-яА-Я]/.test(text)) {
+  data.language = 'ru';
+} else if (/[à-ÿÀ-Ÿ]/.test(text)) {
+  data.language = 'fr';
+} else if (/[äöüßÄÖÜ]/.test(text)) {
+  data.language = 'de';
+} else {
+  data.language = 'en';
+}
+
+return data;
 ```
 
 ## Available Data
@@ -608,16 +603,13 @@ Pre-processing runs for every event. Keep functions lightweight:
 
 ```javascript
 // Fast - simple checks
-function filterWebhook(data) {
-  return data.path === 'INBOX' && !data.headers['auto-submitted'];
-}
+return data.path === 'INBOX' && !data.headers['auto-submitted'];
+```
 
-// Slow - complex operations
-function filterWebhook(data) {
-  // Avoid expensive regex, loops, or parsing
-  const words = data.text.split(/\s+/); // Can be slow for large messages
-  return words.length > 10;
-}
+```javascript
+// Slow - avoid expensive operations
+const words = data.text.split(/\s+/); // Can be slow for large messages
+return words.length > 10;
 ```
 
 ### 2. Cache Computed Values
@@ -625,18 +617,16 @@ function filterWebhook(data) {
 If checking multiple conditions, store intermediate results:
 
 ```javascript
-function mapWebhook(data) {
-  const subject = (data.subject || '').toLowerCase(); // Compute once
+const subject = (data.subject || '').toLowerCase(); // Compute once
 
-  // Use cached value
-  data.isUrgent = subject.includes('urgent') ||
-                  subject.includes('important');
+// Use cached value
+data.isUrgent = subject.includes('urgent') ||
+                subject.includes('important');
 
-  data.isBilling = subject.includes('invoice') ||
-                   subject.includes('payment');
+data.isBilling = subject.includes('invoice') ||
+                 subject.includes('payment');
 
-  return data;
-}
+return data;
 ```
 
 ### 3. Exit Early
@@ -644,15 +634,13 @@ function mapWebhook(data) {
 Return as soon as you know the result:
 
 ```javascript
-function filterWebhook(data) {
-  // Exit early if conditions not met
-  if (data.path !== 'INBOX') return false;
-  if (!data.from || !data.from.address) return false;
-  if (data.headers && data.headers['auto-submitted']) return false;
+// Exit early if conditions not met
+if (data.path !== 'INBOX') return false;
+if (!data.from || !data.from.address) return false;
+if (data.headers && data.headers['auto-submitted']) return false;
 
-  // Only process if all checks passed
-  return true;
-}
+// Only process if all checks passed
+return true;
 ```
 
 ## Debugging
@@ -662,16 +650,14 @@ function filterWebhook(data) {
 Use `console.log()` to debug:
 
 ```javascript
-function filterWebhook(data) {
-  console.log('Processing webhook for account:', data.account);
-  console.log('Message path:', data.path);
-  console.log('Has auto-submitted header:', !!data.headers?.['auto-submitted']);
+console.log('Processing webhook for account:', data.account);
+console.log('Message path:', data.path);
+console.log('Has auto-submitted header:', !!data.headers?.['auto-submitted']);
 
-  const result = data.path === 'INBOX';
-  console.log('Filter result:', result);
+const result = data.path === 'INBOX';
+console.log('Filter result:', result);
 
-  return result;
-}
+return result;
 ```
 
 View logs in EmailEngine logs or UI test console.
@@ -691,17 +677,15 @@ tail -f logs/emailengine.log | grep "function.*error"
 Log timing information:
 
 ```javascript
-function mapWebhook(data) {
-  const start = Date.now();
+const start = Date.now();
 
-  // Your transformations
-  data.customField = processData(data);
+// Your transformations
+data.customField = 'processed';
 
-  const duration = Date.now() - start;
-  console.log(`Processing took ${duration}ms`);
+const duration = Date.now() - start;
+console.log(`Processing took ${duration}ms`);
 
-  return data;
-}
+return data;
 ```
 
 ## HTML Email Pre-Processing for Web Display
