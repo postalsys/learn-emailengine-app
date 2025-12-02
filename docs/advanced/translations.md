@@ -79,8 +79,8 @@ curl -X POST https://your-ee.com/v1/settings \
 **Via Web Interface:**
 
 1. Open the EmailEngine admin dashboard
-2. Navigate to **Configuration** > **Service Configuration**
-3. Find the **Locale** setting
+2. Navigate to **Configuration** > **General Settings**
+3. Find the **Default Language** setting
 4. Select your preferred language from the dropdown
 5. Click **Save**
 
