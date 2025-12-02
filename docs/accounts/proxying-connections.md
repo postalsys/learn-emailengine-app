@@ -200,7 +200,7 @@ curl -X POST https://your-ee.com/v1/token \
 
 - `account`: EmailEngine account ID
 - `scopes`: Must include `"imap-proxy"` for proxy access
-- `description`: Optional description for identification
+- `description`: Required token description for identification
 - `restrictions.addresses`: Optional IP restrictions (CIDR notation)
 
 **Response:**
@@ -368,7 +368,7 @@ curl -X POST https://your-ee.com/v1/token \
 See all tokens for an account:
 
 ```bash
-curl https://your-ee.com/v1/account/user123/tokens \
+curl https://your-ee.com/v1/tokens/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
