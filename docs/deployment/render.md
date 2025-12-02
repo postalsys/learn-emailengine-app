@@ -141,7 +141,7 @@ Use the **Internal Connection String** for better performance and no data transf
 
 2. **Check logs:**
    - Click "Logs" tab to see real-time progress
-   - Look for: `EmailEngine started`
+   - Look for: `Started API server thread`
 
 3. **Get application URL:**
    - Once deployed, URL appears at top: `https://emailengine-xxxx.onrender.com`
@@ -184,26 +184,19 @@ EmailEngine is now running on Render with automatic SSL and monitoring.
 **Common variables to add:**
 
 ```bash
-# OAuth2 for Gmail
-EENGINE_GMAIL_CLIENT_ID=your-client-id.apps.googleusercontent.com
-EENGINE_GMAIL_CLIENT_SECRET=your-client-secret
-
-# OAuth2 for Outlook
-EENGINE_OUTLOOK_CLIENT_ID=your-outlook-client-id
-EENGINE_OUTLOOK_CLIENT_SECRET=your-outlook-client-secret
-
-# Webhooks
-EENGINE_WEBHOOK_URL=https://your-app.com/webhooks
-
-# License key (PEM format - use Render environment editor for multiline)
-EENGINE_PREPARED_LICENSE="-----BEGIN LICENSE-----..."
+# License key (use Render environment editor for multiline values)
+EENGINE_PREPARED_LICENSE="<your-encoded-license>"
 
 # Performance
 EENGINE_WORKERS=4
-EENGINE_MAX_CONNECTIONS=20
 
-# Monitoring
+# Pre-configured settings as JSON (webhooks, OAuth2, etc.)
+EENGINE_SETTINGS='{"webhooks":"https://your-app.com/webhooks","webhookEvents":["*"],"webhooksEnabled":true}'
 ```
+
+:::info OAuth2 and Webhook Configuration
+OAuth2 credentials and webhook URLs are not configured via individual environment variables. Instead, use the EmailEngine web UI or the `EENGINE_SETTINGS` JSON environment variable to configure these settings after deployment.
+:::
 
 ### Health Checks
 
@@ -220,7 +213,7 @@ Add to `render.yaml` in your repository:
 services:
   - type: web
     name: emailengine
-    env: node
+    runtime: node
     healthCheckPath: /health
     buildCommand: npm install --omit=dev
     startCommand: npm start
@@ -288,10 +281,9 @@ EmailEngine does NOT support horizontal scaling. Running multiple EmailEngine in
 **Log examples:**
 
 ```log
-10/13/2025, 10:00:00 AM [INFO] EmailEngine started
-10/13/2025, 10:00:05 AM [INFO] Connected to Redis
-10/13/2025, 10:00:10 AM [INFO] Listening on port 3000
-10/13/2025, 10:05:30 AM [INFO] Account user@gmail.com connected
+{"level":30,"msg":"Started API server thread","port":3000,"host":"0.0.0.0"}
+{"level":30,"msg":"All required threads are available","threads":["api","imap","webhooks","submit"]}
+{"level":30,"msg":"Account state change","account":"user@gmail.com","state":"connected"}
 ```
 
 ### Metrics
@@ -422,26 +414,31 @@ Create in repository root:
 services:
   - type: web
     name: emailengine
-    env: node
+    runtime: node
     region: oregon
     plan: starter
     buildCommand: npm install --omit=dev
     startCommand: npm start
-    healthCheckPath: /health
+    # healthCheckPath: /health  # Optional - uncomment to enable
     envVars:
       - key: NODE_ENV
         value: production
       - key: EENGINE_REDIS
-        fromDatabase:
+        fromService:
+          type: redis
           name: emailengine-redis
           property: connectionString
       - key: EENGINE_SECRET
         generateValue: true
       - key: EENGINE_WORKERS
         value: "2"
+      - key: EENGINE_HOST
+        value: "0.0.0.0"
+      - key: EENGINE_API_PROXY
+        value: "1"
 
-databases:
-  - name: emailengine-redis
+  - type: redis
+    name: emailengine-redis
     plan: starter
     region: oregon
     maxmemoryPolicy: noeviction
