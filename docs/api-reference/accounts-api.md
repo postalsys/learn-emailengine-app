@@ -29,7 +29,7 @@ Email accounts are the core resource in EmailEngine. Each account represents a c
   "email": "user@example.com",
   "state": "connected",
   "syncTime": 1640995200000,
-  "syncFrom": "2025-01-01T00:00:00.000Z",
+  "notifyFrom": "2025-01-01T00:00:00.000Z",
   "lastError": null,
   "imap": {
     "host": "imap.gmail.com",
@@ -64,7 +64,7 @@ Email accounts are the core resource in EmailEngine. Each account represents a c
 | `authenticationError` | Authentication failed (invalid credentials or expired token) |
 | `connectError` | Connection failed (network or server issue) |
 | `disconnected` | Connection closed or lost |
-| `unset` | Initial state before any connection attempt |
+| `unset` | Initial state before any connection attempt (internal) |
 
 ## Common Operations
 
@@ -79,12 +79,12 @@ Register a new email account with EmailEngine.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `account` | string | Yes | Unique account identifier (usually email address) |
-| `name` | string | No | Display name for the account |
+| `name` | string | Yes | Display name for the account |
 | `email` | string | No | Email address (defaults to `account`) |
 | `imap` | object | Yes* | IMAP connection settings |
 | `smtp` | object | No | SMTP connection settings |
 | `oauth2` | object | No | OAuth2 settings |
-| `syncFrom` | string | No | ISO date to sync from (default: 1 week ago) |
+| `notifyFrom` | string | No | ISO date to send webhooks from (default: account creation time) |
 
 *Either `imap` or `oauth2` is required.
 
@@ -582,7 +582,7 @@ PRINT("Reconnection initiated: " + result.success)
 | `email` | string | Email address |
 | `state` | string | Connection state (see Account States) |
 | `syncTime` | number | Unix timestamp of last sync |
-| `syncFrom` | string | ISO date to sync messages from |
+| `notifyFrom` | string | ISO date to send webhooks from |
 | `lastError` | object | Last error details (if any) |
 | `imap` | object | IMAP connection settings |
 | `smtp` | object | SMTP connection settings |
@@ -777,9 +777,9 @@ function getSyncStatus(account) {
 **Account Already Exists:**
 ```json
 {
-  "error": "Account already exists",
-  "code": "AccountExists",
-  "statusCode": 409
+  "error": "Another account for the same OAuth2 user already exists",
+  "code": "AccountAlreadyExists",
+  "statusCode": 400
 }
 ```
 **Solution:** Use PUT to update existing account or choose different account ID.
@@ -797,8 +797,7 @@ function getSyncStatus(account) {
 **Account Not Found:**
 ```json
 {
-  "error": "Account not found",
-  "code": "AccountNotFound",
+  "error": "Account record was not found for requested ID",
   "statusCode": 404
 }
 ```
