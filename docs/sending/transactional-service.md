@@ -187,15 +187,14 @@ EmailEngine includes an optional SMTP server for standard email client integrati
 
 ### Enable SMTP Server
 
-1. Navigate to **Configuration → SMTP Server**
+1. Navigate to **Configuration → SMTP Interface**
 2. Check **Enable SMTP Server**
 3. Configure port (default: 2525)
 4. Set authentication password
 5. Save settings
 
 **Important Notes**:
-- No TLS support built-in (use HAProxy with PROXY protocol if TLS needed)
-- Uses cleartext connections
+- TLS/STARTTLS support available via `smtpServerTLSEnabled` setting
 - Can enable HAProxy PROXY protocol support
 - Authentication optional but recommended
 
@@ -322,7 +321,7 @@ with smtplib.SMTP('localhost', 2525) as smtp:
 - **Header addresses**: `To`, `Cc`, `Bcc` headers are informational only
 - **Bcc header**: Automatically removed from messages
 - **Mandatory headers**: `Message-ID`, `MIME-Version`, `Date` added if missing
-- **No TLS**: Use HAProxy for TLS termination if needed
+- **TLS**: Enable via `smtpServerTLSEnabled` setting, or use HAProxy for TLS termination
 
 ## Scheduled Sending
 
@@ -386,7 +385,7 @@ Use ISO 8601 format with timezone:
 ### Scheduling Limits
 
 - Maximum schedule time: Configurable (default: no limit)
-- Minimum schedule time: Current time + 1 minute
+- Minimum schedule time: None (if `sendAt` is in the past, message sends immediately)
 - Queue retention: Messages remain queued until `sendAt` time
 
 ## Webhook Notifications
@@ -426,8 +425,18 @@ Triggered when delivery fails temporarily (will retry):
   "data": {
     "queueId": "24279fb3e0dff64e",
     "messageId": "<188db4df-3abb-806c-94c8-7a9303652c50@example.com>",
+    "envelope": {
+      "from": "sender@example.com",
+      "to": ["recipient@example.com"]
+    },
     "error": "Connection timeout",
-    "response": "421 4.4.2 Connection timed out"
+    "errorCode": "ETIMEDOUT",
+    "smtpResponse": "421 4.4.2 Connection timed out",
+    "smtpResponseCode": 421,
+    "job": {
+      "attemptsMade": 1,
+      "nextAttempt": "2025-10-15T10:30:15.000Z"
+    }
   }
 }
 ```
@@ -474,7 +483,7 @@ Triggered when a bounce message is detected in the mailbox:
 }
 ```
 
-**Note**: Bounce notification includes only `messageId`, not a reference to the original queued message. You must track `messageId` values yourself to correlate bounces with sent messages.
+**Note**: Bounce notification includes both `messageId` and `queueId`, which you can use to correlate bounces with sent messages.
 
 ## Bounce Detection
 
@@ -600,13 +609,18 @@ View queue status in Bull Board:
 ### Retry Behavior
 
 **Default Retry Strategy**:
-- Initial attempt: Immediate
-- Retry 1: 30 seconds later
-- Retry 2: 5 minutes later
-- Retry 3: 30 minutes later
-- Retry 4: 2 hours later
+EmailEngine uses exponential backoff with a base delay of 5 seconds:
 
-Configure retry attempts in **Configuration → Service → Delivery Attempts**.
+- Initial attempt: Immediate
+- Retry 1: ~5 seconds later (5s x 2^0)
+- Retry 2: ~10 seconds later (5s x 2^1)
+- Retry 3: ~20 seconds later (5s x 2^2)
+- Retry 4: ~40 seconds later (5s x 2^3)
+- And so on, doubling each time
+
+Default maximum attempts: 10
+
+Configure retry attempts in **Configuration → General Settings → Retry Attempts**.
 
 ### Manual Queue Management
 
