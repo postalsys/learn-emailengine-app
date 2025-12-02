@@ -10,7 +10,7 @@ Get help with EmailEngine through our support channels.
 
 ## Contact Support
 
-**Email:** [support@postalsys.com](mailto:support@postalsys.com)
+**Email:** [support@emailengine.app](mailto:support@emailengine.app)
 
 - Response time: Usually within 48 hours on business days
 - Bug reports are prioritized
@@ -20,7 +20,7 @@ Get help with EmailEngine through our support channels.
 
 **With active subscription:**
 
-- Email support via support@postalsys.com
+- Email support via support@emailengine.app
 - Bug fixes and patches
 - Access to all EmailEngine updates
 
@@ -45,6 +45,6 @@ Standard support does not include:
 Before contacting support, check these resources:
 
 - **[Documentation](/docs)** - Comprehensive guides and API reference
-- **[Troubleshooting Guide](/docs/troubleshooting)** - Common issues and solutions
+- **[Troubleshooting Guide](/docs/accounts/troubleshooting)** - Common issues and solutions
 - **[GitHub Issues](https://github.com/postalsys/emailengine/issues)** - Search existing issues
 - **[Changelog](https://github.com/postalsys/emailengine/releases)** - Recent updates and fixes
