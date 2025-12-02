@@ -94,24 +94,29 @@ When EmailEngine detects a deleted message, it sends a [`messageDeleted` webhook
 
 ```json
 {
+  "serviceUrl": "https://emailengine.example.com",
   "account": "example",
+  "date": "2025-01-15T10:30:00.000Z",
+  "path": "INBOX",
   "event": "messageDeleted",
   "data": {
     "id": "AAAAAQAAAeE",
-    "uid": 12345,
-    "path": "INBOX",
-    "emailId": "1743d29c-b67d-4747-9016-b8850a5a39bd",
-    "threadId": "1743d29c-b67d-4747-9016-b8850a5a39bd"
+    "uid": 12345
   }
 }
 ```
 
 **Important Fields:**
-- `id` - EmailEngine's message ID (now deleted)
-- `uid` - IMAP UID of deleted message
-- `path` - Folder where message was deleted
-- `emailId` - Unique email identifier (survives moves)
-- `threadId` - Thread identifier
+- `path` - Folder where message was deleted (at root level, not inside data)
+- `data.id` - EmailEngine's message ID (now deleted)
+- `data.uid` - IMAP UID of deleted message
+
+:::note Provider Differences
+The payload varies by account type:
+- **IMAP accounts**: `data` contains `id` and `uid`
+- **Gmail API accounts**: `data` contains `id`, `threadId`, `flags`, `labels`, and `category`
+- **Outlook API accounts**: `data` contains only `id`
+:::
 
 ### Handling Deletion Webhooks
 
@@ -134,10 +139,10 @@ app.post('/webhooks/emailengine', async (req, res) => {
 });
 
 async function handleMessageDeleted(event) {
-  const { account, data } = event;
+  const { account, path, data } = event;
 
   console.log(`Message deleted from ${account}:`);
-  console.log(`- Folder: ${data.path}`);
+  console.log(`- Folder: ${path}`);
   console.log(`- UID: ${data.uid}`);
   console.log(`- EmailEngine ID: ${data.id}`);
 
@@ -145,7 +150,7 @@ async function handleMessageDeleted(event) {
   await updateMessageStatus(data.id, 'deleted');
 
   // Sync deletion to external system
-  await syncDeletion(account, data);
+  await syncDeletion(account, { ...data, path });
 }
 
 async function updateMessageStatus(messageId, status) {
@@ -247,43 +252,54 @@ async function onMessageDeleted(message) {
 
 ### Distinguishing Moves from Deletions
 
-A message might appear "deleted" from one folder because it was moved to another. EmailEngine uses the `emailId` to track messages across folders:
+A message might appear "deleted" from one folder because it was moved to another. The ability to detect moves depends on the account type:
+
+**Gmail API accounts:** The `messageDeleted` event includes the Gmail message `id`, which you can use to correlate with a subsequent `messageNew` event (Gmail assigns the same ID to moved messages).
+
+**IMAP accounts:** The `messageDeleted` event only includes `id` (packed UID) and `uid`, which are folder-specific. When a message is moved, it gets a new UID in the destination folder, so direct correlation is not possible. However, if your IMAP server supports the OBJECTID extension, you can use `emailId` from `messageNew` events to detect moves by matching against previously stored message data.
 
 ```javascript
-// Track when messageDeleted is followed by messageNew with same emailId
+// Track moved messages using emailId from messageNew events
+// Note: This requires storing emailId when messages are first received
 const recentDeletions = new Map();
 
 async function handleMessageDeleted(event) {
-  const { data } = event;
+  const { path, data } = event;
 
-  // Store deletion temporarily
-  recentDeletions.set(data.emailId, {
-    ...data,
-    timestamp: Date.now()
-  });
+  // Look up the emailId from our stored message data
+  const storedMessage = await db.messages.findOne({ emailEngineId: data.id });
+  if (storedMessage && storedMessage.emailId) {
+    // Store deletion temporarily using emailId
+    recentDeletions.set(storedMessage.emailId, {
+      id: data.id,
+      path: path,
+      emailId: storedMessage.emailId,
+      timestamp: Date.now()
+    });
 
-  // Clean up old entries after 60 seconds
-  setTimeout(() => {
-    recentDeletions.delete(data.emailId);
-  }, 60000);
+    // Clean up old entries after 60 seconds
+    setTimeout(() => {
+      recentDeletions.delete(storedMessage.emailId);
+    }, 60000);
+  }
 
   await updateMessageStatus(data.id, 'deleted');
 }
 
 async function handleMessageNew(event) {
-  const { data } = event;
+  const { path, data } = event;
 
-  // Check if this is a moved message
-  const recentDeletion = recentDeletions.get(data.emailId);
+  // Check if this is a moved message (using emailId from the new message)
+  const recentDeletion = data.emailId ? recentDeletions.get(data.emailId) : null;
 
   if (recentDeletion) {
     console.log('Message was moved, not deleted');
     console.log(`From: ${recentDeletion.path}`);
-    console.log(`To: ${data.path}`);
+    console.log(`To: ${path}`);
 
     // Update status to moved
     await updateMessageStatus(recentDeletion.id, 'moved');
-    await updateMessageLocation(data.emailId, data.path, data.id);
+    await updateMessageLocation(data.emailId, path, data.id);
 
     recentDeletions.delete(data.emailId);
   } else {
@@ -310,6 +326,10 @@ async function updateMessageLocation(emailId, newPath, newId) {
 }
 ```
 
+:::note
+The `emailId` field is only available if the IMAP server supports the OBJECTID extension (RFC 8474). Not all IMAP servers support this extension.
+:::
+
 ## Batch Deletion Detection
 
 ### Detect Mass Deletions
@@ -320,8 +340,8 @@ Alert when many messages are deleted at once:
 const deletionCounts = new Map();
 
 async function handleMessageDeleted(event) {
-  const { account, data } = event;
-  const key = `${account}:${data.path}`;
+  const { account, path, data } = event;
+  const key = `${account}:${path}`;
 
   // Track deletions per folder per minute
   if (!deletionCounts.has(key)) {
@@ -346,13 +366,13 @@ async function handleMessageDeleted(event) {
   if (stats.count > 50) {
     await alertMassDeletion({
       account: account,
-      folder: data.path,
+      folder: path,
       count: stats.count,
       timeWindow: '1 minute'
     });
   }
 
-  await syncDeletion(account, data);
+  await syncDeletion(account, { ...data, path });
 }
 
 async function alertMassDeletion(info) {
@@ -447,7 +467,7 @@ Instead of immediately deleting, mark as deleted:
 
 ```javascript
 async function handleMessageDeleted(event) {
-  const { data } = event;
+  const { path, data } = event;
 
   // Soft delete: mark as deleted but keep in database
   await db.messages.update(
@@ -457,7 +477,7 @@ async function handleMessageDeleted(event) {
         status: 'deleted',
         deletedAt: new Date(),
         // Keep original data for potential recovery
-        originalFolderPath: data.path,
+        originalFolderPath: path,
         originalUid: data.uid
       }
     }
