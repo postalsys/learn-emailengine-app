@@ -121,7 +121,7 @@ Direct the user to this URL to begin authentication.
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `account` | Yes | Unique account identifier (your internal ID) |
+| `account` | No | Account ID. If not provided or `null`, a unique ID is generated automatically. If an existing account ID is provided, that account's settings will be updated |
 | `email` | No | Pre-fill email address on form |
 | `name` | No | Pre-fill display name on form |
 | `type` | No | Pre-select account type (skips selection screen) |
@@ -438,23 +438,6 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 User will authenticate with their personal account but access the shared mailbox.
 
 [Learn more about shared mailboxes →](/docs/accounts/outlook-365#shared-mailboxes)
-
-### Custom Redirect Path
-
-Redirect to different paths based on success/failure:
-
-```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "account": "user123",
-    "email": "john@gmail.com",
-    "redirectUrl": "https://myapp.com/settings/email",
-    "successUrl": "https://myapp.com/welcome",  # Optional
-    "errorUrl": "https://myapp.com/error"  # Optional
-  }'
-```
 
 ## User Experience
 
