@@ -152,14 +152,14 @@ console.log('User authentication URL:', authUrl);
 Enable webhooks to receive email notifications using the [Update Settings API endpoint](/docs/api/post-v-1-settings):
 
 ```bash
-curl -X PUT "https://your-emailengine.com/admin/config" \
+curl -X POST "https://your-emailengine.com/v1/settings" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "webhooks": "https://your-app.com/webhooks/emailengine",
     "webhooksEnabled": true,
-    "notifyHeaders": true,
-    "notifyTextSize": 131072,
+    "notifyHeaders": ["*"],
+    "notifyTextSize": 2097152,
     "notifyWebSafeHtml": true,
     "notifyCalendarEvents": true
   }'
@@ -223,7 +223,7 @@ async function processMessage(event) {
 
   try {
     // Extract text content
-    const content = data.text || (data.html ? stripHtml(data.html.join('')) : '');
+    const content = data.text?.plain || (data.text?.html ? stripHtml(data.text.html) : '');
 
     // Process the email
     await processEmailContent({
@@ -453,7 +453,7 @@ processingQueue.process('process-email', async (job) => {
   job.progress(25);
 
   // Process email
-  const content = data.text || stripHtml(data.html?.join('') || '');
+  const content = data.text?.plain || stripHtml(data.text?.html || '');
 
   job.progress(50);
 
@@ -579,7 +579,7 @@ async function processMessage(event) {
     messageId: data.id,
     subject: data.subject,
     from: data.from.address,
-    content: data.text
+    content: data.text?.plain
   });
 }
 
@@ -590,7 +590,7 @@ function shouldProcess(message) {
   }
 
   // Skip if no content
-  if (!message.text && !message.html) {
+  if (!message.text?.plain && !message.text?.html) {
     return false;
   }
 
@@ -644,7 +644,7 @@ async function processMessage(event) {
       messageId: event.data.id,
       subject: event.data.subject,
       from: event.data.from.address,
-      content: event.data.text
+      content: event.data.text?.plain
     });
 
     metrics.processed++;
