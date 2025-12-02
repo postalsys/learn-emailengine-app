@@ -174,10 +174,11 @@ Add attachments using the `attachments` array:
 
 **Attachment options:**
 
-- `filename` - Attachment filename (required)
-- `content` - Base64 encoded content (required)
+- `filename` - Attachment filename (optional, recommended)
+- `content` - Base64 encoded content (required unless using `reference`)
 - `contentType` - MIME type (optional, auto-detected if omitted)
 - `cid` - Content ID for inline images (optional)
+- `reference` - Reference an existing attachment by ID instead of providing content (optional)
 
 #### Inline Images
 
@@ -301,7 +302,7 @@ Request delivery status notifications (DSN):
   "text": "Request delivery notification",
   "dsn": {
     "return": "headers",
-    "notify": "success,failure,delay"
+    "notify": ["success", "failure", "delay"]
   }
 }
 ```
@@ -355,11 +356,13 @@ Generate email preview without actually sending:
 **Response:**
 ```json
 {
+  "response": "Dry run",
+  "messageId": "<generated-message-id@example.com>",
   "preview": "BASE64_ENCODED_RFC822_MESSAGE"
 }
 ```
 
-The response contains the complete RFC822 formatted email (base64 encoded). Decode it to see exactly what would be sent. Perfect for testing templates and rendering.
+The `preview` field contains the complete RFC822 formatted email (base64 encoded). Decode it to see exactly what would be sent. Perfect for testing templates and rendering.
 
 ### Network Configuration
 
