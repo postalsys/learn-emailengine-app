@@ -240,15 +240,18 @@ Combine mail merge with [stored templates](./templates.md) for maximum efficienc
 First, create a template via API or UI:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/templates" \
+curl -XPOST "https://ee.example.com/v1/templates/template" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
+    "account": null,
     "name": "Welcome Email",
     "description": "Welcome new users",
-    "subject": "Welcome {{{params.nickname}}}!",
-    "html": "<h1>Hello {{params.nickname}}</h1><p>Welcome to our service!</p>",
-    "text": "Hello {{params.nickname}}\n\nWelcome to our service!"
+    "content": {
+      "subject": "Welcome {{{params.nickname}}}!",
+      "html": "<h1>Hello {{params.nickname}}</h1><p>Welcome to our service!</p>",
+      "text": "Hello {{params.nickname}}\n\nWelcome to our service!"
+    }
   }'
 ```
 
@@ -256,9 +259,9 @@ curl -XPOST "https://ee.example.com/v1/templates" \
 
 ```json
 {
-  "id": "AAABgggrm00AAAABZWtpcmk",
-  "name": "Welcome Email",
-  ...
+  "created": true,
+  "account": null,
+  "id": "AAABgggrm00AAAABZWtpcmk"
 }
 ```
 
@@ -304,9 +307,9 @@ EmailEngine:
 
 ## Advanced Features
 
-### Per-Recipient Recipients
+### Per-Recipient Custom Message-ID
 
-Send to multiple recipients per merge entry:
+Override the Message-ID for specific recipients:
 
 ```json
 {
@@ -314,13 +317,14 @@ Send to multiple recipients per merge entry:
   "html": "<p>Update for {{params.teamName}}</p>",
   "mailMerge": [
     {
-      "to": [{ "address": "alice@example.com" }, { "address": "bob@example.com" }],
+      "to": { "address": "alice@example.com" },
+      "messageId": "<custom-id-alice@example.com>",
       "params": {
         "teamName": "Engineering"
       }
     },
     {
-      "to": [{ "address": "charlie@example.com" }],
+      "to": { "address": "bob@example.com" },
       "params": {
         "teamName": "Sales"
       }
@@ -329,42 +333,7 @@ Send to multiple recipients per merge entry:
 }
 ```
 
-**Note:** Both recipients in the first merge entry will see each other in the `To` field. For true individual sending, use separate merge entries.
-
-### Per-Recipient Attachments
-
-Include different attachments for each recipient:
-
-```json
-{
-  "subject": "Your Invoice",
-  "html": "<p>Please find your invoice attached.</p>",
-  "mailMerge": [
-    {
-      "to": { "address": "customer1@example.com" },
-      "params": { "invoiceNum": "INV-001" },
-      "attachments": [
-        {
-          "filename": "invoice-001.pdf",
-          "content": "base64-content-for-customer-1",
-          "contentType": "application/pdf"
-        }
-      ]
-    },
-    {
-      "to": { "address": "customer2@example.com" },
-      "params": { "invoiceNum": "INV-002" },
-      "attachments": [
-        {
-          "filename": "invoice-002.pdf",
-          "content": "base64-content-for-customer-2",
-          "contentType": "application/pdf"
-        }
-      ]
-    }
-  ]
-}
-```
+**Note:** Each mailMerge entry accepts a single recipient address. For sending to multiple recipients, use separate merge entries.
 
 ### Scheduled Mail Merge
 
@@ -432,7 +401,7 @@ for (let i = 0; i < recipients.length; i += batchSize) {
 Monitor the queue to ensure you're not overwhelming the system:
 
 ```bash
-curl "https://ee.example.com/v1/account/example/outbox" \
+curl "https://ee.example.com/v1/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -581,7 +550,7 @@ app.post('/webhook', async (req, res) => {
 
 ### Queue Timeouts
 
-**Problem:** Each generated message gets its own queue entry; if your merge size is huge, watch `/v1/queue` for items that exceed EmailEngine's processing window.
+**Problem:** Each generated message gets its own queue entry; if your merge size is huge, watch `/v1/outbox` for items that exceed EmailEngine's processing window.
 
 **Solution:**
 
