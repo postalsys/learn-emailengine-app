@@ -114,7 +114,7 @@ $secret = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 64 | ForEac
 
 # Create .env file with configuration
 @"
-EENGINE_REDIS=redis://127.0.0.1:6379
+EENGINE_REDIS=redis://127.0.0.1:6379/8
 EENGINE_SECRET=$secret
 EENGINE_WORKERS=4
 EENGINE_PORT=3000
@@ -292,7 +292,7 @@ Create `.env` file in the same directory as `emailengine.exe`:
 
 ```bash
 # Required
-EENGINE_REDIS=redis://127.0.0.1:6379
+EENGINE_REDIS=redis://127.0.0.1:6379/8
 EENGINE_SECRET=your-secret-key-at-least-64-chars
 
 # Optional
@@ -329,7 +329,9 @@ raw = false
 Run with config file:
 
 ```powershell
-.\emailengine.exe --config=config.toml
+# Set the config file path via environment variable
+$env:NODE_CONFIG_PATH="C:\Program Files\EmailEngine\config.toml"
+.\emailengine.exe
 ```
 
-**Note:** TOML config files can include all settings including `service.secret`, so you don't need separate environment variables or CLI arguments.
+**Note:** TOML config files are loaded using the `NODE_CONFIG_PATH` environment variable. They can include all settings including `service.secret`, so you don't need separate environment variables or CLI arguments.
