@@ -177,18 +177,10 @@ curl "http://localhost:3000/v1/account/test-account" \
   | jq '.subconnections'
 ```
 
-Response:
+Response (returns the configured folder paths as an array):
 
 ```json
-{
-  "subconnections": [
-    {
-      "path": "[Gmail]/Spam",
-      "specialUse": "\\Junk",
-      "status": "connected"
-    }
-  ]
-}
+["[Gmail]/Spam", "\\Junk"]
 ```
 
 ## Gmail Category Detection
@@ -209,9 +201,10 @@ Category detection requires **additional IMAP commands per email**, which can sl
 
 #### Enable in UI
 
-1. Go to **Settings** → **Configuration** → **Service** → **Labs**
-2. Enable **Gmail Category Detection**
-3. Save changes
+1. Go to **Configuration** → **General Settings**
+2. Scroll to the **Gmail Features** section
+3. Enable **Detect Gmail Categories (IMAP)**
+4. Save changes
 
 ![Enable Category Detection](/img/external/Screenshot-2023-02-27-at-11.50.10.png)
 
@@ -256,6 +249,8 @@ Possible `category` values:
 - `promotions`
 - `updates`
 - `forums`
+- `reservations`
+- `purchases`
 
 ## Implementing Delivery Tests
 
