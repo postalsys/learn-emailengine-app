@@ -123,7 +123,7 @@ An HTTP callback that EmailEngine sends to your application when events occur (n
 
 ### Webhook Event
 
-A specific type of notification, such as `messageNew`, `messageSent`, `accountError`. See [Webhook Events Reference](/docs/reference/webhook-events) for complete list.
+A specific type of notification, such as `messageNew`, `messageSent`, `authenticationError`. See [Webhook Events Reference](/docs/reference/webhook-events) for complete list.
 
 ### Token (API)
 
@@ -131,7 +131,7 @@ An authentication credential for accessing the EmailEngine API. Created in the w
 
 ### Token Scope
 
-Permissions assigned to an API token. Examples: `api` (full access), `metrics` (Prometheus metrics only), `api.accountId` (single account access).
+Permissions assigned to an API token. Valid scopes: `*` (full access), `api` (API access), `metrics` (Prometheus metrics only), `smtp` (SMTP gateway access), `imap-proxy` (IMAP proxy access).
 
 ### Service URL
 
