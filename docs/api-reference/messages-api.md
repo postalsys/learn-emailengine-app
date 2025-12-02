@@ -98,11 +98,11 @@ Retrieve messages from a mailbox with filtering and pagination.
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `path` | string | Mailbox path (required) |
-| `page` | number | Page number (0-indexed, default 0) |
+| `page` | number | Page number (0-indexed, default 0). Deprecated; use cursor instead |
 | `pageSize` | number | Messages per page (default 20, max 1000) |
 | `cursor` | string | Paging cursor from nextPageCursor or prevPageCursor |
-| `unseen` | boolean | Filter by unseen status |
-| `flagged` | boolean | Filter by flagged status |
+
+To filter messages by flags (unseen, flagged, etc.), use the [Search endpoint](#7-search-messages) instead.
 
 **Examples:**
 
@@ -110,7 +110,7 @@ Retrieve messages from a mailbox with filtering and pagination.
 <TabItem value="curl" label="cURL">
 
 ```bash
-curl "http://localhost:3000/v1/account/user@example.com/messages?path=INBOX&pageSize=50&unseen=true" \
+curl "http://localhost:3000/v1/account/user@example.com/messages?path=INBOX&pageSize=50" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -123,7 +123,7 @@ from urllib.parse import quote
 account = 'user@example.com'
 response = requests.get(
     f'http://localhost:3000/v1/account/{quote(account)}/messages',
-    params={'path': 'INBOX', 'pageSize': 50, 'unseen': True},
+    params={'path': 'INBOX', 'pageSize': 50},
     headers={'Authorization': 'Bearer YOUR_ACCESS_TOKEN'}
 )
 
@@ -138,9 +138,9 @@ for msg in data['messages']:
 
 
 ```
-// List messages from a mailbox with filtering
+// List messages from a mailbox
 account = "user@example.com"
-url = "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/messages?path=INBOX&pageSize=50&unseen=true"
+url = "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/messages?path=INBOX&pageSize=50"
 
 response = HTTP_GET(url, {
   headers: {
@@ -210,7 +210,7 @@ Retrieve complete message information including body and attachments.
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `maxBytes` | number | Maximum bytes to retrieve for text/html |
-| `textType` | string | Preferred text format ('html' or 'plain') |
+| `textType` | string | Which text format to return: 'html', 'plain', or '*' for all. By default text content is not returned |
 
 **Examples:**
 
@@ -412,7 +412,7 @@ response = HTTP_PUT(
 )
 
 result = PARSE_JSON(response.body)
-PRINT("Flags updated: " + result.success)
+PRINT("Flags added: " + result.flags.add)
 
 // Example 2: Mark message as unread (remove Seen flag)
 response = HTTP_PUT(
@@ -492,8 +492,10 @@ response = HTTP_PUT(
 )
 
 result = PARSE_JSON(response.body)
-PRINT("Message moved: " + result.success)
-PRINT("New message ID: " + result.id)
+PRINT("Message moved to: " + result.path)
+if (result.id) {
+  PRINT("New message ID: " + result.id)
+}
 ```
 
 </TabItem>
@@ -502,13 +504,13 @@ PRINT("New message ID: " + result.id)
 **Response:**
 ```json
 {
-  "success": true,
+  "path": "Archive",
   "id": "AAAABQABNd",
-  "path": "Archive"
+  "uid": 12346
 }
 ```
 
-**Note:** Moving a message changes its ID since it's technically a new message in the destination mailbox.
+**Note:** The `id` and `uid` fields are only included if the server provides them. Moving a message may change its ID since it's technically a new message in the destination mailbox.
 
 **Use Cases:**
 - Archive processed messages
@@ -530,7 +532,7 @@ Delete a message permanently or move to trash.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `force` | boolean | If true, permanently delete; otherwise move to Trash |
+| `force` | boolean | If true, delete message even if not in Trash. Not supported for Gmail API accounts |
 
 **Examples:**
 
@@ -538,11 +540,11 @@ Delete a message permanently or move to trash.
 <TabItem value="curl" label="cURL">
 
 ```bash
-# Soft delete (move to Trash)
+# Delete (moves to Trash, or deletes if already in Trash)
 curl -X DELETE "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 
-# Hard delete (permanent)
+# Force delete (delete even if not in Trash)
 curl -X DELETE "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc?force=true" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
@@ -552,7 +554,7 @@ curl -X DELETE "http://localhost:3000/v1/account/user@example.com/message/AAAABA
 
 
 ```
-// Example 1: Soft delete (move to Trash)
+// Example 1: Delete (moves to Trash, or deletes if already in Trash)
 account = "user@example.com"
 messageId = "AAAABAABNc"
 
@@ -566,9 +568,10 @@ response = HTTP_DELETE(
 )
 
 result = PARSE_JSON(response.body)
-PRINT("Message deleted: " + result.success)
+PRINT("Message deleted: " + result.deleted)
+// If moved to trash, result.moved contains destination and new message ID
 
-// Example 2: Permanently delete (force)
+// Example 2: Force delete (delete even if not in Trash)
 response = HTTP_DELETE(
   "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId + "?force=true",
   {
@@ -625,11 +628,14 @@ Search messages using advanced query syntax.
 | `to` | string | To address contains |
 | `subject` | string | Subject contains |
 | `body` | string | Body text contains |
-| `since` | date | Messages after date |
-| `before` | date | Messages before date |
+| `since` | date | Messages received after date |
+| `before` | date | Messages received before date |
+| `sentSince` | date | Messages sent after date |
+| `sentBefore` | date | Messages sent before date |
 | `unseen` | boolean | Unread messages only |
 | `flagged` | boolean | Flagged messages only |
-| `size` | object | Size range (`{min: 1000, max: 5000}`) |
+| `larger` | number | Messages larger than size in bytes |
+| `smaller` | number | Messages smaller than size in bytes |
 
 **Examples:**
 
@@ -676,7 +682,7 @@ response = HTTP_POST(
 results = PARSE_JSON(response.body)
 PRINT("Found " + results.total + " messages")
 
-// Example 2: Search for large attachments from specific sender
+// Example 2: Search for large messages from specific sender
 response = HTTP_POST(
   "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/search?path=INBOX",
   {
@@ -687,7 +693,7 @@ response = HTTP_POST(
     body: {
       search: {
         from: "client@example.com",
-        size: { min: 1000000 }  // > 1 MB
+        larger: 1000000  // > 1 MB
       }
     }
   }
@@ -822,7 +828,7 @@ searchCriteria = {
     from: "client@example.com",
     subject: "invoice",
     unseen: true,
-    size: { min: 100000 }
+    larger: 100000
   }
 }
 
