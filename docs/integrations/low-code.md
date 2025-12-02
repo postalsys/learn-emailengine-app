@@ -149,7 +149,7 @@ return {
             },
             {
                 name: 'Reason',
-                value: payload.data.response || 'Unknown',
+                value: payload.data.response?.message || 'Unknown',
                 inline: false
             }
         ],
@@ -360,7 +360,7 @@ return {
     priority: priority,
     from: payload.data.from.address,
     subject: payload.data.subject,
-    preview: payload.data.text ? payload.data.text.substring(0, 200) : '',
+    preview: payload.data.text?.plain ? payload.data.text.plain.substring(0, 200) : '',
     account: payload.account,
     timestamp: payload.date
 };
@@ -414,8 +414,8 @@ return {
     from_name: payload.data.from.name || '',
     from_email: payload.data.from.address,
     subject: payload.data.subject || '',
-    text_content: payload.data.text || '',
-    html_content: payload.data.html || '',
+    text_content: (payload.data.text && payload.data.text.plain) || '',
+    html_content: (payload.data.text && payload.data.text.html) || '',
     received_date: payload.date,
     has_attachments: !!(payload.data.attachments && payload.data.attachments.length > 0),
     attachment_count: payload.data.attachments ? payload.data.attachments.length : 0,
@@ -484,7 +484,7 @@ n8n provides visual workflow building with powerful logic.
 
 EmailEngine provides a test interface for webhook routes:
 
-1. Navigate to Settings → Webhook Routing
+1. Navigate to Webhook Routing in the sidebar
 2. Create or edit a webhook route
 3. Use the "Test" button
 4. Provide sample payload
@@ -507,10 +507,9 @@ docker logs emailengine
 
 # SystemD
 journalctl -u emailengine
-
-# Direct logs
-tail -f /path/to/emailengine/logs/app.log
 ```
+
+EmailEngine logs to stdout using the pino logger. There is no log file - logs are available through your process manager or container runtime.
 
 
 ## Common Use Cases
