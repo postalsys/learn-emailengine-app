@@ -29,8 +29,8 @@ EmailEngine can be installed on macOS using two methods:
 
 ### Required Software
 
-- **Redis 6.0+** (install via Homebrew)
-- **Node.js 20+** (only for source installation, recommended 24+)
+- **Redis** (any version, install via Homebrew)
+- **Node.js 20+** (only for source installation)
 - **Homebrew** (recommended for Redis installation)
 
 ### Privileges
