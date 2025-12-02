@@ -376,39 +376,30 @@ function fetchAllMessages(account) {
 
 ### Query Parameters
 
-Many list endpoints support filtering:
+The messages list endpoint supports basic query parameters:
 
 ```bash
-# Filter by mailbox path
-curl "http://localhost:3000/v1/account/user@example.com/messages?path=INBOX"
-
-# Filter by flags
-curl "http://localhost:3000/v1/account/user@example.com/messages?unseen=true"
+# List messages in a specific mailbox
+curl "http://localhost:3000/v1/account/user@example.com/messages?path=INBOX" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 ### Search Syntax
 
-Use the search endpoint for advanced queries:
+Use the search endpoint for advanced queries including flag filtering:
 
 ```bash
+# Search for unread messages from a specific sender
 curl -X POST http://localhost:3000/v1/account/user@example.com/search \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "search": {
       "from": "sender@example.com",
-      "subject": "Important"
+      "subject": "Important",
+      "unseen": true
     }
   }'
-```
-
-### Sorting Results
-
-Some endpoints support sorting:
-
-```bash
-# Sort messages by date descending (newest first)
-curl "http://localhost:3000/v1/account/user@example.com/messages?sort=date:desc"
 ```
 
 ## Webhooks
