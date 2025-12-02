@@ -63,13 +63,13 @@ Set your webhook endpoint URL in EmailEngine:
 Use the [settings API](/docs/api/post-v-1-settings) to configure webhooks:
 
 ```bash
-curl -X PUT "https://your-emailengine.com/admin/config" \
+curl -X POST "https://your-emailengine.com/v1/settings" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "webhooks": "https://your-app.com/webhooks/emailengine",
     "webhooksEnabled": true,
-    "notifyHeaders": true,
+    "notifyHeaders": ["List-ID", "X-Priority"],
     "notifyTextSize": 65536,
     "notifyWebSafeHtml": true,
     "notifyCalendarEvents": true
@@ -713,36 +713,42 @@ https://YOUR-EMAILENGINE-HOST/oauth/msg/notification
 
 EmailEngine can sign webhooks using HMAC:
 
-**1. Set a webhook secret using the [settings API](/docs/api/post-v-1-settings):**
+**1. Set a service secret using the [settings API](/docs/api/post-v-1-settings):**
 
 ```bash
-curl -X PUT "https://your-emailengine.com/admin/config" \
+curl -X POST "https://your-emailengine.com/v1/settings" \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"webhookSecret": "your-secret-key-here"}'
+  -d '{"serviceSecret": "your-secret-key-here"}'
 ```
 
 **2. Verify signature in your handler:**
 
+The signature is computed on the raw request body using HMAC-SHA256 and encoded as base64url.
+
 ```javascript
 const crypto = require('crypto');
 
-function verifyWebhookSignature(payload, signature, secret) {
+function verifyWebhookSignature(rawBody, signature, secret) {
   const expectedSignature = crypto
     .createHmac('sha256', secret)
-    .update(JSON.stringify(payload))
-    .digest('hex');
+    .update(rawBody)
+    .digest('base64url');
 
   return signature === expectedSignature;
 }
 
-app.post('/webhooks/emailengine', (req, res) => {
-  const signature = req.headers['x-ee-signature'];
-  const secret = process.env.WEBHOOK_SECRET;
+// Important: Use raw body parser to get the exact bytes for signature verification
+app.post('/webhooks/emailengine', express.raw({ type: 'application/json' }), (req, res) => {
+  const signature = req.headers['x-ee-wh-signature'];
+  const secret = process.env.SERVICE_SECRET;
 
   if (!verifyWebhookSignature(req.body, signature, secret)) {
     return res.status(401).json({ error: 'Invalid signature' });
   }
+
+  // Parse body after verification
+  const event = JSON.parse(req.body.toString());
 
   // Process webhook...
   res.json({ success: true });
