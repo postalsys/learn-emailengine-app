@@ -97,8 +97,8 @@ Create and populate `.env` file in `/opt/emailengine`:
 ```bash
 # Generate encryption secret and create .env file
 sudo bash -c "cat > /opt/emailengine/.env" <<EOF
-# Redis connection
-EENGINE_REDIS=redis://127.0.0.1:6379
+# Redis connection (database 8 is the default)
+EENGINE_REDIS=redis://127.0.0.1:6379/8
 
 # Security secret (auto-generated)
 EENGINE_SECRET=$(openssl rand -hex 32)
@@ -108,7 +108,6 @@ EENGINE_WORKERS=4
 
 # Logging
 EENGINE_LOG_LEVEL=info
-EENGINE_LOG_RAW=false
 
 # API settings
 EENGINE_PORT=3000
@@ -257,10 +256,11 @@ Create `/opt/emailengine/.env`:
 ```bash
 # Generate encryption secret and create .env file
 sudo bash -c "cat > /opt/emailengine/.env" <<EOF
-EENGINE_REDIS=redis://127.0.0.1:6379
+EENGINE_REDIS=redis://127.0.0.1:6379/8
 EENGINE_SECRET=$(openssl rand -hex 32)
 EENGINE_WORKERS=4
 EENGINE_PORT=3000
+EENGINE_HOST=0.0.0.0
 EENGINE_LOG_LEVEL=info
 EOF
 
@@ -477,7 +477,7 @@ All configuration can be set via environment variables in `.env` file:
 
 ```bash
 # Core settings
-EENGINE_REDIS=redis://127.0.0.1:6379
+EENGINE_REDIS=redis://127.0.0.1:6379/8
 EENGINE_SECRET=your-encryption-secret-at-least-32-chars
 
 # Performance
@@ -491,8 +491,8 @@ EENGINE_HOST=0.0.0.0
 EENGINE_LOG_LEVEL=info
 EENGINE_LOG_RAW=false
 
-# Features
-EENGINE_MAX_ATTACHMENT_SIZE=5242880
+# Features (5MB = 5 * 1024 * 1024)
+EENGINE_MAX_SIZE=5242880
 ```
 
 See [Configuration Options](/docs/configuration) for complete reference.
