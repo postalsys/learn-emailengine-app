@@ -382,11 +382,11 @@ curl -X POST https://your-ee.com/v1/account \
 ```json
 {
   "account": "user123",
-  "state": "connecting"
+  "state": "new"
 }
 ```
 
-The account should transition to "connected" state within moments.
+The account will be created and should transition to "connected" state within moments.
 
 ### Add Multiple Accounts
 
@@ -496,7 +496,7 @@ curl -X DELETE https://your-ee.com/v1/account/user123 \
 
 **Principle of Least Privilege:**
 - Only grant scopes actually needed
-- If you only need read access, use `gmail.readonly` instead of `https://mail.google.com/`
+- For IMAP access, `https://mail.google.com/` is required
 - Consider separate service accounts for different purposes
 - Document why each scope is needed
 
