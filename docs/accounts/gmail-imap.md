@@ -247,7 +247,7 @@ Click **Add or remove scopes** and find `https://mail.google.com/` from the list
 :::important Required Scope for IMAP/SMTP
 The `https://mail.google.com/` scope is **required for IMAP and SMTP access**.
 
-If you were using [Gmail REST API](./gmail-api) instead, the scope would be `gmail.modify`.
+If you were using [Gmail REST API](./gmail-api) instead, the scope would be `https://www.googleapis.com/auth/gmail.modify`.
 :::
 
 Check the scope and click **Update** to apply changes.
