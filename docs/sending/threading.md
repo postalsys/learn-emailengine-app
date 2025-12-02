@@ -154,11 +154,10 @@ EmailEngine provides a `threadId` property that identifies related messages. The
 Gmail and Microsoft Graph API support a special `\All` folder that searches across all mailboxes:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/gmail/search" \
+curl -XPOST "https://ee.example.com/v1/account/gmail/search?path=%5CAll" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "\\All",
     "search": { "threadId": "1759349012996310407" }
   }'
 ```
