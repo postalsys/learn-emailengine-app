@@ -38,13 +38,13 @@ emailengine
 ```
 
 1. Access web interface: `http://localhost:3000`
-2. Click **"Activate Trial"** button in the dashboard
+2. Click **"Start a 14-day trial"** button in the dashboard
 3. Trial begins immediately (no sign-up required)
 4. Lasts for 14 days from activation
 
 **Trial period:**
 
-- Starts when you click "Activate Trial" button
+- Starts when you click "Start a 14-day trial" button
 - Lasts 14 days from activation
 - No functionality restrictions
 - Full production capabilities
@@ -147,7 +147,7 @@ graph TB
 1. [Download and install EmailEngine](/docs/installation)
 2. Start EmailEngine without license key
 3. Access web interface at `http://localhost:3000`
-4. Click **"Activate Trial"** button in the dashboard
+4. Click **"Start a 14-day trial"** button in the dashboard
 5. 14-day trial begins immediately
 6. Full functionality, no limitations
 
@@ -401,7 +401,7 @@ Jan 1, 2026:  Subscription expires (original renewal date)
 
 **Q: How long is the free trial?**
 
-A: 14 days from first launch of EmailEngine instance. Full functionality, no limitations, no credit card required.
+A: 14 days from when you click the "Start a 14-day trial" button. Full functionality, no limitations, no credit card required.
 
 **Q: What happens when trial expires?**
 
