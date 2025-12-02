@@ -133,7 +133,6 @@ EmailEngine can be deployed in various ways depending on your infrastructure and
 **Recommended:** Docker Compose
 
 ```yaml
-version: '3.8'
 services:
   redis:
     image: redis:7-alpine
@@ -142,7 +141,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - EENGINE_REDIS=redis://redis:6379/8
+      - EENGINE_REDIS=redis://redis:6379/2
 ```
 
 **Why:** Quick setup, easy to tear down, includes all dependencies.
@@ -228,7 +227,6 @@ EmailEngine does NOT support running multiple instances against the same Redis. 
 **Configuration:**
 ```bash
 EENGINE_WORKERS=16           # Match CPU cores
-EENGINE_MAX_CONNECTIONS=20
 EENGINE_WORKERS_WEBHOOKS=8
 EENGINE_WORKERS_SUBMIT=4
 ```
@@ -284,12 +282,11 @@ curl http://localhost:3000/health
 **Response:**
 ```json
 {
-  "status": "ok",
-  "redis": "connected",
-  "accounts": 42,
-  "uptime": 86400
+  "success": true
 }
 ```
+
+The health endpoint verifies that all IMAP workers are running and Redis is accessible. It returns a 500 error if any checks fail.
 
 ## Environment-Specific Configuration
 
@@ -309,8 +306,8 @@ EENGINE_REDIS=redis://localhost:6379/8
 # .env.staging
 NODE_ENV=production
 EENGINE_LOG_LEVEL=debug
-EENGINE_BASE_URL=https://staging-email.example.com
-EENGINE_REDIS=redis://staging-redis:6379/8
+EENGINE_SETTINGS='{"serviceUrl":"https://staging-email.example.com"}'
+EENGINE_REDIS=redis://staging-redis:6379/2
 ```
 
 ### Production
@@ -319,8 +316,8 @@ EENGINE_REDIS=redis://staging-redis:6379/8
 # .env.production
 NODE_ENV=production
 EENGINE_LOG_LEVEL=info
-EENGINE_BASE_URL=https://emailengine.example.com
-REDIS_URL=redis://prod-redis:6379
+EENGINE_SETTINGS='{"serviceUrl":"https://emailengine.example.com"}'
+EENGINE_REDIS=redis://prod-redis:6379/2
 EENGINE_SECRET=${ENCRYPTION_KEY}
 ```
 
@@ -376,7 +373,7 @@ graph TB
 ```mermaid
 graph TB
     Ingress[Ingress Controller<br/>SSL/LB]
-    EmailEngine[EmailEngine Pods<br/>3x replicas]
+    EmailEngine[EmailEngine Pod<br/>Single instance]
     Redis[Redis StatefulSet<br/>Master + Replica]
 
     Ingress --> EmailEngine
@@ -386,6 +383,8 @@ graph TB
     style EmailEngine fill:#e8f5e9
     style Redis fill:#f3e5f5
 ```
+
+Note: EmailEngine runs as a single instance only. Kubernetes is used for container orchestration, health monitoring, and automatic restarts rather than horizontal scaling.
 
 [Kubernetes guide →](/docs/installation/docker#production-deployment)
 
@@ -419,16 +418,16 @@ kubectl set image deployment/emailengine \
   emailengine=postalsys/emailengine:v2
 ```
 
-### Zero-Downtime Updates
+### Updates with Brief Downtime
 
-**Kubernetes rolling update:**
+Since EmailEngine doesn't support multiple instances, updates will have brief downtime:
+
+**Kubernetes recreate strategy:**
 ```yaml
 spec:
+  replicas: 1
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+    type: Recreate
 ```
 
 **Docker Compose:**
