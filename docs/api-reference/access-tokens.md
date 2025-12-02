@@ -178,13 +178,17 @@ curl -X POST http://localhost:3000/v1/token \
 
 Scopes define what a token can access:
 
-| Scope        | Description     | Access                            |
-| ------------ | --------------- | --------------------------------- |
-| `*`          | Full access     | All API endpoints, all operations |
-| `api`        | API access only | Standard API calls, no metrics    |
-| `metrics`    | Metrics only    | Prometheus metrics endpoint only  |
-| `smtp`       | SMTP proxy      | SMTP gateway access               |
-| `imap-proxy` | IMAP proxy      | IMAP proxy access                 |
+| Scope        | Description     | Access                            | Available via           |
+| ------------ | --------------- | --------------------------------- | ----------------------- |
+| `*`          | Full access     | All API endpoints, all operations | Web UI, CLI only        |
+| `api`        | API access only | Standard API calls, no metrics    | Web UI, CLI, API        |
+| `metrics`    | Metrics only    | Prometheus metrics endpoint only  | Web UI, CLI only        |
+| `smtp`       | SMTP proxy      | SMTP gateway access               | Web UI, CLI, API        |
+| `imap-proxy` | IMAP proxy      | IMAP proxy access                 | Web UI, CLI, API        |
+
+:::info API Scope Limitations
+When creating tokens via the `POST /v1/token` API endpoint, only `api`, `smtp`, and `imap-proxy` scopes are available. The `*` (full access) and `metrics` scopes can only be assigned through the Web UI or CLI.
+:::
 
 **Multiple scopes:**
 
@@ -223,13 +227,6 @@ For complete export/import workflows and prepared token configuration, see [Prep
 3. Click **Delete**
 4. Confirm deletion
 
-**Via CLI:**
-
-```bash
-emailengine tokens delete \
-  -t f05d76644ea39c4a2ee33e7bffe55808b716a34b51d67b388c7d60498b0f89bc
-```
-
 **Via API:**
 
 ```bash
@@ -238,6 +235,10 @@ curl -X DELETE http://localhost:3000/v1/token/TOKEN_HASH \
 ```
 
 [Detailed API reference →](/docs/api/delete-v-1-token-token)
+
+:::note CLI Token Deletion
+The CLI does not have a `tokens delete` command. To delete tokens programmatically, use the API endpoint above or the web interface.
+:::
 
 ## Disabling Authentication (Development Only)
 
