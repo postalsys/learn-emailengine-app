@@ -45,7 +45,7 @@ Can be updated via Settings API or web interface without restart.
 
 #### Port
 
-**Environment:** `EENGINE_PORT` or `EENGINE_API_PORT`
+**Environment:** `EENGINE_PORT`
 **Command line:** `--api.port=3000`
 **Config file:** `api.port`
 **Default:** `3000`
@@ -68,7 +68,7 @@ port = 8080
 
 #### Host
 
-**Environment:** `EENGINE_HOST` or `EENGINE_API_HOST`
+**Environment:** `EENGINE_HOST`
 **Command line:** `--api.host=0.0.0.0`
 **Config file:** `api.host`
 **Default:** `127.0.0.1`
