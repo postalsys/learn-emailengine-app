@@ -65,13 +65,13 @@ EmailEngine uses standard Pino log levels:
 Control log verbosity with the `EENGINE_LOG_LEVEL` environment variable:
 
 ```bash
-# Production - info level (default)
+# Production - info level (recommended)
 EENGINE_LOG_LEVEL=info node server.js
 
 # Development - debug level
 EENGINE_LOG_LEVEL=debug node server.js
 
-# Troubleshooting - trace level (very verbose)
+# Default - trace level (very verbose)
 EENGINE_LOG_LEVEL=trace node server.js
 
 # Quiet mode - errors only
@@ -80,9 +80,9 @@ EENGINE_LOG_LEVEL=error node server.js
 
 **Recommended log levels:**
 
-- **Production:** `info` (default) - Normal operations only
+- **Production:** `info` - Normal operations only (recommended for production)
 - **Staging:** `debug` - Include debugging information
-- **Development:** `trace` - Full detail for troubleshooting
+- **Development:** `trace` (default) - Full detail for troubleshooting
 - **Error monitoring:** `error` - Errors only for alerting
 
 ### Pretty Printing
@@ -675,19 +675,29 @@ Control logging behavior with these environment variables:
 
 ```bash
 # Log level (fatal, error, warn, info, debug, trace)
+# Default: trace
 EENGINE_LOG_LEVEL=info
 
-# Enable/disable colors in pretty mode
-EENGINE_LOG_NO_COLORS=false
-
-# Log to file instead of stdout
-EENGINE_LOG_FILE=/var/log/emailengine/app.log
-
 # Enable raw IMAP/SMTP protocol logging (very verbose!)
+# Default: false
 EENGINE_LOG_RAW=false
 ```
 
+You can also use command-line arguments:
 
+```bash
+# Set log level via command line
+node server.js --log.level=info
+
+# Enable raw protocol logging
+node server.js --log.raw=true
+```
+
+## Best Practices
+
+### 1. Use Appropriate Log Levels
+
+```bash
 # Production
 EENGINE_LOG_LEVEL=info
 
