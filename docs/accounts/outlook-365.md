@@ -109,12 +109,12 @@ For maximum compatibility, select **"Accounts in any organizational directory an
 
 EmailEngine supports multiple Microsoft cloud environments beyond the standard commercial cloud:
 
-| Cloud | Value | IMAP/SMTP Host | Use Case |
-|-------|-------|----------------|----------|
-| **Commercial** | `global` | outlook.office365.com | Standard Microsoft 365 (default) |
-| **GCC High** | `gcc-high` | outlook.office365.us | US Government Community Cloud High |
-| **DoD** | `dod` | outlook-dod.office365.us | US Department of Defense |
-| **China** | `china` | partner.outlook.cn | China (operated by 21Vianet) |
+| Cloud | Value | IMAP Host | SMTP Host | Use Case |
+|-------|-------|-----------|-----------|----------|
+| **Commercial** | `global` | outlook.office365.com | smtp.office365.com | Standard Microsoft 365 (default) |
+| **GCC High** | `gcc-high` | outlook.office365.us | smtp.office365.us | US Government L4 |
+| **DoD** | `dod` | outlook-dod.office365.us | outlook-dod.office365.us | US Government L5 (DoD) |
+| **China** | `china` | partner.outlook.cn | partner.outlook.cn | China (operated by 21Vianet) |
 
 When configuring the OAuth2 application in EmailEngine, select the appropriate cloud environment. EmailEngine automatically uses the correct endpoints for authentication and email access.
 
