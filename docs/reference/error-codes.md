@@ -183,25 +183,22 @@ Rate limit exceeded.
 ```json
 {
   "error": "Rate limit exceeded",
-  "code": "RateLimitExceeded",
   "statusCode": 429,
-  "details": {
-    "retryAfter": 60
-  }
+  "ttl": 60
 }
 ```
 
 **Response Headers:**
 ```
 X-RateLimit-Limit: 1000
-X-RateLimit-Remaining: 0
-X-RateLimit-Reset: 1640995200
-Retry-After: 60
+X-RateLimit-Reset: 60
 ```
+
+Note: `X-RateLimit-Reset` contains the TTL (time-to-live) in seconds until the rate limit window resets, not a Unix timestamp. The `X-RateLimit-Remaining` header is only included in successful (non-rate-limited) responses.
 
 **Solutions:**
 - Implement exponential backoff
-- Wait for `Retry-After` seconds
+- Wait for `ttl` seconds before retrying
 - Reduce request frequency
 - Implement request queuing
 
@@ -212,8 +209,9 @@ async function makeRequestWithRetry(url, options, maxRetries = 3) {
     const response = await fetch(url, options);
 
     if (response.status === 429) {
-      const retryAfter = response.headers.get('Retry-After') || Math.pow(2, i);
-      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+      const data = await response.json();
+      const waitTime = data.ttl || Math.pow(2, i);
+      await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
       continue;
     }
 
@@ -439,7 +437,7 @@ Message exceeds size limits.
 **Solutions:**
 - Reduce message size
 - Compress attachments
-- Increase `EENGINE_MAX_PAYLOAD_SIZE`
+- Increase `EENGINE_MAX_BODY_SIZE`
 
 ---
 
@@ -576,21 +574,19 @@ Failed to connect to mail server.
 
 ---
 
-#### AuthenticationFailed
+#### AuthenticationFails
 
 Authentication to mail server failed.
 
-**HTTP Status:** 401
+**HTTP Status:** 503
 
 **Example:**
 ```json
 {
-  "error": "Authentication failed",
-  "code": "AuthenticationFailed",
-  "statusCode": 401,
-  "details": {
-    "serverResponse": "Invalid credentials"
-  }
+  "error": "Requested account can not be authenticated",
+  "code": "AuthenticationFails",
+  "statusCode": 503,
+  "state": "authenticationError"
 }
 ```
 
@@ -658,7 +654,7 @@ Failed to deliver webhook to endpoint.
 
 **Common Causes:**
 - Webhook endpoint down
-- Webhook endpoint timeout (>30s)
+- Webhook endpoint timeout (default 90s, configurable via `EENGINE_FETCH_TIMEOUT`)
 - Invalid response code
 - Network connectivity
 
@@ -712,7 +708,7 @@ Operation requires valid license.
 
 ---
 
-#### LicenseExpired
+#### ELicenseExpired
 
 License has expired.
 
@@ -722,11 +718,8 @@ License has expired.
 ```json
 {
   "error": "License has expired",
-  "code": "LicenseExpired",
-  "statusCode": 403,
-  "details": {
-    "expiredAt": "2025-01-01T00:00:00.000Z"
-  }
+  "code": "ELicenseExpired",
+  "statusCode": 403
 }
 ```
 
@@ -1006,7 +999,7 @@ function categorizeError(statusCode, errorCode) {
   }
 
   // Authentication - refresh credentials
-  if (errorCode === 'AuthenticationFailed' || errorCode === 'InvalidToken') {
+  if (errorCode === 'AuthenticationFails' || errorCode === 'InvalidToken') {
     return 'AUTH_ERROR';
   }
 
@@ -1025,7 +1018,7 @@ async function handleError(error, context) {
 
     case 'RATE_LIMIT':
       // Wait and retry
-      await sleep(error.details.retryAfter * 1000);
+      await sleep(error.ttl * 1000);
       return retryRequest(context);
 
     case 'SERVER_ERROR':
@@ -1051,9 +1044,8 @@ Convert error codes to user-friendly messages:
 ```javascript
 const ERROR_MESSAGES = {
   'AccountNotFound': 'Email account not found. Please check the account ID.',
-  'AuthenticationFailed': 'Email login failed. Please check your password.',
+  'AuthenticationFails': 'Email login failed. Please check your password.',
   'MessageNotFound': 'Email message not found. It may have been deleted.',
-  'RateLimitExceeded': 'Too many requests. Please try again in a moment.',
   'ConnectionError': 'Unable to connect to email server. Please try again later.',
   'InvalidToken': 'Your session has expired. Please log in again.'
 };
