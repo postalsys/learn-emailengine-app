@@ -393,7 +393,7 @@ curl http://localhost:3000/v1/settings \
   -H "Authorization: Bearer TOKEN" | jq '.webhooksUrl'
 
 # Check webhook queue
-curl http://localhost:3000/v1/settings/queue/webhooks \
+curl http://localhost:3000/v1/settings/queue/notify \
   -H "Authorization: Bearer TOKEN"
 
 # Test webhook endpoint
@@ -464,11 +464,11 @@ journalctl -u emailengine | grep -i webhook
 
 ```bash
 # Check queue status
-curl http://localhost:3000/v1/settings/queue/webhooks \
+curl http://localhost:3000/v1/settings/queue/notify \
   -H "Authorization: Bearer TOKEN" | jq
 
 # Check backlog
-redis-cli LLEN "bull:webhooks:wait"
+redis-cli LLEN "bull:notify:wait"
 
 # Monitor webhook processing
 journalctl -u emailengine -f | grep webhook
@@ -476,12 +476,20 @@ journalctl -u emailengine -f | grep webhook
 
 **Solutions:**
 
-1. **Increase queue concurrency:**
+1. **Pause and resume queue to clear backlog:**
 
    ```bash
-   curl -X PUT http://localhost:3000/v1/settings/queue/webhooks \
+   # Pause the queue
+   curl -X PUT http://localhost:3000/v1/settings/queue/notify \
      -H "Authorization: Bearer TOKEN" \
-     -d '{"concurrency": 10}'
+     -H "Content-Type: application/json" \
+     -d '{"paused": true}'
+
+   # Resume the queue
+   curl -X PUT http://localhost:3000/v1/settings/queue/notify \
+     -H "Authorization: Bearer TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"paused": false}'
    ```
 
 2. **Reduce webhook payload:**
@@ -621,7 +629,9 @@ curl http://localhost:3000/v1/account/user@example.com \
 
 # Force sync
 curl -X PUT http://localhost:3000/v1/account/user@example.com/sync \
-  -H "Authorization: Bearer TOKEN"
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"sync": true}'
 
 # Check logs
 journalctl -u emailengine | grep -i "sync\|idle"
@@ -638,8 +648,9 @@ journalctl -u emailengine | grep -i "sync\|idle"
 
    ```bash
    # Resume sync
-   curl -X PUT http://localhost:3000/v1/account/user@example.com \
+   curl -X PUT http://localhost:3000/v1/account/user@example.com/sync \
      -H "Authorization: Bearer TOKEN" \
+     -H "Content-Type: application/json" \
      -d '{"sync": true}'
    ```
 
@@ -656,10 +667,9 @@ journalctl -u emailengine | grep -i "sync\|idle"
 **Solution:**
 
 ```bash
-# Permanently delete (expunge)
-curl -X PUT http://localhost:3000/v1/account/{account}/messages/delete \
-  -H "Authorization: Bearer TOKEN" \
-  -d '{"path": "INBOX", "message": "uid:123", "delete": true}'
+# Permanently delete a single message (expunge)
+curl -X DELETE "http://localhost:3000/v1/account/{account}/message/{message}?force=true" \
+  -H "Authorization: Bearer TOKEN"
 
 # Check Trash folder
 curl http://localhost:3000/v1/account/{account}/mailboxes \
@@ -827,7 +837,7 @@ When requesting support, provide:
 
    ```bash
    # Sanitize sensitive data before sharing
-   cat /etc/emailengine/config.toml
+   cat /etc/emailengine.toml
    ```
 
 4. **Logs:**
