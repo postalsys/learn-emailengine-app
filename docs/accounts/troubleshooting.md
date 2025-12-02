@@ -36,8 +36,8 @@ journalctl -u emailengine -f
 # If running with Docker
 docker logs -f emailengine
 
-# If running manually
-tail -f /path/to/emailengine/logs/application.log
+# If running manually (logs go to stdout)
+# EmailEngine uses pino for JSON logging to stdout
 ```
 
 ## Common Account States and Solutions
@@ -251,17 +251,21 @@ tail -f /path/to/emailengine/logs/application.log
 - Check for errors in OAuth2 app settings
 - Generate new authentication form URL
 
-### State: disabled
+### State: disconnected
 
-**What it means:** Account manually disabled.
+**What it means:** Account is disconnected (manually disabled or closed).
 
 **Solution:**
 ```bash
-# Re-enable account
+# Re-enable account if it was disabled
 curl -X PUT https://your-ee.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{ "disabled": false }'
+  -d '{ "imap": { "disabled": false } }'
+
+# Then reconnect
+curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ## Provider-Specific Issues
@@ -464,10 +468,10 @@ Check webhook queue in Bull Board:
 
 **Solution:**
 ```bash
-# Check current connections
+# Check current subconnections
 curl https://your-ee.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
-  | jq '.connections'
+  | jq '.subconnections'
 
 # Reduce sub-connections
 curl -X PUT https://your-ee.com/v1/account/user123 \
@@ -672,10 +676,10 @@ curl https://your-ee.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   | jq -r .state
 
-# Connection info
+# Subconnections info
 curl https://your-ee.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
-  | jq '.connections'
+  | jq '.subconnections'
 ```
 
 ### Test IMAP Connection
