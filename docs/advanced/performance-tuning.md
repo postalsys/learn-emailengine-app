@@ -318,8 +318,7 @@ EENGINE_HOST=0.0.0.0
 EENGINE_PORT=3000
 
 # Redis
-REDIS_URL=redis://redis.internal:6379
-REDIS_PREFIX=ee
+EENGINE_REDIS=redis://redis.internal:6379
 
 # IMAP Workers
 EENGINE_WORKERS=8                      # 8 worker threads
@@ -456,12 +455,11 @@ Your application must:
 curl http://localhost:3000/health
 
 {
-  "status": "ok",
-  "version": "2.40.0",
-  "accounts": 450,
-  "connections": 448
+  "success": true
 }
 ```
+
+The health endpoint returns a simple success response. For detailed statistics, use the `/v1/stats` endpoint (requires authentication).
 
 ### Prometheus Metrics
 
