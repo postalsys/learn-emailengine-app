@@ -37,7 +37,7 @@ Get instant webhook notifications when new emails arrive, no polling required.
     "id": "AAAAAQAACnA",
     "subject": "Re: Meeting tomorrow",
     "from": {"address": "client@example.com"},
-    "text": "Thanks for scheduling..."
+    "text": {"plain": "Thanks for scheduling..."}
   }
 }
 ```
@@ -171,7 +171,7 @@ EmailEngine provides a comprehensive REST API:
 - **[Account Management](/docs/api-reference/accounts-api)** - Register and manage accounts
 - **[Sending Emails](/docs/api-reference/sending-api)** - Submit endpoint and options
 - **[Message Operations](/docs/api-reference/messages-api)** - List, search, and manage emails
-- **[Complete API Docs](/docs/api-reference)** - All 73 endpoints with schemas
+- **[Complete API Docs](/docs/api-reference)** - All 72 endpoints with schemas
 
 ## Get Help
 
