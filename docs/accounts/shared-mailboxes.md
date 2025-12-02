@@ -306,6 +306,7 @@ curl https://your-ee.com/v1/account/shared-support \
   "state": "connected",
   "oauth2": {
     "auth": {
+      "delegatedUser": "support@company.com",
       "delegatedAccount": "my-account"
     }
   }
