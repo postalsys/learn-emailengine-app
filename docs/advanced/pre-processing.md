@@ -49,7 +49,7 @@ Filter functions determine whether an event should be processed or discarded.
 
 **Return value:**
 
-- `true` - Process the event
+- `true` - Process the event (must be exactly `true`, not just truthy)
 - `false` or any other value - Discard the event
 - Exception thrown - Discard the event
 
@@ -107,8 +107,8 @@ if (payload.data.subject && /urgent/i.test(payload.data.subject)) {
 }
 
 // Redact sensitive content
-if (payload.data.text) {
-  payload.data.text = payload.data.text.replace(/ssn:\s*\d{3}-\d{2}-\d{4}/gi, "ssn: [REDACTED]");
+if (payload.data.text && payload.data.text.plain) {
+  payload.data.text.plain = payload.data.text.plain.replace(/ssn:\s*\d{3}-\d{2}-\d{4}/gi, "ssn: [REDACTED]");
 }
 
 return payload;
@@ -188,30 +188,12 @@ return payload;
 
 #### Step 4: Test Function
 
-Use the **Test** button to verify your function works correctly:
+Use the **Set test payload** button to provide sample data for testing your function. The editor runs your filter and mapping functions in the browser and shows:
 
-```javascript
-// Test with sample data
-const testData = {
-  account: "john@example.com",
-  path: "INBOX",
-  subject: "Invoice #12345 - Payment Due",
-  from: {
-    name: "Billing Department",
-    address: "billing@example.com",
-  },
-  date: new Date().toISOString(),
-};
+- **Evaluation result** - Whether the filter function returns `true` (matches) or not
+- **Mapping preview** - The transformed payload after the mapping function runs
 
-// Run through filter
-const shouldSend = filterWebhook(testData);
-console.log("Should send:", shouldSend); // true
-
-// Run through mapping
-const mapped = mapWebhook(testData);
-console.log("Mapped data:", mapped);
-// Output includes: category: 'billing', ticketId: '12345', metadata: {...}
-```
+You can select from predefined example payloads or enter custom JSON data to test different scenarios.
 
 ## Common Use Cases
 
@@ -496,17 +478,14 @@ if (apiKey) {
 return true;
 ```
 
-Configure `scriptEnv` via the Settings API:
+Configure `scriptEnv` via the Settings API (note: the value must be a JSON string):
 
 ```bash
 curl -X POST "https://emailengine.example.com/v1/settings" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "scriptEnv": {
-      "MY_API_KEY": "your-api-key-here",
-      "WEBHOOK_SECRET": "your-secret"
-    }
+    "scriptEnv": "{\"MY_API_KEY\":\"your-api-key-here\",\"WEBHOOK_SECRET\":\"your-secret\"}"
   }'
 ```
 
@@ -600,12 +579,17 @@ Log entries appear in EmailEngine's stdout alongside other application logs.
 
 ### Check EmailEngine Logs
 
-```bash
-# View pre-processing logs
-tail -f logs/emailengine.log | grep "pre-processing"
+EmailEngine logs to stdout. Use your process manager or Docker logs to view output:
 
-# View function errors
-tail -f logs/emailengine.log | grep "function.*error"
+```bash
+# If running directly
+node server.js 2>&1 | grep "subscript"
+
+# If using Docker
+docker logs -f emailengine 2>&1 | grep "subscript"
+
+# If using systemd
+journalctl -u emailengine -f | grep "subscript"
 ```
 
 ### Monitor Execution Time
@@ -734,7 +718,7 @@ function display_email(accountId, messageId, token):
   message = PARSE_JSON(response.body)
 
   // Inject HTML into page (safe due to pre-processing)
-  SET_ELEMENT_HTML("email-content", message.html[0])
+  SET_ELEMENT_HTML("email-content", message.text.html)
 end function
 ```
 
@@ -795,31 +779,34 @@ EmailEngine distinguishes between two attachment types:
 
 **Example Response**:
 
+When `embedAttachedImages=true`, inline images referenced by `cid:` in the HTML are converted to base64 data URIs directly in the HTML content. The attachments array still contains metadata about all attachments:
+
 ```json
 {
   "id": "AAAAGQAACeE",
   "subject": "Newsletter",
-  "html": ["<p>Check out our new product:</p><img src=\"data:image/png;base64,iVBORw0...\" />"],
+  "text": {
+    "html": "<p>Check out our new product:</p><img src=\"data:image/png;base64,iVBORw0...\" />"
+  },
   "attachments": [
     {
       "id": "ATT123",
       "filename": "product-catalog.pdf",
       "contentType": "application/pdf",
-      "size": 524288,
-      "embedded": false
-    }
-  ],
-  "embeddedImages": [
+      "encodedSize": 524288
+    },
     {
       "id": "IMG456",
-      "contentId": "<image-123@example.com>",
+      "filename": "product-image.png",
       "contentType": "image/png",
-      "size": 12345,
-      "embedded": true
+      "contentId": "<image-123@example.com>",
+      "encodedSize": 12345
     }
   ]
 }
 ```
+
+Note: Inline images remain in the `attachments` array but their `cid:` references in HTML are replaced with data URIs.
 
 ### Implementation Example
 
@@ -850,14 +837,14 @@ function email_viewer(accountId, messageId, token):
   DISPLAY("Date: " + FORMAT_DATE(email.date))
 
   // Display email body (pre-processed HTML)
-  SET_HTML("email-body", email.html[0])
+  SET_HTML("email-body", email.text.html)
 
   // Display attachments if present
   if email.attachments exists AND LENGTH(email.attachments) > 0:
     DISPLAY("Attachments:")
     for each attachment in email.attachments:
       DISPLAY_LINK(attachment.downloadUrl,
-                   attachment.filename + " (" + attachment.size + " bytes)")
+                   attachment.filename + " (" + attachment.encodedSize + " bytes)")
     end for
   end if
 end function
