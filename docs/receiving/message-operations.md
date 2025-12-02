@@ -36,8 +36,11 @@ curl "https://your-emailengine.com/v1/account/example/messages?path=INBOX" \
 
 ```json
 {
+  "total": 300,
   "page": 0,
   "pages": 15,
+  "nextPageCursor": "imap_kcQIji3UobDDTxc",
+  "prevPageCursor": null,
   "messages": [
     {
       "id": "AAAAAQAAAeE",
@@ -49,7 +52,6 @@ curl "https://your-emailengine.com/v1/account/example/messages?path=INBOX" \
       "labels": ["\\Inbox"],
       "unseen": false,
       "flagged": false,
-      "answered": false,
       "draft": false,
       "size": 45678,
       "subject": "Meeting Tomorrow",
@@ -67,7 +69,13 @@ curl "https://your-emailengine.com/v1/account/example/messages?path=INBOX" \
       "bcc": [],
       "messageId": "<abc123@example.com>",
       "inReplyTo": null,
-      "hasAttachments": true
+      "attachments": [
+        {
+          "id": "AAAAAgAAAeEBAAAAAQAAAeE",
+          "contentType": "application/pdf",
+          "filename": "agenda.pdf"
+        }
+      ]
     }
   ]
 }
@@ -186,13 +194,11 @@ curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE" \
   "uid": 12345,
   "emailId": "1743d29c-b67d-4747-9016-b8850a5a39bd",
   "threadId": "1743d29c-b67d-4747-9016-b8850a5a39bd",
-  "path": "INBOX",
   "date": "2025-10-13T10:23:45.000Z",
   "flags": ["\\Seen"],
   "labels": ["\\Inbox"],
   "unseen": false,
   "flagged": false,
-  "answered": false,
   "draft": false,
   "size": 45678,
   "subject": "Meeting Tomorrow",
@@ -208,7 +214,6 @@ curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE" \
   ],
   "messageId": "<abc123@example.com>",
   "inReplyTo": null,
-  "references": ["<previous@example.com>"],
   "headers": {
     "date": ["Sun, 13 Oct 2025 10:23:45 +0000"],
     "from": ["John Doe <john@example.com>"],
@@ -216,17 +221,21 @@ curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE" \
     "subject": ["Meeting Tomorrow"],
     "message-id": ["<abc123@example.com>"]
   },
-  "text": "Hi Jane,\n\nLet's meet tomorrow at 10am.\n\nBest,\nJohn",
-  "html": ["<p>Hi Jane,</p><p>Let's meet tomorrow at 10am.</p><p>Best,<br>John</p>"],
+  "text": {
+    "id": "AAAAAgAAAeETEXT",
+    "encodedSize": {
+      "plain": 52,
+      "html": 78
+    },
+    "plain": "Hi Jane,\n\nLet's meet tomorrow at 10am.\n\nBest,\nJohn",
+    "html": "<p>Hi Jane,</p><p>Let's meet tomorrow at 10am.</p><p>Best,<br>John</p>"
+  },
   "attachments": [
     {
       "id": "AAAAAgAAAeEBAAAAAQAAAeE",
       "contentType": "application/pdf",
       "encodedSize": 45000,
-      "size": 43500,
-      "filename": "agenda.pdf",
-      "disposition": "attachment",
-      "embedded": false
+      "filename": "agenda.pdf"
     }
   ]
 }
@@ -253,7 +262,7 @@ async function getMessage(accountId, messageId) {
 const message = await getMessage('example', 'AAAAAQAAAeE');
 console.log(`From: ${message.from.address}`);
 console.log(`Subject: ${message.subject}`);
-console.log(`Body: ${message.text}`);
+console.log(`Body: ${message.text?.plain}`);
 ```
 
 ### Get Message Source
@@ -320,11 +329,13 @@ curl -X PUT "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE
 
 ```json
 {
-  "id": "BBBBBQAAAeE",
   "path": "Work/Projects",
-  "moved": true
+  "id": "BBBBBQAAAeE",
+  "uid": 5678
 }
 ```
+
+The response includes the destination `path` and, if provided by the server, the new message `id` and `uid` in the target folder.
 
 **JavaScript Example:**
 
@@ -386,20 +397,34 @@ async function trashMessage(accountId, messageId) {
 
 ### Delete Message
 
-Permanently delete a message using the [delete message API](/docs/api/delete-v-1-account-account-message-message):
+Delete a message using the [delete message API](/docs/api/delete-v-1-account-account-message-message). By default, the message is moved to Trash. If the message is already in Trash (or if `force=true` is specified), it is permanently deleted.
 
 ```bash
 curl -X DELETE "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-**Response:**
+**Response (moved to Trash):**
+
+```json
+{
+  "deleted": false,
+  "moved": {
+    "destination": "Trash",
+    "message": "AAAAAwAAAWg"
+  }
+}
+```
+
+**Response (permanently deleted):**
 
 ```json
 {
   "deleted": true
 }
 ```
+
+To force permanent deletion without moving to Trash first, add `?force=true` to the URL (not supported for Gmail API accounts).
 
 **JavaScript Example:**
 
@@ -444,24 +469,15 @@ const results = await deleteMessages('example', [
 ]);
 ```
 
-### Delete vs Move to Trash
+### Delete Behavior
 
-**Delete** - Permanently removes the message (cannot be recovered)
-**Move to Trash** - Moves to trash folder (can be recovered)
+The delete API has smart behavior:
 
-Most applications should **move to trash** instead of deleting:
+- **Message not in Trash**: Moves to Trash (recoverable)
+- **Message already in Trash**: Permanently deletes (not recoverable)
+- **With `?force=true`**: Permanently deletes regardless of location (not supported for Gmail API)
 
-```javascript
-async function softDelete(accountId, messageId) {
-  // Try to move to trash first
-  try {
-    return await trashMessage(accountId, messageId);
-  } catch (err) {
-    console.warn('Failed to move to trash, deleting permanently:', err);
-    return await deleteMessage(accountId, messageId);
-  }
-}
-```
+This means you can safely use the delete endpoint in most cases - messages get a "second chance" in Trash before permanent deletion.
 
 ## Updating Message Flags
 
@@ -485,11 +501,13 @@ curl -X PUT "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE
 
 ```json
 {
-  "id": "AAAAAQAAAeE",
-  "flags": ["\\Seen", "\\Flagged"],
-  "updated": true
+  "flags": {
+    "add": ["\\Seen", "\\Flagged"]
+  }
 }
 ```
+
+The response echoes back the flag operations that were performed.
 
 ### Common Flag Operations
 
