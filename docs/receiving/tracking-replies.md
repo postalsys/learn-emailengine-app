@@ -193,13 +193,14 @@ async function getTrackedEmail(messageId) {
 Enable webhooks for new message events:
 
 ```bash
-curl -X PUT "https://your-emailengine.com/admin/config" \
+curl -X POST "https://your-emailengine.com/v1/settings" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "webhooks": "https://your-app.com/webhooks/emailengine",
     "webhooksEnabled": true,
-    "notifyHeaders": true
+    "webhookEvents": ["messageNew"],
+    "notifyHeaders": ["In-Reply-To", "References", "Message-ID"]
   }'
 ```
 
