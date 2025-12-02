@@ -177,11 +177,10 @@ Choose your integration path:
 - **CRM Builders**: Follow the [CRM Integration Guide](/docs/integrations/crm)
 - **AI Enthusiasts**: Explore [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt)
 - **No-Code Users**: Check out [Low-Code Integrations](/docs/integrations/low-code)
-- **Edge Computing**: Learn about [Cloudflare Workers](/docs/integrations/cloudflare-workers)
 
 ## Support and Resources
 
-- **API Documentation**: [Complete API Reference](https://api.emailengine.app/)
+- **API Documentation**: [Complete API Reference](/docs/api-reference)
 - **Community**: GitHub Issues and Discussions
-- **Professional Support**: [Contact Support](/docs/licensing)
+- **Professional Support**: [Contact Support](/docs/support)
 - **Examples**: GitHub repository with integration examples
