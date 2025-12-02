@@ -80,14 +80,15 @@ flowchart TD
 EmailEngine automatically adds these headers to emails sent with a `listId`:
 
 ```
-List-Unsubscribe: <https://emailengine.app/unsubscribe/abc123>, <mailto:unsubscribe@example.com?subject=unsubscribe>
+List-ID: <newsletter-weekly.example.com>
+List-Unsubscribe: <https://emailengine.example.com/unsubscribe?data=abc123&sig=xyz>
 List-Unsubscribe-Post: List-Unsubscribe=One-Click
 ```
 
-**Two unsubscribe methods:**
+**One-Click Unsubscribe (RFC 8058):**
 
-1. **One-Click (HTTPS)** - Preferred by Gmail, instant processing
-2. **Mailto** - Fallback for older email clients
+- HTTPS-based unsubscribe - Preferred by Gmail and modern email clients
+- Instant processing when recipient clicks unsubscribe
 
 ## Sending Emails with Virtual Lists
 
@@ -103,7 +104,7 @@ curl -XPOST "http://localhost:3000/v1/account/sender@example.com/submit" \
     "subject": "Weekly Newsletter - {{date}}",
     "text": "Hello {{name}},\n\nHere is this week'\''s newsletter...\n\n{{content}}",
     "listId": "newsletter-weekly",
-    "mergeList": [
+    "mailMerge": [
       {
         "to": {"address": "john@example.com"},
         "params": {
@@ -156,7 +157,7 @@ function send_newsletter(recipients, subject, content):
       subject: subject,
       text: content,
       listId: 'newsletter-weekly',  // Enable virtual list
-      mergeList: merge_list
+      mailMerge: merge_list
     })
   )
 
@@ -190,7 +191,7 @@ def send_newsletter(recipients, subject, content):
             'subject': subject,
             'text': content,
             'listId': 'newsletter-weekly',
-            'mergeList': [
+            'mailMerge': [
                 {
                     'to': {'address': r['email']},
                     'params': {
@@ -236,7 +237,7 @@ function sendNewsletter($recipients, $subject, $content) {
         'subject' => $subject,
         'text' => $content,
         'listId' => 'newsletter-weekly',
-        'mergeList' => $mergeList
+        'mailMerge' => $mergeList
     ];
 
     $ch = curl_init('http://localhost:3000/v1/account/sender@example.com/submit');
@@ -278,10 +279,11 @@ When a recipient unsubscribes, EmailEngine sends a webhook notification:
   "date": "2024-10-13T14:23:45.678Z",
   "event": "listUnsubscribe",
   "data": {
-    "listId": "newsletter-weekly",
     "recipient": "john@example.com",
-    "method": "https",
-    "timestamp": "2024-10-13T14:23:45.678Z"
+    "messageId": "<a2184d08-a470-fec6-a493-fa211a3756e9@example.com>",
+    "listId": "newsletter-weekly",
+    "remoteAddress": "192.168.1.100",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
   }
 }
 ```
@@ -291,10 +293,11 @@ When a recipient unsubscribes, EmailEngine sends a webhook notification:
 | Field | Description |
 |-------|-------------|
 | `event` | Always `listUnsubscribe` |
-| `data.listId` | The list ID from the original email |
 | `data.recipient` | Email address that unsubscribed |
-| `data.method` | Unsubscribe method: `https` (one-click) or `mailto` |
-| `data.timestamp` | When unsubscribe occurred |
+| `data.messageId` | Message-ID of the email that triggered the unsubscribe |
+| `data.listId` | The list ID from the original email |
+| `data.remoteAddress` | IP address of the unsubscribe request |
+| `data.userAgent` | User agent string from the unsubscribe request |
 
 ### Webhook Handler Example
 
@@ -307,9 +310,9 @@ function handle_webhook(request):
   if webhook.event == 'listUnsubscribe':
     list_id = webhook.data.listId
     recipient = webhook.data.recipient
-    method = webhook.data.method
+    message_id = webhook.data.messageId
 
-    PRINT('Unsubscribe: ' + recipient + ' from list ' + list_id + ' via ' + method)
+    PRINT('Unsubscribe: ' + recipient + ' from list ' + list_id + ' (message: ' + message_id + ')')
 
     // Remove from your database
     DATABASE_UPDATE(
@@ -324,7 +327,7 @@ function handle_webhook(request):
       values={
         email: recipient,
         listId: list_id,
-        method: method,
+        messageId: message_id,
         unsubscribedAt: CURRENT_TIMESTAMP()
       }
     )
@@ -370,9 +373,9 @@ def webhook_handler():
         data = webhook['data']
         list_id = data['listId']
         recipient = data['recipient']
-        method = data['method']
+        message_id = data['messageId']
 
-        print(f"Unsubscribe: {recipient} from {list_id} via {method}")
+        print(f"Unsubscribe: {recipient} from {list_id} (message: {message_id})")
 
         # Update database
         db.mailing_list.update(
@@ -384,7 +387,7 @@ def webhook_handler():
         db.unsubscribe_logs.insert({
             'email': recipient,
             'listId': list_id,
-            'method': method,
+            'messageId': message_id,
             'unsubscribedAt': datetime.now()
         })
 
@@ -407,17 +410,17 @@ $webhook = json_decode(file_get_contents('php://input'), true);
 if ($webhook['event'] === 'listUnsubscribe') {
     $listId = $webhook['data']['listId'];
     $recipient = $webhook['data']['recipient'];
-    $method = $webhook['data']['method'];
+    $messageId = $webhook['data']['messageId'];
 
-    error_log("Unsubscribe: {$recipient} from {$listId} via {$method}");
+    error_log("Unsubscribe: {$recipient} from {$listId} (message: {$messageId})");
 
     // Update database
     $stmt = $pdo->prepare('UPDATE mailing_list SET subscribed = 0, unsubscribed_at = NOW() WHERE email = ? AND list_id = ?');
     $stmt->execute([$recipient, $listId]);
 
     // Log unsubscribe
-    $stmt = $pdo->prepare('INSERT INTO unsubscribe_logs (email, list_id, method, unsubscribed_at) VALUES (?, ?, ?, NOW())');
-    $stmt->execute([$recipient, $listId, $method]);
+    $stmt = $pdo->prepare('INSERT INTO unsubscribe_logs (email, list_id, message_id, unsubscribed_at) VALUES (?, ?, ?, NOW())');
+    $stmt->execute([$recipient, $listId, $messageId]);
 
     error_log("Successfully unsubscribed {$recipient}");
 }
