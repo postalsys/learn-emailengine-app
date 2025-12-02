@@ -16,7 +16,7 @@ EmailEngine supports three types of prepared configuration:
 2. **Prepared Access Tokens** - API authentication tokens
 3. **Prepared License Keys** - License activation
 
-All prepared configuration is applied on application startup. If the configuration already exists, it's skipped to avoid duplicates.
+All prepared configuration is applied on every application startup. This means settings will be overwritten each time EmailEngine starts, ensuring your environment configuration always takes precedence.
 
 ## Use Cases
 
@@ -44,11 +44,13 @@ Pre-configure runtime settings that would normally be set via the Settings API o
 Any setting available via the `/v1/settings` API endpoint:
 
 - Webhook URLs and event filters
-- OAuth2 application credentials
-- SMTP gateway configuration
-- Email templates
-- Default email signatures
-- Custom service settings
+- SMTP server configuration (built-in SMTP server)
+- Service URL and base URLs
+- Tracking settings (clicks, opens)
+- Logging configuration
+- Proxy settings
+- IMAP proxy configuration
+- UI branding and locale settings
 
 ### Configuration Methods
 
@@ -149,17 +151,21 @@ EENGINE_SETTINGS='{
 }'
 ```
 
-**OAuth2 applications:**
+**SMTP server and tracking:**
 ```bash
 EENGINE_SETTINGS='{
-  "gmailEnabled": true,
-  "gmailClientId": "123456.apps.googleusercontent.com",
-  "gmailClientSecret": "GOCSPX-abc123",
-  "outlookEnabled": true,
-  "outlookClientId": "abc-def-ghi",
-  "outlookClientSecret": "secret123"
+  "smtpServerEnabled": true,
+  "smtpServerPort": 2525,
+  "smtpServerHost": "0.0.0.0",
+  "smtpServerAuthEnabled": true,
+  "trackClicks": true,
+  "trackOpens": true
 }'
 ```
+
+:::note OAuth2 Configuration
+OAuth2 provider credentials (Gmail, Outlook) should be configured using the OAuth2 Applications API (`/v1/oauth2`) rather than the settings endpoint. The legacy settings like `gmailClientId` are deprecated.
+:::
 
 ### Validation
 
@@ -175,10 +181,10 @@ Check your JSON syntax and setting values if you encounter errors.
 
 ### Updating Prepared Settings
 
-Prepared settings are only applied once on first startup. To update:
+Prepared settings are applied on every startup, overwriting existing values. To update:
 
-1. Use the Settings API to modify existing settings
-2. Or update the `EENGINE_SETTINGS` environment variable and restart
+1. Update the `EENGINE_SETTINGS` environment variable and restart EmailEngine
+2. Or use the Settings API for runtime changes (will be overwritten on next restart if also defined in `EENGINE_SETTINGS`)
 
 **Update settings via API:**
 ```bash
