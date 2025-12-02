@@ -96,7 +96,7 @@ server {
     }
 
     location / {
-        client_max_body_size 100M;  # Allow large email submissions with attachments
+        client_max_body_size 50M;  # Allow large email submissions with attachments
         proxy_http_version 1.1;
         proxy_redirect off;
         proxy_set_header X-Real-IP $remote_addr;
@@ -274,7 +274,7 @@ server {
         proxy_redirect off;
 
         # Client body size (for large email submissions with attachments)
-        client_max_body_size 100M;
+        client_max_body_size 50M;
 
         # Timeouts (increased for large uploads)
         proxy_connect_timeout 90s;
@@ -617,7 +617,7 @@ http {
 
     # Buffers
     client_body_buffer_size 128k;
-    client_max_body_size 100m;  # Allow large email submissions
+    client_max_body_size 50m;  # Allow large email submissions
     client_header_buffer_size 1k;
     large_client_header_buffers 4 16k;
 
@@ -691,7 +691,7 @@ server {
     }
 
     location / {
-        client_max_body_size 100M;
+        client_max_body_size 50M;
         proxy_pass http://emailengine;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
