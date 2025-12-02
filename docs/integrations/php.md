@@ -141,6 +141,8 @@ while (!$account_connected) {
 | `connected` | Account is ready to use |
 | `authenticationError` | Authentication failed |
 | `connectError` | Connection failed |
+| `disconnected` | Account is temporarily disconnected |
+| `unset` | Account is not configured |
 
 **Important**: Add a timeout or maximum retry count to avoid infinite loops if the account cannot connect.
 
@@ -237,27 +239,32 @@ foreach ($messages['messages'] as $message) {
 
 (See: [Get Message API](/docs/api/get-v-1-account-account-message-message))
 
+By default, message text content is not included in the response. Use the `textType` query parameter to retrieve text content:
+
 ```php
 <?php
 
-$message = $ee->request('get', '/v1/account/example/message/' . $messageId);
+// Use textType=* to include both plain text and HTML content
+$message = $ee->request('get', '/v1/account/example/message/' . $messageId . '?textType=*');
 
 echo "Subject: " . $message['subject'] . "\n";
-echo "Text: " . $message['text'] . "\n";
+echo "Text: " . ($message['text']['plain'] ?? '') . "\n";
 
-// Download attachments
+// Attachments contain metadata, not content by default
+// Use the attachment download endpoint to get attachment content
 foreach ($message['attachments'] as $attachment) {
-    $content = base64_decode($attachment['content']);
-    file_put_contents($attachment['filename'], $content);
+    echo "Attachment: " . $attachment['filename'] . "\n";
 }
 ```
 
 ### Searching Messages
 
+The search endpoint uses POST method with the search criteria in the request body:
+
 ```php
 <?php
 
-$results = $ee->request('get', '/v1/account/example/search', [
+$results = $ee->request('post', '/v1/account/example/search?path=INBOX', [
     'search' => [
         'from' => 'jane@example.com',
     ],
@@ -478,9 +485,11 @@ class EmailAutomation
     public function getUnreadMessages($accountId)
     {
         try {
-            $response = $this->ee->request('get', "/v1/account/$accountId/messages", [
-                'path' => 'INBOX',
-                'unseen' => true,
+            // Use POST search endpoint to filter by unseen messages
+            $response = $this->ee->request('post', "/v1/account/$accountId/search?path=INBOX", [
+                'search' => [
+                    'unseen' => true,
+                ],
             ]);
 
             return $response['messages'];
