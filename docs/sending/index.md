@@ -23,7 +23,7 @@ EmailEngine abstracts all of this complexity behind a simple REST API.
 ## Key Capabilities
 
 ### Unified API
-- Single REST endpoint (`/v1/account/:id/submit`) for all providers
+- Single REST endpoint (`/v1/account/{account}/submit`) for all providers
 - Consistent JSON request/response format
 - Automatic credential management
 
