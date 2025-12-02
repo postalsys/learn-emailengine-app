@@ -39,9 +39,11 @@ EmailEngine offers **field-level encryption** that encrypts all sensitive fields
 
 **Configuration**:
 
-- OAuth client secrets
-- Webhook secrets
-- API secrets
+- OAuth client secrets (Gmail, Outlook)
+- SMTP server password
+- Gmail service account key
+- Document store password
+- OpenAI API key
 
 **Not encrypted**:
 
@@ -410,9 +412,11 @@ echo "your-secret-password" | docker secret create ee_encryption_key -
 docker service create \
   --name emailengine \
   --secret ee_encryption_key \
-  --env EENGINE_SECRET=/run/secrets/ee_encryption_key \
+  --env EENGINE_SECRET_FILE=/run/secrets/ee_encryption_key \
   emailengine/emailengine
 ```
+
+The `_FILE` suffix tells EmailEngine to read the secret from the specified file path.
 
 ## Migration Planning
 
