@@ -171,12 +171,10 @@ curl http://localhost:3000/v1/license \
   "active": true,
   "details": {
     "application": "@postalsys/emailengine-app",
-    "key": "a1b2c3d4e5f6g7h8i9j0",
-    "licensedTo": "Example Corporation Inc",
-    "hostname": "mail.example.com",
-    "created": "2024-01-15T10:30:00.000Z",
-    "trial": false,
-    "expires": "2026-01-15T10:30:00.000Z"
+    "key": "1edf01e35e75ed3425808eba",
+    "licensedTo": "Kreata OÜ",
+    "hostname": "emailengine.example.com",
+    "created": "2021-10-13T07:47:42.695Z"
   },
   "type": "EmailEngine License"
 }
