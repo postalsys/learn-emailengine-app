@@ -434,7 +434,6 @@ curl -X POST https://your-ee.com/v1/verifyAccount \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "john@example.com",
     "imap": {
       "host": "imap.example.com",
       "port": 993,
@@ -571,6 +570,7 @@ curl -X POST https://your-ee.com/v1/settings \
 
 - `socks5://` - SOCKS5 proxy (recommended)
 - `socks4://` - SOCKS4 proxy
+- `socks://` - Generic SOCKS proxy
 - `http://` - HTTP proxy
 - `https://` - HTTPS proxy
 
