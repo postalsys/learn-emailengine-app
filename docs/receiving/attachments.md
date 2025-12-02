@@ -30,13 +30,13 @@ Email attachments are files sent with email messages. EmailEngine provides compr
 **Regular Attachments**
 - Files explicitly attached to the email
 - Displayed in attachment list
-- `disposition: "attachment"`
+- `embedded: false`, `inline: false`
 - Examples: PDFs, documents, spreadsheets
 
 **Inline Attachments**
 - Images embedded in HTML content
 - Referenced with `cid:` URLs
-- `disposition: "inline"`
+- `embedded: true` or `inline: true`
 - Examples: logos, signatures, embedded images
 
 **Both Types**
@@ -52,23 +52,22 @@ Each attachment includes:
 {
   "id": "AAAAAgAAAeEBAAAAAQAAAeE",
   "contentType": "application/pdf",
-  "disposition": "attachment",
   "filename": "invoice.pdf",
   "encodedSize": 45000,
-  "size": 43500,
   "embedded": false,
-  "contentId": null
+  "inline": false,
+  "contentId": "<unique-image-id@localhost>"
 }
 ```
 
 **id** - Unique attachment identifier (use for downloading)
 **contentType** - MIME type of the file
-**disposition** - "attachment" or "inline"
 **filename** - Original filename (may be null)
-**encodedSize** - Size in email (base64 encoded)
-**size** - Actual file size after decoding
-**embedded** - True if inline image
-**contentId** - Content-ID for inline images (cid:xxx)
+**encodedSize** - Size in email (base64 encoded, actual file size will be smaller)
+**embedded** - True if the attachment is embedded in HTML content
+**inline** - True if the attachment should be displayed inline rather than as a download
+**contentId** - Content-ID header value for embedding images in HTML
+**method** - Calendar method (REQUEST, REPLY, CANCEL, etc.) for iCalendar attachments
 
 ## Listing Attachments
 
@@ -100,7 +99,7 @@ console.log(`Message: ${info.subject}`);
 console.log(`Attachments: ${info.attachments.length}`);
 
 info.attachments.forEach(att => {
-  console.log(`- ${att.filename} (${formatBytes(att.size)})`);
+  console.log(`- ${att.filename} (${formatBytes(att.encodedSize)})`);
 });
 ```
 
@@ -121,12 +120,12 @@ function filterAttachments(attachments, options = {}) {
       return false;
     }
 
-    // Filter by size
-    if (options.minSize && att.size < options.minSize) {
+    // Filter by size (using encodedSize - actual file will be smaller)
+    if (options.minSize && att.encodedSize < options.minSize) {
       return false;
     }
 
-    if (options.maxSize && att.size > options.maxSize) {
+    if (options.maxSize && att.encodedSize > options.maxSize) {
       return false;
     }
 
@@ -397,7 +396,8 @@ Convert HTML with inline images to use local files:
 
 ```javascript
 async function convertHtmlWithInlineImages(message, imageDir) {
-  let html = message.html ? message.html.join('\n') : '';
+  // message.text.html is a string containing the HTML content
+  let html = message.text && message.text.html ? message.text.html : '';
 
   if (!html) return html;
 
@@ -535,7 +535,6 @@ async function extractAttachmentMetadata(accountId, folderPath) {
         attachmentId: attachment.id,
         filename: attachment.filename,
         contentType: attachment.contentType,
-        size: attachment.size,
         encodedSize: attachment.encodedSize
       });
     }
@@ -549,14 +548,14 @@ const metadata = await extractAttachmentMetadata('example', 'INBOX');
 
 // Export to CSV
 const csv = [
-  ['Message Subject', 'From', 'Date', 'Filename', 'Type', 'Size'],
+  ['Message Subject', 'From', 'Date', 'Filename', 'Type', 'Encoded Size'],
   ...metadata.map(m => [
     m.messageSubject,
     m.messageFrom,
     m.messageDate,
     m.filename,
     m.contentType,
-    m.size
+    m.encodedSize
   ])
 ].map(row => row.join(',')).join('\n');
 
@@ -606,8 +605,9 @@ try {
 
 ```javascript
 async function downloadIfSmallEnough(accountId, messageId, attachment, maxSize, outputPath) {
-  if (attachment.size > maxSize) {
-    console.log(`Skipping ${attachment.filename}: too large (${attachment.size} > ${maxSize})`);
+  // Note: encodedSize is the base64 encoded size; actual file will be smaller
+  if (attachment.encodedSize > maxSize) {
+    console.log(`Skipping ${attachment.filename}: too large (${attachment.encodedSize} > ${maxSize})`);
     return null;
   }
 
