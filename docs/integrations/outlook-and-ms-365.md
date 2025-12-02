@@ -21,17 +21,17 @@ Select _Web_ as the platform and use your EmailEngine URL with the `/oauth` path
 In the application's overview page, find the _Application (client) ID_. This ID will be used as the _Azure Application Id_ in EmailEngine’s OAuth form when configuring the Outlook integration.
 7.  **Add API Permissions**  
 Navigate to _API Permissions_ and click _Add a permission_. This step grants your app the necessary access to interact with users' Outlook and MS365 email accounts.
-8.  **Enable Microsoft Graph Permissions**
--   Select _Microsoft Graph_ → _Delegated permissions_.
--   Search for and enable the following permissions to allow your app to interact with the user's email:
+8.  **Enable API Permissions**
+-   Click _Add a permission_ and search for the permissions listed below to enable them.
 -   If you want to use **IMAP and SMTP** as the base scopes:
 -   _IMAP.AccessAsUser.All_ (for IMAP access)
 -   _SMTP.Send_ (for sending emails via SMTP)
 -   _offline\_access_ (for long-term access to accounts)
 -   If you want to use **MS Graph API** as the base scope:
--   _User.Read_ (for reading account properties)
--   _Mail.ReadWrite_ (for reading emails)
+-   Select _Microsoft Graph_ → _Delegated permissions_, then add:
+-   _Mail.ReadWrite_ (for reading and managing emails)
 -   _Mail.Send_ (for sending emails)
+-   _User.Read_ (for reading account properties)
 -   _offline\_access_ (for long-term access to accounts)
 9.  **Create a client secret**  
 Navigate to _Certificates & Secrets_ and create a new client secret. The client secret is used by your app to authenticate with Azure. Choose an expiration period you are comfortable with. Note that once the secret expires, you'll need to generate a new one and update it in EmailEngine.
@@ -45,5 +45,5 @@ In the OAuth2 application form in EmailEngine, use the Application ID (from Azur
 In the EmailEngine form, use the client secret value (the one you copied earlier) as the _Client Secret_. This allows EmailEngine to authenticate with Azure and access Outlook email accounts.
 14.  **Set the supported account types**  
 In EmailEngine, set the _Supported account types_ value. The option _Common_ corresponds to the _Accounts in any org and personal accounts_ option you selected during the Azure app registration process.
-15.  **Register the app in EmailEngine**  
-Click _Register app_ in EmailEngine to complete the integration. Your app is now configured to use the Microsoft Graph API for accessing Outlook and MS365 email accounts via IMAP and SMTP.
+15.  **Register the app in EmailEngine**
+Click _Register app_ in EmailEngine to complete the integration. Your app is now configured for accessing Outlook and MS365 email accounts using either IMAP/SMTP or MS Graph API, depending on the scopes you selected.
