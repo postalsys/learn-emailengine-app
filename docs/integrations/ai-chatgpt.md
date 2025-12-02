@@ -23,16 +23,16 @@ EmailEngine integrates with OpenAI's API to provide AI-powered email processing 
 ### OpenAI API Access
 
 - **GPT-3.5**: Available to all OpenAI accounts
-- **GPT-4**: Requires separate [application](https://openai.com/waitlist/gpt-4-api)
+- **GPT-4**: Available to all OpenAI accounts
 - **Paid Account**: Recommended for production (free accounts have strict rate limits)
 
 ## Feature 1: Email Processing and Summarization
 
 ### Enable AI Processing
 
-1. Navigate to **Configuration** → **LLM Integration** in EmailEngine
+1. Navigate to **Configuration** → **AI Processing** in EmailEngine
 2. Enter your OpenAI API key
-3. Check "Enable email processing with AI"
+3. Check "Enable AI Email Processing"
 4. Select model (GPT-3.5 or GPT-4)
 5. Save configuration
 
@@ -232,9 +232,9 @@ The `id` field contains the OpenAI request ID for troubleshooting:
 
 Customize the AI analysis by modifying the system prompt:
 
-1. Go to **Configuration** → **LLM Integration**
-2. Expand **Advanced Settings**
-3. Edit the prompt template
+1. Go to **Configuration** → **AI Processing**
+2. Scroll to **AI Instructions** section
+3. Edit the AI Prompt
 4. Add custom instructions
 5. Save configuration
 
@@ -301,8 +301,9 @@ Route emails based on AI analysis:
 // Pseudo code - implement in your preferred language
 function routeEmail(webhook):
   summary = webhook.data.summary
+  riskAssessment = webhook.data.riskAssessment
 
-  if summary.riskAssessment.risk >= 4:
+  if riskAssessment.risk >= 4:
     // High risk - route to spam/security team
     moveToSpam(webhook.data.id)
   else if summary.actions AND summary.actions.length > 0:
@@ -384,6 +385,7 @@ Build analytics from AI-processed emails:
 // Pseudo code - implement in your preferred language
 function trackEmailMetrics(webhook):
   summary = webhook.data.summary
+  riskAssessment = webhook.data.riskAssessment
 
   // Track sentiment distribution
   incrementMetric('sentiment', summary.sentiment)
@@ -397,7 +399,7 @@ function trackEmailMetrics(webhook):
     incrementMetric('hasActions', summary.actions.length)
 
   // Track high-risk emails
-  if summary.riskAssessment.risk >= 4:
+  if riskAssessment.risk >= 4:
     incrementMetric('highRisk')
     alertSecurityTeam(webhook.data)
 ```
