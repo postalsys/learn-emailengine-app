@@ -33,6 +33,7 @@ Quick lookup tables for common EmailEngine configuration and API usage.
 | `trackOpen` | Email opened | Tracking pixel loaded |
 | `trackClick` | Link clicked | Tracked link accessed |
 | `listUnsubscribe` | Unsubscribe request | User unsubscribed via List-Unsubscribe |
+| `listSubscribe` | Subscribe request | User re-subscribed to a list |
 
 See [Webhook Events Reference](/docs/reference/webhook-events) for complete payload documentation.
 
