@@ -336,7 +336,7 @@ spec:
 | Setting     | Environment Variable | Description              |
 | ----------- | -------------------- | ------------------------ |
 | Redis URL   | `REDIS_URL`          | Redis connection string  |
-| Server Host | `EENGINE_HOST`       | Listen address (0.0.0.0) |
+| Server Host | `EENGINE_HOST`       | Listen address (default: 127.0.0.1) |
 | Server Port | `EENGINE_PORT`       | HTTP port (default 3000) |
 
 **Example:**
@@ -356,11 +356,11 @@ EENGINE_HOST=127.0.0.1
 EENGINE_PORT=3000
 ```
 
-**With Redis Cluster:**
+**With Redis Key Prefix:**
 
 ```bash
-REDIS_URL=redis://node1:6379,redis://node2:6379
-EENGINE_REDIS_PREFIX={ee-prod}
+REDIS_URL=redis://localhost:6379/8
+EENGINE_REDIS_PREFIX=ee-prod
 ```
 
 **Development Mode:**
