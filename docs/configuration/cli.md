@@ -237,10 +237,10 @@ secret = "your-encryption-secret-32-chars-min"
 commandTimeout = 30000
 
 # IMAP Proxy (optional)
-[imapProxy]
+[imap-proxy]
 enabled = true
 host = "0.0.0.0"
-port = 9993
+port = 2993
 secret = "imap-proxy-secret"
 
 # SMTP Server (optional)
