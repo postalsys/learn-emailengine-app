@@ -504,7 +504,7 @@ function handleMessageDeleted(webhook) {
 
 ```bash
 # Delete all messages with UID between 100 and 500
-POST /v1/account/{account}/messages/delete
+PUT /v1/account/{account}/messages/delete
 
 {
   "search": {
@@ -575,7 +575,7 @@ if (message.messageId) {
 | Identifier    | When to Use                 | Stability            | Availability         |
 | ------------- | --------------------------- | -------------------- | -------------------- |
 | **id**        | EmailEngine API calls       | Stable within folder | Always               |
-| **uid**       | Range searches, IMAP ops    | Stable within folder | Always               |
+| **uid**       | Range searches, IMAP ops    | Stable within folder | IMAP only            |
 | **emailId**   | Cross-folder tracking       | Permanent            | Gmail/Yahoo/Fastmail |
 | **messageId** | External integration, dedup | Permanent            | Almost always        |
 | **Sequence**  | Don't use                   | Session-only         | Internal only        |
