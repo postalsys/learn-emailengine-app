@@ -99,22 +99,23 @@ Email clients use subject matching as part of threading. Changing the subject (b
 
 ## EmailEngine's Threading Solution
 
-EmailEngine provides two approaches to threading depending on the email provider:
+EmailEngine provides native threading support for select providers:
 
-1. **Native Provider Threading**: For Gmail and Microsoft Graph API
-2. **RFC 8474 THREADID**: For providers supporting OBJECTID extension (Yahoo/AOL/Verizon)
+1. **Gmail (API)**: Uses Gmail's native thread IDs from the Gmail API
+2. **Microsoft Graph API**: Uses Outlook's conversation IDs
 
-For generic IMAP accounts without native threading support, threads must be built manually by analyzing Message-ID, In-Reply-To, and References headers from email messages.
+For generic IMAP accounts (including Yahoo, AOL, and other providers), EmailEngine does not provide native threading support. Threads must be built manually by analyzing Message-ID, In-Reply-To, and References headers from email messages.
 
 ## Thread ID Format
 
-EmailEngine provides a `threadId` property in message data. The format depends on the provider:
+EmailEngine provides a `threadId` property in message data for supported providers. The format depends on the provider:
 
 | Provider               | Format                | Example                 |
 | ---------------------- | --------------------- | ----------------------- |
 | Gmail/Google Workspace | Long numeric string   | `"1759349012996310407"` |
 | Microsoft Graph API    | Graph conversation ID | `"AAQkAGI2TH..."`       |
-| Yahoo/AOL/Verizon      | Short numeric string  | `"501"`                 |
+
+Generic IMAP accounts do not have native thread IDs.
 
 ## Where Thread IDs Appear
 
