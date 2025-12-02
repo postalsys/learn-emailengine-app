@@ -174,9 +174,9 @@ const results = await searchByDateRange(
 { search: { to: 'jane@company.com' } }
 ```
 
-**header** - Custom header search
+**header** - Custom header search (object format)
 ```javascript
-{ search: { header: 'X-Custom-Header: value' } }
+{ search: { header: { 'X-Custom-Header': 'value' } } }
 ```
 
 ### Date Operators
@@ -296,9 +296,10 @@ This allows using Gmail's powerful search operators directly. See [Gmail search 
 - `emailId`, `threadId`, `emailIds`: Gmail and modern IMAP servers with RFC 8474 support
 - `seq`, `modseq`, `deleted`: Traditional IMAP only
 - **Microsoft Graph API limitations:**
-  - `to`, `cc`, `bcc` fields are **not supported** for search
+  - `to`, `cc`, `bcc`, `larger`, `smaller` fields are **not supported** for search by default
   - Use `from` and `subject` for filtering, or search `body` for recipient names
-  - Consider using IMAP/SMTP mode for Outlook accounts if recipient search is required
+  - Consider using IMAP/SMTP mode for Outlook accounts if these search fields are required
+  - Alternatively, use the `useOutlookSearch` query parameter to enable MS Graph `$search` mode, which supports `to`, `cc`, `bcc`, `larger`, `smaller`, `body`, `before`, `sentBefore`, `since`, and `sentSince` fields. Note: `$search` returns up to 1,000 results sorted by relevance (not date) and does not indicate total matches or pages.
 :::
 
 ## Combined Searches
@@ -416,7 +417,7 @@ async function findByMessageId(accountId, messageId) {
         },
         body: JSON.stringify({
           search: {
-            header: `Message-ID: ${messageId}`
+            header: { 'Message-ID': messageId }
           }
         })
       }
@@ -445,7 +446,11 @@ if (result) {
 
 ```javascript
 async function searchTodaysMessages(accountId, folderPath) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
   const response = await fetch(
     `https://your-emailengine.com/v1/account/${accountId}/search?path=${folderPath}`,
@@ -457,7 +462,8 @@ async function searchTodaysMessages(accountId, folderPath) {
       },
       body: JSON.stringify({
         search: {
-          on: today
+          since: todayStr,
+          before: tomorrowStr
         }
       })
     }
@@ -523,11 +529,11 @@ async function searchUnreadImportant(accountId) {
 
 ### Search by Keywords
 
-Search for messages containing specific keywords:
+Search for messages containing specific keywords in the message body:
 
 ```javascript
 async function searchByKeywords(accountId, folderPath, keywords) {
-  // Search in both subject and body
+  // Search in message body for each keyword
   const results = [];
 
   for (const keyword of keywords) {
@@ -541,7 +547,7 @@ async function searchByKeywords(accountId, folderPath, keywords) {
         },
         body: JSON.stringify({
           search: {
-            text: keyword
+            body: keyword
           }
         })
       }
@@ -715,9 +721,9 @@ async function search(accountId, folderPath, searchCriteria) {
   return await response.json();
 }
 
-// Slow - searches entire mailbox
+// Slow - searches entire message body
 const results = await search('example', 'INBOX', {
-  text: 'meeting'
+  body: 'meeting'
 });
 
 // Faster - limits search to subject only
