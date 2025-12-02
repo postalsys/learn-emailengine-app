@@ -274,7 +274,6 @@ When updating fields within nested objects (like `imap`, `smtp`, or `oauth2`), y
 
 | State | Description | Actions Available |
 |-------|-------------|-------------------|
-| `new` | Just added, not yet connected | Wait for initialization |
 | `init` | Being initialized | Wait |
 | `syncing` | Performing initial mailbox sync | Wait for sync to complete |
 | `connecting` | Establishing connection | Wait |
@@ -464,7 +463,7 @@ const tokenResponse = await fetch(
   }
 );
 
-const { accessToken, expires } = await tokenResponse.json();
+const { account, user, accessToken, provider, expires } = await tokenResponse.json();
 
 // Use token with Google/Microsoft APIs
 const apiResponse = await fetch('https://www.googleapis.com/gmail/v1/users/me/profile', {
@@ -571,7 +570,7 @@ For Gmail API or MS Graph API accounts:
 }
 ```
 
-When EmailEngine needs to authenticate, it calls your server at `GET {authServer}?account={account}` and expects a response with `user` and `accessToken` fields.
+When EmailEngine needs to authenticate, it calls your server at `GET {authServer}?account={account}&proto={proto}` (where `proto` is `imap`, `smtp`, or `api`) and expects a response with `user` and either `pass` or `accessToken` fields.
 
 [Authentication Server Guide →](./authentication-server)
 
@@ -585,4 +584,4 @@ When EmailEngine needs to authenticate, it calls your server at `GET {authServer
 - [DELETE /v1/account/\{account\} - Delete Account](/docs/api/delete-v-1-account-account)
 - [PUT /v1/account/\{account\}/reconnect - Reconnect](/docs/api/put-v-1-account-account-reconnect)
 - [POST /v1/verifyaccount - Verify Account](/docs/api/post-v-1-verifyaccount)
-- [GET /v1/account/\{account\}/oauthtoken - Get OAuth Token](/docs/api/get-v-1-account-account-oauthtoken)
+- [GET /v1/account/\{account\}/oauth-token - Get OAuth Token](/docs/api/get-v-1-account-account-oauth-token)
