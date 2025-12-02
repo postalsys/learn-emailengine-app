@@ -575,3 +575,11 @@ curl -X POST https://your-ee.com/v1/settings \
 - `https://` - HTTPS proxy
 
 Per-account proxy settings override the global proxy setting.
+
+:::warning IMAP and SMTP Only
+Proxy settings apply only to IMAP and SMTP connections. HTTP requests made by EmailEngine (OAuth2 token exchange, Gmail API, Microsoft Graph API, license validation, etc.) are **not** routed through the proxy and will always use direct connections.
+
+If your environment requires proxying HTTP traffic, configure a system-wide HTTP proxy using standard environment variables (`HTTP_PROXY`, `HTTPS_PROXY`) at the operating system level.
+
+For environments with strict outbound firewalls, see [Outbound Connection Whitelist](/docs/deployment/security#outbound-connection-whitelist) for a list of domains that EmailEngine needs to reach.
+:::

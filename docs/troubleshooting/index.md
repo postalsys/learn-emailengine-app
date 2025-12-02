@@ -209,6 +209,8 @@ journalctl -u emailengine | grep -i "connection\|error"
    sudo ufw allow out 587/tcp
    ```
 
+   For a complete list of domains and ports EmailEngine needs to reach, see [Outbound Connection Whitelist](/docs/deployment/security#outbound-connection-whitelist).
+
 3. **Rate limiting by email provider**
 
    **Solution:**

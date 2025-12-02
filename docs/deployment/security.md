@@ -55,6 +55,10 @@ sudo iptables -A INPUT -p tcp --dport 6379 -s 127.0.0.1 -j ACCEPT
 sudo iptables -A INPUT -p tcp --dport 6379 -j DROP
 ```
 
+:::tip Outbound Connections
+These rules control inbound traffic. If your firewall also restricts outbound connections, see [Outbound Connection Whitelist](#outbound-connection-whitelist) for domains that EmailEngine needs to reach.
+:::
+
 ### VPN Setup
 
 For secure remote access to the admin interface, consider using a VPN:
@@ -106,6 +110,107 @@ graph TB
     style Proxy fill:#fff9c4
     style EmailEngine fill:#e1f5ff
     style Redis fill:#f3e5f5
+```
+
+### Outbound Connection Whitelist
+
+If EmailEngine is deployed behind a firewall that blocks outbound connections, you must whitelist the following domains for EmailEngine to function correctly.
+
+:::info Proxy Limitations
+EmailEngine's [proxy settings](/docs/accounts/imap-smtp#proxy-configuration) apply only to IMAP and SMTP connections. HTTP requests to the domains listed below are **not** routed through the configured proxy and require direct network access or a system-wide HTTP proxy.
+:::
+
+#### Required Domains
+
+These domains are required for core EmailEngine functionality:
+
+| Domain | Port | Purpose |
+|--------|------|---------|
+| `postalsys.com` | 443 | License validation and trial provisioning. Required for all licensed installations. |
+
+#### OAuth2 Provider Domains
+
+Required based on which OAuth2 providers you use:
+
+**Google (Gmail):**
+
+| Domain | Port | Purpose |
+|--------|------|---------|
+| `oauth2.googleapis.com` | 443 | OAuth2 token exchange and refresh for Gmail accounts |
+| `gmail.googleapis.com` | 443 | Gmail API for profile info and message operations (when using API mode) |
+| `pubsub.googleapis.com` | 443 | Gmail push notifications for real-time updates (when using Pub/Sub) |
+
+**Microsoft (Outlook/Office 365):**
+
+| Domain | Port | Purpose |
+|--------|------|---------|
+| `login.microsoftonline.com` | 443 | OAuth2 token exchange and refresh for Outlook accounts |
+| `graph.microsoft.com` | 443 | Microsoft Graph API for mail operations (when using API mode) |
+
+**Microsoft Government Cloud (GCC-High):**
+
+| Domain | Port | Purpose |
+|--------|------|---------|
+| `login.microsoftonline.us` | 443 | OAuth2 tokens for GCC-High/DoD environments |
+| `graph.microsoft.us` | 443 | Microsoft Graph API for GCC-High |
+| `dod-graph.microsoft.us` | 443 | Microsoft Graph API for DoD |
+
+**Microsoft China (21Vianet):**
+
+| Domain | Port | Purpose |
+|--------|------|---------|
+| `login.chinacloudapi.cn` | 443 | OAuth2 tokens for Microsoft China |
+| `microsoftgraph.chinacloudapi.cn` | 443 | Microsoft Graph API for China |
+
+**Mail.ru:**
+
+| Domain | Port | Purpose |
+|--------|------|---------|
+| `oauth.mail.ru` | 443 | OAuth2 token exchange, refresh, and user info retrieval |
+
+#### Optional Feature Domains
+
+These domains are only needed if you use specific features:
+
+| Domain | Port | Purpose |
+|--------|------|---------|
+| `autoconfig.thunderbird.net` | 443 | Mozilla ISP database for automatic IMAP/SMTP server detection. Used when adding accounts without manual server configuration. |
+| `api.github.com` | 443 | Checks for new EmailEngine releases. Used by the update notification feature in the admin dashboard. |
+| `api.nodemailer.com` | 443 | SMTP delivery testing service. Used by the "Test Delivery" feature to verify SMTP configuration. |
+| `acme-v02.api.letsencrypt.org` | 443 | Let's Encrypt ACME protocol. Required only if using EmailEngine's built-in TLS certificate provisioning. |
+
+#### User-Configured Endpoints
+
+These endpoints depend on your specific configuration:
+
+| Endpoint Type | Purpose |
+|---------------|---------|
+| Webhook URLs | URLs configured in EmailEngine settings for webhook delivery. Whitelist your webhook receiver endpoints. |
+| Elasticsearch URLs | If using document store for email indexing and AI embeddings. Whitelist your Elasticsearch cluster. |
+| IMAP/SMTP servers | Mail servers for connected accounts. Typically ports 993 (IMAPS), 465/587 (SMTPS/submission), 143 (IMAP), 25 (SMTP). |
+
+#### Minimal Whitelist Example
+
+For a typical deployment using Gmail and Outlook OAuth2 with IMAP:
+
+```bash
+# Required
+postalsys.com:443
+
+# Gmail OAuth2
+oauth2.googleapis.com:443
+
+# Outlook OAuth2
+login.microsoftonline.com:443
+
+# Your webhook endpoint
+webhooks.yourcompany.com:443
+
+# Mail servers (examples)
+imap.gmail.com:993
+smtp.gmail.com:465
+outlook.office365.com:993
+smtp.office365.com:587
 ```
 
 ## Authentication Security
