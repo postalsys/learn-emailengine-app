@@ -45,19 +45,13 @@ Response when healthy:
 
 ```json
 {
-  "status": "ok",
-  "version": "2.41.5",
-  "license": "valid",
-  "accounts": {
-    "total": 15,
-    "connected": 14,
-    "disconnected": 1
-  },
-  "redis": {
-    "status": "connected"
-  }
+  "success": true
 }
 ```
+
+The health check verifies:
+- All IMAP workers are available
+- Redis database is accessible and responding
 
 ### Detailed Status Check
 
@@ -72,25 +66,45 @@ Response includes:
 
 ```json
 {
-  "version": "2.41.5",
+  "version": "2.58.0",
+  "license": "MIT",
   "accounts": 15,
+  "node": "24.0.0",
+  "redis": "7.2.4",
   "counters": {
-    "events": 1523,
-    "webhooks": 1450,
-    "emails": 8234
+    "events:messageNew": 1523,
+    "webhooks:messageNew": 1450,
+    "apiReq:GET /v1/stats": 234
   },
   "queues": {
-    "webhook": {
-      "waiting": 0,
+    "notify": {
       "active": 2,
-      "completed": 1450,
-      "failed": 3
+      "delayed": 0,
+      "waiting": 0,
+      "paused": 0,
+      "isPaused": false,
+      "total": 2
     },
     "submit": {
-      "waiting": 5,
       "active": 1,
-      "completed": 234
+      "delayed": 0,
+      "waiting": 5,
+      "paused": 0,
+      "isPaused": false,
+      "total": 6
+    },
+    "documents": {
+      "active": 0,
+      "delayed": 0,
+      "waiting": 0,
+      "paused": 0,
+      "isPaused": false,
+      "total": 0
     }
+  },
+  "connections": {
+    "connected": 14,
+    "connecting": 1
   }
 }
 ```
@@ -202,8 +216,10 @@ webhooks{event="messageDeleted",status="success"}
 events{event="messageNew"}
 events{event="messageUpdated"}
 
-# Webhook request duration
-webhook_req{le="0.1"}  # Histogram buckets
+# Webhook request duration (buckets in milliseconds)
+webhook_req_bucket{le="100"}
+webhook_req_bucket{le="1000"}
+webhook_req_bucket{le="10000"}
 webhook_req_sum
 webhook_req_count
 ```
@@ -317,13 +333,13 @@ imap_connections{status="connectError"}
 **Panel 6: Webhook Response Time**
 
 ```promql
-# Query (99th percentile)
+# Query (99th percentile, result in milliseconds)
 histogram_quantile(0.99,
   rate(webhook_req_bucket[5m])
 )
 
 # Visualization: Graph
-# Label: 99th percentile webhook duration
+# Label: 99th percentile webhook duration (ms)
 ```
 
 ### Dashboard Variables
@@ -374,9 +390,10 @@ queue_size{queue="notify",state="waiting"} > 100
 
 ```promql
 # Alert if webhooks are processing slowly (99th percentile > 5 seconds)
+# Note: webhook_req buckets are in milliseconds
 histogram_quantile(0.99,
   rate(webhook_req_bucket[5m])
-) > 5
+) > 5000
 ```
 
 #### 5. Queue Processing Rate
@@ -395,7 +412,7 @@ Track these for performance optimization:
 # Webhook events per minute
 rate(webhooks[5m]) * 60
 
-# Webhook processing time (median)
+# Webhook processing time (median, in milliseconds)
 histogram_quantile(0.5,
   rate(webhook_req_bucket[5m])
 )
@@ -464,16 +481,16 @@ groups:
           summary: "EmailEngine is down"
           description: "EmailEngine on {{ $labels.instance }} is down"
 
-      # Slow webhook processing
+      # Slow webhook processing (buckets are in milliseconds)
       - alert: EmailEngineSlowWebhooks
         expr: |
-          histogram_quantile(0.99, rate(webhook_req_bucket[5m])) > 10
+          histogram_quantile(0.99, rate(webhook_req_bucket[5m])) > 10000
         for: 5m
         labels:
           severity: warning
         annotations:
           summary: "Webhooks processing slowly"
-          description: "99th percentile webhook duration: {{ $value }}s"
+          description: "99th percentile webhook duration: {{ $value }}ms"
 
       # Queue not processing
       - alert: EmailEngineQueueStalled
@@ -576,11 +593,13 @@ Monitor with Elasticsearch APM by initializing the APM agent with your language'
 
 EmailEngine uses Bull queues. Monitor them visually with Bull Board.
 
-Enable in EmailEngine UI:
+Bull Board is always enabled and available at:
 
-1. Go to **Settings** → **Configuration**
-2. Enable **Bull Board**
-3. Access at `http://localhost:3000/admin/arena`
+```
+http://localhost:3000/admin/bull-board
+```
+
+You can also access it from the dashboard sidebar under **Tools** → **Bull Board**.
 
 See detailed queue monitoring in [Webhooks Guide - Debugging Section](/docs/receiving/webhooks#debugging-webhooks).
 
@@ -749,30 +768,32 @@ exit 0
 #!/bin/bash
 # comprehensive-health-check.sh
 
-# Check health endpoint
-HEALTH=$(curl -s http://localhost:3000/health)
-STATUS=$(echo $HEALTH | jq -r '.status')
+TOKEN="$1"
+HOST="${2:-localhost:3000}"
 
-if [ "$STATUS" != "ok" ]; then
-  echo "CRITICAL: EmailEngine status is $STATUS"
+# Check basic health endpoint (no auth required)
+HEALTH=$(curl -s http://$HOST/health)
+SUCCESS=$(echo $HEALTH | jq -r '.success')
+
+if [ "$SUCCESS" != "true" ]; then
+  echo "CRITICAL: EmailEngine health check failed"
   exit 2
 fi
+
+# Get detailed stats (requires token)
+STATS=$(curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://$HOST/v1/stats")
 
 # Check connected accounts
-CONNECTED=$(echo $HEALTH | jq -r '.accounts.connected')
-TOTAL=$(echo $HEALTH | jq -r '.accounts.total')
-PERCENT=$(echo "scale=2; $CONNECTED * 100 / $TOTAL" | bc)
+CONNECTED=$(echo $STATS | jq -r '.connections.connected // 0')
+TOTAL=$(echo $STATS | jq -r '.accounts')
 
-if (( $(echo "$PERCENT < 95" | bc -l) )); then
-  echo "WARNING: Only $PERCENT% accounts connected"
-  exit 1
-fi
-
-# Check Redis
-REDIS=$(echo $HEALTH | jq -r '.redis.status')
-if [ "$REDIS" != "connected" ]; then
-  echo "CRITICAL: Redis not connected"
-  exit 2
+if [ "$TOTAL" -gt 0 ]; then
+  PERCENT=$(echo "scale=2; $CONNECTED * 100 / $TOTAL" | bc)
+  if (( $(echo "$PERCENT < 95" | bc -l) )); then
+    echo "WARNING: Only $PERCENT% accounts connected ($CONNECTED/$TOTAL)"
+    exit 1
+  fi
 fi
 
 echo "OK: EmailEngine healthy - $CONNECTED/$TOTAL accounts connected"
@@ -791,21 +812,22 @@ HOST="${2:-localhost:3000}"
 STATS=$(curl -s -H "Authorization: Bearer $TOKEN" \
   "http://$HOST/v1/stats")
 
-# Check webhook queue
-QUEUE_SIZE=$(echo $STATS | jq -r '.queues.webhook.waiting')
-if [ "$QUEUE_SIZE" -gt 100 ]; then
-  echo "CRITICAL: Webhook queue size $QUEUE_SIZE | queue=$QUEUE_SIZE"
+# Check webhook queue (notify queue handles webhooks)
+QUEUE_WAITING=$(echo $STATS | jq -r '.queues.notify.waiting // 0')
+QUEUE_TOTAL=$(echo $STATS | jq -r '.queues.notify.total // 0')
+if [ "$QUEUE_WAITING" -gt 100 ]; then
+  echo "CRITICAL: Webhook queue size $QUEUE_WAITING | queue=$QUEUE_WAITING"
   exit 2
 fi
 
-# Check failed webhooks
-FAILED=$(echo $STATS | jq -r '.queues.webhook.failed')
-if [ "$FAILED" -gt 10 ]; then
-  echo "WARNING: $FAILED failed webhooks | failed=$FAILED"
+# Check queue status
+QUEUE_PAUSED=$(echo $STATS | jq -r '.queues.notify.isPaused')
+if [ "$QUEUE_PAUSED" = "true" ]; then
+  echo "WARNING: Webhook queue is paused | paused=1"
   exit 1
 fi
 
-echo "OK: EmailEngine operational | queue=$QUEUE_SIZE failed=$FAILED"
+echo "OK: EmailEngine operational | queue_waiting=$QUEUE_WAITING queue_total=$QUEUE_TOTAL"
 exit 0
 ```
 
