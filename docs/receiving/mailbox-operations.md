@@ -88,6 +88,7 @@ EmailEngine recognizes these special-use flags:
 | Flag       | Purpose              | Example Names                        |
 | ---------- | -------------------- | ------------------------------------ |
 | `\Inbox`   | Main inbox           | INBOX                                |
+| `\Flagged` | Starred/flagged      | Starred, Flagged                     |
 | `\Sent`    | Sent emails          | Sent Mail, Saadetud kirjad, Enviados |
 | `\Drafts`  | Draft emails         | Drafts, Mustandid, Borradores        |
 | `\Trash`   | Deleted emails       | Trash, Prügikast, Papelera           |
@@ -170,10 +171,9 @@ curl "https://your-emailengine.com/v1/account/example/mailboxes" \
       "subscribed": true,
       "specialUse": "\\Inbox",
       "specialUseSource": "name",
+      "noInferiors": false,
       "messages": 1523,
-      "uidNext": 12456,
-      "uidValidity": 1634567890,
-      "highestModseq": 1234567
+      "uidNext": 12456
     },
     {
       "path": "[Gmail]/Sent Mail",
@@ -184,9 +184,9 @@ curl "https://your-emailengine.com/v1/account/example/mailboxes" \
       "subscribed": true,
       "specialUse": "\\Sent",
       "specialUseSource": "extension",
+      "noInferiors": false,
       "messages": 891,
-      "uidNext": 2485,
-      "uidValidity": 1634567890
+      "uidNext": 2485
     },
     {
       "path": "Work/Projects",
@@ -195,9 +195,9 @@ curl "https://your-emailengine.com/v1/account/example/mailboxes" \
       "name": "Projects",
       "listed": true,
       "subscribed": true,
+      "noInferiors": false,
       "messages": 45,
-      "uidNext": 78,
-      "uidValidity": 1634567890
+      "uidNext": 78
     }
   ]
 }
@@ -215,10 +215,10 @@ curl "https://your-emailengine.com/v1/account/example/mailboxes" \
 | `subscribed`       | Whether user is subscribed to folder                         |
 | `specialUse`       | Special-use flag if applicable (`\Sent`, `\Drafts`, etc.)    |
 | `specialUseSource` | How special-use was determined (`extension`, `name`, `user`) |
+| `noInferiors`      | Whether this mailbox can contain child mailboxes             |
 | `messages`         | Total message count                                          |
 | `uidNext`          | Next expected UID                                            |
-| `uidValidity`      | Folder validity identifier                                   |
-| `highestModseq`    | Highest modification sequence (if supported)                 |
+| `status`           | Additional statistics (messages count, unseen count)         |
 
 ### Using Special-Use Folders
 
@@ -294,9 +294,12 @@ curl -X POST "https://your-emailengine.com/v1/account/example/mailbox" \
 ```json
 {
   "path": "Work/NewProject",
+  "mailboxId": "1439876283476",
   "created": true
 }
 ```
+
+The `mailboxId` field is included if the server supports mailbox IDs.
 
 :::tip Array Syntax for Subfolders
 Use array syntax `["Parent", "Child"]` instead of string `"Parent/Child"` when creating nested folders. Different servers use different delimiters (`/` vs `.`), and the array syntax works universally across all IMAP servers.
@@ -349,7 +352,7 @@ curl -X PUT "https://your-emailengine.com/v1/account/example/mailbox" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": ["Work", "OldProject"],
+    "path": "Work/OldProject",
     "newPath": ["Work", "CompletedProject"]
   }'
 ```
@@ -358,7 +361,8 @@ curl -X PUT "https://your-emailengine.com/v1/account/example/mailbox" \
 
 ```json
 {
-  "path": "Work/CompletedProject",
+  "path": "Work/OldProject",
+  "newPath": "Work/CompletedProject",
   "renamed": true
 }
 ```
@@ -380,7 +384,7 @@ await fetch(`https://your-emailengine.com/v1/account/example/mailbox`, {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    path: ["Work", "Projects"],
+    path: "Work/Projects",
     newPath: ["Work", "Archive"],
   }),
 });
@@ -393,12 +397,8 @@ await fetch(`https://your-emailengine.com/v1/account/example/mailbox`, {
 Delete a mailbox using the [delete mailbox API](/docs/api/delete-v-1-account-account-mailbox):
 
 ```bash
-curl -X DELETE "https://your-emailengine.com/v1/account/example/mailbox" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "path": ["Work", "OldProject"]
-  }'
+curl -X DELETE "https://your-emailengine.com/v1/account/example/mailbox?path=Work%2FOldProject" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 **Response:**
@@ -424,9 +424,9 @@ await deleteFolder("example", "INBOX");
 
 ```javascript
 // Must delete child folders before parent
-await deleteFolder("example", ["Work", "Projects", "ProjectA"]);
-await deleteFolder("example", ["Work", "Projects", "ProjectB"]);
-await deleteFolder("example", ["Work", "Projects"]);
+await deleteFolder("example", "Work/Projects/ProjectA");
+await deleteFolder("example", "Work/Projects/ProjectB");
+await deleteFolder("example", "Work/Projects");
 ```
 
 **Messages are deleted:**
