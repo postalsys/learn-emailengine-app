@@ -265,9 +265,9 @@ function classifyEmail(payload) {
 
 **Note**: Some users have email filters that move specific emails to custom folders. Consider treating non-special folders as incoming emails.
 
-### Gmail and Yahoo Exception
+### Gmail and Outlook Exception
 
-Gmail and Yahoo provide a unique `emailId` property that persists across folders:
+Gmail and Outlook (when connected via their APIs) provide a unique `emailId` property that persists across folders:
 
 ```json
 {
@@ -278,7 +278,7 @@ Gmail and Yahoo provide a unique `emailId` property that persists across folders
 }
 ```
 
-Use `emailId` for Gmail/Yahoo if available, fall back to `messageId` for other providers.
+Use `emailId` for Gmail/Outlook API accounts if available, fall back to `messageId` for other providers (including standard IMAP connections).
 
 ## Building a Message Registry
 
