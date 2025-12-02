@@ -54,7 +54,7 @@ Bull Board provides a web interface for:
 **Purpose**: Handles all outbound email sending operations.
 
 **Job Creation**: Created when:
-- API `/submit` endpoint called
+- API `/v1/account/{account}/submit` endpoint called
 - SMTP message received
 - Scheduled email reaches send time
 
@@ -153,11 +153,7 @@ Every job moves through different states during its lifecycle.
 
 **Delay Reasons**:
 - **Scheduled Send**: User specified `sendAt` timestamp
-- **Retry After Failure**: Failed delivery, scheduled for retry
-  - Retry 1: 30 seconds
-  - Retry 2: 5 minutes
-  - Retry 3: 30 minutes
-  - Retry 4: 2 hours
+- **Retry After Failure**: Failed delivery, scheduled for retry using exponential backoff with a 5-second base delay (e.g., 5s, 10s, 20s, 40s, etc.)
 
 **Example**: Email scheduled for tomorrow 9am or failed email waiting 30 seconds before retry.
 
@@ -169,7 +165,7 @@ Every job moves through different states during its lifecycle.
 
 **What Happens**: Job stored for reference (if retention enabled), otherwise discarded.
 
-**Retention**: By default, Completed jobs are immediately removed. Enable retention in **Configuration → Service → Completed/failed queue entries to keep**.
+**Retention**: By default, Completed jobs are immediately removed. Enable retention in **Configuration → Service → Job History Limit**.
 
 **Example**: Email successfully delivered to SMTP server.
 
@@ -322,7 +318,7 @@ Failed:    50   ← High failure rate
     "subject": "Test"
   },
   "failedReason": "535 5.7.8 Authentication failed",
-  "attemptsMade": 5,
+  "attemptsMade": 10,
   "stacktrace": [
     "Error: 535 5.7.8 Authentication failed",
     "at SMTPConnection._actionAUTHComplete",
@@ -365,7 +361,7 @@ Error: ECONNREFUSED connect ECONNREFUSED 192.168.1.100:443
 
 **Timeout**:
 ```
-Error: Timeout: webhook endpoint did not respond within 5000ms
+Error: Timeout: webhook endpoint did not respond within 10000ms
 ```
 **Solution**: Optimize webhook handler, respond faster
 
@@ -383,7 +379,7 @@ By default, Completed and Failed jobs are immediately removed. To keep them for 
 
 **Steps**:
 1. Navigate to **Configuration → Service**
-2. Find **Completed/failed queue entries to keep**
+2. Find **Job History Limit**
 3. Set to desired number (e.g., 100)
 4. Click **Save**
 
@@ -478,34 +474,29 @@ Webhooks are emitted at specific queue state transitions:
 
 ### Webhook Retry Strategy
 
-**Retry Attempts**: 5 (configurable)
+**Retry Attempts**: 10 (default, configurable)
 
-**Retry Delays**:
-- Attempt 1: Immediate
-- Attempt 2: 30 seconds
-- Attempt 3: 5 minutes
-- Attempt 4: 30 minutes
-- Attempt 5: 2 hours
+**Retry Delays**: Exponential backoff with a 5-second base delay (5s, 10s, 20s, 40s, 80s, etc.)
 
-**After 5 Failures**: Job moves to Failed, webhook never delivered.
+**After All Retries Exhausted**: Job moves to Failed, webhook not delivered.
 
 ## Performance Tuning
 
 ### Worker Concurrency
 
-Control how many jobs process simultaneously:
+Control how many workers process jobs simultaneously for different queue types:
 
-**Configuration**: `EENGINE_WORKERS` environment variable
+**Environment Variables**:
 
 ```bash
-# Default: 4 workers
+# IMAP workers (default: 4) - handles account synchronization
 EENGINE_WORKERS=4
 
-# High volume: Increase workers
-EENGINE_WORKERS=10
+# Webhook workers (default: 1) - handles webhook delivery
+EENGINE_WORKERS_WEBHOOKS=1
 
-# Low resources: Decrease workers
-EENGINE_WORKERS=2
+# Submit workers (default: 1) - handles email sending
+EENGINE_WORKERS_SUBMIT=1
 ```
 
 **Trade-offs**:
@@ -524,11 +515,11 @@ BullMQ depends on Redis performance:
 
 **Redis Connection**:
 ```bash
-# Use connection pooling
-REDIS_URL=redis://localhost:6379
+# Configure Redis URL
+EENGINE_REDIS=redis://localhost:6379
 
-# Increase connection pool size
-REDIS_MAX_POOL=20
+# Alternative: Use REDIS_URL
+REDIS_URL=redis://localhost:6379
 ```
 
 ### Queue Priority
