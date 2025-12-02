@@ -121,8 +121,8 @@ redis = "redis://localhost:6379/8"
 port = 3000
 host = "127.0.0.1"
 
-[service]
-workers = 4
+[workers]
+imap = 4
 
 [log]
 level = "info"
@@ -260,8 +260,8 @@ port = 3000
 host = "127.0.0.1"
 proxy = true
 
-[service]
-workers = 4
+[workers]
+imap = 4
 
 [log]
 level = "info"
