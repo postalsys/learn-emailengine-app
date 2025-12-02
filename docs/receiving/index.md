@@ -154,13 +154,12 @@ Continuously export emails to:
 Configure EmailEngine to send webhooks to your application:
 
 ```bash
-curl -X PUT "https://your-emailengine.com/admin/config" \
+curl -X POST "https://your-emailengine.com/v1/settings" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "webhooks": "https://your-app.com/webhooks",
     "webhooksEnabled": true,
-    "notifyTextSize": 65536,
     "notifyWebSafeHtml": true
   }'
 ```
