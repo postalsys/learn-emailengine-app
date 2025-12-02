@@ -174,12 +174,18 @@ for each webhook in data.webhooks {
 **Response:**
 ```json
 {
+  "total": 1,
+  "page": 0,
+  "pages": 1,
   "webhooks": [
     {
-      "id": "route_123abc",
+      "id": "AAABgS-UcAYAAAABAA",
+      "name": "Send to Slack",
+      "description": "Notify Slack on new messages",
       "targetUrl": "https://your-app.com/webhook",
-      "events": ["messageNew", "messageSent"],
-      "enabled": true
+      "enabled": true,
+      "created": "2021-02-17T13:43:18.860Z",
+      "tcount": 123
     }
   ]
 }
@@ -217,13 +223,18 @@ PRINT("Events: " + route.events)
 **Response:**
 ```json
 {
-  "id": "route_123abc",
+  "id": "AAABgS-UcAYAAAABAA",
+  "name": "Send to Slack",
+  "description": "Notify Slack on new messages",
   "targetUrl": "https://your-app.com/webhook",
-  "events": ["messageNew"],
-  "customHeaders": {
-    "X-Custom-Header": "value"
-  },
-  "enabled": true
+  "enabled": true,
+  "created": "2021-02-17T13:43:18.860Z",
+  "updated": "2021-02-17T13:45:00.000Z",
+  "tcount": 123,
+  "content": {
+    "fn": "return true;",
+    "map": "payload.ts = Date.now(); return payload;"
+  }
 }
 ```
 
@@ -327,15 +338,15 @@ Subscribe to specific event types:
 
 ### Custom Headers
 
-Add custom headers to webhook requests:
+Add custom headers to webhook requests using an array of key-value objects:
 
 ```javascript
 {
   webhooks: 'https://your-app.com/webhook',
-  customHeaders: {
-    'X-API-Key': 'your-secret-key',
-    'X-Source': 'emailengine'
-  }
+  webhooksCustomHeaders: [
+    { key: 'X-API-Key', value: 'your-secret-key' },
+    { key: 'X-Source', value: 'emailengine' }
+  ]
 }
 ```
 
@@ -345,9 +356,9 @@ Add custom headers to webhook requests:
 ```javascript
 {
   webhooks: 'https://your-app.com/webhook',
-  customHeaders: {
-    'Authorization': 'Bearer YOUR_SECRET_TOKEN'
-  }
+  webhooksCustomHeaders: [
+    { key: 'Authorization', value: 'Bearer YOUR_SECRET_TOKEN' }
+  ]
 }
 ```
 
@@ -412,17 +423,14 @@ Each event type includes specific data in the `data` field. See [Webhook Events 
 
 ### Retry Metadata
 
-Failed webhooks include retry information:
+EmailEngine includes retry information in HTTP headers (not in the payload):
 
-```json
-{
-  "event": "messageNew",
-  "account": "user@example.com",
-  "data": { /* ... */ },
-  "retryCount": 2,
-  "maxRetries": 3
-}
-```
+| Header | Description |
+|--------|-------------|
+| `X-EE-Wh-Id` | Unique webhook job ID |
+| `X-EE-Wh-Attempts-Made` | Number of delivery attempts made |
+| `X-EE-Wh-Queued-Time` | Time since webhook was queued (e.g., "5s") |
+| `X-EE-Wh-Event-Id` | Event ID (if available) |
 
 ## Event Types Overview
 
@@ -434,7 +442,8 @@ Complete list of webhook events (see [Webhook Events Reference](/docs/reference/
 |-------|---------|
 | `accountAdded` | Account registered |
 | `accountDeleted` | Account deleted |
-| `accountError` | Account error occurred |
+| `authenticationError` | Authentication failed |
+| `connectError` | Connection to server failed |
 | `accountInitialized` | Account first connected |
 
 ### Message Events
@@ -452,7 +461,7 @@ Complete list of webhook events (see [Webhook Events Reference](/docs/reference/
 |-------|---------|
 | `mailboxNew` | New folder created |
 | `mailboxDeleted` | Folder deleted |
-| `mailboxRenamed` | Folder renamed |
+| `mailboxReset` | Mailbox sync was reset |
 
 ### Sending Events
 
@@ -470,7 +479,7 @@ EmailEngine signs webhook payloads for verification.
 
 **Signature Header:**
 ```
-X-EE-Signature: sha256=abc123def456...
+X-EE-Wh-Signature: <base64url-encoded-hmac>
 ```
 
 **Verify Signature:**
@@ -481,8 +490,8 @@ X-EE-Signature: sha256=abc123def456...
 function verifyWebhook(payload, signature, secret) {
   // Create HMAC with SHA256
   hmac = CREATE_HMAC("sha256", secret)
-  hmac.UPDATE(JSON_STRING IFY(payload))
-  expectedSignature = "sha256=" + hmac.DIGEST_HEX()
+  hmac.UPDATE(payload)  // raw request body as string
+  expectedSignature = hmac.DIGEST_BASE64URL()
 
   // Constant-time comparison to prevent timing attacks
   return CONSTANT_TIME_COMPARE(signature, expectedSignature)
@@ -490,10 +499,10 @@ function verifyWebhook(payload, signature, secret) {
 
 // Example webhook handler
 function handleWebhook(request, response) {
-  signature = request.headers["x-ee-signature"]
-  secret = ENV_VAR("WEBHOOK_SECRET")
+  signature = request.headers["x-ee-wh-signature"]
+  secret = GET_SERVICE_SECRET()  // Retrieved from EmailEngine settings
 
-  if NOT verifyWebhook(request.body, signature, secret) {
+  if NOT verifyWebhook(request.rawBody, signature, secret) {
     return HTTP_RESPONSE(401, { error: "Invalid signature" })
   }
 
@@ -509,21 +518,25 @@ function handleWebhook(request, response) {
 ```python
 import hmac
 import hashlib
+import base64
 
 def verify_webhook(payload, signature, secret):
-    expected = 'sha256=' + hmac.new(
+    # Compute HMAC-SHA256 and encode as base64url (no padding)
+    computed = hmac.new(
         secret.encode(),
-        payload.encode(),
+        payload,  # raw bytes
         hashlib.sha256
-    ).hexdigest()
+    ).digest()
+    expected = base64.urlsafe_b64encode(computed).rstrip(b'=').decode()
 
     return hmac.compare_digest(signature, expected)
 
 # Flask example
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    signature = request.headers.get('X-EE-Signature')
-    payload = request.get_data(as_text=True)
+    signature = request.headers.get('X-EE-Wh-Signature')
+    payload = request.get_data()  # raw bytes
+    # Note: The secret is the serviceSecret from EmailEngine settings
     secret = os.environ['WEBHOOK_SECRET']
 
     if not verify_webhook(payload, signature, secret):
@@ -845,19 +858,19 @@ Full webhook receiver with all best practices:
 **Pseudo code:**
 ```
 // Complete webhook receiver implementation
-// Webhook secret for signature verification
-WEBHOOK_SECRET = ENV_VAR("WEBHOOK_SECRET")
+// Webhook secret for signature verification (serviceSecret from EmailEngine settings)
+WEBHOOK_SECRET = GET_SERVICE_SECRET()
 
 // Verify webhook signature middleware
 function verifySignature(request, response, next) {
-  signature = request.headers["x-ee-signature"]
+  signature = request.headers["x-ee-wh-signature"]
   if NOT signature {
     return HTTP_RESPONSE(401, { error: "Missing signature" })
   }
 
   hmac = CREATE_HMAC("sha256", WEBHOOK_SECRET)
-  hmac.UPDATE(JSON_STRINGIFY(request.body))
-  expected = "sha256=" + hmac.DIGEST_HEX()
+  hmac.UPDATE(request.rawBody)  // raw request body bytes
+  expected = hmac.DIGEST_BASE64URL()
 
   if NOT CONSTANT_TIME_COMPARE(signature, expected) {
     return HTTP_RESPONSE(401, { error: "Invalid signature" })
