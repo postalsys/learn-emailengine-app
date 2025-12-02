@@ -96,7 +96,7 @@ curl -X POST https://your-ee.com/v1/settings \
   }'
 ```
 
-Or via the web interface: **Configuration** > **Service Configuration** > **IMAP Indexer**
+Or via the web interface: **Configuration** > **General Settings** > **IMAP Processing** > **Indexing Method**
 
 ### Per-Account Setting
 
