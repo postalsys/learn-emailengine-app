@@ -189,7 +189,7 @@ https://mail.google.com/
 **For Gmail API:**
 
 ```
-gmail.modify
+https://www.googleapis.com/auth/gmail.modify
 ```
 
 [See Gmail OAuth2 setup guide for details →](./gmail-imap)
