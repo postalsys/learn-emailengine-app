@@ -330,8 +330,7 @@ curl "https://ee.example.com/v1/account/example" \
 
 Look for:
 
-- `path`: Backend type (imap, gmail, graph)
-- `imap.capabilities`: For OBJECTID support
+- `type`: Account type (imap, gmail, gmailService, outlook, mailRu, oauth2)
 
 ### Test Thread ID Availability
 
