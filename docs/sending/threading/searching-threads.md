@@ -43,32 +43,31 @@ curl -XPOST "https://ee.example.com/v1/account/gmail/search?path=%5CAll" \
   "total": 5,
   "page": 0,
   "pages": 1,
+  "nextPageCursor": null,
+  "prevPageCursor": null,
   "messages": [
     {
-      "path": "INBOX",
       "id": "AAAAKAAACKM",
       "uid": 2211,
       "threadId": "1759349012996310407",
       "subject": "Project discussion",
-      "from": { "address": "colleague@example.com" },
+      "from": { "name": "Colleague", "address": "colleague@example.com" },
       "date": "2025-10-10T14:30:00.000Z"
     },
     {
-      "path": "Sent",
       "id": "AAAAKAAACKN",
       "uid": 445,
       "threadId": "1759349012996310407",
       "subject": "Re: Project discussion",
-      "from": { "address": "me@example.com" },
+      "from": { "name": "Me", "address": "me@example.com" },
       "date": "2025-10-10T15:45:00.000Z"
     },
     {
-      "path": "INBOX",
       "id": "AAAAKAAACKO",
       "uid": 2213,
       "threadId": "1759349012996310407",
       "subject": "Re: Project discussion",
-      "from": { "address": "colleague@example.com" },
+      "from": { "name": "Colleague", "address": "colleague@example.com" },
       "date": "2025-10-10T16:20:00.000Z"
     }
   ]
