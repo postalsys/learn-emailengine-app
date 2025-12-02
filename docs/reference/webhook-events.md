@@ -183,50 +183,6 @@ Triggered when an account successfully connects for the first time and completes
 
 ---
 
-### accountError
-
-Triggered when an account encounters an error (authentication failure, connection issues, etc.).
-
-**Payload:**
-```json
-{
-  "serviceUrl": "https://emailengine.example.com",
-  "event": "accountError",
-  "account": "user@example.com",
-  "date": "2025-01-15T10:30:00.000Z",
-  "data": {
-    "account": "user@example.com",
-    "error": {
-      "message": "Authentication failed",
-      "code": "EAUTH",
-      "serverResponseCode": "NO"
-    },
-    "lastError": {
-      "response": "Invalid credentials",
-      "serverResponseCode": "NO"
-    }
-  }
-}
-```
-
-**Fields:**
-- `data.account` (string) - Account identifier
-- `data.error` (object) - Error object with details
-  - `data.error.message` (string) - Human-readable error description
-  - `data.error.code` (string) - Error code (e.g., "EAUTH", "ECONNECTION")
-  - `data.error.serverResponseCode` (string, optional) - Server response code
-- `data.lastError` (object, optional) - Additional error context
-  - `data.lastError.response` (string) - Raw server response
-  - `data.lastError.serverResponseCode` (string) - Server response code
-
-**Use Cases:**
-- Alert user to fix credentials
-- Pause account operations
-- Log errors for debugging
-- Trigger credential refresh flow
-
----
-
 ### authenticationError
 
 Triggered when account authentication fails.
@@ -987,11 +943,6 @@ Triggered when EmailEngine abandons delivery after all retry attempts fail. This
     "messageId": "<abc123@example.com>",
     "queueId": "queue_456",
     "error": "Error: Invalid login: 535 5.7.8 Error: authentication failed",
-    "envelope": {
-      "from": "sender@example.com",
-      "to": ["recipient@example.com"]
-    },
-    "subject": "Test Email",
     "networkRouting": {
       "localAddress": "192.168.1.100",
       "localPort": 54321
@@ -1003,11 +954,7 @@ Triggered when EmailEngine abandons delivery after all retry attempts fail. This
 **Fields:**
 - `data.messageId` (string) - Message-ID header
 - `data.queueId` (string) - Internal queue ID
-- `data.error` (string) - Final error message
-- `data.envelope` (object) - SMTP envelope
-  - `data.envelope.from` (string) - Envelope sender
-  - `data.envelope.to` (array of strings) - Envelope recipients
-- `data.subject` (string, optional) - Email subject
+- `data.error` (string) - Final error message (first line of stack trace)
 - `data.networkRouting` (object, optional) - Network information
   - `data.networkRouting.localAddress` (string) - Local IP address used
   - `data.networkRouting.localPort` (number) - Local port used
@@ -1318,7 +1265,6 @@ Quick reference table of all events:
 | `accountAdded` | Account | Account registered | Onboarding |
 | `accountDeleted` | Account | Account removed | Cleanup |
 | `accountInitialized` | Account | First successful sync | Enable features |
-| `accountError` | Account | Connection/auth error | Alert user |
 | `authenticationError` | Account | Auth failed | Re-authenticate |
 | `authenticationSuccess` | Account | Auth succeeded | Resume operations |
 | `connectError` | Account | Connection failed | Monitor connectivity |
@@ -1380,13 +1326,13 @@ Subscribe to specific events when configuring webhooks:
   "trackOpen",
   "trackClick",
   "listUnsubscribe",
-  "accountError",
-  "authenticationError"
+  "authenticationError",
+  "connectError"
 ]
 ```
 
 **Subscribe to all events:**
-Omit `webhookEvents` or use empty array `[]` to receive all events.
+Use `["*"]` to receive all events.
 
 ## Conditional Fields Reference
 
