@@ -50,7 +50,7 @@ curl -XPOST "https://ee.example.com/v1/settings" \
 
 ### Via Web Interface
 
-Navigate to **Configuration > SMTP Server** in the EmailEngine admin panel to configure the SMTP gateway settings.
+Navigate to **Configuration > SMTP Interface** in the EmailEngine admin panel to configure the SMTP gateway settings.
 
 ### Configuration Options
 
@@ -59,9 +59,9 @@ Navigate to **Configuration > SMTP Server** in the EmailEngine admin panel to co
 | `smtpServerEnabled` | Enable/disable SMTP gateway | `false` |
 | `smtpServerPort` | Port to listen on | `2525` |
 | `smtpServerHost` | Host/interface to bind | `0.0.0.0` |
-| `smtpServerAuthEnabled` | Require authentication | `true` |
+| `smtpServerAuthEnabled` | Require authentication | `false` |
 | `smtpServerPassword` | Optional global password | - |
-| `smtpServerTLSEnabled` | Enable TLS/STARTTLS | `false` |
+| `smtpServerTLSEnabled` | Enable TLS (implicit) | `false` |
 
 ### Restart EmailEngine
 
@@ -126,7 +126,7 @@ server.quit()
 3. Configure:
    - **Server Name**: emailengine.example.com
    - **Port**: 2525
-   - **Connection security**: None (or STARTTLS if configured)
+   - **Connection security**: None (or SSL/TLS if TLS is enabled on the server)
    - **Authentication method**: Normal password
    - **Username**: Account ID or email address
    - **Password**: API token
@@ -241,7 +241,7 @@ try {
     $mail->SMTPAuth   = true;
     $mail->Username   = 'example-account';
     $mail->Password   = getenv('EMAILENGINE_TOKEN');
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->SMTPSecure = false;  // No encryption by default; use PHPMailer::ENCRYPTION_SMTPS if TLS is enabled
     $mail->Port       = 2525;
 
     // Recipients
@@ -295,36 +295,35 @@ mail.deliver!
 
 ## TLS/SSL Support
 
-### STARTTLS
+### Enabling TLS
 
-Enable STARTTLS for encrypted connections:
-
-```bash
-EENGINE_SMTP_GATEWAY_SECURE=false
-EENGINE_SMTP_GATEWAY_STARTTLS=true
-```
-
-Clients can upgrade to TLS using STARTTLS command.
-
-### SSL/TLS (Implicit)
-
-Use a different port for implicit SSL:
+Enable TLS for encrypted connections using the Settings API or web interface:
 
 ```bash
-EENGINE_SMTP_GATEWAY_SECURE=true
-EENGINE_SMTP_GATEWAY_PORT=465
+curl -XPOST "https://ee.example.com/v1/settings" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "smtpServerTLSEnabled": true
+  }'
 ```
 
-Clients must connect with SSL from the start.
+When TLS is enabled, the SMTP server uses implicit TLS (clients must connect with SSL from the start).
 
 ### Certificate Configuration
 
-Provide custom TLS certificate:
+Provide custom TLS certificate using environment variables:
 
 ```bash
-EENGINE_SMTP_GATEWAY_TLS_KEY=/path/to/private.key
-EENGINE_SMTP_GATEWAY_TLS_CERT=/path/to/certificate.crt
+EENGINE_SMTP_TLS_KEY=/path/to/private.key
+EENGINE_SMTP_TLS_CERT=/path/to/certificate.crt
 ```
+
+Additional TLS options available with the `EENGINE_SMTP_TLS_` prefix:
+- `EENGINE_SMTP_TLS_CA` - CA certificate
+- `EENGINE_SMTP_TLS_CIPHERS` - TLS ciphers
+- `EENGINE_SMTP_TLS_MIN_VERSION` - Minimum TLS version
+- `EENGINE_SMTP_TLS_MAX_VERSION` - Maximum TLS version
 
 ## Features and Limitations
 
@@ -332,7 +331,7 @@ EENGINE_SMTP_GATEWAY_TLS_CERT=/path/to/certificate.crt
 
 - [YES] Standard SMTP protocol
 - [YES] Authentication (PLAIN, LOGIN)
-- [YES] TLS/STARTTLS encryption
+- [YES] TLS encryption (implicit TLS when enabled)
 - [YES] Multiple recipients (TO, CC, BCC)
 - [YES] Attachments
 - [YES] Custom headers
@@ -357,7 +356,7 @@ Messages sent via SMTP gateway are treated the same as messages sent via REST AP
 - Queued in the outbox queue
 - Automatic retry logic
 - Webhook notifications (`messageSent`, `messageDeliveryError`, `messageFailed`)
-- Visible in Arena queue UI
+- Visible in Bull Board queue UI
 
 Query queue status:
 
