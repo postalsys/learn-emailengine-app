@@ -79,7 +79,7 @@ curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
   -d '{
     "reference": {
       "message": "AAAADQAABl0",
-      "action": "replyAll",
+      "action": "reply-all",
       "inline": true
     },
     "html": "<p>Reply to everyone</p>"
@@ -170,7 +170,7 @@ curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
 - Adds `Fwd:` prefix to subject
 - Prepends original message with forwarding header
 - Optionally copies attachments
-- Marks original message as `\Answered` (not `\Forwarded` - this is an IMAP limitation)
+- Marks original message with `\Answered` and `$Forwarded` flags
 
 ### Forward with Attachments
 
