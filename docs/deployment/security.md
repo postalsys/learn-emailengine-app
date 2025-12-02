@@ -671,26 +671,27 @@ bind 10.0.1.100
 
 ### Redis Commands
 
-EmailEngine uses `KEYS` and `CONFIG` commands internally. Do not disable these commands.
+EmailEngine uses `SCAN` (via `scanStream()`) for safe key iteration and `INFO` for statistics. It does not use the potentially dangerous `KEYS` command.
 
-**Disable only dangerous commands:**
+**Disable dangerous commands:**
 
 ```bash
 # redis.conf
 rename-command FLUSHDB ""
 rename-command FLUSHALL ""
 rename-command SHUTDOWN "SHUTDOWN_12345"
+rename-command KEYS ""
 ```
 
-:::warning Keep KEYS and CONFIG
-EmailEngine requires `KEYS` and `CONFIG` Redis commands to function properly. Only disable commands like `FLUSHDB`, `FLUSHALL`, and `SHUTDOWN`.
+:::tip Safe Key Operations
+EmailEngine uses `SCAN` instead of `KEYS` for key iteration, which is the recommended approach for production Redis deployments. You can safely disable the `KEYS` command.
 :::
 
 ### Redis ACLs (Redis 6+)
 
 ```bash
-# Create user with full access (EmailEngine needs most commands)
-ACL SETUSER emailengine on >password ~* +@all -flushdb -flushall
+# Create user with restricted access (disable dangerous commands)
+ACL SETUSER emailengine on >password ~* +@all -flushdb -flushall -keys
 
 # Verify
 ACL LIST
