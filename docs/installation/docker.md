@@ -95,8 +95,8 @@ EENGINE_SECRET=your-generated-secret-here
 # Recommended: Redis password for security
 REDIS_PASSWORD=your-redis-password
 
-# Optional: Version pinning
-EMAILENGINE_VERSION=v2
+# Optional: Version pinning (default: latest)
+EMAILENGINE_VERSION=latest
 
 # Optional: Custom port bindings (default: 127.0.0.1)
 EMAILENGINE_API_BIND=0.0.0.0
@@ -538,14 +538,13 @@ EENGINE_PORT=3000              # HTTP port
 EENGINE_HOST=0.0.0.0          # Bind address
 
 # Logging
-EENGINE_LOG_LEVEL=info        # trace, debug, info, warn, error
+EENGINE_LOG_LEVEL=info        # trace, debug, info, warn, error, fatal, silent
 EENGINE_LOG_RAW=false         # Log raw IMAP/SMTP traffic
 
 # Metrics available at /metrics endpoint (requires token with 'metrics' scope)
 
-# Queue settings
-EENGINE_QUEUE_NOTIFY=true     # Enable queue notifications
-EENGINE_MAX_SIZE=5242880  # 5MB in bytes
+# Max attachment size (default: 5MB)
+EENGINE_MAX_SIZE=5M
 
 ```
 
