@@ -16,10 +16,9 @@ Every account in EmailEngine has a state that indicates its current status:
 
 | State | Description | Can Send/Receive | Actions |
 |-------|-------------|------------------|---------|
-| `new` | Just added, not yet initialized | No | Wait |
 | `init` | Being initialized | No | Wait |
-| `syncing` | Performing initial mailbox sync | No | Wait |
-| `connecting` | Establishing connection | No | Wait |
+| `connecting` | Establishing connection | Limited | Wait for connection |
+| `syncing` | Performing mailbox sync | Yes | Operations allowed |
 | `connected` | Active and operational | Yes | All operations available |
 | `authenticationError` | Invalid or expired credentials | No | Update credentials or reconnect |
 | `connectError` | Cannot reach mail server | No | Check network, server status |
@@ -30,11 +29,10 @@ Every account in EmailEngine has a state that indicates its current status:
 
 ```mermaid
 stateDiagram-v2
-    [*] --> new
-    new --> init
-    init --> syncing
-    syncing --> connecting
-    connecting --> connected
+    [*] --> init
+    init --> connecting
+    connecting --> syncing
+    syncing --> connected
     connected --> [*]
 
     connecting --> authenticationError
@@ -233,8 +231,11 @@ curl https://your-ee.com/v1/account/user123 \
   "path": "*",
   "subconnections": [],
   "counters": {
-    "sent": 42,
-    "received": 158
+    "events": {
+      "messageNew": 158,
+      "messageSent": 42,
+      "messageDeleted": 5
+    }
   }
 }
 ```
@@ -463,8 +464,6 @@ curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
 **Success:**
 ```json
 {
-  "account": "user123",
-  "state": "connecting",
   "reconnect": true
 }
 ```
@@ -561,61 +560,50 @@ curl -X POST https://your-ee.com/v1/verifyAccount \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "mailboxes": [{
-      "email": "john@example.com",
-      "imap": {
-        "host": "imap.example.com",
-        "port": 993,
-        "secure": true,
-        "auth": {
-          "user": "john@example.com",
-          "pass": "password123"
-        }
-      },
-      "smtp": {
-        "host": "smtp.example.com",
-        "port": 587,
-        "secure": false,
-        "auth": {
-          "user": "john@example.com",
-          "pass": "password123"
-        }
+    "imap": {
+      "host": "imap.example.com",
+      "port": 993,
+      "secure": true,
+      "auth": {
+        "user": "john@example.com",
+        "pass": "password123"
       }
-    }]
+    },
+    "smtp": {
+      "host": "smtp.example.com",
+      "port": 587,
+      "secure": false,
+      "auth": {
+        "user": "john@example.com",
+        "pass": "password123"
+      }
+    }
   }'
 ```
 
 **Response (Success):**
 ```json
 {
-  "mailboxes": [{
-    "email": "john@example.com",
-    "imap": {
-      "success": true
-    },
-    "smtp": {
-      "success": true
-    }
-  }]
+  "imap": {
+    "success": true
+  },
+  "smtp": {
+    "success": true
+  }
 }
 ```
 
 **Response (Failure):**
 ```json
 {
-  "mailboxes": [{
-    "email": "john@example.com",
-    "imap": {
-      "success": false,
-      "error": {
-        "message": "Invalid credentials",
-        "code": "AUTHENTICATIONFAILED"
-      }
-    },
-    "smtp": {
-      "success": true
-    }
-  }]
+  "imap": {
+    "success": false,
+    "error": "Invalid credentials",
+    "code": "AUTHENTICATIONFAILED"
+  },
+  "smtp": {
+    "success": true
+  }
 }
 ```
 
@@ -641,33 +629,6 @@ curl https://your-ee.com/v1/account/user123 \
     "response": "Connection timeout",
     "serverResponseCode": "TIMEOUT"
   }
-}
-```
-
-### Account Metrics
-
-Get detailed metrics:
-
-```bash
-curl https://your-ee.com/v1/account/user123/metrics \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
-**Response:**
-```json
-{
-  "account": "user123",
-  "counters": {
-    "sent": 42,
-    "received": 158,
-    "webhooksSent": 200,
-    "webhooksFailed": 3
-  },
-  "connections": {
-    "imap": 2,
-    "smtp": 0
-  },
-  "lastActivity": "2024-01-15T10:30:00.000Z"
 }
 ```
 
