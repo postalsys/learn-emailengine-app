@@ -68,314 +68,187 @@ iptables -A OUTPUT -s 192.168.1.102 -j ACCEPT
 
 ## Configuration Methods
 
-### Method 1: Account-Level Configuration
+### Method 1: Global Settings via API
 
-Specify local address per account:
-
-```bash
-curl -XPOST "http://localhost:3000/v1/account" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{
-    "account": "john@example.com",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "imap": {
-      "host": "imap.example.com",
-      "port": 993,
-      "secure": true,
-      "auth": {
-        "user": "john@example.com",
-        "pass": "password123"
-      },
-      "localAddress": "192.168.1.101"
-    },
-    "smtp": {
-      "host": "smtp.example.com",
-      "port": 587,
-      "secure": false,
-      "auth": {
-        "user": "john@example.com",
-        "pass": "password123"
-      },
-      "localAddress": "192.168.1.101"
-    }
-  }'
-```
-
-**Key fields:**
-- `imap.localAddress` - IP for IMAP connections
-- `smtp.localAddress` - IP for SMTP connections
-
-### Method 2: Global Default via Settings
-
-Configure default local addresses via the Settings API or web interface (**Configuration** > **Network**). Local addresses are configured as an array that can be assigned to IMAP and SMTP connections:
+Configure local addresses via the Settings API or web interface (**Configuration** > **Network**). Local addresses are configured globally and EmailEngine selects IPs from this pool based on the configured strategy:
 
 ```bash
 curl -X POST "http://localhost:3000/v1/settings" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "localAddresses": ["192.168.1.100", "192.168.1.101", "192.168.1.102"]
+    "localAddresses": ["192.168.1.100", "192.168.1.101", "192.168.1.102"],
+    "imapStrategy": "dedicated",
+    "smtpStrategy": "dedicated"
   }'
 ```
 
-Alternatively, add to your TOML configuration file:
+**Configuration options:**
+
+- `localAddresses` - Array of local IP addresses to use for outbound connections
+- `imapStrategy` - IP selection strategy for IMAP connections (`default`, `dedicated`, or `random`)
+- `smtpStrategy` - IP selection strategy for SMTP connections (`default`, `dedicated`, or `random`)
+
+**Strategy options:**
+
+- `default` - Use the server's default network configuration
+- `dedicated` - Each account consistently uses the same IP from the pool (based on account ID hashing)
+- `random` - Each connection uses a randomly selected IP from the pool
+
+Alternatively, add to your TOML configuration file under `[service]`:
 
 ```toml
 # config.toml
+[service]
 localAddresses = "192.168.1.100,192.168.1.101,192.168.1.102"
 ```
 
-Accounts without explicit `localAddress` will use addresses from this pool.
+Note: Strategy settings (`imapStrategy`, `smtpStrategy`) must be configured via the API or web interface, not TOML.
 
-### Method 3: Multiple IPs with Round-Robin
+### Method 2: Dedicated Strategy (Recommended)
 
-Distribute accounts across multiple IPs:
+Use the `dedicated` strategy for consistent IP assignment per account. EmailEngine automatically assigns each account to a specific IP from your pool using consistent hashing based on the account ID:
 
-```
-// Pseudo code - implement in your preferred language
-
-local_addresses = ['192.168.1.100', '192.168.1.101', '192.168.1.102']
-current_index = 0
-
-function register_account(email, password):
-  // Round-robin IP selection
-  local_address = local_addresses[current_index]
-  current_index = (current_index + 1) MOD LENGTH(local_addresses)
-
-  // Prepare request payload
-  payload = {
-    account: email,
-    name: email,
-    email: email,
-    imap: {
-      host: 'imap.gmail.com',
-      port: 993,
-      secure: true,
-      auth: { user: email, pass: password },
-      localAddress: local_address  // Assign IP
-    },
-    smtp: {
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user: email, pass: password },
-      localAddress: local_address  // Assign IP
-    }
-  }
-
-  // Make HTTP POST request
-  response = HTTP_POST(
-    'http://localhost:3000/v1/account',
-    headers={
-      'Authorization': 'Bearer YOUR_TOKEN',
-      'Content-Type': 'application/json'
-    },
-    body=JSON_ENCODE(payload)
-  )
-
-  return PARSE_JSON(response.body)
-end function
+```bash
+curl -X POST "http://localhost:3000/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "localAddresses": ["192.168.1.100", "192.168.1.101", "192.168.1.102"],
+    "imapStrategy": "dedicated",
+    "smtpStrategy": "dedicated"
+  }'
 ```
 
-### Method 4: Provider-Specific IPs
+With this configuration:
+- Each account consistently uses the same IP from the pool
+- IP assignment is automatic based on account ID hashing
+- Load is distributed across all configured IPs
+- No manual IP assignment needed per account
 
-Assign IPs based on email provider:
+### Method 3: Random Strategy
 
+Use the `random` strategy for connections that don't require consistency:
+
+```bash
+curl -X POST "http://localhost:3000/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "localAddresses": ["192.168.1.100", "192.168.1.101", "192.168.1.102"],
+    "imapStrategy": "random",
+    "smtpStrategy": "random"
+  }'
 ```
-// Pseudo code - implement in your preferred language
 
-function get_local_address_for_provider(email):
-  domain = LOWERCASE(SPLIT(email, '@')[1])
-
-  ip_map = {
-    'gmail.com': '192.168.1.100',
-    'outlook.com': '192.168.1.101',
-    'yahoo.com': '192.168.1.102'
-  }
-
-  if domain in ip_map:
-    return ip_map[domain]
-  else:
-    return '192.168.1.100'  // Default IP
-  end if
-end function
-
-function register_account_with_provider_ip(email, password):
-  local_address = get_local_address_for_provider(email)
-
-  // Register account with assigned IP
-  CALL register_account(email, password, local_address)
-end function
-```
+With this configuration:
+- Each new connection randomly selects an IP from the pool
+- Good for distributing load when consistency isn't required
 
 ## Use Cases
 
 ### 1. Avoiding Gmail Rate Limits
 
-Gmail limits IMAP connections per IP (typically 15 concurrent connections). Distribute accounts across IPs:
+Gmail limits IMAP connections per IP. Use the `dedicated` strategy to automatically distribute accounts across multiple IPs:
 
-```
-// Pseudo code - implement in your preferred language
-
-// Split 100 Gmail accounts across 10 IPs (10 accounts per IP)
-IPS_PER_ACCOUNT_COUNT = 10
-
-function assign_ip(account_index):
-  ip_suffix = 100 + FLOOR(account_index / IPS_PER_ACCOUNT_COUNT)
-  return CONCAT('192.168.1.', ip_suffix)
-end function
-
-for i from 0 to LENGTH(gmail_accounts) - 1:
-  account = gmail_accounts[i]
-  local_address = assign_ip(i)
-
-  CALL register_account(account.email, account.password, local_address)
-end for
-```
-
-### 2. Dedicated IPs for VIP Accounts
-
-Assign clean, dedicated IPs to important accounts:
-
-```javascript
-const vipAccounts = [
-  'ceo@company.com',
-  'sales@company.com'
-];
-
-const vipIP = '192.168.1.200'; // Dedicated clean IP
-const regularIP = '192.168.1.100'; // Shared IP
-
-function getIPForAccount(email) {
-  return vipAccounts.includes(email) ? vipIP : regularIP;
-}
+```bash
+# Configure multiple IPs with dedicated strategy
+curl -X POST "http://localhost:3000/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "localAddresses": [
+      "192.168.1.100",
+      "192.168.1.101",
+      "192.168.1.102",
+      "192.168.1.103",
+      "192.168.1.104"
+    ],
+    "imapStrategy": "dedicated",
+    "smtpStrategy": "dedicated"
+  }'
 ```
 
-### 3. IP Rotation for High Volume
+With 5 IPs and 100 Gmail accounts:
+- Accounts are automatically distributed across all 5 IPs
+- Each account consistently uses the same IP
+- Approximately 20 accounts per IP
 
-Rotate IPs for accounts sending high volumes:
+### 2. IP Rotation for High Volume
 
-```
-// Pseudo code - implement in your preferred language
+Use the `random` strategy to distribute load across IPs for high-volume sending:
 
-class IPRotator:
-  properties:
-    ip_pool: list
-    usage_count: dictionary
-
-  function initialize(ip_pool):
-    this.ip_pool = ip_pool
-    this.usage_count = {}
-
-    // Initialize usage tracking
-    for each ip in ip_pool:
-      this.usage_count[ip] = 0
-    end for
-  end function
-
-  // Get least-used IP
-  function get_least_used_ip():
-    min_ip = this.ip_pool[0]
-    min_count = this.usage_count[min_ip]
-
-    for each ip in this.ip_pool:
-      count = this.usage_count[ip]
-      if count < min_count:
-        min_ip = ip
-        min_count = count
-      end if
-    end for
-
-    this.usage_count[min_ip] = min_count + 1
-    return min_ip
-  end function
-
-  // Release IP (when account disconnects)
-  function release_ip(ip):
-    count = this.usage_count[ip] OR 0
-    this.usage_count[ip] = MAX(0, count - 1)
-  end function
-end class
-
-// Usage
-rotator = NEW IPRotator([
-  '192.168.1.100',
-  '192.168.1.101',
-  '192.168.1.102',
-  '192.168.1.103'
-])
-
-// Assign IP to new account
-local_address = rotator.get_least_used_ip()
+```bash
+curl -X POST "http://localhost:3000/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "localAddresses": [
+      "192.168.1.100",
+      "192.168.1.101",
+      "192.168.1.102",
+      "192.168.1.103"
+    ],
+    "imapStrategy": "dedicated",
+    "smtpStrategy": "random"
+  }'
 ```
 
-### 4. Separate IPs for Sending and Receiving
+This configuration:
+- Uses consistent IPs for IMAP (receiving) connections
+- Randomly distributes SMTP (sending) connections across all IPs
+- Helps avoid per-IP sending rate limits
 
-Use different IPs for IMAP vs SMTP:
+### 3. Separate Strategies for IMAP and SMTP
 
-```javascript
-const RECEIVING_IP = '192.168.1.100'; // For IMAP
-const SENDING_IP = '192.168.1.200';   // For SMTP
+Configure different strategies for receiving vs sending:
 
-async function registerAccount(email, password) {
-  await fetch('http://localhost:3000/v1/account', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer YOUR_TOKEN',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      account: email,
-      email,
-      imap: {
-        host: 'imap.gmail.com',
-        port: 993,
-        secure: true,
-        auth: { user: email, pass: password },
-        localAddress: RECEIVING_IP
-      },
-      smtp: {
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        auth: { user: email, pass: password },
-        localAddress: SENDING_IP
-      }
-    })
-  });
-}
+```bash
+curl -X POST "http://localhost:3000/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "localAddresses": ["192.168.1.100", "192.168.1.101", "192.168.1.102"],
+    "imapStrategy": "dedicated",
+    "smtpStrategy": "random"
+  }'
 ```
+
+This is useful when:
+- You need consistent IMAP connections (to maintain session state)
+- You want to distribute SMTP load across multiple IPs
 
 ## Verifying Configuration
 
-### Check Account Configuration
+### Check Global Settings
 
-Verify local address is set:
+Verify local addresses and strategies are configured:
 
 ```bash
-curl "http://localhost:3000/v1/account/john@example.com" \
+curl "http://localhost:3000/v1/settings" \
   -H "Authorization: Bearer YOUR_TOKEN" \
-  | jq '.imap.localAddress, .smtp.localAddress'
+  | jq '{localAddresses, imapStrategy, smtpStrategy}'
 ```
 
 Expected output:
 
 ```json
-"192.168.1.101"
-"192.168.1.101"
+{
+  "localAddresses": ["192.168.1.100", "192.168.1.101", "192.168.1.102"],
+  "imapStrategy": "dedicated",
+  "smtpStrategy": "dedicated"
+}
 ```
 
 ### Test Connectivity
 
-Verify EmailEngine can connect using the specified IP:
+Verify your server can connect using the configured IPs:
 
 ```bash
-# Check IMAP connection
+# Check IMAP connection from specific IP
 telnet --bind-address 192.168.1.101 imap.gmail.com 993
 
-# Check SMTP connection
+# Check SMTP connection from specific IP
 telnet --bind-address 192.168.1.101 smtp.gmail.com 587
 ```
 
@@ -394,103 +267,32 @@ netstat -an | grep ESTABLISHED | grep 993 | awk '{print $4}' | cut -d: -f1 | sor
 
 ### EmailEngine Logs
 
-Check logs for connection info:
+Check logs for IP selection info:
 
 ```bash
-# View connection logs
-tail -f logs/emailengine.log | grep "localAddress"
-
-# Check for connection errors
-tail -f logs/emailengine.log | grep -i "bind\|connect"
+# View connection logs showing selected local address
+# Look for "Selected local address" log entries
+tail -f /var/log/emailengine.log | grep "Selected local address"
 ```
 
-## Updating Local Address
+The logs show which IP was selected for each connection, including the selection strategy used.
 
-Update local address for existing account:
+## Updating Configuration
+
+Update the global IP pool or strategy:
 
 ```bash
-curl -XPUT "http://localhost:3000/v1/account/john@example.com" \
+curl -X POST "http://localhost:3000/v1/settings" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
-    "imap": {
-      "localAddress": "192.168.1.102"
-    },
-    "smtp": {
-      "localAddress": "192.168.1.102"
-    }
+    "localAddresses": ["192.168.1.100", "192.168.1.101", "192.168.1.102", "192.168.1.103"],
+    "imapStrategy": "random",
+    "smtpStrategy": "dedicated"
   }'
 ```
 
-EmailEngine will reconnect using the new IP address.
-
-## Advanced: Dynamic IP Assignment
-
-Automatically assign IPs based on current load:
-
-```javascript
-class DynamicIPAssigner {
-  constructor(ipPool) {
-    this.ipPool = ipPool;
-    this.activeConnections = new Map();
-
-    ipPool.forEach(ip => this.activeConnections.set(ip, 0));
-  }
-
-  async getOptimalIP(provider) {
-    // Get connection limits for provider
-    const limits = {
-      'gmail.com': 15,
-      'outlook.com': 10,
-      'yahoo.com': 10
-    };
-
-    const maxConnections = limits[provider] || 10;
-
-    // Find IP with room for more connections
-    for (const ip of this.ipPool) {
-      const connections = this.activeConnections.get(ip);
-
-      if (connections < maxConnections) {
-        this.activeConnections.set(ip, connections + 1);
-        return ip;
-      }
-    }
-
-    // All IPs at capacity, use least loaded
-    const [ip] = [...this.activeConnections.entries()]
-      .sort((a, b) => a[1] - b[1])[0];
-
-    this.activeConnections.set(ip, this.activeConnections.get(ip) + 1);
-    return ip;
-  }
-
-  releaseIP(ip) {
-    const count = this.activeConnections.get(ip) || 0;
-    this.activeConnections.set(ip, Math.max(0, count - 1));
-  }
-
-  getStats() {
-    return Object.fromEntries(this.activeConnections);
-  }
-}
-
-const assigner = new DynamicIPAssigner([
-  '192.168.1.100',
-  '192.168.1.101',
-  '192.168.1.102'
-]);
-
-async function registerAccountDynamic(email, password) {
-  const provider = email.split('@')[1];
-  const localAddress = await assigner.getOptimalIP(provider);
-
-  console.log(`Assigning ${email} to ${localAddress}`);
-  console.log('Current IP stats:', assigner.getStats());
-
-  await registerAccount(email, password, localAddress);
-}
-```
+Changes take effect for new connections. Existing connections continue using their current IP until they reconnect.
 
 
 ## Performance Considerations
