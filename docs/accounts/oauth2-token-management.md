@@ -139,7 +139,7 @@ For security, the OAuth2 token API endpoint is **disabled by default**.
 
 **To enable via Web UI:**
 
-1. Navigate to **Configuration** > **Service Configuration**
+1. Navigate to **Configuration** > **General Settings**
 2. Check **Allow OAuth2 Token Access via API**
 3. Click **Save**
 
