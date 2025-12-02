@@ -338,15 +338,15 @@ redis-cli -h localhost -p 6379 ping
 
 ### Check EmailEngine Logs
 
-EmailEngine uses JSON logging (pino). Log levels: `60`=FATAL, `50`=ERROR, `30`=INFO, `20`=DEBUG, `10`=TRACE.
+EmailEngine uses JSON logging (pino). Log levels: `60`=FATAL, `50`=ERROR, `40`=WARN, `30`=INFO, `20`=DEBUG, `10`=TRACE.
 
 **Successful connection:**
 ```json
 {"level":30,"time":1762176419767,"pid":93728,"msg":"EmailEngine starting up","version":"2.58.0"}
-{"level":30,"time":1762176421071,"pid":93728,"msg":"server started","host":"127.0.0.1","port":3000}
+{"level":20,"time":1762176421071,"pid":93728,"msg":"Started API server thread","port":3000,"host":"127.0.0.1"}
 ```
 
-No explicit "Redis connected" message. If "server started" appears, Redis is connected.
+No explicit "Redis connected" message. If "Started API server thread" appears (at debug level), Redis is connected.
 
 **Connection failure:**
 ```
