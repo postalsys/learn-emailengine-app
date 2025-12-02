@@ -81,8 +81,8 @@ Redis database connection and configuration.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_REDIS` | string | `redis://127.0.0.1:6379` | Redis connection URL (primary) | `redis://user:pass@redis.example.com:6379/0` |
-| `REDIS_URL` | string | `redis://127.0.0.1:6379` | Redis connection URL (fallback if EENGINE_REDIS not set) | `redis://localhost:6379` |
+| `EENGINE_REDIS` | string | `redis://127.0.0.1:6379/8` | Redis connection URL (primary) | `redis://user:pass@redis.example.com:6379/0` |
+| `REDIS_URL` | string | `redis://127.0.0.1:6379/8` | Redis connection URL (fallback if EENGINE_REDIS not set) | `redis://localhost:6379` |
 | `EENGINE_REDIS_PREFIX` | string | none | Optional key prefix for Redis keys | `{ee-prod}` |
 
 **Connection URL Format:**
@@ -376,7 +376,7 @@ Logging configuration and error tracking.
 **Log Levels:**
 - `trace` - Very detailed, includes all protocol messages
 - `debug` - Detailed operational information
-- `info` - General operational messages (default)
+- `info` - General operational messages
 - `warn` - Warning messages
 - `error` - Error messages only
 - `fatal` - Fatal errors only
