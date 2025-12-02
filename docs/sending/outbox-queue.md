@@ -60,6 +60,14 @@ Handles all webhook delivery jobs.
 - **Jobs**: Webhook HTTP requests
 - **Retries**: Automatic retry on webhook failures
 
+### 3. Documents Queue
+
+Handles document indexing jobs.
+
+- **Purpose**: Index emails for search functionality
+- **Jobs**: Document indexing tasks
+- **Used when**: Document Store/Elasticsearch integration is enabled
+
 ## Job Lifecycle
 
 Jobs in the submit queue move through different states:
@@ -155,13 +163,14 @@ curl "https://ee.example.com/v1/outbox" \
 - Then moved to *Waiting*
 - If failure: `messageDeliveryError` webhook is emitted
 
-**Retry schedule** (exponential backoff):
+**Retry schedule** (exponential backoff with 5 second base delay):
 - Attempt 1: Immediate
-- Attempt 2: +30 seconds
-- Attempt 3: +1 minute
-- Attempt 4: +5 minutes
-- Attempt 5: +15 minutes
-- Subsequent: +30 minutes
+- Attempt 2: +10 seconds (2^1 x 5s)
+- Attempt 3: +20 seconds (2^2 x 5s)
+- Attempt 4: +40 seconds (2^3 x 5s)
+- Attempt 5: +80 seconds (2^4 x 5s)
+- Attempt 6: +160 seconds (2^5 x 5s)
+- And so on, doubling each time
 
 ```bash
 # View delayed jobs
@@ -173,7 +182,7 @@ curl "https://ee.example.com/v1/outbox" \
 
 **Description**: Jobs held when queue is paused.
 
-**How to pause**: Use the Arena UI or API to pause the queue.
+**How to pause**: Use the Bull Board UI or API to pause the queue.
 
 **What happens**:
 - New jobs go to *Paused* instead of *Waiting*
@@ -187,21 +196,25 @@ curl "https://ee.example.com/v1/outbox" \
 
 ```bash
 # Pause queue
-curl -XPOST "https://ee.example.com/v1/admin/queue/submit/pause" \
-  -H "Authorization: Bearer <token>"
+curl -XPUT "https://ee.example.com/v1/settings/queue/submit" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"paused": true}'
 
-# Unpause queue
-curl -XPOST "https://ee.example.com/v1/admin/queue/submit/resume" \
-  -H "Authorization: Bearer <token>"
+# Resume queue
+curl -XPUT "https://ee.example.com/v1/settings/queue/submit" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"paused": false}'
 ```
 
 ## Monitoring the Queue
 
-### Arena UI
+### Bull Board UI
 
-EmailEngine includes [Arena](https://github.com/bee-queue/arena), a web UI for BullMQ queues.
+EmailEngine includes [Bull Board](https://github.com/felixmosh/bull-board), a web UI for BullMQ queues.
 
-**Access**: Navigate to **Tools → Arena** in EmailEngine UI.
+**Access**: Navigate to **Tools → Bull Board** in EmailEngine UI, or go directly to `/admin/bull-board`.
 
 **Features**:
 - View job counts by state
@@ -320,17 +333,19 @@ To retry a failed job, you need to delete it from the queue and resubmit the mes
 
 ### Delivery Attempts
 
-Configure maximum retry attempts:
+Configure maximum retry attempts via the web UI or API:
 
-```bash
-# Environment variable
-EENGINE_DELIVERY_ATTEMPTS=10
+**Via Web UI**:
+1. Navigate to **Configuration → Service**
+2. Set "Delivery Attempts" (default: 10)
 
-# Or via API when registering account
+**Via API when submitting a message**:
+```json
 {
-  "account": "example",
-  "deliveryAttempts": 10,
-  ...
+  "to": [{"address": "recipient@example.com"}],
+  "subject": "Test",
+  "text": "Hello",
+  "deliveryAttempts": 5
 }
 ```
 
@@ -338,43 +353,19 @@ Default: 10 attempts
 
 ### Keep Completed/Failed Jobs
 
-By default, completed and failed jobs are not stored to save Redis memory.
+By default, completed and failed jobs are removed to save Redis memory.
 
 **Enable storage**:
 
 1. Navigate to **Configuration → Service**
-2. Set "How many completed/failed queue entries to keep"
-3. Example: Set to 100 to keep last 100 completed and 100 failed
+2. Set "Job History Limit" to the number of completed/failed jobs to keep
+3. Example: Set to 100 to keep last 100 completed and 100 failed jobs
 
 **Note**: This only applies to new jobs, not existing ones.
 
-### Queue Timeouts
-
-Configure job processing timeout:
-
-```bash
-# Environment variable
-EENGINE_QUEUE_TIMEOUT=300000  # 5 minutes in milliseconds
-```
-
-Jobs taking longer than this are considered failed.
-
 ### SMTP Timeout
 
-Configure SMTP connection timeout:
-
-```bash
-# Environment variable
-EENGINE_SMTP_TIMEOUT=60000  # 1 minute
-
-# Or per-account
-{
-  "account": "example",
-  "smtp": {
-    "timeout": 60000
-  }
-}
-```
+The SMTP socket timeout is set to 2 minutes (120 seconds). This is the maximum time allowed for SMTP operations before timing out.
 
 ## Webhook Events
 
