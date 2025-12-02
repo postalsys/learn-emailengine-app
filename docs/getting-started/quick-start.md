@@ -305,15 +305,13 @@ $ curl "http://127.0.0.1:3000/v1/account/my-account" \
   "name": "Your Name",
   "email": "you@example.com",
   "state": "connected",
-  "connections": 4,
   "lastError": null
 }
 ```
 
 Key fields to check:
 
-- `state`: Should be `"connected"` (other values: `"init"`, `"connecting"`, `"authenticationError"`, `"connectError"`)
-- `connections`: Number of active IMAP connections (should be > 0 when connected)
+- `state`: Should be `"connected"` (other values: `"init"`, `"syncing"`, `"connecting"`, `"authenticationError"`, `"connectError"`, `"unset"`, `"disconnected"`)
 - `lastError`: Should be `null` if no errors occurred
 
 ### Initial Sync Duration
@@ -322,7 +320,7 @@ Sync time depends on:
 
 - **Number of mailbox folders** - More folders take longer to scan
 - **Number of messages** - Each message needs to be indexed
-- **Indexer type** - Fast indexer (basic metadata) or Full indexer (complete indexing, default)
+- **Indexer type** - Fast indexer (detects only new messages) or Full indexer (detects new, changed, and deleted messages; default)
 
 ## Step 6: Send Your First Email
 
