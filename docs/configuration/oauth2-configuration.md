@@ -18,10 +18,10 @@ Authenticate your IMAP and SMTP accounts using OAuth2 for secure access. Choose 
 
 Utilize the Gmail API as the messaging backend for seamless and efficient email management with EmailEngine.
 
-### [Google Service Accounts](/docs/accounts/gmail-service-accounts)
+### [Google Service Accounts](/docs/accounts/google-service-accounts)
 
 Enable EmailEngine to access all email accounts within your organization simultaneously using Google Service Accounts.
 
-### [Outlook and MS365](/docs/accounts/outlook)
+### [Outlook and MS365](/docs/accounts/outlook-365)
 
 Authenticate your Outlook and Microsoft 365 IMAP and SMTP accounts securely with OAuth2.
