@@ -186,7 +186,7 @@ response = HTTP_POST(
       reference: {
         message: "AAAABAABNc",
         action: "forward",
-        attachments: true  // Include original attachments
+        forwardAttachments: true  // Include original attachments
       }
     }
   }
@@ -339,8 +339,8 @@ response = HTTP_GET(
 )
 
 message = PARSE_JSON(response.body)
-PRINT("Status: " + message.status)
-PRINT("Attempts: " + message.attempts)
+PRINT("Status: " + message.progress.status)
+PRINT("Attempts made: " + message.attemptsMade)
 ```
 
 **Response:**
@@ -348,12 +348,14 @@ PRINT("Attempts: " + message.attempts)
 {
   "queueId": "outbox_789ghi",
   "account": "user@example.com",
-  "to": [{ "address": "subscriber@example.com" }],
   "subject": "Newsletter January 2025",
-  "status": "sending",
-  "attempts": 1,
-  "lastError": null,
-  "created": "2025-01-15T10:00:00.000Z"
+  "created": "2025-01-15T10:00:00.000Z",
+  "scheduled": "2025-01-15T10:00:00.000Z",
+  "attemptsMade": 0,
+  "attempts": 10,
+  "progress": {
+    "status": "queued"
+  }
 }
 ```
 
@@ -380,19 +382,19 @@ response = HTTP_DELETE(
 )
 
 result = PARSE_JSON(response.body)
-PRINT("Message cancelled: " + result.success)
+PRINT("Message cancelled: " + result.deleted)
 ```
 
-**Note:** Can only cancel messages with status `queued`. Messages already `sending` or `sent` cannot be cancelled.
+**Note:** Can only cancel messages with status `queued`. Messages already `processing` or `submitted` cannot be cancelled.
 
 ### Outbox Message States
 
 | Status | Description |
 |--------|-------------|
 | `queued` | Waiting to be sent |
-| `sending` | Currently being delivered |
-| `sent` | Successfully sent |
-| `failed` | Failed after max attempts |
+| `processing` | Currently being delivered |
+| `submitted` | Successfully sent |
+| `error` | Failed after max attempts |
 
 [Detailed API reference →](/docs/api/get-v-1-outbox)
 
@@ -501,8 +503,7 @@ Best practice: Always provide both `text` and `html` for maximum compatibility.
 {
   "reference": {
     "message": "AAAABAABNc",
-    "action": "reply",
-    "replyAll": true
+    "action": "reply-all"
   }
 }
 ```
@@ -513,7 +514,7 @@ Best practice: Always provide both `text` and `html` for maximum compatibility.
   "reference": {
     "message": "AAAABAABNc",
     "action": "forward",
-    "attachments": true
+    "forwardAttachments": true
   }
 }
 ```
@@ -639,7 +640,7 @@ HTTP_POST(
       reference: {
         message: messageId,
         action: "forward",
-        attachments: true
+        forwardAttachments: true
       }
     }
   }
