@@ -180,7 +180,7 @@ emailengine
 
 **Output:**
 ```
-{"level":20,"time":1638811265629,"msg":"Imported prepared token"}
+{"level":20,"time":1638811265629,"msg":"Token imported"}
 ```
 
 </TabItem>
