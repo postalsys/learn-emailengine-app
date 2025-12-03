@@ -1,6 +1,6 @@
 ---
 title: "accountInitialized"
-sidebar_position: 15
+sidebar_position: 16
 description: "Webhook event triggered when an email account completes its initial mailbox synchronization"
 ---
 

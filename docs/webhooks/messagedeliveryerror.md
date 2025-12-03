@@ -1,6 +1,6 @@
 ---
 title: "messageDeliveryError"
-sidebar_position: 7
+sidebar_position: 8
 description: "Webhook event triggered when EmailEngine fails to deliver an email to the SMTP server (may be retried)"
 ---
 

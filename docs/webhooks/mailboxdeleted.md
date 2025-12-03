@@ -1,6 +1,6 @@
 ---
 title: "mailboxDeleted"
-sidebar_position: 12
+sidebar_position: 13
 description: "Webhook event triggered when a previously tracked folder is no longer found on the mail server"
 ---
 

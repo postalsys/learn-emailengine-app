@@ -1,6 +1,6 @@
 ---
 title: "authenticationSuccess"
-sidebar_position: 17
+sidebar_position: 18
 description: "Webhook event triggered when an email account successfully authenticates with EmailEngine"
 ---
 

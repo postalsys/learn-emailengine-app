@@ -1,6 +1,6 @@
 ---
 title: "listSubscribe"
-sidebar_position: 23
+sidebar_position: 24
 description: "Webhook event triggered when a recipient re-subscribes to a mailing list"
 ---
 

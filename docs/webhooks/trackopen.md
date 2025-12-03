@@ -1,6 +1,6 @@
 ---
 title: "trackOpen"
-sidebar_position: 20
+sidebar_position: 21
 description: "Webhook event triggered when a recipient opens an email with open tracking enabled"
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "mailboxNew"
-sidebar_position: 11
+sidebar_position: 12
 description: "Webhook event triggered when a new folder is discovered on the mail server"
 ---
 

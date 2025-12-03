@@ -1,6 +1,6 @@
 ---
 title: "accountAdded"
-sidebar_position: 14
+sidebar_position: 15
 description: "Webhook event triggered when a new email account is registered with EmailEngine"
 ---
 

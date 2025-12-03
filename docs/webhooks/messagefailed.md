@@ -1,6 +1,6 @@
 ---
 title: "messageFailed"
-sidebar_position: 8
+sidebar_position: 9
 description: "Webhook event triggered when EmailEngine permanently fails to deliver an email after all retry attempts are exhausted"
 ---
 

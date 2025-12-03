@@ -1,6 +1,6 @@
 ---
 title: "authenticationError"
-sidebar_position: 18
+sidebar_position: 19
 description: "Webhook event triggered when EmailEngine fails to authenticate an email account"
 ---
 

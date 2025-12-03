@@ -1,6 +1,6 @@
 ---
 title: "mailboxReset"
-sidebar_position: 13
+sidebar_position: 14
 description: "Webhook event triggered when a folder's UIDVALIDITY changes, indicating a mailbox reset"
 ---
 

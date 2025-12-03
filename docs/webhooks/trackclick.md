@@ -1,6 +1,6 @@
 ---
 title: "trackClick"
-sidebar_position: 21
+sidebar_position: 22
 description: "Webhook event triggered when a recipient clicks a tracked link in an email"
 ---
 

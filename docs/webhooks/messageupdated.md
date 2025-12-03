@@ -1,6 +1,6 @@
 ---
 title: "messageUpdated"
-sidebar_position: 4
+sidebar_position: 5
 description: "Webhook event triggered when email flags or labels change on a message"
 ---
 

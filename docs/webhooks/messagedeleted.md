@@ -1,6 +1,6 @@
 ---
 title: "messageDeleted"
-sidebar_position: 3
+sidebar_position: 4
 description: "Webhook event triggered when a previously present email is no longer found in a folder"
 ---
 

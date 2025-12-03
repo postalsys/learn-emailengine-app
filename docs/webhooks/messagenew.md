@@ -1,6 +1,6 @@
 ---
 title: "messageNew"
-sidebar_position: 2
+sidebar_position: 3
 description: "Webhook event triggered when a new email is detected in a mailbox folder"
 ---
 

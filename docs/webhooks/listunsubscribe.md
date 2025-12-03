@@ -1,6 +1,6 @@
 ---
 title: "listUnsubscribe"
-sidebar_position: 22
+sidebar_position: 23
 description: "Webhook event triggered when a recipient unsubscribes from a mailing list via one-click unsubscribe"
 ---
 

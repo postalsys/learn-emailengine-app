@@ -1,6 +1,6 @@
 ---
 title: "connectError"
-sidebar_position: 19
+sidebar_position: 20
 description: "Webhook event triggered when EmailEngine fails to establish a connection to an email server"
 ---
 

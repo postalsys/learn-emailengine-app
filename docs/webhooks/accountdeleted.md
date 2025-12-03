@@ -1,6 +1,6 @@
 ---
 title: "accountDeleted"
-sidebar_position: 16
+sidebar_position: 17
 description: "Webhook event triggered when an email account is removed from EmailEngine"
 ---
 
