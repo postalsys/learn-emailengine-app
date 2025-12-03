@@ -86,26 +86,6 @@ const config: Config = {
       },
     ],
     [
-      require.resolve("@cmfcmf/docusaurus-search-local"),
-      {
-        indexDocs: true,
-        indexBlog: false,
-        indexPages: false,
-        language: "en",
-        style: undefined,
-        maxSearchResults: 8,
-        lunr: {
-          tokenizerSeparator: /[\s\-]+/,
-          b: 0.75,
-          k1: 1.2,
-          titleBoost: 5,
-          contentBoost: 1,
-          tagsBoost: 3,
-          parentCategoriesBoost: 2,
-        },
-      },
-    ],
-    [
       'docusaurus-biel',
       {
         project: 'ctd51bpdtp',
@@ -113,6 +93,13 @@ const config: Config = {
         buttonPosition: 'bottom-right',
         modalPosition: 'sidebar-right',
         buttonStyle: 'dark',
+      },
+    ],
+    [
+      'docusaurus-plugin-plausible',
+      {
+        domain: 'learn.emailengine.app',
+        customDomain: 'plausible.emailengine.dev',
       },
     ],
   ],
@@ -231,15 +218,17 @@ const config: Config = {
         'diff',
       ],
     },
-  } satisfies Preset.ThemeConfig,
-
-  scripts: [
-    {
-      src: 'https://plausible.emailengine.dev/js/script.js',
-      defer: true,
-      'data-domain': 'learn.emailengine.app',
+    algolia: {
+      appId: 'HL9UU5VXN0',
+      apiKey: 'c142e0ee535a50968d526dff722ed6d5',
+      indexName: 'EmailEngine Documentation',
+      contextualSearch: true,
+      searchPagePath: 'search',
+      insights: false,
+      // TODO: Add Algolia Assistant ID when available
+      // askAi: 'YOUR_ALGOLIA_ASSISTANT_ID',
     },
-  ],
+  } satisfies Preset.ThemeConfig,
 };
 
 export default config;

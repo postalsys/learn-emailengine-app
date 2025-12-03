@@ -22,8 +22,6 @@ EmailEngine integrates with OpenAI's API to provide AI-powered email processing 
 
 ### OpenAI API Access
 
-- **GPT-3.5**: Available to all OpenAI accounts
-- **GPT-4**: Available to all OpenAI accounts
 - **Paid Account**: Recommended for production (free accounts have strict rate limits)
 
 ## Feature 1: Email Processing and Summarization
@@ -38,12 +36,13 @@ EmailEngine integrates with OpenAI's API to provide AI-powered email processing 
 
 ### Model Selection
 
-| Model | Speed | Cost | Context Window | Best For |
-|-------|-------|------|----------------|----------|
-| **GPT-3.5 Turbo** | Fast | Low | 4K tokens | Summaries, basic analysis |
-| **GPT-4** | Slower | High | 8K+ tokens | Complex analysis, longer emails |
+| Model             | Speed  | Cost | Context Window | Best For                        |
+| ----------------- | ------ | ---- | -------------- | ------------------------------- |
+| **GPT-3.5 Turbo** | Fast   | Low  | 4K tokens      | Summaries, basic analysis       |
+| **GPT-4**         | Slower | High | 8K+ tokens     | Complex analysis, longer emails |
 
 **Recommendation**:
+
 - Use GPT-3.5 for basic summarization
 - Use GPT-4 for advanced features or longer emails
 
@@ -409,6 +408,7 @@ function trackEmailMetrics(webhook):
 Build conversational email search for users:
 
 **cURL:**
+
 ```bash
 curl -X POST "https://ee.example.com/v1/chat/user123" \
   -H "Authorization: Bearer <TOKEN>" \
@@ -419,6 +419,7 @@ curl -X POST "https://ee.example.com/v1/chat/user123" \
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -438,6 +439,7 @@ curl -X POST "https://ee.example.com/v1/chat/user123" \
 ```
 
 **Implementation (Pseudo code):**
+
 ```
 // Pseudo code - implement in your preferred language
 function searchEmails(userId, question):
@@ -478,6 +480,7 @@ print(result.answer)
 **OpenAI Policy**: OpenAI does not use API data for training models.
 
 **Your Responsibility**: Verify this behavior complies with:
+
 - User data processing agreements
 - GDPR requirements
 - Industry-specific regulations (HIPAA, etc.)
@@ -503,14 +506,17 @@ You can enable/disable AI processing per account if needed (would require custom
 OpenAI charges based on token usage:
 
 **GPT-3.5 Turbo** (as of 2023):
+
 - Input: $0.0015 per 1K tokens
 - Output: $0.002 per 1K tokens
 
 **GPT-4**:
+
 - Input: $0.03 per 1K tokens
 - Output: $0.06 per 1K tokens
 
 **Example**: Processing 100 emails per day with GPT-3.5:
+
 - Average email: ~500 tokens input, 200 tokens output
 - Daily tokens: ~70,000 tokens
 - Monthly cost: ~$3-5
@@ -541,4 +547,3 @@ function trackTokenUsage(webhook):
       timestamp: current_timestamp()
     })
 ```
-

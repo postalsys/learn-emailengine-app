@@ -24,6 +24,7 @@ For production deployments on Windows Server, consider using **WSL2** or running
 EmailEngine does not require administrator privileges to run. You can run it as a regular user on any unprivileged port (e.g., 3000).
 
 Administrator access is only needed during initial setup to:
+
 - Install Memurai/Redis as a Windows service
 - Create a Windows service for EmailEngine (optional)
 - Bind the SMTP or IMAP proxy to privileged ports (below 1024, such as 465 or 993)
@@ -329,9 +330,7 @@ raw = false
 Run with config file:
 
 ```powershell
-# Set the config file path via environment variable
-$env:NODE_CONFIG_PATH="C:\Program Files\EmailEngine\config.toml"
-.\emailengine.exe
+.\emailengine.exe --config="C:\Program Files\EmailEngine\config.toml"
 ```
 
 **Note:** TOML config files are loaded using the `NODE_CONFIG_PATH` environment variable. They can include all settings including `service.secret`, so you don't need separate environment variables or CLI arguments.
