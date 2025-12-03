@@ -286,7 +286,9 @@ Triggered when a folder is deleted.
 
 #### mailboxReset
 
-Triggered when a folder's UIDVALIDITY changes (rare event).
+Triggered when a folder's UIDVALIDITY changes, indicating a mailbox reset. This is a rare but significant event that invalidates all previously tracked message UIDs in the folder.
+
+[See full mailboxReset reference](/docs/receiving/webhooks/mailboxreset)
 
 ### Account Events
 
