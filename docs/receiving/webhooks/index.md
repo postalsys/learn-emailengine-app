@@ -310,7 +310,9 @@ Triggered when an email account completes its initial mailbox synchronization. T
 
 #### accountDeleted
 
-Triggered when an account is removed.
+Triggered when an email account is removed from EmailEngine. This is the final webhook event in the account lifecycle.
+
+[See full accountDeleted reference](/docs/receiving/webhooks/accountdeleted)
 
 #### authenticationSuccess
 
