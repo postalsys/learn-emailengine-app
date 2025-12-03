@@ -544,42 +544,8 @@ Similar patterns apply to HashiCorp Vault, Azure Key Vault, and Google Secret Ma
 ## API Security
 
 :::tip Internal API
-The EmailEngine API is designed to be an internal resource, accessed only by your backend services. It should not be exposed directly to the public internet. Keep the API behind a firewall or restrict access to trusted IP addresses. With this architecture, API rate limiting is typically unnecessary.
+The EmailEngine API is designed to be an internal resource, accessed only by your backend services. It should not be exposed directly to the public internet. Keep the API behind a firewall or restrict access to trusted IP addresses.
 :::
-
-### Per-Token Rate Limiting
-
-If you need to expose the API with account-specific tokens (rare use case), EmailEngine supports optional per-token rate limiting. Configure rate limits when creating access tokens:
-
-```bash
-curl -X POST http://localhost:3000/v1/token \
-  -H "Authorization: Bearer ADMIN_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "account": "user123",
-    "description": "Rate-limited user token",
-    "scopes": ["api"],
-    "restrictions": {
-      "rateLimit": {
-        "maxRequests": 100,
-        "timeWindow": 60
-      }
-    }
-  }'
-```
-
-| Field | Description |
-|-------|-------------|
-| `maxRequests` | Maximum requests allowed in the time window |
-| `timeWindow` | Time window duration in seconds |
-
-When rate limited, the API returns `429 Too Many Requests` with headers:
-
-| Header | Description |
-|--------|-------------|
-| `X-RateLimit-Limit` | Maximum requests per window |
-| `X-RateLimit-Remaining` | Requests remaining in window |
-| `X-RateLimit-Reset` | Seconds until limit resets |
 
 ### IP Whitelisting
 
