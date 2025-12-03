@@ -282,7 +282,9 @@ Triggered when a new folder is created.
 
 #### mailboxDeleted
 
-Triggered when a folder is deleted.
+Triggered when a previously tracked folder is no longer found on the mail server.
+
+[See full mailboxDeleted reference](/docs/receiving/webhooks/mailboxdeleted)
 
 #### mailboxReset
 
