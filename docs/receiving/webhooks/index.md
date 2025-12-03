@@ -264,23 +264,9 @@ Triggered when EmailEngine permanently fails to deliver a queued email after all
 
 #### messageBounce
 
-Triggered when a bounce message is received.
+Triggered when a bounce notification (Delivery Status Notification) is received in a monitored mailbox. EmailEngine parses the bounce message to extract delivery failure information including the failed recipient, SMTP error codes, and details about the original message.
 
-**Payload Example:**
-
-```json
-{
-  "account": "example",
-  "event": "messageBounce",
-  "data": {
-    "id": "AAAAAQAAAeE",
-    "bounceMessage": "Mailbox full",
-    "recipient": "user@example.com",
-    "action": "failed",
-    "status": "5.2.2"
-  }
-}
-```
+[See full messageBounce reference](/docs/receiving/webhooks/messagebounce)
 
 #### messageComplaint
 
