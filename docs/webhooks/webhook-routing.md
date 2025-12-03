@@ -510,17 +510,16 @@ You can add custom HTTP headers to webhook requests for authentication or identi
 Deleting a route is permanent and cannot be undone. Any webhooks that would have matched this route will no longer be delivered to its target URL.
 :::
 
-## Setting Up Routes via API
+## Viewing Routes via API
 
-You can manage webhook routes programmatically using the EmailEngine API. The [Webhooks API documentation](/docs/api-reference/webhooks-api#webhook-management) provides complete details on all available endpoints including:
+You can retrieve webhook route information programmatically using the EmailEngine API:
 
 - **List routes** - `GET /v1/webhookRoutes` - Retrieve all configured webhook routes
-- **Get route details** - `GET /v1/webhookRoutes/webhookRoute/:id` - Get a specific route with filter and mapping functions
-- **Create route** - `POST /v1/webhookRoutes` - Create a new webhook route
-- **Update route** - `PUT /v1/webhookRoutes/webhookRoute/:id` - Modify an existing route
-- **Delete route** - `DELETE /v1/webhookRoutes/webhookRoute/:id` - Remove a webhook route
+- **Get route details** - `GET /v1/webhookRoutes/webhookRoute/{webhookRoute}` - Get a specific route with filter and mapping functions
 
-For detailed request/response examples and code samples, see the [Webhooks API reference](/docs/api-reference/webhooks-api).
+:::info Web UI Required for Route Management
+Creating, updating, and deleting webhook routes is only available through the Web UI. The API provides read-only access to route information.
+:::
 
 ## Practical Examples
 
@@ -731,6 +730,7 @@ Filter and mapping functions have access to:
 | `logger` | Logging object with `.info()`, `.error()`, etc. |
 | `fetch` | Fetch API for making HTTP requests (async) |
 | `URL` | URL constructor for URL manipulation |
+| `env` | Environment variables defined in Script Environment settings |
 
 :::info
 The `fetch` function is available for making external API calls within your functions, but use it sparingly as it can slow down webhook processing. Consider using mapping functions only for payload transformation.
