@@ -348,11 +348,13 @@ Triggered when a recipient clicks a tracked link in an email that has click trac
 
 #### listUnsubscribe
 
-Triggered when a recipient unsubscribes.
+Triggered when a recipient uses the one-click unsubscribe mechanism to remove themselves from a mailing list. EmailEngine adds the recipient to the suppression list and fires this webhook.
+
+[See full listUnsubscribe reference](/docs/receiving/webhooks/listunsubscribe)
 
 #### listSubscribe
 
-Triggered when a recipient resubscribes.
+Triggered when a recipient resubscribes to a mailing list.
 
 ## Testing Webhooks
 
