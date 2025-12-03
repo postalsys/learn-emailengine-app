@@ -246,21 +246,9 @@ Triggered when EmailEngine detects that a message it expected to find on the mai
 
 #### messageSent
 
-Triggered when a queued message is successfully accepted by the SMTP server.
+Triggered when a queued message is successfully accepted by the SMTP server or email API (Gmail API, Microsoft Graph API). This event confirms that the message has been handed off to the mail transfer agent for delivery.
 
-**Payload Example:**
-
-```json
-{
-  "account": "example",
-  "event": "messageSent",
-  "data": {
-    "queueId": "abc123def456",
-    "messageId": "<sent-message@example.com>",
-    "response": "250 2.0.0 OK: queued as 1234ABCD"
-  }
-}
-```
+[See full messageSent reference →](/docs/receiving/webhooks/messagesent)
 
 #### messageDeliveryError
 
