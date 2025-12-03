@@ -304,7 +304,9 @@ Triggered when a new email account is registered with EmailEngine. This is the f
 
 #### accountInitialized
 
-Triggered when initial sync completes for an account.
+Triggered when an email account completes its initial mailbox synchronization. This marks the point at which the account is fully operational and ready for use.
+
+[See full accountInitialized reference](/docs/receiving/webhooks/accountinitialized)
 
 #### accountDeleted
 
