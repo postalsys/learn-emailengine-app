@@ -438,7 +438,7 @@ This gives you a real-time, pretty-printed view of all incoming webhooks.
 EmailEngine allows you to send a test webhook from the UI:
 
 1. Go to **Configuration → Webhooks**
-2. Click **Send Test Payload**
+2. Click **Send test webhook**
 3. Check your webhook endpoint receives the test
 
 ## Debugging Webhooks
@@ -475,7 +475,7 @@ EmailEngine uses BullMQ to manage webhook delivery. To inspect webhook jobs:
 To keep failed jobs for inspection:
 
 1. Go to **Configuration → Service**
-2. Set **Completed/failed queue entries to keep** to **100**
+2. Set **Job History Limit** to **100**
 3. Save changes
 
 Now failed webhooks remain visible in Bull Board with full error details.
