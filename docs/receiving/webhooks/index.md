@@ -258,21 +258,9 @@ Triggered when EmailEngine fails to deliver an email to the SMTP server. This ev
 
 #### messageFailed
 
-Triggered when delivery permanently fails (no more retries).
+Triggered when EmailEngine permanently fails to deliver a queued email after all retry attempts have been exhausted. This is a terminal event indicating that the message will not be delivered.
 
-**Payload Example:**
-
-```json
-{
-  "account": "example",
-  "event": "messageFailed",
-  "data": {
-    "queueId": "abc123def456",
-    "error": "Recipient rejected",
-    "response": "550 5.1.1 User unknown"
-  }
-}
-```
+[See full messageFailed reference](/docs/receiving/webhooks/messagefailed)
 
 #### messageBounce
 

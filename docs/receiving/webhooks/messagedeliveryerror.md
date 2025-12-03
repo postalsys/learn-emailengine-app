@@ -415,7 +415,7 @@ messageSent             messageDeliveryError
 ## Related Events
 
 - [messageSent](/docs/receiving/webhooks/messagesent) - Successful delivery to SMTP server
-- [messageFailed](/docs/receiving/webhooks) - Permanent delivery failure
+- [messageFailed](/docs/receiving/webhooks/messagefailed) - Permanent delivery failure
 - [messageBounce](/docs/receiving/webhooks) - Bounce message received
 
 ## See Also
