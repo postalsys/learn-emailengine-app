@@ -302,11 +302,11 @@ When an automated request is detected, the event is logged but no webhook is sen
 
 ## Related Events
 
-- [trackOpen](/docs/receiving/webhooks/trackopen) - Triggered when a tracked email is opened
-- [messageSent](/docs/receiving/webhooks/messagesent) - Triggered when the tracked email was sent
+- [trackOpen](/docs/webhooks/trackopen) - Triggered when a tracked email is opened
+- [messageSent](/docs/webhooks/messagesent) - Triggered when the tracked email was sent
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Sending Emails](/docs/sending/basic-sending) - How to send emails with tracking enabled
 - [Settings API](/docs/api/post-v-1-settings) - Configure global tracking settings

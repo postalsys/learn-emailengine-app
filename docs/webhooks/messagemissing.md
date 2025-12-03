@@ -1,6 +1,6 @@
 ---
 title: "messageMissing"
-sidebar_position: 4
+sidebar_position: 5
 description: "Webhook event triggered when a message that should exist is not found, indicating a synchronization error"
 ---
 
@@ -306,13 +306,13 @@ Track message IDs to correlate these events in your logging.
 
 ## Related Events
 
-- [messageNew](/docs/receiving/webhooks/messagenew) - Triggered when a new message arrives successfully
-- [messageDeleted](/docs/receiving/webhooks/messagedeleted) - Triggered when a tracked message is removed
-- [connectError](/docs/receiving/webhooks/) - Triggered when connection to email server fails
-- [authenticationError](/docs/receiving/webhooks/) - Triggered when authentication fails
+- [messageNew](/docs/webhooks/messagenew) - Triggered when a new message arrives successfully
+- [messageDeleted](/docs/webhooks/messagedeleted) - Triggered when a tracked message is removed
+- [connectError](/docs/webhooks/connecterror) - Triggered when connection to email server fails
+- [authenticationError](/docs/webhooks/authenticationerror) - Triggered when authentication fails
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Troubleshooting](/docs/support/troubleshooting) - Diagnosing sync issues
 - [Settings API](/docs/api/post-v-1-settings) - Configure webhook settings

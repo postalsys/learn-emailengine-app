@@ -29,7 +29,7 @@ EmailEngine provides comprehensive monitoring capabilities:
 - **Prometheus Metrics** - Detailed metrics for Prometheus/Grafana stack
 - **Performance Indicators** - Track message processing, connections, and queue health
 - **Custom Alerting** - Set up alerts based on key metrics
-- **Bull Board Dashboard** - Visual queue monitoring (see [Webhooks Guide](/docs/receiving/webhooks))
+- **Bull Board Dashboard** - Visual queue monitoring (see [Webhooks Guide](/docs/webhooks/overview))
 
 ## Health Check Endpoints
 
@@ -601,7 +601,7 @@ http://localhost:3000/admin/bull-board
 
 You can also access it from the dashboard sidebar under **Tools** → **Bull Board**.
 
-See detailed queue monitoring in [Webhooks Guide - Debugging Section](/docs/receiving/webhooks#debugging-webhooks).
+See detailed queue monitoring in [Webhooks Guide - Debugging Section](/docs/webhooks/overview#debugging-webhooks).
 
 ## Log-Based Monitoring
 

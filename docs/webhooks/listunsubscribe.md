@@ -323,11 +323,11 @@ EmailEngine only triggers the `listUnsubscribe` webhook for the first unsubscrib
 
 ## Related Events
 
-- [messageSent](/docs/receiving/webhooks/messagesent) - Triggered when the original email was sent
-- [trackClick](/docs/receiving/webhooks/trackclick) - Triggered when links in emails are clicked
+- [messageSent](/docs/webhooks/messagesent) - Triggered when the original email was sent
+- [trackClick](/docs/webhooks/trackclick) - Triggered when links in emails are clicked
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Sending Emails](/docs/sending/basic-sending) - How to send emails with List-Unsubscribe headers
 - [Suppression Lists API](/docs/api/get-v-1-lists-type-list-entries) - Manage unsubscribe lists programmatically

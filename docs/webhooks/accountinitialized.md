@@ -1,6 +1,6 @@
 ---
 title: "accountInitialized"
-sidebar_position: 7
+sidebar_position: 15
 description: "Webhook event triggered when an email account completes its initial mailbox synchronization"
 ---
 
@@ -216,15 +216,15 @@ This behavior is useful for:
 
 ## Related Events
 
-- [accountAdded](/docs/receiving/webhooks/accountadded) - Triggered when account is first registered
-- [authenticationSuccess](/docs/receiving/webhooks/authenticationsuccess) - Triggered when authentication succeeds
-- [authenticationError](/docs/receiving/webhooks/authenticationerror) - Triggered when authentication fails
-- [connectError](/docs/receiving/webhooks/connecterror) - Triggered when connection fails (network-level)
+- [accountAdded](/docs/webhooks/accountadded) - Triggered when account is first registered
+- [authenticationSuccess](/docs/webhooks/authenticationsuccess) - Triggered when authentication succeeds
+- [authenticationError](/docs/webhooks/authenticationerror) - Triggered when authentication fails
+- [connectError](/docs/webhooks/connecterror) - Triggered when connection fails (network-level)
 - accountDeleted - Triggered when an account is removed
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Account Management](/docs/accounts) - Managing email accounts
 - [Create Account API](/docs/api/post-v-1-account) - API endpoint for creating accounts
 - [Flush Account API](/docs/api/post-v-1-account-account-flush) - API endpoint for resetting account state

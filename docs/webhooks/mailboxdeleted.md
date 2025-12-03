@@ -1,6 +1,6 @@
 ---
 title: "mailboxDeleted"
-sidebar_position: 9
+sidebar_position: 12
 description: "Webhook event triggered when a previously tracked folder is no longer found on the mail server"
 ---
 
@@ -384,14 +384,14 @@ async function handleMailboxDeleted(event) {
 
 ## Related Events
 
-- [mailboxNew](/docs/receiving/webhooks/mailboxnew) - Triggered when a new folder is created
-- [mailboxReset](/docs/receiving/webhooks/mailboxreset) - Triggered when a folder's UIDVALIDITY changes
-- [messageDeleted](/docs/receiving/webhooks/messagedeleted) - Triggered when individual messages are deleted
-- [accountDeleted](/docs/receiving/webhooks) - Triggered when an entire account is removed
+- [mailboxNew](/docs/webhooks/mailboxnew) - Triggered when a new folder is created
+- [mailboxReset](/docs/webhooks/mailboxreset) - Triggered when a folder's UIDVALIDITY changes
+- [messageDeleted](/docs/webhooks/messagedeleted) - Triggered when individual messages are deleted
+- [accountDeleted](/docs/webhooks/overview) - Triggered when an entire account is removed
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Mailbox Operations](/docs/api/get-v-1-account-account-mailboxes) - List mailboxes via API
 - [Delete Mailbox API](/docs/api/delete-v-1-account-account-mailbox) - Delete a mailbox programmatically
 - [Settings API](/docs/api/post-v-1-settings) - Configure webhook settings

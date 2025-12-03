@@ -1,6 +1,6 @@
 ---
 title: "connectError"
-sidebar_position: 12
+sidebar_position: 19
 description: "Webhook event triggered when EmailEngine fails to establish a connection to an email server"
 ---
 
@@ -18,7 +18,7 @@ The `connectError` event fires when:
 - The server returns a connection-level error before authentication
 - The IMAP or SMTP connection is interrupted unexpectedly
 
-This event is specifically for connection failures that occur **before or outside of authentication**. If the connection succeeds but authentication fails, an [authenticationError](/docs/receiving/webhooks/authenticationerror) event is triggered instead.
+This event is specifically for connection failures that occur **before or outside of authentication**. If the connection succeeds but authentication fails, an [authenticationError](/docs/webhooks/authenticationerror) event is triggered instead.
 
 EmailEngine uses intelligent error tracking to avoid spamming your webhook endpoint. The event is only sent on the **first occurrence** of a connection error for an account. Subsequent identical errors are suppressed until the account successfully connects again or the error state changes.
 
@@ -290,14 +290,14 @@ You do not need to implement retry logic in your webhook handler - EmailEngine h
 
 ## Related Events
 
-- [authenticationError](/docs/receiving/webhooks/authenticationerror) - Triggered when authentication fails (after connection succeeds)
-- [authenticationSuccess](/docs/receiving/webhooks/authenticationsuccess) - Triggered when authentication succeeds
-- [accountAdded](/docs/receiving/webhooks/accountadded) - Triggered when a new account is registered
-- [accountDeleted](/docs/receiving/webhooks/accountdeleted) - Triggered when an account is removed
+- [authenticationError](/docs/webhooks/authenticationerror) - Triggered when authentication fails (after connection succeeds)
+- [authenticationSuccess](/docs/webhooks/authenticationsuccess) - Triggered when authentication succeeds
+- [accountAdded](/docs/webhooks/accountadded) - Triggered when a new account is registered
+- [accountDeleted](/docs/webhooks/accountdeleted) - Triggered when an account is removed
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Account Management](/docs/accounts) - Managing email accounts
 - [Troubleshooting](/docs/support/troubleshooting) - Common issues and solutions
 - [IMAP Configuration](/docs/accounts/generic-imap) - Setting up IMAP accounts

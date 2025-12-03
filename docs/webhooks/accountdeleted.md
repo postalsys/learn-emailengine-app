@@ -1,6 +1,6 @@
 ---
 title: "accountDeleted"
-sidebar_position: 8
+sidebar_position: 16
 description: "Webhook event triggered when an email account is removed from EmailEngine"
 ---
 
@@ -277,14 +277,14 @@ The webhook is sent immediately after the account is deleted. There is no delay 
 
 ## Related Events
 
-- [accountAdded](/docs/receiving/webhooks/accountadded) - Triggered when a new account is registered
-- [accountInitialized](/docs/receiving/webhooks/accountinitialized) - Triggered when initial sync completes
-- [authenticationSuccess](/docs/receiving/webhooks/authenticationsuccess) - Triggered when authentication succeeds
-- [authenticationError](/docs/receiving/webhooks/authenticationerror) - Triggered when authentication fails
-- [connectError](/docs/receiving/webhooks/connecterror) - Triggered when connection fails
+- [accountAdded](/docs/webhooks/accountadded) - Triggered when a new account is registered
+- [accountInitialized](/docs/webhooks/accountinitialized) - Triggered when initial sync completes
+- [authenticationSuccess](/docs/webhooks/authenticationsuccess) - Triggered when authentication succeeds
+- [authenticationError](/docs/webhooks/authenticationerror) - Triggered when authentication fails
+- [connectError](/docs/webhooks/connecterror) - Triggered when connection fails
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Account Management](/docs/accounts) - Managing email accounts
 - [Delete Account API](/docs/api/delete-v-1-account-account) - API endpoint for deleting accounts

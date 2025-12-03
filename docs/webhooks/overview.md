@@ -1,6 +1,6 @@
 ---
-title: Webhooks
-sidebar_position: 2
+title: Webhook Overview
+sidebar_position: 1
 description: "Complete guide to EmailEngine webhooks - setup, event types, testing, debugging, and best practices"
 keywords:
   - webhooks
@@ -218,145 +218,155 @@ EmailEngine sends different types of events organized into categories:
 
 ### Message Events
 
+Events related to emails in monitored mailbox folders. These webhooks notify you when messages arrive, are modified, or are removed from the mailbox.
+
 #### messageNew
 
 Triggered when a new message is detected in a mailbox folder. This is one of the most commonly used webhook events, enabling real-time processing of incoming emails.
 
-[See full messageNew reference →](/docs/receiving/webhooks/messagenew)
+[See full messageNew reference →](/docs/webhooks/messagenew)
 
 #### messageDeleted
 
 Triggered when a previously tracked email has been removed from a mailbox folder. Helps keep external systems synchronized with mailbox state changes.
 
-[See full messageDeleted reference →](/docs/receiving/webhooks/messagedeleted)
+[See full messageDeleted reference →](/docs/webhooks/messagedeleted)
 
 #### messageUpdated
 
 Triggered when EmailEngine detects that the flags or labels on a message have changed, enabling real-time synchronization of message state changes with external systems.
 
-[See full messageUpdated reference →](/docs/receiving/webhooks/messageupdated)
+[See full messageUpdated reference →](/docs/webhooks/messageupdated)
 
 #### messageMissing
 
 Triggered when EmailEngine detects that a message it expected to find on the mail server is not available. This event indicates a potential synchronization issue and helps handle edge cases in message processing.
 
-[See full messageMissing reference →](/docs/receiving/webhooks/messagemissing)
+[See full messageMissing reference →](/docs/webhooks/messagemissing)
 
 ### Delivery Events
+
+Events related to outgoing email delivery. These webhooks track the lifecycle of messages sent through EmailEngine, from successful delivery to failures, bounces, and spam complaints.
 
 #### messageSent
 
 Triggered when a queued message is successfully accepted by the SMTP server or email API (Gmail API, Microsoft Graph API). This event confirms that the message has been handed off to the mail transfer agent for delivery.
 
-[See full messageSent reference →](/docs/receiving/webhooks/messagesent)
+[See full messageSent reference →](/docs/webhooks/messagesent)
 
 #### messageDeliveryError
 
 Triggered when EmailEngine fails to deliver an email to the SMTP server. This event indicates a temporary failure that may be retried automatically based on the configured retry policy.
 
-[See full messageDeliveryError reference](/docs/receiving/webhooks/messagedeliveryerror)
+[See full messageDeliveryError reference](/docs/webhooks/messagedeliveryerror)
 
 #### messageFailed
 
 Triggered when EmailEngine permanently fails to deliver a queued email after all retry attempts have been exhausted. This is a terminal event indicating that the message will not be delivered.
 
-[See full messageFailed reference](/docs/receiving/webhooks/messagefailed)
+[See full messageFailed reference](/docs/webhooks/messagefailed)
 
 #### messageBounce
 
 Triggered when a bounce notification (Delivery Status Notification) is received in a monitored mailbox. EmailEngine parses the bounce message to extract delivery failure information including the failed recipient, SMTP error codes, and details about the original message.
 
-[See full messageBounce reference](/docs/receiving/webhooks/messagebounce)
+[See full messageBounce reference](/docs/webhooks/messagebounce)
 
 #### messageComplaint
 
 Triggered when a feedback loop (FBL) complaint is detected. EmailEngine parses ARF (Abuse Reporting Format) complaint messages to extract information about the complainant and the original message that was reported as spam.
 
-[See full messageComplaint reference](/docs/receiving/webhooks/messagecomplaint)
+[See full messageComplaint reference](/docs/webhooks/messagecomplaint)
 
 ### Mailbox Events
+
+Events related to mailbox folder changes. These webhooks notify you when folders are created, deleted, or reset on the mail server.
 
 #### mailboxNew
 
 Triggered when a new folder is discovered on the mail server during synchronization.
 
-[See full mailboxNew reference](/docs/receiving/webhooks/mailboxnew)
+[See full mailboxNew reference](/docs/webhooks/mailboxnew)
 
 #### mailboxDeleted
 
 Triggered when a previously tracked folder is no longer found on the mail server.
 
-[See full mailboxDeleted reference](/docs/receiving/webhooks/mailboxdeleted)
+[See full mailboxDeleted reference](/docs/webhooks/mailboxdeleted)
 
 #### mailboxReset
 
 Triggered when a folder's UIDVALIDITY changes, indicating a mailbox reset. This is a rare but significant event that invalidates all previously tracked message UIDs in the folder.
 
-[See full mailboxReset reference](/docs/receiving/webhooks/mailboxreset)
+[See full mailboxReset reference](/docs/webhooks/mailboxreset)
 
 ### Account Events
+
+Events related to email account lifecycle and connection status. These webhooks track account registration, initialization, authentication, and connection health.
 
 #### accountAdded
 
 Triggered when a new email account is registered with EmailEngine. This is the first webhook in the account lifecycle, fired before authentication is attempted.
 
-[See full accountAdded reference](/docs/receiving/webhooks/accountadded)
+[See full accountAdded reference](/docs/webhooks/accountadded)
 
 #### accountInitialized
 
 Triggered when an email account completes its initial mailbox synchronization. This marks the point at which the account is fully operational and ready for use.
 
-[See full accountInitialized reference](/docs/receiving/webhooks/accountinitialized)
+[See full accountInitialized reference](/docs/webhooks/accountinitialized)
 
 #### accountDeleted
 
 Triggered when an email account is removed from EmailEngine. This is the final webhook event in the account lifecycle.
 
-[See full accountDeleted reference](/docs/receiving/webhooks/accountdeleted)
+[See full accountDeleted reference](/docs/webhooks/accountdeleted)
 
 #### authenticationSuccess
 
 Triggered when EmailEngine successfully authenticates an email account for the first time or after recovering from an error state.
 
-[See full authenticationSuccess reference](/docs/receiving/webhooks/authenticationsuccess)
+[See full authenticationSuccess reference](/docs/webhooks/authenticationsuccess)
 
 #### authenticationError
 
 Triggered when EmailEngine fails to authenticate an email account due to invalid credentials, expired OAuth2 tokens, or API authentication errors.
 
-[See full authenticationError reference](/docs/receiving/webhooks/authenticationerror)
+[See full authenticationError reference](/docs/webhooks/authenticationerror)
 
 #### connectError
 
 Triggered when EmailEngine fails to establish a connection to an email server due to network issues, server unavailability, or TLS/SSL problems. This is distinct from authentication errors which occur after connection is established.
 
-[See full connectError reference](/docs/receiving/webhooks/connecterror)
+[See full connectError reference](/docs/webhooks/connecterror)
 
 ### Tracking Events
+
+Events related to email engagement tracking. These webhooks notify you when recipients open emails, click links, or manage their subscription preferences.
 
 #### trackOpen
 
 Triggered when a recipient opens an email that has open tracking enabled. The tracking works by embedding a 1x1 pixel image in the email's HTML body that is loaded when the email is viewed.
 
-[See full trackOpen reference](/docs/receiving/webhooks/trackopen)
+[See full trackOpen reference](/docs/webhooks/trackopen)
 
 #### trackClick
 
 Triggered when a recipient clicks a tracked link in an email that has click tracking enabled. EmailEngine rewrites links in outgoing HTML emails to redirect through a tracking endpoint, capturing click events before redirecting recipients to the original destination.
 
-[See full trackClick reference](/docs/receiving/webhooks/trackclick)
+[See full trackClick reference](/docs/webhooks/trackclick)
 
 #### listUnsubscribe
 
 Triggered when a recipient uses the one-click unsubscribe mechanism to remove themselves from a mailing list. EmailEngine adds the recipient to the suppression list and fires this webhook.
 
-[See full listUnsubscribe reference](/docs/receiving/webhooks/listunsubscribe)
+[See full listUnsubscribe reference](/docs/webhooks/listunsubscribe)
 
 #### listSubscribe
 
 Triggered when a recipient re-subscribes to a mailing list after previously unsubscribing. This event enables you to restore subscriptions and keep your mailing lists synchronized.
 
-[See full listSubscribe reference](/docs/receiving/webhooks/listsubscribe)
+[See full listSubscribe reference](/docs/webhooks/listsubscribe)
 
 ## Testing Webhooks
 

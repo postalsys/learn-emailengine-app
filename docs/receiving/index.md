@@ -239,7 +239,7 @@ async function downloadAttachment(accountId, attachmentId) {
 
 This section covers all aspects of receiving and processing emails:
 
-1. **[Webhooks](./webhooks)** - Setting up real-time notifications
+1. **[Webhooks](/docs/webhooks/overview)** - Setting up real-time notifications
 2. **[Mailbox Operations](./mailbox-operations)** - Working with folders and mailboxes
 3. **[Message Operations](./message-operations)** - Listing, fetching, and managing messages
 4. **[Searching](./searching)** - Finding messages with search queries

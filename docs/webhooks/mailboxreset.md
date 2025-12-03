@@ -1,6 +1,6 @@
 ---
 title: "mailboxReset"
-sidebar_position: 10
+sidebar_position: 13
 description: "Webhook event triggered when a folder's UIDVALIDITY changes, indicating a mailbox reset"
 ---
 
@@ -324,13 +324,13 @@ async function handleMailboxReset(event) {
 
 ## Related Events
 
-- [mailboxNew](/docs/receiving/webhooks) - Triggered when a new folder is detected
-- [mailboxDeleted](/docs/receiving/webhooks) - Triggered when a folder is removed
-- [messageNew](/docs/receiving/webhooks/messagenew) - Will fire for messages after resync
-- [messageDeleted](/docs/receiving/webhooks/messagedeleted) - May fire during resync cleanup
+- [mailboxNew](/docs/webhooks/overview) - Triggered when a new folder is detected
+- [mailboxDeleted](/docs/webhooks/overview) - Triggered when a folder is removed
+- [messageNew](/docs/webhooks/messagenew) - Will fire for messages after resync
+- [messageDeleted](/docs/webhooks/messagedeleted) - May fire during resync cleanup
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Mailbox Operations](/docs/api/get-v-1-account-account-mailboxes) - List mailboxes via API
 - [Settings API](/docs/api/post-v-1-settings) - Configure webhook settings

@@ -1,6 +1,6 @@
 ---
 title: "messageBounce"
-sidebar_position: 8
+sidebar_position: 9
 description: "Webhook event triggered when a bounce response email is received"
 ---
 
@@ -272,13 +272,13 @@ Use `messageFailed` when you need to:
 
 ## Related Events
 
-- [messageFailed](/docs/receiving/webhooks/messagefailed) - Triggered when EmailEngine fails to deliver a queued email
-- [messageDeliveryError](/docs/receiving/webhooks/messagedeliveryerror) - Triggered on temporary SMTP delivery errors
-- [messageSent](/docs/receiving/webhooks/messagesent) - Triggered when a message is successfully sent
-- [messageNew](/docs/receiving/webhooks/messagenew) - The bounce notification also triggers this event
+- [messageFailed](/docs/webhooks/messagefailed) - Triggered when EmailEngine fails to deliver a queued email
+- [messageDeliveryError](/docs/webhooks/messagedeliveryerror) - Triggered on temporary SMTP delivery errors
+- [messageSent](/docs/webhooks/messagesent) - Triggered when a message is successfully sent
+- [messageNew](/docs/webhooks/messagenew) - The bounce notification also triggers this event
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Sending Emails](/docs/sending/basic-sending) - How to send emails through EmailEngine
 - [Settings API](/docs/api/post-v-1-settings) - Configure webhook settings

@@ -1,6 +1,6 @@
 ---
 title: "messageDeliveryError"
-sidebar_position: 6
+sidebar_position: 7
 description: "Webhook event triggered when EmailEngine fails to deliver an email to the SMTP server (may be retried)"
 ---
 
@@ -414,13 +414,13 @@ messageSent             messageDeliveryError
 
 ## Related Events
 
-- [messageSent](/docs/receiving/webhooks/messagesent) - Successful delivery to SMTP server
-- [messageFailed](/docs/receiving/webhooks/messagefailed) - Permanent delivery failure
-- [messageBounce](/docs/receiving/webhooks) - Bounce message received
+- [messageSent](/docs/webhooks/messagesent) - Successful delivery to SMTP server
+- [messageFailed](/docs/webhooks/messagefailed) - Permanent delivery failure
+- [messageBounce](/docs/webhooks/overview) - Bounce message received
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Submit API](/docs/api/post-v-1-account-account-submit) - Send emails via EmailEngine
 - [Outbox API](/docs/api/get-v-1-outbox) - Check queued message status
 - [Sending Emails](/docs/sending) - Email sending guide

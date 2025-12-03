@@ -211,5 +211,5 @@ The response includes the `imapIndexer` field showing the active strategy.
 
 - [Managing Accounts](./index.md) - Account creation and management
 - [Continuous Email Processing](/docs/receiving/continuous-processing) - Building email processing pipelines
-- [Webhooks](/docs/receiving/webhooks) - Webhook event reference
+- [Webhooks](/docs/webhooks/overview) - Webhook event reference
 - [Flush API](/docs/api/put-v-1-account-account-flush) - API reference for flush operations

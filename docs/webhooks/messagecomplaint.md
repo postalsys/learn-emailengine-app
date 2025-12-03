@@ -1,6 +1,6 @@
 ---
 title: "messageComplaint"
-sidebar_position: 9
+sidebar_position: 10
 description: "Webhook event triggered when an FBL (Feedback Loop) complaint is detected"
 ---
 
@@ -308,13 +308,13 @@ async function correlateComplaint(complaintData) {
 
 ## Related Events
 
-- [messageBounce](/docs/receiving/webhooks/messagebounce) - Triggered when a bounce notification is received
-- [messageFailed](/docs/receiving/webhooks/messagefailed) - Triggered when EmailEngine fails to deliver a queued email
-- [messageSent](/docs/receiving/webhooks/messagesent) - Triggered when a message is successfully sent
-- [messageNew](/docs/receiving/webhooks/messagenew) - The complaint notification also triggers this event
+- [messageBounce](/docs/webhooks/messagebounce) - Triggered when a bounce notification is received
+- [messageFailed](/docs/webhooks/messagefailed) - Triggered when EmailEngine fails to deliver a queued email
+- [messageSent](/docs/webhooks/messagesent) - Triggered when a message is successfully sent
+- [messageNew](/docs/webhooks/messagenew) - The complaint notification also triggers this event
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Sending Emails](/docs/sending/basic-sending) - How to send emails through EmailEngine
 - [Settings API](/docs/api/post-v-1-settings) - Configure webhook settings

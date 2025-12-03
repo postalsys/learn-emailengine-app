@@ -1,6 +1,6 @@
 ---
 title: "messageDeleted"
-sidebar_position: 2
+sidebar_position: 3
 description: "Webhook event triggered when a previously present email is no longer found in a folder"
 ---
 
@@ -257,12 +257,12 @@ async function handleMessageDeleted(event) {
 
 ## Related Events
 
-- [messageNew](/docs/receiving/webhooks/messagenew) - Triggered when a new message arrives
-- [messageUpdated](/docs/receiving/webhooks/messageupdated) - Triggered when flags/labels change
-- [mailboxDeleted](/docs/receiving/webhooks/mailboxdeleted) - Triggered when an entire folder is deleted
+- [messageNew](/docs/webhooks/messagenew) - Triggered when a new message arrives
+- [messageUpdated](/docs/webhooks/messageupdated) - Triggered when flags/labels change
+- [mailboxDeleted](/docs/webhooks/mailboxdeleted) - Triggered when an entire folder is deleted
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Message Operations](/docs/receiving/message-operations) - Working with messages via API
 - [Settings API](/docs/api/post-v-1-settings) - Configure webhook settings

@@ -1,6 +1,6 @@
 ---
 title: "authenticationSuccess"
-sidebar_position: 10
+sidebar_position: 17
 description: "Webhook event triggered when an email account successfully authenticates with EmailEngine"
 ---
 
@@ -212,14 +212,14 @@ When an account recovers from an error:
 
 ## Related Events
 
-- [authenticationError](/docs/receiving/webhooks/authenticationerror) - Triggered when authentication fails
-- [connectError](/docs/receiving/webhooks/connecterror) - Triggered when connection fails (network-level, not authentication)
-- [accountAdded](/docs/receiving/webhooks/accountadded) - Triggered when a new account is registered
-- [accountInitialized](/docs/receiving/webhooks/accountinitialized) - Triggered when initial sync completes
+- [authenticationError](/docs/webhooks/authenticationerror) - Triggered when authentication fails
+- [connectError](/docs/webhooks/connecterror) - Triggered when connection fails (network-level, not authentication)
+- [accountAdded](/docs/webhooks/accountadded) - Triggered when a new account is registered
+- [accountInitialized](/docs/webhooks/accountinitialized) - Triggered when initial sync completes
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Account Management](/docs/accounts) - Managing email accounts
 - [Gmail OAuth2 Setup](/docs/accounts/gmail-imap) - Setting up Gmail with OAuth2
 - [Outlook OAuth2 Setup](/docs/accounts/outlook-imap) - Setting up Outlook with OAuth2

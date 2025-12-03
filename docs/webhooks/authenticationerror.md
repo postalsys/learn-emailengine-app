@@ -1,6 +1,6 @@
 ---
 title: "authenticationError"
-sidebar_position: 11
+sidebar_position: 18
 description: "Webhook event triggered when EmailEngine fails to authenticate an email account"
 ---
 
@@ -274,14 +274,14 @@ This means you can rely on receiving exactly one `authenticationError` webhook p
 
 ## Related Events
 
-- [authenticationSuccess](/docs/receiving/webhooks/authenticationsuccess) - Triggered when authentication succeeds (if documented)
-- [connectError](/docs/receiving/webhooks/connecterror) - Triggered when connection fails (network-level, not authentication)
-- [accountAdded](/docs/receiving/webhooks/accountadded) - Triggered when a new account is registered
-- [accountDeleted](/docs/receiving/webhooks/accountdeleted) - Triggered when an account is removed
+- [authenticationSuccess](/docs/webhooks/authenticationsuccess) - Triggered when authentication succeeds (if documented)
+- [connectError](/docs/webhooks/connecterror) - Triggered when connection fails (network-level, not authentication)
+- [accountAdded](/docs/webhooks/accountadded) - Triggered when a new account is registered
+- [accountDeleted](/docs/webhooks/accountdeleted) - Triggered when an account is removed
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Account Management](/docs/accounts) - Managing email accounts
 - [Gmail OAuth2 Setup](/docs/accounts/gmail-imap) - Setting up Gmail with OAuth2
 - [Outlook OAuth2 Setup](/docs/accounts/outlook-imap) - Setting up Outlook with OAuth2

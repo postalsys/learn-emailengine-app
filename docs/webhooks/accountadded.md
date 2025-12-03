@@ -1,6 +1,6 @@
 ---
 title: "accountAdded"
-sidebar_position: 6
+sidebar_position: 14
 description: "Webhook event triggered when a new email account is registered with EmailEngine"
 ---
 
@@ -206,15 +206,15 @@ If authentication fails:
 
 ## Related Events
 
-- [authenticationSuccess](/docs/receiving/webhooks/authenticationsuccess) - Triggered when authentication succeeds
-- [authenticationError](/docs/receiving/webhooks/authenticationerror) - Triggered when authentication fails
-- [connectError](/docs/receiving/webhooks/connecterror) - Triggered when connection fails (network-level)
+- [authenticationSuccess](/docs/webhooks/authenticationsuccess) - Triggered when authentication succeeds
+- [authenticationError](/docs/webhooks/authenticationerror) - Triggered when authentication fails
+- [connectError](/docs/webhooks/connecterror) - Triggered when connection fails (network-level)
 - accountInitialized - Triggered when initial sync completes
 - accountDeleted - Triggered when an account is removed
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Account Management](/docs/accounts) - Managing email accounts
 - [Create Account API](/docs/api/post-v-1-account) - API endpoint for creating accounts
 - [Hosted Authentication](/docs/accounts/hosted-authentication) - Using the hosted authentication form

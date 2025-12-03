@@ -271,11 +271,11 @@ No webhook will be triggered for duplicate or invalid requests.
 
 ## Related Events
 
-- [listUnsubscribe](/docs/receiving/webhooks/listunsubscribe) - Triggered when a recipient unsubscribes from a mailing list
-- [messageSent](/docs/receiving/webhooks/messagesent) - Triggered when emails are sent
+- [listUnsubscribe](/docs/webhooks/listunsubscribe) - Triggered when a recipient unsubscribes from a mailing list
+- [messageSent](/docs/webhooks/messagesent) - Triggered when emails are sent
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Sending Emails](/docs/sending/basic-sending) - How to send emails with List-Unsubscribe headers
 - [Suppression Lists API](/docs/api/get-v-1-lists-type-list-entries) - Manage subscription lists programmatically

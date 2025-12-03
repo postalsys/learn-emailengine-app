@@ -1,6 +1,6 @@
 ---
 title: "messageSent"
-sidebar_position: 5
+sidebar_position: 6
 description: "Webhook event triggered when a queued email is successfully accepted by the SMTP server"
 ---
 
@@ -321,13 +321,13 @@ Monitor `messageBounce`, `messageDeliveryError`, and `messageFailed` events for 
 
 ## Related Events
 
-- [messageDeliveryError](/docs/receiving/webhooks/messagedeliveryerror) - Temporary SMTP delivery failure (will retry)
-- [messageFailed](/docs/receiving/webhooks/messagefailed) - Permanent delivery failure
-- [messageBounce](/docs/receiving/webhooks) - Bounce message received
+- [messageDeliveryError](/docs/webhooks/messagedeliveryerror) - Temporary SMTP delivery failure (will retry)
+- [messageFailed](/docs/webhooks/messagefailed) - Permanent delivery failure
+- [messageBounce](/docs/webhooks/overview) - Bounce message received
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Submit API](/docs/api/post-v-1-account-account-submit) - Send emails via EmailEngine
 - [Outbox API](/docs/api/get-v-1-outbox) - Check queued message status
 - [Sending Emails](/docs/sending) - Email sending guide

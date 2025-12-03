@@ -1,6 +1,6 @@
 ---
 title: "messageUpdated"
-sidebar_position: 3
+sidebar_position: 4
 description: "Webhook event triggered when email flags or labels change on a message"
 ---
 
@@ -419,12 +419,12 @@ Some Gmail labels map to IMAP flags:
 
 ## Related Events
 
-- [messageNew](/docs/receiving/webhooks/messagenew) - Triggered when a new message arrives
-- [messageDeleted](/docs/receiving/webhooks/messagedeleted) - Triggered when a message is removed
-- [mailboxNew](/docs/receiving/webhooks/mailboxnew) - Triggered when a new folder is created
+- [messageNew](/docs/webhooks/messagenew) - Triggered when a new message arrives
+- [messageDeleted](/docs/webhooks/messagedeleted) - Triggered when a message is removed
+- [mailboxNew](/docs/webhooks/mailboxnew) - Triggered when a new folder is created
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Message Operations](/docs/receiving/message-operations) - Working with messages via API
 - [Settings API](/docs/api/post-v-1-settings) - Configure webhook settings

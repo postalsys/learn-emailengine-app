@@ -1,6 +1,6 @@
 ---
 title: "mailboxNew"
-sidebar_position: 8
+sidebar_position: 11
 description: "Webhook event triggered when a new folder is discovered on the mail server"
 ---
 
@@ -511,14 +511,14 @@ async function handleMailboxNew(event) {
 
 ## Related Events
 
-- [mailboxDeleted](/docs/receiving/webhooks/mailboxdeleted) - Triggered when a folder is removed
-- [mailboxReset](/docs/receiving/webhooks/mailboxreset) - Triggered when a folder's UIDVALIDITY changes
-- [messageNew](/docs/receiving/webhooks/messagenew) - Triggered when new messages arrive in a folder
-- [accountInitialized](/docs/receiving/webhooks) - Triggered when initial account sync completes
+- [mailboxDeleted](/docs/webhooks/mailboxdeleted) - Triggered when a folder is removed
+- [mailboxReset](/docs/webhooks/mailboxreset) - Triggered when a folder's UIDVALIDITY changes
+- [messageNew](/docs/webhooks/messagenew) - Triggered when new messages arrive in a folder
+- [accountInitialized](/docs/webhooks/overview) - Triggered when initial account sync completes
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Mailbox Operations](/docs/api/get-v-1-account-account-mailboxes) - List mailboxes via API
 - [Create Mailbox API](/docs/api/post-v-1-account-account-mailbox) - Create a mailbox programmatically
 - [Settings API](/docs/api/post-v-1-settings) - Configure webhook settings

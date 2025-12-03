@@ -102,6 +102,17 @@ const config: Config = {
         customDomain: 'plausible.emailengine.dev',
       },
     ],
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        redirects: [
+          {
+            from: '/docs/receiving/webhooks',
+            to: '/docs/webhooks/overview',
+          },
+        ],
+      },
+    ],
   ],
 
   themes: [

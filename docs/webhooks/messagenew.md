@@ -1,6 +1,6 @@
 ---
 title: "messageNew"
-sidebar_position: 1
+sidebar_position: 2
 description: "Webhook event triggered when a new email is detected in a mailbox folder"
 ---
 
@@ -464,12 +464,12 @@ async function handleMessageNew(event) {
 
 ## Related Events
 
-- [messageDeleted](/docs/receiving/webhooks/messagedeleted) - Triggered when a message is removed
-- [messageUpdated](/docs/receiving/webhooks/messageupdated) - Triggered when flags/labels change
-- [messageBounce](/docs/receiving/webhooks/messagebounce) - Triggered when a bounce is detected
+- [messageDeleted](/docs/webhooks/messagedeleted) - Triggered when a message is removed
+- [messageUpdated](/docs/webhooks/messageupdated) - Triggered when flags/labels change
+- [messageBounce](/docs/webhooks/messagebounce) - Triggered when a bounce is detected
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Message Operations](/docs/receiving/message-operations) - Working with messages via API
 - [Settings API](/docs/api/post-v-1-settings) - Configure webhook settings

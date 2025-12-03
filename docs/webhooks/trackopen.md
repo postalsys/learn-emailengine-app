@@ -263,11 +263,11 @@ When an automated request is detected, the event is logged but no webhook is sen
 
 ## Related Events
 
-- [trackClick](/docs/receiving/webhooks/trackclick) - Triggered when a tracked link is clicked
-- [messageSent](/docs/receiving/webhooks/messagesent) - Triggered when the tracked email was sent
+- [trackClick](/docs/webhooks/trackclick) - Triggered when a tracked link is clicked
+- [messageSent](/docs/webhooks/messagesent) - Triggered when the tracked email was sent
 
 ## See Also
 
-- [Webhooks Overview](/docs/receiving/webhooks) - Complete webhook setup guide
+- [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Sending Emails](/docs/sending/basic-sending) - How to send emails with tracking enabled
 - [Settings API](/docs/api/post-v-1-settings) - Configure global tracking settings

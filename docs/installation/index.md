@@ -192,7 +192,7 @@ Register an email account via the web interface or API:
 
 Configure webhooks to receive real-time email notifications:
 
-[Webhooks Guide →](/docs/receiving/webhooks)
+[Webhooks Guide →](/docs/webhooks/overview)
 
 ### 6. Secure Your Deployment
 

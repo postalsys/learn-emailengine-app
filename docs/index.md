@@ -96,7 +96,7 @@ Get your first email working in 10 minutes:
 1. **[Install EmailEngine](/docs/installation)** - Set up with Docker, npm, or on platforms like Render.com
 2. **[Add Your First Account](/docs/getting-started/quick-start)** - Register an email account via API
 3. **[Send an Email](/docs/sending/basic-sending)** - Submit your first message
-4. **[Receive Webhooks](/docs/receiving/webhooks)** - Get notified of new emails
+4. **[Receive Webhooks](/docs/webhooks/overview)** - Get notified of new emails
 
 ## Common Use Cases
 
