@@ -22,6 +22,21 @@
   justify-content: center;
 }
 
+/* Introduction Section */
+.intro {
+  padding: 2rem 0;
+  background: var(--ifm-background-color);
+}
+
+.introText {
+  font-size: 1.2rem;
+  line-height: 1.7;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+  color: var(--ifm-color-emphasis-800);
+}
+
 /* Use Cases Section */
 .useCases {
   padding: 3rem 0;
