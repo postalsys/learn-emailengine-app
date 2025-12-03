@@ -10,6 +10,9 @@ keywords:
   - webhook testing
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Webhooks
 
 <!--
@@ -76,6 +79,12 @@ curl -X POST "https://your-emailengine.com/v1/settings" \
   }'
 ```
 
+:::tip Advanced: Webhook Routes
+For more advanced scenarios, you can configure multiple webhook routes to send different events to different endpoints based on account, event type, or custom filtering logic. Webhook routes also support pre-processing functions to filter or transform payloads before delivery.
+
+See [Webhooks API](/docs/api-reference/webhooks-api) for route management and [Pre-Processing Functions](/docs/advanced/pre-processing) for custom filters.
+:::
+
 ### 2. Create Webhook Handler
 
 Your webhook endpoint must:
@@ -83,7 +92,8 @@ Your webhook endpoint must:
 - Return a 2xx status code quickly (within 5 seconds)
 - Process events asynchronously
 
-**Node.js Example:**
+<Tabs>
+<TabItem value="nodejs" label="Node.js" default>
 
 ```javascript
 const express = require('express');
@@ -125,7 +135,8 @@ app.listen(3000, () => {
 });
 ```
 
-**Python Example:**
+</TabItem>
+<TabItem value="python" label="Python">
 
 ```python
 from flask import Flask, request, jsonify
@@ -157,7 +168,8 @@ if __name__ == '__main__':
     app.run(port=3000)
 ```
 
-**PHP Example:**
+</TabItem>
+<TabItem value="php" label="PHP">
 
 ```php
 <?php
@@ -197,6 +209,9 @@ function processEvent($event) {
 ?>
 ```
 
+</TabItem>
+</Tabs>
+
 ## Webhook Events
 
 EmailEngine sends different types of events organized into categories:
@@ -205,128 +220,27 @@ EmailEngine sends different types of events organized into categories:
 
 #### messageNew
 
-Triggered when a new message is detected in a mailbox folder.
+Triggered when a new message is detected in a mailbox folder. This is one of the most commonly used webhook events, enabling real-time processing of incoming emails.
 
-**Payload Example:**
-
-```json
-{
-  "account": "example",
-  "event": "messageNew",
-  "data": {
-    "id": "AAAAAQAAAeE",
-    "uid": 12345,
-    "path": "INBOX",
-    "emailId": "1743d29c-b67d-4747-9016-b8850a5a39bd",
-    "threadId": "1743d29c-b67d-4747-9016-b8850a5a39bd",
-    "date": "2025-10-13T10:23:45.000Z",
-    "flags": ["\\Seen"],
-    "labels": ["\\Inbox"],
-    "unseen": false,
-    "flagged": false,
-    "answered": false,
-    "draft": false,
-    "size": 45678,
-    "subject": "Meeting Tomorrow",
-    "from": {
-      "name": "John Doe",
-      "address": "john@example.com"
-    },
-    "to": [
-      {
-        "name": "Jane Smith",
-        "address": "jane@company.com"
-      }
-    ],
-    "messageId": "<abc123@example.com>",
-    "inReplyTo": "<xyz789@example.com>",
-    "text": "Plain text body...",
-    "html": ["<p>HTML body...</p>"],
-    "attachments": [
-      {
-        "id": "AAAAAgAAAeEBAAAAAQAAAeE",
-        "contentType": "application/pdf",
-        "encodedSize": 45000,
-        "filename": "report.pdf",
-        "embedded": false
-      }
-    ]
-  }
-}
-```
-
-**Use Cases:**
-- Trigger support ticket creation
-- Process incoming orders
-- Filter and classify emails
-- Feed emails to AI analysis
+[See full messageNew reference →](/docs/receiving/webhooks/messagenew)
 
 #### messageDeleted
 
-Triggered when a message is removed from a folder.
+Triggered when a previously tracked email has been removed from a mailbox folder. Helps keep external systems synchronized with mailbox state changes.
 
-**Payload Example:**
-
-```json
-{
-  "account": "example",
-  "event": "messageDeleted",
-  "data": {
-    "id": "AAAAAQAAAeE",
-    "uid": 12345,
-    "path": "INBOX",
-    "emailId": "1743d29c-b67d-4747-9016-b8850a5a39bd"
-  }
-}
-```
-
-**Use Cases:**
-- Sync deletions to external systems
-- Update indexes and databases
-- Track user behavior
+[See full messageDeleted reference →](/docs/receiving/webhooks/messagedeleted)
 
 #### messageUpdated
 
-Triggered when message flags or labels change.
+Triggered when EmailEngine detects that the flags or labels on a message have changed, enabling real-time synchronization of message state changes with external systems.
 
-**Payload Example:**
+[See full messageUpdated reference →](/docs/receiving/webhooks/messageupdated)
 
-```json
-{
-  "account": "example",
-  "event": "messageUpdated",
-  "data": {
-    "id": "AAAAAQAAAeE",
-    "uid": 12345,
-    "path": "INBOX",
-    "changes": {
-      "flags": {
-        "added": ["\\Seen"],
-        "removed": [],
-        "value": ["\\Seen", "\\Flagged"]
-      },
-      "labels": {
-        "added": ["\\Important"],
-        "removed": ["\\Inbox"],
-        "value": ["\\Important", "\\Starred"]
-      }
-    }
-  }
-}
-```
+#### messageMissing
 
-**Payload Fields:**
-- `changes.flags.added` - Flags that were just added
-- `changes.flags.removed` - Flags that were just removed
-- `changes.flags.value` - Complete current flag list
-- `changes.labels.added` - Labels added (Gmail only)
-- `changes.labels.removed` - Labels removed (Gmail only)
-- `changes.labels.value` - Complete current label list (Gmail only)
+Triggered when EmailEngine detects that a message it expected to find on the mail server is not available. This event indicates a potential synchronization issue and helps handle edge cases in message processing.
 
-**Use Cases:**
-- Track read status
-- Sync flags to external systems
-- Monitor user actions
+[See full messageMissing reference →](/docs/receiving/webhooks/messagemissing)
 
 ### Delivery Events
 
