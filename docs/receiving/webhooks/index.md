@@ -310,7 +310,9 @@ Triggered when an account is removed.
 
 #### authenticationSuccess
 
-Triggered when account successfully authenticates.
+Triggered when EmailEngine successfully authenticates an email account for the first time or after recovering from an error state.
+
+[See full authenticationSuccess reference](/docs/receiving/webhooks/authenticationsuccess)
 
 #### authenticationError
 
