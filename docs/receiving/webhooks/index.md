@@ -322,7 +322,9 @@ Triggered when EmailEngine fails to authenticate an email account due to invalid
 
 #### connectError
 
-Triggered when connection to email server fails.
+Triggered when EmailEngine fails to establish a connection to an email server due to network issues, server unavailability, or TLS/SSL problems. This is distinct from authentication errors which occur after connection is established.
+
+[See full connectError reference](/docs/receiving/webhooks/connecterror)
 
 ### Tracking Events
 
