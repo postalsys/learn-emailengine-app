@@ -252,21 +252,9 @@ Triggered when a queued message is successfully accepted by the SMTP server or e
 
 #### messageDeliveryError
 
-Triggered when delivery to the SMTP server fails temporarily (will retry).
+Triggered when EmailEngine fails to deliver an email to the SMTP server. This event indicates a temporary failure that may be retried automatically based on the configured retry policy.
 
-**Payload Example:**
-
-```json
-{
-  "account": "example",
-  "event": "messageDeliveryError",
-  "data": {
-    "queueId": "abc123def456",
-    "error": "Connection timeout",
-    "response": "421 4.4.2 Connection timeout"
-  }
-}
-```
+[See full messageDeliveryError reference](/docs/receiving/webhooks/messagedeliveryerror)
 
 #### messageFailed
 

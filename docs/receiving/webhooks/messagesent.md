@@ -321,7 +321,7 @@ Monitor `messageBounce`, `messageDeliveryError`, and `messageFailed` events for 
 
 ## Related Events
 
-- [messageDeliveryError](/docs/receiving/webhooks) - Temporary SMTP delivery failure (will retry)
+- [messageDeliveryError](/docs/receiving/webhooks/messagedeliveryerror) - Temporary SMTP delivery failure (will retry)
 - [messageFailed](/docs/receiving/webhooks) - Permanent delivery failure
 - [messageBounce](/docs/receiving/webhooks) - Bounce message received
 
