@@ -615,19 +615,3 @@ Always use HTTPS for webhook URLs to prevent:
 - Credential exposure
 - Data tampering
 
-### Implement Rate Limiting
-
-Protect your webhook endpoint:
-
-```javascript
-const rateLimit = require('express-rate-limit');
-
-const webhookLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 100, // Max 100 requests per minute
-  message: 'Too many webhook requests'
-});
-
-app.post('/webhooks/emailengine', webhookLimiter, handleWebhook);
-```
-
