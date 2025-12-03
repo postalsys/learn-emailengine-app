@@ -354,7 +354,9 @@ Triggered when a recipient uses the one-click unsubscribe mechanism to remove th
 
 #### listSubscribe
 
-Triggered when a recipient resubscribes to a mailing list.
+Triggered when a recipient re-subscribes to a mailing list after previously unsubscribing. This event enables you to restore subscriptions and keep your mailing lists synchronized.
+
+[See full listSubscribe reference](/docs/receiving/webhooks/listsubscribe)
 
 ## Testing Webhooks
 
