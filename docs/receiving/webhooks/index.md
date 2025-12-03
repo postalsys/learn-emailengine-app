@@ -278,7 +278,9 @@ Triggered when a feedback loop (FBL) complaint is detected. EmailEngine parses A
 
 #### mailboxNew
 
-Triggered when a new folder is created.
+Triggered when a new folder is discovered on the mail server during synchronization.
+
+[See full mailboxNew reference](/docs/receiving/webhooks/mailboxnew)
 
 #### mailboxDeleted
 
