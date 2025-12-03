@@ -270,21 +270,9 @@ Triggered when a bounce notification (Delivery Status Notification) is received 
 
 #### messageComplaint
 
-Triggered when a feedback loop complaint is detected.
+Triggered when a feedback loop (FBL) complaint is detected. EmailEngine parses ARF (Abuse Reporting Format) complaint messages to extract information about the complainant and the original message that was reported as spam.
 
-**Payload Example:**
-
-```json
-{
-  "account": "example",
-  "event": "messageComplaint",
-  "data": {
-    "id": "AAAAAQAAAeE",
-    "recipient": "user@example.com",
-    "complaintType": "abuse"
-  }
-}
-```
+[See full messageComplaint reference](/docs/receiving/webhooks/messagecomplaint)
 
 ### Mailbox Events
 
