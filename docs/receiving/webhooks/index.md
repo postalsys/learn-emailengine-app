@@ -314,7 +314,9 @@ Triggered when account successfully authenticates.
 
 #### authenticationError
 
-Triggered when authentication fails.
+Triggered when EmailEngine fails to authenticate an email account due to invalid credentials, expired OAuth2 tokens, or API authentication errors.
+
+[See full authenticationError reference](/docs/receiving/webhooks/authenticationerror)
 
 #### connectError
 
