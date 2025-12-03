@@ -336,24 +336,9 @@ Triggered when EmailEngine fails to establish a connection to an email server du
 
 #### trackOpen
 
-Triggered when a recipient opens an email (requires open tracking enabled).
+Triggered when a recipient opens an email that has open tracking enabled. The tracking works by embedding a 1x1 pixel image in the email's HTML body that is loaded when the email is viewed.
 
-**Payload Example:**
-
-```json
-{
-  "account": "example",
-  "event": "trackOpen",
-  "date": "2025-10-13T10:30:00.000Z",
-  "data": {
-    "messageId": "<sent-message@example.com>",
-    "remoteAddress": "192.168.1.1",
-    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)..."
-  }
-}
-```
-
-**Note:** The timestamp is in the parent-level `date` field, not in `data`.
+[See full trackOpen reference](/docs/receiving/webhooks/trackopen)
 
 #### trackClick
 
