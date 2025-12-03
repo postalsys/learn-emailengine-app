@@ -298,7 +298,9 @@ Triggered when a folder's UIDVALIDITY changes, indicating a mailbox reset. This 
 
 #### accountAdded
 
-Triggered when a new account is registered.
+Triggered when a new email account is registered with EmailEngine. This is the first webhook in the account lifecycle, fired before authentication is attempted.
+
+[See full accountAdded reference](/docs/receiving/webhooks/accountadded)
 
 #### accountInitialized
 
