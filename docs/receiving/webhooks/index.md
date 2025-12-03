@@ -342,25 +342,9 @@ Triggered when a recipient opens an email that has open tracking enabled. The tr
 
 #### trackClick
 
-Triggered when a recipient clicks a tracked link.
+Triggered when a recipient clicks a tracked link in an email that has click tracking enabled. EmailEngine rewrites links in outgoing HTML emails to redirect through a tracking endpoint, capturing click events before redirecting recipients to the original destination.
 
-**Payload Example:**
-
-```json
-{
-  "account": "example",
-  "event": "trackClick",
-  "date": "2025-10-13T10:31:00.000Z",
-  "data": {
-    "messageId": "<sent-message@example.com>",
-    "url": "https://example.com/product",
-    "remoteAddress": "192.168.1.1",
-    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)..."
-  }
-}
-```
-
-**Note:** The timestamp is in the parent-level `date` field, not in `data`.
+[See full trackClick reference](/docs/receiving/webhooks/trackclick)
 
 #### listUnsubscribe
 
