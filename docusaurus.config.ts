@@ -9,6 +9,15 @@ const config: Config = {
   tagline: 'Email API for IMAP and SMTP',
   favicon: 'img/favicon.ico',
 
+  // Plausible Analytics
+  scripts: [
+    {
+      src: 'https://plausible.emailengine.dev/js/script.js',
+      defer: true,
+      'data-domain': 'learn.emailengine.app',
+    },
+  ],
+
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
@@ -93,13 +102,6 @@ const config: Config = {
         buttonPosition: 'bottom-right',
         modalPosition: 'sidebar-right',
         buttonStyle: 'dark',
-      },
-    ],
-    [
-      'docusaurus-plugin-plausible',
-      {
-        domain: 'learn.emailengine.app',
-        customDomain: 'plausible.emailengine.dev',
       },
     ],
     [
