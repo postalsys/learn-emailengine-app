@@ -31,20 +31,33 @@ EmailEngine integrates with OpenAI's API to provide AI-powered email processing 
 1. Navigate to **Configuration** → **AI Processing** in EmailEngine
 2. Enter your OpenAI API key
 3. Check "Enable AI Email Processing"
-4. Select model (GPT-3.5 or GPT-4)
+4. Select a model from the dropdown
 5. Save configuration
 
 ### Model Selection
 
-| Model             | Speed  | Cost | Context Window | Best For                        |
-| ----------------- | ------ | ---- | -------------- | ------------------------------- |
-| **GPT-3.5 Turbo** | Fast   | Low  | 4K tokens      | Summaries, basic analysis       |
-| **GPT-4**         | Slower | High | 8K+ tokens     | Complex analysis, longer emails |
+EmailEngine dynamically fetches available models from OpenAI's model listing API, so you always have access to the latest models. The model dropdown shows all chat-compatible models available for your API key.
 
-**Recommendation**:
+#### Recommended Models
 
-- Use GPT-3.5 for basic summarization
-- Use GPT-4 for advanced features or longer emails
+| Model | Speed | Cost | Best For |
+|-------|-------|------|----------|
+| **GPT-5 Mini** | Fast | Low | General email processing (default) |
+| **GPT-5** | Medium | Medium | Complex analysis, longer emails |
+| **GPT-5 Pro** | Slower | High | Most demanding tasks |
+| **GPT-4o Mini** | Fast | Low | Budget-conscious processing |
+| **GPT-4o** | Medium | Medium | Balanced performance |
+| **O3 Mini** | Medium | Medium | Advanced reasoning tasks |
+
+#### Model Families
+
+- **GPT-5.x** - Latest generation with best overall performance
+- **GPT-4o** - Optimized models with good speed/cost balance
+- **GPT-4.1** - Enhanced GPT-4 variants
+- **O-series (O1, O3, O4)** - Reasoning-focused models for complex analysis
+- **GPT-3.5/GPT-4** - Legacy models (still available)
+
+**Recommendation**: Start with **GPT-5 Mini** (the default) for most email processing tasks. It offers an excellent balance of speed, cost, and quality. Upgrade to GPT-5 or GPT-5 Pro only if you need enhanced capabilities for complex analysis.
 
 ### How It Works
 
@@ -73,7 +86,7 @@ With AI processing enabled, `messageNew` webhooks include additional sections:
     "summary": {
       "id": "chatcmpl-7IzVIEp5UL3hdQ3aZJ8AHyrJrt3R0",
       "tokens": 245,
-      "model": "gpt-4",
+      "model": "gpt-5-mini",
       "sentiment": "positive",
       "summary": "Request to attend project meeting tomorrow at 2pm in conference room A to discuss Q4 roadmap.",
       "shouldReply": true,
@@ -208,7 +221,7 @@ The `tokens` field shows OpenAI API tokens consumed:
 {
   "summary": {
     "tokens": 2060,
-    "model": "gpt-4"
+    "model": "gpt-5-mini"
   }
 }
 ```
@@ -503,27 +516,23 @@ You can enable/disable AI processing per account if needed (would require custom
 
 ### Estimating Costs
 
-OpenAI charges based on token usage:
+OpenAI charges based on token usage. Pricing varies by model and changes over time. Check [OpenAI's pricing page](https://openai.com/pricing) for current rates.
 
-**GPT-3.5 Turbo** (as of 2023):
+**General pricing tiers:**
 
-- Input: $0.0015 per 1K tokens
-- Output: $0.002 per 1K tokens
+- **Mini/Nano models** (GPT-5 Mini, GPT-4o Mini) - Lowest cost, best for high-volume processing
+- **Standard models** (GPT-5, GPT-4o) - Moderate cost, balanced performance
+- **Pro models** (GPT-5 Pro, O3 Pro) - Higher cost, maximum capability
 
-**GPT-4**:
-
-- Input: $0.03 per 1K tokens
-- Output: $0.06 per 1K tokens
-
-**Example**: Processing 100 emails per day with GPT-3.5:
+**Example**: Processing 100 emails per day with GPT-5 Mini:
 
 - Average email: ~500 tokens input, 200 tokens output
 - Daily tokens: ~70,000 tokens
-- Monthly cost: ~$3-5
+- Monthly cost varies by current pricing - typically very affordable with mini models
 
 ### Cost Optimization
 
-1. **Use GPT-3.5 for Summaries**: Reserve GPT-4 for complex analysis
+1. **Use Mini Models**: GPT-5 Mini or GPT-4o Mini for most email processing
 2. **Filter Emails**: Only process emails from Inbox (skip spam, notifications)
 3. **Selective Processing**: Process only emails matching certain criteria
 4. **Monitor Usage**: Track `tokens` field in webhooks
