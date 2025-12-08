@@ -14,7 +14,8 @@ const config: Config = {
     {
       src: 'https://plausible.emailengine.dev/js/script.js',
       defer: true,
-      'data-domain': 'learn.emailengine.app',
+      // use aggregated domain
+      'data-domain': 'emailengine.app',
     },
   ],
 
