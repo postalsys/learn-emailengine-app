@@ -38,13 +38,20 @@ function IntroSection() {
   return (
     <section className={styles.intro}>
       <div className="container">
-        <p className={styles.introText}>
-          <strong>EmailEngine</strong> is a self-hosted email gateway that connects your application
-          to any email account using a simple REST API. Instead of dealing with IMAP, SMTP, OAuth2,
-          and provider-specific quirks, you make HTTP requests and receive webhooks.
-          EmailEngine handles the complexity of maintaining persistent connections, syncing messages,
-          and authenticating with Gmail, Outlook, or any IMAP server.
-        </p>
+        <div className={styles.introContent}>
+          <img
+            src="/img/EmailEngine_logo_vert.png"
+            alt="EmailEngine Logo"
+            className={styles.introLogo}
+          />
+          <p className={styles.introText}>
+            <strong>EmailEngine</strong> is a self-hosted email gateway that connects your application
+            to any email account using a simple REST API. Instead of dealing with IMAP, SMTP, OAuth2,
+            and provider-specific quirks, you make HTTP requests and receive webhooks.
+            EmailEngine handles the complexity of maintaining persistent connections, syncing messages,
+            and authenticating with Gmail, Outlook, or any IMAP server.
+          </p>
+        </div>
       </div>
     </section>
   );
