@@ -142,7 +142,7 @@ curl -XPOST "https://ee.example.com/v1/account/example/submit" \
 
 ## Template Syntax
 
-Templates use [Handlebars](https://handlebarsjs.com/) for dynamic content.
+Templates use [Handlebars](https://handlebarsjs.com/) for dynamic content. EmailEngine extends Handlebars with additional helpers compatible with [SendGrid's dynamic templates](https://docs.sendgrid.com/for-developers/sending-email/using-handlebars), making migration between platforms straightforward.
 
 ### Variables
 
@@ -217,9 +217,9 @@ With data:
 }
 ```
 
-### Helpers
+### Basic Helpers
 
-Common Handlebars helpers:
+Common built-in Handlebars helpers:
 
 ```handlebars
 {{!-- Comments --}}
@@ -236,6 +236,259 @@ Common Handlebars helpers:
   <p>{{email}}</p>
 {{/with}}
 ```
+
+### SendGrid-Compatible Helpers
+
+EmailEngine provides additional helpers that are compatible with SendGrid's dynamic templates. These helpers enable advanced templating capabilities for comparisons, date formatting, and default values.
+
+#### Comparison Helpers
+
+##### equals
+
+Check if two values are equal. Uses loose equality (`==`) for automatic type coercion.
+
+```handlebars
+{{#equals params.status "active"}}
+  <p>Your account is active.</p>
+{{else}}
+  <p>Your account is inactive.</p>
+{{/equals}}
+```
+
+```handlebars
+{{#equals params.customerCode params.winningCode}}
+  <p>Congratulations! You have a winning code.</p>
+{{/equals}}
+```
+
+##### notEquals
+
+Check if two values are not equal. Uses loose inequality (`!=`) for automatic type coercion.
+
+```handlebars
+{{#notEquals params.role "admin"}}
+  <p>You don't have admin privileges.</p>
+{{/notEquals}}
+```
+
+##### greaterThan
+
+Check if the first numeric value is greater than the second.
+
+```handlebars
+{{#greaterThan params.score 90}}
+  <p>Excellent score! You're in the top tier.</p>
+{{else}}
+  <p>Keep working to improve your score.</p>
+{{/greaterThan}}
+```
+
+```handlebars
+{{#greaterThan params.cartTotal 100}}
+  <p>You qualify for free shipping!</p>
+{{/greaterThan}}
+```
+
+##### lessThan
+
+Check if the first numeric value is less than the second.
+
+```handlebars
+{{#lessThan params.daysRemaining 7}}
+  <p>Your subscription expires soon. Renew now!</p>
+{{/lessThan}}
+```
+
+```handlebars
+{{#lessThan params.inventory 10}}
+  <p>Low stock - only {{params.inventory}} items left!</p>
+{{/lessThan}}
+```
+
+#### Logical Helpers
+
+##### and
+
+Renders content only when all conditions are true. Accepts multiple arguments.
+
+```handlebars
+{{#and params.isVerified params.hasSubscription}}
+  <p>Welcome back, verified subscriber!</p>
+{{else}}
+  <p>Please verify your email or subscribe to continue.</p>
+{{/and}}
+```
+
+```handlebars
+{{#and params.inStock params.hasDiscount params.isPremiumMember}}
+  <p>Exclusive deal available for you!</p>
+{{/and}}
+```
+
+##### or
+
+Renders content when at least one condition is true. Accepts multiple arguments.
+
+```handlebars
+{{#or params.isAdmin params.isModerator}}
+  <p>You have moderation privileges.</p>
+{{/or}}
+```
+
+```handlebars
+{{#or params.hasCoupon params.isPremium params.isFirstOrder}}
+  <p>You're eligible for a discount!</p>
+{{/or}}
+```
+
+#### Value Helpers
+
+##### insert
+
+Insert a value with an optional default if the value is missing or empty.
+
+```handlebars
+<p>Hello {{insert params.firstName "default=Customer"}}!</p>
+```
+
+If `params.firstName` is empty or undefined, displays "Customer" instead.
+
+```handlebars
+<p>Your membership level: {{insert params.tier "default=Standard"}}</p>
+```
+
+##### length
+
+Get the length of an array. Useful in conditionals to check if an array has items.
+
+```handlebars
+{{#if (length params.items)}}
+  <p>You have {{length params.items}} items in your cart.</p>
+{{else}}
+  <p>Your cart is empty.</p>
+{{/if}}
+```
+
+```handlebars
+{{#greaterThan (length params.orders) 10}}
+  <p>Thank you for being a loyal customer with over 10 orders!</p>
+{{/greaterThan}}
+```
+
+#### Date Formatting
+
+##### formatDate
+
+Format dates using [Moment.js format tokens](https://momentjs.com/docs/#/displaying/format/). Accepts an optional timezone offset.
+
+**Syntax:** `{{formatDate timestamp format [timezoneOffset]}}`
+
+**Common format tokens:**
+
+| Token | Output | Example |
+|-------|--------|---------|
+| `YYYY` | 4-digit year | 2025 |
+| `YY` | 2-digit year | 25 |
+| `MMMM` | Full month name | January |
+| `MMM` | Short month name | Jan |
+| `MM` | Month number (padded) | 01 |
+| `DD` | Day of month (padded) | 05 |
+| `D` | Day of month | 5 |
+| `dddd` | Full weekday name | Monday |
+| `ddd` | Short weekday name | Mon |
+| `HH` | Hour (24h, padded) | 14 |
+| `hh` | Hour (12h, padded) | 02 |
+| `h` | Hour (12h) | 2 |
+| `mm` | Minutes (padded) | 05 |
+| `ss` | Seconds (padded) | 09 |
+| `A` | AM/PM | PM |
+| `a` | am/pm | pm |
+| `ZZ` | Timezone offset | +0000 |
+
+**Examples:**
+
+```handlebars
+<p>Order date: {{formatDate params.orderDate "MMMM DD, YYYY"}}</p>
+<!-- Output: Order date: January 15, 2025 -->
+```
+
+```handlebars
+<p>Event time: {{formatDate params.eventTime "dddd, MMMM D, YYYY [at] h:mm A"}}</p>
+<!-- Output: Event time: Monday, January 15, 2025 at 2:30 PM -->
+```
+
+```handlebars
+<p>Delivery: {{formatDate params.deliveryDate "MMM D, YYYY" "-0500"}}</p>
+<!-- Output with EST timezone offset: Delivery: Jan 15, 2025 -->
+```
+
+```handlebars
+<p>Created: {{formatDate params.timestamp "YYYY-MM-DD HH:mm:ss"}}</p>
+<!-- Output: Created: 2025-01-15 14:30:00 -->
+```
+
+#### Iteration Helpers
+
+##### each with Special Variables
+
+When iterating over arrays, you have access to special variables:
+
+```handlebars
+<ol>
+{{#each params.steps}}
+  <li>Step {{@index}}: {{this}}</li>
+{{/each}}
+</ol>
+```
+
+| Variable | Description |
+|----------|-------------|
+| `{{@index}}` | Zero-based index of the current item |
+| `{{@first}}` | True if this is the first item |
+| `{{@last}}` | True if this is the last item |
+| `{{this}}` | The current item value |
+
+```handlebars
+<ul>
+{{#each params.items}}
+  <li{{#if @first}} class="first"{{/if}}{{#if @last}} class="last"{{/if}}>
+    {{this.name}}
+  </li>
+{{/each}}
+</ul>
+```
+
+#### Root Context Access
+
+Access top-level variables from within nested blocks using `@root`:
+
+```handlebars
+{{#each params.orders}}
+  <div class="order">
+    <p>Order #{{this.id}}</p>
+    <p>Customer: {{@root.params.customerName}}</p>
+    <p>Support: {{@root.service.url}}/support</p>
+  </div>
+{{/each}}
+```
+
+### Helpers Quick Reference
+
+| Helper | Purpose | Example |
+|--------|---------|---------|
+| `{{#if}}` | Conditional rendering | `{{#if params.active}}...{{/if}}` |
+| `{{#unless}}` | Inverse conditional | `{{#unless params.disabled}}...{{/unless}}` |
+| `{{#each}}` | Iterate over arrays | `{{#each params.items}}...{{/each}}` |
+| `{{#with}}` | Change context | `{{#with params.user}}...{{/with}}` |
+| `{{#equals}}` | Equality check | `{{#equals a b}}...{{/equals}}` |
+| `{{#notEquals}}` | Inequality check | `{{#notEquals a b}}...{{/notEquals}}` |
+| `{{#greaterThan}}` | Numeric greater than | `{{#greaterThan a b}}...{{/greaterThan}}` |
+| `{{#lessThan}}` | Numeric less than | `{{#lessThan a b}}...{{/lessThan}}` |
+| `{{#and}}` | All conditions true | `{{#and a b c}}...{{/and}}` |
+| `{{#or}}` | Any condition true | `{{#or a b c}}...{{/or}}` |
+| `{{insert}}` | Value with default | `{{insert var "default=fallback"}}` |
+| `{{length}}` | Array length | `{{length params.items}}` |
+| `{{formatDate}}` | Format dates | `{{formatDate date "MMM D, YYYY"}}` |
 
 ## Template Examples
 
