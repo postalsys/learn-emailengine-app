@@ -261,95 +261,162 @@ Note: Memory usage, CPU usage, and uptime metrics are available through standard
 
 ## Grafana Dashboard
 
-### Setting Up Grafana
+EmailEngine provides a pre-built Grafana dashboard for comprehensive monitoring. The dashboard is available in the EmailEngine repository and can be imported directly into your Grafana instance.
 
-Create a comprehensive EmailEngine dashboard in Grafana.
+![EmailEngine Grafana Dashboard](/img/grafana-dashboard.png)
+*EmailEngine monitoring dashboard showing system overview, worker threads, memory, and CPU usage*
 
-#### Add Prometheus Data Source
+### Dashboard Features
 
-1. Go to **Configuration** → **Data Sources**
-2. Add Prometheus
-3. URL: `http://localhost:9090`
-4. Save & Test
+The official EmailEngine Grafana dashboard includes the following sections:
 
-#### Create Dashboard
+**System Overview**
+- Uptime with color-coded thresholds (yellow if under 1 hour, green if stable)
+- EmailEngine version and Node.js runtime version
+- Redis version
+- IMAP and webhook worker thread counts
+- Unresponsive workers alert indicator
+- License status with expiry warnings
 
-Import this dashboard JSON or create panels manually:
+**Worker Threads**
+- Worker threads by type (API, IMAP, webhooks, documents, SMTP, submit, main, imapProxy)
+- Thread lifecycle monitoring (starts and stops over time)
+- Differentiation between recently started threads and established connections
 
-**Panel 1: IMAP Connection Status**
+**Performance Metrics**
+- Process memory usage (RSS, heap total, heap used)
+- CPU usage per core
 
-```promql
-# Query
-sum by (status) (imap_connections)
+**API Traffic**
+- Request distribution by HTTP method (GET, POST, PUT, DELETE)
+- Response status code breakdown (2xx, 4xx, 5xx)
 
-# Visualization: Pie Chart
-# Legend: {{status}}
+**Webhooks**
+- Webhook delivery success vs. failure rates
+- Events distribution by type
+- Request latency heatmap showing response time distribution
+
+**Queue Monitoring**
+- Webhook queue status (waiting, active, delayed jobs)
+- Webhook processing completion and failure rates
+- Email sending queue status
+- Email send attempt outcomes
+
+**Account Connections**
+- Account connection states (connected, connecting, error)
+- IMAP response codes (OK, NO, BAD)
+- Network bandwidth (inbound/outbound data rates)
+- Internal event rates
+
+**OAuth2 Integration**
+- Token refresh success/failure by provider (Microsoft Graph, Gmail)
+- API request rates and statuses
+- HTTP status code breakdown for failures
+- Microsoft Graph subscription status (valid, expired, failed)
+
+**Redis Performance**
+- Memory usage and limits
+- Connection pool utilization
+- Commands per second throughput
+- PING latency
+- Slow query log count
+- Cache hit ratio
+- Uptime and last save time
+
+### Installing the Dashboard
+
+#### Step 1: Add Prometheus Data Source
+
+1. Go to **Configuration** (gear icon) -> **Data Sources**
+2. Click **Add data source**
+3. Select **Prometheus**
+4. Configure the connection:
+   - **URL**: `http://localhost:9090` (or your Prometheus server address)
+   - Leave other settings at defaults
+5. Click **Save & Test** to verify the connection
+
+#### Step 2: Download the Dashboard
+
+Download the dashboard JSON from the EmailEngine repository:
+
+```bash
+curl -O https://raw.githubusercontent.com/postalsys/emailengine/master/examples/grafana-dashboard.json
 ```
 
-**Panel 2: Webhook Events Rate**
+Or download directly from: [grafana-dashboard.json](https://github.com/postalsys/emailengine/blob/master/examples/grafana-dashboard.json)
 
-```promql
-# Query
-rate(webhooks[5m]) * 60
+#### Step 3: Import the Dashboard
 
-# Visualization: Graph
-# Label: Webhooks per minute
-```
+1. In Grafana, go to **Dashboards** (four squares icon) -> **Import**
+2. Click **Upload JSON file** and select the downloaded `grafana-dashboard.json`
+3. Or paste the JSON content directly into the **Import via panel json** text area
+4. Configure the import options:
+   - **Name**: EmailEngine (or customize)
+   - **Folder**: Select or create a folder
+   - **Prometheus**: Select your Prometheus data source
+5. Click **Import**
 
-**Panel 3: Webhook Success vs Failure**
+#### Step 4: Configure the Instance Variable
 
-```promql
-# Queries (use multiple series)
-sum(rate(webhooks{status="success"}[5m])) * 60
-sum(rate(webhooks{status="failure"}[5m])) * 60
+The dashboard includes an `Instance` variable for filtering by EmailEngine instance. After importing:
 
-# Visualization: Graph
-# Labels: Success, Failure
-```
-
-**Panel 4: Queue Health**
-
-```promql
-# Queries (multiple series)
-queue_size{queue="notify",state="waiting"}
-queue_size{queue="submit",state="waiting"}
-
-# Visualization: Stat or Graph
-# Alert if > 100
-```
-
-**Panel 5: IMAP Connections by Status**
-
-```promql
-# Query
-imap_connections{status="connected"}
-imap_connections{status="authenticationError"}
-imap_connections{status="connectError"}
-
-# Visualization: Graph (stacked)
-# Legend: {{status}}
-```
-
-**Panel 6: Webhook Response Time**
-
-```promql
-# Query (99th percentile, result in milliseconds)
-histogram_quantile(0.99,
-  rate(webhook_req_bucket[5m])
-)
-
-# Visualization: Graph
-# Label: 99th percentile webhook duration (ms)
-```
+1. Click the gear icon on the dashboard to access **Settings**
+2. Go to **Variables**
+3. Edit the `host` variable if needed to match your Prometheus labels
+4. The default query `label_values(emailengine_info, instance)` should auto-populate with your instances
 
 ### Dashboard Variables
 
-Add variables for filtering:
+The dashboard uses these variables for filtering:
 
+| Variable | Description | Default Query |
+|----------|-------------|---------------|
+| `$host` | EmailEngine instance filter | `label_values(emailengine_info, instance)` |
+
+Select different instances from the dropdown at the top of the dashboard to filter all panels.
+
+### Custom Dashboard Panels
+
+You can extend the dashboard with custom panels. Here are some useful queries:
+
+**Webhook Events Rate**
+
+```promql
+rate(webhooks[5m]) * 60
 ```
-$environment = label_values(imap_connections, environment)
-$instance = label_values(imap_connections, instance)
+Shows webhooks per minute.
+
+**Webhook Success vs Failure**
+
+```promql
+# Success rate
+sum(rate(webhooks{status="success"}[5m])) * 60
+
+# Failure rate
+sum(rate(webhooks{status="failure"}[5m])) * 60
 ```
+
+**IMAP Connections by Status**
+
+```promql
+sum by (status) (imap_connections)
+```
+Use with a pie chart or stat panel.
+
+**Webhook Response Time (99th percentile)**
+
+```promql
+histogram_quantile(0.99, rate(webhook_req_bucket[5m]))
+```
+Result is in milliseconds.
+
+**Queue Health**
+
+```promql
+queue_size{queue="notify",state="waiting"}
+queue_size{queue="submit",state="waiting"}
+```
+Alert if values exceed 100.
 
 ## Key Metrics to Monitor
 
