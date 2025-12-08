@@ -337,13 +337,13 @@ The official EmailEngine Grafana dashboard includes the following sections:
 
 #### Step 2: Download the Dashboard
 
-Download the dashboard JSON from the EmailEngine repository:
+Download the dashboard JSON:
 
 ```bash
-curl -O https://raw.githubusercontent.com/postalsys/emailengine/master/examples/grafana-dashboard.json
+curl -L -O https://go.emailengine.app/grafana-dashboard.json
 ```
 
-Or download directly from: [grafana-dashboard.json](https://github.com/postalsys/emailengine/blob/master/examples/grafana-dashboard.json)
+Or download directly from: [grafana-dashboard.json](https://go.emailengine.app/grafana-dashboard.json)
 
 #### Step 3: Import the Dashboard
 
