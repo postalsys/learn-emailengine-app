@@ -22,7 +22,7 @@ Choose based on your priorities: operational overhead vs control and cost.
 | ------------------------ | --------------------------- | ---------------------------------- |
 | **Hosting**              | Self-hosted                 | Fully managed SaaS                 |
 | **Data Storage**         | Metadata only (in Redis)    | Full message copies in Nylas cloud |
-| **Pricing Model**        | Flat yearly license         | Per-account ($1.50/month)          |
+| **Pricing Model**        | Flat yearly license         | Per-account (from $1.50/month)     |
 | **Setup Time**           | 5-10 minutes                | Instant (signup)                   |
 | **Data Residency**       | Your infrastructure         | Nylas cloud                        |
 | **Webhook Latency**      | Near-instant                | Similar                            |
@@ -80,6 +80,7 @@ graph LR
 ```
 
 - **Stores:** Complete message copies, attachments, metadata
+- **Retention:** 90-day rolling window for IMAP accounts
 - **Advantages:** Fast reads, full-text search, offline access
 - **Disadvantages:** Data stored on third-party servers
 
@@ -113,9 +114,9 @@ graph LR
 
 **Nylas:**
 
-- Fully parallel - no queueing
+- Fully parallel on Nylas API layer - no queueing
 - Multiple threads can read same mailbox simultaneously
-- No IMAP rate limits exposed to you
+- Underlying provider limits still apply (e.g., Microsoft Graph: 4 concurrent connections)
 
 **EmailEngine:**
 
@@ -180,7 +181,7 @@ See [Threading Documentation](/docs/sending/threading/provider-support) for deta
 | Cost Component      | Amount                                                       |
 | ------------------- | ------------------------------------------------------------ |
 | EmailEngine License | Flat annual fee (see [pricing](https://postalsys.com/plans)) |
-| Infrastructure      | $50-500/month (VPS/cloud)                                    |
+| Infrastructure      | Variable (VPS/cloud)                                         |
 | DevOps Time         | Variable                                                     |
 
 **Cost scales with infrastructure, not mailbox count.**
@@ -189,7 +190,9 @@ See [Threading Documentation](/docs/sending/threading/provider-support) for deta
 
 ### Nylas Pricing
 
-**Structure:** (as of January 2025)
+:::info Pricing as of 9 December 2025
+Pricing may change. Check [nylas.com/pricing](https://www.nylas.com/pricing/) for current rates.
+:::
 
 **Pricing Tiers:**
 
@@ -199,21 +202,27 @@ See [Threading Documentation](/docs/sending/threading/provider-support) for deta
    - Accounts: 5 connected accounts
    - Purpose: Testing and development
 
-2. **Full Platform**
+2. **Calendar Only**
 
-   - Cost: $1.50 per account/month
-   - Minimum: $15/month (5 accounts minimum)
+   - Base: $10/month (includes 5 connected accounts)
+   - Additional accounts: $1/account/month
+   - Features: Calendar sync, scheduling, recurring events
+
+3. **Full Platform**
+
+   - Base: $15/month (includes 5 connected accounts)
+   - Additional accounts: $1.50/account/month
    - Features: Email, Calendar, and full communication stack
 
-3. **Enterprise/Custom**
-   - Cost: Negotiable with volume discounts
-   - Contact: Sales team required
-   - Features: Custom arrangements for large deployments
+4. **Custom/Enterprise**
+   - Contact sales for volume discounts
+   - Features: Full communication suite, dedicated support, uptime guarantees
+   - BAA available for HIPAA compliance (contract plans only)
 
-**Cost scales with mailbox count.**
+**Cost scales with connected account count.**
 
 :::info Volume Pricing
-Enterprise customers can negotiate volume discounts. Actual costs may vary based on custom contracts.
+Enterprise customers can negotiate volume discounts with annual contracts.
 :::
 
 ---
@@ -318,9 +327,9 @@ Enterprise customers can negotiate volume discounts. Actual costs may vary based
 
 **- You need advanced AI features**
 
-- Sentiment analysis
-- Smart categorization
-- Contact enrichment
+- Sentiment analysis (native)
+- Smart categorization (native)
+- Signature extraction (extracts contact data from email signatures)
 - Event detection
 
 **- You need parallel performance**
