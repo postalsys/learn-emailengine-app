@@ -1,9 +1,8 @@
 ---
-title: Delivery Testing and Inbox Placement
+title: Inbox Placement Testing
 sidebar_position: 8
-description: Test email deliverability and measure inbox vs spam placement using EmailEngine's sub-connections feature
+description: Track whether emails land in inbox or spam folder by monitoring seed mailboxes with EmailEngine's sub-connections feature
 keywords:
-  - delivery testing
   - inbox placement
   - spam testing
   - deliverability
@@ -17,7 +16,7 @@ SOURCE: sources/blog/2023-02-27-measuging-inbox-spam-placement.md
 This guide covers using EmailEngine to test email delivery and measure inbox/spam placement.
 -->
 
-# Delivery Testing and Inbox Placement
+# Inbox Placement Testing
 
 Measure email deliverability by monitoring test mailboxes with EmailEngine. Track whether your emails land in the inbox or spam folder, and for Gmail, which category tab they appear in.
 
@@ -61,7 +60,7 @@ Sub-connections allow EmailEngine to establish **additional IMAP sessions** for 
 
 Use sub-connections sparingly. EmailEngine prioritizes the primary connection and only establishes sub-connections after the main session is stable.
 
-## Setting Up Delivery Testing
+## Setting Up Inbox Placement Testing
 
 ### 1. Create Test Account
 
@@ -96,7 +95,7 @@ Instead of folder paths, use **special-use flags** (automatically resolved):
 
 ```json
 {
-  "subconnections": ["\\Junk"]  // Spam/Junk folder
+  "subconnections": ["\\Junk"]
 }
 ```
 
@@ -195,13 +194,23 @@ Gmail sorts inbox emails into category tabs:
 
 ![Gmail Category Tabs](/img/external/Screenshot-2023-02-27-at-11.52.29.png)
 
-### Enable Category Detection
+### Gmail API vs IMAP
 
-Category detection requires **additional IMAP commands per email**, which can slow processing for high-volume accounts. Enable only when needed.
+Category detection behavior depends on how the Gmail account is connected:
+
+**Gmail API accounts:** Category information is **always available** automatically. The Gmail API provides category labels directly as part of the message metadata, so no additional configuration is needed.
+
+**IMAP accounts:** Category detection must be **explicitly enabled** (see below). EmailEngine uses advanced IMAP commands to detect categories, which adds overhead. This is why it's disabled by default for IMAP connections.
+
+If you're setting up accounts specifically for inbox placement testing and need category detection, consider using Gmail API authentication instead of IMAP for automatic category support.
+
+### Enable Category Detection (IMAP only)
+
+For IMAP-connected Gmail accounts, category detection requires **additional IMAP commands per email**, which can slow processing for high-volume accounts. Enable only when needed.
 
 #### Enable in UI
 
-1. Go to **Configuration** → **General Settings**
+1. Go to **Configuration** > **General Settings**
 2. Scroll to the **Gmail Features** section
 3. Enable **Detect Gmail Categories (IMAP)**
 4. Save changes
@@ -252,7 +261,7 @@ Possible `category` values:
 - `reservations`
 - `purchases`
 
-## Implementing Delivery Tests
+## Implementing Inbox Placement Tests
 
 ### Complete Testing Flow
 
@@ -671,4 +680,8 @@ function generateDeliveryReport(stats) {
 }
 ```
 
+## See Also
 
+- [Email Authentication Testing](/docs/advanced/email-authentication-testing) - Verify DKIM, SPF, DMARC configuration
+- [Webhooks](/docs/receiving/webhooks) - Configure webhook notifications
+- [Gmail OAuth2](/docs/accounts/gmail-oauth2) - Set up Gmail accounts for testing

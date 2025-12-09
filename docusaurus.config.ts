@@ -124,6 +124,10 @@ const config: Config = {
             from: '/docs/receiving/webhooks',
             to: '/docs/webhooks/overview',
           },
+          {
+            from: '/docs/advanced/delivery-testing',
+            to: '/docs/advanced/inbox-placement-testing',
+          },
         ],
       },
     ],

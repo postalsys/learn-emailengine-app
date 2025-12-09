@@ -28,7 +28,21 @@ This repository contains the **unified Docusaurus documentation site** for Email
    - ✅ Use text instead: "Success", "Warning", "Important", etc.
    - Note: Existing emojis in CLAUDE.md itself are acceptable for this meta-documentation file
 
-3. **Screenshot Automation** - When generating screenshots for documentation
+3. **URL Redirects** - When renaming or moving documentation pages
+
+   - If a documentation page URL changes (file renamed or moved), add a redirect from the old URL to the new one
+   - This prevents 404 errors when users access old/bookmarked links
+   - Add redirects in `docusaurus.config.ts` under the `@docusaurus/plugin-client-redirects` plugin
+   - Example:
+     ```typescript
+     {
+       from: '/docs/old-path/old-page',
+       to: '/docs/new-path/new-page',
+     },
+     ```
+   - Only skip redirects if a new page with different content replaces the old URL
+
+4. **Screenshot Automation** - When generating screenshots for documentation
 
    **Environment Variables for Automation:**
 
