@@ -128,6 +128,10 @@ const config: Config = {
             from: '/docs/advanced/delivery-testing',
             to: '/docs/advanced/inbox-placement-testing',
           },
+          {
+            from: '/docs/sending/smtp-gateway',
+            to: '/docs/sending/smtp-interface',
+          },
         ],
       },
     ],

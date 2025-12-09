@@ -167,6 +167,6 @@ Integrate email into your application logic:
 4. **[Threading](./threading.md)** - Maintain conversation threads
 5. **[Templates](./templates.md)** - Use email templates
 6. **[Outbox Queue](./outbox-queue.md)** - Understanding the queue system
-7. **[SMTP Gateway](./smtp-gateway.md)** - Alternative SMTP integration
+7. **[SMTP Interface](./smtp-interface.md)** - Alternative SMTP integration
 
 

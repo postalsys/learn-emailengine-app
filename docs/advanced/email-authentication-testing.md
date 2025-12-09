@@ -107,7 +107,9 @@ console.log('Test ID:', result.deliveryTest);
 
 ## Using a Gateway
 
-By default, the test email is sent using the account's native sending method (SMTP, Gmail API, or Microsoft Graph). To test delivery through a specific SMTP gateway instead:
+By default, the test email is sent using the account's native sending method (SMTP, Gmail API, or Microsoft Graph). To test delivery through a specific SMTP gateway instead, use the `gateway` parameter.
+
+A **gateway** in EmailEngine is an SMTP account (typically from a sending provider like SendGrid, Mailgun, or Amazon SES) that EmailEngine can use to send emails on behalf of any account. Gateways must allow custom `From:` addresses since they send mail for multiple accounts. You can register gateways via the [Gateway API](/docs/api/post-v-1-gateway).
 
 ```bash
 curl -X POST "http://localhost:3000/v1/delivery-test/account/my-account" \
@@ -413,5 +415,5 @@ For complete request/response schemas, see the API documentation:
 ## See Also
 
 - [Inbox Placement Testing](/docs/advanced/inbox-placement-testing) - Test whether emails land in inbox or spam
-- [SMTP Gateway](/docs/sending/smtp-gateway) - Configure custom SMTP gateways
+- [SMTP Interface](/docs/sending/smtp-interface) - Send emails via SMTP protocol
 - [Webhooks](/docs/webhooks/overview) - Monitor email events

@@ -1,16 +1,16 @@
 ---
-title: SMTP Gateway
+title: SMTP Interface
 sidebar_position: 8
-description: Using EmailEngine's SMTP gateway for sending emails with standard SMTP clients
+description: Using EmailEngine's SMTP interface for sending emails with standard SMTP clients
 ---
 
-# SMTP Gateway
+# SMTP Interface
 
-EmailEngine provides an SMTP gateway feature that allows you to send emails using standard SMTP protocol instead of the REST API. This is useful for legacy applications or when you need to integrate with tools that only support SMTP.
+EmailEngine provides an SMTP interface that allows you to send emails using standard SMTP protocol instead of the REST API. EmailEngine acts as an SMTP proxy - it accepts messages via SMTP and routes them through the appropriate email account. This is useful for legacy applications or when you need to integrate with tools that only support SMTP.
 
-## Why Use the SMTP Gateway
+## Why Use the SMTP Interface
 
-The SMTP gateway is beneficial when:
+The SMTP interface is beneficial when:
 
 - **Legacy applications**: Integration with older systems that only support SMTP
 - **Email clients**: Using desktop or mobile email clients
@@ -20,7 +20,7 @@ The SMTP gateway is beneficial when:
 
 ## How It Works
 
-When the SMTP gateway is enabled:
+When the SMTP interface is enabled:
 
 1. EmailEngine listens on an SMTP port (default: 2525)
 2. Clients connect using SMTP protocol
@@ -29,11 +29,11 @@ When the SMTP gateway is enabled:
 5. Messages are queued just like with the Submit API
 6. Delivery status tracked via webhooks
 
-## Enabling the SMTP Gateway
+## Enabling the SMTP Interface
 
 ### Via Settings API (Recommended)
 
-Configure the SMTP gateway using the Settings API:
+Configure the SMTP interface using the Settings API:
 
 ```bash
 curl -XPOST "https://ee.example.com/v1/settings" \
@@ -50,13 +50,13 @@ curl -XPOST "https://ee.example.com/v1/settings" \
 
 ### Via Web Interface
 
-Navigate to **Configuration > SMTP Interface** in the EmailEngine admin panel to configure the SMTP gateway settings.
+Navigate to **Configuration > SMTP Interface** in the EmailEngine admin panel to configure the settings.
 
 ### Configuration Options
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| `smtpServerEnabled` | Enable/disable SMTP gateway | `false` |
+| `smtpServerEnabled` | Enable/disable SMTP interface | `false` |
 | `smtpServerPort` | Port to listen on | `2525` |
 | `smtpServerHost` | Host/interface to bind | `0.0.0.0` |
 | `smtpServerAuthEnabled` | Require authentication | `false` |
@@ -90,8 +90,8 @@ const transporter = nodemailer.createTransport({
 await transporter.sendMail({
   from: 'sender@example.com',
   to: 'recipient@example.com',
-  subject: 'Test via SMTP Gateway',
-  text: 'Hello from SMTP Gateway!'
+  subject: 'Test via SMTP Interface',
+  text: 'Hello from SMTP Interface!'
 });
 ```
 
@@ -104,8 +104,8 @@ You can also use the email address as username:
 import smtplib
 from email.mime.text import MIMEText
 
-msg = MIMEText('Hello from SMTP Gateway!')
-msg['Subject'] = 'Test via SMTP Gateway'
+msg = MIMEText('Hello from SMTP Interface!')
+msg['Subject'] = 'Test via SMTP Interface'
 msg['From'] = 'sender@example.com'
 msg['To'] = 'recipient@example.com'
 
@@ -351,7 +351,7 @@ For advanced features, use the [REST API](./basic-sending.md) instead.
 
 ## Monitoring and Webhooks
 
-Messages sent via SMTP gateway are treated the same as messages sent via REST API:
+Messages sent via the SMTP interface are treated the same as messages sent via REST API:
 
 - Queued in the outbox queue
 - Automatic retry logic
@@ -366,9 +366,9 @@ curl "https://ee.example.com/v1/account/example/outbox" \
 ```
 
 
-## When to Use SMTP Gateway vs REST API
+## When to Use SMTP Interface vs REST API
 
-### Use SMTP Gateway When:
+### Use SMTP Interface When:
 
 - Integrating with legacy systems
 - Using desktop email clients

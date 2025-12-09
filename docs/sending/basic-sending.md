@@ -426,7 +426,7 @@ Route through a specific SMTP gateway:
 }
 ```
 
-Gateways must be configured in EmailEngine settings first. [Learn more →](./smtp-gateway)
+Gateways are SMTP accounts (like SendGrid, Mailgun, or Amazon SES) that EmailEngine can use to send emails on behalf of any account. Register gateways via the [Gateway API](/docs/api/post-v-1-gateway).
 
 #### SMTP Envelope
 
