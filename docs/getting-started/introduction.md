@@ -17,6 +17,36 @@ EmailEngine streamlines email integration for your app or service with a unified
 - **Gmail API** - Native Gmail integration
 - **Microsoft Graph API** - Native Microsoft 365/Outlook integration
 
+## What EmailEngine is NOT
+
+Understanding what EmailEngine does not do is just as important as knowing what it does:
+
+### Not a Mail Server
+
+EmailEngine is **not a mail server** like Postfix, Sendmail, or Microsoft Exchange. You cannot create new email accounts with EmailEngine. It does not host mailboxes, manage email domains, or provide MX records for receiving mail directly.
+
+Instead, EmailEngine connects to **existing email accounts** that you already have with providers like Gmail, Outlook, or any IMAP-compatible email service. Think of it as a bridge between your application and email providers, not as a replacement for those providers.
+
+### Not a Managed Service
+
+EmailEngine is **self-hosted software**, not a cloud service. There is no EmailEngine-hosted API endpoint you can call. You must deploy and run EmailEngine on your own infrastructure, whether that's:
+
+- A cloud server (AWS, DigitalOcean, Render, etc.)
+- An on-premise server
+- A Docker container
+- Your local development machine
+
+This gives you complete control over your data and privacy, but also means you're responsible for hosting, maintenance, and scaling.
+
+### Summary
+
+| EmailEngine IS | EmailEngine is NOT |
+|----------------|-------------------|
+| An email API gateway | A mail server |
+| A bridge to existing accounts | A service that creates email accounts |
+| Self-hosted software | A managed cloud service |
+| A unified REST API | A replacement for your email provider |
+
 ## Key Features
 
 ### Unified REST API

@@ -22,4 +22,4 @@ yarn-error.log*
 documentation-pages.csv
 review-reports/
 
-webhook-events.csv
+webhook-events.csv.claude/settings.local.json
