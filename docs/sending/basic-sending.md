@@ -117,12 +117,8 @@ You can specify multiple recipients in `to`, `cc`, and `bcc` fields:
     { "name": "Alice", "address": "alice@example.com" },
     { "name": "Bob", "address": "bob@example.com" }
   ],
-  "cc": [
-    { "address": "manager@example.com" }
-  ],
-  "bcc": [
-    { "address": "archive@example.com" }
-  ]
+  "cc": [{ "address": "manager@example.com" }],
+  "bcc": [{ "address": "archive@example.com" }]
 }
 ```
 
@@ -324,6 +320,7 @@ Enable open and click tracking for your emails:
 ```
 
 When enabled, EmailEngine will:
+
 - Insert a tracking pixel to detect email opens (`trackOpens`)
 - Rewrite links to track clicks (`trackClicks`)
 - Send `trackOpen` and `trackClick` webhook events when detected
@@ -354,6 +351,7 @@ Generate email preview without actually sending:
 ```
 
 **Response:**
+
 ```json
 {
   "response": "Dry run",
@@ -452,6 +450,7 @@ Useful for bounce handling and advanced email routing.
 Prevent duplicate message submission with idempotency keys:
 
 **Request:**
+
 ```bash
 curl -XPOST "http://127.0.0.1:3000/v1/account/example/submit" \
   -H "Authorization: Bearer <token>" \
@@ -465,6 +464,7 @@ curl -XPOST "http://127.0.0.1:3000/v1/account/example/submit" \
 ```
 
 If the same request is sent multiple times with the same `Idempotency-Key` header, EmailEngine will:
+
 - Process it only once
 - Return the same response for duplicate requests
 - Prevent accidental double-sends
@@ -541,6 +541,17 @@ Raised once EmailEngine gives up retrying (max attempts reached):
 }
 ```
 
+### Bounce Handling
+
+A `messageSent` event means the account's email server (e.g., Gmail, Outlook) accepted the email for delivery. However, when that server's MTA attempts to deliver the email to the recipient's mail server (MX), the recipient MX may reject it (e.g., mailbox full, user doesn't exist, domain not found).
+
+When this happens, the sender's MTA generates a bounce response email and sends it back to the sender's inbox. This is an informational email that explains why delivery failed. EmailEngine monitors the inbox, detects these bounce emails, parses them to extract the bounced recipient and error details, and triggers a `messageBounce` webhook event if it can identify which original message bounced.
+
+See:
+
+- [Bounce Detection](/docs/advanced/bounces) - How EmailEngine detects and processes bounces
+- [messageBounce Webhook](/docs/webhooks/messagebounce) - Webhook payload and handling
+
 ## Testing Sent Emails
 
 ### Using Ethereal Email
@@ -584,6 +595,7 @@ curl "http://127.0.0.1:3000/v1/account/example/outbox" \
 **Problem**: Gmail, Outlook, and Yahoo may refuse SMTP logins that look like bots.
 
 **Solution**:
+
 - **Gmail**: Use OAuth2 or app-specific passwords (account passwords no longer work)
 - **Outlook**: Use OAuth2 (password authentication completely disabled)
 - **Yahoo**: Use OAuth2 or app-specific passwords
@@ -595,6 +607,7 @@ See [Gmail Setup](../accounts/gmail-imap.md) and [Outlook Setup](../accounts/out
 **Problem**: Heroku dynos cut idle sockets.
 
 **Solution**:
+
 - Move off Heroku or increase dyno size
 - Configure longer timeouts
 - Use a different deployment platform
@@ -610,6 +623,7 @@ See [Gmail Setup](../accounts/gmail-imap.md) and [Outlook Setup](../accounts/out
 **Problem**: Too many emails sent too quickly.
 
 **Solution**:
+
 - Implement throttling in your application
 - Use mail merge for bulk sending
 - Spread sends over time
@@ -620,6 +634,7 @@ See [Gmail Setup](../accounts/gmail-imap.md) and [Outlook Setup](../accounts/out
 **Problem**: Email rejected due to size limits.
 
 **Solution**:
+
 - Reduce attachment size
 - Use external file hosting with links
 - Compress attachments
@@ -630,6 +645,7 @@ See [Gmail Setup](../accounts/gmail-imap.md) and [Outlook Setup](../accounts/out
 **Problem**: Emails flagged as spam.
 
 **Solution**:
+
 - Provide both HTML and plain text versions
 - Avoid spam trigger words
 - Include unsubscribe links for bulk email
@@ -641,6 +657,7 @@ See [Gmail Setup](../accounts/gmail-imap.md) and [Outlook Setup](../accounts/out
 ### Optimize for Bulk Sending
 
 For sending multiple emails:
+
 - Use [Mail Merge](./mail-merge.md) instead of individual calls
 - Enable `copy: false` to skip Sent folder storage
 - Implement rate limiting
@@ -649,6 +666,7 @@ For sending multiple emails:
 ### Connection Pooling
 
 EmailEngine maintains SMTP connection pools automatically. For high-volume sending:
+
 - Keep accounts connected
 - Avoid frequent reconnections
 - Monitor connection status
@@ -656,6 +674,7 @@ EmailEngine maintains SMTP connection pools automatically. For high-volume sendi
 ### Webhook Processing
 
 Handle webhooks asynchronously:
+
 - Return 200 OK quickly from webhook endpoint
 - Process delivery status in background jobs
 - Implement webhook retry logic

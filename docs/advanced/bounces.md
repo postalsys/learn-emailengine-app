@@ -5,7 +5,7 @@ description: Automatically detect and track email bounces with EmailEngine's bou
 keywords:
   - bounces
   - bounce detection
-  - DSN
+  - bounce email
   - delivery status
   - hard bounce
   - soft bounce
@@ -37,10 +37,21 @@ Note: EmailEngine does not use [VERP addresses](https://en.wikipedia.org/wiki/Va
 
 ## How Bounce Detection Works
 
-EmailEngine continuously monitors the inbox for bounce messages (Delivery Status Notifications - DSN). When a bounce is detected:
+When you send an email through EmailEngine:
 
-1. **Parse Bounce Message** - Extract bounce information from DSN format
-2. **Match Original Message** - Link bounce to sent message via Message-ID
+1. **Email Sent** - EmailEngine submits the email to the account's email server (Gmail, Outlook, etc.)
+2. **messageSent Event** - The account's server accepts the email and EmailEngine triggers `messageSent`
+3. **MTA Delivery Attempt** - The account's Mail Transfer Agent (MTA) attempts to deliver to the recipient's mail server (MX)
+4. **Recipient MX Rejects** - If the recipient server rejects the email (user unknown, mailbox full, etc.)
+5. **Bounce Email Generated** - The sender's MTA generates a bounce response email (a human-readable informational message explaining the delivery failure) and sends it to the sender's inbox
+6. **EmailEngine Detects Bounce** - EmailEngine monitors the inbox and detects the bounce email by recognizing common bounce message patterns
+7. **Bounce Parsed** - EmailEngine parses the bounce email to extract the bounced recipient address, error message, and original message details
+8. **messageBounce Event** - If EmailEngine can identify which original message bounced (via Message-ID or other headers), it triggers the `messageBounce` webhook
+
+When a bounce is detected, EmailEngine:
+
+1. **Parse Bounce Email** - Extract bounce information from the human-readable bounce message
+2. **Match Original Message** - Link bounce to sent message via Message-ID (when available)
 3. **Send Webhook** - Deliver `messageBounce` webhook to your application
 4. **Add to Message** - Attach bounce data to sent message in listings
 
@@ -48,13 +59,20 @@ EmailEngine continuously monitors the inbox for bounce messages (Delivery Status
 
 ```mermaid
 flowchart TD
-    A[Send Email] --> B[Store Message-ID: &lt;abc@example.com&gt;]
-    B --> C[Email Bounces]
-    C --> D[Receive DSN - Delivery Status Notification]
-    D --> E[Parse Bounce Information]
-    E --> F[Match to Original Message-ID]
-    F --> G[Send messageBounce Webhook]
-    G --> H[Add bounces array to message listing]
+    A[Send Email via EmailEngine] --> B[Account's email server accepts email]
+    B --> C[messageSent webhook triggered]
+    C --> D[Account's MTA delivers to recipient MX]
+    D --> E{Recipient MX accepts?}
+    E -->|Yes| F[Email delivered successfully]
+    E -->|No| G[Recipient MX rejects email]
+    G --> H[Sender's MTA generates bounce email]
+    H --> I[Bounce email arrives in sender's inbox]
+    I --> J[EmailEngine detects bounce message]
+    J --> K[Parse bounce to extract recipient and error]
+    K --> L{Can identify original message?}
+    L -->|Yes| M[messageBounce webhook triggered]
+    L -->|No| N[Bounce detected but not linked]
+    M --> O[Add bounces array to message listing]
 ```
 
 ## Bounce Types
@@ -92,7 +110,7 @@ Temporary delivery failures that might succeed on retry:
 
 ### Bounce Action Codes
 
-EmailEngine includes the DSN action code:
+EmailEngine extracts action codes from bounce emails (these follow the standard action codes used in bounce messages):
 
 - `failed` - Permanent failure (hard bounce)
 - `delayed` - Temporary failure (soft bounce)
@@ -173,7 +191,7 @@ When the email bounces, EmailEngine sends a `messageBounce` webhook:
 |-------|-------------|
 | `bounceMessage` | ID of the bounce notification message |
 | `recipient` | Email address that bounced |
-| `action` | DSN action: `failed`, `delayed`, etc. |
+| `action` | Bounce action: `failed`, `delayed`, etc. |
 | `response.message` | Error message from receiving server |
 | `response.status` | SMTP status code (e.g., `5.0.0`) |
 | `response.source` | Source of error: `smtp`, `dns`, etc. |
