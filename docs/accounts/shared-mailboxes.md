@@ -253,6 +253,40 @@ curl -X POST https://your-ee.com/v1/account \
 
 All three shared mailboxes use the same main account credentials (`my-account`).
 
+## Email Address vs UPN Mismatch
+
+In Microsoft 365, a shared mailbox may have a public email address that differs from its User Principal Name (UPN). This commonly happens when:
+
+- The organization uses a custom domain for email (e.g., `shared@contoso.com`)
+- The UPN uses the default Microsoft domain (e.g., `sharedmailbox@contoso.onmicrosoft.com`)
+
+In this case, set the `email` field to the public address and use `delegatedUser` to specify the actual UPN:
+
+```bash
+curl -X POST https://your-ee.com/v1/account \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "shared-support",
+    "name": "Support Mailbox",
+    "email": "shared@contoso.com",
+    "oauth2": {
+      "auth": {
+        "delegatedUser": "sharedmailbox@contoso.onmicrosoft.com",
+        "delegatedAccount": "my-account"
+      }
+    }
+  }'
+```
+
+**How it works:**
+
+- `email`: The public email address (`shared@contoso.com`) - used in EmailEngine for display and as the From address when sending
+- `delegatedUser`: The UPN (`sharedmailbox@contoso.onmicrosoft.com`) - used internally to access the mailbox via Microsoft Graph or IMAP
+- `delegatedAccount`: The main account whose OAuth2 credentials are used for authentication
+
+This configuration ensures EmailEngine uses the correct public email address externally while accessing the mailbox through the proper Microsoft 365 UPN.
+
 ## Backend-Specific Considerations
 
 ### IMAP/SMTP Backend
