@@ -91,6 +91,13 @@ Start using EmailEngine immediately. No sign-up, no credit card, no limitations 
 - Flat rate (not per-mailbox or per-instance)
 - Payment via credit card or SEPA direct debit
 
+**VAT (Value Added Tax):**
+
+- VAT is added to all customers in Estonia
+- VAT is added to EU customers without a valid VAT number
+- EU business customers with a valid VAT number are exempt (reverse charge applies)
+- Customers outside the EU are not charged VAT
+
 **How it works:**
 
 1. Purchase a **subscription** (not individual licenses)
