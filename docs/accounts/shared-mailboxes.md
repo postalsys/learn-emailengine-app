@@ -65,6 +65,41 @@ Before setting up shared mailboxes in EmailEngine:
 Both IMAP/SMTP and Microsoft Graph API backends support shared mailboxes, but Graph API provides better native support.
 :::
 
+### Microsoft Graph API Scopes
+
+If using the Microsoft Graph API backend, you must add additional scopes to your OAuth2 application.
+
+**Step 1: Add scopes in Azure Portal**
+
+1. Log in to [Azure Portal](https://portal.azure.com/) and navigate to your app registration
+2. Go to **API Permissions** > **Add a permission** > **Microsoft Graph** > **Delegated permissions**
+3. Add these scopes:
+
+| Scope | Purpose |
+|-------|---------|
+| `User.ReadBasic.All` | Read basic profile information of users in the organization. Required to resolve the shared mailbox identity. |
+| `Mail.ReadWrite.Shared` | Read and write mail in shared mailboxes the user has access to. Without this, only the user's own mailbox is accessible. |
+| `Mail.Send.Shared` | Send mail from shared mailboxes. Required to send emails on behalf of the shared mailbox. |
+
+**Step 2: Add scopes in EmailEngine**
+
+1. In EmailEngine, navigate to your OAuth2 application settings
+2. Find the **Additional Scopes** field
+3. Add the same scopes:
+   ```
+   User.ReadBasic.All
+   Mail.ReadWrite.Shared
+   Mail.Send.Shared
+   ```
+4. Save the changes
+
+**Step 3: Refresh OAuth2 grant**
+
+Existing accounts need to re-authenticate to get the new permissions. Either:
+
+- **Re-add the account** - Delete and re-add the main account in EmailEngine
+- **Generate new auth link** - Use the [Authentication Form API](/docs/api/generate-authentication-link) with the existing account ID to generate a new authentication URL. The user must open this link and grant the new permissions.
+
 ## Option 1: Direct Access Setup
 
 ### Via Hosted Authentication Form
@@ -260,7 +295,74 @@ In Microsoft 365, a shared mailbox may have a public email address that differs 
 - The organization uses a custom domain for email (e.g., `shared@contoso.com`)
 - The UPN uses the default Microsoft domain (e.g., `sharedmailbox@contoso.onmicrosoft.com`)
 
-In this case, set the `email` field to the public address and use `delegatedUser` to specify the actual UPN:
+In this case, set the `email` field to the public address and use `delegatedUser` to specify the actual UPN.
+
+### With Direct Access
+
+:::warning Hosted Form Limitation
+The hosted authentication form (`/v1/authentication/form`) does not support this scenario. Use the `/v1/account` endpoint instead.
+:::
+
+**Using OAuth2 authorization flow:**
+
+Request an authorization URL, then redirect the user to complete OAuth2:
+
+```bash
+curl -X POST https://your-ee.com/v1/account \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "shared-support",
+    "name": "Support Mailbox",
+    "email": "shared@contoso.com",
+    "oauth2": {
+      "authorize": true,
+      "provider": "AAABlf_0iLgAAAAQ",
+      "redirectUrl": "https://myapp.com/settings",
+      "auth": {
+        "delegatedUser": "sharedmailbox@contoso.onmicrosoft.com"
+      }
+    }
+  }'
+```
+
+Response:
+
+```json
+{
+  "redirect": "https://login.microsoftonline.com/..."
+}
+```
+
+Redirect the user to the `redirect` URL. After they authenticate with their Microsoft account, they'll be redirected to your `redirectUrl` with the account created.
+
+**Using existing OAuth2 tokens:**
+
+If you manage OAuth2 tokens externally:
+
+```bash
+curl -X POST https://your-ee.com/v1/account \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "shared-support",
+    "name": "Support Mailbox",
+    "email": "shared@contoso.com",
+    "oauth2": {
+      "provider": "AAABlf_0iLgAAAAQ",
+      "auth": {
+        "user": "admin@contoso.com",
+        "delegatedUser": "sharedmailbox@contoso.onmicrosoft.com"
+      },
+      "accessToken": "EwBIA8l6...",
+      "refreshToken": "M.R3_BAY..."
+    }
+  }'
+```
+
+### With Delegated Access
+
+When referencing another EmailEngine account for credentials:
 
 ```bash
 curl -X POST https://your-ee.com/v1/account \
@@ -279,11 +381,11 @@ curl -X POST https://your-ee.com/v1/account \
   }'
 ```
 
-**How it works:**
+### How It Works
 
 - `email`: The public email address (`shared@contoso.com`) - used in EmailEngine for display and as the From address when sending
 - `delegatedUser`: The UPN (`sharedmailbox@contoso.onmicrosoft.com`) - used internally to access the mailbox via Microsoft Graph or IMAP
-- `delegatedAccount`: The main account whose OAuth2 credentials are used for authentication
+- `delegatedAccount`: (optional) The main account whose OAuth2 credentials are used for authentication
 
 This configuration ensures EmailEngine uses the correct public email address externally while accessing the mailbox through the proper Microsoft 365 UPN.
 
@@ -298,19 +400,19 @@ This configuration ensures EmailEngine uses the correct public email address ext
 
 **SMTP Limitations:**
 
-- Shared mailboxes without a full Microsoft 365 subscription lack SMTP access
-- EmailEngine uses main account's SMTP credentials
-- Sets "From" address to the shared mailbox email
-- Sent emails saved in both main account and shared mailbox "Sent Items"
+- Shared mailboxes cannot authenticate directly via SMTP
+- EmailEngine authenticates as the main user but sets the "From" address to the shared mailbox email
+- Outlook SMTP automatically saves sent emails to the main account's "Sent Items" folder
+- To ensure sent emails also appear in the shared mailbox, EmailEngine uploads a copy via IMAP to the shared mailbox's "Sent Items" folder
 
 ### Microsoft Graph API Backend
 
 **Better Native Support:**
 
 - Shared mailboxes fully supported
-- No SMTP limitations
-- Cleaner sent email handling
-- Better performance
+- No SMTP authentication workarounds needed
+- Emails are sent and managed directly as the shared mailbox
+- Sent emails saved only in the shared mailbox's "Sent Items" (no duplicates)
 
 **Recommendation:** Use Microsoft Graph API backend for shared mailboxes when possible.
 
@@ -337,6 +439,7 @@ curl https://your-ee.com/v1/account/shared-support \
   "account": "shared-support",
   "name": "Support Mailbox",
   "email": "support@company.com",
+  "type": "delegated",
   "state": "connected",
   "oauth2": {
     "auth": {
