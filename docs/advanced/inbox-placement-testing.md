@@ -83,7 +83,7 @@ curl -XPOST "http://localhost:3000/v1/account" \
         "pass": "app-password-here"
       }
     },
-    "subconnections": ["\\\\Junk"]
+    "subconnections": ["\\Junk"]
   }'
 ```
 
@@ -149,8 +149,8 @@ curl -XPOST "http://localhost:3000/v1/account" \
       }
     },
     "subconnections": [
-      "\\\\Junk",
-      "\\\\Trash"
+      "\\Junk",
+      "\\Trash"
     ]
   }'
 ```
