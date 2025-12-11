@@ -68,6 +68,14 @@ https.get(SWAGGER_URL, (response) => {
       const { execSync } = require('child_process');
 
       try {
+        // Remove existing API docs to force regeneration
+        // (gen-api-docs skips existing files)
+        const apiDocsPath = path.join(__dirname, '..', 'docs', 'api');
+        if (fs.existsSync(apiDocsPath)) {
+          fs.rmSync(apiDocsPath, { recursive: true });
+          console.log('   Removed existing docs/api folder');
+        }
+
         // Regenerate API docs from OpenAPI spec
         execSync('npm run docusaurus gen-api-docs all', { stdio: 'inherit' });
         console.log('✅ API docs regenerated');
