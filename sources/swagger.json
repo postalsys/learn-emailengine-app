@@ -1,7 +1,7 @@
 {
   "info": {
     "title": "EmailEngine API",
-    "version": "2.59.0",
+    "version": "2.59.2",
     "description": "EmailEngine provides a RESTful API for managing email accounts, sending messages, and processing email data across multiple providers.\n\n<h3>Authentication</h3>\nAll API requests require authentication using an Access Token. You can generate and manage your tokens from the <a href=\"/admin/tokens\" target=\"_parent\"><strong>Access Tokens</strong></a> page.\n\nInclude your token in requests using one of these methods:\n- Query parameter: <code>?access_token=YOUR_TOKEN</code>\n- Authorization header: <code>Authorization: Bearer YOUR_TOKEN</code>\n\n<h3>Request Processing</h3>\n\n<strong>Sequential Processing:</strong> Requests to the same email account are processed sequentially to maintain data consistency. Multiple simultaneous requests will be queued.\n\n<strong>Timeouts:</strong> Long-running operations may cause queued requests to timeout. Configure appropriate timeout values using the <code>X-EE-Timeout</code> header (in milliseconds).\n\n<h3>Getting Started</h3>\n1. <a href=\"/admin/tokens\" target=\"_parent\">Generate an Access Token</a>\n2. <a href=\"/admin/accounts\" target=\"_parent\">Add an email account</a>\n3. Start making API requests using the endpoints below",
     "contact": {
       "name": "EmailEngine Support",
@@ -1306,7 +1306,7 @@
             "type": "string",
             "description": "Custom system prompt to guide AI behavior when processing emails",
             "example": "You are an assistant scanning incoming emails…",
-            "maxLength": 6144
+            "maxLength": 1048576
           },
           "openAiGenerateEmbeddings": {
             "type": "boolean",
@@ -1627,7 +1627,7 @@
           "version": {
             "type": "string",
             "description": "EmailEngine version number",
-            "example": "2.59.0"
+            "example": "2.59.2"
           },
           "license": {
             "type": "string",
@@ -2638,6 +2638,7 @@
           },
           "user": {
             "type": "string",
+            "description": "SMTP authentication username",
             "maxLength": 1024,
             "x-convert": {
               "trim": true
@@ -2645,6 +2646,7 @@
           },
           "pass": {
             "type": "string",
+            "description": "SMTP authentication password",
             "maxLength": 1024
           },
           "host": {
@@ -2862,6 +2864,7 @@
         "properties": {
           "name": {
             "type": "string",
+            "description": "Display name for the email address",
             "example": "Some Name",
             "maxLength": 256,
             "x-convert": {
@@ -2870,6 +2873,7 @@
           },
           "address": {
             "type": "string",
+            "description": "Email address",
             "example": "user@example.com",
             "x-format": {
               "email": {
@@ -2884,9 +2888,11 @@
       },
       "RcptAddressEntry": {
         "type": "object",
+        "description": "Email address with optional display name",
         "properties": {
           "name": {
             "type": "string",
+            "description": "Display name for the email address",
             "example": "Some Name",
             "maxLength": 256,
             "x-convert": {
@@ -2895,6 +2901,7 @@
           },
           "address": {
             "type": "string",
+            "description": "Email address",
             "example": "user@example.com",
             "x-format": {
               "email": {
@@ -2945,7 +2952,7 @@
           },
           "encodedSize": {
             "type": "integer",
-            "description": "Size of the attachment in bytes as stored (base64 encoded size, actual file size will be smaller)",
+            "description": "Size of the attachment as stored in the email (base64 encoded). The actual decoded file size is approximately 75% of this value.",
             "example": 48
           },
           "embedded": {
@@ -4401,6 +4408,7 @@
           },
           "user": {
             "type": "string",
+            "description": "SMTP authentication username",
             "default": null,
             "maxLength": 1024,
             "x-convert": {
@@ -4409,6 +4417,7 @@
           },
           "pass": {
             "type": "string",
+            "description": "SMTP authentication password",
             "default": null,
             "maxLength": 1024
           },
@@ -4844,7 +4853,7 @@
             "type": "string",
             "description": "Custom system prompt to guide AI behavior when processing emails",
             "example": "You are an assistant scanning incoming emails…",
-            "maxLength": 6144
+            "maxLength": 1048576
           },
           "openAiGenerateEmbeddings": {
             "type": "boolean",
@@ -5141,6 +5150,7 @@
       },
       "Scopes": {
         "type": "array",
+        "description": "Token permission scopes: \"api\" for REST API access, \"smtp\" for SMTP submission, \"imap-proxy\" for IMAP proxy authentication",
         "default": [
           "api"
         ],
@@ -5709,9 +5719,11 @@
       },
       "Model5": {
         "type": "object",
+        "description": "Email address with optional display name",
         "properties": {
           "name": {
             "type": "string",
+            "description": "Display name for the email address",
             "example": "Some Name",
             "maxLength": 256,
             "x-convert": {
@@ -5720,6 +5732,7 @@
           },
           "address": {
             "type": "string",
+            "description": "Email address",
             "example": "user@example.com",
             "x-format": {
               "email": {
@@ -5980,7 +5993,7 @@
           },
           "uidValidity": {
             "type": "string",
-            "description": "UIDVALIDTITY of the target folder. Numeric value cast as string.",
+            "description": "UIDVALIDITY of the target folder. Numeric value cast as string.",
             "example": "12345"
           },
           "seq": {
@@ -6258,9 +6271,11 @@
       },
       "ReplyToAddress": {
         "type": "object",
+        "description": "Email address with optional display name",
         "properties": {
           "name": {
             "type": "string",
+            "description": "Display name for the email address",
             "example": "Some Name",
             "maxLength": 256,
             "x-convert": {
@@ -6269,6 +6284,7 @@
           },
           "address": {
             "type": "string",
+            "description": "Email address",
             "example": "user@example.com",
             "x-format": {
               "email": {
@@ -6299,9 +6315,11 @@
       },
       "ToAddress": {
         "type": "object",
+        "description": "Email address with optional display name",
         "properties": {
           "name": {
             "type": "string",
+            "description": "Display name for the email address",
             "example": "Some Name",
             "maxLength": 256,
             "x-convert": {
@@ -6310,6 +6328,7 @@
           },
           "address": {
             "type": "string",
+            "description": "Email address",
             "example": "user@example.com",
             "x-format": {
               "email": {
@@ -6339,9 +6358,11 @@
       },
       "CcAddress": {
         "type": "object",
+        "description": "Email address with optional display name",
         "properties": {
           "name": {
             "type": "string",
+            "description": "Display name for the email address",
             "example": "Some Name",
             "maxLength": 256,
             "x-convert": {
@@ -6350,6 +6371,7 @@
           },
           "address": {
             "type": "string",
+            "description": "Email address",
             "example": "user@example.com",
             "x-format": {
               "email": {
@@ -6374,9 +6396,11 @@
       },
       "BccAddress": {
         "type": "object",
+        "description": "Email address with optional display name",
         "properties": {
           "name": {
             "type": "string",
+            "description": "Display name for the email address",
             "example": "Some Name",
             "maxLength": 256,
             "x-convert": {
@@ -6385,6 +6409,7 @@
           },
           "address": {
             "type": "string",
+            "description": "Email address",
             "example": "user@example.com",
             "x-format": {
               "email": {
@@ -6775,9 +6800,11 @@
       },
       "ToAddressSingle": {
         "type": "object",
+        "description": "Email address with optional display name",
         "properties": {
           "name": {
             "type": "string",
+            "description": "Display name for the email address",
             "example": "Some Name",
             "maxLength": 256,
             "x-convert": {
@@ -6786,6 +6813,7 @@
           },
           "address": {
             "type": "string",
+            "description": "Email address",
             "example": "user@example.com",
             "x-format": {
               "email": {
@@ -7051,7 +7079,7 @@
           },
           "deleted": {
             "type": "boolean",
-            "description": "Was the gateway deleted",
+            "description": "Was the OAuth2 application deleted",
             "default": true
           },
           "accounts": {
@@ -7079,7 +7107,7 @@
         "properties": {
           "deleted": {
             "type": "boolean",
-            "description": "Was the account deleted",
+            "description": "Was the token deleted",
             "default": true
           }
         }
@@ -7107,7 +7135,7 @@
         "properties": {
           "deleted": {
             "type": "boolean",
-            "description": "Was the account flushed",
+            "description": "Were the templates flushed",
             "default": true
           },
           "account": {
@@ -8159,6 +8187,7 @@
           },
           "user": {
             "type": "string",
+            "description": "SMTP authentication username",
             "nullable": true,
             "maxLength": 1024,
             "x-convert": {
@@ -8167,6 +8196,7 @@
           },
           "pass": {
             "type": "string",
+            "description": "SMTP authentication password",
             "nullable": true,
             "maxLength": 1024
           },
@@ -11714,10 +11744,10 @@
             "in": "query",
             "schema": {
               "type": "boolean",
-              "description": "Shorthand option to fetch and preprocess HTML and inlined images. Overrides `textType`, `preProcessHtml`, and `preProcessHtml` options.",
+              "description": "Shorthand option to fetch and preprocess HTML and inline images. Overrides `textType`, `preProcessHtml`, and `embedAttachedImages` options.",
               "default": false
             },
-            "description": "Shorthand option to fetch and preprocess HTML and inlined images. Overrides `textType`, `preProcessHtml`, and `preProcessHtml` options."
+            "description": "Shorthand option to fetch and preprocess HTML and inline images. Overrides `textType`, `preProcessHtml`, and `embedAttachedImages` options."
           },
           {
             "name": "embedAttachedImages",
