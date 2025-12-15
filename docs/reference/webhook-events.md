@@ -992,7 +992,9 @@ Triggered when a bounce (DSN - Delivery Status Notification) message is received
     "response": {
       "source": "smtp",
       "message": "550 5.1.1 <bounced@example.com>: Recipient address rejected: User unknown in relay recipient table",
-      "status": "5.1.1"
+      "status": "5.1.1",
+      "category": "user_unknown",
+      "recommendedAction": "remove"
     },
     "mta": "mx.example.com",
     "originalRecipient": "original@example.com",
@@ -1013,9 +1015,38 @@ Triggered when a bounce (DSN - Delivery Status Notification) message is received
   - `data.response.source` (string) - Source of bounce ("smtp", "dns", etc.)
   - `data.response.message` (string) - Bounce message
   - `data.response.status` (string) - Status code
+  - `data.response.category` (string, optional) - ML-classified bounce category (see table below)
+  - `data.response.recommendedAction` (string, optional) - Suggested action: "remove", "retry", "review", "fix_configuration", "retry_different_ip", or "remove_content"
+  - `data.response.blocklist` (object, optional) - Blocklist details when bounce indicates a blocklist issue
+    - `data.response.blocklist.name` (string) - Blocklist name (e.g., "Spamhaus ZEN")
+    - `data.response.blocklist.type` (string) - "ip" or "domain"
+  - `data.response.retryAfter` (number, optional) - Suggested retry delay in seconds (when timing found in error message)
 - `data.mta` (string, optional) - Mail Transfer Agent that generated the bounce
 - `data.originalRecipient` (string, optional) - Original recipient (before forwarding)
 - `data.queueId` (string, optional) - MTA queue identifier
+
+**ML Bounce Categories:**
+
+EmailEngine uses machine learning to classify bounces into detailed categories:
+
+| Category | Description | Action |
+|----------|-------------|--------|
+| `user_unknown` | Recipient doesn't exist | remove |
+| `invalid_address` | Bad syntax or domain not found | remove |
+| `mailbox_disabled` | Account suspended/disabled | remove |
+| `mailbox_full` | Over quota | retry |
+| `greylisting` | Temporary rejection | retry |
+| `rate_limited` | Too many connections | retry |
+| `server_error` | Timeout/connection failed | retry |
+| `ip_blacklisted` | Sender IP on blocklist | retry_different_ip |
+| `domain_blacklisted` | Sender domain on blocklist | fix_configuration |
+| `auth_failure` | DMARC/SPF/DKIM failure | fix_configuration |
+| `relay_denied` | Relaying not permitted | fix_configuration |
+| `spam_blocked` | Detected as spam | review |
+| `policy_blocked` | Local policy rejection | review |
+| `virus_detected` | Infected content | remove_content |
+| `geo_blocked` | Geographic rejection | retry_different_ip |
+| `unknown` | Unclassified | review |
 
 **Bounce Types:**
 - **Hard bounce**: Permanent failure (invalid email, domain not found, user unknown)
@@ -1023,7 +1054,8 @@ Triggered when a bounce (DSN - Delivery Status Notification) message is received
 
 **Use Cases:**
 - Remove hard bounces from mailing lists
-- Retry soft bounces
+- Retry soft bounces based on `recommendedAction` and `retryAfter`
+- Detect and respond to blocklist issues
 - Email validation
 - Delivery reporting
 - Maintain sender reputation

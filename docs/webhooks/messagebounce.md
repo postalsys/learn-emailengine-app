@@ -64,13 +64,17 @@ EmailEngine analyzes incoming messages for bounce patterns from various email pr
 
 ### Response Object Structure
 
-The `response` object contains details about the SMTP error:
+The `response` object contains details about the SMTP error and ML-powered classification:
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `source` | string | Source of the diagnostic code (typically "smtp") |
 | `message` | string | The full SMTP error message from the receiving server |
 | `status` | string | Enhanced status code (e.g., "5.1.1" for invalid mailbox, "5.2.2" for mailbox full) |
+| `category` | string | ML-classified bounce category (see [Bounce Categories](#bounce-categories) below) |
+| `recommendedAction` | string | Suggested action: "remove", "retry", "review", "fix_configuration", "retry_different_ip", or "remove_content" |
+| `blocklist` | object | Present when bounce indicates a blocklist issue. Contains `name` (string) and `type` (string: "ip" or "domain") |
+| `retryAfter` | number | Suggested retry delay in seconds (only when timing information is found in the error message) |
 
 ### Message Headers Object Structure
 
@@ -106,7 +110,9 @@ The `messageHeaders` object contains headers from the original bounced message (
     "response": {
       "source": "smtp",
       "message": "550 5.1.1 The email account that you tried to reach does not exist",
-      "status": "5.1.1"
+      "status": "5.1.1",
+      "category": "user_unknown",
+      "recommendedAction": "remove"
     },
     "mta": "mx.example.com",
     "queueId": "9441D8220E",
@@ -150,6 +156,75 @@ Soft bounces are temporary and may succeed on retry. The `action` field may be "
 | 4.4.2 | Connection dropped |
 | 4.7.1 | Temporary authentication failure |
 
+## Bounce Categories
+
+EmailEngine uses machine learning to classify bounce messages into specific categories. The `category` field in the response object provides a detailed classification beyond basic hard/soft bounce distinction.
+
+| Category | Description | Recommended Action |
+|----------|-------------|-------------------|
+| `user_unknown` | Recipient email address does not exist | Remove from list |
+| `invalid_address` | Bad email syntax or domain not found | Remove from list |
+| `mailbox_disabled` | Account suspended or disabled | Remove from list |
+| `mailbox_full` | Over quota, storage exceeded | Retry later |
+| `greylisting` | Temporary rejection, retry later | Retry after delay |
+| `rate_limited` | Too many connections or messages | Retry after delay |
+| `server_error` | Timeout or connection failed | Retry later |
+| `ip_blacklisted` | Sender IP on a blocklist (RBL) | Retry from different IP |
+| `domain_blacklisted` | Sender domain on a blocklist | Fix DNS/configuration |
+| `auth_failure` | DMARC, SPF, or DKIM failure | Fix authentication config |
+| `relay_denied` | Relaying not permitted | Fix configuration |
+| `spam_blocked` | Message detected as spam | Review content |
+| `policy_blocked` | Local policy rejection | Review and contact admin |
+| `virus_detected` | Infected content detected | Remove malicious content |
+| `geo_blocked` | Geographic or country-based rejection | Retry from different IP |
+| `unknown` | Unclassified bounce type | Review manually |
+
+### Using Recommended Actions
+
+The `recommendedAction` field suggests how to handle each bounce:
+
+| Action | Description |
+|--------|-------------|
+| `remove` | Permanently remove email from mailing lists |
+| `retry` | Retry delivery after a delay |
+| `review` | Manual review required |
+| `fix_configuration` | Fix sender DNS, authentication, or relay settings |
+| `retry_different_ip` | Retry from a different sending IP address |
+| `remove_content` | Remove problematic content and resend |
+
+### Blocklist Detection
+
+When a bounce indicates a blocklist issue, the `blocklist` object provides details:
+
+```json
+{
+  "response": {
+    "message": "550 blocked using zen.spamhaus.org",
+    "category": "ip_blacklisted",
+    "recommendedAction": "retry_different_ip",
+    "blocklist": {
+      "name": "Spamhaus ZEN",
+      "type": "ip"
+    }
+  }
+}
+```
+
+### Retry Timing
+
+When the bounce message contains timing information (e.g., "try again in 5 minutes"), the `retryAfter` field provides the suggested delay in seconds:
+
+```json
+{
+  "response": {
+    "message": "450 Greylisted, try again in 5 minutes",
+    "category": "greylisting",
+    "recommendedAction": "retry",
+    "retryAfter": 300
+  }
+}
+```
+
 ## Handling the Event
 
 ### Basic Handler
@@ -166,13 +241,35 @@ async function handleMessageBounce(event) {
   if (data.response) {
     console.log(`  Status: ${data.response.status}`);
     console.log(`  Message: ${data.response.message}`);
+    console.log(`  Category: ${data.response.category}`);
+    console.log(`  Recommended Action: ${data.response.recommendedAction}`);
+
+    // Check for blocklist issues
+    if (data.response.blocklist) {
+      console.log(`  Blocklist: ${data.response.blocklist.name} (${data.response.blocklist.type})`);
+    }
   }
 
-  // Process based on bounce type
-  if (data.action === 'failed') {
-    await handleHardBounce(data);
-  } else if (data.action === 'delayed') {
-    await handleSoftBounce(data);
+  // Process based on recommended action
+  const action = data.response?.recommendedAction ||
+    (data.action === 'failed' ? 'remove' : 'retry');
+
+  switch (action) {
+    case 'remove':
+      await removeFromMailingList(data.recipient);
+      break;
+    case 'retry':
+      const delay = data.response?.retryAfter || 3600;
+      await scheduleRetry(data.recipient, delay);
+      break;
+    case 'fix_configuration':
+      await alertAdminConfigIssue(data);
+      break;
+    case 'retry_different_ip':
+      await retryWithDifferentIP(data);
+      break;
+    default:
+      await flagForReview(data);
   }
 }
 ```
@@ -191,6 +288,8 @@ async function handleHardBounce(bounceData) {
         emailValid: false,
         bounceReason: response?.message,
         bounceCode: response?.status,
+        bounceCategory: response?.category,
+        recommendedAction: response?.recommendedAction,
         bouncedAt: new Date()
       }
     }
@@ -209,33 +308,28 @@ async function handleHardBounce(bounceData) {
 async function trackBounceMetrics(event) {
   const { account, data } = event;
 
-  // Extract bounce category from status code
-  const statusCode = data.response?.status || '';
-  const isHardBounce = statusCode.startsWith('5');
-  const category = getBounceCategory(statusCode);
+  // Use ML-classified category (preferred) or fall back to status code
+  const category = data.response?.category || 'unknown';
+  const recommendedAction = data.response?.recommendedAction || 'review';
+  const isHardBounce = ['remove', 'remove_content'].includes(recommendedAction);
 
   await metrics.increment('email.bounces', {
     account,
     type: isHardBounce ? 'hard' : 'soft',
     category,
-    mta: data.mta || 'unknown'
+    recommendedAction,
+    mta: data.mta || 'unknown',
+    blocklisted: data.response?.blocklist ? 'yes' : 'no'
   });
-}
 
-function getBounceCategory(status) {
-  if (!status) return 'unknown';
-
-  const [major, minor] = status.split('.');
-
-  if (minor === '1') return 'address';      // Address-related
-  if (minor === '2') return 'mailbox';      // Mailbox-related
-  if (minor === '3') return 'system';       // Mail system issues
-  if (minor === '4') return 'network';      // Network/routing
-  if (minor === '5') return 'protocol';     // Protocol issues
-  if (minor === '6') return 'content';      // Content issues
-  if (minor === '7') return 'security';     // Security/policy
-
-  return 'other';
+  // Track blocklist issues separately
+  if (data.response?.blocklist) {
+    await metrics.increment('email.blocklist_bounces', {
+      account,
+      blocklistName: data.response.blocklist.name,
+      blocklistType: data.response.blocklist.type
+    });
+  }
 }
 ```
 

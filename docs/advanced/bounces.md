@@ -195,6 +195,10 @@ When the email bounces, EmailEngine sends a `messageBounce` webhook:
 | `response.message` | Error message from receiving server |
 | `response.status` | SMTP status code (e.g., `5.0.0`) |
 | `response.source` | Source of error: `smtp`, `dns`, etc. |
+| `response.category` | ML-classified bounce category (see below) |
+| `response.recommendedAction` | Suggested action to take |
+| `response.blocklist` | Blocklist details if applicable |
+| `response.retryAfter` | Suggested retry delay in seconds |
 | `mta` | Hostname of the MTA that generated the bounce |
 | `queueId` | Queue ID from the bouncing MTA |
 | `messageId` | Message-ID of the original sent email |
@@ -577,5 +581,237 @@ Understanding SMTP status codes helps interpret bounces:
 452 4.2.2 Mailbox full
 451 4.4.1 Connection timeout
 450 4.7.1 Greylisting in effect
+```
+
+## ML-Powered Bounce Classification
+
+EmailEngine uses machine learning to classify bounce messages into detailed categories, going beyond basic hard/soft bounce distinction. This classification helps you take more precise action on bounced emails.
+
+### Classification Categories
+
+The `response.category` field provides one of these classifications:
+
+| Category | Description | Recommended Action |
+|----------|-------------|-------------------|
+| `user_unknown` | Recipient email address does not exist | Remove from mailing list |
+| `invalid_address` | Bad email syntax or domain not found | Remove from mailing list |
+| `mailbox_disabled` | Account suspended or disabled | Remove from mailing list |
+| `mailbox_full` | Over quota, storage exceeded | Retry later |
+| `greylisting` | Temporary rejection, retry later | Retry after delay |
+| `rate_limited` | Too many connections or messages | Retry after delay |
+| `server_error` | Timeout or connection failed | Retry later |
+| `ip_blacklisted` | Sender IP on a blocklist (RBL) | Use different sending IP |
+| `domain_blacklisted` | Sender domain on a blocklist | Fix DNS/authentication |
+| `auth_failure` | DMARC, SPF, or DKIM failure | Fix email authentication |
+| `relay_denied` | Relaying not permitted | Fix mail server config |
+| `spam_blocked` | Message detected as spam | Review email content |
+| `policy_blocked` | Local policy rejection | Review and contact admin |
+| `virus_detected` | Infected content detected | Remove malicious content |
+| `geo_blocked` | Geographic/country-based rejection | Use different sending IP |
+| `unknown` | Unclassified bounce type | Review manually |
+
+### Recommended Actions
+
+The `response.recommendedAction` field tells you how to handle the bounce:
+
+| Action | Description | When Used |
+|--------|-------------|-----------|
+| `remove` | Remove email from all mailing lists | Invalid addresses, disabled accounts |
+| `retry` | Retry delivery after a delay | Temporary issues like greylisting, rate limits |
+| `review` | Manual review required | Spam blocks, policy rejections |
+| `fix_configuration` | Fix sender configuration | Authentication failures, relay issues |
+| `retry_different_ip` | Retry from another IP address | IP blocklist issues |
+| `remove_content` | Remove problematic content | Virus detection |
+
+### Blocklist Detection
+
+When a bounce indicates a blocklist issue, the `response.blocklist` object provides details:
+
+```json
+{
+  "response": {
+    "message": "550 Service unavailable; Client host [1.2.3.4] blocked using zen.spamhaus.org",
+    "category": "ip_blacklisted",
+    "recommendedAction": "retry_different_ip",
+    "blocklist": {
+      "name": "Spamhaus ZEN",
+      "type": "ip"
+    }
+  }
+}
+```
+
+The `blocklist.type` indicates whether the issue is with your IP address (`ip`) or your domain (`domain`).
+
+### Retry Timing
+
+When bounce messages contain timing hints (e.g., "try again in 5 minutes"), the `response.retryAfter` field provides the suggested delay in seconds:
+
+```json
+{
+  "response": {
+    "message": "450 4.7.1 Greylisted, please try again in 300 seconds",
+    "category": "greylisting",
+    "recommendedAction": "retry",
+    "retryAfter": 300
+  }
+}
+```
+
+### Using ML Classification in Your Application
+
+Here's how to handle bounces based on the ML classification:
+
+```javascript
+async function handleBounce(webhook) {
+  const { data } = webhook;
+  const { recipient, response } = data;
+
+  // Get ML classification or fall back to basic detection
+  const category = response?.category || 'unknown';
+  const action = response?.recommendedAction || 'review';
+
+  switch (action) {
+    case 'remove':
+      // Permanent issue - remove from all lists
+      await db.contacts.update(
+        { email: recipient },
+        {
+          $set: {
+            status: 'bounced',
+            bounceCategory: category,
+            bouncedAt: new Date()
+          }
+        }
+      );
+      break;
+
+    case 'retry':
+      // Temporary issue - schedule retry
+      const delay = response?.retryAfter || 3600; // Default 1 hour
+      await scheduleRetry(recipient, delay);
+      break;
+
+    case 'fix_configuration':
+      // Configuration issue - alert admin
+      await alertAdmin({
+        type: 'bounce_config_issue',
+        category,
+        message: response?.message,
+        blocklist: response?.blocklist
+      });
+      break;
+
+    case 'retry_different_ip':
+      // IP blocklist - try another sending IP
+      await queueForAlternateIP(recipient, data.messageId);
+      break;
+
+    case 'review':
+    default:
+      // Needs manual review
+      await flagForReview(recipient, category, response?.message);
+  }
+
+  // Track metrics by category
+  await metrics.increment('bounces', { category, action });
+}
+```
+
+### Python Example with Classification
+
+```python
+def handle_bounce(webhook):
+    data = webhook['data']
+    recipient = data['recipient']
+    response = data.get('response', {})
+
+    category = response.get('category', 'unknown')
+    action = response.get('recommendedAction', 'review')
+    retry_after = response.get('retryAfter')
+    blocklist = response.get('blocklist')
+
+    if action == 'remove':
+        # Hard bounce - remove from list
+        db.contacts.update_one(
+            {'email': recipient},
+            {'$set': {
+                'status': 'bounced',
+                'bounce_category': category,
+                'bounced_at': datetime.now()
+            }}
+        )
+
+    elif action == 'retry':
+        # Soft bounce - schedule retry
+        delay = retry_after or 3600
+        schedule_retry(recipient, delay)
+
+    elif action == 'fix_configuration':
+        # Alert admin about config issues
+        alert_admin(f"Configuration issue: {category}", response.get('message'))
+
+    elif action == 'retry_different_ip':
+        # IP blocklist issue
+        queue_for_alternate_ip(recipient)
+        if blocklist:
+            log_blocklist_hit(blocklist['name'], blocklist['type'])
+
+    else:
+        # Flag for manual review
+        flag_for_review(recipient, category)
+
+    return {'processed': True}
+```
+
+### PHP Example with Classification
+
+```php
+function handleBounce($webhook) {
+    $data = $webhook['data'];
+    $recipient = $data['recipient'];
+    $response = $data['response'] ?? [];
+
+    $category = $response['category'] ?? 'unknown';
+    $action = $response['recommendedAction'] ?? 'review';
+    $retryAfter = $response['retryAfter'] ?? null;
+    $blocklist = $response['blocklist'] ?? null;
+
+    switch ($action) {
+        case 'remove':
+            // Hard bounce - remove from list
+            $stmt = $pdo->prepare('
+                UPDATE contacts
+                SET status = "bounced",
+                    bounce_category = ?,
+                    bounced_at = NOW()
+                WHERE email = ?
+            ');
+            $stmt->execute([$category, $recipient]);
+            break;
+
+        case 'retry':
+            // Soft bounce - schedule retry
+            $delay = $retryAfter ?? 3600;
+            scheduleRetry($recipient, $delay);
+            break;
+
+        case 'fix_configuration':
+            alertAdmin("Config issue: $category", $response['message'] ?? '');
+            break;
+
+        case 'retry_different_ip':
+            queueForAlternateIP($recipient);
+            if ($blocklist) {
+                logBlocklistHit($blocklist['name'], $blocklist['type']);
+            }
+            break;
+
+        default:
+            flagForReview($recipient, $category);
+    }
+
+    return ['processed' => true];
+}
 ```
 
