@@ -36,6 +36,17 @@ $ docker run -p 3000:3000 \
 
 EmailEngine will start on **http://localhost:3000**
 
+:::warning Production Security
+For production deployments, you **must** configure `EENGINE_SECRET` to encrypt stored credentials. Without this setting, account passwords and OAuth tokens are stored unencrypted in Redis.
+
+```bash
+# Generate and set encryption secret
+export EENGINE_SECRET=$(openssl rand -hex 32)
+```
+
+See [Credential Security](/docs/support/security-faq) for details on how EmailEngine protects your data.
+:::
+
 ## Step 2: Access the Web Interface
 
 1. Open your browser and navigate to **http://localhost:3000**

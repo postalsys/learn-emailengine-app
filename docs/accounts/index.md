@@ -139,6 +139,43 @@ IMAP/SMTP requires the full `https://mail.google.com/` scope. Gmail API can use 
 
 [Microsoft Graph Setup →](./outlook-365#ms-graph-api)
 
+## How Credentials Are Stored
+
+EmailEngine stores email account credentials in Redis. Understanding this is important for security planning.
+
+### What Gets Stored
+
+- IMAP/SMTP passwords
+- OAuth2 access tokens
+- OAuth2 refresh tokens
+- OAuth2 application client secrets
+- Service account private keys
+
+:::info
+Email message content is **not stored** in Redis. EmailEngine fetches messages from the mail server on demand and only caches metadata for synchronization.
+:::
+
+### Default Behavior (Development)
+
+By default, credentials are stored in **cleartext** in Redis. This is acceptable for local development but **not recommended for production**.
+
+### Production Security (Required)
+
+Configure the `EENGINE_SECRET` environment variable to enable **AES-256-GCM encryption** for all sensitive data:
+
+```bash
+# Generate a secure encryption secret
+export EENGINE_SECRET=$(openssl rand -hex 32)
+```
+
+With encryption enabled, all credentials are encrypted before being written to Redis.
+
+:::danger Critical
+If you lose the `EENGINE_SECRET`, encrypted credentials cannot be recovered. Store this secret securely and include it in your backup strategy.
+:::
+
+[Complete security guide](/docs/support/security-faq) | [Encryption details](/docs/advanced/encryption)
+
 ## Decision Tree: Which Method Should I Use?
 
 ```mermaid

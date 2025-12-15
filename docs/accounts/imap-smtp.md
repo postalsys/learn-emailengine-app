@@ -14,6 +14,10 @@ Sources merged:
 
 This guide covers setting up email accounts using standard IMAP and SMTP protocols. This method works with virtually any email provider that supports these protocols, including self-hosted mail servers, regional providers, and services not covered by specific OAuth2 integrations.
 
+:::warning Credential Storage
+When you add IMAP/SMTP accounts, EmailEngine stores the provided passwords in Redis. By default, these are stored in cleartext. For production deployments, configure `EENGINE_SECRET` to enable encryption **before** adding accounts. [Learn more](/docs/support/security-faq)
+:::
+
 ## Overview
 
 IMAP (Internet Message Access Protocol) and SMTP (Simple Mail Transfer Protocol) are the standard protocols for email:

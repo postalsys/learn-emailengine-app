@@ -306,22 +306,38 @@ Security settings and access restrictions.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_SECRET` | string | none | Encryption secret for credentials and sessions (required for production) | `your-random-secret-key` |
+| `EENGINE_SECRET` | string | none | **Required for production.** Master encryption key for all credentials stored in Redis (AES-256-GCM). | `$(openssl rand -hex 32)` |
 | `EENGINE_ADMIN_ACCESS_ADDRESSES` | string | all | Comma-separated list of IP addresses allowed to access admin interface | `192.168.1.0/24,10.0.0.1` |
 | `EENGINE_REQUIRE_API_AUTH` | boolean | `true` | Require API authentication tokens | `false` |
 | `EENGINE_ENABLE_OAUTH_TOKENS_API` | boolean | `false` | Allow retrieving raw OAuth tokens via API | `true` |
 | `EENGINE_DISABLE_SETUP_WARNINGS` | boolean | `false` | Disable admin password setup warnings | `true` |
 
-**Examples:**
+### Credential Encryption (EENGINE_SECRET)
+
+:::danger Critical for Production
+Without `EENGINE_SECRET`, all account passwords, OAuth2 tokens, and application secrets are stored **unencrypted** in Redis. Always configure this for production deployments.
+:::
+
+**What gets encrypted:**
+- IMAP/SMTP passwords
+- OAuth2 access and refresh tokens
+- OAuth2 application client secrets
+- Service account private keys
 
 **Set encryption secret:**
 ```bash
-# Generate a secret
+# Generate a secure 256-bit secret
 openssl rand -hex 32
 
 # Add to .env file:
 EENGINE_SECRET=generated-value-here
 ```
+
+:::warning Secret Recovery
+If you lose `EENGINE_SECRET`, encrypted credentials cannot be recovered. Back up this secret securely and separately from your Redis data.
+:::
+
+[Credential Security FAQ](/docs/support/security-faq) | [Encryption Guide](/docs/advanced/encryption)
 
 **Restrict admin access to specific IPs:**
 ```bash
