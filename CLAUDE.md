@@ -2,6 +2,13 @@
 
 This repository contains the **unified Docusaurus documentation site** for EmailEngine, an Email API for IMAP and SMTP.
 
+## Key URLs
+
+- **EmailEngine Homepage:** https://emailengine.app/ (landing page only)
+- **GitHub Repository:** https://github.com/postalsys/emailengine (source-available, not open source)
+- **Documentation Site:** https://learn.emailengine.app/ (hosts this Docusaurus project)
+- **Blog:** https://blog.emailengine.app/ (low activity)
+
 ## Project Status
 
 **✅ Production Ready** - All documentation has been unified and cleaned up. The site is ready for deployment.
