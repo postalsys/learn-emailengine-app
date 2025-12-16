@@ -5,8 +5,8 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'EmailEngine',
-  tagline: 'Email API for IMAP and SMTP',
+  title: 'EmailEngine - Self-Hosted Email API',
+  tagline: 'Unified REST API for IMAP, SMTP, Gmail & Microsoft 365',
   favicon: 'img/favicon.ico',
 
   // Plausible Analytics
@@ -19,13 +19,41 @@ const config: Config = {
     },
   ],
 
-  // Site verification
+  // Site verification and SEO meta tags
   headTags: [
     {
       tagName: 'meta',
       attributes: {
         name: 'algolia-site-verification',
         content: '0846214CC3D8705B',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        property: 'og:type',
+        content: 'website',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        property: 'og:site_name',
+        content: 'EmailEngine Documentation',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'twitter:card',
+        content: 'summary_large_image',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'twitter:site',
+        content: '@emailengine',
       },
     },
   ],
@@ -74,7 +102,14 @@ const config: Config = {
           editUrl: undefined,
           docItemComponent: "@theme/ApiItem", // Derived from docusaurus-theme-openapi-docs
         },
-        blog: false, // Blog disabled
+        blog: {
+          showReadingTime: true,
+          blogTitle: 'EmailEngine Blog',
+          blogDescription: 'Technical guides, tutorials, and updates about email API integration',
+          postsPerPage: 10,
+          blogSidebarTitle: 'Recent Posts',
+          blogSidebarCount: 5,
+        },
         theme: {
           customCss: './src/css/custom.css',
         },

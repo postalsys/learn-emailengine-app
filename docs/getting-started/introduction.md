@@ -1,14 +1,18 @@
 ---
-title: Introduction to EmailEngine
-description: Introduction to EmailEngine - unified REST API for email accounts and providers
+title: What is EmailEngine? | Email API Introduction
+description: EmailEngine is a self-hosted email API gateway. Learn how it provides unified REST API access to IMAP, SMTP, Gmail, and Microsoft 365 email accounts.
 sidebar_position: 0
+keywords:
+  - what is EmailEngine
+  - email API gateway
+  - unified email API
+  - IMAP REST API
+  - email integration platform
 ---
 
-# EmailEngine
+# What is EmailEngine?
 
 **EmailEngine** is a self-hosted email gateway that allows you to access email accounts over REST API. It provides a unified interface to interact with IMAP and SMTP protocols, as well as native integrations with Gmail API and Microsoft Graph API.
-
-## What is EmailEngine?
 
 EmailEngine streamlines email integration for your app or service with a unified REST API that seamlessly connects with:
 

@@ -1,13 +1,23 @@
 ---
-title: EmailEngine Documentation
+title: EmailEngine - Self-Hosted Email API for Developers
 sidebar_position: 0
-description: Self-hosted email gateway with a unified REST API for IMAP, SMTP, Gmail API, and Microsoft Graph API
+description: Build email features into your app with EmailEngine's unified REST API. Self-hosted email gateway supporting IMAP, SMTP, Gmail API, and Microsoft Graph. Flat pricing, no per-mailbox fees.
 slug: /
+keywords:
+  - email API
+  - IMAP API
+  - SMTP API
+  - self-hosted email
+  - email integration
+  - email gateway
+  - REST API email
+  - Gmail API alternative
+  - Nylas alternative
 ---
 
-# Welcome to EmailEngine
+# Self-Hosted Email API for Developers
 
-**EmailEngine** is a self-hosted email gateway that provides a unified REST API for accessing email accounts through IMAP, SMTP, Gmail API, and Microsoft Graph API. Build email functionality into your application without dealing with the complexity of different email protocols and providers.
+**EmailEngine** is a self-hosted email API that lets you add email functionality to any application. Access Gmail, Outlook, and any IMAP mailbox through a single REST API. Unlike per-mailbox services like Nylas, EmailEngine uses flat annual pricing - connect unlimited accounts for one predictable cost.
 
 ## What Can You Do With EmailEngine?
 
@@ -214,3 +224,31 @@ EmailEngine requires a license key for production use. Get a license:
 - [See the CRM integration guide](/docs/integrations/crm) for a complete architecture example
 - [Explore AI integration](/docs/integrations/ai-chatgpt) for email summarization and automation
 - [Compare EmailEngine vs Nylas](/docs/comparison/emailengine-vs-nylas) to understand the differences
+
+---
+
+## Frequently Asked Questions
+
+### What is EmailEngine?
+
+EmailEngine is a self-hosted email gateway that provides a unified REST API for accessing email accounts. It supports IMAP, SMTP, Gmail API, and Microsoft Graph API, letting you build email features into your application without dealing with protocol complexity.
+
+### How is EmailEngine different from Nylas?
+
+EmailEngine is self-hosted with flat annual pricing, while Nylas is a managed service charging per connected mailbox. EmailEngine gives you full data control and becomes more cost-effective at 30+ mailboxes. [See detailed comparison →](/docs/comparison/emailengine-vs-nylas)
+
+### What email providers does EmailEngine support?
+
+EmailEngine works with any email provider: Gmail, Google Workspace, Microsoft 365, Outlook.com, Yahoo, FastMail, and any IMAP/SMTP compatible email service.
+
+### Is EmailEngine free?
+
+EmailEngine offers a 14-day free trial with full functionality. Production use requires an annual license from [postalsys.com/plans](https://postalsys.com/plans).
+
+### Can I use EmailEngine to send emails?
+
+Yes. EmailEngine supports sending emails via SMTP or native APIs (Gmail API, Microsoft Graph) with features like attachments, HTML content, templates, mail merge, and delivery tracking.
+
+### Where is my email data stored?
+
+EmailEngine stores only metadata (message IDs, flags, folder structure) in Redis. Email content is fetched on-demand from the original mailbox and is not copied to third-party servers. Your data stays on your infrastructure.

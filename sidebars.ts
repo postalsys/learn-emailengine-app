@@ -7,6 +7,10 @@ const sidebars: SidebarsConfig = {
   docsSidebar: [
     'index',
 
+    // SEO Landing Pages - High-value keyword targets
+    'email-api',
+    'imap-api',
+
     // 1. Getting Started - Keep expanded for new users
     {
       type: 'category',

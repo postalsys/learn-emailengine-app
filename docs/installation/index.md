@@ -1,7 +1,13 @@
 ---
-title: Installation Guide
-description: Install EmailEngine on Linux, macOS, Windows, Docker, or from source
+title: Install EmailEngine - Setup Guide for All Platforms
+description: Install EmailEngine on Linux, macOS, Windows, or Docker in under 10 minutes. Self-hosted email API setup with one-click cloud deployments available.
 sidebar_position: 1
+keywords:
+  - install EmailEngine
+  - EmailEngine Docker
+  - EmailEngine setup
+  - self-hosted email API installation
+  - email gateway setup
 ---
 
 # Installing EmailEngine
