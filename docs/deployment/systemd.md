@@ -507,6 +507,103 @@ IOReadBandwidthMax=/var 10M
 IOWriteBandwidthMax=/var 10M
 ```
 
+### Automatic Restart on Memory Threshold
+
+SystemD can automatically restart EmailEngine when memory usage exceeds a defined threshold. This is useful for preventing runaway memory usage from causing system-wide issues and ensuring long-term stability.
+
+**Configure memory-based automatic restart:**
+
+```ini
+[Service]
+# Memory threshold - service is killed when exceeded
+MemoryMax=4G
+
+# Ensure service restarts after being killed
+Restart=always
+RestartSec=5
+```
+
+When EmailEngine's memory usage exceeds `MemoryMax`, SystemD terminates the process with an OOM (Out of Memory) kill signal. Combined with `Restart=always`, the service automatically restarts with fresh memory allocation.
+
+**Complete example with memory management:**
+
+```ini
+[Unit]
+Description=EmailEngine Email API Service
+After=network.target redis.service
+Requires=redis.service
+
+[Service]
+Type=simple
+User=emailengine
+Group=emailengine
+WorkingDirectory=/opt/emailengine
+ExecStart=/usr/local/bin/emailengine
+
+# Memory management - kill and restart when exceeded
+MemoryMax=4G
+
+# Restart policy
+Restart=always         # Always restart (including after OOM kill)
+RestartSec=5           # Wait 5 seconds before restart
+StartLimitInterval=300 # Rate limit: max restarts within 5 minutes
+StartLimitBurst=5      # Max 5 restarts within interval
+
+# Environment
+Environment="EENGINE_REDIS=redis://localhost:6379/8"
+Environment="EENGINE_SECRET=your-secret-key-at-least-32-characters"
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=emailengine
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**How it works:**
+
+1. **MemoryMax:** When memory exceeds this value, SystemD sends SIGKILL to terminate the service
+2. **Restart=always:** Ensures the service restarts after any termination, including OOM kills
+3. **StartLimitBurst/Interval:** Prevents rapid restart loops if there are severe issues
+
+**Verify memory-based restart is configured:**
+
+```bash
+# Check current memory limit
+sudo systemctl show emailengine -p MemoryMax
+
+# Monitor memory usage
+sudo systemctl status emailengine | grep Memory
+
+# View OOM kill events in logs
+sudo journalctl -u emailengine | grep -i "killed\|oom"
+
+# Check restart count
+sudo systemctl show emailengine -p NRestarts
+```
+
+**Example log output after memory-based restart:**
+
+```
+emailengine.service: A process of this unit has been killed by the OOM killer.
+emailengine.service: Main process exited, code=killed, status=9/KILL
+emailengine.service: Scheduled restart job, restart counter is at 1.
+Started EmailEngine Email API Service.
+```
+
+:::tip Choosing Memory Limits
+Memory usage varies significantly based on the number of accounts, message volume, and specific usage patterns. Monitor your actual memory usage over time with `systemctl status emailengine` and set `MemoryMax` appropriately for your workload. Leave enough headroom below your server's total RAM for the operating system and other services.
+:::
+
+:::warning Detecting Memory Exhaustion
+If EmailEngine's CPU usage reaches 100% and stays there persistently, this often indicates the process has exhausted available memory. When this happens, the system starts thrashing (excessive swapping), causing high CPU load while the process becomes unresponsive. Setting `MemoryMax` prevents this scenario by terminating and restarting the service before it can consume all system memory.
+:::
+
+:::warning Restart Limits
+The `StartLimitBurst` and `StartLimitInterval` settings prevent infinite restart loops. If EmailEngine restarts more than 5 times within 5 minutes, SystemD stops trying. Check logs to diagnose the underlying issue.
+:::
+
 ## Advanced Configuration
 
 ### Multiple Instances
