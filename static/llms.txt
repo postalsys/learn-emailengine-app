@@ -1,0 +1,30 @@
+# EmailEngine Documentation - AI Agent Context
+# https://learn.emailengine.app
+
+# What is EmailEngine?
+EmailEngine is a self-hosted email API gateway that provides REST API access
+to email accounts via IMAP, SMTP, Gmail API, and Microsoft Graph API.
+
+# AI Agent Resources
+# These files are designed for AI coding assistants helping developers
+# integrate with the EmailEngine API.
+
+# Human-readable quick reference (Markdown)
+# Contains: API endpoints, webhook events, code patterns, decision trees
+/docs/llm-context
+
+# Machine-parseable API manifest (JSON)
+# Contains: Structured endpoints, webhooks, account types, error codes
+/capabilities.json
+
+# Full OpenAPI 3.0 specification
+# Source of truth for all API endpoints and schemas
+https://emailengine.dev/swagger.json
+
+# Documentation sections
+/docs/getting-started - Installation and quick start
+/docs/accounts - Account setup (Gmail, Outlook, IMAP)
+/docs/sending - Sending emails, templates, mail merge
+/docs/receiving - Webhooks, messages, attachments
+/docs/api-reference - API overview and authentication
+/docs/api - Auto-generated endpoint documentation
