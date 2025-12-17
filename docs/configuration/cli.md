@@ -26,7 +26,26 @@ This enables:
 
 ### Installation
 
-The EmailEngine CLI is included with EmailEngine. Download EmailEngine from the official website:
+The EmailEngine CLI can be installed in several ways:
+
+#### Option 1: npm (Recommended)
+
+Install globally from npm:
+
+```bash
+npm install -g emailengine-app
+```
+
+After installation, the `emailengine` command is available system-wide:
+
+```bash
+emailengine --version
+emailengine tokens --help
+```
+
+#### Option 2: Download Binary
+
+Download pre-built binaries from the official website:
 
 **Download from:** https://emailengine.app
 
@@ -34,9 +53,7 @@ The EmailEngine CLI is included with EmailEngine. Download EmailEngine from the 
 
 - Compiled binaries (Linux, macOS, Windows)
 - Docker images
-- Source code for Node.js
-
-**After downloading:**
+- Source distribution
 
 The `emailengine` command is available in the downloaded package and can be run directly:
 
@@ -44,7 +61,9 @@ The `emailengine` command is available in the downloaded package and can be run 
 ./emailengine [command] [options]
 ```
 
-Or install globally (if using source):
+#### Option 3: From Source
+
+If running from source code, install globally from the project directory:
 
 ```bash
 # From the EmailEngine directory

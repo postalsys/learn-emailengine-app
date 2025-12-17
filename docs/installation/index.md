@@ -17,6 +17,10 @@ Choose your installation method based on your operating system and deployment re
 ## Quick Start
 
 ```bash
+# npm: Install globally (requires Node.js 20+)
+npm install -g emailengine-app
+emailengine --dbs.redis="redis://127.0.0.1:6379/8"
+
 # Linux: Download binary
 wget https://go.emailengine.app/emailengine.tar.gz
 tar xzf emailengine.tar.gz
