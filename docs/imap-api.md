@@ -1,5 +1,6 @@
 ---
 title: IMAP API - REST API Wrapper for IMAP Protocol
+sidebar_label: REST API Wrapper for IMAP Protocol
 description: Access any IMAP mailbox through a simple REST API. EmailEngine converts complex IMAP protocol operations into easy HTTP requests with real-time webhooks.
 sidebar_position: 2
 slug: /imap-api

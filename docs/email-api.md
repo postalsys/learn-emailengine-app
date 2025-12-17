@@ -1,5 +1,6 @@
 ---
 title: Email API - REST API for Email Integration
+sidebar_label: REST API for Email Integration
 description: Add email functionality to your app with EmailEngine's REST API. Send emails, receive webhooks, manage mailboxes. Self-hosted with flat pricing.
 sidebar_position: 1
 slug: /email-api

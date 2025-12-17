@@ -1,5 +1,6 @@
 ---
 title: EmailEngine - Self-Hosted Email API for Developers
+sidebar_label: Self-Hosted Email API for Developers
 sidebar_position: 0
 description: Build email features into your app with EmailEngine's unified REST API. Self-hosted email gateway supporting IMAP, SMTP, Gmail API, and Microsoft Graph. Flat pricing, no per-mailbox fees.
 slug: /
