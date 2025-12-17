@@ -49,7 +49,39 @@ This repository contains the **unified Docusaurus documentation site** for Email
      ```
    - Only skip redirects if a new page with different content replaces the old URL
 
-4. **Screenshot Automation** - When generating screenshots for documentation
+4. **AI Agent Reference Files** - Keep these files up to date when API changes
+
+   Two files exist specifically for AI coding assistants and must be updated when the API changes:
+
+   - **`docs/llm-context.md`** - Human-readable AI agent reference document
+     - Contains: Complete API endpoint list, webhook events, common patterns, decision trees
+     - Update when: New endpoints added, webhooks changed, major features added
+     - Location: Appears in the sidebar under "AI Agent Reference"
+
+   - **`static/capabilities.json`** - Machine-readable API capabilities manifest
+     - Contains: Structured JSON with all endpoints, webhook events, account types, error codes
+     - Update when: Any API surface changes (new endpoints, parameters, webhooks)
+     - Accessible at: `/capabilities.json` on the documentation site
+
+   **When to Update These Files:**
+   - New API endpoint added
+   - Existing endpoint parameters changed
+   - New webhook event type added
+   - New account type supported
+   - New error codes introduced
+   - Major feature additions
+
+   **How to Update:**
+   1. Check `sources/swagger.json` for the latest API version
+   2. Update `docs/llm-context.md` with new endpoints/features in the appropriate tables
+   3. Update `static/capabilities.json` with corresponding structured data
+   4. Verify the version number in both files matches the current API version
+   5. Test that `capabilities.json` is valid JSON: `node -e "require('./static/capabilities.json')"`
+
+   **Why These Files Matter:**
+   AI agents (like Claude Code, GitHub Copilot, Cursor) helping developers integrate with EmailEngine use these files to quickly understand the API surface without parsing the full OpenAPI spec or reading dozens of documentation pages.
+
+5. **Screenshot Automation** - When generating screenshots for documentation
 
    **Environment Variables for Automation:**
 
@@ -333,6 +365,7 @@ This is a **unified documentation system** where each feature/topic is covered b
 ```
 docs/
 ├── index.md                 # Landing page
+├── llm-context.md           # AI Agent Reference (for AI coding assistants)
 ├── getting-started/         # 3 files - Introduction, quick start, installation
 ├── accounts/                # 12 files - Gmail, Outlook, OAuth2, service accounts
 ├── sending/                 # 8 files - Basic sending, mail merge, threading, templates
@@ -345,6 +378,10 @@ docs/
 ├── reference/               # 3 files - Webhook events, error codes, config options
 ├── support/                 # 2 files - Troubleshooting, license/privacy
 └── api/                     # 73 auto-generated OpenAPI docs (DO NOT EDIT)
+
+static/
+├── capabilities.json        # Machine-readable API capabilities (for AI agents)
+└── img/                     # Images and screenshots
 ```
 
 ### Key Architectural Decisions
@@ -879,7 +916,7 @@ This documentation was created by:
 
 ---
 
-**Last Updated:** October 14, 2025
+**Last Updated:** December 17, 2025
 **Docusaurus Version:** 3.9.1
-**EmailEngine API Version:** 2.57.0
+**EmailEngine API Version:** 2.60.0
 **Status:** Production Ready

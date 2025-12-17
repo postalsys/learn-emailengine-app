@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "EmailEngine",
+  "description": "Self-hosted email API gateway providing REST API access to email accounts via IMAP, SMTP, Gmail API, and Microsoft Graph API",
+  "version": "2.60.0",
+  "documentationUrl": "https://learn.emailengine.app/",
+  "openApiSpec": "https://emailengine.dev/swagger.json",
+  "authentication": {
+    "type": "bearer",
+    "header": "Authorization",
+    "format": "Bearer {token}",
+    "alternativeQueryParam": "access_token"
+  },
+  "baseUrl": "http://localhost:3000/v1",
+  "capabilities": {
+    "accountManagement": {
+      "description": "Register, configure, and manage email account connections",
+      "features": ["oauth2", "imap", "smtp", "gmail-api", "ms-graph", "service-accounts"],
+      "endpoints": [
+        {"method": "POST", "path": "/v1/account", "description": "Register new email account"},
+        {"method": "GET", "path": "/v1/accounts", "description": "List all accounts (paginated)"},
+        {"method": "GET", "path": "/v1/account/{account}", "description": "Get account details"},
+        {"method": "PUT", "path": "/v1/account/{account}", "description": "Update account configuration"},
+        {"method": "DELETE", "path": "/v1/account/{account}", "description": "Delete account"},
+        {"method": "PUT", "path": "/v1/account/{account}/reconnect", "description": "Force reconnection"},
+        {"method": "PUT", "path": "/v1/account/{account}/flush", "description": "Reset sync state"},
+        {"method": "PUT", "path": "/v1/account/{account}/sync", "description": "Trigger immediate sync"},
+        {"method": "GET", "path": "/v1/account/{account}/oauth-token", "description": "Get OAuth2 access token"},
+        {"method": "POST", "path": "/v1/verifyAccount", "description": "Test account credentials"},
+        {"method": "POST", "path": "/v1/authentication/form", "description": "Generate hosted auth form URL"},
+        {"method": "GET", "path": "/v1/autoconfig", "description": "Auto-detect IMAP/SMTP settings"}
+      ]
+    },
+    "messageOperations": {
+      "description": "Read, search, update, and delete email messages",
+      "features": ["list", "search", "read", "update-flags", "move", "delete", "download-attachments"],
+      "endpoints": [
+        {"method": "GET", "path": "/v1/account/{account}/messages", "description": "List messages in mailbox"},
+        {"method": "GET", "path": "/v1/account/{account}/message/{message}", "description": "Get message details"},
+        {"method": "GET", "path": "/v1/account/{account}/message/{message}/source", "description": "Get raw RFC822 source"},
+        {"method": "PUT", "path": "/v1/account/{account}/message/{message}", "description": "Update flags/labels"},
+        {"method": "DELETE", "path": "/v1/account/{account}/message/{message}", "description": "Delete message"},
+        {"method": "PUT", "path": "/v1/account/{account}/message/{message}/move", "description": "Move to mailbox"},
+        {"method": "POST", "path": "/v1/account/{account}/message", "description": "Upload message"},
+        {"method": "POST", "path": "/v1/account/{account}/search", "description": "Search messages"},
+        {"method": "GET", "path": "/v1/account/{account}/text/{text}", "description": "Get text part"},
+        {"method": "GET", "path": "/v1/account/{account}/attachment/{attachment}", "description": "Download attachment"}
+      ]
+    },
+    "bulkOperations": {
+      "description": "Perform operations on multiple messages at once",
+      "endpoints": [
+        {"method": "POST", "path": "/v1/account/{account}/messages/move", "description": "Move multiple messages"},
+        {"method": "POST", "path": "/v1/account/{account}/messages/delete", "description": "Delete multiple messages"}
+      ]
+    },
+    "mailboxManagement": {
+      "description": "List, create, and delete mailbox folders",
+      "endpoints": [
+        {"method": "GET", "path": "/v1/account/{account}/mailboxes", "description": "List all mailboxes"},
+        {"method": "POST", "path": "/v1/account/{account}/mailbox", "description": "Create mailbox"},
+        {"method": "DELETE", "path": "/v1/account/{account}/mailbox", "description": "Delete mailbox"}
+      ]
+    },
+    "emailSending": {
+      "description": "Send emails with attachments, templates, and tracking",
+      "features": ["html", "attachments", "templates", "mail-merge", "scheduling", "tracking", "replies", "forwards"],
+      "endpoints": [
+        {"method": "POST", "path": "/v1/account/{account}/submit", "description": "Send/queue email"},
+        {"method": "GET", "path": "/v1/outbox", "description": "List queued emails"},
+        {"method": "GET", "path": "/v1/outbox/{queueId}", "description": "Get queued email"},
+        {"method": "DELETE", "path": "/v1/outbox/{queueId}", "description": "Cancel queued email"}
+      ],
+      "submitParameters": {
+        "required": ["to"],
+        "optional": [
+          {"name": "to", "type": "array", "description": "Recipients [{address, name}]"},
+          {"name": "cc", "type": "array", "description": "CC recipients"},
+          {"name": "bcc", "type": "array", "description": "BCC recipients"},
+          {"name": "subject", "type": "string", "description": "Email subject"},
+          {"name": "text", "type": "string", "description": "Plain text body"},
+          {"name": "html", "type": "string", "description": "HTML body"},
+          {"name": "from", "type": "object", "description": "Override sender {address, name}"},
+          {"name": "replyTo", "type": "object", "description": "Reply-to address"},
+          {"name": "attachments", "type": "array", "description": "Attachments [{filename, content, contentType}]"},
+          {"name": "headers", "type": "object", "description": "Custom email headers"},
+          {"name": "reference", "type": "object", "description": "For replies/forwards {message, action}"},
+          {"name": "template", "type": "string", "description": "Template ID to use"},
+          {"name": "mailMerge", "type": "array", "description": "Bulk personalized sending"},
+          {"name": "sendAt", "type": "string", "description": "Schedule sending (ISO 8601)"},
+          {"name": "trackOpens", "type": "boolean", "description": "Enable open tracking"},
+          {"name": "trackClicks", "type": "boolean", "description": "Enable click tracking"},
+          {"name": "copy", "type": "boolean", "description": "Save to Sent folder (default: true)"},
+          {"name": "dryRun", "type": "boolean", "description": "Preview without sending"},
+          {"name": "gateway", "type": "string", "description": "Use specific SMTP gateway"},
+          {"name": "deliveryAttempts", "type": "number", "description": "Max retry attempts"}
+        ]
+      }
+    },
+    "templates": {
+      "description": "Create and manage reusable email templates",
+      "endpoints": [
+        {"method": "GET", "path": "/v1/templates", "description": "List templates"},
+        {"method": "POST", "path": "/v1/templates/template", "description": "Create template"},
+        {"method": "GET", "path": "/v1/templates/template/{template}", "description": "Get template"},
+        {"method": "PUT", "path": "/v1/templates/template/{template}", "description": "Update template"},
+        {"method": "DELETE", "path": "/v1/templates/template/{template}", "description": "Delete template"},
+        {"method": "GET", "path": "/v1/templates/account/{account}", "description": "List account templates"}
+      ]
+    },
+    "webhooks": {
+      "description": "Real-time notifications for email events",
+      "endpoints": [
+        {"method": "GET", "path": "/v1/webhookRoutes", "description": "List webhook routes"},
+        {"method": "POST", "path": "/v1/webhookRoutes/webhookRoute", "description": "Create route"},
+        {"method": "PUT", "path": "/v1/webhookRoutes/webhookRoute/{webhookRoute}", "description": "Update route"},
+        {"method": "DELETE", "path": "/v1/webhookRoutes/webhookRoute/{webhookRoute}", "description": "Delete route"}
+      ],
+      "configurationViaSettings": {
+        "endpoint": "POST /v1/settings",
+        "parameters": ["webhooks", "webhooksEnabled", "webhookEvents"]
+      }
+    },
+    "oauth2Apps": {
+      "description": "Configure OAuth2 applications for Gmail and Outlook",
+      "endpoints": [
+        {"method": "GET", "path": "/v1/oauth2", "description": "List OAuth2 apps"},
+        {"method": "POST", "path": "/v1/oauth2", "description": "Register app"},
+        {"method": "GET", "path": "/v1/oauth2/{app}", "description": "Get app"},
+        {"method": "PUT", "path": "/v1/oauth2/{app}", "description": "Update app"},
+        {"method": "DELETE", "path": "/v1/oauth2/{app}", "description": "Delete app"}
+      ]
+    },
+    "smtpGateway": {
+      "description": "Configure SMTP gateways for sending via external services",
+      "endpoints": [
+        {"method": "GET", "path": "/v1/gateways", "description": "List gateways"},
+        {"method": "POST", "path": "/v1/gateway", "description": "Register gateway"},
+        {"method": "GET", "path": "/v1/gateway/{gateway}", "description": "Get gateway"},
+        {"method": "PUT", "path": "/v1/gateway/edit/{gateway}", "description": "Update gateway"},
+        {"method": "DELETE", "path": "/v1/gateway/{gateway}", "description": "Delete gateway"}
+      ]
+    },
+    "accessTokens": {
+      "description": "Create and manage API access tokens",
+      "endpoints": [
+        {"method": "GET", "path": "/v1/tokens", "description": "List tokens"},
+        {"method": "POST", "path": "/v1/token", "description": "Create token"},
+        {"method": "GET", "path": "/v1/token/{token}", "description": "Get token"},
+        {"method": "DELETE", "path": "/v1/token/{token}", "description": "Delete token"},
+        {"method": "GET", "path": "/v1/tokens/account/{account}", "description": "List account tokens"}
+      ]
+    },
+    "blocklists": {
+      "description": "Manage email address blocklists",
+      "endpoints": [
+        {"method": "GET", "path": "/v1/blocklists", "description": "List blocklists"},
+        {"method": "GET", "path": "/v1/blocklist/{listId}", "description": "Get entries"},
+        {"method": "POST", "path": "/v1/blocklist/{listId}", "description": "Add to blocklist"},
+        {"method": "DELETE", "path": "/v1/blocklist/{listId}", "description": "Remove from blocklist"}
+      ]
+    },
+    "settings": {
+      "description": "Configure EmailEngine runtime settings",
+      "endpoints": [
+        {"method": "GET", "path": "/v1/settings", "description": "Get all settings"},
+        {"method": "POST", "path": "/v1/settings", "description": "Update settings"}
+      ]
+    },
+    "monitoring": {
+      "description": "Access statistics, logs, and system information",
+      "endpoints": [
+        {"method": "GET", "path": "/v1/stats", "description": "Get usage statistics"},
+        {"method": "GET", "path": "/v1/logs/{account}", "description": "Get account logs"},
+        {"method": "GET", "path": "/v1/changes", "description": "Get recent changes"},
+        {"method": "GET", "path": "/v1/license", "description": "Get license info"}
+      ]
+    },
+    "deliverabilityTesting": {
+      "description": "Test email deliverability and authentication",
+      "endpoints": [
+        {"method": "POST", "path": "/v1/delivery-test/account/{account}", "description": "Start test"},
+        {"method": "GET", "path": "/v1/delivery-test/check/{deliveryTest}", "description": "Check results"}
+      ]
+    }
+  },
+  "webhookEvents": [
+    {"event": "messageNew", "category": "message", "description": "New email received in mailbox"},
+    {"event": "messageDeleted", "category": "message", "description": "Email deleted from mailbox"},
+    {"event": "messageUpdated", "category": "message", "description": "Email flags/labels changed"},
+    {"event": "messageMissing", "category": "message", "description": "Expected message not found"},
+    {"event": "messageSent", "category": "delivery", "description": "Email successfully sent via SMTP"},
+    {"event": "messageDeliveryError", "category": "delivery", "description": "Delivery attempt failed (will retry)"},
+    {"event": "messageFailed", "category": "delivery", "description": "Delivery permanently failed"},
+    {"event": "messageBounce", "category": "delivery", "description": "Bounce notification received"},
+    {"event": "messageComplaint", "category": "delivery", "description": "Spam complaint (ARF) received"},
+    {"event": "accountAdded", "category": "account", "description": "New account registered"},
+    {"event": "accountDeleted", "category": "account", "description": "Account removed"},
+    {"event": "accountInitialized", "category": "account", "description": "Account ready for use"},
+    {"event": "authenticationError", "category": "account", "description": "Authentication failed"},
+    {"event": "authenticationSuccess", "category": "account", "description": "Authentication succeeded"},
+    {"event": "connectError", "category": "account", "description": "Connection to server failed"},
+    {"event": "mailboxNew", "category": "mailbox", "description": "New folder created"},
+    {"event": "mailboxDeleted", "category": "mailbox", "description": "Folder deleted"},
+    {"event": "mailboxReset", "category": "mailbox", "description": "Folder UIDVALIDITY changed"},
+    {"event": "trackOpen", "category": "tracking", "description": "Email opened (tracking pixel loaded)"},
+    {"event": "trackClick", "category": "tracking", "description": "Tracked link clicked"},
+    {"event": "listUnsubscribe", "category": "tracking", "description": "User unsubscribed"},
+    {"event": "listSubscribe", "category": "tracking", "description": "User re-subscribed"}
+  ],
+  "accountTypes": [
+    {"type": "imap", "description": "Standard IMAP/SMTP with username/password", "protocols": ["imap", "smtp"]},
+    {"type": "gmail", "description": "Gmail via OAuth2 (IMAP or API)", "protocols": ["imap", "smtp", "gmail-api"]},
+    {"type": "gmailService", "description": "Google Workspace via service account", "protocols": ["gmail-api"]},
+    {"type": "outlook", "description": "Microsoft 365/Outlook via OAuth2", "protocols": ["imap", "smtp", "ms-graph"]},
+    {"type": "mailRu", "description": "Mail.ru via OAuth2", "protocols": ["imap", "smtp"]},
+    {"type": "oauth2", "description": "Generic OAuth2 provider", "protocols": ["imap", "smtp"]}
+  ],
+  "accountStates": [
+    {"state": "init", "description": "Being initialized", "operational": false},
+    {"state": "syncing", "description": "Initial sync in progress", "operational": false},
+    {"state": "connecting", "description": "Establishing connection", "operational": false},
+    {"state": "connected", "description": "Active and operational", "operational": true},
+    {"state": "disconnected", "description": "Connection lost (will auto-reconnect)", "operational": false},
+    {"state": "authenticationError", "description": "Invalid credentials", "operational": false},
+    {"state": "connectError", "description": "Network/server error", "operational": false},
+    {"state": "unset", "description": "OAuth2 flow not completed", "operational": false}
+  ],
+  "errorCodes": [
+    {"code": "AccountNotFound", "status": 404, "retryable": false, "description": "Account doesn't exist"},
+    {"code": "MessageNotFound", "status": 404, "retryable": false, "description": "Message doesn't exist"},
+    {"code": "InvalidRequest", "status": 400, "retryable": false, "description": "Request validation failed"},
+    {"code": "AuthenticationRequired", "status": 401, "retryable": false, "description": "Missing API token"},
+    {"code": "RateLimitExceeded", "status": 429, "retryable": true, "description": "Too many requests"},
+    {"code": "ConnectionError", "status": 503, "retryable": true, "description": "Mail server connection failed"},
+    {"code": "DuplicateAccount", "status": 409, "retryable": false, "description": "Account ID already exists"}
+  ],
+  "searchParameters": [
+    {"name": "from", "type": "string", "description": "Sender address or name"},
+    {"name": "to", "type": "string", "description": "Recipient address or name"},
+    {"name": "subject", "type": "string", "description": "Subject contains"},
+    {"name": "body", "type": "string", "description": "Body contains"},
+    {"name": "unseen", "type": "boolean", "description": "Unread messages only"},
+    {"name": "flagged", "type": "boolean", "description": "Starred/flagged only"},
+    {"name": "since", "type": "string", "description": "After date (YYYY-MM-DD)"},
+    {"name": "before", "type": "string", "description": "Before date (YYYY-MM-DD)"},
+    {"name": "header", "type": "object", "description": "Custom header match"},
+    {"name": "emailId", "type": "string", "description": "Specific message ID"},
+    {"name": "threadId", "type": "string", "description": "Specific thread ID"}
+  ],
+  "environmentVariables": [
+    {"name": "EENGINE_REDIS", "required": true, "description": "Redis connection URL", "example": "redis://localhost:6379/8"},
+    {"name": "EENGINE_SECRET", "required": "production", "description": "Encryption key (32+ hex chars)", "example": "openssl rand -hex 32"},
+    {"name": "EENGINE_PORT", "required": false, "default": "3000", "description": "API port"},
+    {"name": "EENGINE_HOST", "required": false, "default": "127.0.0.1", "description": "Bind address"},
+    {"name": "EENGINE_WORKERS", "required": false, "default": "4", "description": "IMAP worker count"},
+    {"name": "EENGINE_LOG_LEVEL", "required": false, "default": "trace", "description": "Log level"}
+  ]
+}
