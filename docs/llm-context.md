@@ -534,48 +534,43 @@ curl -X POST "https://emailengine.example.com/v1/authentication/form" \
 
 ### Choosing Account Type
 
-```
-Gmail personal account?
-  Yes -> Gmail OAuth2 (IMAP or API)
-
-Google Workspace with domain-wide access?
-  Yes -> Service Account
-
-Microsoft 365 / Outlook.com?
-  Yes -> Outlook OAuth2 (IMAP or MS Graph)
-
-Yahoo / AOL / Verizon?
-  Yes -> IMAP/SMTP with app password
-
-Other provider / Self-hosted?
-  Yes -> IMAP/SMTP with credentials
+```mermaid
+flowchart TD
+    A[Email Provider?] --> B{Gmail personal?}
+    B -->|Yes| C[Gmail OAuth2<br/>IMAP or API]
+    B -->|No| D{Google Workspace<br/>domain-wide?}
+    D -->|Yes| E[Service Account]
+    D -->|No| F{Microsoft 365 /<br/>Outlook.com?}
+    F -->|Yes| G[Outlook OAuth2<br/>IMAP or MS Graph]
+    F -->|No| H{Yahoo / AOL /<br/>Verizon?}
+    H -->|Yes| I[IMAP/SMTP<br/>with app password]
+    H -->|No| J[IMAP/SMTP<br/>with credentials]
 ```
 
 ### Gmail API vs Gmail IMAP
 
-```
-Need limited OAuth2 scopes (gmail.readonly, gmail.modify)?
-  Yes -> Gmail API (required for limited scopes)
-
-Need maximum listing performance?
-  No -> Gmail API (faster sending/fetching, slower listing)
-  Yes -> Gmail IMAP
-
-Need real-time push notifications?
-  Yes -> Gmail API (uses Cloud Pub/Sub)
+```mermaid
+flowchart TD
+    A[Gmail Account Setup] --> B{Need limited OAuth2 scopes?<br/>gmail.readonly, gmail.modify}
+    B -->|Yes| C[Gmail API<br/>required for limited scopes]
+    B -->|No| D{Need maximum<br/>listing performance?}
+    D -->|Yes| E[Gmail IMAP<br/>faster listing]
+    D -->|No| F{Need real-time<br/>push notifications?}
+    F -->|Yes| G[Gmail API<br/>uses Cloud Pub/Sub]
+    F -->|No| H[Either works<br/>Gmail API recommended]
 ```
 
 ### MS Graph vs Outlook IMAP
 
-```
-Need shared mailbox access?
-  Yes -> MS Graph API
-
-Need advanced search?
-  Yes -> Outlook IMAP (Graph has limited search)
-
-Using Outlook.com/Hotmail?
-  Yes -> Either works, MS Graph recommended
+```mermaid
+flowchart TD
+    A[Microsoft Account Setup] --> B{Need shared<br/>mailbox access?}
+    B -->|Yes| C[MS Graph API]
+    B -->|No| D{Need advanced search?}
+    D -->|Yes| E[Outlook IMAP<br/>Graph has limited search]
+    D -->|No| F{Outlook.com /<br/>Hotmail?}
+    F -->|Yes| G[Either works<br/>MS Graph recommended]
+    F -->|No| H[MS Graph API<br/>recommended]
 ```
 
 ## Environment Variables
