@@ -72,7 +72,10 @@ npm install -g .
 
 ### Getting Help
 
+EmailEngine provides a dynamic help system that adapts to your terminal width:
+
 ```bash
+# Show all available commands
 emailengine --help
 emailengine -h
 emailengine help
@@ -81,9 +84,17 @@ emailengine help
 View command-specific help:
 
 ```bash
+# Show help for specific commands
+emailengine help tokens
+emailengine help license
+emailengine help check-bounce
+
+# Alternative syntax
 emailengine tokens --help
 emailengine license --help
 ```
+
+The help output automatically wraps text based on your terminal width for better readability.
 
 ### Version Information
 
@@ -96,7 +107,7 @@ emailengine version
 **Output:**
 
 ```
-EmailEngine v2.58.2 (LICENSE_EMAILENGINE)
+EmailEngine v2.61.0 (LICENSE_EMAILENGINE)
 ```
 
 ## Configuration Arguments
@@ -708,6 +719,76 @@ ee:settings,1,512,512
 - Audit keyspace structure
 - Capacity planning
 - Debugging
+
+---
+
+## Bounce Email Analysis
+
+Analyze bounce emails to understand delivery failures.
+
+### Check Bounce Command
+
+Analyze an EML file to detect bounce information:
+
+```bash
+emailengine check-bounce [options]
+```
+
+**Options:**
+
+| Option   | Short | Description                |
+| -------- | ----- | -------------------------- |
+| `--file` | `-f`  | Path to EML file to analyze |
+
+**Examples:**
+
+```bash
+# Analyze a bounce email
+emailengine check-bounce /path/to/bounce.eml
+
+# Using the --file option
+emailengine check-bounce --file /path/to/bounce.eml
+emailengine check-bounce -f /path/to/bounce.eml
+```
+
+**Output:** JSON object with bounce analysis including:
+
+- `recipient` - The email address that bounced
+- `action` - Type of bounce action (failed, delayed, etc.)
+- `response` - Server response message
+- `headers` - Relevant message headers
+- `category` - ML-based classification of bounce type
+- `recommendedAction` - Suggested action to take
+
+**Example output:**
+
+```json
+{
+  "recipient": "user@example.com",
+  "action": "failed",
+  "response": {
+    "message": "550 5.1.1 User unknown",
+    "status": "5.1.1"
+  },
+  "headers": {
+    "from": "mailer-daemon@mail.example.com",
+    "subject": "Delivery Status Notification (Failure)"
+  },
+  "category": "hard-bounce",
+  "recommendedAction": "remove"
+}
+```
+
+**Use cases:**
+
+- Debug delivery issues
+- Classify bounce types (hard bounce vs soft bounce)
+- Automate bounce handling workflows
+- Test bounce detection accuracy
+
+:::tip
+This command uses the same enhanced bounce detection engine as EmailEngine's automatic bounce handling, including support for Exim-style diagnostic messages, legacy bounce formats, and non-standard patterns.
+:::
 
 ---
 
