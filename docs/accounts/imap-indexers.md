@@ -98,6 +98,10 @@ curl -X POST https://your-ee.com/v1/settings \
 
 Or via the web interface: **Configuration** > **General Settings** > **IMAP Processing** > **Indexing Method**
 
+:::info New Accounts Only
+Changing the global default only affects newly created accounts. Existing accounts continue using their current indexer setting. To migrate existing accounts to a different indexer, you must update each account individually using the [flush API](/docs/api/put-v-1-account-account-flush).
+:::
+
 ### Per-Account Setting
 
 Set the indexer when creating an account:
