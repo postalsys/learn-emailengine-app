@@ -14,15 +14,17 @@ This page documents what data EmailEngine stores, how it handles sensitive infor
 
 EmailEngine stores the following data in [Redis](/docs/configuration/redis):
 
-| Data Category | Examples | Encrypted | Retention |
+| Data Category | Examples | Encrypted* | Retention |
 |--------------|----------|-----------|-----------|
-| **Account credentials** | IMAP/SMTP passwords, OAuth tokens | Yes (with [EENGINE_SECRET](/docs/advanced/encryption)) | Until account deleted |
+| **Account credentials** | IMAP/SMTP passwords, OAuth tokens | Yes | Until account deleted |
 | **Account metadata** | Email address, account ID, connection state | No | Until account deleted |
 | **Message index** | Message UIDs, flags, folder structure | No | Until account deleted or [flushed](/docs/api/put-v-1-account-account-flush) |
-| **OAuth configuration** | Client IDs, client secrets | Yes (secrets only) | Until removed |
-| **Application settings** | Webhook URLs, [API tokens](/docs/api-reference/access-tokens) | Partially | Persistent |
+| **OAuth configuration** | Client IDs, client secrets | Yes | Until removed |
+| **Application settings** | Webhook URLs, [API tokens](/docs/api-reference/access-tokens) | No | Persistent |
 | **Queue jobs** | Pending emails, webhook deliveries | No | Until processed (typically minutes) |
 | **Logs** | Connection events, errors | No | [Configurable](/docs/advanced/logging) (default: 10,000 entries) |
+
+\* Encryption requires [`EENGINE_SECRET`](/docs/advanced/encryption) to be configured. Without it, all data is stored in cleartext.
 
 ### What EmailEngine Does NOT Store
 
