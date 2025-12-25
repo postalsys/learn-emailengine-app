@@ -12,17 +12,17 @@ This page documents what data EmailEngine stores, how it handles sensitive infor
 
 ### What EmailEngine Stores
 
-EmailEngine stores the following data in Redis:
+EmailEngine stores the following data in [Redis](/docs/configuration/redis):
 
 | Data Category | Examples | Encrypted | Retention |
 |--------------|----------|-----------|-----------|
-| **Account credentials** | IMAP/SMTP passwords, OAuth tokens | Yes (with EENGINE_SECRET) | Until account deleted |
+| **Account credentials** | IMAP/SMTP passwords, OAuth tokens | Yes (with [EENGINE_SECRET](/docs/advanced/encryption)) | Until account deleted |
 | **Account metadata** | Email address, account ID, connection state | No | Until account deleted |
-| **Message index** | Message UIDs, flags, folder structure | No | Until account deleted or flushed |
+| **Message index** | Message UIDs, flags, folder structure | No | Until account deleted or [flushed](/docs/api/put-v-1-account-account-flush) |
 | **OAuth configuration** | Client IDs, client secrets | Yes (secrets only) | Until removed |
-| **Application settings** | Webhook URLs, API tokens | Partially | Persistent |
+| **Application settings** | Webhook URLs, [API tokens](/docs/api-reference/access-tokens) | Partially | Persistent |
 | **Queue jobs** | Pending emails, webhook deliveries | No | Until processed (typically minutes) |
-| **Logs** | Connection events, errors | No | Configurable (default: 10,000 entries) |
+| **Logs** | Connection events, errors | No | [Configurable](/docs/advanced/logging) (default: 10,000 entries) |
 
 ### What EmailEngine Does NOT Store
 
@@ -57,13 +57,13 @@ flowchart LR
 
 1. **Credentials** flow from user to EmailEngine to Redis (encrypted)
 2. **Email content** flows from mail server through EmailEngine to your application (not stored)
-3. **Webhook payloads** contain metadata and optionally message content (sent to your endpoint)
+3. **[Webhook](/docs/webhooks/overview) payloads** contain metadata and optionally message content (sent to your endpoint)
 
 ## Encryption
 
 EmailEngine supports **AES-256-GCM** field-level encryption for all sensitive data.
 
-**Encrypted when EENGINE_SECRET is set:**
+**Encrypted when [`EENGINE_SECRET`](/docs/advanced/encryption) is set:**
 - IMAP/SMTP passwords
 - OAuth access and refresh tokens
 - OAuth client secrets (Gmail, Outlook)
@@ -91,7 +91,7 @@ curl -X GET "https://your-ee.com/v1/account/user123" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-The response includes all stored account data, connection state, and settings.
+See [Get Account](/docs/api/get-v-1-account-account) API reference. The response includes all stored account data, connection state, and settings.
 
 ### Right to Erasure (Deletion)
 
@@ -102,7 +102,7 @@ curl -X DELETE "https://your-ee.com/v1/account/user123" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-This removes:
+See [Delete Account](/docs/api/delete-v-1-account-account) API reference. This removes:
 - Account credentials
 - OAuth tokens
 - Message index
@@ -126,6 +126,8 @@ curl -X PUT "https://your-ee.com/v1/account/user123" \
     "email": "new-email@example.com"
   }'
 ```
+
+See [Update Account](/docs/api/put-v-1-account-account) API reference.
 
 ### Data Portability
 
@@ -174,10 +176,10 @@ Google requires documentation of your data handling practices. Key points for Em
 
 For sensitive scopes, Google requires a third-party security assessment. Prepare by:
 
-1. **Enable encryption** - Set `EENGINE_SECRET` for all credential encryption
-2. **Secure Redis** - Authentication, network isolation, TLS if remote
+1. **Enable encryption** - Set [`EENGINE_SECRET`](/docs/advanced/encryption) for all credential encryption
+2. **Secure Redis** - [Authentication, network isolation](/docs/configuration/redis), TLS if remote
 3. **Use HTTPS** - TLS for all API and webhook traffic
-4. **Implement access controls** - API tokens, admin password, IP restrictions
+4. **Implement access controls** - [API tokens](/docs/api-reference/access-tokens), admin password, [IP restrictions](/docs/deployment/security#admin-interface-access-control)
 5. **Enable logging** - For audit trail
 
 See [Security Best Practices](/docs/deployment/security) for detailed configuration.
