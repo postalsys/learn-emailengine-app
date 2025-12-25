@@ -34,9 +34,16 @@ EmailEngine stores the following data in [Redis](/docs/configuration/redis):
 - **Historical message content** - No email archive or backup functionality
 - **User browsing data** - No cookies or tracking outside admin interface session
 
-:::info Self-Hosted Advantage
-Since EmailEngine is self-hosted, all data remains within your infrastructure. No data is transmitted to EmailEngine developers or third parties.
-:::
+### No Developer Access
+
+EmailEngine is fully self-hosted. EmailEngine developers have no access to your instance, data, or credentials. There is no remote management, telemetry collection, or backdoor access.
+
+**Outbound connections:** EmailEngine makes limited outbound requests for operational purposes:
+
+- `postalsys.com` - License key validation (required)
+- `api.github.com` - Version update checks (optional, for admin dashboard notifications)
+
+These requests contain no user data, email content, or account information. See [Outbound Connection Whitelist](/docs/deployment/security#outbound-connection-whitelist) for the complete list of external domains.
 
 ### Data Flow
 
