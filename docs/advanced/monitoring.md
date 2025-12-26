@@ -259,6 +259,109 @@ emailengine_config{config="workersImap"}
 
 Note: Memory usage, CPU usage, and uptime metrics are available through standard Node.js metrics exporters if needed.
 
+### Complete Prometheus Metrics Reference
+
+The following tables provide a comprehensive reference of all Prometheus metrics exposed by EmailEngine:
+
+#### Worker and Thread Metrics
+
+| Metric Name | Type | Labels | Description |
+|-------------|------|--------|-------------|
+| `thread_starts` | Counter | - | Total number of worker threads started |
+| `thread_stops` | Counter | - | Total number of worker threads stopped |
+| `threads` | Gauge | `type`, `recent` | Current worker thread count by type (api, imap, webhooks, documents, smtp, submit, main, imapProxy) |
+| `unresponsive_workers` | Gauge | - | Number of unresponsive worker threads |
+
+#### IMAP Connection Metrics
+
+| Metric Name | Type | Labels | Description |
+|-------------|------|--------|-------------|
+| `imap_connections` | Gauge | `status` | IMAP connection count by status (connected, connecting, authenticationError, connectError, syncing, disconnected) |
+| `imap_responses` | Counter | `response`, `code` | IMAP server response counts by response type and code |
+| `imap_bytes_sent` | Counter | - | Total bytes sent over IMAP connections |
+| `imap_bytes_received` | Counter | - | Total bytes received over IMAP connections |
+
+#### OAuth2 Metrics
+
+| Metric Name | Type | Labels | Description |
+|-------------|------|--------|-------------|
+| `oauth2_token_refresh` | Counter | `status`, `provider`, `statusCode` | OAuth2 access token refresh attempts by status (success, error), provider, and HTTP status code |
+| `oauth2_api_request` | Counter | `status`, `provider`, `statusCode` | OAuth2 API requests (MS Graph, Gmail API) by status, provider, and HTTP status code |
+| `outlook_subscriptions` | Gauge | `status` | Microsoft Graph webhook subscription states (valid, expired, failed) |
+
+#### Webhook Metrics
+
+| Metric Name | Type | Labels | Description |
+|-------------|------|--------|-------------|
+| `webhooks` | Counter | `status`, `event` | Webhook delivery count by status (success, failure) and event type |
+| `events` | Counter | `event` | Internal events fired by event type |
+| `webhook_req` | Histogram | - | Webhook request duration histogram (buckets: 100, 250, 500, 750, 1000, 2500, 5000, 7500, 10000, 60000 ms) |
+
+#### Queue Metrics
+
+| Metric Name | Type | Labels | Description |
+|-------------|------|--------|-------------|
+| `queue_size` | Gauge | `queue`, `state` | Queue size by queue name (notify, submit, documents) and state (waiting, active, delayed, paused) |
+| `queues_processed` | Counter | `queue`, `status` | Processed job count by queue and status (completed, failed) |
+
+#### API Metrics
+
+| Metric Name | Type | Labels | Description |
+|-------------|------|--------|-------------|
+| `api_call` | Counter | `method`, `statusCode`, `route` | API call count by HTTP method, status code, and route pattern |
+
+#### License Metrics
+
+| Metric Name | Type | Labels | Description |
+|-------------|------|--------|-------------|
+| `license_days_remaining` | Gauge | - | Days until license expires (-1 for lifetime, 0 for no license) |
+
+#### Configuration Metrics
+
+| Metric Name | Type | Labels | Description |
+|-------------|------|--------|-------------|
+| `emailengine_config` | Gauge | `version`, `config` | Configuration values including version and settings like `uvThreadpoolSize` |
+
+#### Redis Metrics
+
+| Metric Name | Type | Labels | Description |
+|-------------|------|--------|-------------|
+| `redis_version` | Gauge | `version` | Redis server version |
+| `redis_uptime_in_seconds` | Gauge | - | Redis server uptime in seconds |
+| `redis_latency` | Gauge | - | Redis PING latency in nanoseconds |
+| `redis_rejected_connections_total` | Gauge | - | Number of connections rejected by Redis |
+| `redis_config_maxclients` | Gauge | - | Maximum configured client connections for Redis |
+| `redis_connected_clients` | Gauge | - | Current number of connected Redis clients |
+| `redis_slowlog_length` | Gauge | - | Number of entries in the Redis slow log |
+| `redis_commands_duration_seconds_total` | Gauge | - | Total seconds spent processing Redis commands |
+| `redis_commands_processed_total` | Gauge | - | Total number of Redis commands processed |
+| `redis_keyspace_hits_total` | Gauge | - | Number of successful Redis key lookups |
+| `redis_keyspace_misses_total` | Gauge | - | Number of failed Redis key lookups |
+| `redis_evicted_keys_total` | Gauge | - | Number of keys evicted due to maxmemory limit |
+| `redis_memory_used_bytes` | Gauge | - | Total bytes allocated by Redis |
+| `redis_memory_max_bytes` | Gauge | - | Redis maxmemory configuration value |
+| `redis_mem_fragmentation_ratio` | Gauge | - | Ratio between used_memory_rss and used_memory |
+| `redis_key_count` | Gauge | `db` | Key count per Redis database |
+| `redis_last_save_time` | Gauge | - | Unix timestamp of the last RDB save |
+| `redis_instantaneous_ops_per_sec` | Gauge | - | Redis operations per second throughput |
+| `redis_command_runs` | Gauge | `command` | Redis command execution counts by command name |
+| `redis_command_runs_fail` | Gauge | `command`, `status` | Failed Redis command counts by command and status |
+
+#### Metric Labels Reference
+
+| Label | Values | Description |
+|-------|--------|-------------|
+| `status` | `connected`, `connecting`, `authenticationError`, `connectError`, `syncing`, `disconnected`, `success`, `failure`, `error` | Connection or operation status |
+| `event` | `messageNew`, `messageUpdated`, `messageDeleted`, `messageBounce`, `messageComplaint`, `accountAdded`, etc. | Webhook event type |
+| `queue` | `notify`, `submit`, `documents` | Queue name |
+| `state` | `waiting`, `active`, `delayed`, `paused` | Queue job state |
+| `type` | `api`, `imap`, `webhooks`, `documents`, `smtp`, `submit`, `main`, `imapProxy` | Worker thread type |
+| `provider` | `gmail`, `outlook`, `mailRu`, `gmailService` | OAuth2 provider |
+| `method` | `get`, `post`, `put`, `delete`, `patch` | HTTP method |
+| `route` | `/v1/account/:account`, `/v1/account/:account/submit`, etc. | API route pattern |
+| `response` | `OK`, `NO`, `BAD` | IMAP response type |
+| `code` | `CAPABILITY`, `PERMANENTFLAGS`, etc. | IMAP response code |
+
 ## Grafana Dashboard
 
 EmailEngine provides a pre-built Grafana dashboard for comprehensive monitoring. The dashboard is available in the EmailEngine repository and can be imported directly into your Grafana instance.

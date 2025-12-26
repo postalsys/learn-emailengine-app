@@ -512,6 +512,203 @@ Recommendations:
 
 You can enable/disable AI processing per account if needed (would require custom implementation).
 
+## AI Pre-Processing Filter (openAiPreProcessingFn)
+
+By default, AI processing is applied to all incoming emails in the INBOX folder. The `openAiPreProcessingFn` setting allows you to define a JavaScript function that filters which emails get processed by the AI, giving you fine-grained control over AI usage and costs.
+
+### How It Works
+
+When configured, the pre-processing filter runs before any AI processing occurs:
+
+1. New email arrives in monitored account
+2. Pre-processing filter function evaluates the email
+3. If function returns `true`, email is sent to OpenAI for analysis
+4. If function returns any other value, AI processing is skipped
+
+### Configuration
+
+Configure the filter via the Settings API:
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "openAiPreProcessingFn": "// Only process emails from specific domains\nconst senderDomain = payload.data.from?.address?.split(\"@\")[1];\nif ([\"important-client.com\", \"vip-customer.org\"].includes(senderDomain)) {\n  return true;\n}\nreturn false;"
+  }'
+```
+
+### Filter Function Structure
+
+The filter function receives the webhook payload and must return `true` to allow AI processing:
+
+```javascript
+// payload contains the full messageNew webhook data
+// Return true to process with AI, false to skip
+
+// Skip automated emails
+if (payload.data.headers && payload.data.headers["auto-submitted"]) {
+  return false;
+}
+
+// Skip emails from no-reply addresses
+if (payload.data.from?.address?.includes("noreply")) {
+  return false;
+}
+
+// Process all other emails
+return true;
+```
+
+### Example Filters
+
+**1. Process Only High-Priority Senders**
+
+```javascript
+// Only AI-process emails from VIP domains
+const vipDomains = ["client.com", "partner.org", "executive.net"];
+const senderDomain = payload.data.from?.address?.split("@")[1]?.toLowerCase();
+
+if (vipDomains.includes(senderDomain)) {
+  return true;
+}
+return false;
+```
+
+**2. Skip Newsletters and Automated Messages**
+
+```javascript
+// Skip common newsletter and automated email patterns
+const from = payload.data.from?.address?.toLowerCase() || "";
+const subject = payload.data.subject?.toLowerCase() || "";
+
+// Skip newsletters
+if (from.includes("newsletter") || from.includes("digest")) {
+  return false;
+}
+
+// Skip automated messages
+if (payload.data.headers?.["auto-submitted"] || payload.data.headers?.["x-auto-response-suppress"]) {
+  return false;
+}
+
+// Skip common notification subjects
+if (subject.includes("notification") || subject.includes("alert")) {
+  return false;
+}
+
+return true;
+```
+
+**3. Process Based on Subject Keywords**
+
+```javascript
+// Only process emails with specific keywords
+const subject = payload.data.subject?.toLowerCase() || "";
+const keywords = ["urgent", "invoice", "contract", "proposal", "meeting"];
+
+for (const keyword of keywords) {
+  if (subject.includes(keyword)) {
+    return true;
+  }
+}
+return false;
+```
+
+**4. Size-Based Filtering**
+
+```javascript
+// Skip very short or very long emails (likely spam or bulk)
+const textSize = payload.data.text?.encodedSize?.plain || 0;
+
+if (textSize < 50) {
+  // Too short - likely spam
+  return false;
+}
+if (textSize > 50000) {
+  // Too long - will consume many tokens
+  return false;
+}
+return true;
+```
+
+**5. Time-Based Processing**
+
+```javascript
+// Only process recent emails (skip old backlog)
+const emailDate = new Date(payload.data.date);
+const now = new Date();
+const hoursDiff = (now - emailDate) / (1000 * 60 * 60);
+
+// Skip emails older than 24 hours
+if (hoursDiff > 24) {
+  return false;
+}
+return true;
+```
+
+### Available Payload Data
+
+The filter function has access to the full `messageNew` webhook payload:
+
+```javascript
+payload.account;           // Account ID
+payload.path;              // Mailbox path (e.g., "INBOX")
+payload.data.id;           // Message ID
+payload.data.from;         // { name, address }
+payload.data.to;           // [{ name, address }, ...]
+payload.data.subject;      // Email subject
+payload.data.date;         // Message date
+payload.data.headers;      // Email headers object
+payload.data.text;         // { encodedSize: { plain, html } }
+payload.data.attachments;  // Attachment metadata array
+```
+
+### Sandbox Environment
+
+The filter function runs in the same sandbox as other pre-processing functions:
+
+**Available:**
+
+- Standard JavaScript (ES6+)
+- `Date`, `Math`, `JSON`, `RegExp`
+- `env` - Script environment variables (from `scriptEnv` setting)
+- `logger` - Pino.js logger for debugging
+
+**Not Available:**
+
+- `fetch` - No external HTTP requests
+- `require()` - No module imports
+- Filesystem or system access
+
+### Debugging Filters
+
+Errors in the filter function are logged and the email is skipped (treated as returning `false`). Check EmailEngine logs for filter errors:
+
+```bash
+# View filter-related log entries
+journalctl -u emailengine | grep "llm-pre-process"
+```
+
+You can also use the logger for debugging:
+
+```javascript
+logger.info({ from: payload.data.from?.address, subject: payload.data.subject, msg: "Evaluating email" });
+
+const result = payload.path === "INBOX";
+logger.info({ result, msg: "Filter decision" });
+
+return result;
+```
+
+### Best Practices
+
+1. **Start broad, then narrow** - Begin with minimal filtering and add rules as needed
+2. **Monitor costs** - Track token usage to measure filter effectiveness
+3. **Log decisions** - Use `logger` to track why emails are filtered
+4. **Handle missing data** - Use optional chaining (`?.`) for potentially undefined values
+5. **Keep it fast** - Complex logic adds processing overhead
+
 ## Cost Management
 
 ### Estimating Costs

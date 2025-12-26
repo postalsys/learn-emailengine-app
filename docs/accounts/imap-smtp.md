@@ -380,9 +380,9 @@ curl -X POST https://your-ee.com/v1/account \
   }'
 ```
 
-### SMTP-Only Account
+### SMTP-Only Account (Send-Only)
 
-For send-only access:
+For send-only access without IMAP:
 
 ```bash
 curl -X POST https://your-ee.com/v1/account \
@@ -403,6 +403,160 @@ curl -X POST https://your-ee.com/v1/account \
     }
   }'
 ```
+
+## Send-Only Accounts
+
+EmailEngine supports send-only accounts that can submit emails but cannot read or sync messages. This is useful for:
+
+- Transactional email systems that only send notifications
+- SMTP relay configurations
+- Applications with limited OAuth2 scopes (e.g., `gmail.send` only)
+- Accounts where IMAP access is not needed or not available
+
+### Types of Send-Only Accounts
+
+EmailEngine detects and handles three types of send-only configurations:
+
+**1. SMTP-Only (No IMAP Configured)**
+
+The simplest form - an account with only SMTP credentials and no IMAP section:
+
+```bash
+curl -X POST https://your-ee.com/v1/account \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "smtp-only-account",
+    "name": "Notification Sender",
+    "email": "notifications@example.com",
+    "smtp": {
+      "host": "smtp.example.com",
+      "port": 587,
+      "secure": false,
+      "auth": {
+        "user": "notifications@example.com",
+        "pass": "password"
+      }
+    }
+  }'
+```
+
+**2. IMAP Explicitly Disabled**
+
+An account with IMAP credentials but explicitly disabled:
+
+```bash
+curl -X POST https://your-ee.com/v1/account \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "imap-disabled-account",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "imap": {
+      "host": "imap.example.com",
+      "port": 993,
+      "secure": true,
+      "disabled": true,
+      "auth": {
+        "user": "john@example.com",
+        "pass": "password"
+      }
+    },
+    "smtp": {
+      "host": "smtp.example.com",
+      "port": 587,
+      "secure": false,
+      "auth": {
+        "user": "john@example.com",
+        "pass": "password"
+      }
+    }
+  }'
+```
+
+This is useful when you have full credentials but want to limit EmailEngine to sending only.
+
+**3. OAuth2 with Send-Only Scopes**
+
+OAuth2 accounts authenticated with only send scopes are automatically detected as send-only:
+
+**Gmail with `gmail.send` scope only:**
+
+When a Gmail OAuth2 application is configured with only the `gmail.send` scope (without `gmail.modify`, `gmail.readonly`, or `mail.google.com`), accounts using that application are treated as send-only.
+
+**Outlook with `Mail.Send` scope only:**
+
+Similarly, Outlook OAuth2 applications with only `Mail.Send` (without `Mail.Read`, `Mail.ReadWrite`, or IMAP scopes) result in send-only accounts.
+
+EmailEngine automatically detects these scope configurations and marks accounts as send-only.
+
+### Send-Only Account Behavior
+
+Send-only accounts have these characteristics:
+
+| Feature | Behavior |
+|---------|----------|
+| **Sending emails** | Fully supported |
+| **IMAP sync** | Disabled (no connection established) |
+| **Webhooks for new messages** | Not available |
+| **Message search** | Not available |
+| **Attachment downloads** | Not available |
+| **Account type in API** | Shows as `sending` |
+| **`sendOnly` flag** | Set to `true` in account info |
+
+### Checking if an Account is Send-Only
+
+The account info endpoint indicates send-only status:
+
+```bash
+curl "https://your-ee.com/v1/account/smtp-only-account" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Response for send-only accounts:
+
+```json
+{
+  "account": "smtp-only-account",
+  "name": "Notification Sender",
+  "email": "notifications@example.com",
+  "type": "sending",
+  "sendOnly": true,
+  "state": "connected",
+  "smtp": {
+    "host": "smtp.example.com",
+    "port": 587,
+    "secure": false
+  }
+}
+```
+
+### Use Cases for Send-Only Accounts
+
+**Transactional Email:**
+
+Applications that send notifications, receipts, or alerts without needing to read responses:
+
+```bash
+curl -X POST https://your-ee.com/v1/account/notifications/submit \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "from": {"name": "MyApp", "address": "notifications@example.com"},
+    "to": [{"address": "user@customer.com"}],
+    "subject": "Your order has shipped",
+    "text": "Your order #12345 has been shipped and will arrive in 2-3 days."
+  }'
+```
+
+**SMTP Relay:**
+
+Using EmailEngine as an SMTP submission layer for existing applications that don't need inbox access.
+
+**Limited OAuth2 Scopes:**
+
+When Google or Microsoft only approves limited scopes during app verification, you can still use EmailEngine for sending while using another solution for reading emails.
 
 ## Adding Accounts via Hosted Authentication Form
 

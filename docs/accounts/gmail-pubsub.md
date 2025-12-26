@@ -1,0 +1,308 @@
+---
+title: Gmail Pub/Sub Integration
+sidebar_position: 4
+description: Configure Google Cloud Pub/Sub for Gmail push notifications in EmailEngine
+---
+
+# Gmail Pub/Sub Integration
+
+This guide covers the Google Cloud Pub/Sub integration used by EmailEngine to receive real-time notifications from Gmail accounts using the Gmail REST API.
+
+:::info Prerequisites
+This guide assumes you have already configured Gmail API access following the [Gmail API Setup Guide](./gmail-api). Pub/Sub is automatically configured when you create a Gmail API OAuth2 application with a linked service account.
+:::
+
+## Overview
+
+When using Gmail REST API (instead of IMAP), EmailEngine relies on Google Cloud Pub/Sub for push notifications:
+
+1. Gmail detects changes in an account (new message, flag change, etc.)
+2. Gmail pushes a notification to a Pub/Sub topic
+3. EmailEngine polls the Pub/Sub subscription for messages
+4. EmailEngine processes the notification and fires webhooks
+
+This is different from IMAP, where EmailEngine maintains persistent connections and uses IMAP IDLE for notifications.
+
+## Configuration Settings
+
+### Service Account Settings
+
+When creating a Gmail Service Account application in EmailEngine, these settings are configured:
+
+| Setting | Description |
+|---------|-------------|
+| `googleProjectId` | Google Cloud project ID containing the Pub/Sub resources |
+| `serviceKey` | Service account credentials JSON for Pub/Sub management |
+| `baseScopes` | Set to `pubsub` for service accounts managing Pub/Sub |
+
+### OAuth2 Application Settings
+
+When creating a Gmail OAuth2 application, link it to a service account:
+
+| Setting | Description |
+|---------|-------------|
+| `pubSubApp` | ID of the service account application to use for Pub/Sub management |
+| `baseScopes` | Set to `api` for Gmail REST API access |
+
+### Generated Pub/Sub Resources
+
+EmailEngine automatically creates and manages these Pub/Sub resources:
+
+| Resource | Naming Pattern | Description |
+|----------|----------------|-------------|
+| Topic | `projects/{projectId}/topics/emailengine-{appId}` | Receives notifications from Gmail |
+| Subscription | `projects/{projectId}/subscriptions/emailengine-{appId}` | EmailEngine polls this for messages |
+
+## API Configuration
+
+### Creating a Service Account Application
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/oauth2" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Gmail Pub/Sub Manager",
+    "provider": "gmailService",
+    "enabled": true,
+    "baseScopes": "pubsub",
+    "serviceKey": "<base64-encoded-service-account-json>"
+  }'
+```
+
+The response includes the application ID:
+
+```json
+{
+  "id": "AAABkQ3c5eQ",
+  "name": "Gmail Pub/Sub Manager",
+  "provider": "gmailService",
+  "baseScopes": "pubsub"
+}
+```
+
+### Creating a Gmail OAuth2 Application with Pub/Sub
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/oauth2" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Gmail API OAuth2",
+    "provider": "gmail",
+    "enabled": true,
+    "baseScopes": "api",
+    "clientId": "YOUR_CLIENT_ID",
+    "clientSecret": "YOUR_CLIENT_SECRET",
+    "redirectUrl": "https://emailengine.example.com/oauth",
+    "pubSubApp": "AAABkQ3c5eQ"
+  }'
+```
+
+The `pubSubApp` field links this OAuth2 application to the service account for Pub/Sub management.
+
+### Checking Pub/Sub Status
+
+Retrieve application details to check Pub/Sub status:
+
+```bash
+curl "https://emailengine.example.com/v1/oauth2/AAABkQ3c5eQ" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Response includes Pub/Sub resource names:
+
+```json
+{
+  "id": "AAABkQ3c5eQ",
+  "name": "Gmail Pub/Sub Manager",
+  "provider": "gmailService",
+  "pubSubTopic": "projects/my-project/topics/emailengine-AAABkQ3c5eQ",
+  "pubSubSubscription": "projects/my-project/subscriptions/emailengine-AAABkQ3c5eQ",
+  "pubSubIamPolicy": true
+}
+```
+
+## Required Google Cloud Permissions
+
+The service account requires these permissions:
+
+### Pub/Sub Admin Role
+
+The **Pub/Sub Admin** role (`roles/pubsub.admin`) provides all necessary permissions:
+
+- `pubsub.topics.create` - Create Pub/Sub topics
+- `pubsub.topics.delete` - Delete Pub/Sub topics
+- `pubsub.topics.setIamPolicy` - Set IAM policies on topics
+- `pubsub.subscriptions.create` - Create subscriptions
+- `pubsub.subscriptions.delete` - Delete subscriptions
+- `pubsub.subscriptions.consume` - Pull messages from subscriptions
+
+### Alternative: Custom Role
+
+For least-privilege access, create a custom role with only:
+
+```yaml
+title: "EmailEngine Pub/Sub Manager"
+description: "Manages Pub/Sub for EmailEngine Gmail integration"
+includedPermissions:
+  - pubsub.topics.create
+  - pubsub.topics.delete
+  - pubsub.topics.get
+  - pubsub.topics.setIamPolicy
+  - pubsub.topics.getIamPolicy
+  - pubsub.subscriptions.create
+  - pubsub.subscriptions.delete
+  - pubsub.subscriptions.get
+  - pubsub.subscriptions.consume
+```
+
+## Gmail Watch Renewal
+
+EmailEngine automatically renews Gmail watch subscriptions to maintain push notifications:
+
+- **Watch duration**: Gmail watches expire after approximately 7 days
+- **Renewal frequency**: EmailEngine renews watches before expiration
+- **Account storage**: Last watch time is stored per account (`lastWatch` field)
+
+### Force Watch Renewal
+
+To force a watch renewal for an account:
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/account/ACCOUNT_ID/reconnect" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+This triggers a full account reconnection, including watch renewal.
+
+## Troubleshooting
+
+### Pub/Sub Topic Creation Failed
+
+**Error:** `Failed to create Pub/Sub topic`
+
+**Causes:**
+- Service account lacks `pubsub.topics.create` permission
+- Pub/Sub API not enabled in the Google Cloud project
+- Project quota exceeded
+
+**Solution:**
+1. Verify the service account has **Pub/Sub Admin** role
+2. Enable Cloud Pub/Sub API in Google Cloud Console
+3. Check project quotas in Google Cloud Console
+
+### IAM Policy Update Failed
+
+**Error:** `Failed to set IAM policy on topic`
+
+**Causes:**
+- Service account lacks `pubsub.topics.setIamPolicy` permission
+- Gmail service account email not granted publisher permission
+
+**Solution:**
+1. Ensure service account has **Pub/Sub Admin** role
+2. EmailEngine automatically grants `gmail-api-push@system.gserviceaccount.com` the publisher role
+
+### Subscription Messages Not Received
+
+**Symptoms:**
+- Webhooks not firing for Gmail accounts
+- Account shows as connected but no events
+
+**Causes:**
+- Gmail watch expired and not renewed
+- Subscription not receiving messages
+- EmailEngine webhook worker not processing
+
+**Solution:**
+1. Check EmailEngine logs for Pub/Sub errors:
+   ```bash
+   journalctl -u emailengine | grep "pub/sub"
+   ```
+2. Force account reconnection to renew watch
+3. Verify webhook worker is running (`threads{type="webhooks"}` metric)
+
+### Debugging Pub/Sub in Logs
+
+EmailEngine logs Pub/Sub activity at various levels:
+
+```bash
+# View Pub/Sub processing logs
+journalctl -u emailengine | grep -i pubsub
+
+# View Google API errors
+journalctl -u emailengine | grep "googleapis"
+
+# View watch renewal logs
+journalctl -u emailengine | grep "watch"
+```
+
+## Monitoring
+
+### Prometheus Metrics
+
+Monitor Pub/Sub-related activity through these metrics:
+
+| Metric | Description |
+|--------|-------------|
+| `oauth2_api_request{provider="gmail"}` | Gmail API requests including watch calls |
+| `oauth2_token_refresh{provider="gmailService"}` | Service account token refreshes |
+| `events{event="messageNew"}` | New message events (triggered by Pub/Sub notifications) |
+
+### Health Indicators
+
+A healthy Pub/Sub integration shows:
+
+- Regular `messageNew` events for active Gmail accounts
+- Successful `oauth2_api_request` metrics
+- No Pub/Sub errors in logs
+
+## Architecture
+
+```
+                     +-----------------+
+                     |   Gmail API     |
+                     +--------+--------+
+                              |
+                              | Push notification
+                              v
++----------------+   +--------+--------+   +------------------+
+|  EmailEngine   |<--|  Cloud Pub/Sub  |<--|  Gmail Accounts  |
+|  Webhook       |   |                 |   |  (via watches)   |
+|  Worker        |   +-----------------+   +------------------+
++-------+--------+
+        |
+        | Poll subscription
+        v
++-------+--------+
+|  Your App      |
+|  (webhooks)    |
++----------------+
+```
+
+**Flow:**
+
+1. EmailEngine creates a Pub/Sub topic and subscription
+2. EmailEngine registers a Gmail watch pointing to the topic
+3. Gmail pushes notifications when changes occur
+4. EmailEngine webhook worker polls the subscription
+5. Notifications are converted to webhooks and delivered to your app
+
+## Comparison: Pub/Sub vs IMAP IDLE
+
+| Feature | Gmail API + Pub/Sub | IMAP + IDLE |
+|---------|---------------------|-------------|
+| Connection type | HTTP polling | Persistent TCP |
+| Notification latency | 1-10 seconds | Near real-time |
+| Resource usage | Lower (no persistent connections) | Higher (per-account connections) |
+| Reliability | Very high (managed by Google) | Connection-dependent |
+| Setup complexity | Higher (service account + Pub/Sub) | Lower (OAuth2 only) |
+| Scope requirements | Granular (`gmail.modify`, etc.) | Full scope (`mail.google.com`) |
+
+## See Also
+
+- [Gmail API Setup](./gmail-api) - Complete setup guide for Gmail API access
+- [Gmail IMAP OAuth2](./gmail-imap) - Alternative setup using IMAP/SMTP
+- [Monitoring](/docs/advanced/monitoring) - Prometheus metrics for monitoring
+- [Webhooks Overview](/docs/webhooks/overview) - Understanding EmailEngine webhooks

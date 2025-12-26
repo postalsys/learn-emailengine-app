@@ -473,8 +473,184 @@ curl -X POST https://your-ee.com/v1/account/shared-support/submit \
 | **Main Account Access**       | Cannot be accessed        | Fully accessible               |
 | **Best For**                  | Single mailbox, testing   | Production, multiple mailboxes |
 
+## Delegated Send Access
+
+Beyond shared mailboxes, delegated accounts can be used for scenarios where one account needs to send emails through another account's SMTP credentials. This is useful for:
+
+- Transactional email accounts that share SMTP credentials
+- Service accounts where multiple identities send through a common relay
+- Organizations with centralized email sending infrastructure
+
+### How Delegation Works Internally
+
+When you configure a delegated account, EmailEngine:
+
+1. **Resolves the delegation chain** - Follows `delegatedAccount` references up to 20 hops (detecting loops)
+2. **Loads credentials from the parent account** - Uses the OAuth2 tokens or IMAP/SMTP credentials from the referenced account
+3. **Sets the identity from the delegated account** - Uses the `email` and `delegatedUser` fields to set the From address and IMAP user
+
+### Delegation Chain Resolution
+
+EmailEngine supports chained delegation where account A references account B, which references account C. The resolution follows the chain until it finds an account with actual credentials:
+
+```
+Account A (delegatedAccount: "B")
+    |
+    v
+Account B (delegatedAccount: "C")
+    |
+    v
+Account C (has OAuth2 credentials) <-- Used for authentication
+```
+
+**Limits and safeguards:**
+
+- Maximum 20 hops in the delegation chain
+- Loop detection prevents circular references
+- Clear error messages when resolution fails
+
+### Configuring Delegated Send Access
+
+**Step 1: Create the parent account with credentials**
+
+```bash
+curl -X POST https://your-ee.com/v1/account \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "smtp-relay",
+    "name": "SMTP Relay Account",
+    "email": "relay@company.com",
+    "smtp": {
+      "host": "smtp.company.com",
+      "port": 587,
+      "secure": false,
+      "auth": {
+        "user": "relay@company.com",
+        "pass": "smtp-password"
+      }
+    }
+  }'
+```
+
+**Step 2: Create delegated accounts that use the parent's SMTP**
+
+```bash
+# Sales team sends through the relay
+curl -X POST https://your-ee.com/v1/account \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "sales-sender",
+    "name": "Sales Team",
+    "email": "sales@company.com",
+    "oauth2": {
+      "auth": {
+        "delegatedUser": "sales@company.com",
+        "delegatedAccount": "smtp-relay"
+      }
+    }
+  }'
+
+# Support team sends through the same relay
+curl -X POST https://your-ee.com/v1/account \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "support-sender",
+    "name": "Support Team",
+    "email": "support@company.com",
+    "oauth2": {
+      "auth": {
+        "delegatedUser": "support@company.com",
+        "delegatedAccount": "smtp-relay"
+      }
+    }
+  }'
+```
+
+**Step 3: Send emails from delegated accounts**
+
+```bash
+# This uses smtp-relay credentials but sends from sales@company.com
+curl -X POST https://your-ee.com/v1/account/sales-sender/submit \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": [{"address": "customer@example.com"}],
+    "subject": "Sales Inquiry",
+    "text": "Thank you for your interest..."
+  }'
+```
+
+### Account Type and State
+
+Delegated accounts show as type `delegated` in the API:
+
+```bash
+curl https://your-ee.com/v1/account/sales-sender \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Response:
+
+```json
+{
+  "account": "sales-sender",
+  "name": "Sales Team",
+  "email": "sales@company.com",
+  "type": "delegated",
+  "state": "connected",
+  "oauth2": {
+    "auth": {
+      "delegatedUser": "sales@company.com",
+      "delegatedAccount": "smtp-relay"
+    }
+  }
+}
+```
+
+### Troubleshooting Delegation Issues
+
+**"Missing account data for delegated account"**
+
+The referenced `delegatedAccount` doesn't exist:
+
+```bash
+# Verify the parent account exists
+curl https://your-ee.com/v1/account/smtp-relay \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**"Delegation looping detected"**
+
+Circular reference in the delegation chain. For example:
+
+- Account A references B
+- Account B references C
+- Account C references A (loop!)
+
+Fix by breaking the loop - ensure one account has actual credentials without referencing another.
+
+**"Too many delegation hops"**
+
+The delegation chain exceeds 20 hops. Simplify your delegation structure.
+
+**Parent account authentication errors**
+
+If the parent account has authentication issues (expired tokens, changed password), all delegated accounts will fail. Monitor the parent account's state and fix authentication promptly.
+
+### Best Practices for Delegated Access
+
+1. **Keep delegation chains short** - Prefer direct references to the credential-holding account
+2. **Monitor parent accounts** - Authentication failures cascade to all delegated accounts
+3. **Use descriptive names** - Make it clear which accounts are parents vs. delegated
+4. **Document relationships** - Track which accounts depend on which credentials
+5. **Test after credential changes** - When rotating parent account credentials, verify delegated accounts still work
+
 ## See Also
 
 - [Outlook OAuth2 Setup Guide](/docs/accounts/outlook-365) - Setting up Azure AD OAuth2
 - [Account Management](/docs/accounts/managing-accounts) - Managing accounts in EmailEngine
 - [Microsoft Graph API](/docs/accounts/outlook-365#ms-graph-api) - Using MS Graph backend
+- [Send-Only Accounts](/docs/accounts/imap-smtp#send-only-accounts) - SMTP-only configurations

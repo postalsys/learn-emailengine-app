@@ -478,16 +478,138 @@ if (apiKey) {
 return true;
 ```
 
-Configure `scriptEnv` via the Settings API (note: the value must be a JSON string):
+## Script Environment Variables (scriptEnv)
+
+The `scriptEnv` setting allows you to pass secrets, API keys, and configuration values to pre-processing scripts without hardcoding them. This is the recommended approach for managing sensitive data in scripts.
+
+### Configuring scriptEnv
+
+Configure `scriptEnv` via the Settings API. The value must be a JSON string containing key-value pairs:
 
 ```bash
 curl -X POST "https://emailengine.example.com/v1/settings" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "scriptEnv": "{\"MY_API_KEY\":\"your-api-key-here\",\"WEBHOOK_SECRET\":\"your-secret\"}"
+    "scriptEnv": "{\"MY_API_KEY\":\"your-api-key-here\",\"WEBHOOK_SECRET\":\"your-secret\",\"SLACK_WEBHOOK_URL\":\"https://hooks.slack.com/...\"}"
   }'
 ```
+
+Or with formatted JSON for readability:
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scriptEnv": "{\"API_KEY\":\"sk-abc123\",\"ENVIRONMENT\":\"production\",\"DEBUG_MODE\":\"false\"}"
+  }'
+```
+
+### Accessing Environment Variables in Scripts
+
+The `env` object is available globally in all pre-processing scripts:
+
+```javascript
+// Access a single variable
+const apiKey = env.API_KEY;
+
+// Check if variable exists
+if (env.SLACK_WEBHOOK_URL) {
+  await fetch(env.SLACK_WEBHOOK_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: `New email from ${payload.data.from.address}`,
+    }),
+  });
+}
+
+// Use environment to control behavior
+if (env.ENVIRONMENT === "production") {
+  // Production-specific logic
+}
+
+return true;
+```
+
+### Use Cases
+
+**1. External API Integration**
+
+```javascript
+// Call an external classification API
+const response = await fetch(env.CLASSIFICATION_API_URL, {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${env.CLASSIFICATION_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    subject: payload.data.subject,
+    from: payload.data.from.address,
+  }),
+});
+
+const result = await response.json();
+payload.classification = result.category;
+return payload;
+```
+
+**2. Webhook Secret Validation**
+
+```javascript
+// Add a shared secret to webhook payloads
+payload.webhookSecret = env.WEBHOOK_SECRET;
+payload.timestamp = Date.now();
+return payload;
+```
+
+**3. Environment-Specific Filtering**
+
+```javascript
+// Different behavior per environment
+if (env.ENVIRONMENT === "development") {
+  // In development, process all emails
+  return true;
+}
+
+// In production, only process inbox emails
+return payload.path === "INBOX";
+```
+
+**4. Feature Flags**
+
+```javascript
+// Toggle features via configuration
+if (env.ENABLE_SLACK_NOTIFICATIONS === "true") {
+  await fetch(env.SLACK_WEBHOOK_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: `Email received: ${payload.data.subject}` }),
+  });
+}
+return true;
+```
+
+### Best Practices
+
+1. **Never hardcode secrets** - Always use `scriptEnv` for API keys, tokens, and passwords
+2. **Use descriptive names** - Use clear, uppercase names like `OPENAI_API_KEY`, `SLACK_WEBHOOK_URL`
+3. **Validate before use** - Check if variables exist before using them: `if (env.MY_KEY) { ... }`
+4. **Keep it simple** - Store only values needed by scripts; use EmailEngine settings for EmailEngine configuration
+5. **Update atomically** - When updating `scriptEnv`, include all values as the entire object is replaced
+
+### Retrieving Current Configuration
+
+Get the current `scriptEnv` value:
+
+```bash
+curl "https://emailengine.example.com/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+The response includes `scriptEnv` (as a JSON string) among other settings
 
 **Using `logger` for Structured Logging:**
 

@@ -107,19 +107,114 @@ For maximum compatibility, select **"Accounts in any organizational directory an
 
 ### Microsoft Cloud Environments
 
-EmailEngine supports multiple Microsoft cloud environments beyond the standard commercial cloud:
+EmailEngine supports multiple Microsoft cloud environments for government and regional deployments. Select the appropriate cloud when creating an Outlook OAuth2 application to use the correct endpoints.
 
-| Cloud | Value | IMAP Host | SMTP Host | Use Case |
-|-------|-------|-----------|-----------|----------|
-| **Commercial** | `global` | outlook.office365.com | smtp.office365.com | Standard Microsoft 365 (default) |
-| **GCC High** | `gcc-high` | outlook.office365.us | smtp.office365.us | US Government L4 |
-| **DoD** | `dod` | outlook-dod.office365.us | outlook-dod.office365.us | US Government L5 (DoD) |
-| **China** | `china` | partner.outlook.cn | partner.outlook.cn | China (operated by 21Vianet) |
+| Cloud | Value | Use Case |
+|-------|-------|----------|
+| **Azure Global** | `global` | Standard Microsoft 365 (default) |
+| **GCC High** | `gcc-high` | US Government L4 |
+| **DoD** | `dod` | US Department of Defense L5 |
+| **Azure China** | `china` | China (operated by 21Vianet) |
 
-When configuring the OAuth2 application in EmailEngine, select the appropriate cloud environment. EmailEngine automatically uses the correct endpoints for authentication and email access.
+#### Cloud Environment Details
 
-:::info Government and Sovereign Clouds
-For government clouds (GCC High, DoD) and sovereign clouds (China), you must register your Azure AD application in the corresponding Azure portal for that cloud environment, not the standard Azure portal.
+**Azure Global (default)**
+
+The standard commercial Microsoft 365 environment used by most organizations:
+
+- **Entra ID Endpoint**: `https://login.microsoftonline.com`
+- **MS Graph API**: `https://graph.microsoft.com`
+- **IMAP Host**: `outlook.office365.com`
+- **SMTP Host**: `smtp.office365.com`
+- **Azure Portal**: [portal.azure.com](https://portal.azure.com)
+
+**GCC High (US Government L4)**
+
+For US government agencies and contractors requiring FedRAMP High + DoD SRG Impact Level 4 compliance:
+
+- **Entra ID Endpoint**: `https://login.microsoftonline.us`
+- **MS Graph API**: `https://graph.microsoft.us`
+- **IMAP Host**: `outlook.office365.us`
+- **SMTP Host**: `smtp.office365.us`
+- **Azure Portal**: [portal.azure.us](https://portal.azure.us)
+
+**DoD (US Department of Defense L5)**
+
+For US Department of Defense requiring Impact Level 5 (ITAR and DoD SRG):
+
+- **Entra ID Endpoint**: `https://login.microsoftonline.us`
+- **MS Graph API**: `https://dod-graph.microsoft.us`
+- **IMAP Host**: `outlook-dod.office365.us`
+- **SMTP Host**: `outlook-dod.office365.us`
+- **Azure Portal**: [portal.azure.us](https://portal.azure.us)
+
+**Azure China (21Vianet)**
+
+Microsoft Azure operated by 21Vianet in China for compliance with Chinese regulations:
+
+- **Entra ID Endpoint**: `https://login.chinacloudapi.cn`
+- **MS Graph API**: `https://microsoftgraph.chinacloudapi.cn`
+- **IMAP Host**: `partner.outlook.cn`
+- **SMTP Host**: `partner.outlook.cn`
+- **Azure Portal**: [portal.azure.cn](https://portal.azure.cn)
+
+#### Configuring Cloud Environment via API
+
+When creating an Outlook OAuth2 application via API, specify the `cloud` parameter:
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/oauth2" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Outlook GCC High",
+    "provider": "outlook",
+    "enabled": true,
+    "cloud": "gcc-high",
+    "clientId": "YOUR_CLIENT_ID",
+    "clientSecret": "YOUR_CLIENT_SECRET",
+    "redirectUrl": "https://emailengine.example.com/oauth",
+    "authority": "organizations"
+  }'
+```
+
+Valid values for `cloud`:
+
+- `global` (default if not specified)
+- `gcc-high`
+- `dod`
+- `china`
+
+#### OAuth2 Scopes by Cloud
+
+Each cloud environment uses different scope URLs. EmailEngine automatically uses the correct scopes based on the selected cloud:
+
+**IMAP/SMTP Scopes:**
+
+| Cloud | IMAP Scope | SMTP Scope |
+|-------|------------|------------|
+| Global | `https://outlook.office365.com/IMAP.AccessAsUser.All` | `https://outlook.office365.com/SMTP.Send` |
+| GCC High | `https://outlook.office365.us/IMAP.AccessAsUser.All` | `https://outlook.office365.us/SMTP.Send` |
+| DoD | `https://outlook.office365.us/IMAP.AccessAsUser.All` | `https://outlook.office365.us/SMTP.Send` |
+| China | `https://partner.outlook.cn/IMAP.AccessAsUser.All` | `https://partner.outlook.cn/SMTP.Send` |
+
+**MS Graph API Scopes:**
+
+| Cloud | Mail.ReadWrite | Mail.Send |
+|-------|----------------|-----------|
+| Global | `https://graph.microsoft.com/Mail.ReadWrite` | `https://graph.microsoft.com/Mail.Send` |
+| GCC High | `https://graph.microsoft.us/Mail.ReadWrite` | `https://graph.microsoft.us/Mail.Send` |
+| DoD | `https://dod-graph.microsoft.us/Mail.ReadWrite` | `https://dod-graph.microsoft.us/Mail.Send` |
+| China | `https://microsoftgraph.chinacloudapi.cn/Mail.ReadWrite` | `https://microsoftgraph.chinacloudapi.cn/Mail.Send` |
+
+:::warning Government Cloud Registration
+For government clouds (GCC High, DoD) and sovereign clouds (China), you must:
+
+1. Register your Azure AD application in the corresponding Azure portal for that cloud environment
+2. Your organization must have a subscription in that cloud environment
+3. Use the correct Azure portal URL for app registration
+
+You cannot use an app registered in the global Azure portal for government or China cloud environments.
 :::
 
 ### Redirect URI

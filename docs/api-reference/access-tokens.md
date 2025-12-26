@@ -287,6 +287,157 @@ curl http://localhost:3000/v1/accounts
 3. Remove any unauthenticated API calls from your code
 4. Test with authentication enabled
 
+## Token Restrictions
+
+Access tokens can be configured with security restrictions to limit their usage by IP address, HTTP referrer, and rate limits. These restrictions provide additional security layers for tokens used in different environments.
+
+### Configuration Options
+
+Token restrictions are configured when creating a token via the API:
+
+```bash
+curl -X POST http://localhost:3000/v1/token \
+  -H "Authorization: Bearer EXISTING_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "user123",
+    "description": "Restricted API token",
+    "scopes": ["api"],
+    "restrictions": {
+      "addresses": ["192.168.1.0/24", "10.0.0.5"],
+      "referrers": ["https://myapp.com/*", "*.example.org/*"],
+      "rateLimit": {
+        "maxRequests": 100,
+        "timeWindow": 60
+      }
+    }
+  }'
+```
+
+### IP Address Allowlist
+
+Restrict token usage to specific IP addresses or CIDR ranges:
+
+```json
+{
+  "restrictions": {
+    "addresses": ["1.2.3.4", "5.6.7.8", "192.168.0.0/16", "10.0.0.0/8"]
+  }
+}
+```
+
+**Supported formats:**
+
+- Single IPv4 addresses: `"192.168.1.100"`
+- Single IPv6 addresses: `"2001:db8::1"`
+- CIDR ranges: `"192.168.0.0/24"`, `"10.0.0.0/8"`
+
+Requests from IP addresses not in the allowlist will be rejected with a 403 Forbidden response.
+
+### HTTP Referrer Patterns
+
+Restrict token usage based on the HTTP `Referer` header. This is useful for tokens used in browser-based applications:
+
+```json
+{
+  "restrictions": {
+    "referrers": ["*web.domain.org/*", "*.domain.org/*", "https://domain.org/*"]
+  }
+}
+```
+
+**Pattern syntax:**
+
+- `*` matches any sequence of characters
+- Patterns are matched against the full referrer URL
+- Multiple patterns can be specified (any match allows the request)
+
+**Use cases:**
+
+- Restrict tokens to specific web applications
+- Prevent token misuse if leaked
+- Enforce origin-based access control
+
+:::warning Referrer Limitations
+HTTP referrer restrictions can be bypassed by clients that do not send the `Referer` header or forge it. Use this as an additional layer of security, not as the sole protection mechanism.
+:::
+
+### Rate Limiting
+
+Limit the number of API requests a token can make within a time window:
+
+```json
+{
+  "restrictions": {
+    "rateLimit": {
+      "maxRequests": 100,
+      "timeWindow": 60
+    }
+  }
+}
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `maxRequests` | integer | Maximum number of requests allowed in the time window |
+| `timeWindow` | integer | Time window duration in seconds |
+
+**Example configurations:**
+
+```json
+// 20 requests per 2 seconds (burst protection)
+{ "maxRequests": 20, "timeWindow": 2 }
+
+// 1000 requests per hour (daily limit)
+{ "maxRequests": 1000, "timeWindow": 3600 }
+
+// 100 requests per minute (standard rate limit)
+{ "maxRequests": 100, "timeWindow": 60 }
+```
+
+When the rate limit is exceeded, requests are rejected with a 429 Too Many Requests response.
+
+### Combining Restrictions
+
+All restriction types can be combined. A request must satisfy ALL configured restrictions:
+
+```bash
+curl -X POST http://localhost:3000/v1/token \
+  -H "Authorization: Bearer EXISTING_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "user123",
+    "description": "Fully restricted frontend token",
+    "scopes": ["api"],
+    "restrictions": {
+      "addresses": ["203.0.113.0/24"],
+      "referrers": ["https://app.example.com/*"],
+      "rateLimit": {
+        "maxRequests": 50,
+        "timeWindow": 60
+      }
+    }
+  }'
+```
+
+### Disabling Restrictions
+
+Set any restriction to `false` to disable it:
+
+```json
+{
+  "restrictions": {
+    "addresses": false,
+    "referrers": false,
+    "rateLimit": false
+  }
+}
+```
+
+Or omit the `restrictions` object entirely to create an unrestricted token.
+
 ## See Also
 
 - [Command Line Interface (CLI)](/docs/configuration/cli) - Complete CLI reference for token management and administration
