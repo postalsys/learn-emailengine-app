@@ -493,14 +493,14 @@ When you configure a delegated account, EmailEngine:
 
 EmailEngine supports chained delegation where account A references account B, which references account C. The resolution follows the chain until it finds an account with actual credentials:
 
-```
-Account A (delegatedAccount: "B")
-    |
-    v
-Account B (delegatedAccount: "C")
-    |
-    v
-Account C (has OAuth2 credentials) <-- Used for authentication
+```mermaid
+flowchart TB
+    A["Account A<br/><small>delegatedAccount: 'B'</small>"] --> B["Account B<br/><small>delegatedAccount: 'C'</small>"]
+    B --> C["Account C<br/><small>has OAuth2 credentials</small>"]
+
+    C -.->|"Credentials used<br/>for authentication"| A
+
+    style C fill:#d4edda,stroke:#28a745
 ```
 
 **Limits and safeguards:**
