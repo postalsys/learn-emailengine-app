@@ -107,7 +107,7 @@ emailengine version
 **Output:**
 
 ```
-EmailEngine v2.61.0 (LICENSE_EMAILENGINE)
+EmailEngine v2.61.1 (LICENSE_EMAILENGINE)
 ```
 
 ## Configuration Arguments

@@ -66,7 +66,7 @@ Response includes:
 
 ```json
 {
-  "version": "2.61.0",
+  "version": "2.61.1",
   "license": "MIT",
   "accounts": 15,
   "node": "24.0.0",
@@ -253,7 +253,7 @@ threads{type="imap"}
 threads{type="webhooks"}
 
 # Configuration
-emailengine_config{version="v2.61.0"}
+emailengine_config{version="v2.61.1"}
 emailengine_config{config="workersImap"}
 ```
 
