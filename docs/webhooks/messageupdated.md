@@ -114,7 +114,6 @@ The `changes` object contains flag and/or label changes:
   "path": "INBOX",
   "specialUse": "\Inbox",
   "event": "messageUpdated",
-  "eventId": "c36ab19a-58cc-4372-a567-0e02b2c3d479",
   "data": {
     "id": "AAAADAAABy4",
     "uid": 1838,
@@ -138,7 +137,6 @@ The `changes` object contains flag and/or label changes:
   "path": "INBOX",
   "specialUse": "\Inbox",
   "event": "messageUpdated",
-  "eventId": "d47bc20a-69dd-4483-b678-1f13c3d4e590",
   "data": {
     "id": "AAAADAAABy8",
     "uid": 1845,
@@ -162,7 +160,6 @@ The `changes` object contains flag and/or label changes:
   "path": "INBOX",
   "specialUse": "\Inbox",
   "event": "messageUpdated",
-  "eventId": "e58cd31b-7aee-5594-c789-2g24d4e5f6a1",
   "data": {
     "id": "AAAADAAABy8",
     "uid": 1845,
@@ -185,7 +182,6 @@ The `changes` object contains flag and/or label changes:
   "date": "2025-10-17T09:45:30.123Z",
   "path": "[Gmail]/All Mail",
   "event": "messageUpdated",
-  "eventId": "f69de42c-8bff-6605-d890-3h35e5f6g7b2",
   "data": {
     "id": "18b5c7d8e9f01234",
     "threadId": "18b5c7d8e9f01234",
@@ -208,7 +204,6 @@ The `changes` object contains flag and/or label changes:
   "date": "2025-10-17T10:00:00.000Z",
   "path": "[Gmail]/All Mail",
   "event": "messageUpdated",
-  "eventId": "a70ef53d-9c00-7716-e9a1-4i46f6g7h8c3",
   "data": {
     "id": "18b5c7d8e9f01234",
     "threadId": "18b5c7d8e9f01234",
@@ -236,7 +231,6 @@ The `changes` object contains flag and/or label changes:
   "date": "2025-10-17T11:20:45.678Z",
   "path": "Inbox",
   "event": "messageUpdated",
-  "eventId": "b81fg64e-ad11-8827-fa2b-5j57g7h8i9d4",
   "data": {
     "id": "AAMkADI2NGVhZTVlLTI1OGItNDUwZS05ZDVkLWQzN2E2MDUyYzc3YQBGAAAAAAI",
     "changes": {

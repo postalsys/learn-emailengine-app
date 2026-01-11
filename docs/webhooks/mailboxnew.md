@@ -64,7 +64,6 @@ The event is triggered after EmailEngine has completed the initial sync of the n
   "date": "2025-10-17T14:22:33.456Z",
   "path": "Projects/Active",
   "event": "mailboxNew",
-  "eventId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "data": {
     "path": "Projects/Active",
     "name": "Active",
@@ -86,7 +85,6 @@ When a special use folder is created or discovered:
   "path": "Archive",
   "specialUse": "\\Archive",
   "event": "mailboxNew",
-  "eventId": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
   "data": {
     "path": "Archive",
     "name": "Archive",
@@ -105,7 +103,6 @@ When a special use folder is created or discovered:
   "date": "2025-10-17T16:30:00.000Z",
   "path": "Archive/2024/Q4/December",
   "event": "mailboxNew",
-  "eventId": "c3d4e5f6-a7b8-9012-cdef-345678901234",
   "data": {
     "path": "Archive/2024/Q4/December",
     "name": "December",

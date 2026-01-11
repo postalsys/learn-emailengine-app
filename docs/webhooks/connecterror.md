@@ -76,7 +76,6 @@ Common `serverResponseCode` values you may encounter:
   "account": "user123",
   "date": "2025-10-17T14:30:00.000Z",
   "event": "connectError",
-  "eventId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "data": {
     "response": "connect ECONNREFUSED 192.168.1.100:993",
     "serverResponseCode": "ECONNREFUSED"
@@ -92,7 +91,6 @@ Common `serverResponseCode` values you may encounter:
   "account": "office-account",
   "date": "2025-10-17T15:45:00.000Z",
   "event": "connectError",
-  "eventId": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
   "data": {
     "response": "connect ETIMEDOUT 10.0.0.50:993",
     "serverResponseCode": "ETIMEDOUT"
@@ -108,7 +106,6 @@ Common `serverResponseCode` values you may encounter:
   "account": "remote-user",
   "date": "2025-10-17T16:20:00.000Z",
   "event": "connectError",
-  "eventId": "c3d4e5f6-a7b8-9012-cdef-345678901234",
   "data": {
     "response": "getaddrinfo ENOTFOUND mail.invalid-domain.example",
     "serverResponseCode": "ENOTFOUND"
@@ -124,7 +121,6 @@ Common `serverResponseCode` values you may encounter:
   "account": "secure-account",
   "date": "2025-10-17T17:00:00.000Z",
   "event": "connectError",
-  "eventId": "d4e5f6a7-b8c9-0123-defa-456789012345",
   "data": {
     "response": "certificate has expired",
     "serverResponseCode": "CERT_HAS_EXPIRED"

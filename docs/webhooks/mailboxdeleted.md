@@ -63,7 +63,6 @@ The event is only triggered for folders that EmailEngine was previously aware of
   "date": "2025-10-17T14:22:33.456Z",
   "path": "Projects/Completed",
   "event": "mailboxDeleted",
-  "eventId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "data": {
     "path": "Projects/Completed",
     "name": "Completed",
@@ -84,7 +83,6 @@ When a special use folder is deleted (note: deleting Trash or other special fold
   "path": "Drafts",
   "specialUse": "\\Drafts",
   "event": "mailboxDeleted",
-  "eventId": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
   "data": {
     "path": "Drafts",
     "name": "Drafts",
@@ -102,7 +100,6 @@ When a special use folder is deleted (note: deleting Trash or other special fold
   "date": "2025-10-17T16:30:00.000Z",
   "path": "Archive/2024/Q1/January",
   "event": "mailboxDeleted",
-  "eventId": "c3d4e5f6-a7b8-9012-cdef-345678901234",
   "data": {
     "path": "Archive/2024/Q1/January",
     "name": "January",

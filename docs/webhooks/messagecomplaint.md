@@ -91,7 +91,6 @@ The `headers` object contains headers from the original complained-about message
   "account": "user123",
   "date": "2025-10-17T07:06:11.697Z",
   "event": "messageComplaint",
-  "eventId": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
   "data": {
     "complaintMessage": "AAAAAQAABzE",
     "arf": {

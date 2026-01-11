@@ -28,7 +28,8 @@
         {"method": "GET", "path": "/v1/account/{account}/oauth-token", "description": "Get OAuth2 access token"},
         {"method": "POST", "path": "/v1/verifyAccount", "description": "Test account credentials"},
         {"method": "POST", "path": "/v1/authentication/form", "description": "Generate hosted auth form URL"},
-        {"method": "GET", "path": "/v1/autoconfig", "description": "Auto-detect IMAP/SMTP settings"}
+        {"method": "GET", "path": "/v1/autoconfig", "description": "Auto-detect IMAP/SMTP settings"},
+        {"method": "GET", "path": "/v1/account/{account}/server-signatures", "description": "List server signatures"}
       ]
     },
     "messageOperations": {
@@ -164,7 +165,9 @@
       "description": "Configure EmailEngine runtime settings",
       "endpoints": [
         {"method": "GET", "path": "/v1/settings", "description": "Get all settings"},
-        {"method": "POST", "path": "/v1/settings", "description": "Update settings"}
+        {"method": "POST", "path": "/v1/settings", "description": "Update settings"},
+        {"method": "GET", "path": "/v1/settings/queue/{queue}", "description": "Get queue configuration"},
+        {"method": "PUT", "path": "/v1/settings/queue/{queue}", "description": "Update queue configuration"}
       ]
     },
     "monitoring": {

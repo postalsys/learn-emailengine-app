@@ -55,7 +55,6 @@ This event fires **after** the account has been removed from EmailEngine's confi
   "account": "user123",
   "date": "2025-10-17T14:32:45.892Z",
   "event": "accountDeleted",
-  "eventId": "c3d4e5f6-a7b8-9012-cdef-345678901234",
   "data": {
     "account": "user123"
   }
@@ -72,7 +71,6 @@ When no service URL is configured:
   "account": "gmail-user456",
   "date": "2025-10-17T16:45:00.000Z",
   "event": "accountDeleted",
-  "eventId": "d4e5f6a7-b8c9-0123-def0-456789012345",
   "data": {
     "account": "gmail-user456"
   }

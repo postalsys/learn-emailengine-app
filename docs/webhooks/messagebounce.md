@@ -101,7 +101,6 @@ The `messageHeaders` object contains headers from the original bounced message (
   "account": "user123",
   "date": "2025-10-17T06:46:29.436Z",
   "event": "messageBounce",
-  "eventId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
   "data": {
     "id": "AAAAAQAAAeE",
     "bounceMessage": "AAAAAQAABy8",

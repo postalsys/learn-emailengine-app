@@ -54,7 +54,6 @@ This event fires **before** EmailEngine attempts to connect to the mail server. 
   "account": "user123",
   "date": "2025-10-17T06:49:22.157Z",
   "event": "accountAdded",
-  "eventId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "data": {
     "account": "user123"
   }
@@ -71,7 +70,6 @@ When no service URL is configured:
   "account": "gmail-user456",
   "date": "2025-10-17T08:15:30.000Z",
   "event": "accountAdded",
-  "eventId": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
   "data": {
     "account": "gmail-user456"
   }

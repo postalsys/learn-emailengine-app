@@ -63,7 +63,6 @@ This ensures the event fires only on the first successful connection, not on rou
   "account": "user123",
   "date": "2025-10-17T06:50:45.321Z",
   "event": "accountInitialized",
-  "eventId": "c3d4e5f6-a7b8-9012-cdef-345678901234",
   "data": {
     "initialized": true
   }
@@ -80,7 +79,6 @@ When no service URL is configured:
   "account": "gmail-user456",
   "date": "2025-10-17T08:16:15.000Z",
   "event": "accountInitialized",
-  "eventId": "d4e5f6a7-b8c9-0123-def4-567890123456",
   "data": {
     "initialized": true
   }

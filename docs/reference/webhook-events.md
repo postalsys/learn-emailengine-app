@@ -442,7 +442,7 @@ Included when **Configuration → Webhooks → Attachments** is enabled (`notify
   - `contentType` (string) - MIME type
   - `disposition` (string) - Content disposition ("attachment" or "inline")
   - `filename` (string) - Filename
-  - `size` (number) - Size in bytes
+  - `encodedSize` (number) - Size in bytes (transfer encoded)
   - `embedded` (boolean, optional) - Is embedded image
   - `inline` (boolean, optional) - Is inline attachment
   - `contentId` (string, optional) - Content-ID header value

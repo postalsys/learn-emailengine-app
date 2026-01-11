@@ -615,3 +615,34 @@ Always use HTTPS for webhook URLs to prevent:
 - Credential exposure
 - Data tampering
 
+### Webhook HTTP Headers
+
+EmailEngine includes the following HTTP headers with each webhook request:
+
+| Header | Description |
+|--------|-------------|
+| `X-EE-Wh-Event-Id` | Unique identifier for this webhook delivery (UUID). Use for deduplication and tracking. |
+| `X-EE-Wh-Signature` | HMAC-SHA256 signature of the request body (base64url encoded). Only present if `serviceSecret` is configured. |
+| `Content-Type` | Always `application/json` |
+| `Content-Length` | Size of the request body in bytes |
+
+**Using the Event ID for Deduplication:**
+
+```javascript
+const processedEvents = new Set();
+
+app.post('/webhooks/emailengine', (req, res) => {
+  const eventId = req.headers['x-ee-wh-event-id'];
+
+  // Skip if already processed (idempotency)
+  if (processedEvents.has(eventId)) {
+    return res.json({ success: true, skipped: true });
+  }
+
+  processedEvents.add(eventId);
+
+  // Process the event...
+  res.json({ success: true });
+});
+```
+

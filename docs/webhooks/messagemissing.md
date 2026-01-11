@@ -81,7 +81,6 @@ The `messageMissing` event includes identification data and retry statistics:
   "path": "INBOX",
   "specialUse": "\Inbox",
   "event": "messageMissing",
-  "eventId": "a83cd01e-45ab-4921-b456-7e89f0123456",
   "data": {
     "id": "AAAADAAABy4",
     "uid": 1838,
@@ -100,7 +99,6 @@ The `messageMissing` event includes identification data and retry statistics:
   "date": "2025-10-17T08:15:22.123Z",
   "path": "[Gmail]/All Mail",
   "event": "messageMissing",
-  "eventId": "b94de12f-56bc-5032-c567-8f90g1234567",
   "data": {
     "id": "18b5c7d8e9f01234"
   }
@@ -116,7 +114,6 @@ The `messageMissing` event includes identification data and retry statistics:
   "date": "2025-10-17T09:30:45.789Z",
   "path": "Inbox",
   "event": "messageMissing",
-  "eventId": "c05ef23g-67cd-6143-d678-9g01h2345678",
   "data": {
     "id": "AAMkADI2NGVhZTVlLTI1OGItNDUwZS05ZDVkLWQzN2E2MDUyYzc3YQBGAAAAAAI"
   }

@@ -66,7 +66,6 @@ UIDVALIDITY is an IMAP mechanism that ensures message UIDs remain valid. When UI
   "path": "INBOX",
   "specialUse": "\\Inbox",
   "event": "mailboxReset",
-  "eventId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "data": {
     "path": "INBOX",
     "name": "INBOX",
@@ -86,7 +85,6 @@ UIDVALIDITY is an IMAP mechanism that ensures message UIDs remain valid. When UI
   "date": "2025-10-17T15:45:12.789Z",
   "path": "Support/Tickets",
   "event": "mailboxReset",
-  "eventId": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
   "data": {
     "path": "Support/Tickets",
     "name": "Tickets",
@@ -108,7 +106,6 @@ When EmailEngine has no record of a previous UIDVALIDITY (e.g., first detection 
   "date": "2025-10-17T16:30:00.000Z",
   "path": "Archive/2024",
   "event": "mailboxReset",
-  "eventId": "c3d4e5f6-a7b8-9012-cdef-345678901234",
   "data": {
     "path": "Archive/2024",
     "name": "2024",

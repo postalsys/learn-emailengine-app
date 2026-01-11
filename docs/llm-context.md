@@ -74,6 +74,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | `POST` | `/v1/verifyAccount` | Test account credentials |
 | `POST` | `/v1/authentication/form` | Generate hosted auth form URL |
 | `GET` | `/v1/autoconfig` | Auto-detect IMAP/SMTP settings |
+| `GET` | `/v1/account/{account}/server-signatures` | List server signatures for account |
 
 ### Message Operations
 
@@ -131,6 +132,8 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 |--------|----------|-------------|
 | `GET` | `/v1/settings` | Get all settings |
 | `POST` | `/v1/settings` | Update settings |
+| `GET` | `/v1/settings/queue/{queue}` | Get queue configuration |
+| `PUT` | `/v1/settings/queue/{queue}` | Update queue configuration |
 
 ### Webhooks
 
@@ -479,6 +482,8 @@ curl -X POST "https://emailengine.example.com/v1/authentication/form" \
 | Gmail Service Account | `gmailService` | Google Workspace domain-wide | Service account key |
 | Outlook OAuth2 | `outlook` | Microsoft via OAuth2 | Azure AD app, refresh token |
 | MS Graph API | `outlook` | Microsoft native API | Azure AD app, graph subscription |
+| Mail.ru OAuth2 | `mailRu` | Mail.ru via OAuth2 + IMAP | OAuth2 app, refresh token |
+| Generic OAuth2 | `oauth2` | Generic OAuth2 provider | OAuth2 app configuration |
 
 ## Account States
 

@@ -84,7 +84,6 @@ The `messageDeleted` event includes minimal data since the message content is no
   "path": "INBOX",
   "specialUse": "\Inbox",
   "event": "messageDeleted",
-  "eventId": "d47bc20a-69dd-4483-b678-1f13c3d4e590",
   "data": {
     "id": "AAAADAAABy4",
     "uid": 1838
@@ -101,7 +100,6 @@ The `messageDeleted` event includes minimal data since the message content is no
   "date": "2025-10-17T08:15:22.123Z",
   "path": "[Gmail]/All Mail",
   "event": "messageDeleted",
-  "eventId": "e58cd31b-7aee-5594-c789-2g24d4e5f6a1",
   "data": {
     "id": "18b5c7d8e9f01234",
     "threadId": "18b5c7d8e9f01234",
@@ -121,7 +119,6 @@ The `messageDeleted` event includes minimal data since the message content is no
   "date": "2025-10-17T09:30:45.789Z",
   "path": "Inbox",
   "event": "messageDeleted",
-  "eventId": "f69de42c-8bff-6605-d890-3h35e5f6g7b2",
   "data": {
     "id": "AAMkADI2NGVhZTVlLTI1OGItNDUwZS05ZDVkLWQzN2E2MDUyYzc3YQBGAAAAAAI"
   }

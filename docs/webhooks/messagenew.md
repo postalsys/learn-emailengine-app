@@ -41,8 +41,9 @@ The event is triggered after EmailEngine has fetched and parsed the message meta
 | `path` | string | Yes | Mailbox folder path (e.g., "INBOX", "Sent Mail") |
 | `specialUse` | string | No | Special use flag of the folder (e.g., "\Inbox", "\Sent", "\Trash") |
 | `event` | string | Yes | Event type, always "messageNew" for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook delivery |
 | `data` | object | Yes | Message data object (see below) |
+
+**Note:** The unique event identifier is sent as the HTTP header `X-EE-Wh-Event-Id`, not in the JSON payload.
 
 ### Message Data Fields (`data` object)
 
@@ -167,7 +168,6 @@ If OpenAI integration is enabled with `generateEmailSummary`:
   "path": "INBOX",
   "specialUse": "\Inbox",
   "event": "messageNew",
-  "eventId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
   "data": {
     "id": "AAAADAAABy4",
     "uid": 1838,
@@ -247,7 +247,6 @@ When OpenAI integration is enabled:
   "path": "INBOX",
   "specialUse": "\Inbox",
   "event": "messageNew",
-  "eventId": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
   "data": {
     "id": "AAAADAAABz0",
     "uid": 1850,

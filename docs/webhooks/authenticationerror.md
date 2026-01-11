@@ -81,7 +81,6 @@ Common `serverResponseCode` values you may encounter:
   "account": "user123",
   "date": "2025-10-17T14:30:00.000Z",
   "event": "authenticationError",
-  "eventId": "b8f3c2a1-9d4e-4f5a-8b7c-6d5e4f3a2b1c",
   "data": {
     "response": "Invalid credentials (Failure)",
     "serverResponseCode": "AUTHENTICATIONFAILED"
@@ -97,7 +96,6 @@ Common `serverResponseCode` values you may encounter:
   "account": "gmail-user456",
   "date": "2025-10-17T15:45:00.000Z",
   "event": "authenticationError",
-  "eventId": "c9d4e5f6-1a2b-3c4d-5e6f-7a8b9c0d1e2f",
   "data": {
     "response": "Token has been expired or revoked.",
     "serverResponseCode": "OauthRenewError",
@@ -125,7 +123,6 @@ For Gmail API or Microsoft Graph API accounts:
   "account": "outlook-user789",
   "date": "2025-10-17T16:20:00.000Z",
   "event": "authenticationError",
-  "eventId": "d0e1f2a3-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
   "data": {
     "response": "The access token has expired or is not yet valid.",
     "serverResponseCode": "ApiRequestError"
