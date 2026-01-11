@@ -120,14 +120,14 @@ This repository contains the **unified Docusaurus documentation site** for Email
    # - EE_OPENAPI_VERBOSE=true - Verbose OpenAPI logging
    # - EENGINE_DISABLE_SETUP_WARNINGS=true - No admin password warnings
    # - EENGINE_REQUIRE_API_AUTH=false - Allow API calls without tokens
-   # - EENGINE_LICENSE_KEY - License key (REQUIRED for IMAP workers to start)
+   # - EENGINE_PREPARED_LICENSE - License key (REQUIRED for IMAP workers to start)
    # - EENGINE_SETTINGS - JSON configuration including serviceUrl
    # - Add other environment variables as needed for specific features
 
    EE_OPENAPI_VERBOSE=true \
    EENGINE_DISABLE_SETUP_WARNINGS=true \
    EENGINE_REQUIRE_API_AUTH=false \
-   EENGINE_LICENSE_KEY="$(cat /Users/andris/Downloads/license-B841200C688A23F553E0DC45.txt)" \
+   EENGINE_PREPARED_LICENSE="$(cat /Users/andris/Downloads/license-B841200C688A23F553E0DC45.txt)" \
    EENGINE_SETTINGS='{"serviceUrl":"https://localdev.kreata.ee","webhooks":"https://kreata.ee/s","webhookEvents":["*"],"webhooksEnabled]":true}' \
    node /Users/andris/Projects/emailengine/server.js \
      --dbs.redis='redis://127.0.0.1:6379/5' \
