@@ -137,7 +137,7 @@ IMAP/SMTP requires the full `https://mail.google.com/` scope. Gmail API can use 
 - Advanced Microsoft 365 integrations
 - Outlook.com and Hotmail accounts
 
-[Microsoft Graph Setup →](/docs/accounts/outlook-365#ms-graph-api)
+[Microsoft Graph Setup →](/docs/accounts/outlook-365#choosing-imapsmtp-vs-ms-graph-api)
 
 ## How Credentials Are Stored
 
@@ -413,7 +413,7 @@ By default, EmailEngine monitors the INBOX folder in real-time but polls other f
 - Most servers limit parallel connections (typically 10-15)
 - Use sparingly
 
-[Learn more in performance tuning →](/docs/advanced/performance-tuning#sub-connections)
+[Learn more in performance tuning →](/docs/advanced/performance-tuning#sub-connections-for-selected-folders)
 
 ### Path Filtering
 
@@ -435,7 +435,7 @@ Limit which folders EmailEngine syncs and monitors to save resources:
 - Unlisted folders won't trigger webhooks
 - API access to unlisted folders still works
 
-[Learn more in performance tuning →](/docs/advanced/performance-tuning#path-filtering)
+[Learn more in performance tuning →](/docs/advanced/performance-tuning#limiting-indexed-folders)
 
 ### Custom Special Folder Paths
 

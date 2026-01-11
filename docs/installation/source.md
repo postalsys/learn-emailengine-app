@@ -79,7 +79,7 @@ Choose between stable releases or development versions:
 
 Before installing EmailEngine from source, you need Node.js 20+ (24+ recommended) and Redis 6.0+:
 
-- **Node.js & Redis setup:** Follow Steps 1-2 in the [Linux Installation Guide](/docs/installation/linux#step-1-install-nodejs)
+- **Node.js & Redis setup:** Follow the [Linux Installation Guide](/docs/installation/linux) for Redis setup, and install Node.js 20+ (24+ recommended)
 - Returns to this guide after completing the prerequisites
 
 #### Step 1: Setup Directory Structure
@@ -235,7 +235,7 @@ sudo journalctl -u emailengine -f
 
 Before installing EmailEngine from source, you need Node.js 20+ (24+ recommended) and Redis:
 
-- **Node.js & Redis setup:** Follow Steps 1-2 in the [macOS Installation Guide](/docs/installation/macos#step-1-install-nodejs)
+- **Node.js & Redis setup:** Follow the [macOS Installation Guide](/docs/installation/macos) for Redis setup, and install Node.js 20+ (24+ recommended)
 - Returns to this guide after completing the prerequisites
 
 #### Step 1: Download and Install EmailEngine

@@ -17,9 +17,9 @@ EmailEngine can be deployed in various ways depending on your infrastructure and
 | [Docker](#docker) | Low | Quick start, containers | Vertical |
 | [Docker Compose](#docker-compose) | Low | Development, small teams | Limited |
 | [Kubernetes](#kubernetes) | High | Enterprise, cloud-native | Vertical |
-| [SystemD Service](#systemd) | Medium | Bare metal, VPS | Vertical |
+| [SystemD Service](#systemd-service) | Medium | Bare metal, VPS | Vertical |
 | [Render.com](#rendercom) | Low | Managed hosting | Vertical |
-| [Nginx Reverse Proxy](#nginx-proxy) | Medium | Production with SSL | N/A |
+| [Nginx Reverse Proxy](#nginx-reverse-proxy) | Medium | Production with SSL | N/A |
 
 ## Quick Comparison
 

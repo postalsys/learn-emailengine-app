@@ -389,7 +389,7 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 - Most servers limit to 10-15 concurrent connections
 - Use sparingly
 
-[Learn more about sub-connections →](/docs/advanced/performance-tuning#sub-connections)
+[Learn more about sub-connections →](/docs/advanced/performance-tuning#sub-connections-for-selected-folders)
 
 ### Configure Path Filtering
 
@@ -415,7 +415,7 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 - You can still **access unlisted folders via API** (list messages, search, etc.)
 - Reduces resource usage by limiting what EmailEngine actively monitors
 
-[Learn more about path filtering →](/docs/advanced/performance-tuning#path-filtering)
+[Learn more about path filtering →](/docs/advanced/performance-tuning#limiting-indexed-folders)
 
 ### Set Custom Sent Mail Path
 

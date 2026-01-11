@@ -652,5 +652,5 @@ If the parent account has authentication issues (expired tokens, changed passwor
 
 - [Outlook OAuth2 Setup Guide](/docs/accounts/outlook-365) - Setting up Azure AD OAuth2
 - [Account Management](/docs/accounts/managing-accounts) - Managing accounts in EmailEngine
-- [Microsoft Graph API](/docs/accounts/outlook-365#ms-graph-api) - Using MS Graph backend
+- [Microsoft Graph API](/docs/accounts/outlook-365#choosing-imapsmtp-vs-ms-graph-api) - Using MS Graph backend
 - [Send-Only Accounts](/docs/accounts/imap-smtp#send-only-accounts) - SMTP-only configurations

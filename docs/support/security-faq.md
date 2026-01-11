@@ -104,7 +104,7 @@ The migration will:
 2. Re-encrypt with the new secret
 3. Update all stored credentials
 
-[Secret rotation guide](/docs/advanced/encryption#secret-rotation)
+[Secret rotation guide](/docs/advanced/encryption#2-secret-rotation)
 
 ## Can I use external secret managers?
 
@@ -165,7 +165,7 @@ EENGINE_REDIS="rediss://localhost:6379"
 - Use firewall rules to restrict access
 - Consider Redis ACLs for fine-grained permissions
 
-[Redis security guide](/docs/configuration/redis#security)
+[Redis security guide](/docs/configuration/redis)
 
 ## Security Checklist for Production
 
