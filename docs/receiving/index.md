@@ -240,12 +240,12 @@ async function downloadAttachment(accountId, attachmentId) {
 This section covers all aspects of receiving and processing emails:
 
 1. **[Webhooks](/docs/webhooks/overview)** - Setting up real-time notifications
-2. **[Mailbox Operations](./mailbox-operations)** - Working with folders and mailboxes
-3. **[Message Operations](./message-operations)** - Listing, fetching, and managing messages
-4. **[Searching](./searching)** - Finding messages with search queries
-5. **[Attachments](./attachments)** - Handling message attachments
-6. **[Tracking Replies](./tracking-replies)** - Detecting and handling reply emails
-7. **[Tracking Deleted Messages](./tracking-deleted)** - Monitoring message deletions
-8. **[Continuous Processing](./continuous-processing)** - Building real-time email processing pipelines
+2. **[Mailbox Operations](/docs/receiving/mailbox-operations)** - Working with folders and mailboxes
+3. **[Message Operations](/docs/receiving/message-operations)** - Listing, fetching, and managing messages
+4. **[Searching](/docs/receiving/searching)** - Finding messages with search queries
+5. **[Attachments](/docs/receiving/attachments)** - Handling message attachments
+6. **[Tracking Replies](/docs/receiving/tracking-replies)** - Detecting and handling reply emails
+7. **[Tracking Deleted Messages](/docs/receiving/tracking-deleted)** - Monitoring message deletions
+8. **[Continuous Processing](/docs/receiving/continuous-processing)** - Building real-time email processing pipelines
 
 

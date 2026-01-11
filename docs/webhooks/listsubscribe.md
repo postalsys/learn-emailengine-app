@@ -246,9 +246,9 @@ When a recipient re-subscribes:
 
 You can manage suppression lists via the API:
 
-- [Get suppression list entries](/docs/api/get-v-1-lists-type-list-entries) - View suppressed emails
-- [Add to suppression list](/docs/api/post-v-1-lists-type-list-entries) - Manually add entries
-- [Remove from suppression list](/docs/api/delete-v-1-lists-type-list-entry) - Remove entries programmatically
+- [Get blocklist entries](/docs/api/get-v-1-blocklist-listid) - View blocked/suppressed emails
+- [Add to blocklist](/docs/api/post-v-1-blocklist-listid) - Manually add entries
+- [Remove from blocklist](/docs/api/delete-v-1-blocklist-listid) - Remove entries programmatically
 
 ### Duplicate Detection
 
@@ -278,4 +278,4 @@ No webhook will be triggered for duplicate or invalid requests.
 
 - [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Sending Emails](/docs/sending/basic-sending) - How to send emails with List-Unsubscribe headers
-- [Suppression Lists API](/docs/api/get-v-1-lists-type-list-entries) - Manage subscription lists programmatically
+- [Blocklists API](/docs/api/get-v-1-blocklists) - Manage blocklists and suppression lists programmatically

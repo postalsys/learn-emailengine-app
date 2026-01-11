@@ -631,7 +631,7 @@ The `POST /v1/account/{account}/search` endpoint accepts these search criteria:
 
 ## See Also
 
-- [Full API Reference](/docs/api) - Auto-generated OpenAPI documentation
+- [Full API Reference](/docs/api/emailengine-api) - Auto-generated OpenAPI documentation
 - [Webhook Events Reference](/docs/reference/webhook-events) - Complete webhook payload docs
 - [Quick Reference](/docs/reference/quick-reference) - Tables for common lookups
 - [Machine-Readable Capabilities](/capabilities.json) - JSON capabilities manifest

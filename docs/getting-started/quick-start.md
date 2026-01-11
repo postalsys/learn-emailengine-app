@@ -139,7 +139,7 @@ The easiest way to add accounts is using EmailEngine's built-in hosted authentic
 5. EmailEngine handles token management and maintains the connection automatically
 
 :::info OAuth2 Setup Required
-OAuth2 provider buttons (Gmail, Outlook) only appear if OAuth2 apps are configured in EmailEngine. Set these up via **Configuration → OAuth2 Apps** in the web interface, or use the [OAuth2 Apps API](/docs/api/oauth2-applications). See [Gmail OAuth2 Setup](/docs/accounts/gmail-imap) and [Outlook OAuth2 Setup](/docs/accounts/outlook-365) for detailed configuration guides.
+OAuth2 provider buttons (Gmail, Outlook) only appear if OAuth2 apps are configured in EmailEngine. Set these up via **Configuration → OAuth2 Apps** in the web interface, or use the [OAuth2 Apps API](/docs/api/post-v-1-oauth-2). See [Gmail OAuth2 Setup](/docs/accounts/gmail-imap) and [Outlook OAuth2 Setup](/docs/accounts/outlook-365) for detailed configuration guides.
 :::
 
 :::tip Admin Testing
@@ -530,7 +530,7 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account/my-account/search" \
 
 ### Production Deployment
 
-- **[Docker Deployment](/docs/deployment/docker)** - Production Docker setup
+- **[Docker Deployment](/docs/deployment)** - Production Docker setup
 - **[Environment Variables](/docs/configuration/environment-variables)** - Configuration Reference
 - **[Performance Tuning](/docs/advanced/performance-tuning)** - Optimize for high volume
 - **[Security Best Practices](/docs/deployment/security)** - Secure your deployment

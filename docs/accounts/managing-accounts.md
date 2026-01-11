@@ -88,7 +88,7 @@ curl -X POST https://your-ee.com/v1/account \
   }'
 ```
 
-[See IMAP/SMTP setup guide →](./imap-smtp)
+[See IMAP/SMTP setup guide →](/docs/accounts/imap-smtp)
 
 #### OAuth2 (Gmail/Outlook)
 

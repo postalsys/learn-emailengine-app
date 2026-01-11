@@ -579,7 +579,7 @@ Configure webhooks and event notifications.
 
 Complete auto-generated API documentation with all endpoints, parameters, and examples.
 
-[Browse full API reference](/docs/api)
+[Browse full API reference](/docs/api/emailengine-api)
 
 ## Support
 

@@ -195,7 +195,7 @@ After this sequence, the account is fully operational.
 
 ### Re-initialization After Flush
 
-When an account is flushed (via the [Flush Account API](/docs/api/post-v-1-account-account-flush)), the connection count is reset to 0. This means:
+When an account is flushed (via the [Flush Account API](/docs/api/put-v-1-account-account-flush)), the connection count is reset to 0. This means:
 
 1. The account will disconnect and re-sync
 2. A new `accountInitialized` event will fire after re-synchronization completes
@@ -227,4 +227,4 @@ This behavior is useful for:
 - [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Account Management](/docs/accounts) - Managing email accounts
 - [Create Account API](/docs/api/post-v-1-account) - API endpoint for creating accounts
-- [Flush Account API](/docs/api/post-v-1-account-account-flush) - API endpoint for resetting account state
+- [Flush Account API](/docs/api/put-v-1-account-account-flush) - API endpoint for resetting account state

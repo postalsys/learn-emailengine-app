@@ -506,7 +506,7 @@ emailengine license import \
 - License updates
 - Migration to new instance
 
-See [Prepared License](/docs/configuration/prepared-license) for automated setup.
+See [Prepared License](/docs/configuration/prepared-settings/license) for automated setup.
 
 ---
 

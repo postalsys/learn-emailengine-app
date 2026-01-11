@@ -335,7 +335,7 @@ When enabled, EmailEngine will:
 }
 ```
 
-[Learn more about tracking events →](../receiving/webhooks#tracking-events)
+[Learn more about tracking events →](/docs/webhooks/trackopen)
 
 ### Preview Mode (Dry Run)
 

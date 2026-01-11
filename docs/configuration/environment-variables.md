@@ -22,7 +22,7 @@ emailengine
 :::
 
 :::tip Command-Line Alternative
-Every environment variable can also be set via command-line arguments using the format `--section.key=value`. For example, `EENGINE_HOST=0.0.0.0` can be set as `--api.host=0.0.0.0`. [See CLI reference →](./cli)
+Every environment variable can also be set via command-line arguments using the format `--section.key=value`. For example, `EENGINE_HOST=0.0.0.0` can be set as `--api.host=0.0.0.0`. [See CLI reference →](/docs/configuration/cli)
 :::
 
 ## Quick Start
@@ -44,7 +44,7 @@ emailengine \
   --api.port=3000
 ```
 
-[Complete CLI reference →](./cli)
+[Complete CLI reference →](/docs/configuration/cli)
 
 ## Server & Connection
 
@@ -58,7 +58,7 @@ Configure HTTP server and connection settings.
 | `EENGINE_TIMEOUT` | number | `10000` | HTTP request timeout (ms) | `30000` |
 | `EENGINE_API_PROXY` | boolean | `false` | Trust reverse proxy headers (X-Forwarded-For) for client IP | `true` |
 
-[Access token management →](./access-tokens)
+[Access token management →](/docs/api-reference/access-tokens)
 
 **Examples:**
 
@@ -642,8 +642,8 @@ Common environment variables and their command-line equivalents:
 
 ## See Also
 
-- [CLI Reference](./cli) - Command-line arguments as an alternative to environment variables
-- [Redis Configuration](./redis.md) - Detailed Redis setup and optimization
-- [Prepared Settings](./prepared-settings/) - Automated deployment configuration
-- [Access Tokens](./access-tokens) - API authentication setup
+- [CLI Reference](/docs/configuration/cli) - Command-line arguments as an alternative to environment variables
+- [Redis Configuration](/docs/configuration/redis) - Detailed Redis setup and optimization
+- [Prepared Settings](/docs/configuration/prepared-settings) - Automated deployment configuration
+- [Access Tokens](/docs/api-reference/access-tokens) - API authentication setup
 - [Monitoring](../advanced/monitoring) - Logging and monitoring setup

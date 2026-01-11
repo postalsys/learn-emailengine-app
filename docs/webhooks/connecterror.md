@@ -299,5 +299,5 @@ You do not need to implement retry logic in your webhook handler - EmailEngine h
 
 - [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Account Management](/docs/accounts) - Managing email accounts
-- [Troubleshooting](/docs/support/troubleshooting) - Common issues and solutions
-- [IMAP Configuration](/docs/accounts/generic-imap) - Setting up IMAP accounts
+- [Troubleshooting](/docs/troubleshooting) - Common issues and solutions
+- [IMAP Configuration](/docs/accounts/imap-smtp) - Setting up IMAP accounts

@@ -98,7 +98,7 @@ If using the Microsoft Graph API backend, you must add additional scopes to your
 Existing accounts need to re-authenticate to get the new permissions. Either:
 
 - **Re-add the account** - Delete and re-add the main account in EmailEngine
-- **Generate new auth link** - Use the [Authentication Form API](/docs/api/generate-authentication-link) with the existing account ID to generate a new authentication URL. The user must open this link and grant the new permissions.
+- **Generate new auth link** - Use the [Authentication Form API](/docs/api/post-v-1-authentication-form) with the existing account ID to generate a new authentication URL. The user must open this link and grant the new permissions.
 
 ## Option 1: Direct Access Setup
 

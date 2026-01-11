@@ -206,7 +206,7 @@ curl -X POST http://localhost:3000/v1/settings \
 
 ## See Also
 
-- [Prepared Access Tokens](./tokens) - Pre-configure API access tokens
-- [Prepared License](./license) - Pre-configure license keys
+- [Prepared Access Tokens](/docs/configuration/prepared-settings/tokens) - Pre-configure API access tokens
+- [Prepared License](/docs/configuration/prepared-settings/license) - Pre-configure license keys
 - [Environment Variables](/docs/configuration/environment-variables) - Complete environment variable reference
-- [Settings API](/docs/api-reference/settings) - Programmatic settings management
+- [Settings API](/docs/api/post-v-1-settings) - Programmatic settings management

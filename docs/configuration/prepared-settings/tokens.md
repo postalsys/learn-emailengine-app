@@ -275,7 +275,7 @@ emailengine
 
 - [Command Line Interface (CLI)](/docs/configuration/cli) - Complete CLI reference for token management and administration
 - [Access Tokens](/docs/api-reference/access-tokens) - Complete token guide (types, creation methods, security, authentication)
-- [Prepared Settings](./index) - Pre-configure runtime settings via environment variables
-- [Prepared License](./license) - Pre-configure license keys for automated deployments
-- [Docker Deployment](/docs/deployment/docker) - Containerized deployment with prepared configuration
+- [Prepared Settings](/docs/configuration/prepared-settings) - Pre-configure runtime settings via environment variables
+- [Prepared License](/docs/configuration/prepared-settings/license) - Pre-configure license keys for automated deployments
+- [Docker Deployment](/docs/deployment) - Containerized deployment with prepared configuration
 - [Security Best Practices](/docs/deployment/security) - Security guidelines for production deployments

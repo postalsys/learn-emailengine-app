@@ -352,8 +352,8 @@ curl -X POST https://emailengine.example.com/v1/oauth2 \
 
 For detailed OAuth2 setup instructions, see:
 
-- [Gmail OAuth2 Setup](/docs/accounts/gmail-oauth2)
-- [Outlook OAuth2 Setup](/docs/accounts/outlook-oauth2)
+- [Gmail OAuth2 Setup](/docs/accounts/gmail-imap)
+- [Outlook OAuth2 Setup](/docs/accounts/outlook-365)
 
 ## Performance Tuning
 
@@ -1025,4 +1025,4 @@ Example:
 - [Environment Variables Guide](/docs/configuration/environment-variables)
 - [Redis Configuration](/docs/configuration/redis)
 - [Security Best Practices](/docs/deployment/security)
-- [Docker Deployment](/docs/deployment/docker)
+- [Docker Deployment](/docs/deployment)

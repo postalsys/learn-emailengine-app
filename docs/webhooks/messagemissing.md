@@ -314,5 +314,5 @@ Track message IDs to correlate these events in your logging.
 ## See Also
 
 - [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
-- [Troubleshooting](/docs/support/troubleshooting) - Diagnosing sync issues
+- [Troubleshooting](/docs/troubleshooting) - Diagnosing sync issues
 - [Settings API](/docs/api/post-v-1-settings) - Configure webhook settings

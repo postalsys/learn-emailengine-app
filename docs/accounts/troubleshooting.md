@@ -763,7 +763,7 @@ journalctl -u emailengine -f
 
 - [EmailEngine API Documentation](https://api.emailengine.app/)
 - [EmailEngine GitHub Issues](https://github.com/postalsys/emailengine/issues)
-- [Support Contact](/support)
+- [Support Contact](/docs/support)
 - Provider-specific documentation:
   - [Gmail IMAP Settings](https://support.google.com/mail/answer/7126229)
   - [Outlook IMAP Settings](https://support.microsoft.com/en-us/office/pop-imap-and-smtp-settings-8361e398-8af4-4e97-b147-6c6c4ac95353)

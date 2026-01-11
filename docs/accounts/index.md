@@ -37,7 +37,7 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 - Any IMAP/SMTP server (except Outlook/Microsoft 365)
 - Self-hosted email
 
-[Learn more about IMAP/SMTP accounts →](./imap-smtp)
+[Learn more about IMAP/SMTP accounts →](/docs/accounts/imap-smtp)
 
 ### OAuth2 (IMAP/SMTP)
 
@@ -60,8 +60,8 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 - Email automation tools
 
 **Setup Guides:**
-- [Gmail OAuth2 Setup →](./gmail-imap)
-- [Outlook OAuth2 Setup →](./outlook-365)
+- [Gmail OAuth2 Setup →](/docs/accounts/gmail-imap)
+- [Outlook OAuth2 Setup →](/docs/accounts/outlook-365)
 
 ### Gmail API (Native)
 
@@ -91,7 +91,7 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 IMAP/SMTP requires the full `https://mail.google.com/` scope. Gmail API can use more limited scopes like `gmail.readonly` or `gmail.modify`. If Google's verification process requires you to use limited scopes, you must use Gmail API instead of IMAP/SMTP.
 :::
 
-[Gmail API Setup Guide →](./gmail-api)
+[Gmail API Setup Guide →](/docs/accounts/gmail-api)
 
 ### OAuth2 (Outlook IMAP/SMTP)
 
@@ -112,7 +112,7 @@ IMAP/SMTP requires the full `https://mail.google.com/` scope. Gmail API can use 
 - CRM systems for Office 365 users
 - Email tools for enterprises
 
-[Outlook OAuth2 Setup Guide →](./outlook-365)
+[Outlook OAuth2 Setup Guide →](/docs/accounts/outlook-365)
 
 ### Microsoft Graph API (Native)
 
@@ -137,7 +137,7 @@ IMAP/SMTP requires the full `https://mail.google.com/` scope. Gmail API can use 
 - Advanced Microsoft 365 integrations
 - Outlook.com and Hotmail accounts
 
-[Microsoft Graph Setup →](./outlook-365#ms-graph-api)
+[Microsoft Graph Setup →](/docs/accounts/outlook-365#ms-graph-api)
 
 ## How Credentials Are Stored
 
@@ -257,7 +257,7 @@ const { url } = await formResponse.json();
 // Redirect user to: url
 ```
 
-[Learn about hosted authentication →](./authentication-server)
+[Learn about hosted authentication →](/docs/accounts/authentication-server)
 
 **Via Web Interface:**
 
@@ -373,7 +373,7 @@ You can only run one flush operation at a time. Wait for the previous flush to c
 For Gmail API and MS Graph accounts, `notifyFrom` has no effect. These backends only notify about new emails arriving after the account was connected, not existing emails.
 :::
 
-[Learn more about IMAP indexers →](./imap-indexers)
+[Learn more about IMAP indexers →](/docs/accounts/imap-indexers)
 
 ### Deleting Accounts
 
@@ -522,7 +522,7 @@ Set `EENGINE_ENABLE_OAUTH_TOKENS_API=true` when starting EmailEngine.
 This setting cannot be changed via the API - it must be configured through the web interface or environment variable.
 :::
 
-[Learn more about OAuth2 token management →](./oauth2-token-management)
+[Learn more about OAuth2 token management →](/docs/accounts/oauth2-token-management)
 
 ## Service Accounts (Google Workspace)
 
@@ -538,7 +538,7 @@ For Google Workspace domains, you can use service accounts with domain-wide dele
 - Super admin access
 - Domain-wide delegation setup
 
-[Service Accounts Setup Guide →](./google-service-accounts)
+[Service Accounts Setup Guide →](/docs/accounts/google-service-accounts)
 
 ## Shared Mailboxes (Microsoft 365)
 
@@ -549,7 +549,7 @@ Microsoft 365 shared mailboxes can be accessed through two approaches:
 
 Delegated access allows one user to manage multiple shared mailboxes without re-authenticating.
 
-[Complete Shared Mailboxes Guide →](./shared-mailboxes)
+[Complete Shared Mailboxes Guide →](/docs/accounts/shared-mailboxes)
 
 ## Authentication Server (External Token Management)
 
@@ -609,7 +609,7 @@ For Gmail API or MS Graph API accounts:
 
 When EmailEngine needs to authenticate, it calls your server at `GET {authServer}?account={account}&proto={proto}` (where `proto` is `imap`, `smtp`, or `api`) and expects a response with `user` and either `pass` or `accessToken` fields.
 
-[Authentication Server Guide →](./authentication-server)
+[Authentication Server Guide →](/docs/accounts/authentication-server)
 
 
 ## API Reference
@@ -621,4 +621,4 @@ When EmailEngine needs to authenticate, it calls your server at `GET {authServer
 - [DELETE /v1/account/\{account\} - Delete Account](/docs/api/delete-v-1-account-account)
 - [PUT /v1/account/\{account\}/reconnect - Reconnect](/docs/api/put-v-1-account-account-reconnect)
 - [POST /v1/verifyaccount - Verify Account](/docs/api/post-v-1-verifyaccount)
-- [GET /v1/account/\{account\}/oauth-token - Get OAuth Token](/docs/api/get-v-1-account-account-oauth-token)
+- [GET /v1/account/\{account\}/oauth-token - Get OAuth Token](/docs/api/get-v-1-account-account-oauthtoken)

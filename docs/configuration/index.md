@@ -27,7 +27,7 @@ EmailEngine uses two distinct types of configuration:
 
 - [Environment variables](/docs/configuration/environment-variables) (recommended)
 - [Command-line arguments](/docs/configuration/cli)
-- [Configuration files](/docs/configuration/cli#configuration-files) (TOML)
+- [Configuration files](/docs/configuration/cli) (TOML)
 
 ### 2. Runtime Configuration
 
@@ -108,7 +108,7 @@ emailengine \
 Environment variables and CLI arguments can be used together. Environment variables take precedence over CLI arguments. See the [mapping table](/docs/configuration/environment-variables#environment-variable-to-cli-mapping) for equivalents.
 :::
 
-[Complete CLI reference →](./cli)
+[Complete CLI reference →](/docs/configuration/cli)
 
 </TabItem>
 <TabItem value="toml" label="Configuration Files">
@@ -139,7 +139,7 @@ secret = "your-encryption-secret"
 emailengine --config=/path/to/config.toml
 ```
 
-[TOML configuration guide →](./cli#configuration-files)
+[TOML configuration guide →](/docs/configuration/cli#configuration-files)
 
 </TabItem>
 </Tabs>
@@ -418,13 +418,13 @@ TLS/SSL settings for secure connections.
 
 Log levels, metrics endpoints, monitoring.
 
-[View details →](../advanced/monitoring)
+[View details →](/docs/advanced/monitoring)
 
 ### Prepared Configuration
 
 Pre-configured settings, tokens, and licenses.
 
-[View details →](./prepared-settings/)
+[View details →](/docs/configuration/prepared-settings)
 
 ## Validation
 

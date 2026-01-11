@@ -284,5 +284,5 @@ This means you can rely on receiving exactly one `authenticationError` webhook p
 - [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Account Management](/docs/accounts) - Managing email accounts
 - [Gmail OAuth2 Setup](/docs/accounts/gmail-imap) - Setting up Gmail with OAuth2
-- [Outlook OAuth2 Setup](/docs/accounts/outlook-imap) - Setting up Outlook with OAuth2
-- [Troubleshooting](/docs/support/troubleshooting) - Common issues and solutions
+- [Outlook OAuth2 Setup](/docs/accounts/outlook-365) - Setting up Outlook with OAuth2
+- [Troubleshooting](/docs/troubleshooting) - Common issues and solutions

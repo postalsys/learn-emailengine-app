@@ -243,7 +243,7 @@ const config: Config = {
           items: [
             {
               label: 'Support',
-              to: '/docs/support/license',
+              to: '/docs/support',
             },
             {
               label: 'GitHub',
