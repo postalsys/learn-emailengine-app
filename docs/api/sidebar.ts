@@ -74,8 +74,8 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/put-v-1-account-account-flush",
-          label: "Request account flush",
+          id: "api/put-v-1-account-account-sync",
+          label: "Request syncing",
           className: "api-method put",
         },
         {
@@ -86,8 +86,8 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/put-v-1-account-account-sync",
-          label: "Request syncing",
+          id: "api/put-v-1-account-account-flush",
+          label: "Request account flush",
           className: "api-method put",
         },
       ],
@@ -138,6 +138,12 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "api/get-v-1-account-account-attachment-attachment",
+          label: "Download attachment",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
           id: "api/get-v-1-account-account-message-message",
           label: "Get message information",
           className: "api-method get",
@@ -156,12 +162,6 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-attachment-attachment",
-          label: "Download attachment",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
           id: "api/get-v-1-account-account-text-text",
           label: "Retrieve message text",
           className: "api-method get",
@@ -174,14 +174,14 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/post-v-1-account-account-message",
-          label: "Upload message",
+          id: "api/post-v-1-account-account-search",
+          label: "Search for messages",
           className: "api-method post",
         },
         {
           type: "doc",
-          id: "api/post-v-1-account-account-search",
-          label: "Search for messages",
+          id: "api/post-v-1-account-account-message",
+          label: "Upload message",
           className: "api-method post",
         },
         {
