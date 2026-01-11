@@ -57,8 +57,7 @@
     "node": ">=20.0"
   },
   "overrides": {
-    "glob@>=10.2.0 <10.5.0": "10.5.0",
-    "mdast-util-to-hast@>=13.0.0 <13.2.1": "13.2.1",
+    "glob": "^10.4.5",
     "openapi-to-postmanv2": {
       "js-yaml": "4.1.1"
     }
