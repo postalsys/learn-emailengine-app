@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "EmailEngine",
   "description": "Self-hosted email API gateway providing REST API access to email accounts via IMAP, SMTP, Gmail API, and Microsoft Graph API",
-  "version": "2.61.1",
+  "version": "2.61.2",
   "documentationUrl": "https://learn.emailengine.app/",
   "openApiSpec": "https://emailengine.dev/swagger.json",
   "authentication": {
@@ -123,7 +123,7 @@
       }
     },
     "oauth2Apps": {
-      "description": "Configure OAuth2 applications for Gmail and Outlook",
+      "description": "Configure OAuth2 applications for Gmail, Outlook, and Mail.ru",
       "endpoints": [
         {"method": "GET", "path": "/v1/oauth2", "description": "List OAuth2 apps"},
         {"method": "POST", "path": "/v1/oauth2", "description": "Register app"},

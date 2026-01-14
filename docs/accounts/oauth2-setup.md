@@ -13,7 +13,7 @@ Sources merged:
 
 # OAuth2 Setup Guide
 
-This guide explains OAuth2 authentication concepts and how to set up OAuth2 applications with EmailEngine. For provider-specific instructions, see the dedicated guides for [Gmail](./gmail-imap), [Outlook](./outlook-365), or [Google Service Accounts](./google-service-accounts).
+This guide explains OAuth2 authentication concepts and how to set up OAuth2 applications with EmailEngine. For provider-specific instructions, see the dedicated guides for [Gmail](./gmail-imap), [Outlook](./outlook-365), [Mail.ru](./mail-ru), or [Google Service Accounts](./google-service-accounts).
 
 ## What is OAuth2?
 
@@ -99,6 +99,19 @@ EmailEngine supports OAuth2 for:
 - **Combined** - Organizations + personal accounts
 
 [Outlook OAuth2 Setup →](./outlook-365)
+
+### Mail.ru
+
+**Protocol Options:**
+
+- **IMAP/SMTP with OAuth2** - Standard protocols with OAuth2 authentication
+
+**Required Scopes:**
+
+- `userinfo` - Basic user profile
+- `mail.imap` - IMAP access
+
+[Mail.ru OAuth2 Setup →](./mail-ru)
 
 ## Setting Up OAuth2 in EmailEngine
 

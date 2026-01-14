@@ -281,7 +281,7 @@ curl -X POST "https://emailengine.example.com/v1/account" \
   }'
 ```
 
-### Pattern 2: Register OAuth2 Account (Gmail/Outlook)
+### Pattern 2: Register OAuth2 Account (Gmail/Outlook/Mail.ru)
 
 ```bash
 curl -X POST "https://emailengine.example.com/v1/account" \

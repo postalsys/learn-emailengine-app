@@ -41,7 +41,7 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 
 ### OAuth2 (IMAP/SMTP)
 
-**Best for:** Gmail and Outlook/Microsoft 365 accounts at scale
+**Best for:** Gmail, Outlook/Microsoft 365, and Mail.ru accounts at scale
 
 **Pros:**
 - No password storage
@@ -62,6 +62,7 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 **Setup Guides:**
 - [Gmail OAuth2 Setup →](/docs/accounts/gmail-imap)
 - [Outlook OAuth2 Setup →](/docs/accounts/outlook-365)
+- [Mail.ru OAuth2 Setup →](/docs/accounts/mail-ru)
 
 ### Gmail API (Native)
 
