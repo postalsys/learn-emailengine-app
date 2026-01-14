@@ -293,8 +293,7 @@ const config: Config = {
       contextualSearch: true,
       searchPagePath: 'search',
       insights: false,
-      // TODO: Add Algolia Assistant ID when available
-      // askAi: 'YOUR_ALGOLIA_ASSISTANT_ID',
+      askAi: 'TurOtO4ccG7p',
     },
   } satisfies Preset.ThemeConfig,
 };
