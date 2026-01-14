@@ -293,7 +293,8 @@ const config: Config = {
       contextualSearch: true,
       searchPagePath: 'search',
       insights: false,
-      askAi: 'TurOtO4ccG7p',
+      // askAi disabled due to marked v16 bug in @docsearch/react@4.4.0
+      // askAi: 'TurOtO4ccG7p',
     },
   } satisfies Preset.ThemeConfig,
 };
