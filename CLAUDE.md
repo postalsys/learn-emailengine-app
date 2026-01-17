@@ -325,6 +325,27 @@ This repository contains the **unified Docusaurus documentation site** for Email
    - All scripts create output directories if they don't exist
    - Update script URLs to point to `http://localhost:3030` when using Docker container
 
+6. **Dependency Management** - DO NOT upgrade React, marked, or related packages
+
+   This site is published as a **static site** - dependency vulnerabilities reported by GitHub/npm have no runtime impact since no server-side code runs in production.
+
+   **DO NOT upgrade these packages:**
+   - `react` / `react-dom` - Must stay on v18.x (OpenAPI theme incompatible with React 19)
+   - `marked` - Current version required for OpenAPI docs plugin compatibility
+   - `docusaurus-theme-openapi-docs` - Tightly coupled with specific React/marked versions
+   - Other OpenAPI-related dependencies
+
+   **Why:**
+   - The `docusaurus-plugin-openapi-docs` and `docusaurus-theme-openapi-docs` packages have strict peer dependency requirements
+   - Upgrading React to v19 breaks the OpenAPI theme rendering
+   - Upgrading marked breaks markdown processing in API docs
+   - These vulnerabilities are false positives for static sites - the vulnerable code paths are never executed
+
+   **If Dependabot/GitHub reports vulnerabilities:**
+   - Ignore warnings for react, marked, and OpenAPI-related packages
+   - Only update packages unrelated to the OpenAPI integration
+   - Test thoroughly with `npm run build` after any dependency changes
+
 ## Quick Commands
 
 ```bash
