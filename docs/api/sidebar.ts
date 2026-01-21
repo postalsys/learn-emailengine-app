@@ -138,8 +138,8 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-attachment-attachment",
-          label: "Download attachment",
+          id: "api/get-v-1-account-account-text-text",
+          label: "Retrieve message text",
           className: "api-method get",
         },
         {
@@ -162,8 +162,8 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-text-text",
-          label: "Retrieve message text",
+          id: "api/get-v-1-account-account-attachment-attachment",
+          label: "Download attachment",
           className: "api-method get",
         },
         {
@@ -174,14 +174,14 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/post-v-1-account-account-search",
-          label: "Search for messages",
+          id: "api/post-v-1-account-account-message",
+          label: "Upload message",
           className: "api-method post",
         },
         {
           type: "doc",
-          id: "api/post-v-1-account-account-message",
-          label: "Upload message",
+          id: "api/post-v-1-account-account-search",
+          label: "Search for messages",
           className: "api-method post",
         },
         {
@@ -571,6 +571,44 @@ const sidebar: SidebarsConfig = {
           id: "api/put-v-1-account-account-messages-move",
           label: "Move messages",
           className: "api-method put",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Export (Beta)",
+      collapsible: true,
+      collapsed: true,
+      items: [
+        {
+          type: "doc",
+          id: "api/get-v-1-account-account-exports",
+          label: "List exports",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-account-account-export-exportid",
+          label: "Get export status",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/delete-v-1-account-account-export-exportid",
+          label: "Delete export",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-account-account-export-exportid-download",
+          label: "Download export file",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/post-v-1-account-account-export",
+          label: "Create export",
+          className: "api-method post",
         },
       ],
     },

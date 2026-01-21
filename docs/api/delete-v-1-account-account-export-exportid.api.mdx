@@ -1,0 +1,72 @@
+---
+id: delete-v-1-account-account-export-exportid
+title: "Delete export"
+description: "Cancels a pending export or deletes a completed export. Removes both Redis data and the export file."
+sidebar_label: "Delete export"
+hide_title: true
+hide_table_of_contents: true
+api: eJy9V21v2zYQ/isHYh8SQLZip+0wwc3mtlrhLU07x9lWxFlAS2ebrUQqJOXYM/zfhyMlW47Toi3Q+YMtiMd7ee65F6+ZKlBzK5QcpCxiKWZo8c9OP0lUKW31Ey8LpatvkbKApWgSLQq6xiL2kssEMwMcCpSpkDNAJwpKg1dIZ4nKC3pOq9M2DDFXCzQwUXYOQ0yFgZRbDlymYOdYa5mKDNssYAXXPEeL2rDoes0kz5FFbNlCbFmRoyotC5ggh+bIU9QsYCaZY85ZtGZ2VZC0kBZn7mg/hCHelWgsVIpASMhFlgmDiZKpgSO1QK1Figbi+OL14CK+HQ3exG+vRoByIbSSOUoLC64Fn2R4zAKWCynyMmfRScByvvTPP3ZP6LP57vY3wRYh7pNYg1NwO38MGmO1kLMDZK6kuCsRRIrSiqlADVOlfXpyLjLYacclpwyziJUGdad7ylzg5yhnds6i7tNnAVu2EiUXqK0zrEXOIqtL3BwA8uVmNd6VQmNaadrF7ekzSL8xcE93+KAmDS/2wsRlccsnSad7muL0ydNnzWfHV2tRk6p/SPKat6YnrZ9u1t0nmx/YQcCfMvcgvJuAWT6jCqhvHL1Ay4/ZDYmaQkmDhoLrnpzQz76RyzJJ0JhpmbGAJUpalC4TvCgykbg2EH4wJLo+xElNPmBCiBeamoYV3pCv8LQhOFEqQy4PEB1pyui0rut7bqC+3IC15oMV1qH8yon4YIdVhGxDn4DlaOdq17c86HMWsXDRCSuKhOvqYRN6w+G6ZsaG6IB6UbeUUmfUPawtTBSGjmgoZ0Jiu/Kunaj8IKz3qtQQk3DshMGrhCONRcYThHth57AiKZ7Ykme1wNXw/JhRRg0mpRZ25ZyYINeo+yXFcX3TPL6kjHjQm0Jb3MnxmuAuD06IBdXDr0rn3LKI/fbX6JDt0qKunSSOgFUfUTJCWcipcmaqjDRj7b8bsIARgl5Pt/2s0356qL5xpdBq4ToZh2F8OZqWGWlx9Z1zyWdugDSL3ARgqsGSozF8hiZwQ6LQilzdXfDjI9HKGMjLzIoi29rTpj2WY9mbn54RblRinvG9cH56Npb9zPuhfSs2UFUe8D1pKJ09LqHvcRoRTm14r0pIuIQZShqo6Bx08aCH1eFpYKpV7vpYj8Nc4/T5mIU8zYUMvcCYgeV6hvb5mN0WXKO0Y3bWM1YrOTtr2jS9sHrbC/kZFHyGLsKBTLIybVqlcbINy/uvJIKakiMGwZeRicayBX+UqFewnbUR9BKV4tnPnhW3Tt/z92+vhrejt7/HF73QHdNNQlVp8a+Hyc/g+vreWQQvHCHhETU+QfU4fLdNcJWksayRuCQRaQXPGlLRFhIY1vFa5eA2PH8wO4BrrCmEKZitwmxFl3IupOVCelIlShphLMpk1YY3NbWMIJZxiao0O4TvRZbBBOGuxBLTdtPrkZ/vpuHouZKzli6ldGmptzEDOV9BwktT69npp4i8nja8VHIqZiXRtKC+rAVxr14jFjwrsU65I52D+e9WHLcqVyrkq3zB0YPN43hbNK/RWlJzabm2mFYJ6bS/jsivd+WxV0BE4bHsPqKtbgKP6+unKanaS6zXddr2rkLOP5Lfe7W9QwRlWighrYEJZuq+mos8cXOx2iSa3euyLGh4sOAz04IXRWi2cu6E9gz/5pcHkrQKZCJBGmuPmzyvTj9nMsVFeD54GV9cxrfxm/7g3G+Jbbu0rocXyticy4YFP1erYfywYa9328H/td5XQ8zi0oZFxoUkYFzA62qqX7NFhwWNfTZqLp9VGNF27bsJ2FwZS/fW6wk3eKWzzYZe31GPo+kasHpjdqM3FYaeUxZNeWbwM5gcDau17Bi+fFN9NMLqJZcrmqNUryxiLGAfcdXY3Wmt/SbvPrVWfoMvW2A3N5ug/o/1dbB9h79ZjwbiHX7w13AbEIHpJagDFc2zg0WY9q/tlvkqPo9HMdts/gOuglgJ
+sidebar_class_name: "delete api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+hide_send_button: true
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Delete export"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/v1/account/{account}/export/{exportId}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Cancels a pending export or deletes a completed export. Removes both Redis data and the export file.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"},{"name":"account","in":"path","schema":{"type":"string","description":"Unique identifier for the email account","example":"user123","maxLength":256,"x-convert":{"trim":true}},"description":"Unique identifier for the email account","required":true},{"name":"exportId","in":"path","schema":{"type":"string","description":"Export job identifier","example":"exp_abc123def456abc123def456","pattern":"^exp_[a-f0-9]{24}$"},"description":"Export job identifier","required":true}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Successful","content":{"application/json":{"schema":{"type":"object","properties":{"deleted":{"type":"boolean","description":"True if export was deleted","example":true}},"title":"DeleteExportResponse"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

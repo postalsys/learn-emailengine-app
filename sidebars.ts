@@ -351,6 +351,18 @@ const sidebars: SidebarsConfig = {
         'api/put-v-1-account-account-messages-delete'
       ],
     },
+    {
+      type: 'category',
+      label: 'Export (Beta)',
+      collapsed: true,
+      items: [
+        'api/post-v-1-account-account-export',
+        'api/get-v-1-account-account-exports',
+        'api/get-v-1-account-account-export-exportid',
+        'api/get-v-1-account-account-export-exportid-download',
+        'api/delete-v-1-account-account-export-exportid'
+      ],
+    },
   ],
 };
 

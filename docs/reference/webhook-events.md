@@ -1288,6 +1288,92 @@ Triggered when a recipient resubscribes to a list after previously unsubscribing
 
 ---
 
+## Export Events
+
+Events related to bulk message export operations. See [Exporting Messages](/docs/receiving/exporting) for details on the export feature.
+
+### exportCompleted
+
+Triggered when a bulk message export completes successfully.
+
+**Payload:**
+```json
+{
+  "serviceUrl": "https://emailengine.example.com",
+  "event": "exportCompleted",
+  "account": "user@example.com",
+  "date": "2025-01-15T10:35:00.000Z",
+  "data": {
+    "exportId": "exp_abc123def456abc123def456",
+    "folders": ["INBOX", "Sent"],
+    "startDate": "2024-01-01T00:00:00.000Z",
+    "endDate": "2024-12-31T23:59:59.000Z",
+    "messagesExported": 450,
+    "messagesSkipped": 5,
+    "bytesWritten": 52428800,
+    "duration": 15000,
+    "expiresAt": "2025-01-16T10:30:00.000Z"
+  }
+}
+```
+
+**Fields:**
+- `data.exportId` (string) - Export job identifier (28-character format: `exp_` + 24 hex digits)
+- `data.folders` (array of strings) - Folders that were exported
+- `data.startDate` (string) - Start of export date range (ISO 8601)
+- `data.endDate` (string) - End of export date range (ISO 8601)
+- `data.messagesExported` (number) - Total messages successfully exported
+- `data.messagesSkipped` (number) - Messages skipped (deleted or inaccessible during export)
+- `data.bytesWritten` (number) - Total bytes written to export file
+- `data.duration` (number) - Export processing time in milliseconds
+- `data.expiresAt` (string) - When the export file expires (ISO 8601)
+
+**Use Cases:**
+- Notify user that export is ready for download
+- Trigger automated download workflows
+- Log export completion for auditing
+- Update export job status in your application
+
+---
+
+### exportFailed
+
+Triggered when a bulk message export fails.
+
+**Payload:**
+```json
+{
+  "serviceUrl": "https://emailengine.example.com",
+  "event": "exportFailed",
+  "account": "user@example.com",
+  "date": "2025-01-15T10:30:00.000Z",
+  "data": {
+    "exportId": "exp_abc123def456abc123def456",
+    "error": "Connection timeout",
+    "errorCode": "ConnectionTimeout",
+    "phase": "exporting",
+    "messagesExported": 250,
+    "messagesQueued": 1500
+  }
+}
+```
+
+**Fields:**
+- `data.exportId` (string) - Export job identifier
+- `data.error` (string) - Error message describing the failure
+- `data.errorCode` (string, optional) - Error code for programmatic handling
+- `data.phase` (string) - Phase when failure occurred ("indexing" or "exporting")
+- `data.messagesExported` (number) - Messages exported before failure
+- `data.messagesQueued` (number) - Total messages that were queued for export
+
+**Use Cases:**
+- Notify user of export failure
+- Retry export operation
+- Log failures for debugging
+- Alert administrators of persistent failures
+
+---
+
 ## Complete Event List
 
 Quick reference table of all events:
@@ -1316,6 +1402,8 @@ Quick reference table of all events:
 | `mailboxNew` | Mailbox | Folder created | Sync folders |
 | `mailboxDeleted` | Mailbox | Folder deleted | Update UI |
 | `mailboxReset` | Mailbox | UIDVALIDITY changed | Resync folder |
+| `exportCompleted` | Export | Export job completed | Download export |
+| `exportFailed` | Export | Export job failed | Retry/alert |
 
 ## Event Filtering
 

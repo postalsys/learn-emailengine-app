@@ -221,6 +221,42 @@ EENGINE_SUBMIT_QC=4
 
 **Memory impact**: With average email size of 1MB and `EENGINE_SUBMIT_QC=16`, you need at least 16MB heap just for active submissions.
 
+## Export Configuration
+
+Bulk exports are handled by dedicated worker threads:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `EENGINE_WORKERS_EXPORT` | `1` | Number of export worker threads |
+| `EENGINE_EXPORT_QC` | `1` | Concurrency per worker |
+
+**Maximum concurrent exports**:
+```
+ACTIVE_EXPORTS = EENGINE_WORKERS_EXPORT x EENGINE_EXPORT_QC
+```
+
+This is further limited by the `exportMaxGlobalConcurrent` setting (default: 8) to prevent system overload.
+
+**Example configurations**:
+
+```bash
+# Default (1 export at a time)
+EENGINE_WORKERS_EXPORT=1
+EENGINE_EXPORT_QC=1
+
+# Medium throughput (4 concurrent)
+EENGINE_WORKERS_EXPORT=2
+EENGINE_EXPORT_QC=2
+
+# High throughput (8 concurrent)
+EENGINE_WORKERS_EXPORT=4
+EENGINE_EXPORT_QC=2
+```
+
+**Memory impact**: Each export batch loads message data into memory. With 4 concurrent exports processing large messages, expect ~400-800 MB additional memory usage.
+
+**Read more**: [Exporting Messages](/docs/receiving/exporting)
+
 ## Redis Optimization
 
 Redis is critical for EmailEngine performance. Follow these best practices:

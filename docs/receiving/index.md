@@ -247,5 +247,6 @@ This section covers all aspects of receiving and processing emails:
 6. **[Tracking Replies](/docs/receiving/tracking-replies)** - Detecting and handling reply emails
 7. **[Tracking Deleted Messages](/docs/receiving/tracking-deleted)** - Monitoring message deletions
 8. **[Continuous Processing](/docs/receiving/continuous-processing)** - Building real-time email processing pipelines
+9. **[Exporting Messages](/docs/receiving/exporting)** - Bulk export with concurrency tuning
 
 
