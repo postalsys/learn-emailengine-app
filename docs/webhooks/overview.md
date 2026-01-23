@@ -368,6 +368,22 @@ Triggered when a recipient re-subscribes to a mailing list after previously unsu
 
 [See full listSubscribe reference](/docs/webhooks/listsubscribe)
 
+### Export Events
+
+Events related to bulk email export jobs. These webhooks notify you when export jobs complete or fail.
+
+#### exportCompleted
+
+Triggered when a bulk email export job finishes successfully. The export file is ready for download.
+
+[See full exportCompleted reference](/docs/webhooks/exportcompleted)
+
+#### exportFailed
+
+Triggered when a bulk email export job fails. Check the `resumable` field to determine if the export can be continued from checkpoint.
+
+[See full exportFailed reference](/docs/webhooks/exportfailed)
+
 ## Testing Webhooks
 
 ### Using webhook.site

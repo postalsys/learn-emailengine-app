@@ -314,6 +314,52 @@ This will:
 - Delete the export file from disk
 - Remove the export record from the system
 
+### Resume Failed Export
+
+If an export fails but made progress, you can resume it from the last checkpoint instead of starting over. Check the `resumable` field in the export status response:
+
+```bash
+curl -X POST "https://your-emailengine.com/v1/account/{account}/export/{exportId}/resume" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**When is an export resumable?**
+
+An export is marked as `resumable: true` when:
+- The export made progress (processed at least one message)
+- Messages remain to be processed
+- The account was not deleted during the export
+
+**Response:**
+
+```json
+{
+  "exportId": "exp_abc123def456abc123def456",
+  "status": "queued",
+  "resumed": true,
+  "previousProgress": {
+    "messagesExported": 750,
+    "messagesSkipped": 5
+  }
+}
+```
+
+The resumed export continues from where it left off, preserving already-exported messages in the output file.
+
+**Error handling:**
+
+If the export is not resumable, the API returns an error:
+
+```json
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Export is not resumable"
+}
+```
+
+In this case, delete the failed export and create a new one.
+
 ## Best Practices
 
 ### Large Exports
