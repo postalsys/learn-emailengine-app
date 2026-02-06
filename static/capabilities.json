@@ -194,7 +194,8 @@
         {"method": "GET", "path": "/v1/account/{account}/exports", "description": "List exports (paginated)"},
         {"method": "GET", "path": "/v1/account/{account}/export/{exportId}", "description": "Get export status"},
         {"method": "GET", "path": "/v1/account/{account}/export/{exportId}/download", "description": "Download export file"},
-        {"method": "DELETE", "path": "/v1/account/{account}/export/{exportId}", "description": "Delete/cancel export"}
+        {"method": "DELETE", "path": "/v1/account/{account}/export/{exportId}", "description": "Delete/cancel export"},
+        {"method": "POST", "path": "/v1/account/{account}/export/{exportId}/resume", "description": "Resume failed export"}
       ]
     }
   },
@@ -269,7 +270,15 @@
     {"name": "EENGINE_SECRET", "required": "production", "description": "Encryption key (32+ hex chars)", "example": "openssl rand -hex 32"},
     {"name": "EENGINE_PORT", "required": false, "default": "3000", "description": "API port"},
     {"name": "EENGINE_HOST", "required": false, "default": "127.0.0.1", "description": "Bind address"},
-    {"name": "EENGINE_WORKERS", "required": false, "default": "4", "description": "IMAP worker count"},
-    {"name": "EENGINE_LOG_LEVEL", "required": false, "default": "trace", "description": "Log level"}
+    {"name": "EENGINE_WORKERS", "required": false, "default": "4", "description": "IMAP worker thread count"},
+    {"name": "EENGINE_WORKERS_WEBHOOKS", "required": false, "default": "1", "description": "Webhook delivery worker threads"},
+    {"name": "EENGINE_WORKERS_SUBMIT", "required": false, "default": "1", "description": "Email submission worker threads"},
+    {"name": "EENGINE_WORKERS_EXPORT", "required": false, "default": "1", "description": "Bulk export worker threads"},
+    {"name": "EENGINE_EXPORT_QC", "required": false, "default": "1", "description": "Concurrent export jobs per worker"},
+    {"name": "EENGINE_EXPORT_PATH", "required": false, "description": "Directory for export files (default: OS temp dir)"},
+    {"name": "EENGINE_EXPORT_MAX_AGE", "required": false, "default": "86400000", "description": "Export file retention time in ms (default: 24h)"},
+    {"name": "EENGINE_EXPORT_TIMEOUT", "required": false, "description": "Export operation timeout in ms"},
+    {"name": "EENGINE_LOG_LEVEL", "required": false, "default": "trace", "description": "Log level"},
+    {"name": "EENGINE_FEATURE_*", "required": false, "description": "Feature flags (set to true/1/yes to enable experimental features)"}
   ]
 }

@@ -210,6 +210,44 @@ EENGINE_EXPORT_QC=2
 
 Higher throughput for large-scale operations. Up to 8 concurrent exports.
 
+### Provider-Specific Batch Sizes
+
+EmailEngine fetches messages in batches during export. The batch size can be tuned per email provider to optimize throughput and avoid rate limits.
+
+Configure via the [Settings API](/docs/api/post-v-1-settings):
+
+```bash
+curl -X POST "https://your-emailengine.com/v1/settings" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "gmailExportBatchSize": 10,
+    "outlookExportBatchSize": 20
+  }'
+```
+
+| Setting | Default | Range | Description |
+|---------|---------|-------|-------------|
+| `gmailExportBatchSize` | 10 | 1-50 | Messages fetched in parallel from Gmail API per batch |
+| `outlookExportBatchSize` | 20 | 1-20 | Messages fetched in parallel from Microsoft Graph API per batch |
+
+**Gmail:** Supports up to 50 parallel fetches. Higher values speed up exports but increase memory usage and may trigger rate limits on accounts with heavy concurrent usage.
+
+**Outlook:** Microsoft Graph API limits batch requests to 20 items per batch. Setting a higher value has no effect.
+
+**IMAP accounts:** Batch size is not configurable for IMAP -- messages are fetched sequentially.
+
+### Export Limits
+
+Additional settings control maximum export sizes:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `exportMaxMessages` | 500,000 | Maximum messages per export job |
+| `exportMaxSize` | 10 GB | Maximum export file size |
+| `exportMaxConcurrent` | 2 | Max concurrent exports per account |
+| `exportMaxGlobalConcurrent` | 8 | Max concurrent exports system-wide |
+
 ### Tuning Considerations
 
 1. **Memory**: Each export batch loads message data into memory. Monitor memory usage and reduce concurrency if you see memory pressure.

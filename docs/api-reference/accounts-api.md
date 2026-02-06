@@ -571,6 +571,154 @@ PRINT("Reconnection initiated: " + result.success)
 
 ---
 
+### 7. Account Operations: Reconnect vs Sync vs Flush
+
+EmailEngine provides three distinct operations for managing account connections, each suited for different scenarios.
+
+#### Reconnect
+
+**Endpoint:** `PUT /v1/account/:account/reconnect`
+
+Closes the existing IMAP connection entirely and opens a new one. This is a full disconnect/reconnect cycle.
+
+```bash
+curl -X PUT "http://localhost:3000/v1/account/user@example.com/reconnect" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**When to use:**
+- After updating account credentials (password change, OAuth2 token update)
+- To recover from persistent connection errors
+- When you need a fresh IMAP session (e.g., after server-side configuration changes)
+
+[Detailed API reference -->](/docs/api/put-v-1-account-account-reconnect)
+
+---
+
+#### Sync
+
+**Endpoint:** `PUT /v1/account/:account/sync`
+
+Triggers an immediate mailbox synchronization without disconnecting. Refreshes the folder list and syncs all monitored mailboxes.
+
+```bash
+curl -X PUT "http://localhost:3000/v1/account/user@example.com/sync" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**When to use:**
+- When you need the latest messages immediately without waiting for the next poll cycle
+- After bulk operations on the mail server (e.g., importing messages via another client)
+- To ensure webhooks are triggered for recently arrived messages
+
+[Detailed API reference -->](/docs/api/put-v-1-account-account-sync)
+
+---
+
+#### Flush
+
+**Endpoint:** `PUT /v1/account/:account/flush`
+
+Deletes all cached email data (message indexes, folder lists, bounce data) from Redis and Elasticsearch, then triggers a full re-sync from scratch. The account is paused during the operation and automatically resumed after completion.
+
+```bash
+curl -X PUT "http://localhost:3000/v1/account/user@example.com/flush" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+:::warning Destructive Operation
+Flush deletes all cached data for the account. This triggers a complete re-indexing of all messages, which may take significant time for large mailboxes and will re-trigger `messageNew` webhooks unless `notifyFrom` is set appropriately. Only one flush operation can run at a time across all accounts.
+:::
+
+**When to use:**
+- To fix data corruption or synchronization issues
+- After major mailbox reorganization on the server
+- When message listings show stale or incorrect data
+- As a last resort when reconnect and sync don't resolve issues
+
+[Detailed API reference -->](/docs/api/put-v-1-account-account-flush)
+
+---
+
+#### Comparison
+
+| Operation | Connection | Data | Duration | Impact |
+|-----------|-----------|------|----------|--------|
+| **Reconnect** | Closes and reopens | Preserved | Seconds | Brief interruption |
+| **Sync** | Stays connected | Preserved | Seconds to minutes | No interruption |
+| **Flush** | Paused temporarily | Deleted and rebuilt | Minutes to hours | Re-indexes everything |
+
+**Decision guide:**
+1. Try **sync** first -- it's the least disruptive way to get fresh data
+2. Use **reconnect** if the connection itself seems broken or after credential changes
+3. Use **flush** only when cached data is corrupted or fundamentally out of sync
+
+---
+
+### 8. Verify Account Credentials
+
+Pre-validate IMAP and SMTP credentials before creating an account.
+
+**Endpoint:** `POST /v1/verifyAccount`
+
+Tests IMAP and/or SMTP connections without creating or modifying any account. Both protocols are tested in parallel.
+
+```bash
+curl -X POST "http://localhost:3000/v1/verifyAccount" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "imap": {
+      "host": "imap.example.com",
+      "port": 993,
+      "secure": true,
+      "auth": {
+        "user": "john@example.com",
+        "pass": "password"
+      }
+    },
+    "smtp": {
+      "host": "smtp.example.com",
+      "port": 587,
+      "secure": false,
+      "auth": {
+        "user": "john@example.com",
+        "pass": "password"
+      }
+    }
+  }'
+```
+
+**Success response:**
+```json
+{
+  "imap": { "success": true },
+  "smtp": { "success": true }
+}
+```
+
+**Failure response (bad IMAP credentials):**
+```json
+{
+  "imap": {
+    "success": false,
+    "error": "Authentication failed",
+    "code": "AUTHENTICATIONFAILED",
+    "responseText": "NO [AUTHENTICATIONFAILED] Invalid credentials"
+  },
+  "smtp": { "success": true }
+}
+```
+
+**Use Cases:**
+- Validate credentials in your onboarding flow before creating the account
+- Build a "test connection" button in your UI
+- Verify server settings returned by the autoconfig endpoint
+
+[Detailed API reference -->](/docs/api/post-v-1-verifyaccount)
+
+---
+
 ## Account Object Reference
 
 ### Complete Field Reference

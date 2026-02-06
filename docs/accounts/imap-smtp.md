@@ -628,30 +628,71 @@ Response if successful:
 
 ## Advanced Configuration
 
-### Custom Sent Mail Path
+### Custom Special Folder Paths {#custom-special-folder-paths}
 
-Override the Sent folder path when EmailEngine's auto-detection fails. This can happen when:
+EmailEngine automatically detects special-use folders (Sent, Drafts, Junk, Trash, Archive) using IMAP special-use flags and common folder name patterns. When auto-detection fails, you can override folder paths per account.
+
+This can happen when:
 
 - The server doesn't support the SPECIAL-USE extension and uses a folder name that EmailEngine's heuristics don't recognize
 - The server uses localized folder names (e.g., Microsoft 365 over IMAP without SPECIAL-USE support may use language-specific names)
-- A mail client created a Sent folder at a different path than the server default, and you want sent emails stored there
+- A mail client created a folder at a different path than the server default
+
+**Available folder path overrides:**
+
+| Field | Purpose | Common Names |
+|-------|---------|-------------|
+| `sentMailPath` | Sent messages | `Sent`, `Sent Items`, `Sent Messages`, `[Gmail]/Sent Mail` |
+| `draftsMailPath` | Draft messages | `Drafts`, `Draft` |
+| `junkMailPath` | Spam/junk messages | `Junk`, `Spam`, `Junk E-mail`, `[Gmail]/Spam` |
+| `trashMailPath` | Deleted messages | `Trash`, `Deleted Items`, `Deleted Messages`, `[Gmail]/Trash` |
+| `archiveMailPath` | Archived messages | `Archive`, `Archives`, `[Gmail]/All Mail` |
+
+Set any combination of these fields inside the `imap` object when registering or updating an account:
 
 ```json
 {
   "imap": {
-    "sentMailPath": "Sent Items"
+    "sentMailPath": "Sent Items",
+    "draftsMailPath": "Drafts",
+    "junkMailPath": "Junk E-mail",
+    "trashMailPath": "Deleted Items",
+    "archiveMailPath": "Archive"
   }
 }
 ```
 
-Common folder name variations:
+Set a field to `null` to revert to auto-detection:
 
-- `Sent` (most providers)
-- `Sent Messages` (some providers)
-- `Sent Items` (Microsoft Exchange)
-- `[Gmail]/Sent Mail` (Gmail)
+```json
+{
+  "imap": {
+    "partial": true,
+    "sentMailPath": null
+  }
+}
+```
 
-[Learn more about custom special folder paths →](/docs/accounts#custom-special-folder-paths)
+### Resync Delay
+
+EmailEngine performs a full mailbox resynchronization at regular intervals to ensure no messages are missed due to connection issues or IMAP protocol quirks. Between resyncs, real-time updates are handled via IMAP IDLE or periodic polling.
+
+The default resync interval is 15 minutes (900 seconds). You can adjust this per account:
+
+```json
+{
+  "imap": {
+    "resyncDelay": 900
+  }
+}
+```
+
+| Value | Behavior |
+|-------|----------|
+| Lower (e.g., 300) | More frequent syncs, higher server load, fewer missed messages |
+| Higher (e.g., 1800) | Less frequent syncs, lower server load, potential for briefly missed messages |
+
+For most use cases, the default 15-minute interval provides a good balance.
 
 ### Path Filtering
 

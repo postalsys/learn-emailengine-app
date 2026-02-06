@@ -624,6 +624,39 @@ app.post('/webhooks/emailengine', express.raw({ type: 'application/json' }), (re
 });
 ```
 
+## Advanced Webhook Settings
+
+### Inbox-Only Webhooks (inboxNewOnly)
+
+By default, EmailEngine triggers `messageNew` webhooks for new messages in all monitored folders. If you only care about incoming mail, enable the `inboxNewOnly` setting to limit `messageNew` webhooks to messages arriving in the Inbox folder only.
+
+```bash
+curl -X POST "https://your-emailengine.com/v1/settings" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"inboxNewOnly": true}'
+```
+
+When enabled:
+- `messageNew` webhooks are only triggered for messages in the Inbox
+- Messages arriving in Sent, Drafts, Junk, Trash, and other folders are silently ignored
+- Other webhook events (`messageDeleted`, `messageUpdated`, etc.) are not affected
+
+This is useful for reducing webhook volume when you only need to process incoming emails.
+
+### Webhook Error Tracking (webhookErrorFlag)
+
+EmailEngine automatically tracks webhook delivery errors. When a webhook delivery fails, the error details are stored and displayed in the admin panel on the account details page. When a subsequent webhook delivery succeeds, the error flag is automatically cleared.
+
+The error flag includes:
+- Event type that failed
+- Error message
+- Webhook URL
+- Error code and HTTP status code
+- Timestamp
+
+This is an internal tracking mechanism -- there is no configuration needed. Check the admin panel or account details API response for the current webhook error status.
+
 ### Use HTTPS
 
 Always use HTTPS for webhook URLs to prevent:

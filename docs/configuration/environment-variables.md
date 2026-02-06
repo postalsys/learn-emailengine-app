@@ -165,6 +165,7 @@ Control worker thread configuration for processing workload.
 | `EENGINE_WORKERS` | number | `4` | IMAP worker thread count | `8` |
 | `EENGINE_WORKERS_SUBMIT` | number | `1` | Worker threads for email submission | `2` |
 | `EENGINE_WORKERS_WEBHOOKS` | number | `1` | Worker threads for webhook delivery | `2` |
+| `EENGINE_WORKERS_EXPORT` | number | `1` | Worker threads for bulk message exports | `2` |
 
 **Examples:**
 
@@ -173,6 +174,7 @@ Control worker thread configuration for processing workload.
 EENGINE_WORKERS=8
 EENGINE_WORKERS_SUBMIT=4
 EENGINE_WORKERS_WEBHOOKS=4
+EENGINE_WORKERS_EXPORT=2
 ```
 
 **Resource-constrained environment:**
@@ -180,6 +182,7 @@ EENGINE_WORKERS_WEBHOOKS=4
 EENGINE_WORKERS=2
 EENGINE_WORKERS_SUBMIT=1
 EENGINE_WORKERS_WEBHOOKS=1
+EENGINE_WORKERS_EXPORT=1
 ```
 
 ## Queue Management
@@ -191,6 +194,7 @@ Configure job queue retention, cleanup, and concurrency.
 | `EENGINE_QUEUE_REMOVE_AFTER` | number | `0` | Number of completed jobs to keep in queue (0 = remove immediately) | `5000` |
 | `EENGINE_SUBMIT_QC` | number | `1` | Concurrency for email submission queue | `4` |
 | `EENGINE_NOTIFY_QC` | number | `1` | Concurrency for notification/webhook queue | `4` |
+| `EENGINE_EXPORT_QC` | number | `1` | Concurrency for export queue | `2` |
 | `EENGINE_SUBMIT_DELAY` | ms | none | Delay between email submissions | `1000` |
 
 **Examples:**
@@ -204,12 +208,34 @@ EENGINE_QUEUE_REMOVE_AFTER=1000
 ```bash
 EENGINE_SUBMIT_QC=4
 EENGINE_NOTIFY_QC=4
+EENGINE_EXPORT_QC=2
 ```
 
 **Rate limit email submissions:**
 ```bash
 EENGINE_SUBMIT_DELAY=1000  # 1 second between submissions
 ```
+
+## Export Configuration
+
+Configure bulk message export behavior.
+
+| Variable | Type | Default | Description | Example |
+|----------|------|---------|-------------|---------|
+| `EENGINE_EXPORT_PATH` | string | OS temp dir | Directory for export files | `/data/exports` |
+| `EENGINE_EXPORT_MAX_AGE` | ms | `86400000` | Export file retention time (24 hours) | `172800000` |
+| `EENGINE_EXPORT_TIMEOUT` | duration | `5m` | Timeout for individual export operations | `10m` |
+
+**Examples:**
+
+**Custom export storage:**
+```bash
+EENGINE_EXPORT_PATH=/data/emailengine/exports
+EENGINE_EXPORT_MAX_AGE=172800000  # 48 hours
+EENGINE_EXPORT_TIMEOUT=10m
+```
+
+[Exporting Messages guide -->](/docs/receiving/exporting)
 
 ## IMAP Proxy Server
 
@@ -635,6 +661,7 @@ Common environment variables and their command-line equivalents:
 | `EENGINE_WORKERS` | `--workers.imap` | IMAP worker count |
 | `EENGINE_WORKERS_WEBHOOKS` | `--workers.webhooks` | Webhook worker count |
 | `EENGINE_WORKERS_SUBMIT` | `--workers.submit` | Submission worker count |
+| `EENGINE_WORKERS_EXPORT` | `--workers.export` | Export worker count |
 | `EENGINE_MAX_SIZE` | `--api.maxSize` | Max attachment size |
 | `EENGINE_TIMEOUT` | `--service.commandTimeout` | Command timeout |
 

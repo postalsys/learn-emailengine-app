@@ -595,6 +595,37 @@ flowchart TD
     F -->|No| H[MS Graph API<br/>recommended]
 ```
 
+## Key Settings (via POST /v1/settings)
+
+| Setting | Type | Description |
+|---------|------|-------------|
+| `webhooks` | string | Webhook URL |
+| `webhooksEnabled` | boolean | Enable webhook delivery |
+| `webhookEvents` | array | Event types to trigger |
+| `inboxNewOnly` | boolean | Only trigger `messageNew` for Inbox folder |
+| `serviceUrl` | string | Public URL of EmailEngine instance |
+| `serviceSecret` | string | HMAC secret for webhook signature verification |
+| `resolveGmailCategories` | boolean | Detect Gmail tabs (Primary, Social, etc.) for IMAP |
+| `smtpEhloName` | string | Custom EHLO hostname for SMTP connections |
+| `ignoreMailCertErrors` | boolean | Accept invalid TLS certificates |
+| `trackOpens` | boolean | Enable email open tracking |
+| `trackClicks` | boolean | Enable click tracking |
+| `imapIndexer` | string | Indexing strategy: `full` or `fast` |
+| `scriptEnv` | string | JSON environment variables for pre-processing scripts |
+
+## Per-Account IMAP Settings
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `disabled` | boolean | `false` | Disable IMAP (send-only mode) |
+| `resyncDelay` | number | `900` | Seconds between full mailbox resyncs |
+| `sentMailPath` | string | auto | Custom Sent folder path |
+| `draftsMailPath` | string | auto | Custom Drafts folder path |
+| `junkMailPath` | string | auto | Custom Junk folder path |
+| `trashMailPath` | string | auto | Custom Trash folder path |
+| `archiveMailPath` | string | auto | Custom Archive folder path |
+| `useAuthServer` | boolean | `false` | Fetch credentials from external auth server |
+
 ## Environment Variables
 
 | Variable | Required | Description |
@@ -604,7 +635,11 @@ flowchart TD
 | `EENGINE_PORT` | No | API port (default: 3000) |
 | `EENGINE_HOST` | No | Bind address (default: 127.0.0.1) |
 | `EENGINE_WORKERS` | No | IMAP worker count (default: 4) |
+| `EENGINE_WORKERS_WEBHOOKS` | No | Webhook worker count (default: 1) |
+| `EENGINE_WORKERS_SUBMIT` | No | Submit worker count (default: 1) |
+| `EENGINE_WORKERS_EXPORT` | No | Export worker count (default: 1) |
 | `EENGINE_LOG_LEVEL` | No | Log level (trace/debug/info/warn/error) |
+| `EENGINE_FEATURE_*` | No | Enable feature flags (set to `true`) |
 
 ## Submit API Key Parameters
 
