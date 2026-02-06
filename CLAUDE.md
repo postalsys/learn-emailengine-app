@@ -939,5 +939,5 @@ This documentation was created by:
 
 **Last Updated:** December 28, 2025
 **Docusaurus Version:** 3.9.1
-**EmailEngine API Version:** 2.61.1
+**EmailEngine API Version:** 2.62.0
 **Status:** Production Ready

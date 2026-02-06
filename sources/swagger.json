@@ -1,7 +1,7 @@
 {
   "info": {
     "title": "EmailEngine API",
-    "version": "2.61.5",
+    "version": "2.62.0",
     "description": "EmailEngine provides a RESTful API for managing email accounts, sending messages, and processing email data across multiple providers.\n\n<h3>Authentication</h3>\nAll API requests require authentication using an Access Token. You can generate and manage your tokens from the <a href=\"/admin/tokens\" target=\"_parent\"><strong>Access Tokens</strong></a> page.\n\nInclude your token in requests using one of these methods:\n- Query parameter: <code>?access_token=YOUR_TOKEN</code>\n- Authorization header: <code>Authorization: Bearer YOUR_TOKEN</code>\n\n<h3>Request Processing</h3>\n\n<strong>Sequential Processing:</strong> Requests to the same email account are processed sequentially to maintain data consistency. Multiple simultaneous requests will be queued.\n\n<strong>Timeouts:</strong> Long-running operations may cause queued requests to timeout. Configure appropriate timeout values using the <code>X-EE-Timeout</code> header (in milliseconds).\n\n<h3>Getting Started</h3>\n1. <a href=\"/admin/tokens\" target=\"_parent\">Generate an Access Token</a>\n2. <a href=\"/admin/accounts\" target=\"_parent\">Add an email account</a>\n3. Start making API requests using the endpoints below",
     "contact": {
       "name": "EmailEngine Support",
@@ -137,7 +137,7 @@
       }
     },
     "schemas": {
-      "type": {
+      "AccountType": {
         "type": "string",
         "description": "Account type",
         "example": "outlook",
@@ -150,7 +150,7 @@
           "oauth2"
         ]
       },
-      "state": {
+      "AccountListState": {
         "type": "string",
         "description": "Account state",
         "example": "connected",
@@ -181,7 +181,7 @@
           }
         }
       },
-      "grant": {
+      "OAuthGrant": {
         "type": "string",
         "description": "OAuth2 grant type being requested",
         "example": "refresh_token",
@@ -199,7 +199,7 @@
           "example": "https://mail.google.com/"
         }
       },
-      "response": {
+      "OAuthTokenErrorResponse": {
         "type": "object",
         "description": "Raw error response from the OAuth2 server",
         "example": {
@@ -207,12 +207,12 @@
           "error_description": "Bad Request"
         }
       },
-      "tokenRequest": {
+      "OAuthTokenRequestError": {
         "type": "object",
         "description": "Details about the failed OAuth2 token request",
         "properties": {
           "grant": {
-            "$ref": "#/components/schemas/grant"
+            "$ref": "#/components/schemas/OAuthGrant"
           },
           "provider": {
             "type": "string",
@@ -234,7 +234,7 @@
             "$ref": "#/components/schemas/OauthScopes"
           },
           "response": {
-            "$ref": "#/components/schemas/response"
+            "$ref": "#/components/schemas/OAuthTokenErrorResponse"
           }
         }
       },
@@ -245,7 +245,7 @@
           "response": {
             "type": "string",
             "description": "Human-readable error message",
-            "example": "Token request failed"
+            "example": "Token request failed for gmail (refresh_token, HTTP 400): invalid_grant - Token has been expired or revoked."
           },
           "serverResponseCode": {
             "type": "string",
@@ -253,7 +253,7 @@
             "example": "OauthRenewError"
           },
           "tokenRequest": {
-            "$ref": "#/components/schemas/tokenRequest"
+            "$ref": "#/components/schemas/OAuthTokenRequestError"
           }
         }
       },
@@ -284,7 +284,7 @@
             }
           },
           "type": {
-            "$ref": "#/components/schemas/type"
+            "$ref": "#/components/schemas/AccountType"
           },
           "app": {
             "type": "string",
@@ -293,7 +293,7 @@
             "maxLength": 256
           },
           "state": {
-            "$ref": "#/components/schemas/state"
+            "$ref": "#/components/schemas/AccountListState"
           },
           "webhooks": {
             "type": "string",
@@ -661,7 +661,7 @@
           "mailRu"
         ]
       },
-      "googleProjectId": {
+      "GoogleProjectId": {
         "type": "string",
         "description": "Google Cloud Project ID",
         "example": "project-name-425411",
@@ -674,7 +674,7 @@
           "trim": true
         }
       },
-      "googleTopicName": {
+      "GoogleTopicName": {
         "type": "string",
         "description": "Google Pub/Sub topic name for Gmail push notifications",
         "example": "ee-pub-12345",
@@ -688,7 +688,7 @@
           "trim": true
         }
       },
-      "googleSubscriptionName": {
+      "GoogleSubscriptionName": {
         "type": "string",
         "description": "Google Pub/Sub subscription name",
         "example": "ee-sub-12345",
@@ -800,7 +800,7 @@
             "example": "9103965568215821627203"
           },
           "googleProjectId": {
-            "$ref": "#/components/schemas/googleProjectId"
+            "$ref": "#/components/schemas/GoogleProjectId"
           },
           "googleWorkspaceAccounts": {
             "type": "boolean",
@@ -808,10 +808,10 @@
             "example": false
           },
           "googleTopicName": {
-            "$ref": "#/components/schemas/googleTopicName"
+            "$ref": "#/components/schemas/GoogleTopicName"
           },
           "googleSubscriptionName": {
-            "$ref": "#/components/schemas/googleSubscriptionName"
+            "$ref": "#/components/schemas/GoogleSubscriptionName"
           },
           "serviceClientEmail": {
             "type": "string",
@@ -865,7 +865,7 @@
           }
         }
       },
-      "source": {
+      "OutboxSource": {
         "type": "string",
         "description": "How this message entered the queue",
         "example": "smtp",
@@ -874,7 +874,7 @@
           "api"
         ]
       },
-      "to": {
+      "OutboxEnvelopeTo": {
         "type": "array",
         "items": {
           "type": "string",
@@ -884,7 +884,7 @@
           }
         }
       },
-      "envelope": {
+      "OutboxEnvelope": {
         "type": "object",
         "description": "SMTP envelope information",
         "properties": {
@@ -896,11 +896,11 @@
             }
           },
           "to": {
-            "$ref": "#/components/schemas/to"
+            "$ref": "#/components/schemas/OutboxEnvelopeTo"
           }
         }
       },
-      "status": {
+      "OutboxStatus": {
         "type": "string",
         "description": "Current delivery status",
         "example": "queued",
@@ -936,7 +936,7 @@
         "type": "object",
         "properties": {
           "status": {
-            "$ref": "#/components/schemas/status"
+            "$ref": "#/components/schemas/OutboxStatus"
           },
           "response": {
             "type": "string",
@@ -966,7 +966,7 @@
             }
           },
           "source": {
-            "$ref": "#/components/schemas/source"
+            "$ref": "#/components/schemas/OutboxSource"
           },
           "messageId": {
             "type": "string",
@@ -975,7 +975,7 @@
             "maxLength": 996
           },
           "envelope": {
-            "$ref": "#/components/schemas/envelope"
+            "$ref": "#/components/schemas/OutboxEnvelope"
           },
           "subject": {
             "type": "string",
@@ -1048,7 +1048,7 @@
           }
         }
       },
-      "webhookEvents": {
+      "WebhookEvents": {
         "type": "array",
         "description": "List of event types that will trigger webhook notifications",
         "items": {
@@ -1089,7 +1089,7 @@
           "$ref": "#/components/schemas/WebhooksCustomHeader"
         }
       },
-      "notifyHeaders": {
+      "NotifyHeaders": {
         "type": "array",
         "description": "Email headers to include in webhook payloads for additional context",
         "items": {
@@ -1098,7 +1098,7 @@
           "maxLength": 256
         }
       },
-      "imapIndexer": {
+      "ImapIndexer": {
         "type": "string",
         "description": "IMAP indexing strategy:\n  * full - Detect new, changed, and deleted messages (slower but complete)\n  * fast - Detect only new messages",
         "example": "full",
@@ -1128,7 +1128,7 @@
           }
         }
       },
-      "imapStrategy": {
+      "ImapStrategy": {
         "type": "string",
         "description": "IP address selection strategy for outbound IMAP connections when multiple local addresses are available",
         "enum": [
@@ -1137,7 +1137,7 @@
           "random"
         ]
       },
-      "smtpStrategy": {
+      "SmtpStrategy": {
         "type": "string",
         "description": "IP address selection strategy for outbound SMTP connections when multiple local addresses are available",
         "enum": [
@@ -1146,7 +1146,7 @@
           "random"
         ]
       },
-      "localAddresses": {
+      "LocalAddresses": {
         "type": "array",
         "description": "List of local IP addresses to use for outbound connections (requires appropriate network configuration)",
         "x-constraint": {
@@ -1165,7 +1165,7 @@
           }
         }
       },
-      "locale": {
+      "SettingsLocale": {
         "type": "string",
         "description": "Default language/locale for the user interface",
         "example": "fr",
@@ -1202,13 +1202,13 @@
             }
           },
           "webhookEvents": {
-            "$ref": "#/components/schemas/webhookEvents"
+            "$ref": "#/components/schemas/WebhookEvents"
           },
           "webhooksCustomHeaders": {
             "$ref": "#/components/schemas/WebhooksCustomHeaders"
           },
           "notifyHeaders": {
-            "$ref": "#/components/schemas/notifyHeaders"
+            "$ref": "#/components/schemas/NotifyHeaders"
           },
           "serviceUrl": {
             "type": "string",
@@ -1248,7 +1248,7 @@
             "description": "Insert a tracking pixel in outgoing HTML emails to detect when messages are opened"
           },
           "imapIndexer": {
-            "$ref": "#/components/schemas/imapIndexer"
+            "$ref": "#/components/schemas/ImapIndexer"
           },
           "resolveGmailCategories": {
             "type": "boolean",
@@ -1399,13 +1399,13 @@
             "$ref": "#/components/schemas/LogSettings"
           },
           "imapStrategy": {
-            "$ref": "#/components/schemas/imapStrategy"
+            "$ref": "#/components/schemas/ImapStrategy"
           },
           "smtpStrategy": {
-            "$ref": "#/components/schemas/smtpStrategy"
+            "$ref": "#/components/schemas/SmtpStrategy"
           },
           "localAddresses": {
-            "$ref": "#/components/schemas/localAddresses"
+            "$ref": "#/components/schemas/LocalAddresses"
           },
           "smtpServerEnabled": {
             "type": "boolean",
@@ -1525,7 +1525,7 @@
             "description": "Trust X-Forwarded-* headers when behind a reverse proxy"
           },
           "locale": {
-            "$ref": "#/components/schemas/locale"
+            "$ref": "#/components/schemas/SettingsLocale"
           },
           "timezone": {
             "type": "string",
@@ -1606,6 +1606,19 @@
             "example": 20,
             "minimum": 1,
             "maximum": 20
+          },
+          "exportMaxMessages": {
+            "type": "integer",
+            "description": "Maximum number of messages per export (default: 500000)",
+            "example": 500000,
+            "minimum": 1,
+            "maximum": 10000000
+          },
+          "exportMaxSize": {
+            "type": "integer",
+            "description": "Maximum export file size in bytes (default: 10GB)",
+            "example": 10737418240,
+            "minimum": 1
           }
         }
       },
@@ -1659,7 +1672,7 @@
           "version": {
             "type": "string",
             "description": "EmailEngine version number",
-            "example": "2.61.5"
+            "example": "2.62.0"
           },
           "license": {
             "type": "string",
@@ -1689,7 +1702,7 @@
           }
         }
       },
-      "format": {
+      "TemplateListFormat": {
         "type": "string",
         "description": "Markup language for HTML (\"html\" or \"markdown\")",
         "default": "html",
@@ -1720,7 +1733,7 @@
             "maxLength": 1024
           },
           "format": {
-            "$ref": "#/components/schemas/format"
+            "$ref": "#/components/schemas/TemplateListFormat"
           },
           "created": {
             "type": "string",
@@ -1954,7 +1967,7 @@
           "maxLength": 1024
         }
       },
-      "IMAPIndexer": {
+      "AccountImapIndexer": {
         "type": "string",
         "description": "Override global IMAP indexing strategy for this account. \"full\" tracks all changes including deletions, \"fast\" only detects new messages.",
         "example": "full",
@@ -1982,7 +1995,7 @@
           "maxLength": 256
         }
       },
-      "accessToken": {
+      "ImapAccessToken": {
         "type": "string",
         "description": "OAuth2 access token (when using OAuth2 instead of password authentication)",
         "example": false,
@@ -1991,7 +2004,7 @@
         ],
         "maxLength": 16384
       },
-      "Authentication": {
+      "ImapAuthentication": {
         "type": "object",
         "description": "Authentication credentials for the IMAP server",
         "enum": [
@@ -2005,7 +2018,7 @@
             "maxLength": 256
           },
           "accessToken": {
-            "$ref": "#/components/schemas/accessToken"
+            "$ref": "#/components/schemas/ImapAccessToken"
           },
           "pass": {
             "type": "string",
@@ -2018,7 +2031,7 @@
           "user"
         ]
       },
-      "TLS": {
+      "ImapTlsOptions": {
         "type": "object",
         "description": "Advanced TLS configuration options",
         "properties": {
@@ -2041,7 +2054,7 @@
         "description": "IMAP configuration",
         "properties": {
           "auth": {
-            "$ref": "#/components/schemas/Authentication"
+            "$ref": "#/components/schemas/ImapAuthentication"
           },
           "useAuthServer": {
             "type": "boolean",
@@ -2070,7 +2083,7 @@
             "default": false
           },
           "tls": {
-            "$ref": "#/components/schemas/TLS"
+            "$ref": "#/components/schemas/ImapTlsOptions"
           },
           "resyncDelay": {
             "type": "integer",
@@ -2120,7 +2133,16 @@
           }
         }
       },
-      "Model1": {
+      "SmtpAccessToken": {
+        "type": "string",
+        "description": "OAuth2 access token (when using OAuth2 instead of password authentication)",
+        "example": false,
+        "enum": [
+          false
+        ],
+        "maxLength": 16384
+      },
+      "SmtpAuthentication": {
         "type": "object",
         "description": "Authentication credentials for the SMTP server",
         "enum": [
@@ -2134,7 +2156,7 @@
             "maxLength": 256
           },
           "accessToken": {
-            "$ref": "#/components/schemas/accessToken"
+            "$ref": "#/components/schemas/SmtpAccessToken"
           },
           "pass": {
             "type": "string",
@@ -2147,12 +2169,30 @@
           "user"
         ]
       },
+      "SmtpTlsOptions": {
+        "type": "object",
+        "description": "Advanced TLS configuration options",
+        "properties": {
+          "rejectUnauthorized": {
+            "type": "boolean",
+            "description": "Reject connections to servers with invalid TLS certificates",
+            "example": true,
+            "default": true
+          },
+          "minVersion": {
+            "type": "string",
+            "description": "Minimum TLS version to accept (e.g., \"TLSv1.2\", \"TLSv1.3\")",
+            "example": "TLSv1.2",
+            "maxLength": 256
+          }
+        }
+      },
       "SMTPResponse": {
         "type": "object",
         "description": "SMTP configuration",
         "properties": {
           "auth": {
-            "$ref": "#/components/schemas/Model1"
+            "$ref": "#/components/schemas/SmtpAuthentication"
           },
           "useAuthServer": {
             "type": "boolean",
@@ -2181,7 +2221,7 @@
             "default": false
           },
           "tls": {
-            "$ref": "#/components/schemas/TLS"
+            "$ref": "#/components/schemas/SmtpTlsOptions"
           }
         },
         "required": [
@@ -2346,7 +2386,7 @@
           "$ref": "#/components/schemas/WebhooksCustomHeader"
         }
       },
-      "baseScopes": {
+      "AccountBaseScopes": {
         "type": "string",
         "description": "OAuth2 Base Scopes",
         "example": "imap",
@@ -2380,6 +2420,50 @@
             "type": "string",
             "description": "Textual information about the usage",
             "example": "53%"
+          }
+        }
+      },
+      "state": {
+        "type": "string",
+        "description": "Subscription state",
+        "enum": [
+          "creating",
+          "created",
+          "error"
+        ]
+      },
+      "state1": {
+        "type": "object",
+        "description": "Current subscription state",
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/state"
+          },
+          "time": {
+            "type": "number",
+            "description": "Timestamp of last state change"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if state is error"
+          }
+        }
+      },
+      "outlookSubscription": {
+        "type": "object",
+        "description": "Microsoft Graph subscription details (Outlook accounts only)",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Microsoft Graph subscription ID"
+          },
+          "expirationDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the subscription expires"
+          },
+          "state": {
+            "$ref": "#/components/schemas/state1"
           }
         }
       },
@@ -2430,7 +2514,7 @@
             "$ref": "#/components/schemas/AccountPath"
           },
           "imapIndexer": {
-            "$ref": "#/components/schemas/IMAPIndexer"
+            "$ref": "#/components/schemas/AccountImapIndexer"
           },
           "subconnections": {
             "$ref": "#/components/schemas/SubconnectionPaths"
@@ -2506,7 +2590,7 @@
             "maxLength": 100
           },
           "type": {
-            "$ref": "#/components/schemas/type"
+            "$ref": "#/components/schemas/AccountType"
           },
           "app": {
             "type": "string",
@@ -2515,7 +2599,7 @@
             "maxLength": 256
           },
           "baseScopes": {
-            "$ref": "#/components/schemas/baseScopes"
+            "$ref": "#/components/schemas/AccountBaseScopes"
           },
           "counters": {
             "$ref": "#/components/schemas/AccountCounters"
@@ -2528,6 +2612,9 @@
             "format": "date-time",
             "description": "Last sync time",
             "example": "2021-02-17T13:43:18.860Z"
+          },
+          "outlookSubscription": {
+            "$ref": "#/components/schemas/outlookSubscription"
           },
           "lastError": {
             "$ref": "#/components/schemas/AccountErrorEntry"
@@ -2804,7 +2891,7 @@
             }
           },
           "googleProjectId": {
-            "$ref": "#/components/schemas/googleProjectId"
+            "$ref": "#/components/schemas/GoogleProjectId"
           },
           "googleWorkspaceAccounts": {
             "type": "boolean",
@@ -2812,10 +2899,10 @@
             "example": false
           },
           "googleTopicName": {
-            "$ref": "#/components/schemas/googleTopicName"
+            "$ref": "#/components/schemas/GoogleTopicName"
           },
           "googleSubscriptionName": {
-            "$ref": "#/components/schemas/googleSubscriptionName"
+            "$ref": "#/components/schemas/GoogleSubscriptionName"
           },
           "serviceClientEmail": {
             "type": "string",
@@ -3020,7 +3107,7 @@
           "$ref": "#/components/schemas/AttachmentEntry"
         }
       },
-      "encodedSize": {
+      "TextEncodedSize": {
         "type": "object",
         "description": "Sizes of different message parts",
         "properties": {
@@ -3045,7 +3132,7 @@
             "example": "AAAAAgAACqiTkaExkaEykA"
           },
           "encodedSize": {
-            "$ref": "#/components/schemas/encodedSize"
+            "$ref": "#/components/schemas/TextEncodedSize"
           }
         }
       },
@@ -3307,7 +3394,7 @@
           }
         }
       },
-      "Model2": {
+      "ExportListStatusValue": {
         "type": "string",
         "description": "Export status",
         "example": "completed",
@@ -3325,10 +3412,10 @@
           "exportId": {
             "type": "string",
             "description": "Export job identifier",
-            "example": "exp_abc123def456"
+            "example": "exp_abc123def456abc123def456"
           },
           "status": {
-            "$ref": "#/components/schemas/Model2"
+            "$ref": "#/components/schemas/ExportListStatusValue"
           },
           "created": {
             "type": "string",
@@ -3344,7 +3431,7 @@
           }
         }
       },
-      "exports": {
+      "ExportEntries": {
         "type": "array",
         "description": "Export entries",
         "items": {
@@ -3370,7 +3457,7 @@
             "example": 1
           },
           "exports": {
-            "$ref": "#/components/schemas/exports"
+            "$ref": "#/components/schemas/ExportEntries"
           }
         }
       },
@@ -3402,7 +3489,7 @@
           "$ref": "#/components/schemas/SignatureResponseItem"
         }
       },
-      "Model3": {
+      "AccountSignaturesResponse": {
         "type": "object",
         "properties": {
           "signatures": {
@@ -3410,27 +3497,27 @@
           }
         }
       },
-      "dkim": {
+      "DkimResults": {
         "type": "object",
         "description": "DKIM results"
       },
-      "spf": {
+      "SpfResults": {
         "type": "object",
         "description": "SPF results"
       },
-      "dmarc": {
+      "DmarcResults": {
         "type": "object",
         "description": "DMARC results"
       },
-      "bimi": {
+      "BimiResults": {
         "type": "object",
         "description": "BIMI results"
       },
-      "arc": {
+      "ArcResults": {
         "type": "object",
         "description": "ARC results"
       },
-      "mainSig": {
+      "MainSignature": {
         "type": "object",
         "description": "Primary DKIM signature. `status.aligned` should be set, otherwise DKIM check should not be considered as passed."
       },
@@ -3443,26 +3530,26 @@
             "example": true
           },
           "dkim": {
-            "$ref": "#/components/schemas/dkim"
+            "$ref": "#/components/schemas/DkimResults"
           },
           "spf": {
-            "$ref": "#/components/schemas/spf"
+            "$ref": "#/components/schemas/SpfResults"
           },
           "dmarc": {
-            "$ref": "#/components/schemas/dmarc"
+            "$ref": "#/components/schemas/DmarcResults"
           },
           "bimi": {
-            "$ref": "#/components/schemas/bimi"
+            "$ref": "#/components/schemas/BimiResults"
           },
           "arc": {
-            "$ref": "#/components/schemas/arc"
+            "$ref": "#/components/schemas/ArcResults"
           },
           "mainSig": {
-            "$ref": "#/components/schemas/mainSig"
+            "$ref": "#/components/schemas/MainSignature"
           }
         }
       },
-      "queue": {
+      "QueueIdResponse": {
         "type": "string",
         "description": "Queue ID",
         "example": "notify",
@@ -3504,7 +3591,7 @@
         "type": "object",
         "properties": {
           "queue": {
-            "$ref": "#/components/schemas/queue"
+            "$ref": "#/components/schemas/QueueIdResponse"
           },
           "jobs": {
             "$ref": "#/components/schemas/QueueJobs"
@@ -3517,6 +3604,24 @@
         },
         "required": [
           "queue"
+        ]
+      },
+      "TemplateResponseFormat": {
+        "type": "string",
+        "description": "Markup language for HTML (\"html\" or \"markdown\")",
+        "default": "html",
+        "enum": [
+          "html",
+          "markdown"
+        ]
+      },
+      "TemplateContentFormat": {
+        "type": "string",
+        "description": "Markup language for HTML (\"html\" or \"markdown\")",
+        "default": "html",
+        "enum": [
+          "html",
+          "markdown"
         ]
       },
       "RequestTemplateContent": {
@@ -3556,7 +3661,7 @@
             "maxLength": 1024
           },
           "format": {
-            "$ref": "#/components/schemas/format"
+            "$ref": "#/components/schemas/TemplateContentFormat"
           }
         }
       },
@@ -3591,7 +3696,7 @@
             "maxLength": 1024
           },
           "format": {
-            "$ref": "#/components/schemas/format"
+            "$ref": "#/components/schemas/TemplateResponseFormat"
           },
           "created": {
             "type": "string",
@@ -3623,10 +3728,8 @@
           "*.domain.org/*",
           "https://domain.org/*"
         ],
-        "default": false,
-        "enum": [
-          false
-        ],
+        "default": null,
+        "nullable": true,
         "x-constraint": {
           "single": true
         },
@@ -3642,10 +3745,8 @@
           "5.6.7.8",
           "127.0.0.0/8"
         ],
-        "default": false,
-        "enum": [
-          false
-        ],
+        "default": null,
+        "nullable": true,
         "x-constraint": {
           "single": true
         },
@@ -3669,10 +3770,8 @@
           "maxRequests": 20,
           "timeWindow": 2
         },
-        "default": false,
-        "enum": [
-          false
-        ],
+        "default": null,
+        "nullable": true,
         "properties": {
           "maxRequests": {
             "type": "integer",
@@ -3691,9 +3790,7 @@
       "TokenRestrictions": {
         "type": "object",
         "description": "Security restrictions for API token usage",
-        "enum": [
-          false
-        ],
+        "nullable": true,
         "properties": {
           "referrers": {
             "$ref": "#/components/schemas/ReferrerAllowlist"
@@ -3866,6 +3963,22 @@
           ]
         }
       },
+      "TextDetailEncodedSize": {
+        "type": "object",
+        "description": "Sizes of different message parts",
+        "properties": {
+          "plain": {
+            "type": "integer",
+            "description": "Size of the plain text part in bytes",
+            "example": 1013
+          },
+          "html": {
+            "type": "integer",
+            "description": "Size of the HTML part in bytes",
+            "example": 1013
+          }
+        }
+      },
       "TextInfoDetails": {
         "type": "object",
         "properties": {
@@ -3875,7 +3988,7 @@
             "example": "AAAAAgAACqiTkaExkaEykA"
           },
           "encodedSize": {
-            "$ref": "#/components/schemas/encodedSize"
+            "$ref": "#/components/schemas/TextDetailEncodedSize"
           },
           "plain": {
             "type": "string",
@@ -3951,7 +4064,7 @@
           "$ref": "#/components/schemas/BounceEntry"
         }
       },
-      "Model4": {
+      "MailboxSpecialUse1": {
         "type": "string",
         "description": "Special folder type of the mailbox containing this message",
         "example": "\\Sent",
@@ -4085,7 +4198,7 @@
             "example": false
           },
           "specialUse": {
-            "$ref": "#/components/schemas/Model4"
+            "$ref": "#/components/schemas/MailboxSpecialUse1"
           },
           "messageSpecialUse": {
             "$ref": "#/components/schemas/MessageSpecialUse"
@@ -4112,7 +4225,7 @@
           }
         }
       },
-      "Model5": {
+      "ExportStatusValue": {
         "type": "string",
         "description": "Export status",
         "example": "processing",
@@ -4124,7 +4237,7 @@
           "cancelled"
         ]
       },
-      "phase": {
+      "ExportPhase": {
         "type": "string",
         "description": "Current export phase",
         "example": "indexing",
@@ -4134,7 +4247,7 @@
           "complete"
         ]
       },
-      "folders": {
+      "ExportStatusFolders": {
         "type": "array",
         "description": "Folders being exported",
         "items": {
@@ -4182,16 +4295,16 @@
           "exportId": {
             "type": "string",
             "description": "Export job identifier",
-            "example": "exp_abc123def456"
+            "example": "exp_abc123def456abc123def456"
           },
           "status": {
-            "$ref": "#/components/schemas/Model5"
+            "$ref": "#/components/schemas/ExportStatusValue"
           },
           "phase": {
-            "$ref": "#/components/schemas/phase"
+            "$ref": "#/components/schemas/ExportPhase"
           },
           "folders": {
-            "$ref": "#/components/schemas/folders"
+            "$ref": "#/components/schemas/ExportStatusFolders"
           },
           "startDate": {
             "type": "string",
@@ -4204,6 +4317,11 @@
             "format": "date-time",
             "description": "Export end date filter",
             "example": "2024-12-31T23:59:59Z"
+          },
+          "isEncrypted": {
+            "type": "boolean",
+            "description": "Whether the export file is encrypted",
+            "example": false
           },
           "progress": {
             "$ref": "#/components/schemas/ExportProgress"
@@ -4224,10 +4342,6 @@
             "type": "string",
             "description": "Error message if export failed",
             "nullable": true
-          },
-          "isResumable": {
-            "type": "boolean",
-            "description": "Whether the failed export can be resumed (only present when status is failed)"
           }
         }
       },
@@ -4239,7 +4353,7 @@
         ],
         "properties": {
           "auth": {
-            "$ref": "#/components/schemas/Authentication"
+            "$ref": "#/components/schemas/ImapAuthentication"
           },
           "useAuthServer": {
             "type": "boolean",
@@ -4268,7 +4382,7 @@
             "default": false
           },
           "tls": {
-            "$ref": "#/components/schemas/TLS"
+            "$ref": "#/components/schemas/ImapTlsOptions"
           },
           "resyncDelay": {
             "type": "integer",
@@ -4326,7 +4440,7 @@
         ],
         "properties": {
           "auth": {
-            "$ref": "#/components/schemas/Model1"
+            "$ref": "#/components/schemas/SmtpAuthentication"
           },
           "useAuthServer": {
             "type": "boolean",
@@ -4355,7 +4469,7 @@
             "default": false
           },
           "tls": {
-            "$ref": "#/components/schemas/TLS"
+            "$ref": "#/components/schemas/SmtpTlsOptions"
           }
         },
         "required": [
@@ -4543,7 +4657,7 @@
             }
           },
           "imapIndexer": {
-            "$ref": "#/components/schemas/IMAPIndexer"
+            "$ref": "#/components/schemas/AccountImapIndexer"
           },
           "imap": {
             "$ref": "#/components/schemas/ImapConfiguration"
@@ -4709,7 +4823,7 @@
           "license"
         ]
       },
-      "provider": {
+      "CreateOAuth2Provider": {
         "type": "string",
         "description": "OAuth2 provider type",
         "example": "gmail",
@@ -4724,7 +4838,7 @@
           "trim": true
         }
       },
-      "Model6": {
+      "OAuth2BaseScopes": {
         "type": "string",
         "description": "Connection type (IMAP, API, or Pub/Sub)",
         "example": "imap",
@@ -4737,7 +4851,7 @@
           "trim": true
         }
       },
-      "pubSubApp": {
+      "PubSubAppId": {
         "type": "string",
         "description": "Pub/Sub application ID for Gmail push notifications",
         "example": "AAAAAQAACnA",
@@ -4747,7 +4861,7 @@
         "nullable": true,
         "maxLength": 512
       },
-      "extraScopes": {
+      "OAuth2ExtraScopesApi": {
         "type": "array",
         "items": {
           "type": "string",
@@ -4758,7 +4872,7 @@
           }
         }
       },
-      "skipScopes": {
+      "OAuth2SkipScopesApi": {
         "type": "array",
         "items": {
           "type": "string",
@@ -4800,7 +4914,7 @@
             }
           },
           "provider": {
-            "$ref": "#/components/schemas/provider"
+            "$ref": "#/components/schemas/CreateOAuth2Provider"
           },
           "enabled": {
             "type": "boolean",
@@ -4827,16 +4941,16 @@
             }
           },
           "baseScopes": {
-            "$ref": "#/components/schemas/Model6"
+            "$ref": "#/components/schemas/OAuth2BaseScopes"
           },
           "pubSubApp": {
-            "$ref": "#/components/schemas/pubSubApp"
+            "$ref": "#/components/schemas/PubSubAppId"
           },
           "extraScopes": {
-            "$ref": "#/components/schemas/extraScopes"
+            "$ref": "#/components/schemas/OAuth2ExtraScopesApi"
           },
           "skipScopes": {
-            "$ref": "#/components/schemas/skipScopes"
+            "$ref": "#/components/schemas/OAuth2SkipScopesApi"
           },
           "serviceClient": {
             "type": "string",
@@ -4848,7 +4962,7 @@
             }
           },
           "googleProjectId": {
-            "$ref": "#/components/schemas/googleProjectId"
+            "$ref": "#/components/schemas/GoogleProjectId"
           },
           "googleWorkspaceAccounts": {
             "type": "boolean",
@@ -4856,10 +4970,10 @@
             "example": false
           },
           "googleTopicName": {
-            "$ref": "#/components/schemas/googleTopicName"
+            "$ref": "#/components/schemas/GoogleTopicName"
           },
           "googleSubscriptionName": {
-            "$ref": "#/components/schemas/googleSubscriptionName"
+            "$ref": "#/components/schemas/GoogleSubscriptionName"
           },
           "serviceClientEmail": {
             "type": "string",
@@ -4963,13 +5077,13 @@
             }
           },
           "webhookEvents": {
-            "$ref": "#/components/schemas/webhookEvents"
+            "$ref": "#/components/schemas/WebhookEvents"
           },
           "webhooksCustomHeaders": {
             "$ref": "#/components/schemas/WebhooksCustomHeaders"
           },
           "notifyHeaders": {
-            "$ref": "#/components/schemas/notifyHeaders"
+            "$ref": "#/components/schemas/NotifyHeaders"
           },
           "serviceUrl": {
             "type": "string",
@@ -5009,7 +5123,7 @@
             "description": "Insert a tracking pixel in outgoing HTML emails to detect when messages are opened"
           },
           "imapIndexer": {
-            "$ref": "#/components/schemas/imapIndexer"
+            "$ref": "#/components/schemas/ImapIndexer"
           },
           "resolveGmailCategories": {
             "type": "boolean",
@@ -5160,13 +5274,13 @@
             "$ref": "#/components/schemas/LogSettings"
           },
           "imapStrategy": {
-            "$ref": "#/components/schemas/imapStrategy"
+            "$ref": "#/components/schemas/ImapStrategy"
           },
           "smtpStrategy": {
-            "$ref": "#/components/schemas/smtpStrategy"
+            "$ref": "#/components/schemas/SmtpStrategy"
           },
           "localAddresses": {
-            "$ref": "#/components/schemas/localAddresses"
+            "$ref": "#/components/schemas/LocalAddresses"
           },
           "smtpServerEnabled": {
             "type": "boolean",
@@ -5286,7 +5400,7 @@
             "description": "Trust X-Forwarded-* headers when behind a reverse proxy"
           },
           "locale": {
-            "$ref": "#/components/schemas/locale"
+            "$ref": "#/components/schemas/SettingsLocale"
           },
           "timezone": {
             "type": "string",
@@ -5367,6 +5481,19 @@
             "example": 20,
             "minimum": 1,
             "maximum": 20
+          },
+          "exportMaxMessages": {
+            "type": "integer",
+            "description": "Maximum number of messages per export (default: 500000)",
+            "example": 500000,
+            "minimum": 1,
+            "maximum": 10000000
+          },
+          "exportMaxSize": {
+            "type": "integer",
+            "description": "Maximum export file size in bytes (default: 10GB)",
+            "example": 10737418240,
+            "minimum": 1
           }
         }
       },
@@ -5529,7 +5656,7 @@
           }
         }
       },
-      "imap": {
+      "VerifyImapResult": {
         "type": "object",
         "properties": {
           "success": {
@@ -5549,7 +5676,7 @@
           }
         }
       },
-      "smtp": {
+      "VerifySmtpResult": {
         "type": "object",
         "properties": {
           "success": {
@@ -5612,7 +5739,7 @@
           "name"
         ]
       },
-      "mailboxes": {
+      "ShortMailboxes": {
         "type": "array",
         "items": {
           "$ref": "#/components/schemas/MailboxShortResponseItem"
@@ -5622,13 +5749,13 @@
         "type": "object",
         "properties": {
           "imap": {
-            "$ref": "#/components/schemas/imap"
+            "$ref": "#/components/schemas/VerifyImapResult"
           },
           "smtp": {
-            "$ref": "#/components/schemas/smtp"
+            "$ref": "#/components/schemas/VerifySmtpResult"
           },
           "mailboxes": {
-            "$ref": "#/components/schemas/mailboxes"
+            "$ref": "#/components/schemas/ShortMailboxes"
           }
         }
       },
@@ -5794,6 +5921,15 @@
           }
         }
       },
+      "TemplateFormat": {
+        "type": "string",
+        "description": "Markup language for HTML (\"html\" or \"markdown\")",
+        "default": "html",
+        "enum": [
+          "html",
+          "markdown"
+        ]
+      },
       "CreateTemplateContent": {
         "type": "object",
         "properties": {
@@ -5858,7 +5994,7 @@
             "maxLength": 1024
           },
           "format": {
-            "$ref": "#/components/schemas/format"
+            "$ref": "#/components/schemas/TemplateFormat"
           },
           "content": {
             "$ref": "#/components/schemas/CreateTemplateContent"
@@ -5898,19 +6034,318 @@
           "id"
         ]
       },
-      "Flags": {
+      "ExportFolders": {
         "type": "array",
-        "description": "Message flags",
-        "example": [
-          "\\Seen",
-          "\\Draft"
-        ],
+        "description": "Folder paths or special-use flags (e.g., \\Inbox, \\Sent, \\All) to export from. If empty/omitted, Gmail/Outlook API accounts export from All Mail folder; other accounts export all folders except Junk and Trash.",
+        "x-constraint": {
+          "single": true
+        },
         "items": {
           "type": "string",
-          "maxLength": 128
+          "example": "INBOX",
+          "maxLength": 1024
         }
       },
-      "action": {
+      "ExportTextType": {
+        "type": "string",
+        "description": "Text content to include: \"plain\", \"html\", \"*\" (both), or omit for metadata only",
+        "example": "*",
+        "default": "*",
+        "enum": [
+          "plain",
+          "html",
+          "*"
+        ]
+      },
+      "ExportRequest": {
+        "type": "object",
+        "properties": {
+          "folders": {
+            "$ref": "#/components/schemas/ExportFolders"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Export messages from this date",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Export messages until this date",
+            "example": "2024-12-31T23:59:59Z"
+          },
+          "textType": {
+            "$ref": "#/components/schemas/ExportTextType"
+          },
+          "maxBytes": {
+            "type": "integer",
+            "description": "Maximum bytes for text content (0 = unlimited)",
+            "example": 5242880,
+            "default": 5242880,
+            "minimum": 0
+          },
+          "includeAttachments": {
+            "type": "boolean",
+            "description": "Include attachment content as base64 blob in attachments array",
+            "default": false
+          }
+        },
+        "required": [
+          "startDate",
+          "endDate"
+        ]
+      },
+      "CreateExportResponse": {
+        "type": "object",
+        "properties": {
+          "exportId": {
+            "type": "string",
+            "description": "Export job identifier",
+            "example": "exp_abc123def456abc123def456"
+          },
+          "status": {
+            "type": "string",
+            "description": "Export status",
+            "example": "queued"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When export was created",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        }
+      },
+      "Headers": {
+        "type": "object",
+        "description": "Search specific email headers",
+        "example": {
+          "Message-ID": "<1DAF52A51E674A2@example.com>"
+        }
+      },
+      "EmailIds": {
+        "type": "array",
+        "description": "List of specific email IDs to fetch. When provided, other search criteria are ignored. Useful for bulk operations on known messages.",
+        "example": [
+          "1278455344230334865"
+        ],
+        "x-constraint": {
+          "single": true
+        },
+        "items": {
+          "type": "string",
+          "description": "Globally unique email identifier (when supported by the email server)",
+          "example": "1278455344230334865",
+          "maxLength": 256
+        }
+      },
+      "SearchQuery": {
+        "type": "object",
+        "description": "Search criteria for filtering messages",
+        "properties": {
+          "seq": {
+            "type": "string",
+            "description": "Sequence number range (e.g., \"1:10\" or \"1,3,5\"). Only supported for IMAP.",
+            "maxLength": 8192
+          },
+          "answered": {
+            "type": "boolean",
+            "description": "Filter for messages that have been replied to. Only supported for IMAP."
+          },
+          "deleted": {
+            "type": "boolean",
+            "description": "Filter for messages marked for deletion. Only supported for IMAP."
+          },
+          "draft": {
+            "type": "boolean",
+            "description": "Filter for draft messages"
+          },
+          "unseen": {
+            "type": "boolean",
+            "description": "Filter for unread messages"
+          },
+          "flagged": {
+            "type": "boolean",
+            "description": "Filter for flagged/starred messages"
+          },
+          "seen": {
+            "type": "boolean",
+            "description": "Filter for read messages"
+          },
+          "from": {
+            "type": "string",
+            "description": "Search in From addresses",
+            "maxLength": 256
+          },
+          "to": {
+            "type": "string",
+            "description": "Search in To addresses. Not supported for MS Graph API.",
+            "maxLength": 256
+          },
+          "cc": {
+            "type": "string",
+            "description": "Search in Cc addresses. Not supported for MS Graph API.",
+            "maxLength": 256
+          },
+          "bcc": {
+            "type": "string",
+            "description": "Search in Bcc addresses. Not supported for MS Graph API.",
+            "maxLength": 256
+          },
+          "body": {
+            "type": "string",
+            "description": "Search in message body content",
+            "maxLength": 256
+          },
+          "subject": {
+            "type": "string",
+            "description": "Search in message subject",
+            "example": "Hello world",
+            "maxLength": 2560
+          },
+          "larger": {
+            "type": "integer",
+            "description": "Find messages larger than specified size in bytes. Not supported for MS Graph API.",
+            "minimum": 0,
+            "maximum": 1073741824
+          },
+          "smaller": {
+            "type": "integer",
+            "description": "Find messages smaller than specified size in bytes. Not supported for MS Graph API.",
+            "minimum": 0,
+            "maximum": 1073741824
+          },
+          "uid": {
+            "type": "string",
+            "description": "UID range (e.g., \"100:200\" or \"150,200,250\"). Only supported for IMAP.",
+            "maxLength": 8192
+          },
+          "modseq": {
+            "type": "integer",
+            "description": "Find messages with modification sequence higher than specified value. Only supported for IMAP with CONDSTORE.",
+            "minimum": 0
+          },
+          "before": {
+            "type": "string",
+            "format": "date",
+            "description": "Find messages received before this date"
+          },
+          "since": {
+            "type": "string",
+            "format": "date",
+            "description": "Find messages received after this date"
+          },
+          "sentBefore": {
+            "type": "string",
+            "format": "date",
+            "description": "Find messages sent before this date"
+          },
+          "sentSince": {
+            "type": "string",
+            "format": "date",
+            "description": "Find messages sent after this date"
+          },
+          "emailId": {
+            "type": "string",
+            "description": "Globally unique email identifier (when supported by the email server)",
+            "example": "1278455344230334865",
+            "maxLength": 256
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread identifier for email conversations (when supported by the email server)",
+            "example": "1694936993596975454"
+          },
+          "header": {
+            "$ref": "#/components/schemas/Headers"
+          },
+          "gmailRaw": {
+            "type": "string",
+            "description": "Gmail search syntax (only works with Gmail accounts)",
+            "example": "has:attachment in:unread",
+            "maxLength": 1024
+          },
+          "emailIds": {
+            "$ref": "#/components/schemas/EmailIds"
+          }
+        }
+      },
+      "MessageSearchPayload": {
+        "type": "object",
+        "example": {
+          "search": {
+            "unseen": true,
+            "flagged": true,
+            "from": "nyan.cat@example.com",
+            "body": "Hello world",
+            "subject": "Hello world",
+            "sentBefore": "2024-08-09",
+            "sentSince": "2022-08-09",
+            "emailId": "1278455344230334865",
+            "threadId": "1266894439832287888",
+            "header": {
+              "Message-ID": "<12345@example.com>"
+            },
+            "gmailRaw": "has:attachment in:unread"
+          }
+        },
+        "properties": {
+          "search": {
+            "$ref": "#/components/schemas/SearchQuery"
+          }
+        },
+        "required": [
+          "search"
+        ]
+      },
+      "MailboxPath": {
+        "type": "array",
+        "description": "Mailbox path as an array or a string. If account is namespaced then namespace prefix is added by default.",
+        "example": [
+          "Parent folder",
+          "Subfolder"
+        ],
+        "x-constraint": {
+          "single": true
+        },
+        "items": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "CreateMailbox": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "$ref": "#/components/schemas/MailboxPath"
+          }
+        }
+      },
+      "CreateMailboxResponse": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Full path to mailbox",
+            "example": "Kalender/S&APw-nnip&AOQ-evad"
+          },
+          "mailboxId": {
+            "type": "string",
+            "description": "Mailbox ID (if server has support)",
+            "example": "1439876283476"
+          },
+          "created": {
+            "type": "boolean",
+            "description": "Was the mailbox created",
+            "example": true
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "MessageAction": {
         "type": "string",
         "description": "Action type: \"reply\" (reply to sender), \"reply-all\" (reply to all recipients), or \"forward\" (forward to new recipients)",
         "example": "reply",
@@ -5935,7 +6370,7 @@
             "maxLength": 256
           },
           "action": {
-            "$ref": "#/components/schemas/action"
+            "$ref": "#/components/schemas/MessageAction"
           },
           "inline": {
             "type": "boolean",
@@ -5963,302 +6398,7 @@
           "message"
         ]
       },
-      "Model7": {
-        "type": "object",
-        "description": "Email address with optional display name",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Display name for the email address",
-            "example": "Some Name",
-            "maxLength": 256,
-            "x-convert": {
-              "trim": true
-            }
-          },
-          "address": {
-            "type": "string",
-            "description": "Email address",
-            "example": "user@example.com",
-            "x-format": {
-              "email": {
-                "ignoreLength": false
-              }
-            }
-          }
-        },
-        "required": [
-          "address"
-        ]
-      },
-      "Model8": {
-        "type": "array",
-        "description": "List of addresses",
-        "example": [
-          {
-            "address": "recipient@example.com"
-          }
-        ],
-        "x-constraint": {
-          "single": true
-        },
-        "items": {
-          "$ref": "#/components/schemas/Model7"
-        }
-      },
-      "Model9": {
-        "type": "array",
-        "description": "List of addresses",
-        "x-constraint": {
-          "single": true
-        },
-        "items": {
-          "$ref": "#/components/schemas/Model7"
-        }
-      },
-      "Model10": {
-        "type": "array",
-        "description": "List of addresses",
-        "x-constraint": {
-          "single": true
-        },
-        "items": {
-          "$ref": "#/components/schemas/Model7"
-        }
-      },
-      "contentDisposition": {
-        "type": "string",
-        "enum": [
-          "inline",
-          "attachment"
-        ],
-        "x-convert": {
-          "case": "lower"
-        }
-      },
-      "encoding": {
-        "type": "string",
-        "default": "base64",
-        "enum": [
-          "base64"
-        ]
-      },
-      "reference": {
-        "type": "string",
-        "description": "References an existing attachment by its ID instead of providing new attachment content. If this field is set, the `content` field must not be included. If not set, the `content` field is required.",
-        "example": "AAAAAQAACnAcde",
-        "enum": [
-          false
-        ],
-        "nullable": true,
-        "maxLength": 256
-      },
-      "UploadAttachment": {
-        "type": "object",
-        "properties": {
-          "filename": {
-            "type": "string",
-            "example": "transparent.gif",
-            "maxLength": 256
-          },
-          "content": {
-            "type": "string",
-            "description": "Base64 formatted attachment file",
-            "example": "R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=",
-            "maxLength": 52428800
-          },
-          "contentType": {
-            "type": "string",
-            "example": "image/gif",
-            "maxLength": 256,
-            "x-convert": {
-              "case": "lower"
-            }
-          },
-          "contentDisposition": {
-            "$ref": "#/components/schemas/contentDisposition"
-          },
-          "cid": {
-            "type": "string",
-            "description": "Content-ID value for embedded images",
-            "example": "unique-image-id@localhost",
-            "maxLength": 256
-          },
-          "encoding": {
-            "$ref": "#/components/schemas/encoding"
-          },
-          "reference": {
-            "$ref": "#/components/schemas/reference"
-          }
-        },
-        "required": [
-          "content"
-        ]
-      },
-      "UploadAttachmentList": {
-        "type": "array",
-        "description": "List of attachments",
-        "items": {
-          "$ref": "#/components/schemas/UploadAttachment"
-        }
-      },
-      "CustomHeaders": {
-        "type": "object",
-        "description": "Custom Headers",
-        "example": {
-          "X-My-Custom-Header": "Custom header value"
-        }
-      },
-      "MessageUpload": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string",
-            "description": "Target mailbox folder path",
-            "example": "INBOX"
-          },
-          "flags": {
-            "$ref": "#/components/schemas/Flags"
-          },
-          "internalDate": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Sets the internal date for this message",
-            "example": "2021-07-08T07:06:34.336Z"
-          },
-          "reference": {
-            "$ref": "#/components/schemas/MessageReference"
-          },
-          "raw": {
-            "type": "string",
-            "description": "A Base64-encoded email message in RFC 822 format. If you provide other fields along with raw, those fields will override the corresponding values in the raw message.",
-            "example": "TUlNRS1WZXJzaW9uOiAxLjANClN1YmplY3Q6IGhlbGxvIHdvcmxkDQoNCkhlbGxvIQ0K",
-            "maxLength": 52428800
-          },
-          "from": {
-            "$ref": "#/components/schemas/FromAddress"
-          },
-          "to": {
-            "$ref": "#/components/schemas/Model8"
-          },
-          "cc": {
-            "$ref": "#/components/schemas/Model9"
-          },
-          "bcc": {
-            "$ref": "#/components/schemas/Model10"
-          },
-          "subject": {
-            "type": "string",
-            "description": "Message subject",
-            "example": "What a wonderful message",
-            "maxLength": 10240
-          },
-          "text": {
-            "type": "string",
-            "description": "Message Text",
-            "example": "Hello from myself!",
-            "maxLength": 52428800
-          },
-          "html": {
-            "type": "string",
-            "description": "Message HTML",
-            "example": "<p>Hello from myself!</p>",
-            "maxLength": 52428800
-          },
-          "attachments": {
-            "$ref": "#/components/schemas/UploadAttachmentList"
-          },
-          "messageId": {
-            "type": "string",
-            "description": "Message ID",
-            "example": "<test123@example.com>",
-            "maxLength": 996
-          },
-          "headers": {
-            "$ref": "#/components/schemas/CustomHeaders"
-          },
-          "locale": {
-            "type": "string",
-            "description": "Optional locale",
-            "example": "fr",
-            "maxLength": 100
-          },
-          "tz": {
-            "type": "string",
-            "description": "Optional timezone",
-            "example": "Europe/Tallinn",
-            "maxLength": 100
-          }
-        },
-        "required": [
-          "path"
-        ]
-      },
-      "ResponseReference": {
-        "type": "object",
-        "description": "Reference info if referencing was requested",
-        "properties": {
-          "message": {
-            "type": "string",
-            "description": "Referenced message ID",
-            "example": "AAAAAQAACnA",
-            "maxLength": 256
-          },
-          "success": {
-            "type": "boolean",
-            "description": "Was the referenced message processed",
-            "example": true
-          },
-          "error": {
-            "type": "string",
-            "description": "An error message if referenced message processing failed",
-            "example": "Referenced message was not found"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
-      "MessageUploadResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier for the message. NB! This and other fields might not be present if server did not provide enough information",
-            "example": "AAAAAgAACrI"
-          },
-          "path": {
-            "type": "string",
-            "description": "Folder this message was uploaded to",
-            "example": "INBOX"
-          },
-          "uid": {
-            "type": "integer",
-            "description": "UID of uploaded message",
-            "example": 12345
-          },
-          "uidValidity": {
-            "type": "string",
-            "description": "UIDVALIDITY of the target folder. Numeric value cast as string.",
-            "example": "12345"
-          },
-          "seq": {
-            "type": "integer",
-            "description": "Sequence number of uploaded message",
-            "example": 12345
-          },
-          "messageId": {
-            "type": "string",
-            "description": "Message ID",
-            "example": "<test123@example.com>",
-            "maxLength": 996
-          },
-          "reference": {
-            "$ref": "#/components/schemas/ResponseReference"
-          }
-        }
-      },
-      "Model11": {
+      "SmtpEnvelopeTo": {
         "type": "array",
         "x-constraint": {
           "single": true
@@ -6283,7 +6423,7 @@
             }
           },
           "to": {
-            "$ref": "#/components/schemas/Model11"
+            "$ref": "#/components/schemas/SmtpEnvelopeTo"
           }
         }
       },
@@ -6450,6 +6590,15 @@
           "$ref": "#/components/schemas/BccAddress"
         }
       },
+      "RenderFormat": {
+        "type": "string",
+        "description": "Markup language for HTML (\"html\" or \"markdown\")",
+        "default": "html",
+        "enum": [
+          "html",
+          "markdown"
+        ]
+      },
       "RenderValues": {
         "type": "object",
         "description": "An object of variables for the template renderer"
@@ -6462,7 +6611,7 @@
         ],
         "properties": {
           "format": {
-            "$ref": "#/components/schemas/format"
+            "$ref": "#/components/schemas/RenderFormat"
           },
           "params": {
             "$ref": "#/components/schemas/RenderValues"
@@ -6503,7 +6652,90 @@
           "$ref": "#/components/schemas/MailMergeListEntry"
         }
       },
-      "return": {
+      "AttachmentContentDisposition": {
+        "type": "string",
+        "enum": [
+          "inline",
+          "attachment"
+        ],
+        "x-convert": {
+          "case": "lower"
+        }
+      },
+      "AttachmentEncoding": {
+        "type": "string",
+        "default": "base64",
+        "enum": [
+          "base64"
+        ]
+      },
+      "AttachmentReference": {
+        "type": "string",
+        "description": "References an existing attachment by its ID instead of providing new attachment content. If this field is set, the `content` field must not be included. If not set, the `content` field is required.",
+        "example": "AAAAAQAACnAcde",
+        "enum": [
+          false
+        ],
+        "nullable": true,
+        "maxLength": 256
+      },
+      "UploadAttachment": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "example": "transparent.gif",
+            "maxLength": 256
+          },
+          "content": {
+            "type": "string",
+            "description": "Base64 formatted attachment file",
+            "example": "R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=",
+            "maxLength": 52428800
+          },
+          "contentType": {
+            "type": "string",
+            "example": "image/gif",
+            "maxLength": 256,
+            "x-convert": {
+              "case": "lower"
+            }
+          },
+          "contentDisposition": {
+            "$ref": "#/components/schemas/AttachmentContentDisposition"
+          },
+          "cid": {
+            "type": "string",
+            "description": "Content-ID value for embedded images",
+            "example": "unique-image-id@localhost",
+            "maxLength": 256
+          },
+          "encoding": {
+            "$ref": "#/components/schemas/AttachmentEncoding"
+          },
+          "reference": {
+            "$ref": "#/components/schemas/AttachmentReference"
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
+      "UploadAttachmentList": {
+        "type": "array",
+        "description": "List of attachments",
+        "items": {
+          "$ref": "#/components/schemas/UploadAttachment"
+        }
+      },
+      "CustomHeaders": {
+        "type": "object",
+        "description": "Custom Headers",
+        "example": {
+          "X-My-Custom-Header": "Custom header value"
+        }
+      },
+      "DsnReturn": {
         "type": "string",
         "description": "Specifies if only headers or the entire body of the message should be included in the response (RET)",
         "enum": [
@@ -6523,7 +6755,7 @@
           "delay"
         ]
       },
-      "notify": {
+      "DsnNotify": {
         "type": "array",
         "description": "Defines the conditions under which a DSN response should be sent",
         "x-constraint": {
@@ -6546,10 +6778,10 @@
             }
           },
           "return": {
-            "$ref": "#/components/schemas/return"
+            "$ref": "#/components/schemas/DsnReturn"
           },
           "notify": {
-            "$ref": "#/components/schemas/notify"
+            "$ref": "#/components/schemas/DsnNotify"
           },
           "recipient": {
             "type": "string",
@@ -6791,7 +7023,7 @@
           }
         }
       },
-      "Model12": {
+      "ResponseReference": {
         "type": "object",
         "description": "Reference info if referencing was requested",
         "properties": {
@@ -6844,32 +7076,7 @@
           "address"
         ]
       },
-      "Model13": {
-        "type": "object",
-        "description": "Reference info if referencing was requested",
-        "properties": {
-          "message": {
-            "type": "string",
-            "description": "Referenced message ID",
-            "example": "AAAAAQAACnA",
-            "maxLength": 256
-          },
-          "success": {
-            "type": "boolean",
-            "description": "Was the referenced message processed successfully",
-            "example": true
-          },
-          "error": {
-            "type": "string",
-            "description": "An error message if referenced message processing failed",
-            "example": "Referenced message was not found"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
-      "skipped": {
+      "SkippedMessageInfo": {
         "type": "object",
         "description": "Info about skipped message. If this value is set, then the message was not sent",
         "properties": {
@@ -6921,7 +7128,7 @@
             "example": "d41f0423195f271f"
           },
           "reference": {
-            "$ref": "#/components/schemas/Model13"
+            "$ref": "#/components/schemas/ResponseReference"
           },
           "sendAt": {
             "type": "string",
@@ -6930,7 +7137,7 @@
             "example": "2021-07-08T07:06:34.336Z"
           },
           "skipped": {
-            "$ref": "#/components/schemas/skipped"
+            "$ref": "#/components/schemas/SkippedMessageInfo"
           }
         }
       },
@@ -6965,7 +7172,7 @@
             "example": "2021-07-08T07:06:34.336Z"
           },
           "reference": {
-            "$ref": "#/components/schemas/Model12"
+            "$ref": "#/components/schemas/ResponseReference"
           },
           "preview": {
             "type": "string",
@@ -6977,318 +7184,307 @@
           }
         }
       },
-      "MailboxPath": {
+      "Flags": {
         "type": "array",
-        "description": "Mailbox path as an array or a string. If account is namespaced then namespace prefix is added by default.",
+        "description": "Message flags",
         "example": [
-          "Parent folder",
-          "Subfolder"
+          "\\Seen",
+          "\\Draft"
+        ],
+        "items": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      "EmailAddress": {
+        "type": "object",
+        "description": "Email address with optional display name",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name for the email address",
+            "example": "Some Name",
+            "maxLength": 256,
+            "x-convert": {
+              "trim": true
+            }
+          },
+          "address": {
+            "type": "string",
+            "description": "Email address",
+            "example": "user@example.com",
+            "x-format": {
+              "email": {
+                "ignoreLength": false
+              }
+            }
+          }
+        },
+        "required": [
+          "address"
+        ]
+      },
+      "AddressList1": {
+        "type": "array",
+        "description": "List of addresses",
+        "example": [
+          {
+            "address": "recipient@example.com"
+          }
         ],
         "x-constraint": {
           "single": true
         },
         "items": {
-          "type": "string",
-          "maxLength": 256
+          "$ref": "#/components/schemas/EmailAddress"
         }
       },
-      "CreateMailbox": {
+      "AddressList2": {
+        "type": "array",
+        "description": "List of addresses",
+        "x-constraint": {
+          "single": true
+        },
+        "items": {
+          "$ref": "#/components/schemas/EmailAddress"
+        }
+      },
+      "AddressList3": {
+        "type": "array",
+        "description": "List of addresses",
+        "x-constraint": {
+          "single": true
+        },
+        "items": {
+          "$ref": "#/components/schemas/EmailAddress"
+        }
+      },
+      "MsgUploadContentDisposition": {
+        "type": "string",
+        "enum": [
+          "inline",
+          "attachment"
+        ],
+        "x-convert": {
+          "case": "lower"
+        }
+      },
+      "MsgUploadEncoding": {
+        "type": "string",
+        "default": "base64",
+        "enum": [
+          "base64"
+        ]
+      },
+      "MsgUploadReference": {
+        "type": "string",
+        "description": "References an existing attachment by its ID instead of providing new attachment content. If this field is set, the `content` field must not be included. If not set, the `content` field is required.",
+        "example": "AAAAAQAACnAcde",
+        "enum": [
+          false
+        ],
+        "nullable": true,
+        "maxLength": 256
+      },
+      "UploadAttachment1": {
         "type": "object",
         "properties": {
-          "path": {
-            "$ref": "#/components/schemas/MailboxPath"
+          "filename": {
+            "type": "string",
+            "example": "transparent.gif",
+            "maxLength": 256
+          },
+          "content": {
+            "type": "string",
+            "description": "Base64 formatted attachment file",
+            "example": "R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=",
+            "maxLength": 52428800
+          },
+          "contentType": {
+            "type": "string",
+            "example": "image/gif",
+            "maxLength": 256,
+            "x-convert": {
+              "case": "lower"
+            }
+          },
+          "contentDisposition": {
+            "$ref": "#/components/schemas/MsgUploadContentDisposition"
+          },
+          "cid": {
+            "type": "string",
+            "description": "Content-ID value for embedded images",
+            "example": "unique-image-id@localhost",
+            "maxLength": 256
+          },
+          "encoding": {
+            "$ref": "#/components/schemas/MsgUploadEncoding"
+          },
+          "reference": {
+            "$ref": "#/components/schemas/MsgUploadReference"
           }
+        },
+        "required": [
+          "content"
+        ]
+      },
+      "UploadAttachmentList1": {
+        "type": "array",
+        "description": "List of attachments",
+        "items": {
+          "$ref": "#/components/schemas/UploadAttachment1"
         }
       },
-      "CreateMailboxResponse": {
+      "MessageUpload": {
         "type": "object",
         "properties": {
           "path": {
             "type": "string",
-            "description": "Full path to mailbox",
-            "example": "Kalender/S&APw-nnip&AOQ-evad"
+            "description": "Target mailbox folder path",
+            "example": "INBOX"
           },
-          "mailboxId": {
+          "flags": {
+            "$ref": "#/components/schemas/Flags"
+          },
+          "internalDate": {
             "type": "string",
-            "description": "Mailbox ID (if server has support)",
-            "example": "1439876283476"
+            "format": "date-time",
+            "description": "Sets the internal date for this message",
+            "example": "2021-07-08T07:06:34.336Z"
           },
-          "created": {
-            "type": "boolean",
-            "description": "Was the mailbox created",
-            "example": true
+          "reference": {
+            "$ref": "#/components/schemas/MessageReference"
+          },
+          "raw": {
+            "type": "string",
+            "description": "A Base64-encoded email message in RFC 822 format. If you provide other fields along with raw, those fields will override the corresponding values in the raw message.",
+            "example": "TUlNRS1WZXJzaW9uOiAxLjANClN1YmplY3Q6IGhlbGxvIHdvcmxkDQoNCkhlbGxvIQ0K",
+            "maxLength": 52428800
+          },
+          "from": {
+            "$ref": "#/components/schemas/FromAddress"
+          },
+          "to": {
+            "$ref": "#/components/schemas/AddressList1"
+          },
+          "cc": {
+            "$ref": "#/components/schemas/AddressList2"
+          },
+          "bcc": {
+            "$ref": "#/components/schemas/AddressList3"
+          },
+          "subject": {
+            "type": "string",
+            "description": "Message subject",
+            "example": "What a wonderful message",
+            "maxLength": 10240
+          },
+          "text": {
+            "type": "string",
+            "description": "Message Text",
+            "example": "Hello from myself!",
+            "maxLength": 52428800
+          },
+          "html": {
+            "type": "string",
+            "description": "Message HTML",
+            "example": "<p>Hello from myself!</p>",
+            "maxLength": 52428800
+          },
+          "attachments": {
+            "$ref": "#/components/schemas/UploadAttachmentList1"
+          },
+          "messageId": {
+            "type": "string",
+            "description": "Message ID",
+            "example": "<test123@example.com>",
+            "maxLength": 996
+          },
+          "headers": {
+            "$ref": "#/components/schemas/CustomHeaders"
+          },
+          "locale": {
+            "type": "string",
+            "description": "Optional locale",
+            "example": "fr",
+            "maxLength": 100
+          },
+          "tz": {
+            "type": "string",
+            "description": "Optional timezone",
+            "example": "Europe/Tallinn",
+            "maxLength": 100
           }
         },
         "required": [
           "path"
         ]
       },
-      "Headers": {
+      "ResponseReference1": {
         "type": "object",
-        "description": "Search specific email headers",
-        "example": {
-          "Message-ID": "<1DAF52A51E674A2@example.com>"
-        }
-      },
-      "EmailIds": {
-        "type": "array",
-        "description": "List of specific email IDs to fetch. When provided, other search criteria are ignored. Useful for bulk operations on known messages.",
-        "example": [
-          "1278455344230334865"
-        ],
-        "x-constraint": {
-          "single": true
-        },
-        "items": {
-          "type": "string",
-          "description": "Globally unique email identifier (when supported by the email server)",
-          "example": "1278455344230334865",
-          "maxLength": 256
-        }
-      },
-      "SearchQuery": {
-        "type": "object",
-        "description": "Search criteria for filtering messages",
+        "description": "Reference info if referencing was requested",
         "properties": {
-          "seq": {
+          "message": {
             "type": "string",
-            "description": "Sequence number range (e.g., \"1:10\" or \"1,3,5\"). Only supported for IMAP.",
-            "maxLength": 8192
-          },
-          "answered": {
-            "type": "boolean",
-            "description": "Filter for messages that have been replied to. Only supported for IMAP."
-          },
-          "deleted": {
-            "type": "boolean",
-            "description": "Filter for messages marked for deletion. Only supported for IMAP."
-          },
-          "draft": {
-            "type": "boolean",
-            "description": "Filter for draft messages"
-          },
-          "unseen": {
-            "type": "boolean",
-            "description": "Filter for unread messages"
-          },
-          "flagged": {
-            "type": "boolean",
-            "description": "Filter for flagged/starred messages"
-          },
-          "seen": {
-            "type": "boolean",
-            "description": "Filter for read messages"
-          },
-          "from": {
-            "type": "string",
-            "description": "Search in From addresses",
+            "description": "Referenced message ID",
+            "example": "AAAAAQAACnA",
             "maxLength": 256
           },
-          "to": {
+          "success": {
+            "type": "boolean",
+            "description": "Was the referenced message processed",
+            "example": true
+          },
+          "error": {
             "type": "string",
-            "description": "Search in To addresses. Not supported for MS Graph API.",
-            "maxLength": 256
-          },
-          "cc": {
+            "description": "An error message if referenced message processing failed",
+            "example": "Referenced message was not found"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "MessageUploadResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
             "type": "string",
-            "description": "Search in Cc addresses. Not supported for MS Graph API.",
-            "maxLength": 256
+            "description": "Unique identifier for the message. NB! This and other fields might not be present if server did not provide enough information",
+            "example": "AAAAAgAACrI"
           },
-          "bcc": {
+          "path": {
             "type": "string",
-            "description": "Search in Bcc addresses. Not supported for MS Graph API.",
-            "maxLength": 256
-          },
-          "body": {
-            "type": "string",
-            "description": "Search in message body content",
-            "maxLength": 256
-          },
-          "subject": {
-            "type": "string",
-            "description": "Search in message subject",
-            "example": "Hello world",
-            "maxLength": 2560
-          },
-          "larger": {
-            "type": "integer",
-            "description": "Find messages larger than specified size in bytes. Not supported for MS Graph API.",
-            "minimum": 0,
-            "maximum": 1073741824
-          },
-          "smaller": {
-            "type": "integer",
-            "description": "Find messages smaller than specified size in bytes. Not supported for MS Graph API.",
-            "minimum": 0,
-            "maximum": 1073741824
+            "description": "Folder this message was uploaded to",
+            "example": "INBOX"
           },
           "uid": {
-            "type": "string",
-            "description": "UID range (e.g., \"100:200\" or \"150,200,250\"). Only supported for IMAP.",
-            "maxLength": 8192
-          },
-          "modseq": {
             "type": "integer",
-            "description": "Find messages with modification sequence higher than specified value. Only supported for IMAP with CONDSTORE.",
-            "minimum": 0
+            "description": "UID of uploaded message",
+            "example": 12345
           },
-          "before": {
+          "uidValidity": {
             "type": "string",
-            "format": "date",
-            "description": "Find messages received before this date"
+            "description": "UIDVALIDITY of the target folder. Numeric value cast as string.",
+            "example": "12345"
           },
-          "since": {
-            "type": "string",
-            "format": "date",
-            "description": "Find messages received after this date"
-          },
-          "sentBefore": {
-            "type": "string",
-            "format": "date",
-            "description": "Find messages sent before this date"
-          },
-          "sentSince": {
-            "type": "string",
-            "format": "date",
-            "description": "Find messages sent after this date"
-          },
-          "emailId": {
-            "type": "string",
-            "description": "Globally unique email identifier (when supported by the email server)",
-            "example": "1278455344230334865",
-            "maxLength": 256
-          },
-          "threadId": {
-            "type": "string",
-            "description": "Thread identifier for email conversations (when supported by the email server)",
-            "example": "1694936993596975454"
-          },
-          "header": {
-            "$ref": "#/components/schemas/Headers"
-          },
-          "gmailRaw": {
-            "type": "string",
-            "description": "Gmail search syntax (only works with Gmail accounts)",
-            "example": "has:attachment in:unread",
-            "maxLength": 1024
-          },
-          "emailIds": {
-            "$ref": "#/components/schemas/EmailIds"
-          }
-        }
-      },
-      "Model14": {
-        "type": "object",
-        "example": {
-          "search": {
-            "unseen": true,
-            "flagged": true,
-            "from": "nyan.cat@example.com",
-            "body": "Hello world",
-            "subject": "Hello world",
-            "sentBefore": "2024-08-09",
-            "sentSince": "2022-08-09",
-            "emailId": "1278455344230334865",
-            "threadId": "1266894439832287888",
-            "header": {
-              "Message-ID": "<12345@example.com>"
-            },
-            "gmailRaw": "has:attachment in:unread"
-          }
-        },
-        "properties": {
-          "search": {
-            "$ref": "#/components/schemas/SearchQuery"
-          }
-        },
-        "required": [
-          "search"
-        ]
-      },
-      "ExportFolders": {
-        "type": "array",
-        "description": "Folder paths or special-use flags (e.g., \\Inbox, \\Sent, \\All) to export from. If empty/omitted, Gmail/Outlook API accounts export from All Mail folder; other accounts export all folders except Junk and Trash.",
-        "x-constraint": {
-          "single": true
-        },
-        "items": {
-          "type": "string",
-          "example": "INBOX",
-          "maxLength": 1024
-        }
-      },
-      "textType": {
-        "type": "string",
-        "description": "Text content to include: \"plain\", \"html\", \"*\" (both), or omit for metadata only",
-        "example": "*",
-        "default": "*",
-        "enum": [
-          "plain",
-          "html",
-          "*"
-        ]
-      },
-      "ExportRequest": {
-        "type": "object",
-        "properties": {
-          "folders": {
-            "$ref": "#/components/schemas/ExportFolders"
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Export messages from this date",
-            "example": "2024-01-01T00:00:00Z"
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Export messages until this date",
-            "example": "2024-12-31T23:59:59Z"
-          },
-          "textType": {
-            "$ref": "#/components/schemas/textType"
-          },
-          "maxBytes": {
+          "seq": {
             "type": "integer",
-            "description": "Maximum bytes for text content (0 = unlimited)",
-            "example": 5242880,
-            "default": 5242880,
-            "minimum": 0
+            "description": "Sequence number of uploaded message",
+            "example": 12345
           },
-          "includeAttachments": {
-            "type": "boolean",
-            "description": "Include attachment content as base64 blob in attachments array",
-            "default": false
-          }
-        },
-        "required": [
-          "startDate",
-          "endDate"
-        ]
-      },
-      "CreateExportResponse": {
-        "type": "object",
-        "properties": {
-          "exportId": {
+          "messageId": {
             "type": "string",
-            "description": "Export job identifier",
-            "example": "exp_abc123def456"
+            "description": "Message ID",
+            "example": "<test123@example.com>",
+            "maxLength": 996
           },
-          "status": {
-            "type": "string",
-            "description": "Export status",
-            "example": "queued"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When export was created",
-            "example": "2024-01-15T10:30:00Z"
+          "reference": {
+            "$ref": "#/components/schemas/ResponseReference1"
           }
         }
       },
-      "gateway": {
+      "DeliveryTestGateway": {
         "type": "string",
         "description": "Optional gateway ID",
         "example": false,
@@ -7302,7 +7498,7 @@
         "type": "object",
         "properties": {
           "gateway": {
-            "$ref": "#/components/schemas/gateway"
+            "$ref": "#/components/schemas/DeliveryTestGateway"
           }
         }
       },
@@ -7329,49 +7525,6 @@
           }
         }
       },
-      "ResumeExportProgress": {
-        "type": "object",
-        "properties": {
-          "messagesExported": {
-            "type": "integer",
-            "description": "Messages already exported",
-            "example": 500
-          },
-          "messagesQueued": {
-            "type": "integer",
-            "description": "Total messages queued",
-            "example": 1500
-          },
-          "messagesSkipped": {
-            "type": "integer",
-            "description": "Messages skipped",
-            "example": 5
-          }
-        }
-      },
-      "ResumeExportResponse": {
-        "type": "object",
-        "properties": {
-          "exportId": {
-            "type": "string",
-            "description": "Export job identifier",
-            "example": "exp_abc123def456"
-          },
-          "status": {
-            "type": "string",
-            "description": "Export status",
-            "example": "queued"
-          },
-          "resumed": {
-            "type": "boolean",
-            "description": "True if export was resumed",
-            "example": true
-          },
-          "progress": {
-            "$ref": "#/components/schemas/ResumeExportProgress"
-          }
-        }
-      },
       "EmptyLicenseResponse": {
         "type": "object",
         "properties": {
@@ -7389,7 +7542,7 @@
           }
         }
       },
-      "DeleteRequestResponse": {
+      "DeleteAccountResponse": {
         "type": "object",
         "properties": {
           "account": {
@@ -7421,7 +7574,7 @@
           }
         }
       },
-      "Model15": {
+      "DeleteGatewayResponse": {
         "type": "object",
         "properties": {
           "gateway": {
@@ -7502,7 +7655,7 @@
           "path"
         ]
       },
-      "DeleteTemplateRequestResponse": {
+      "FlushTemplatesResponse": {
         "type": "object",
         "properties": {
           "deleted": {
@@ -7524,7 +7677,7 @@
           "account"
         ]
       },
-      "Model16": {
+      "DeleteTemplateResponse": {
         "type": "object",
         "properties": {
           "deleted": {
@@ -7563,7 +7716,7 @@
           }
         }
       },
-      "moved": {
+      "MessageMovedToTrash": {
         "type": "object",
         "description": "Present if message was moved to Trash",
         "properties": {
@@ -7592,11 +7745,47 @@
             "example": false
           },
           "moved": {
-            "$ref": "#/components/schemas/moved"
+            "$ref": "#/components/schemas/MessageMovedToTrash"
           }
         }
       },
-      "Model17": {
+      "ImapUpdateAccessToken": {
+        "type": "string",
+        "description": "OAuth2 access token (when using OAuth2 instead of password authentication)",
+        "example": false,
+        "enum": [
+          false
+        ],
+        "maxLength": 16384
+      },
+      "ImapUpdateAuthentication": {
+        "type": "object",
+        "description": "Authentication credentials for the IMAP server",
+        "enum": [
+          false
+        ],
+        "properties": {
+          "user": {
+            "type": "string",
+            "description": "Username or email address for IMAP authentication",
+            "example": "myuser@gmail.com",
+            "maxLength": 256
+          },
+          "accessToken": {
+            "$ref": "#/components/schemas/ImapUpdateAccessToken"
+          },
+          "pass": {
+            "type": "string",
+            "description": "Password for IMAP authentication",
+            "example": "verysecret",
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "ImapUpdateTlsOptions": {
         "type": "object",
         "description": "Advanced TLS configuration options",
         "properties": {
@@ -7627,7 +7816,7 @@
             "default": false
           },
           "auth": {
-            "$ref": "#/components/schemas/Authentication"
+            "$ref": "#/components/schemas/ImapUpdateAuthentication"
           },
           "useAuthServer": {
             "type": "boolean",
@@ -7655,7 +7844,7 @@
             "example": true
           },
           "tls": {
-            "$ref": "#/components/schemas/Model17"
+            "$ref": "#/components/schemas/ImapUpdateTlsOptions"
           },
           "resyncDelay": {
             "type": "integer",
@@ -7704,7 +7893,16 @@
           }
         }
       },
-      "Model18": {
+      "SmtpUpdateAccessToken": {
+        "type": "string",
+        "description": "OAuth2 access token (when using OAuth2 instead of password authentication)",
+        "example": false,
+        "enum": [
+          false
+        ],
+        "maxLength": 16384
+      },
+      "SmtpUpdateAuthentication": {
         "type": "object",
         "description": "Authentication credentials for the SMTP server",
         "enum": [
@@ -7718,7 +7916,7 @@
             "maxLength": 256
           },
           "accessToken": {
-            "$ref": "#/components/schemas/accessToken"
+            "$ref": "#/components/schemas/SmtpUpdateAccessToken"
           },
           "pass": {
             "type": "string",
@@ -7731,7 +7929,7 @@
           "user"
         ]
       },
-      "Model19": {
+      "SmtpUpdateTlsOptions": {
         "type": "object",
         "description": "Advanced TLS configuration options",
         "properties": {
@@ -7762,7 +7960,7 @@
             "default": false
           },
           "auth": {
-            "$ref": "#/components/schemas/Model18"
+            "$ref": "#/components/schemas/SmtpUpdateAuthentication"
           },
           "useAuthServer": {
             "type": "boolean",
@@ -7790,7 +7988,7 @@
             "example": false
           },
           "tls": {
-            "$ref": "#/components/schemas/Model19"
+            "$ref": "#/components/schemas/SmtpUpdateTlsOptions"
           }
         }
       },
@@ -7968,7 +8166,7 @@
           }
         }
       },
-      "Model20": {
+      "UpdateAccountResponse": {
         "type": "object",
         "properties": {
           "account": {
@@ -7985,7 +8183,7 @@
           "account"
         ]
       },
-      "clientId": {
+      "UpdateOAuth2ClientId": {
         "type": "string",
         "description": "Client or Application ID for 3-legged OAuth2 applications",
         "example": "52422112755-3uov8bjwlrullq122rdm6l8ui25ho7qf.apps.googleusercontent.com",
@@ -7998,7 +8196,7 @@
           "trim": true
         }
       },
-      "Model21": {
+      "UpdateOAuth2ExtraScopes": {
         "type": "array",
         "description": "OAuth2 Extra Scopes",
         "items": {
@@ -8010,7 +8208,7 @@
           }
         }
       },
-      "Model22": {
+      "UpdateOAuth2SkipScopes": {
         "type": "array",
         "description": "OAuth2 scopes to skip from the base set",
         "items": {
@@ -8022,7 +8220,7 @@
           }
         }
       },
-      "serviceClient": {
+      "UpdateServiceClient": {
         "type": "string",
         "description": "Service client ID for 2-legged OAuth2 applications",
         "example": "7103296518315821565203",
@@ -8049,7 +8247,7 @@
           "trim": true
         }
       },
-      "redirectUrl": {
+      "UpdateOAuth2RedirectUrl": {
         "type": "string",
         "description": "Redirect URL for 3-legged OAuth2 applications",
         "example": "https://myservice.com/oauth",
@@ -8103,7 +8301,7 @@
             "example": true
           },
           "clientId": {
-            "$ref": "#/components/schemas/clientId"
+            "$ref": "#/components/schemas/UpdateOAuth2ClientId"
           },
           "clientSecret": {
             "type": "string",
@@ -8121,16 +8319,16 @@
             "maxLength": 512
           },
           "extraScopes": {
-            "$ref": "#/components/schemas/Model21"
+            "$ref": "#/components/schemas/UpdateOAuth2ExtraScopes"
           },
           "skipScopes": {
-            "$ref": "#/components/schemas/Model22"
+            "$ref": "#/components/schemas/UpdateOAuth2SkipScopes"
           },
           "serviceClient": {
-            "$ref": "#/components/schemas/serviceClient"
+            "$ref": "#/components/schemas/UpdateServiceClient"
           },
           "googleProjectId": {
-            "$ref": "#/components/schemas/googleProjectId"
+            "$ref": "#/components/schemas/GoogleProjectId"
           },
           "googleWorkspaceAccounts": {
             "type": "boolean",
@@ -8138,10 +8336,10 @@
             "example": false
           },
           "googleTopicName": {
-            "$ref": "#/components/schemas/googleTopicName"
+            "$ref": "#/components/schemas/GoogleTopicName"
           },
           "googleSubscriptionName": {
-            "$ref": "#/components/schemas/googleSubscriptionName"
+            "$ref": "#/components/schemas/GoogleSubscriptionName"
           },
           "serviceClientEmail": {
             "type": "string",
@@ -8181,7 +8379,7 @@
             }
           },
           "redirectUrl": {
-            "$ref": "#/components/schemas/redirectUrl"
+            "$ref": "#/components/schemas/UpdateOAuth2RedirectUrl"
           }
         }
       },
@@ -8320,7 +8518,7 @@
             "nullable": true
           },
           "imapIndexer": {
-            "$ref": "#/components/schemas/IMAPIndexer"
+            "$ref": "#/components/schemas/AccountImapIndexer"
           }
         }
       },
@@ -8463,7 +8661,7 @@
           "search"
         ]
       },
-      "add": {
+      "BulkFlagAddList": {
         "type": "array",
         "example": [
           "\\Seen",
@@ -8473,7 +8671,7 @@
           "type": "string"
         }
       },
-      "delete": {
+      "BulkFlagDeleteList": {
         "type": "array",
         "example": [
           "\\Draft"
@@ -8482,7 +8680,7 @@
           "type": "string"
         }
       },
-      "set": {
+      "BulkFlagSetList": {
         "type": "array",
         "example": [
           "\\Seen"
@@ -8491,21 +8689,21 @@
           "type": "string"
         }
       },
-      "FlagResponse": {
+      "BulkFlagUpdateResponse": {
         "type": "object",
         "properties": {
           "add": {
-            "$ref": "#/components/schemas/add"
+            "$ref": "#/components/schemas/BulkFlagAddList"
           },
           "delete": {
-            "$ref": "#/components/schemas/delete"
+            "$ref": "#/components/schemas/BulkFlagDeleteList"
           },
           "set": {
-            "$ref": "#/components/schemas/set"
+            "$ref": "#/components/schemas/BulkFlagSetList"
           }
         }
       },
-      "Model23": {
+      "BulkLabelAddList": {
         "type": "array",
         "example": [
           "Label1",
@@ -8515,7 +8713,7 @@
           "type": "string"
         }
       },
-      "Model24": {
+      "BulkLabelDeleteList": {
         "type": "array",
         "example": [
           "Label3"
@@ -8524,7 +8722,7 @@
           "type": "string"
         }
       },
-      "Model25": {
+      "BulkLabelSetList": {
         "type": "array",
         "example": [
           "Label1"
@@ -8533,28 +8731,28 @@
           "type": "string"
         }
       },
-      "Model26": {
+      "BulkLabelUpdateResponse": {
         "type": "object",
         "properties": {
           "add": {
-            "$ref": "#/components/schemas/Model23"
+            "$ref": "#/components/schemas/BulkLabelAddList"
           },
           "delete": {
-            "$ref": "#/components/schemas/Model24"
+            "$ref": "#/components/schemas/BulkLabelDeleteList"
           },
           "set": {
-            "$ref": "#/components/schemas/Model25"
+            "$ref": "#/components/schemas/BulkLabelSetList"
           }
         }
       },
-      "MessageUpdateResponse": {
+      "BulkMessageUpdateResponse": {
         "type": "object",
         "properties": {
           "flags": {
-            "$ref": "#/components/schemas/FlagResponse"
+            "$ref": "#/components/schemas/BulkFlagUpdateResponse"
           },
           "labels": {
-            "$ref": "#/components/schemas/Model26"
+            "$ref": "#/components/schemas/BulkLabelUpdateResponse"
           }
         }
       },
@@ -8628,11 +8826,24 @@
           }
         }
       },
+      "QueueIdPutResponse": {
+        "type": "string",
+        "description": "Queue ID",
+        "example": "notify",
+        "enum": [
+          "notify",
+          "submit",
+          "documents"
+        ],
+        "x-convert": {
+          "trim": true
+        }
+      },
       "SettingsPutQueueResponse": {
         "type": "object",
         "properties": {
           "queue": {
-            "$ref": "#/components/schemas/queue"
+            "$ref": "#/components/schemas/QueueIdPutResponse"
           },
           "paused": {
             "type": "boolean",
@@ -8642,6 +8853,15 @@
         },
         "required": [
           "queue"
+        ]
+      },
+      "TemplateUpdateFormat": {
+        "type": "string",
+        "description": "Markup language for HTML (\"html\" or \"markdown\")",
+        "default": "html",
+        "enum": [
+          "html",
+          "markdown"
         ]
       },
       "UpdateTemplateContent": {
@@ -8698,7 +8918,7 @@
             "maxLength": 1024
           },
           "format": {
-            "$ref": "#/components/schemas/format"
+            "$ref": "#/components/schemas/TemplateUpdateFormat"
           },
           "content": {
             "$ref": "#/components/schemas/UpdateTemplateContent"
@@ -8809,7 +9029,49 @@
           }
         }
       },
-      "Model27": {
+      "FlagAddList": {
+        "type": "array",
+        "example": [
+          "\\Seen",
+          "\\Flagged"
+        ],
+        "items": {
+          "type": "string"
+        }
+      },
+      "FlagDeleteList": {
+        "type": "array",
+        "example": [
+          "\\Draft"
+        ],
+        "items": {
+          "type": "string"
+        }
+      },
+      "FlagSetList": {
+        "type": "array",
+        "example": [
+          "\\Seen"
+        ],
+        "items": {
+          "type": "string"
+        }
+      },
+      "FlagUpdateResponse": {
+        "type": "object",
+        "properties": {
+          "add": {
+            "$ref": "#/components/schemas/FlagAddList"
+          },
+          "delete": {
+            "$ref": "#/components/schemas/FlagDeleteList"
+          },
+          "set": {
+            "$ref": "#/components/schemas/FlagSetList"
+          }
+        }
+      },
+      "LabelAddList": {
         "type": "array",
         "example": [
           "Label1",
@@ -8819,7 +9081,7 @@
           "type": "string"
         }
       },
-      "Model28": {
+      "LabelDeleteList": {
         "type": "array",
         "example": [
           "Label3"
@@ -8828,7 +9090,7 @@
           "type": "string"
         }
       },
-      "Model29": {
+      "LabelSetList": {
         "type": "array",
         "example": [
           "Label1"
@@ -8837,28 +9099,28 @@
           "type": "string"
         }
       },
-      "Model30": {
+      "LabelUpdateResponse": {
         "type": "object",
         "properties": {
           "add": {
-            "$ref": "#/components/schemas/Model27"
+            "$ref": "#/components/schemas/LabelAddList"
           },
           "delete": {
-            "$ref": "#/components/schemas/Model28"
+            "$ref": "#/components/schemas/LabelDeleteList"
           },
           "set": {
-            "$ref": "#/components/schemas/Model29"
+            "$ref": "#/components/schemas/LabelSetList"
           }
         }
       },
-      "Model31": {
+      "MessageUpdateResponse": {
         "type": "object",
         "properties": {
           "flags": {
-            "$ref": "#/components/schemas/FlagResponse"
+            "$ref": "#/components/schemas/FlagUpdateResponse"
           },
           "labels": {
-            "$ref": "#/components/schemas/Model30"
+            "$ref": "#/components/schemas/LabelUpdateResponse"
           }
         }
       },
@@ -10325,6 +10587,22 @@
               "type": "boolean",
               "default": false
             }
+          },
+          {
+            "name": "exportMaxMessages",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "exportMaxSize",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "tags": [
@@ -10701,7 +10979,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DeleteRequestResponse"
+                  "$ref": "#/components/schemas/DeleteAccountResponse"
                 }
               }
             }
@@ -10758,7 +11036,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Model20"
+                  "$ref": "#/components/schemas/UpdateAccountResponse"
                 }
               }
             }
@@ -11042,7 +11320,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Model15"
+                  "$ref": "#/components/schemas/DeleteGatewayResponse"
                 }
               }
             }
@@ -11549,7 +11827,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MessageUpdateResponse"
+                  "$ref": "#/components/schemas/BulkMessageUpdateResponse"
                 }
               }
             }
@@ -11735,7 +12013,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Model3"
+                  "$ref": "#/components/schemas/AccountSignaturesResponse"
                 }
               }
             }
@@ -11996,7 +12274,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Model16"
+                  "$ref": "#/components/schemas/DeleteTemplateResponse"
                 }
               }
             }
@@ -12480,7 +12758,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Model31"
+                  "$ref": "#/components/schemas/MessageUpdateResponse"
                 }
               }
             }
@@ -13091,11 +13369,11 @@
         }
       }
     },
-    "/v1/account/{account}/message": {
+    "/v1/account/{account}/export": {
       "post": {
-        "summary": "Upload message",
-        "operationId": "postV1AccountAccountMessage",
-        "description": "Upload a message structure, compile it into an EML file and store it into selected mailbox.",
+        "summary": "Create export",
+        "operationId": "postV1AccountAccountExport",
+        "description": "Creates a new bulk message export job. The export runs asynchronously and notifies via webhook when complete.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -13122,6 +13400,124 @@
             },
             "description": "Unique identifier for the email account",
             "required": true
+          }
+        ],
+        "tags": [
+          "Export (Beta)"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateExportResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/account/{account}/search": {
+      "post": {
+        "summary": "Search for messages",
+        "operationId": "postV1AccountAccountSearch",
+        "description": "Filter messages from a mailbox folder by search options. Search is performed against a specific folder and not for the entire account.",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts.",
+              "example": "INBOX"
+            },
+            "description": "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Paging cursor from `nextPageCursor` or `prevPageCursor` value",
+              "example": "imap_kcQIji3UobDDTxc",
+              "maxLength": 1048576,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Paging cursor from `nextPageCursor` or `prevPageCursor` value"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts. Deprecated; use the paging cursor instead. If the page cursor value is provided, then the page number value is ignored.",
+              "example": 0,
+              "default": 0,
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "description": "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts. Deprecated; use the paging cursor instead. If the page cursor value is provided, then the page number value is ignored."
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "How many entries per page",
+              "example": 20,
+              "default": 20,
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "description": "How many entries per page"
+          },
+          {
+            "name": "useOutlookSearch",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "MS Graph only. If enabled, uses the $search parameter for MS Graph search queries instead of $filter. This allows searching the \"to\", \"cc\", \"bcc\", \"larger\", \"smaller\", \"body\", \"before\", \"sentBefore\", \"since\", and the \"sentSince\" fields. Note that $search returns up to 1,000 results, does not indicate the total number of matching results or pages, and returns results sorted by relevance rather than date."
+            },
+            "description": "MS Graph only. If enabled, uses the $search parameter for MS Graph search queries instead of $filter. This allows searching the \"to\", \"cc\", \"bcc\", \"larger\", \"smaller\", \"body\", \"before\", \"sentBefore\", \"since\", and the \"sentSince\" fields. Note that $search returns up to 1,000 results, does not indicate the total number of matching results or pages, and returns results sorted by relevance rather than date."
           }
         ],
         "tags": [
@@ -13131,7 +13527,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MessageUpload"
+                "$ref": "#/components/schemas/MessageSearchPayload"
               }
             }
           }
@@ -13142,100 +13538,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MessageUploadResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/account/{account}/submit": {
-      "post": {
-        "summary": "Submit message for delivery",
-        "operationId": "postV1AccountAccountSubmit",
-        "description": "Submit message for delivery. If reference message ID is provided then EmailEngine adds all headers and flags required for a reply/forward automatically.",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "idempotency-key",
-            "in": "header",
-            "schema": {
-              "type": "string",
-              "description": "Unique key to prevent duplicate processing of the same request",
-              "minLength": 0,
-              "maxLength": 1024,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique key to prevent duplicate processing of the same request"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          },
-          {
-            "name": "documentStore",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "description": "If enabled then fetch email used as a reference template from the Document Store",
-              "default": false
-            },
-            "description": "If enabled then fetch email used as a reference template from the Document Store"
-          },
-          {
-            "name": "useStructuredFormat",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "description": "For MS Graph accounts: If true, uses structured JSON format (respects from field for shared mailboxes, breaks calendar invites and special MIME types). If false, sends as raw MIME (preserves calendar invites, ignores from field). Default is false (raw MIME).",
-              "default": false
-            },
-            "description": "For MS Graph accounts: If true, uses structured JSON format (respects from field for shared mailboxes, breaks calendar invites and special MIME types). If false, sends as raw MIME (preserves calendar invites, ignores from field). Default is false (raw MIME)."
-          }
-        ],
-        "tags": [
-          "Submit"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubmitMessage"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubmitMessageResponse"
+                  "$ref": "#/components/schemas/MessageList"
                 }
               }
             }
@@ -13418,11 +13721,104 @@
         }
       }
     },
-    "/v1/account/{account}/search": {
+    "/v1/account/{account}/submit": {
       "post": {
-        "summary": "Search for messages",
-        "operationId": "postV1AccountAccountSearch",
-        "description": "Filter messages from a mailbox folder by search options. Search is performed against a specific folder and not for the entire account.",
+        "summary": "Submit message for delivery",
+        "operationId": "postV1AccountAccountSubmit",
+        "description": "Submit message for delivery. If reference message ID is provided then EmailEngine adds all headers and flags required for a reply/forward automatically.",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "description": "Unique key to prevent duplicate processing of the same request",
+              "minLength": 0,
+              "maxLength": 1024,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique key to prevent duplicate processing of the same request"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          },
+          {
+            "name": "documentStore",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "If enabled then fetch email used as a reference template from the Document Store",
+              "default": false
+            },
+            "description": "If enabled then fetch email used as a reference template from the Document Store"
+          },
+          {
+            "name": "useStructuredFormat",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "For MS Graph accounts: If true, uses structured JSON format (respects from field for shared mailboxes, breaks calendar invites and special MIME types). If false, sends as raw MIME (preserves calendar invites, ignores from field). Default is false (raw MIME).",
+              "default": false
+            },
+            "description": "For MS Graph accounts: If true, uses structured JSON format (respects from field for shared mailboxes, breaks calendar invites and special MIME types). If false, sends as raw MIME (preserves calendar invites, ignores from field). Default is false (raw MIME)."
+          }
+        ],
+        "tags": [
+          "Submit"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitMessage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitMessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/account/{account}/message": {
+      "post": {
+        "summary": "Upload message",
+        "operationId": "postV1AccountAccountMessage",
+        "description": "Upload a message structure, compile it into an EML file and store it into selected mailbox.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -13449,65 +13845,6 @@
             },
             "description": "Unique identifier for the email account",
             "required": true
-          },
-          {
-            "name": "path",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "description": "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts.",
-              "example": "INBOX"
-            },
-            "description": "Mailbox folder path. Can use special use labels like \"\\Sent\". Special value \"\\All\" is available for Gmail IMAP, Gmail API, MS Graph API accounts."
-          },
-          {
-            "name": "cursor",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "description": "Paging cursor from `nextPageCursor` or `prevPageCursor` value",
-              "example": "imap_kcQIji3UobDDTxc",
-              "maxLength": 1048576,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Paging cursor from `nextPageCursor` or `prevPageCursor` value"
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "description": "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts. Deprecated; use the paging cursor instead. If the page cursor value is provided, then the page number value is ignored.",
-              "example": 0,
-              "default": 0,
-              "minimum": 0,
-              "maximum": 1048576
-            },
-            "description": "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts. Deprecated; use the paging cursor instead. If the page cursor value is provided, then the page number value is ignored."
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "description": "How many entries per page",
-              "example": 20,
-              "default": 20,
-              "minimum": 1,
-              "maximum": 1000
-            },
-            "description": "How many entries per page"
-          },
-          {
-            "name": "useOutlookSearch",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "description": "MS Graph only. If enabled, uses the $search parameter for MS Graph search queries instead of $filter. This allows searching the \"to\", \"cc\", \"bcc\", \"larger\", \"smaller\", \"body\", \"before\", \"sentBefore\", \"since\", and the \"sentSince\" fields. Note that $search returns up to 1,000 results, does not indicate the total number of matching results or pages, and returns results sorted by relevance rather than date."
-            },
-            "description": "MS Graph only. If enabled, uses the $search parameter for MS Graph search queries instead of $filter. This allows searching the \"to\", \"cc\", \"bcc\", \"larger\", \"smaller\", \"body\", \"before\", \"sentBefore\", \"since\", and the \"sentSince\" fields. Note that $search returns up to 1,000 results, does not indicate the total number of matching results or pages, and returns results sorted by relevance rather than date."
           }
         ],
         "tags": [
@@ -13517,7 +13854,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Model14"
+                "$ref": "#/components/schemas/MessageUpload"
               }
             }
           }
@@ -13528,66 +13865,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MessageList"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/account/{account}/export": {
-      "post": {
-        "summary": "Create export",
-        "operationId": "postV1AccountAccountExport",
-        "description": "Creates a new bulk message export job. The export runs asynchronously and notifies via webhook when complete.",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          }
-        ],
-        "tags": [
-          "Export (Beta)"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExportRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateExportResponse"
+                  "$ref": "#/components/schemas/MessageUploadResponse"
                 }
               }
             }
@@ -13647,68 +13925,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DeliveryStartResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/account/{account}/export/{exportId}/resume": {
-      "post": {
-        "summary": "Resume failed export",
-        "operationId": "postV1AccountAccountExportExportidResume",
-        "description": "Resumes a failed export from its last checkpoint. Only works for exports that are marked as resumable.",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          },
-          {
-            "name": "exportId",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Export job identifier",
-              "example": "exp_abc123def456abc123def456",
-              "pattern": "^exp_[a-f0-9]{24}$"
-            },
-            "description": "Export job identifier",
-            "required": true
-          }
-        ],
-        "tags": [
-          "Export (Beta)"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResumeExportResponse"
                 }
               }
             }
@@ -13823,7 +14039,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DeleteTemplateRequestResponse"
+                  "$ref": "#/components/schemas/FlushTemplatesResponse"
                 }
               }
             }

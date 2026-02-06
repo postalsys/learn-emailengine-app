@@ -98,6 +98,16 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | `POST` | `/v1/account/{account}/messages/move` | Move multiple messages |
 | `POST` | `/v1/account/{account}/messages/delete` | Delete multiple messages |
 
+### Export Operations (Beta)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/v1/account/{account}/export` | Create new bulk message export |
+| `GET` | `/v1/account/{account}/exports` | List account exports (paginated) |
+| `GET` | `/v1/account/{account}/export/{exportId}` | Get export status and details |
+| `GET` | `/v1/account/{account}/export/{exportId}/download` | Download completed export file |
+| `DELETE` | `/v1/account/{account}/export/{exportId}` | Cancel or delete export |
+
 ### Mailbox Operations
 
 | Method | Endpoint | Description |
@@ -199,7 +209,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | `POST` | `/v1/delivery-test/account/{account}` | Start delivery test |
 | `GET` | `/v1/delivery-test/check/{deliveryTest}` | Check test results |
 
-## Webhook Events (22 Total)
+## Webhook Events (24 Total)
 
 ### Message Events
 
@@ -247,6 +257,13 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | `trackClick` | Link clicked | `data.messageId`, `data.url` |
 | `listUnsubscribe` | User unsubscribed | `data.recipient` |
 | `listSubscribe` | User re-subscribed | `data.recipient` |
+
+### Export Events
+
+| Event | Description | Key Payload Fields |
+|-------|-------------|-------------------|
+| `exportCompleted` | Export finished successfully | `data.exportId`, `data.messagesExported`, `data.bytesWritten` |
+| `exportFailed` | Export failed | `data.exportId`, `data.error` |
 
 ## Common Patterns
 

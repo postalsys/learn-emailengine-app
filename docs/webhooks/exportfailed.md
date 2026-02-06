@@ -172,7 +172,7 @@ Failures during `indexing` typically cannot be resumed because the message list 
 
 ### resumable
 
-Determines whether the export can be continued using the [Resume Export API](/docs/api/post-v-1-account-account-export-exportid-resume):
+Determines whether the export can be continued using the [Create Export API](/docs/api/post-v-1-account-account-export):
 
 **Resumable (`true`) when:**
 - Export made progress (`messagesExported > 0`)
@@ -345,4 +345,4 @@ After receiving `exportFailed`:
 
 - [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Exporting Messages](/docs/receiving/exporting) - Export feature documentation
-- [Resume Export API](/docs/api/post-v-1-account-account-export-exportid-resume) - Resume failed exports
+- [Create Export API](/docs/api/post-v-1-account-account-export) - Create or resume exports

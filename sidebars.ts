@@ -360,7 +360,6 @@ const sidebars: SidebarsConfig = {
         'api/get-v-1-account-account-exports',
         'api/get-v-1-account-account-export-exportid',
         'api/get-v-1-account-account-export-exportid-download',
-        'api/post-v-1-account-account-export-exportid-resume',
         'api/delete-v-1-account-account-export-exportid'
       ],
     },
