@@ -612,6 +612,9 @@ flowchart TD
 | `trackClicks` | boolean | Enable click tracking |
 | `imapIndexer` | string | Indexing strategy: `full` or `fast` |
 | `scriptEnv` | string | JSON environment variables for pre-processing scripts |
+| `httpProxyEnabled` | boolean | Route outbound HTTP/HTTPS requests through proxy |
+| `httpProxyUrl` | string | HTTP/SOCKS proxy URL for outbound requests |
+| `pageBrandName` | string | Custom brand name displayed in page titles |
 
 ## Per-Account IMAP Settings
 
@@ -640,6 +643,9 @@ flowchart TD
 | `EENGINE_WORKERS_EXPORT` | No | Export worker count (default: 1) |
 | `EENGINE_LOG_LEVEL` | No | Log level (trace/debug/info/warn/error) |
 | `EENGINE_FEATURE_*` | No | Enable feature flags (set to `true`) |
+| `EENGINE_CORS_MAX_AGE` | No | CORS preflight cache duration in seconds (default: 60) |
+| `EENGINE_HTTP_PROXY_ENABLED` | No | Enable HTTP proxy for outbound requests |
+| `EENGINE_HTTP_PROXY_URL` | No | HTTP/SOCKS proxy URL for outbound requests |
 
 ## Submit API Key Parameters
 

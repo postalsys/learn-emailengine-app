@@ -445,6 +445,7 @@ Included when **Configuration → Webhooks → Attachments** is enabled (`notify
   - `encodedSize` (number) - Size in bytes (transfer encoded)
   - `embedded` (boolean, optional) - Is embedded image
   - `inline` (boolean, optional) - Is inline attachment
+  - `encodedInMessage` (boolean, optional) - Whether the attachment belongs to an enclosed message/rfc822 part rather than the top-level message
   - `contentId` (string, optional) - Content-ID header value
 
 **Gmail-Specific Fields:**

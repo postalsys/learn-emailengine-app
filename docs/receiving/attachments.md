@@ -56,6 +56,7 @@ Each attachment includes:
   "encodedSize": 45000,
   "embedded": false,
   "inline": false,
+  "encodedInMessage": false,
   "contentId": "<unique-image-id@localhost>"
 }
 ```
@@ -66,6 +67,7 @@ Each attachment includes:
 **encodedSize** - Size in email (base64 encoded, actual file size will be smaller)
 **embedded** - True if the attachment is embedded in HTML content
 **inline** - True if the attachment should be displayed inline rather than as a download
+**encodedInMessage** - True if the attachment is part of an enclosed message/rfc822 attachment rather than the top-level message itself
 **contentId** - Content-ID header value for embedding images in HTML
 **method** - Calendar method (REQUEST, REPLY, CANCEL, etc.) for iCalendar attachments
 
