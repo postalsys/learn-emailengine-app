@@ -44,14 +44,14 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-serversignatures",
-          label: "List Account Signatures",
+          id: "api/get-v-1-account-account-oauthtoken",
+          label: "Get OAuth2 access token",
           className: "api-method get",
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-oauthtoken",
-          label: "Get OAuth2 access token",
+          id: "api/get-v-1-account-account-serversignatures",
+          label: "List Account Signatures",
           className: "api-method get",
         },
         {
@@ -138,8 +138,8 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-text-text",
-          label: "Retrieve message text",
+          id: "api/get-v-1-account-account-attachment-attachment",
+          label: "Download attachment",
           className: "api-method get",
         },
         {
@@ -162,8 +162,8 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-attachment-attachment",
-          label: "Download attachment",
+          id: "api/get-v-1-account-account-text-text",
+          label: "Retrieve message text",
           className: "api-method get",
         },
         {
@@ -475,6 +475,12 @@ const sidebar: SidebarsConfig = {
           id: "api/put-v-1-oauth-2-app",
           label: "Update OAuth2 application",
           className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-pubsub-status",
+          label: "List Pub/Sub status",
+          className: "api-method get",
         },
       ],
     },
