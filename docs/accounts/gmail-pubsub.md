@@ -44,6 +44,37 @@ When creating a Gmail OAuth2 application, link it to a service account:
 | `pubSubApp` | ID of the service account application to use for Pub/Sub management |
 | `baseScopes` | Set to `api` for Gmail REST API access |
 
+### Subscription Expiration (TTL)
+
+You can configure how long a Pub/Sub subscription persists without activity before Google automatically deletes it.
+
+| Setting | Description |
+|---------|-------------|
+| `gmailSubscriptionTtl` | Subscription TTL in days. Empty for Google's default (31 days), `0` for indefinite (never expires), `1`-`365` for a custom TTL |
+
+Configure via the API:
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "gmailSubscriptionTtl": 0
+  }'
+```
+
+Or through the admin UI at **Configuration > OAuth2 > Subscriptions**.
+
+:::warning When do expiration changes take effect?
+Changing this setting does **not** immediately update existing subscriptions. The new TTL is applied only when EmailEngine next calls Google's Pub/Sub API for that subscription, which happens when:
+
+- An OAuth2 application is **created** (new subscription gets the current TTL)
+- An OAuth2 application is **updated** (existing subscription is patched to match the current TTL)
+- A subscription is **re-created after expiring** (e.g., Google deleted it due to inactivity, and EmailEngine's recovery process creates a new one with the current TTL)
+
+If you need the change to apply immediately, edit and save each Pub/Sub-enabled OAuth2 application to trigger a subscription update.
+:::
+
 ### Generated Pub/Sub Resources
 
 EmailEngine automatically creates and manages these Pub/Sub resources:
@@ -122,6 +153,51 @@ Response includes Pub/Sub resource names:
   "pubSubIamPolicy": true
 }
 ```
+
+### Listing All Pub/Sub Applications
+
+To list all Pub/Sub-enabled OAuth2 applications and their subscription errors:
+
+```bash
+curl "https://emailengine.example.com/v1/pubsub/status" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```json
+{
+  "total": 2,
+  "page": 0,
+  "pages": 1,
+  "apps": [
+    {
+      "id": "AAABkQ3c5eQ",
+      "name": "Gmail Pub/Sub Manager",
+      "pubSubError": null
+    },
+    {
+      "id": "AAABkR7d2fR",
+      "name": "Another App",
+      "pubSubError": {
+        "message": "Failed to process subscription loop",
+        "description": "Subscription not found"
+      }
+    }
+  ]
+}
+```
+
+A `pubSubError` of `null` means the subscription is healthy. If present, it contains the latest error from the Pub/Sub subscription loop.
+
+:::info Subscription expiration is not shown in the status list
+The `/v1/pubsub/status` endpoint does not include subscription expiration dates. Expiration is managed by Google Cloud based on the TTL configured in EmailEngine. To check the actual expiration policy on a subscription, use the Google Cloud Console or the `gcloud` CLI:
+
+```bash
+gcloud pubsub subscriptions describe emailengine-AAABkQ3c5eQ \
+  --project=your-project-id \
+  --format="value(expirationPolicy.ttl)"
+```
+:::
+
 
 ## Required Google Cloud Permissions
 
