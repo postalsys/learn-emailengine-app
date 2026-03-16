@@ -572,6 +572,34 @@ Use `EENGINE_SETTINGS` to configure webhooks at startup:
 EENGINE_SETTINGS='{"webhooks":"https://your-app.com/webhooks","webhooksEnabled":true,"webhookEvents":["*"]}'
 ```
 
+### Webhook Payload Settings
+
+Control what data is included in webhook payloads. These are runtime settings configured via `POST /v1/settings`.
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `notifyText` | boolean | `false` | Include plain text content in webhook payloads |
+| `notifyTextSize` | number | none | Max text size in webhook payloads (bytes) |
+| `notifyAttachments` | boolean | `false` | Include attachment data in webhook payloads |
+| `notifyAttachmentSize` | number | none | Max attachment size in webhook payloads (bytes) |
+| `notifyCalendarEvents` | boolean | `false` | Include calendar event data in webhook payloads |
+| `notifyWebSafeHtml` | boolean | `false` | Sanitize HTML content in webhook payloads |
+| `notifyHeaders` | string | none | Comma-separated list of email headers to include in webhook payloads |
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "notifyText": true,
+    "notifyTextSize": 50000,
+    "notifyAttachments": true,
+    "notifyAttachmentSize": 1048576,
+    "notifyCalendarEvents": true,
+    "notifyHeaders": "list-unsubscribe,x-mailer"
+  }'
+```
+
 ## Monitoring
 
 ### Metrics Endpoint
@@ -724,6 +752,31 @@ Disable the message browser in the admin interface.
 EENGINE_DISABLE_MESSAGE_BROWSER=true
 ```
 
+## Locale and Branding
+
+Runtime settings configured via `POST /v1/settings` that customize the admin UI and hosted pages.
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `locale` | string | auto | UI language/locale |
+| `timezone` | string | auto | Default timezone for date/time display (IANA identifier, e.g. `Europe/Tallinn`) |
+| `pageBrandName` | string | none | Custom brand name displayed in page titles |
+| `templateHeader` | string | none | Custom HTML injected at the top of hosted pages (max 1 MB) |
+| `templateHtmlHead` | string | none | Custom HTML injected into the `<head>` section of hosted pages (max 1 MB) |
+
+`templateHeader` and `templateHtmlHead` are useful for adding custom branding, analytics scripts, or CSS to the hosted authentication forms and other hosted pages.
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "locale": "en",
+    "timezone": "America/New_York",
+    "pageBrandName": "My Company"
+  }'
+```
+
 ## IMAP Settings
 
 ### Disable IMAP Compression
@@ -758,6 +811,30 @@ Time before disabling IMAP connections after repeated auth failures.
 ```bash
 EENGINE_MAX_IMAP_AUTH_FAILURE_TIME=1d
 ```
+
+### IMAP ID Extension
+
+Runtime settings configured via `POST /v1/settings`. These customize the IMAP ID extension response ([RFC 2971](https://tools.ietf.org/html/rfc2971)) sent to mail servers, which can affect server-side behavior.
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `imapClientName` | string | none | Client name reported to IMAP servers |
+| `imapClientVersion` | string | none | Client version reported to IMAP servers |
+| `imapClientVendor` | string | none | Vendor name reported to IMAP servers |
+| `imapClientSupportUrl` | string | none | Support URL reported to IMAP servers |
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/settings" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "imapClientName": "EmailEngine",
+    "imapClientVersion": "2.63.4",
+    "imapClientVendor": "Postal Systems"
+  }'
+```
+
+Some mail servers adjust rate limits, feature availability, or logging based on the IMAP ID values provided by the client.
 
 ## Queue Settings
 

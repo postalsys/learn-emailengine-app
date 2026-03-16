@@ -1,6 +1,6 @@
 ---
 title: Generic IMAP/SMTP Accounts
-sidebar_position: 5
+sidebar_position: 3
 description: Setting up email accounts using standard IMAP and SMTP protocols
 ---
 

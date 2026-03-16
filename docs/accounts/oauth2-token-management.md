@@ -1,6 +1,6 @@
 ---
 title: OAuth2 Token Management
-sidebar_position: 7
+sidebar_position: 12
 description: Using EmailEngine to manage OAuth2 tokens and access provider APIs
 ---
 

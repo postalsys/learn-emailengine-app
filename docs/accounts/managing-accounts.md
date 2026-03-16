@@ -1,6 +1,6 @@
 ---
 title: Managing Accounts
-sidebar_position: 11
+sidebar_position: 2
 description: Complete guide to account lifecycle management via API and dashboard
 ---
 

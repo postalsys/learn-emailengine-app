@@ -1,6 +1,6 @@
 ---
 title: Setting Up Gmail with OAuth2 (IMAP/SMTP)
-sidebar_position: 2
+sidebar_position: 4
 description: Complete guide to setting up Gmail accounts with OAuth2 authentication for IMAP and SMTP access
 ---
 

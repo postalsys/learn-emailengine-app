@@ -178,6 +178,7 @@ These domains are only needed if you use specific features:
 | `api.github.com` | 443 | Checks for new EmailEngine releases. Used by the update notification feature in the admin dashboard. |
 | `api.nodemailer.com` | 443 | SMTP delivery testing service. Used by the "Test Delivery" feature to verify SMTP configuration. |
 | `acme-v02.api.letsencrypt.org` | 443 | Let's Encrypt ACME protocol. Required only if using EmailEngine's built-in TLS certificate provisioning. |
+| `*.okta.com` | 443 | Okta SSO authentication. Required only if using Okta single sign-on for the admin interface. |
 
 #### User-Configured Endpoints
 
@@ -452,6 +453,28 @@ emailengine.example.com {
 :::tip Defense in Depth
 For production deployments, combine `EENGINE_ADMIN_ACCESS_ADDRESSES` with reverse proxy IP restrictions. This provides multiple layers of protection in case one layer is misconfigured.
 :::
+
+### Single Sign-On (Okta)
+
+EmailEngine supports Okta-based SSO for the admin interface. When configured, administrators authenticate via Okta instead of the built-in password login.
+
+**Setup:**
+
+1. Create a web application in the [Okta developer console](https://developer.okta.com/)
+2. Set the sign-in redirect URI to `{serviceUrl}/admin/login/okta`
+3. Configure the environment variables:
+
+```bash
+OKTA_OAUTH2_ISSUER=https://your-org.okta.com/oauth2/default
+OKTA_OAUTH2_CLIENT_ID=your-client-id
+OKTA_OAUTH2_CLIENT_SECRET=your-client-secret
+```
+
+4. Restart EmailEngine
+
+All three environment variables must be set to enable Okta SSO. When enabled, a "Sign in with Okta" button appears on the admin login page.
+
+For full details on the environment variables, see [SSO Configuration](/docs/configuration/environment-variables#single-sign-on-sso).
 
 ## Encryption
 

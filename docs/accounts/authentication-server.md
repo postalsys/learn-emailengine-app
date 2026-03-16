@@ -1,6 +1,6 @@
 ---
 title: Using an Authentication Server
-sidebar_position: 9
+sidebar_position: 14
 description: Delegate OAuth2 flows to an external authentication server for centralized token management
 ---
 

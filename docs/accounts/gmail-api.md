@@ -1,6 +1,6 @@
 ---
 title: Setting Up Gmail API
-sidebar_position: 3
+sidebar_position: 5
 description: Configure EmailEngine to use Gmail REST API as the email backend with Cloud Pub/Sub webhooks
 ---
 

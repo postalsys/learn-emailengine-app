@@ -542,7 +542,7 @@ The EmailEngine application source code is located at `/Users/andris/Projects/em
 ```
 /Users/andris/Projects/emailengine/
 ├── server.js                 # Main server entry point (110KB - core application)
-├── package.json              # Application metadata (v2.63.2)
+├── package.json              # Application metadata (v2.63.4)
 ├── lib/                      # Core library modules
 │   ├── account.js           # Account management logic (106KB)
 │   ├── schemas.js           # API validation schemas (78KB)
@@ -648,7 +648,7 @@ When documenting EmailEngine features:
 
 ### Important Notes
 
-- The source code is actively developed - check version in `package.json` (currently v2.63.2)
+- The source code is actively developed - check version in `package.json` (currently v2.63.4)
 - OpenAPI spec is generated from this codebase - available at https://emailengine.dev/swagger.json
 - Web UI templates in `views/` use Handlebars templating
 - Background workers use Bull queues (BullMQ) for job processing
@@ -939,5 +939,5 @@ This documentation was created by:
 
 **Last Updated:** December 28, 2025
 **Docusaurus Version:** 3.9.1
-**EmailEngine API Version:** 2.63.2
+**EmailEngine API Version:** 2.63.4
 **Status:** Production Ready

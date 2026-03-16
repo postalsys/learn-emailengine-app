@@ -1,6 +1,6 @@
 ---
 title: Setting Up Mail.ru with OAuth2
-sidebar_position: 5
+sidebar_position: 9
 description: Complete guide to setting up Mail.ru accounts with OAuth2 authentication for IMAP and SMTP access
 ---
 

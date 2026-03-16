@@ -1,6 +1,6 @@
 ---
 title: AI Agent Reference
-sidebar_position: 100
+sidebar_position: 6
 description: Quick reference for AI coding assistants building EmailEngine integrations
 ---
 
@@ -201,6 +201,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | `GET` | `/v1/logs/{account}` | Get account logs |
 | `GET` | `/v1/changes` | Get recent changes |
 | `GET` | `/v1/license` | Get license info |
+| `GET` | `/v1/pubsub/status` | List Pub/Sub subscription status |
 
 ### Deliverability Testing
 
@@ -615,6 +616,20 @@ flowchart TD
 | `httpProxyEnabled` | boolean | Route outbound HTTP/HTTPS requests through proxy |
 | `httpProxyUrl` | string | HTTP/SOCKS proxy URL for outbound requests |
 | `pageBrandName` | string | Custom brand name displayed in page titles |
+| `notifyText` | boolean | Include plain text content in webhook payloads |
+| `notifyTextSize` | number | Max text size in webhook payloads (bytes) |
+| `notifyAttachments` | boolean | Include attachments in webhook payloads |
+| `notifyAttachmentSize` | number | Max attachment size in webhook payloads (bytes) |
+| `notifyCalendarEvents` | boolean | Include calendar events in webhook payloads |
+| `notifyWebSafeHtml` | boolean | Sanitize HTML in webhook payloads |
+| `locale` | string | UI language/locale |
+| `timezone` | string | Default timezone (IANA identifier) |
+| `templateHeader` | string | Custom HTML header for hosted pages |
+| `templateHtmlHead` | string | Custom HTML for page head section |
+| `imapClientName` | string | IMAP ID extension client name |
+| `imapClientVersion` | string | IMAP ID extension version |
+| `imapClientVendor` | string | IMAP ID extension vendor |
+| `imapClientSupportUrl` | string | IMAP ID extension support URL |
 
 ## Per-Account IMAP Settings
 

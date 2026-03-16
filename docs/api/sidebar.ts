@@ -174,14 +174,14 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/post-v-1-account-account-search",
-          label: "Search for messages",
+          id: "api/post-v-1-account-account-message",
+          label: "Upload message",
           className: "api-method post",
         },
         {
           type: "doc",
-          id: "api/post-v-1-account-account-message",
-          label: "Upload message",
+          id: "api/post-v-1-account-account-search",
+          label: "Search for messages",
           className: "api-method post",
         },
         {

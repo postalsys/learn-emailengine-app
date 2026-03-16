@@ -376,6 +376,30 @@ EENGINE_ADMIN_ACCESS_ADDRESSES="192.168.1.0/24,10.0.0.1"
 EENGINE_REQUIRE_API_AUTH=false
 ```
 
+## Single Sign-On (SSO)
+
+Enable Okta-based single sign-on for the EmailEngine admin interface. All three variables must be set to activate Okta SSO.
+
+| Variable | Type | Default | Description | Example |
+|----------|------|---------|-------------|---------|
+| `OKTA_OAUTH2_ISSUER` | string | none | Okta OAuth2 issuer URL | `https://your-org.okta.com/oauth2/default` |
+| `OKTA_OAUTH2_CLIENT_ID` | string | none | Okta application client ID | `0oa1bcdef2ghijk3lmn4` |
+| `OKTA_OAUTH2_CLIENT_SECRET` | string | none | Okta application client secret | `your-client-secret` |
+
+When configured, a "Sign in with Okta" button appears on the admin login page (`/admin/login`).
+
+**Setup:**
+```bash
+OKTA_OAUTH2_ISSUER=https://your-org.okta.com/oauth2/default
+OKTA_OAUTH2_CLIENT_ID=your-client-id
+OKTA_OAUTH2_CLIENT_SECRET=your-client-secret
+```
+
+**Okta application configuration:**
+- Application type: Web
+- Sign-in redirect URI: `{serviceUrl}/admin/login/okta` (where `serviceUrl` is the public URL configured in EmailEngine settings)
+- Requires restart after configuration changes
+
 ## Advanced Settings
 
 Advanced configuration options for debugging and performance tuning.

@@ -167,6 +167,30 @@ const config: Config = {
             from: '/docs/sending/smtp-gateway',
             to: '/docs/sending/smtp-interface',
           },
+          {
+            from: '/docs/integrations/gmail-over-imap',
+            to: '/docs/accounts/gmail-imap',
+          },
+          {
+            from: '/docs/integrations/gmail-api',
+            to: '/docs/accounts/gmail-api',
+          },
+          {
+            from: '/docs/integrations/outlook-and-ms-365',
+            to: '/docs/accounts/outlook-365',
+          },
+          {
+            from: '/docs/integrations/google-service-accounts',
+            to: '/docs/accounts/google-service-accounts',
+          },
+          {
+            from: '/docs/integrations/shared-mailboxes-in-ms-365',
+            to: '/docs/accounts/shared-mailboxes',
+          },
+          {
+            from: '/docs/llm-context',
+            to: '/docs/reference/llm-context',
+          },
         ],
       },
     ],
@@ -195,10 +219,19 @@ const config: Config = {
       },
       items: [
         {
-          type: 'docSidebar',
-          sidebarId: 'docsSidebar',
-          position: 'left',
+          type: 'dropdown',
           label: 'Documentation',
+          position: 'left',
+          items: [
+            {type: 'doc', docId: 'getting-started/introduction', label: 'Getting Started'},
+            {type: 'doc', docId: 'accounts/index', label: 'Email Accounts'},
+            {type: 'doc', docId: 'sending/index', label: 'Sending Emails'},
+            {type: 'doc', docId: 'receiving/index', label: 'Receiving Emails'},
+            {type: 'doc', docId: 'webhooks/overview', label: 'Webhooks'},
+            {type: 'doc', docId: 'configuration/index', label: 'Configuration'},
+            {type: 'doc', docId: 'deployment/index', label: 'Deployment'},
+            {type: 'doc', docId: 'reference/configuration-options', label: 'Reference'},
+          ],
         },
         {
           type: 'docSidebar',
