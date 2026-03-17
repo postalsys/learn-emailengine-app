@@ -1,6 +1,6 @@
 ---
 title: Gmail Pub/Sub Integration
-sidebar_position: 6
+sidebar_position: 7
 description: Configure Google Cloud Pub/Sub for Gmail push notifications in EmailEngine
 ---
 

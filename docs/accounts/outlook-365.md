@@ -1,6 +1,6 @@
 ---
 title: Setting Up Outlook and Microsoft 365
-sidebar_position: 7
+sidebar_position: 8
 description: Complete guide to setting up Outlook.com and Microsoft 365 accounts with OAuth2 authentication
 ---
 

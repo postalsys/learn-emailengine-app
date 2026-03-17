@@ -37,17 +37,9 @@ This guide covers using **Gmail REST API directly** as the email backend. EmailE
 - You're migrating existing IMAP-based integrations
 
 :::info OAuth2 Scope Requirements
-**IMAP/SMTP** requires the full `https://mail.google.com/` scope. **Gmail API** can use more granular scopes:
+**IMAP/SMTP** requires the full `https://mail.google.com/` scope. **Gmail API** can use more granular scopes such as `gmail.modify` (default), `gmail.readonly`, `gmail.send`, and `gmail.labels`.
 
-| Scope | Access Level | Use Case |
-|-------|--------------|----------|
-| `gmail.readonly` | Read-only | Applications that only need to read emails |
-| `gmail.modify` | Read, send, modify | Full email access except permanent deletion |
-| `gmail.send` | Send only | Applications that only send emails |
-
-**Google's Principle of Least Privilege:** For public production apps, Google requires you to request only the minimum scopes needed for your use case. If your application only reads emails, you will not be granted `gmail.modify`. If you only send emails, you will not be granted read access.
-
-EmailEngine can be configured to work with these limited scopes - select the appropriate **Base Scopes** setting when creating your Gmail OAuth2 application in EmailEngine.
+Google requires public apps to request only the minimum scopes needed. EmailEngine supports all Gmail scope combinations - see the [Gmail API Scopes Reference](./gmail-api-scopes) for detailed configuration options, setup instructions, and Google verification requirements.
 :::
 
 ## Overview of Setup Steps
@@ -351,24 +343,9 @@ You must select the service account application you created in Step 6. This tell
 
 ### Configuring Limited Scopes
 
-If Google requires you to use limited scopes during verification, you can configure EmailEngine to request only the scopes you need.
+If Google requires you to use limited scopes during verification, you can configure EmailEngine to request only the scopes you need. The Web UI provides preset buttons (**Normal**, **Read-Only**, **Read-Only + Send**, **Send-Only**) that auto-populate the scope fields.
 
-**Default scope:** By default, Gmail API mode requests `gmail.modify` which provides read, send, and modify access (but not permanent deletion).
-
-**Using more limited scopes:** To use scopes other than `gmail.modify`, you need to:
-1. Add the required scopes to **Additional scopes**
-2. Add `gmail.modify` to **Disabled scopes** (to skip the default scope)
-
-| Your Use Case | Additional Scopes | Disabled Scopes | Resulting Access |
-|---------------|-------------------|-----------------|------------------|
-| Read and send (default) | (none) | (none) | Full `gmail.modify` access |
-| Read only | `gmail.readonly`, `gmail.labels` | `gmail.modify` | Read-only access with folder listing |
-| Send only | `gmail.send` | `gmail.modify` | Send-only access |
-| Read and send (granular) | `gmail.readonly`, `gmail.send`, `gmail.labels` | `gmail.modify` | Read and send with separate scopes |
-
-:::info Why gmail.labels?
-When using `gmail.readonly` instead of `gmail.modify`, you should also add `gmail.labels` to see the folder/label structure. Without it, EmailEngine cannot list mailboxes properly.
-:::
+See the [Gmail API Scopes Reference](./gmail-api-scopes) for all supported scope combinations, what each enables in EmailEngine, and detailed setup instructions for both the Web UI and API.
 
 Click **Register app** to save.
 
@@ -418,62 +395,13 @@ Check the account status in EmailEngine:
 
 ## Using Custom Scopes
 
-If you have a public OAuth2 application and Google requires narrower scopes than `gmail.modify`, you can configure custom scopes.
+If you have a public OAuth2 application and Google requires narrower scopes than `gmail.modify`, you can configure custom scopes using the **Additional scopes** and **Disabled scopes** fields in the OAuth2 application configuration.
 
-### Configure Custom Scopes in EmailEngine
-
-In the Gmail OAuth2 application configuration in EmailEngine, scroll to the bottom to find the **Additional scopes** and **Disabled scopes** fields.
-
-**Example: Read-only access**
-
-If Google only grants `gmail.readonly` and `gmail.labels`:
-
-**Additional scopes:**
-```
-https://www.googleapis.com/auth/gmail.readonly
-https://www.googleapis.com/auth/gmail.labels
-```
-
-**Disabled scopes:**
-```
-https://www.googleapis.com/auth/gmail.modify
-```
-
-**Example: Read and send with granular scopes**
-
-If Google requires separate read and send scopes instead of `gmail.modify`:
-
-**Additional scopes:**
-```
-https://www.googleapis.com/auth/gmail.readonly
-https://www.googleapis.com/auth/gmail.send
-https://www.googleapis.com/auth/gmail.labels
-```
-
-**Disabled scopes:**
-```
-https://www.googleapis.com/auth/gmail.modify
-```
-
-**Example: Send-only access**
-
-If your application only sends emails:
-
-**Additional scopes:**
-```
-https://www.googleapis.com/auth/gmail.send
-```
-
-**Disabled scopes:**
-```
-https://www.googleapis.com/auth/gmail.modify
-```
+See the [Gmail API Scopes Reference](./gmail-api-scopes) for all supported scope combinations with setup instructions for both the Web UI and API, EmailEngine feature availability for each configuration, and Google verification requirements.
 
 :::warning Important
 You must add `gmail.modify` to **Disabled scopes** when using custom scopes. Otherwise, EmailEngine will request both `gmail.modify` AND your additional scopes, which defeats the purpose of using limited scopes.
 :::
-
-When users authenticate, the Google permissions screen will only show the scopes you configured.
 
 ## Production Considerations
 

@@ -1,6 +1,6 @@
 ---
 title: IMAP Indexers
-sidebar_position: 15
+sidebar_position: 17
 description: Understanding full and fast indexing strategies for IMAP accounts
 ---
 

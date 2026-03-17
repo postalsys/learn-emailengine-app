@@ -1,6 +1,6 @@
 ---
 title: OAuth2 Setup Guide
-sidebar_position: 11
+sidebar_position: 12
 description: Understanding OAuth2 authentication and setting up OAuth2 applications with EmailEngine
 ---
 
@@ -233,15 +233,17 @@ Scopes define what your application can access.
 
 **Narrower Scopes (if required by Google):**
 
-| Scope            | Access                 | Notes                                            |
-| ---------------- | ---------------------- | ------------------------------------------------ |
-| `gmail.readonly` | Read-only access       | Must be combined with `gmail.labels` (see below) |
-| `gmail.send`     | Send emails only       | Cannot read emails                               |
-| `gmail.labels`   | List and manage labels | Required with `gmail.readonly`                   |
+| Scope            | Access                       | Notes                                              |
+| ---------------- | ---------------------------- | -------------------------------------------------- |
+| `gmail.readonly` | Read-only access             | Must be combined with `gmail.labels` (see below)    |
+| `gmail.send`     | Send emails only             | Cannot read emails                                  |
+| `gmail.labels`   | List and manage labels       | Required with `gmail.readonly` for EmailEngine      |
 
 :::warning gmail.readonly requires gmail.labels
-The `gmail.readonly` scope alone cannot list labels (mailboxes). Since EmailEngine requires mailbox information to access emails, you must combine `gmail.readonly` with `gmail.labels` for read-only access to work.
+The `gmail.labels` scope is required for EmailEngine to list labels (mailboxes) properly. Always combine `gmail.readonly` with `gmail.labels` for read-only access to work.
 :::
+
+See the [Gmail API Scopes Reference](/docs/accounts/gmail-api-scopes) for detailed setup instructions and EmailEngine feature availability for each scope combination.
 
 ### Outlook Scopes
 
