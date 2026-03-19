@@ -1,6 +1,6 @@
 ---
 title: Proxying IMAP Connections
-sidebar_position: 18
+sidebar_position: 19
 description: Use EmailEngine's IMAP proxy to access OAuth2 accounts without native OAuth2 support in your IMAP client
 ---
 

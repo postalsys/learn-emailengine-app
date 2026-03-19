@@ -1,6 +1,6 @@
 ---
 title: Hosted Authentication
-sidebar_position: 15
+sidebar_position: 16
 description: Use EmailEngine's hosted authentication forms to let users connect their email accounts via OAuth2
 ---
 

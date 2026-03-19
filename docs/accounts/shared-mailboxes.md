@@ -1,6 +1,6 @@
 ---
 title: Shared Mailboxes (Microsoft 365)
-sidebar_position: 9
+sidebar_position: 10
 description: Configure and manage Microsoft 365 shared mailboxes with EmailEngine using direct or delegated access
 keywords:
   - Microsoft 365

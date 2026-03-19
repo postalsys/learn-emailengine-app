@@ -1,6 +1,6 @@
 ---
 title: Account Troubleshooting
-sidebar_position: 14
+sidebar_position: 15
 description: Comprehensive troubleshooting guide for common account issues in EmailEngine
 ---
 

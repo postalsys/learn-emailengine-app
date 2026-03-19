@@ -1,6 +1,6 @@
 ---
 title: OAuth2 Setup Guide
-sidebar_position: 12
+sidebar_position: 13
 description: Understanding OAuth2 authentication and setting up OAuth2 applications with EmailEngine
 ---
 

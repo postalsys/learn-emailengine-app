@@ -1,6 +1,6 @@
 ---
 title: Google Service Accounts
-sidebar_position: 11
+sidebar_position: 12
 description: Setting up Google Service Accounts with domain-wide delegation for Gmail access
 ---
 
