@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "EmailEngine",
   "description": "Self-hosted email API gateway providing REST API access to email accounts via IMAP, SMTP, Gmail API, and Microsoft Graph API",
-  "version": "2.63.4",
+  "version": "2.64.0",
   "documentationUrl": "https://learn.emailengine.app/",
   "openApiSpec": "https://emailengine.dev/swagger.json",
   "authentication": {
@@ -230,6 +230,7 @@
     {"type": "gmail", "description": "Gmail via OAuth2 (IMAP or API)", "protocols": ["imap", "smtp", "gmail-api"]},
     {"type": "gmailService", "description": "Google Workspace via service account", "protocols": ["gmail-api"]},
     {"type": "outlook", "description": "Microsoft 365/Outlook via OAuth2", "protocols": ["imap", "smtp", "ms-graph"]},
+    {"type": "outlookService", "description": "Microsoft 365 via application credentials (client credentials)", "protocols": ["ms-graph"]},
     {"type": "mailRu", "description": "Mail.ru via OAuth2", "protocols": ["imap", "smtp"]},
     {"type": "oauth2", "description": "Generic OAuth2 provider", "protocols": ["imap", "smtp"]}
   ],

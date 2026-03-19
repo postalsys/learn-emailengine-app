@@ -140,6 +140,30 @@ IMAP/SMTP requires the full `https://mail.google.com/` scope. Gmail API can use 
 
 [Microsoft Graph Setup →](/docs/accounts/outlook-365#choosing-imapsmtp-vs-ms-graph-api)
 
+### Microsoft 365 Application Access (Client Credentials)
+
+**Best for:** Enterprise deployments accessing mailboxes without interactive user login
+
+**Pros:**
+- No interactive user login required
+- Admin grants access once for the entire organization
+- Access any mailbox with the same app credentials
+- Ideal for automated workflows and service integrations
+
+**Cons:**
+- Microsoft 365 only (no personal accounts)
+- Requires Azure AD admin privileges and admin consent
+- MS Graph API only (no IMAP/SMTP)
+- Client secret has maximum 2-year lifetime
+
+**Use Cases:**
+- Helpdesk and compliance systems
+- Shared mailbox management at scale
+- Automated email processing across an organization
+- Service integrations where interactive login is not possible
+
+[Outlook Application Access Setup →](/docs/accounts/outlook-client-credentials)
+
 ## How Credentials Are Stored
 
 EmailEngine stores email account credentials in Redis. Understanding this is important for security planning.
@@ -197,7 +221,9 @@ graph TD
     GmailVerify -->|No| GmailIMAPApp[IMAP with app password]
     GmailTest -->|Yes| GmailIMAPApp2[IMAP with app password]
 
-    M365 --> M365Shared{Need shared mailboxes?}
+    M365 --> M365AppAccess{App-level access<br/>without user login?}
+    M365AppAccess -->|Yes| AppAccess[Application Access<br/>Client Credentials]
+    M365AppAccess -->|No| M365Shared{Need shared mailboxes?}
     M365 --> M365Enterprise{Enterprise features?}
     M365 --> M365OAuth{Connecting user accounts?}
     M365Shared -->|Yes| GraphAPI[Microsoft Graph API]

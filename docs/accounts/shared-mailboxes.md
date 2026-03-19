@@ -48,8 +48,14 @@ Add a main account normally, then add shared mailboxes that reference the main a
 2. Add shared mailbox accounts that reference the main account
 3. EmailEngine uses the main account's credentials to access shared mailboxes
 
+### Option 3: Application Access (Simplest for Microsoft 365)
+
+If your organization uses Microsoft 365, you can use application-level access with client credentials to access any mailbox (including shared mailboxes) without interactive user login. This is the simplest approach when you have Azure AD admin privileges.
+
+[Outlook Application Access guide →](/docs/accounts/outlook-client-credentials#shared-mailboxes)
+
 :::tip Recommendation
-Use **delegated access** for production. It's more flexible and allows one user to access multiple shared mailboxes without re-authenticating.
+Use **delegated access** for production when users need to individually authorize access. Use **application access** if you have Azure AD admin privileges and want the simplest setup for shared mailboxes.
 :::
 
 ## Prerequisites

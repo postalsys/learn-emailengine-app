@@ -98,7 +98,15 @@ EmailEngine supports OAuth2 for:
 - **Personal Accounts** - Outlook.com, Hotmail.com, Live.com
 - **Combined** - Organizations + personal accounts
 
+**Application Access (Client Credentials):**
+
+- **Application permissions** - App authenticates as itself, no user login needed
+- Uses `client_credentials` grant type with MS Graph API only
+- Requires Azure AD admin consent and a specific tenant ID
+- Best for automated systems accessing mailboxes without user interaction
+
 [Outlook OAuth2 Setup →](./outlook-365)
+[Outlook Application Access →](./outlook-client-credentials)
 
 ### Mail.ru
 
@@ -135,7 +143,8 @@ EmailEngine supports different OAuth2 application types:
 
 **Outlook:**
 
-- Outlook (IMAP/SMTP or MS Graph API)
+- Outlook (delegated) - IMAP/SMTP or MS Graph API with user login
+- Outlook (application) - MS Graph API with client credentials (no user login)
 
 Each type has its own configuration page in EmailEngine.
 

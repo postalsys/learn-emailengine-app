@@ -500,6 +500,7 @@ curl -X POST "https://emailengine.example.com/v1/authentication/form" \
 | Gmail Service Account | `gmailService` | Google Workspace domain-wide | Service account key |
 | Outlook OAuth2 | `outlook` | Microsoft via OAuth2 | Azure AD app, refresh token |
 | MS Graph API | `outlook` | Microsoft native API | Azure AD app, graph subscription |
+| Outlook Application Access | `outlookService` | Microsoft 365 via client credentials | Azure AD app, tenant ID |
 | Mail.ru OAuth2 | `mailRu` | Mail.ru via OAuth2 + IMAP | OAuth2 app, refresh token |
 | Generic OAuth2 | `oauth2` | Generic OAuth2 provider | OAuth2 app configuration |
 
@@ -587,7 +588,9 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Microsoft Account Setup] --> B{Need shared<br/>mailbox access?}
+    A[Microsoft Account Setup] --> AA{Need app-level access<br/>without user login?}
+    AA -->|Yes| AB[outlookService<br/>Client Credentials]
+    AA -->|No| B{Need shared<br/>mailbox access?}
     B -->|Yes| C[MS Graph API]
     B -->|No| D{Need advanced search?}
     D -->|Yes| E[Outlook IMAP<br/>Graph has limited search]
