@@ -1,6 +1,7 @@
 ---
 title: Gmail API Scopes Reference
-sidebar_position: 6
+sidebar_label: API Scopes Reference
+sidebar_position: 3
 description: Complete reference for Gmail OAuth2 scope configurations in EmailEngine
 ---
 
@@ -11,7 +12,7 @@ When using EmailEngine with Gmail, you must choose which OAuth2 scopes to reques
 This page covers all Gmail scope configurations supported by EmailEngine, what each enables, and how to set them up.
 
 :::info Prerequisites
-This page assumes you have already created a Google Cloud project and OAuth2 credentials. If not, see [Setting Up Gmail API](/docs/accounts/gmail-api) or [Setting Up Gmail with OAuth2 (IMAP/SMTP)](/docs/accounts/gmail-imap) first.
+This page assumes you have already created a Google Cloud project and OAuth2 credentials. If not, see [Setting Up Gmail API](/docs/accounts/gmail/gmail-api) or [Setting Up Gmail with OAuth2 (IMAP/SMTP)](/docs/accounts/gmail/gmail-imap) first.
 :::
 
 ## Quick Reference
@@ -138,7 +139,7 @@ curl -X POST "https://emailengine.example.com/v1/oauth2" \
 
 ### See also
 
-[Setting Up Gmail with OAuth2 (IMAP/SMTP)](/docs/accounts/gmail-imap) - complete step-by-step setup guide.
+[Setting Up Gmail with OAuth2 (IMAP/SMTP)](/docs/accounts/gmail/gmail-imap) - complete step-by-step setup guide.
 
 ---
 
@@ -214,7 +215,7 @@ No `extraScopes` or `skipScopes` needed - `gmail.modify` is the default for the 
 
 ### See also
 
-[Setting Up Gmail API](/docs/accounts/gmail-api) - complete step-by-step setup guide including Cloud Pub/Sub configuration.
+[Setting Up Gmail API](/docs/accounts/gmail/gmail-api) - complete step-by-step setup guide including Cloud Pub/Sub configuration.
 
 ---
 
@@ -557,9 +558,9 @@ Source: [Gmail API Reference](https://developers.google.com/gmail/api/reference/
 
 ## See Also
 
-- [Setting Up Gmail API](/docs/accounts/gmail-api) - complete Gmail API setup guide with Cloud Pub/Sub
-- [Setting Up Gmail with OAuth2 (IMAP/SMTP)](/docs/accounts/gmail-imap) - IMAP/SMTP setup guide
-- [Gmail Pub/Sub Integration](/docs/accounts/gmail-pubsub) - Cloud Pub/Sub configuration for real-time notifications
-- [Google Service Accounts](/docs/accounts/google-service-accounts) - service accounts use `baseScopes: "pubsub"` or `"imap"`
+- [Setting Up Gmail API](/docs/accounts/gmail/gmail-api) - complete Gmail API setup guide with Cloud Pub/Sub
+- [Setting Up Gmail with OAuth2 (IMAP/SMTP)](/docs/accounts/gmail/gmail-imap) - IMAP/SMTP setup guide
+- [Gmail Pub/Sub Integration](/docs/accounts/gmail/gmail-pubsub) - Cloud Pub/Sub configuration for real-time notifications
+- [Google Service Accounts](/docs/accounts/gmail/google-service-accounts) - service accounts use `baseScopes: "pubsub"` or `"imap"`
 - [OAuth2 Setup Guide](/docs/accounts/oauth2-setup) - general OAuth2 concepts and configuration
 - [OAuth2 Token Management](/docs/accounts/oauth2-token-management) - managing and using OAuth2 tokens for additional APIs

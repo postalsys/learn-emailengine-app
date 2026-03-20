@@ -169,27 +169,59 @@ const config: Config = {
           },
           {
             from: '/docs/integrations/gmail-over-imap',
-            to: '/docs/accounts/gmail-imap',
+            to: '/docs/accounts/gmail/gmail-imap',
           },
           {
             from: '/docs/integrations/gmail-api',
-            to: '/docs/accounts/gmail-api',
+            to: '/docs/accounts/gmail/gmail-api',
           },
           {
             from: '/docs/integrations/outlook-and-ms-365',
-            to: '/docs/accounts/outlook-365',
+            to: '/docs/accounts/microsoft-365/outlook-365',
           },
           {
             from: '/docs/integrations/google-service-accounts',
-            to: '/docs/accounts/google-service-accounts',
+            to: '/docs/accounts/gmail/google-service-accounts',
           },
           {
             from: '/docs/integrations/shared-mailboxes-in-ms-365',
-            to: '/docs/accounts/shared-mailboxes',
+            to: '/docs/accounts/microsoft-365/shared-mailboxes',
           },
           {
             from: '/docs/llm-context',
             to: '/docs/reference/llm-context',
+          },
+          {
+            from: '/docs/accounts/gmail-imap',
+            to: '/docs/accounts/gmail/gmail-imap',
+          },
+          {
+            from: '/docs/accounts/gmail-api',
+            to: '/docs/accounts/gmail/gmail-api',
+          },
+          {
+            from: '/docs/accounts/gmail-api-scopes',
+            to: '/docs/accounts/gmail/gmail-api-scopes',
+          },
+          {
+            from: '/docs/accounts/gmail-pubsub',
+            to: '/docs/accounts/gmail/gmail-pubsub',
+          },
+          {
+            from: '/docs/accounts/google-service-accounts',
+            to: '/docs/accounts/gmail/google-service-accounts',
+          },
+          {
+            from: '/docs/accounts/outlook-365',
+            to: '/docs/accounts/microsoft-365/outlook-365',
+          },
+          {
+            from: '/docs/accounts/outlook-client-credentials',
+            to: '/docs/accounts/microsoft-365/outlook-client-credentials',
+          },
+          {
+            from: '/docs/accounts/shared-mailboxes',
+            to: '/docs/accounts/microsoft-365/shared-mailboxes',
           },
         ],
       },

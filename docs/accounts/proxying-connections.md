@@ -1,6 +1,6 @@
 ---
 title: Proxying IMAP Connections
-sidebar_position: 19
+sidebar_position: 12
 description: Use EmailEngine's IMAP proxy to access OAuth2 accounts without native OAuth2 support in your IMAP client
 ---
 
@@ -169,10 +169,10 @@ telnet localhost 2143
 First, ensure you have an OAuth2 account configured in EmailEngine.
 
 **For Gmail:**
-[Follow Gmail OAuth2 setup guide →](./gmail-imap)
+[Follow Gmail OAuth2 setup guide →](./gmail/gmail-imap)
 
 **For Outlook:**
-[Follow Outlook OAuth2 setup guide →](./outlook-365)
+[Follow Outlook OAuth2 setup guide →](./microsoft-365/outlook-365)
 
 :::important Must Use IMAP Backend
 The account must be configured to use **IMAP/SMTP**, not Gmail API or MS Graph API. The proxy only works with IMAP-based accounts.

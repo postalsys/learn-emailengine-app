@@ -1,6 +1,6 @@
 ---
 title: Account Troubleshooting
-sidebar_position: 15
+sidebar_position: 13
 description: Comprehensive troubleshooting guide for common account issues in EmailEngine
 ---
 
@@ -87,7 +87,7 @@ docker logs -f emailengine
 
    **Solution:**
    - Use app-specific passwords (requires 2FA): [Gmail app passwords](https://myaccount.google.com/apppasswords)
-   - Or switch to OAuth2: [Gmail OAuth2 guide](./gmail-imap)
+   - Or switch to OAuth2: [Gmail OAuth2 guide](./gmail/gmail-imap)
 
 4. **IMAP/SMTP disabled (Microsoft 365)**
    - Admin may have disabled IMAP/SMTP protocols
@@ -96,7 +96,7 @@ docker logs -f emailengine
    - Enable in [Microsoft 365 admin center](https://admin.microsoft.com/)
    - Navigate to Users → Active users → Mail settings
    - Enable IMAP and SMTP AUTH
-   - Or use MS Graph API: [Outlook setup guide](./outlook-365)
+   - Or use MS Graph API: [Outlook setup guide](./microsoft-365/outlook-365)
 
 #### For OAuth2 Accounts
 
@@ -130,8 +130,8 @@ docker logs -f emailengine
    - Check OAuth2 app settings in EmailEngine
    - Verify against Google Cloud Console / Azure AD
    - Look for error messages in OAuth2 app settings page
-   - [Gmail OAuth2 setup guide](./gmail-imap)
-   - [Outlook OAuth2 setup guide](./outlook-365)
+   - [Gmail OAuth2 setup guide](./gmail/gmail-imap)
+   - [Outlook OAuth2 setup guide](./microsoft-365/outlook-365)
 
 3. **Insufficient permissions**
    - Account doesn't have required scopes
@@ -282,7 +282,7 @@ Gmail has completely disabled account password authentication. The "Less secure 
 
 **Solution:**
 1. **App Passwords (for testing):** Generate an [app-specific password](https://support.google.com/accounts/answer/185833) (requires 2FA enabled)
-2. **OAuth2 (recommended for production):** Follow the [Gmail OAuth2 guide](./gmail-imap)
+2. **OAuth2 (recommended for production):** Follow the [Gmail OAuth2 guide](./gmail/gmail-imap)
 
 #### Rate Limits
 
@@ -299,7 +299,7 @@ Gmail has completely disabled account password authentication. The "Less secure 
 **Solution:**
 - Reduce sub-connections
 - Implement path filtering
-- Consider Gmail API for high-volume: [Gmail API guide](./gmail-api)
+- Consider Gmail API for high-volume: [Gmail API guide](./gmail/gmail-api)
 - Spread operations over time
 
 #### OAuth2 Scope Too Wide (Public Apps)
@@ -559,7 +559,7 @@ No action needed from you. If issues persist, check logs for specific errors.
 3. **Consider Gmail API** for very large Gmail accounts:
    - Faster initial sync
    - Better performance
-   - [Gmail API guide](./gmail-api)
+   - [Gmail API guide](./gmail/gmail-api)
 
 ### High Memory/CPU Usage
 

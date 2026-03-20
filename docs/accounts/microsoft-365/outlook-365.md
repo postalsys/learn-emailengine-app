@@ -1,6 +1,7 @@
 ---
 title: Setting Up Outlook and Microsoft 365 (Delegated Access)
-sidebar_position: 8
+sidebar_label: Delegated Access (OAuth2)
+sidebar_position: 1
 description: Complete guide to setting up Outlook.com and Microsoft 365 accounts with OAuth2 authentication
 ---
 
@@ -24,8 +25,8 @@ If you need to access Microsoft 365 mailboxes **without interactive user login**
 
 EmailEngine supports two types of Outlook OAuth2 integrations:
 
-- **Delegated access** (this page) -- Each user signs in and grants access to their own mailbox. Supports both IMAP/SMTP and MS Graph API backends. Works with personal Microsoft accounts and Microsoft 365.
-- **Application access** ([separate guide](./outlook-client-credentials)) -- An admin grants the application access to any mailbox in the organization. Uses MS Graph API only. Microsoft 365 only, no personal accounts.
+- **Delegated access** (this page) - Each user signs in and grants access to their own mailbox. Supports both IMAP/SMTP and MS Graph API backends. Works with personal Microsoft accounts and Microsoft 365.
+- **Application access** ([separate guide](./outlook-client-credentials)) - An admin grants the application access to any mailbox in the organization. Uses MS Graph API only. Microsoft 365 only, no personal accounts.
 
 ### Email Backend Options
 
@@ -475,16 +476,16 @@ The `provider` field should be the **OAuth2 application ID** from EmailEngine, w
 
 Microsoft 365 shared mailboxes are mailboxes not bound to a specific user. Multiple users can access them using their own credentials.
 
-With delegated access, EmailEngine supports shared mailboxes through two approaches:
-
-- **Direct access** -- Add shared mailbox with its own OAuth2 credentials
-- **Delegated access** -- Add main account, then reference it for shared mailboxes (recommended)
-
-For detailed setup instructions, see the [Shared Mailboxes guide](./shared-mailboxes).
-
-:::tip Application Access for Shared Mailboxes
-If you manage many shared mailboxes or want to avoid per-user OAuth2 login flows, consider using [Outlook Application Access (Client Credentials)](./outlook-client-credentials) instead. With application access, you can add any mailbox -- including shared mailboxes -- using a single admin-authorized application, without any interactive login.
+:::tip Recommended: Application Access
+For shared mailboxes, [Outlook Application Access (Client Credentials)](./outlook-client-credentials) is the simplest approach - no interactive login, no extra scopes, just an API call per mailbox.
 :::
+
+With delegated access, EmailEngine also supports shared mailboxes through:
+
+- **Delegated access** - Add a main account, then add shared mailboxes that reference its credentials
+- **Direct access** - Add a shared mailbox with its own OAuth2 authentication
+
+For detailed setup instructions covering all three approaches, see the [Shared Mailboxes guide](./shared-mailboxes).
 
 ## Performance Considerations
 
@@ -570,4 +571,4 @@ EmailEngine keeps tokens active by making regular API requests, but if an accoun
 Microsoft OAuth2 **client secrets expire** (90 days to 2 years max). When expired, **all accounts** using that OAuth2 app fail immediately. Monitor expiration dates in Azure AD and rotate secrets before they expire.
 :::
 
-[Learn more about OAuth2 token management →](./oauth2-token-management)
+[Learn more about OAuth2 token management →](../oauth2-token-management)

@@ -139,7 +139,7 @@ The easiest way to add accounts is using EmailEngine's built-in hosted authentic
 5. EmailEngine handles token management and maintains the connection automatically
 
 :::info OAuth2 Setup Required
-OAuth2 provider buttons (Gmail, Outlook) only appear if OAuth2 apps are configured in EmailEngine. Set these up via **Configuration → OAuth2 Apps** in the web interface, or use the [OAuth2 Apps API](/docs/api/post-v-1-oauth-2). See [Gmail OAuth2 Setup](/docs/accounts/gmail-imap) and [Outlook OAuth2 Setup](/docs/accounts/outlook-365) for detailed configuration guides.
+OAuth2 provider buttons (Gmail, Outlook) only appear if OAuth2 apps are configured in EmailEngine. Set these up via **Configuration → OAuth2 Apps** in the web interface, or use the [OAuth2 Apps API](/docs/api/post-v-1-oauth-2). See [Gmail OAuth2 Setup](/docs/accounts/gmail/gmail-imap) and [Outlook OAuth2 Setup](/docs/accounts/microsoft-365/outlook-365) for detailed configuration guides.
 :::
 
 :::tip Admin Testing
@@ -175,7 +175,7 @@ For programmatic control or special requirements, register accounts directly via
 
 **Gmail Example:**
 
-**Prerequisites:** You need to set up OAuth2 credentials in Google Cloud Console. [See detailed guide →](/docs/accounts/gmail-imap)
+**Prerequisites:** You need to set up OAuth2 credentials in Google Cloud Console. [See detailed guide →](/docs/accounts/gmail/gmail-imap)
 
 ```bash
 $ curl -XPOST "http://127.0.0.1:3000/v1/account" \
@@ -201,7 +201,7 @@ The `provider` value should be your OAuth2 application ID from EmailEngine, whic
 
 **Outlook Example:**
 
-**Prerequisites:** You need to register an app in Azure AD. [See detailed guide →](/docs/accounts/outlook-365)
+**Prerequisites:** You need to register an app in Azure AD. [See detailed guide →](/docs/accounts/microsoft-365/outlook-365)
 
 ```bash
 $ curl -XPOST "http://127.0.0.1:3000/v1/account" \
@@ -524,8 +524,8 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account/my-account/search" \
 
 ### Set Up OAuth2
 
-- **[Gmail OAuth2 Setup](/docs/accounts/gmail-imap)** - Complete guide with screenshots
-- **[Outlook OAuth2 Setup](/docs/accounts/outlook-365)** - Azure AD configuration
+- **[Gmail OAuth2 Setup](/docs/accounts/gmail/gmail-imap)** - Complete guide with screenshots
+- **[Outlook OAuth2 Setup](/docs/accounts/microsoft-365/outlook-365)** - Azure AD configuration
 - **[OAuth2 Token Management](/docs/accounts/oauth2-token-management)** - Use tokens for other APIs
 
 ### Production Deployment
@@ -556,14 +556,14 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account/my-account/search" \
 - **App passwords required:** Must enable 2FA and generate an app-specific password
 - **OAuth2 recommended:** OAuth2 provides the best experience (automatic token refresh)
 - **OAuth2 verification:** Public OAuth2 apps require verification if sending to many users
-- [Complete Gmail setup →](/docs/accounts/gmail-imap)
+- [Complete Gmail setup →](/docs/accounts/gmail/gmail-imap)
 
 ### Outlook/Microsoft 365
 
 - **OAuth2 required:** Password authentication is deprecated for personal accounts
 - **Azure AD setup:** Requires app registration in Azure portal
 - **Permissions:** Need both IMAP and SMTP permissions or use Graph API
-- [Complete Outlook setup →](/docs/accounts/outlook-365)
+- [Complete Outlook setup →](/docs/accounts/microsoft-365/outlook-365)
 
 ### Yahoo Mail
 

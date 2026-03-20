@@ -352,8 +352,8 @@ curl -X POST https://emailengine.example.com/v1/oauth2 \
 
 For detailed OAuth2 setup instructions, see:
 
-- [Gmail OAuth2 Setup](/docs/accounts/gmail-imap)
-- [Outlook OAuth2 Setup](/docs/accounts/outlook-365)
+- [Gmail OAuth2 Setup](/docs/accounts/gmail/gmail-imap)
+- [Outlook OAuth2 Setup](/docs/accounts/microsoft-365/outlook-365)
 
 ## Performance Tuning
 

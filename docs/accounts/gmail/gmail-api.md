@@ -1,6 +1,7 @@
 ---
 title: Setting Up Gmail API
-sidebar_position: 5
+sidebar_label: API Setup
+sidebar_position: 2
 description: Configure EmailEngine to use Gmail REST API as the email backend with Cloud Pub/Sub webhooks
 ---
 
@@ -469,4 +470,4 @@ Google refresh tokens can expire under certain conditions:
 EmailEngine keeps tokens active by making regular API requests, but if an account is deleted from EmailEngine and re-added later, a new consent flow is required.
 :::
 
-[Learn more about OAuth2 token management →](./oauth2-token-management)
+[Learn more about OAuth2 token management →](../oauth2-token-management)

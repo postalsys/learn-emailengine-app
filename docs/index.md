@@ -212,7 +212,7 @@ EmailEngine requires a license key for production use. Get a license:
 
 1. [Read the introduction](/docs/getting-started/introduction) to understand what EmailEngine can do
 2. [Follow the quick start guide](/docs/getting-started/quick-start) to get your first email working
-3. [Set up OAuth2 for Gmail](/docs/accounts/gmail-imap) or [Outlook](/docs/accounts/outlook-365)
+3. [Set up OAuth2 for Gmail](/docs/accounts/gmail/gmail-imap) or [Outlook](/docs/accounts/microsoft-365/outlook-365)
 
 **Ready to build?**
 

@@ -323,7 +323,7 @@ curl -X POST http://localhost:3000/v1/webhooks \
 - [Account Management](/docs/accounts/managing-accounts) - Register and configure IMAP accounts
 - [Messages API](/docs/api-reference/messages-api) - List, read, search, and manage messages
 - [Webhooks](/docs/webhooks/overview) - Real-time event notifications
-- [Gmail Setup](/docs/accounts/gmail-imap) - Configure Gmail IMAP access
+- [Gmail Setup](/docs/accounts/gmail/gmail-imap) - Configure Gmail IMAP access
 - [Performance Tuning](/docs/advanced/performance-tuning) - Optimize for high volume
 
 ## Alternative: Native Provider APIs
@@ -335,7 +335,7 @@ For Gmail and Microsoft 365, EmailEngine also supports native APIs:
 
 These provide additional features like native threading and can be faster for some operations.
 
-[Gmail API setup →](/docs/accounts/gmail-api) | [Microsoft Graph setup →](/docs/accounts/outlook-365)
+[Gmail API setup →](/docs/accounts/gmail/gmail-api) | [Microsoft Graph setup →](/docs/accounts/microsoft-365/outlook-365)
 
 ## Try EmailEngine Free
 

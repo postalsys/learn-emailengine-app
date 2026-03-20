@@ -1,6 +1,6 @@
 ---
 title: OAuth2 Setup Guide
-sidebar_position: 13
+sidebar_position: 7
 description: Understanding OAuth2 authentication and setting up OAuth2 applications with EmailEngine
 ---
 
@@ -13,7 +13,7 @@ Sources merged:
 
 # OAuth2 Setup Guide
 
-This guide explains OAuth2 authentication concepts and how to set up OAuth2 applications with EmailEngine. For provider-specific instructions, see the dedicated guides for [Gmail](./gmail-imap), [Outlook](./outlook-365), [Mail.ru](./mail-ru), or [Google Service Accounts](./google-service-accounts).
+This guide explains OAuth2 authentication concepts and how to set up OAuth2 applications with EmailEngine. For provider-specific instructions, see the dedicated guides for [Gmail](./gmail/gmail-imap), [Outlook](./microsoft-365/outlook-365), [Mail.ru](./mail-ru), or [Google Service Accounts](./gmail/google-service-accounts).
 
 ## What is OAuth2?
 
@@ -80,9 +80,9 @@ EmailEngine supports OAuth2 for:
 - **Service Accounts** - Google Workspace with domain-wide delegation
 - **Public Apps** - Any Gmail user (requires security audit)
 
-[Gmail IMAP OAuth2 Setup →](./gmail-imap)
-[Gmail API Setup →](./gmail-api)
-[Google Service Accounts →](./google-service-accounts)
+[Gmail IMAP OAuth2 Setup →](./gmail/gmail-imap)
+[Gmail API Setup →](./gmail/gmail-api)
+[Google Service Accounts →](./gmail/google-service-accounts)
 
 ### Outlook / Microsoft 365
 
@@ -105,8 +105,8 @@ EmailEngine supports OAuth2 for:
 - Requires Azure AD admin consent and a specific tenant ID
 - Best for automated systems accessing mailboxes without user interaction
 
-[Outlook OAuth2 Setup →](./outlook-365)
-[Outlook Application Access →](./outlook-client-credentials)
+[Outlook OAuth2 Setup →](./microsoft-365/outlook-365)
+[Outlook Application Access →](./microsoft-365/outlook-client-credentials)
 
 ### Mail.ru
 
@@ -252,7 +252,7 @@ Scopes define what your application can access.
 The `gmail.labels` scope is required for EmailEngine to list labels (mailboxes) properly. Always combine `gmail.readonly` with `gmail.labels` for read-only access to work.
 :::
 
-See the [Gmail API Scopes Reference](/docs/accounts/gmail-api-scopes) for detailed setup instructions and EmailEngine feature availability for each scope combination.
+See the [Gmail API Scopes Reference](/docs/accounts/gmail/gmail-api-scopes) for detailed setup instructions and EmailEngine feature availability for each scope combination.
 
 ### Outlook Scopes
 
@@ -426,7 +426,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
   }'
 ```
 
-[Learn more about shared mailboxes →](./outlook-365#shared-mailboxes)
+[Learn more about shared mailboxes →](./microsoft-365/outlook-365#shared-mailboxes)
 
 ### Service Accounts (Google Workspace)
 
@@ -445,4 +445,4 @@ Access any user's mailbox without individual consent:
 
 Requires domain-wide delegation setup.
 
-[Learn more about service accounts →](./google-service-accounts)
+[Learn more about service accounts →](./gmail/google-service-accounts)

@@ -60,9 +60,9 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 - Email automation tools
 
 **Setup Guides:**
-- [Gmail OAuth2 Setup →](/docs/accounts/gmail-imap)
-- [Outlook OAuth2 Setup (Delegated Access) →](/docs/accounts/outlook-365)
-- [Outlook Application Access (Client Credentials) →](/docs/accounts/outlook-client-credentials)
+- [Gmail OAuth2 Setup →](/docs/accounts/gmail/gmail-imap)
+- [Outlook OAuth2 Setup (Delegated Access) →](/docs/accounts/microsoft-365/outlook-365)
+- [Outlook Application Access (Client Credentials) →](/docs/accounts/microsoft-365/outlook-client-credentials)
 - [Mail.ru OAuth2 Setup →](/docs/accounts/mail-ru)
 
 ### Gmail API (Native)
@@ -93,7 +93,7 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 IMAP/SMTP requires the full `https://mail.google.com/` scope. Gmail API can use more limited scopes like `gmail.readonly` or `gmail.modify`. If Google's verification process requires you to use limited scopes, you must use Gmail API instead of IMAP/SMTP.
 :::
 
-[Gmail API Setup Guide →](/docs/accounts/gmail-api)
+[Gmail API Setup Guide →](/docs/accounts/gmail/gmail-api)
 
 ### OAuth2 (Outlook IMAP/SMTP)
 
@@ -114,7 +114,7 @@ IMAP/SMTP requires the full `https://mail.google.com/` scope. Gmail API can use 
 - CRM systems for Office 365 users
 - Email tools for enterprises
 
-[Outlook OAuth2 Setup Guide →](/docs/accounts/outlook-365)
+[Outlook OAuth2 Setup Guide →](/docs/accounts/microsoft-365/outlook-365)
 
 ### Microsoft Graph API (Native)
 
@@ -139,7 +139,7 @@ IMAP/SMTP requires the full `https://mail.google.com/` scope. Gmail API can use 
 - Advanced Microsoft 365 integrations
 - Outlook.com and Hotmail accounts
 
-[Microsoft Graph Setup →](/docs/accounts/outlook-365#choosing-imapsmtp-vs-ms-graph-api)
+[Microsoft Graph Setup →](/docs/accounts/microsoft-365/outlook-365#choosing-imapsmtp-vs-ms-graph-api)
 
 ### Microsoft 365 Application Access (Client Credentials)
 
@@ -163,7 +163,7 @@ IMAP/SMTP requires the full `https://mail.google.com/` scope. Gmail API can use 
 - Automated email processing across an organization
 - Service integrations where interactive login is not possible
 
-[Outlook Application Access Setup →](/docs/accounts/outlook-client-credentials)
+[Outlook Application Access Setup →](/docs/accounts/microsoft-365/outlook-client-credentials)
 
 ## How Credentials Are Stored
 
@@ -566,7 +566,7 @@ For Google Workspace domains, you can use service accounts with domain-wide dele
 - Super admin access
 - Domain-wide delegation setup
 
-[Service Accounts Setup Guide →](/docs/accounts/google-service-accounts)
+[Service Accounts Setup Guide →](/docs/accounts/gmail/google-service-accounts)
 
 ## Shared Mailboxes (Microsoft 365)
 
@@ -577,7 +577,7 @@ Microsoft 365 shared mailboxes can be accessed through two approaches:
 
 Delegated access allows one user to manage multiple shared mailboxes without re-authenticating.
 
-[Complete Shared Mailboxes Guide →](/docs/accounts/shared-mailboxes)
+[Complete Shared Mailboxes Guide →](/docs/accounts/microsoft-365/shared-mailboxes)
 
 ## Authentication Server (External Token Management)
 

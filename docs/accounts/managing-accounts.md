@@ -108,8 +108,8 @@ curl -X POST https://your-ee.com/v1/account \
   }'
 ```
 
-[See Gmail OAuth2 guide →](./gmail-imap)
-[See Outlook OAuth2 guide →](./outlook-365)
+[See Gmail OAuth2 guide →](./gmail/gmail-imap)
+[See Outlook OAuth2 guide →](./microsoft-365/outlook-365)
 
 #### Service Accounts (Google Workspace)
 
@@ -130,7 +130,7 @@ curl -X POST https://your-ee.com/v1/account \
   }'
 ```
 
-[See Service Accounts guide →](./google-service-accounts)
+[See Service Accounts guide →](./gmail/google-service-accounts)
 
 #### Authentication Server
 

@@ -1,6 +1,7 @@
 ---
 title: Setting Up Gmail with OAuth2 (IMAP/SMTP)
-sidebar_position: 4
+sidebar_label: OAuth2 Setup (IMAP/SMTP)
+sidebar_position: 1
 description: Complete guide to setting up Gmail accounts with OAuth2 authentication for IMAP and SMTP access
 ---
 
@@ -511,4 +512,4 @@ Google refresh tokens can expire under certain conditions:
 EmailEngine keeps tokens active by making regular API requests, but if an account is deleted from EmailEngine and re-added later, a new consent flow is required.
 :::
 
-[Learn more about OAuth2 token management →](./oauth2-token-management)
+[Learn more about OAuth2 token management →](../oauth2-token-management)

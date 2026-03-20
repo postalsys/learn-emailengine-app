@@ -600,7 +600,7 @@ curl "http://127.0.0.1:3000/v1/account/example/outbox" \
 - **Outlook**: Use OAuth2 (password authentication completely disabled)
 - **Yahoo**: Use OAuth2 or app-specific passwords
 
-See [Gmail Setup](../accounts/gmail-imap.md) and [Outlook Setup](../accounts/outlook-365.md).
+See [Gmail Setup](../accounts/gmail/gmail-imap.md) and [Outlook Setup](../accounts/microsoft-365/outlook-365.md).
 
 ### Timeout Errors
 

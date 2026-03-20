@@ -1,6 +1,7 @@
 ---
 title: Outlook Application Access (Client Credentials)
-sidebar_position: 9
+sidebar_label: Application Access (Client Credentials)
+sidebar_position: 2
 description: Setting up Microsoft 365 application-level access using client credentials for EmailEngine
 ---
 
@@ -138,9 +139,9 @@ Click **Add a permission** > **Microsoft Graph** > **Application permissions**.
 
 Add the following permissions:
 
-- `Mail.ReadWrite` -- Read and write mail in all mailboxes
-- `Mail.Send` -- Send mail as any user
-- `User.Read.All` -- Read all users' profiles (needed for mailbox resolution)
+- `Mail.ReadWrite` - Read and write mail in all mailboxes
+- `Mail.Send` - Send mail as any user
+- `User.Read.All` - Read all users' profiles (needed for mailbox resolution)
 
 :::danger Application Permissions, Not Delegated
 Make sure you select **Application permissions**, not **Delegated permissions**. These are in separate tabs when adding permissions. Application permissions apply to the app itself and require admin consent. Delegated permissions apply on behalf of a signed-in user and are used in the delegated access flow.
@@ -169,7 +170,7 @@ Click **New client secret**.
 - 24 months (maximum)
 
 :::danger Copy Secret Immediately
-The secret value is only shown once. Copy it immediately after creation -- you cannot retrieve it later. If you lose it, you must generate a new secret.
+The secret value is only shown once. Copy it immediately after creation -you cannot retrieve it later. If you lose it, you must generate a new secret.
 :::
 
 Copy the value from the **Value** column (not the "Secret ID").
@@ -247,7 +248,7 @@ Replace `AAABkTn2CRQAAAAB` with your actual App ID from EmailEngine.
 
 **Key points:**
 
-- No `accessToken` or `refreshToken` needed -- EmailEngine obtains tokens automatically via client credentials
+- No `accessToken` or `refreshToken` needed - EmailEngine obtains tokens automatically via client credentials
 - The `auth.user` field specifies which mailbox to access
 - The `email` field should match the mailbox email address
 - EmailEngine handles token acquisition and renewal automatically
@@ -323,7 +324,7 @@ curl -X POST https://your-ee.com/v1/account \
   }'
 ```
 
-No additional delegation configuration is needed -- the application permissions grant direct access to all mailboxes.
+No additional delegation configuration is needed -the application permissions grant direct access to all mailboxes.
 
 ## Cloud Environments
 
@@ -465,8 +466,8 @@ By default, EmailEngine stores credentials in cleartext in Redis. To protect sen
 
 Application access uses MS Graph webhook subscriptions for real-time email notifications. EmailEngine requires two publicly reachable HTTPS endpoints:
 
-- `{serviceUrl}/oauth/msg/notification` -- Receives change notifications
-- `{serviceUrl}/oauth/msg/lifecycle` -- Receives lifecycle events (subscription renewal, missed notifications)
+- `{serviceUrl}/oauth/msg/notification` - Receives change notifications
+- `{serviceUrl}/oauth/msg/lifecycle` - Receives lifecycle events (subscription renewal, missed notifications)
 
 EmailEngine automatically creates and renews these subscriptions. If the endpoints are not reachable from Microsoft's servers, EmailEngine falls back to periodic polling.
 
@@ -480,15 +481,15 @@ For the most up-to-date information, refer to Microsoft's official documentation
 
 ### Client Credentials Flow
 
-- [Microsoft identity platform and the OAuth 2.0 client credentials flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-client-creds-grant-flow) -- Technical reference for the client credentials grant
-- [Get access without a user](https://learn.microsoft.com/en-us/graph/auth-v2-service) -- MS Graph guide for app-only access
+- [Microsoft identity platform and the OAuth 2.0 client credentials flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-client-creds-grant-flow) - Technical reference for the client credentials grant
+- [Get access without a user](https://learn.microsoft.com/en-us/graph/auth-v2-service) - MS Graph guide for app-only access
 
 ### Application Permissions
 
-- [Microsoft Graph permissions reference](https://learn.microsoft.com/en-us/graph/permissions-reference) -- Complete list of available permissions
-- [Understanding application-only access](https://learn.microsoft.com/en-us/graph/auth/auth-concepts#application-permissions) -- Concepts guide for application vs delegated permissions
+- [Microsoft Graph permissions reference](https://learn.microsoft.com/en-us/graph/permissions-reference) - Complete list of available permissions
+- [Understanding application-only access](https://learn.microsoft.com/en-us/graph/auth/auth-concepts#application-permissions) - Concepts guide for application vs delegated permissions
 
 ### Admin Consent
 
-- [Grant tenant-wide admin consent](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/grant-admin-consent) -- How to grant and manage admin consent
-- [Configure admin consent workflow](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-admin-consent-workflow) -- Setting up approval workflows
+- [Grant tenant-wide admin consent](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/grant-admin-consent) - How to grant and manage admin consent
+- [Configure admin consent workflow](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-admin-consent-workflow) - Setting up approval workflows

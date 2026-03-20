@@ -1,6 +1,6 @@
 ---
 title: Using an Authentication Server
-sidebar_position: 17
+sidebar_position: 10
 description: Delegate OAuth2 flows to an external authentication server for centralized token management
 ---
 
@@ -192,8 +192,8 @@ https://mail.google.com/
 https://www.googleapis.com/auth/gmail.modify
 ```
 
-[See Gmail OAuth2 setup guide for details →](./gmail-imap)
-[See Outlook OAuth2 setup guide for details →](./outlook-365)
+[See Gmail OAuth2 setup guide for details →](./gmail/gmail-imap)
+[See Outlook OAuth2 setup guide for details →](./microsoft-365/outlook-365)
 
 #### For Password-Based Accounts
 

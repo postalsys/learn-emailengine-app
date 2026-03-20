@@ -684,4 +684,4 @@ function generateDeliveryReport(stats) {
 
 - [Email Authentication Testing](/docs/advanced/email-authentication-testing) - Verify DKIM, SPF, DMARC configuration
 - [Webhooks](/docs/webhooks/overview) - Configure webhook notifications
-- [Gmail OAuth2](/docs/accounts/gmail-imap) - Set up Gmail accounts for testing
+- [Gmail OAuth2](/docs/accounts/gmail/gmail-imap) - Set up Gmail accounts for testing

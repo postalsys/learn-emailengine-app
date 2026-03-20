@@ -74,10 +74,10 @@ const useCaseCategories: UseCaseCategory[] = [
   {
     title: 'Connect Email Accounts',
     items: [
-      {label: 'Connect Gmail', link: '/docs/accounts/gmail-imap', description: 'OAuth2 for Gmail'},
-      {label: 'Connect Outlook', link: '/docs/accounts/outlook-365', description: 'Microsoft 365'},
+      {label: 'Connect Gmail', link: '/docs/accounts/gmail/gmail-imap', description: 'OAuth2 for Gmail'},
+      {label: 'Connect Outlook', link: '/docs/accounts/microsoft-365/outlook-365', description: 'Microsoft 365'},
       {label: 'Connect IMAP', link: '/docs/accounts/imap-smtp', description: 'Any email provider'},
-      {label: 'Service Accounts', link: '/docs/accounts/google-service-accounts', description: 'Domain-wide access'},
+      {label: 'Service Accounts', link: '/docs/accounts/gmail/google-service-accounts', description: 'Domain-wide access'},
     ],
   },
   {

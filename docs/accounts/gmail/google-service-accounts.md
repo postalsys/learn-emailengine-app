@@ -1,6 +1,7 @@
 ---
 title: Google Service Accounts
-sidebar_position: 12
+sidebar_label: Service Accounts
+sidebar_position: 5
 description: Setting up Google Service Accounts with domain-wide delegation for Gmail access
 ---
 
@@ -47,7 +48,7 @@ Service accounts can also be used to manage Gmail Push Notification subscription
 - Email updates are delivered via push notifications instead of polling
 - The service account only handles the notification infrastructure, not email access
 
-For push notification setup, see [Setting Up Gmail API](/docs/accounts/gmail-api).
+For push notification setup, see [Setting Up Gmail API](/docs/accounts/gmail/gmail-api).
 
 ### Key Concepts
 
@@ -409,7 +410,7 @@ The **Base scopes** selection determines how EmailEngine uses this service accou
 
 **For direct email access** (the primary use case in this guide), select **IMAP and SMTP**. This allows the service account to access any mailbox in your Google Workspace organization via IMAP and SMTP protocols.
 
-**For push notification management**, select **Cloud Pub/Sub**. This is used when you have regular Gmail OAuth2 accounts (where users authenticate individually) but want a single service account to manage Pub/Sub topic subscriptions for receiving email change notifications. See [Setting Up Gmail API](/docs/accounts/gmail-api) for this use case.
+**For push notification management**, select **Cloud Pub/Sub**. This is used when you have regular Gmail OAuth2 accounts (where users authenticate individually) but want a single service account to manage Pub/Sub topic subscriptions for receiving email change notifications. See [Setting Up Gmail API](/docs/accounts/gmail/gmail-api) for this use case.
 
 **Enable this app**: Check if you want it available immediately
 

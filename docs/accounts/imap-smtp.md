@@ -59,12 +59,12 @@ EmailEngine's IMAP/SMTP support works with hundreds of providers. Here are commo
 **Gmail:**
 
 - Requires app-specific password if 2FA is enabled
-- See [Gmail IMAP guide](./gmail-imap) for OAuth2 alternative
+- See [Gmail IMAP guide](./gmail/gmail-imap) for OAuth2 alternative
 
 **Outlook.com / Hotmail.com / Live.com:**
 
 - **OAuth2 required** - Microsoft has disabled regular password authentication
-- Use [Outlook OAuth2 guide](./outlook-365) to set up OAuth2 for IMAP/SMTP
+- Use [Outlook OAuth2 guide](./microsoft-365/outlook-365) to set up OAuth2 for IMAP/SMTP
 
 **Yahoo Mail:**
 
@@ -125,7 +125,7 @@ Response includes detected IMAP and SMTP settings:
 You can then use these settings when [registering an account](/docs/api/post-v-1-account).
 
 :::warning Outlook.com / Hotmail.com / Live.com
-Microsoft has **disabled regular password authentication** for consumer accounts. You must use OAuth2 authentication. See the [Outlook OAuth2 guide](./outlook-365) for setup instructions.
+Microsoft has **disabled regular password authentication** for consumer accounts. You must use OAuth2 authentication. See the [Outlook OAuth2 guide](./microsoft-365/outlook-365) for setup instructions.
 :::
 
 :::info Understanding the "secure" Setting

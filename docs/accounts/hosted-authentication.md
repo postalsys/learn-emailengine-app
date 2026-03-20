@@ -1,6 +1,6 @@
 ---
 title: Hosted Authentication
-sidebar_position: 16
+sidebar_position: 9
 description: Use EmailEngine's hosted authentication forms to let users connect their email accounts via OAuth2
 ---
 
@@ -437,7 +437,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 
 User will authenticate with their personal account but access the shared mailbox.
 
-[Learn more about shared mailboxes →](/docs/accounts/outlook-365#shared-mailboxes)
+[Learn more about shared mailboxes →](/docs/accounts/microsoft-365/outlook-365#shared-mailboxes)
 
 ## User Experience
 

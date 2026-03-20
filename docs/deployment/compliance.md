@@ -238,5 +238,5 @@ Configure log retention and forwarding in [Logging](/docs/advanced/logging).
 
 - [Security Best Practices](/docs/deployment/security) - Production security configuration
 - [Secret Encryption](/docs/advanced/encryption) - Enable field-level encryption
-- [Gmail OAuth2 Setup](/docs/accounts/gmail-imap) - Configure Gmail access
+- [Gmail OAuth2 Setup](/docs/accounts/gmail/gmail-imap) - Configure Gmail access
 - [Managing Accounts](/docs/accounts/managing-accounts) - Account lifecycle management
