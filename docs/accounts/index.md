@@ -61,7 +61,8 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 
 **Setup Guides:**
 - [Gmail OAuth2 Setup →](/docs/accounts/gmail-imap)
-- [Outlook OAuth2 Setup →](/docs/accounts/outlook-365)
+- [Outlook OAuth2 Setup (Delegated Access) →](/docs/accounts/outlook-365)
+- [Outlook Application Access (Client Credentials) →](/docs/accounts/outlook-client-credentials)
 - [Mail.ru OAuth2 Setup →](/docs/accounts/mail-ru)
 
 ### Gmail API (Native)

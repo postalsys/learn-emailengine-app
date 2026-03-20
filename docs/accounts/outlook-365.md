@@ -1,5 +1,5 @@
 ---
-title: Setting Up Outlook and Microsoft 365
+title: Setting Up Outlook and Microsoft 365 (Delegated Access)
 sidebar_position: 8
 description: Complete guide to setting up Outlook.com and Microsoft 365 accounts with OAuth2 authentication
 ---
@@ -12,13 +12,24 @@ Sources merged:
 - docs/integrations/shared-mailboxes-in-ms-365.md (shared mailboxes details)
 -->
 
-# Setting Up Outlook and Microsoft 365
+# Setting Up Outlook and Microsoft 365 (Delegated Access)
 
-This guide shows you how to set up Outlook OAuth2 authentication with EmailEngine for Outlook.com, Hotmail.com, and Microsoft 365 accounts. You can use either IMAP/SMTP or Microsoft Graph API as the email backend.
+This guide shows you how to set up Outlook OAuth2 authentication with EmailEngine using **delegated access**, where each user signs in interactively through Microsoft's OAuth2 consent flow. This works with Outlook.com, Hotmail.com, and Microsoft 365 accounts. You can use either IMAP/SMTP or Microsoft Graph API as the email backend.
+
+:::tip Looking for Application Access?
+If you need to access Microsoft 365 mailboxes **without interactive user login** (e.g., for automated systems, helpdesk integrations, or centralized management), see [Outlook Application Access (Client Credentials)](./outlook-client-credentials) instead. Application access lets an admin grant access to any mailbox in the organization using a single set of credentials.
+:::
 
 ## Overview
 
-EmailEngine has native support for Outlook and Microsoft 365 accounts with two backend options:
+EmailEngine supports two types of Outlook OAuth2 integrations:
+
+- **Delegated access** (this page) -- Each user signs in and grants access to their own mailbox. Supports both IMAP/SMTP and MS Graph API backends. Works with personal Microsoft accounts and Microsoft 365.
+- **Application access** ([separate guide](./outlook-client-credentials)) -- An admin grants the application access to any mailbox in the organization. Uses MS Graph API only. Microsoft 365 only, no personal accounts.
+
+### Email Backend Options
+
+With delegated access, you can choose between two backend options:
 
 **IMAP/SMTP Backend:**
 
@@ -252,6 +263,10 @@ By default, only `User.Read` permission exists. Click **Add a permission**.
 
 Select **Microsoft Graph** and then **Delegated permissions**.
 
+:::danger Select Delegated Permissions, Not Application Permissions
+Make sure you select the **Delegated permissions** tab, not **Application permissions**. Application permissions are used for [application access (client credentials)](./outlook-client-credentials), which is a different setup flow. Delegated permissions allow the app to act on behalf of a signed-in user.
+:::
+
 ### For IMAP/SMTP Backend
 
 Add these permissions:
@@ -460,12 +475,16 @@ The `provider` field should be the **OAuth2 application ID** from EmailEngine, w
 
 Microsoft 365 shared mailboxes are mailboxes not bound to a specific user. Multiple users can access them using their own credentials.
 
-EmailEngine supports shared mailboxes through two approaches:
+With delegated access, EmailEngine supports shared mailboxes through two approaches:
 
-- **Direct access** - Add shared mailbox with its own OAuth2 credentials
-- **Delegated access** - Add main account, then reference it for shared mailboxes (recommended)
+- **Direct access** -- Add shared mailbox with its own OAuth2 credentials
+- **Delegated access** -- Add main account, then reference it for shared mailboxes (recommended)
 
-For detailed setup instructions, see the [Shared Mailboxes guide →](./shared-mailboxes)
+For detailed setup instructions, see the [Shared Mailboxes guide](./shared-mailboxes).
+
+:::tip Application Access for Shared Mailboxes
+If you manage many shared mailboxes or want to avoid per-user OAuth2 login flows, consider using [Outlook Application Access (Client Credentials)](./outlook-client-credentials) instead. With application access, you can add any mailbox -- including shared mailboxes -- using a single admin-authorized application, without any interactive login.
+:::
 
 ## Performance Considerations
 
