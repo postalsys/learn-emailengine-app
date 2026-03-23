@@ -280,7 +280,8 @@ OAuth2 applications (Gmail, Outlook, Mail.ru) are configured via the **Settings 
 
 - `gmail` - Gmail with 3-legged OAuth2 (user consent)
 - `gmailService` - Gmail with service account (2-legged OAuth2)
-- `outlook` - Microsoft 365 / Outlook
+- `outlook` - Microsoft 365 / Outlook (delegated access)
+- `outlookService` - Microsoft 365 via client credentials (application access)
 - `mailRu` - Mail.ru
 
 ```bash
@@ -327,7 +328,7 @@ curl -X POST https://emailengine.example.com/v1/oauth2 \
 **Key fields:**
 
 - `name` - Display name for the application
-- `provider` - One of: `gmail`, `gmailService`, `outlook`, `mailRu`
+- `provider` - One of: `gmail`, `gmailService`, `outlook`, `outlookService`, `mailRu`
 - `clientId` / `clientSecret` - OAuth2 credentials (for 3-legged OAuth2)
 - `serviceClient` / `serviceClientEmail` / `serviceKey` - Service account credentials (for Gmail service accounts)
 - `authority` - Microsoft tenant: `common`, `organizations`, `consumers`, or tenant ID
@@ -338,9 +339,31 @@ curl -X POST https://emailengine.example.com/v1/oauth2 \
 
 1. Navigate to **Configuration > OAuth2**
 2. Click **Register new application**
-3. Select provider (Gmail, Outlook, Gmail Service Account, or Mail.ru)
+3. Select provider (Gmail, Outlook, Outlook Application Access, Gmail Service Account, or Mail.ru)
 4. Enter your OAuth2 credentials
 5. Click **Register application**
+
+### Gmail Pub/Sub Subscription TTL
+
+**Setting name:** `gmailSubscriptionTtl`
+**Default:** Google default (31 days)
+
+Controls how long a Gmail Pub/Sub subscription persists without activity before Google automatically deletes it. Configured via `POST /v1/settings` or the admin UI at **Configuration > OAuth2 > Subscriptions**.
+
+| Value | Behavior |
+|-------|----------|
+| Empty / not set | Google default (31 days) |
+| `0` | No expiration (never expires) |
+| `1`-`365` | Custom TTL in days |
+
+```bash
+curl -X POST https://emailengine.example.com/v1/settings \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"gmailSubscriptionTtl": 0}'
+```
+
+Changes take effect when a subscription is next created or updated, not immediately. See [Gmail Pub/Sub Integration](/docs/accounts/gmail/gmail-pubsub#subscription-expiration-ttl) for details.
 
 ### Related API Endpoints
 

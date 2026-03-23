@@ -123,6 +123,8 @@ The response includes detailed progress information:
 | `messagesSkipped` | Messages skipped (deleted or inaccessible) |
 | `bytesWritten` | Total bytes written to export file |
 
+The response also includes a top-level `truncated` field (boolean) that indicates whether the export was cut short due to message count or size limits. When `true`, the export file does not contain all matching messages.
+
 ## Downloading Export Files
 
 Download a completed export using the [Download Export API endpoint](/docs/api/get-v-1-account-account-export-exportid-download):
