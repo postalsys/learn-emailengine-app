@@ -35,7 +35,13 @@ This repository contains the **unified Docusaurus documentation site** for Email
    - ✅ Use text instead: "Success", "Warning", "Important", etc.
    - Note: Existing emojis in CLAUDE.md itself are acceptable for this meta-documentation file
 
-3. **URL Redirects** - When renaming or moving documentation pages
+3. **Dash Usage in Documentation** - Use a single hyphen-minus as a thought separator
+
+   - ❌ Don't use: `--` (double dash/hyphen), `—` (em dash), `–` (en dash)
+   - ✅ Use: `-` (single hyphen-minus) for parenthetical asides and separators
+   - Example: "Queue Management - Detailed guide on BullMQ internals"
+
+4. **URL Redirects** - When renaming or moving documentation pages
 
    - If a documentation page URL changes (file renamed or moved), add a redirect from the old URL to the new one
    - This prevents 404 errors when users access old/bookmarked links
@@ -49,7 +55,7 @@ This repository contains the **unified Docusaurus documentation site** for Email
      ```
    - Only skip redirects if a new page with different content replaces the old URL
 
-4. **AI Agent Reference Files** - Keep these files up to date when API changes
+5. **AI Agent Reference Files** - Keep these files up to date when API changes
 
    Two files exist specifically for AI coding assistants and must be updated when the API changes:
 
@@ -81,7 +87,7 @@ This repository contains the **unified Docusaurus documentation site** for Email
    **Why These Files Matter:**
    AI agents (like Claude Code, GitHub Copilot, Cursor) helping developers integrate with EmailEngine use these files to quickly understand the API surface without parsing the full OpenAPI spec or reading dozens of documentation pages.
 
-5. **Screenshot Automation** - When generating screenshots for documentation
+6. **Screenshot Automation** - When generating screenshots for documentation
 
    **Environment Variables for Automation:**
 
@@ -325,7 +331,7 @@ This repository contains the **unified Docusaurus documentation site** for Email
    - All scripts create output directories if they don't exist
    - Update script URLs to point to `http://localhost:3030` when using Docker container
 
-6. **Dependency Management** - DO NOT upgrade React, marked, or related packages
+7. **Dependency Management** - DO NOT upgrade React, marked, or related packages
 
    This site is published as a **static site** - dependency vulnerabilities reported by GitHub/npm have no runtime impact since no server-side code runs in production.
 

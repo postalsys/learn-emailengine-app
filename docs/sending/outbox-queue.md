@@ -93,10 +93,10 @@ Jobs in the submit queue move through different states:
 - Waits for SMTP response
 
 **Outcomes**:
-- **Success** -- Moved to *Completed*
-- **Temporary failure** -- Moved to *Delayed* (will retry)
-- **Permanent failure** -- Moved to *Failed* (no retry, even if attempts remain)
-- **Retries exhausted** -- Moved to *Failed* after all attempts used
+- **Success** - Moved to *Completed*
+- **Temporary failure** - Moved to *Delayed* (will retry)
+- **Permanent failure** - Moved to *Failed* (no retry, even if attempts remain)
+- **Retries exhausted** - Moved to *Failed* after all attempts used
 
 ### 3. Completed
 
@@ -107,7 +107,7 @@ Jobs in the submit queue move through different states:
 - `messageSent` webhook is emitted
 - Message content is removed from Redis
 
-By default, completed jobs are immediately removed from the queue. To keep them for debugging, configure the **Job History Limit** setting (see [Configuration](#keep-completedfailed-jobs) below). Even with retention enabled, the message content is no longer stored -- only the job metadata remains in BullMQ.
+By default, completed jobs are immediately removed from the queue. To keep them for debugging, configure the **Job History Limit** setting (see [Configuration](#keep-completedfailed-jobs) below). Even with retention enabled, the message content is no longer stored - only the job metadata remains in BullMQ.
 
 ### 4. Failed
 
@@ -121,7 +121,7 @@ By default, completed jobs are immediately removed from the queue. To keep them 
 - `messageFailed` webhook is emitted
 - Message content is removed from Redis
 
-By default, failed jobs are immediately removed from the queue, just like completed jobs. To keep them for debugging, configure the **Job History Limit** setting. Even with retention enabled, the message content is no longer stored -- only the job metadata remains in BullMQ.
+By default, failed jobs are immediately removed from the queue, just like completed jobs. To keep them for debugging, configure the **Job History Limit** setting. Even with retention enabled, the message content is no longer stored - only the job metadata remains in BullMQ.
 
 **Permanent (non-retriable) errors** cause immediate failure regardless of remaining attempts:
 
@@ -317,7 +317,7 @@ curl "https://ee.example.com/v1/outbox/4646ac53857fd2b2" \
 ```
 
 :::warning
-This endpoint only works for messages that are still queued (waiting, active, delayed, or paused). Once a message is completed or has permanently failed, its content is removed from Redis and this endpoint returns a 404 error -- even if the job metadata is retained in BullMQ via the Job History Limit setting.
+This endpoint only works for messages that are still queued (waiting, active, delayed, or paused). Once a message is completed or has permanently failed, its content is removed from Redis and this endpoint returns a 404 error - even if the job metadata is retained in BullMQ via the Job History Limit setting.
 :::
 
 ## Managing Queue Jobs
@@ -468,6 +468,6 @@ Emitted when a job permanently fails (all retries exhausted or a non-retriable e
 
 ## See Also
 
-- [Queue Management](/docs/advanced/queue-management) -- Detailed guide on BullMQ internals, Bull Board, and performance tuning
-- [Basic Sending](/docs/sending/basic-sending) -- How to submit emails via the API
-- [Webhook Events](/docs/webhooks/overview) -- Complete webhook event reference
+- [Queue Management](/docs/advanced/queue-management) - Detailed guide on BullMQ internals, Bull Board, and performance tuning
+- [Basic Sending](/docs/sending/basic-sending) - How to submit emails via the API
+- [Webhook Events](/docs/webhooks/overview) - Complete webhook event reference
