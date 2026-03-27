@@ -17,7 +17,8 @@ EmailEngine handles sensitive data including email credentials, OAuth tokens, an
 This guide covers:
 
 - Network security and firewall configuration
-- Authentication and access control
+- Authentication and access control (passwords, passkeys, SSO)
+- Audit logging for authentication events
 - Encryption at rest and in transit
 - API security
 - Redis security
@@ -454,6 +455,69 @@ emailengine.example.com {
 For production deployments, combine `EENGINE_ADMIN_ACCESS_ADDRESSES` with reverse proxy IP restrictions. This provides multiple layers of protection in case one layer is misconfigured.
 :::
 
+### Passkey Authentication (WebAuthn)
+
+EmailEngine supports passkey (WebAuthn) authentication for the admin interface. Passkeys provide passwordless login using biometric sensors, hardware security keys, or platform authenticators like Touch ID and Windows Hello.
+
+**Benefits over password authentication:**
+
+- Phishing-resistant - passkeys are bound to the specific domain
+- No passwords to remember, leak, or brute-force
+- Bypasses TOTP requirement - passkeys are inherently multi-factor
+- Works with platform authenticators (Touch ID, Face ID, Windows Hello) and roaming authenticators (YubiKey, Titan)
+
+:::info Service URL Required
+Passkey registration requires a configured Service URL (`serviceUrl`). The URL's hostname is used as the WebAuthn Relying Party ID. Without a Service URL, the "Add passkey" button is disabled.
+:::
+
+**Setting up passkeys:**
+
+1. Ensure `serviceUrl` is configured in **Configuration** > **Service**
+2. Navigate to **Account** > **Security** (click your username in the top-right)
+3. In the **Passkeys** section, click **Add passkey**
+4. Enter a descriptive name (e.g., "MacBook Touch ID", "YubiKey")
+5. Follow your browser's WebAuthn prompt to register the authenticator
+
+You can register multiple passkeys per admin user.
+
+**Signing in with a passkey:**
+
+1. Navigate to the admin login page
+2. Click **Sign in with a passkey**
+3. Follow your browser's WebAuthn prompt
+
+Passkey authentication bypasses the TOTP requirement - if you have TOTP configured, you will not be prompted for it when signing in with a passkey.
+
+**Managing passkeys:**
+
+- View all registered passkeys on the **Account** > **Security** page
+- Each passkey shows its name and registration date
+- Remove individual passkeys using the **Remove** button
+
+**Security details:**
+
+- Only public keys are stored server-side - private keys never leave the authenticator device
+- Registration challenges expire after 5 minutes and are single-use
+- Per-IP rate limiting protects authentication endpoints against brute-force attacks
+- All authentication events (success and failure) are logged with method, username, and IP address
+
+### Audit Logging
+
+EmailEngine logs all admin authentication events with structured data for security monitoring.
+
+**Logged events:**
+
+| Event | Fields |
+|---|---|
+| Successful password login | method: `password`, user, IP address |
+| Failed password login | method: `password`, error, IP address |
+| Successful TOTP verification | method: `totp`, user, IP address |
+| Failed TOTP verification | method: `totp`, error, IP address |
+| Successful passkey login | method: `passkey`, user, IP address |
+| Failed passkey login | method: `passkey`, error, IP address |
+
+Use these log entries to detect unauthorized access attempts and feed them into your SIEM or log aggregation system.
+
 ### Single Sign-On (Okta)
 
 EmailEngine supports Okta-based SSO for the admin interface. When configured, administrators authenticate via Okta instead of the built-in password login.
@@ -763,7 +827,8 @@ Optionally, EmailEngine can be configured to retain the last N queue job entries
 - [ ] Test firewall rules
 - [ ] Verify Redis is not publicly accessible
 - [ ] Check SSL certificate auto-renewal
-- [ ] Configure log aggregation
+- [ ] Register passkeys for admin accounts (phishing-resistant login)
+- [ ] Configure log aggregation (including auth audit logs)
 - [ ] Perform security scan
 - [ ] Document security procedures
 - [ ] Train team on security practices

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "EmailEngine",
   "description": "Self-hosted email API gateway providing REST API access to email accounts via IMAP, SMTP, Gmail API, and Microsoft Graph API",
-  "version": "2.64.0",
+  "version": "2.65.0",
   "documentationUrl": "https://learn.emailengine.app/",
   "openApiSpec": "https://emailengine.dev/swagger.json",
   "authentication": {
@@ -186,6 +186,11 @@
         {"method": "POST", "path": "/v1/delivery-test/account/{account}", "description": "Start test"},
         {"method": "GET", "path": "/v1/delivery-test/check/{deliveryTest}", "description": "Check results"}
       ]
+    },
+    "adminAuthentication": {
+      "description": "Admin interface authentication methods",
+      "features": ["password", "totp", "passkey-webauthn", "okta-sso"],
+      "notes": "Passkey (WebAuthn) authentication requires serviceUrl to be configured. Passkeys bypass TOTP requirement. Audit logging covers all authentication methods."
     },
     "exportOperations": {
       "description": "Bulk export email messages from accounts (Beta)",

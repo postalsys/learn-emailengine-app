@@ -28,6 +28,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | Webhooks | HTTP POST to configured endpoint |
 | Data Storage | Redis (credentials encrypted with `EENGINE_SECRET`) |
 | Message Storage | None - fetched from mail server on demand |
+| Admin Auth | Password + TOTP, passkeys (WebAuthn), Okta SSO |
 
 ## Core Capabilities Matrix
 

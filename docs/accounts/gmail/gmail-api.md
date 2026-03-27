@@ -443,6 +443,19 @@ You can:
 - Set up billing alerts for Pub/Sub costs
 - View subscription status in EmailEngine
 
+### Granular Consent and Scope Validation
+
+Google supports **granular consent**, allowing users to selectively grant or deny individual permissions during the OAuth2 flow. EmailEngine validates that all required functional scopes were granted after the OAuth2 callback.
+
+If a user deselects a required scope (e.g., unchecks email access), EmailEngine:
+
+1. Detects the missing scope(s)
+2. Revokes the partial token (best-effort) to prevent dangling grants
+3. Shows an error page explaining which permissions are required
+4. Offers a "Try Again" button to restart the OAuth2 flow
+
+This prevents accounts from being registered with insufficient permissions, which would cause authentication errors during sync.
+
 ### Token Management
 
 EmailEngine automatically:
