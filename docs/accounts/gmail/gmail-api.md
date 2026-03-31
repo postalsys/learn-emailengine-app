@@ -451,7 +451,7 @@ If a user deselects a required scope (e.g., unchecks email access), EmailEngine:
 
 1. Detects the missing scope(s)
 2. Revokes the partial token (best-effort) to prevent dangling grants
-3. Shows an error page explaining which permissions are required
+3. Shows an error page listing the missing permissions with human-readable descriptions
 4. Offers a "Try Again" button to restart the OAuth2 flow
 
 This prevents accounts from being registered with insufficient permissions, which would cause authentication errors during sync.

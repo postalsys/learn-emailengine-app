@@ -475,10 +475,11 @@ Passkey registration requires a configured Service URL (`serviceUrl`). The URL's
 1. Ensure `serviceUrl` is configured in **Configuration** > **Service**
 2. Navigate to **Account** > **Security** (click your username in the top-right)
 3. In the **Passkeys** section, click **Add passkey**
-4. Enter a descriptive name (e.g., "MacBook Touch ID", "YubiKey")
-5. Follow your browser's WebAuthn prompt to register the authenticator
+4. Enter your current password to verify your identity
+5. Enter a descriptive name (e.g., "MacBook Touch ID", "YubiKey")
+6. Follow your browser's WebAuthn prompt to register the authenticator
 
-You can register multiple passkeys per admin user.
+You can register up to 20 passkeys per admin user.
 
 **Signing in with a passkey:**
 
@@ -494,12 +495,18 @@ Passkey authentication bypasses the TOTP requirement - if you have TOTP configur
 - Each passkey shows its name and registration date
 - Remove individual passkeys using the **Remove** button
 
+:::warning Password Changes Clear Passkeys
+Changing the admin password immediately deletes all registered passkeys for that user. This is a security measure to prevent unauthorized passkey-only access if the password is compromised. Re-register your passkeys after a password change.
+:::
+
 **Security details:**
 
 - Only public keys are stored server-side - private keys never leave the authenticator device
+- Registration requires current password verification
 - Registration challenges expire after 5 minutes and are single-use
-- Per-IP rate limiting protects authentication endpoints against brute-force attacks
-- All authentication events (success and failure) are logged with method, username, and IP address
+- Maximum 20 passkeys per admin user
+- Per-IP rate limiting protects all passkey endpoints (registration and authentication)
+- All passkey events (registration, deletion, login success, and login failure) are logged with method, username, and IP address
 
 ### Audit Logging
 
@@ -515,8 +522,11 @@ EmailEngine logs all admin authentication events with structured data for securi
 | Failed TOTP verification | method: `totp`, error, IP address |
 | Successful passkey login | method: `passkey`, user, IP address |
 | Failed passkey login | method: `passkey`, error, IP address |
+| Passkey registered | method: `passkey`, user, passkey name, IP address |
+| Passkey deleted | method: `passkey`, user, credential ID, IP address |
+| Passkeys cleared (password change) | user |
 
-Use these log entries to detect unauthorized access attempts and feed them into your SIEM or log aggregation system.
+These events are written to the application log (stdout). Use these log entries to detect unauthorized access attempts and feed them into your SIEM or log aggregation system.
 
 ### Single Sign-On (Okta)
 

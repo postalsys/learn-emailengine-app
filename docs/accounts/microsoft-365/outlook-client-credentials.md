@@ -466,10 +466,22 @@ By default, EmailEngine stores credentials in cleartext in Redis. To protect sen
 
 Application access uses MS Graph webhook subscriptions for real-time email notifications. EmailEngine requires two publicly reachable HTTPS endpoints:
 
-- `{serviceUrl}/oauth/msg/notification` - Receives change notifications
-- `{serviceUrl}/oauth/msg/lifecycle` - Receives lifecycle events (subscription renewal, missed notifications)
+- `{serviceUrl}/oauth/msg/notification` - Receives change notifications for messages
+- `{serviceUrl}/oauth/msg/lifecycle` - Receives lifecycle events (subscription renewal, reauthorization, missed notifications)
 
 EmailEngine automatically creates and renews these subscriptions. If the endpoints are not reachable from Microsoft's servers, EmailEngine falls back to periodic polling.
+
+### Automatic Recovery for Missed Notifications
+
+Microsoft Graph may occasionally fail to deliver change notifications - for example, due to transient network issues or service disruptions. When this happens, Microsoft sends a `missed` lifecycle event to inform EmailEngine that notifications were lost.
+
+EmailEngine handles this automatically:
+
+1. When a `missed` lifecycle event is received, EmailEngine queries the Microsoft Graph API for recent messages
+2. Any messages not already processed through normal notifications are synced
+3. A cooldown period prevents repeated recovery runs for the same event
+
+No configuration is required - this recovery mechanism is built in and runs automatically for all MS Graph accounts with webhook subscriptions enabled.
 
 :::info Public HTTPS Required
 MS Graph webhook subscriptions require publicly accessible HTTPS endpoints. If your EmailEngine instance is behind a firewall or on a private network, you will need to configure a reverse proxy or tunnel. Without reachable endpoints, EmailEngine will still work but will rely on polling for updates instead of real-time notifications.
