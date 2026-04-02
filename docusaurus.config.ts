@@ -70,7 +70,7 @@ const config: Config = {
 
   // GitHub pages deployment config.
   organizationName: 'postalsys',
-  projectName: 'learn.emailengine.app',
+  projectName: 'learn-emailengine-app',
   trailingSlash: false,
   deploymentBranch: 'gh-pages',
 
