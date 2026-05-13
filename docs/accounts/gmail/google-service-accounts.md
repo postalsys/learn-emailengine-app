@@ -15,6 +15,15 @@ Sources merged:
 
 Service accounts provide a powerful way for Google Workspace admins to grant EmailEngine access to any email account in the organization without requiring individual user consent. This guide shows you how to set up service accounts with domain-wide delegation.
 
+:::tip Two authentication methods
+EmailEngine supports two ways to authenticate a service account:
+
+- **Service account key** - the classic flow with a JSON key file containing a private RSA key. Covered in Steps 1-8 below.
+- **Workload Identity Federation (keyless)** - your runtime (GKE, EKS, AKS, or any OIDC source) provides a short-lived token that Google trusts; no long-lived key is stored. See [Alternative: Workload Identity Federation](#alternative-workload-identity-federation-keyless).
+
+Both methods use the same domain-wide delegation setup. Only the signing step differs.
+:::
+
 ## Overview
 
 ### What are Service Accounts?
@@ -126,6 +135,7 @@ For push notification setup, see [Setting Up Gmail API](/docs/accounts/gmail/gma
 - Service account credentials provide access to all users
 - Must be stored very securely
 - Compromised credentials = access to entire organization's email
+- For deployments where storing long-lived JSON keys is unacceptable, use [Workload Identity Federation](#alternative-workload-identity-federation-keyless) instead
 
 ## Step 1: Create a Google Cloud Project
 
@@ -304,6 +314,10 @@ This step in the Admin Console is where the service account actually receives pe
 
 ## Step 5: Generate Service Account Key
 
+:::tip Prefer a keyless setup?
+If your clients prohibit long-lived service-account JSON keys for compliance reasons, you can skip generating a key entirely. See [Alternative: Workload Identity Federation](#alternative-workload-identity-federation-keyless) below. The federation flow replaces only the signing key - every other step in this guide stays the same.
+:::
+
 Return to the Google Cloud Console service accounts page.
 
 Open the context menu for your service account (three dots) and click **Manage keys**.
@@ -440,6 +454,177 @@ You can also find the App ID by calling the [List OAuth2 Apps API endpoint](/doc
 curl https://your-ee.com/v1/oauth2 \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN"
 ```
+
+## Alternative: Workload Identity Federation (Keyless)
+
+Workload Identity Federation (WIF) lets EmailEngine authenticate as a Google service account without storing a long-lived JSON key. Instead, the workload it runs on (a GKE pod, an EKS pod, a VM with managed identity, or any OIDC-emitting source) presents a short-lived token that Google's Security Token Service exchanges for a federated access token. EmailEngine then asks Google to sign the JWT bearer assertion server-side via the IAM Credentials API.
+
+The end result is identical to the key-based flow: a signed JWT is exchanged at `oauth2.googleapis.com/token` for an IMAP XOAUTH2 access token. Only the signing step changes.
+
+### Why use WIF
+
+- **No JSON keys to rotate, leak, or revoke.** The signing key never leaves Google.
+- **Compliance.** Many security frameworks now flag long-lived service-account keys; WIF removes them entirely.
+- **Audit trail.** Every `signJwt` call is recorded in Google Cloud audit logs against the impersonated service account.
+
+### When to use WIF
+
+WIF is only useful when EmailEngine runs in an environment that can produce a credential Google trusts:
+
+- **Google Kubernetes Engine (GKE)** with Workload Identity bound to a Google IAM service account
+- **Amazon EKS** with IAM Roles for Service Accounts (IRSA) projecting a service-account token
+- **Azure Kubernetes Service (AKS)** with workload identity / managed identity
+- **Self-managed Kubernetes** with a projected service-account token volume
+- **Any OIDC identity provider** exposing tokens over HTTP
+
+If you self-host EmailEngine on a plain VM or on the EmailEngine Hosted service, stick with the key-based flow described above.
+
+### What stays the same
+
+Steps 1-4 and 6 of this guide are unchanged. You still:
+
+- Create the Google Cloud project
+- Configure the OAuth consent screen
+- Create the service account
+- Enable domain-wide delegation in the Google Workspace admin console with the same scopes (`https://mail.google.com/`)
+- Enable the Gmail API
+
+What changes is Step 5 - instead of generating and downloading a JSON key, you create an external account credential configuration that points at your workload's identity source.
+
+### Required IAM bindings
+
+In addition to the standard DWD setup, the service account needs one extra permission so it can sign JWTs for itself via the IAM Credentials API.
+
+**1. Bind your workload identity to the Google service account.**
+
+For GKE, annotate the Kubernetes Service Account so it can impersonate the Google service account:
+
+```bash
+gcloud iam service-accounts add-iam-policy-binding \
+  GSA_EMAIL \
+  --role=roles/iam.workloadIdentityUser \
+  --member="serviceAccount:PROJECT_ID.svc.id.goog[NAMESPACE/KSA_NAME]"
+```
+
+For EKS/AKS/OIDC providers, follow the equivalent binding for your workload identity pool provider.
+
+**2. Grant the service account permission to sign JWTs for itself.**
+
+```bash
+gcloud iam service-accounts add-iam-policy-binding \
+  GSA_EMAIL \
+  --role=roles/iam.serviceAccountTokenCreator \
+  --member="serviceAccount:GSA_EMAIL"
+```
+
+This is what allows EmailEngine to call `iamcredentials.googleapis.com:signJwt` for the service account.
+
+### Generate the external account credential configuration
+
+Use `gcloud iam workload-identity-pools create-cred-config` to produce the JSON file. The exact arguments depend on your workload identity provider, but the output always conforms to the same external-account schema.
+
+**Example for GKE:**
+
+```bash
+gcloud iam workload-identity-pools create-cred-config \
+  projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID \
+  --service-account=GSA_EMAIL \
+  --credential-source-file=/var/run/secrets/tokens/gcp-ksa/token \
+  --output-file=external-account.json
+```
+
+The resulting `external-account.json` looks like:
+
+```json
+{
+  "type": "external_account",
+  "audience": "//iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID",
+  "subject_token_type": "urn:ietf:params:oauth:token-type:jwt",
+  "token_url": "https://sts.googleapis.com/v1/token",
+  "service_account_impersonation_url": "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/GSA_EMAIL:generateAccessToken",
+  "credential_source": {
+    "file": "/var/run/secrets/tokens/gcp-ksa/token",
+    "format": { "type": "text" }
+  }
+}
+```
+
+**Example for an OIDC provider exposing tokens over HTTP** (Azure IMDS, custom OIDC issuer, etc.):
+
+```json
+{
+  "type": "external_account",
+  "audience": "//iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID",
+  "subject_token_type": "urn:ietf:params:oauth:token-type:id_token",
+  "token_url": "https://sts.googleapis.com/v1/token",
+  "service_account_impersonation_url": "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/GSA_EMAIL:generateAccessToken",
+  "credential_source": {
+    "url": "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=AUDIENCE",
+    "headers": { "Metadata": "true" },
+    "format": { "type": "json", "subject_token_field_name": "access_token" }
+  }
+}
+```
+
+:::info Supported credential sources
+EmailEngine supports the `file` and `url` credential sources. The `executable` and AWS sigv4 `aws4_request` variants are not implemented; EKS users should use the projected service-account token at the standard mount path, which uses the `file` source.
+:::
+
+### Mount the projected token (GKE)
+
+Your pod spec must mount a projected service-account token volume at the path referenced in `credential_source.file`:
+
+```yaml
+spec:
+  serviceAccountName: KSA_NAME
+  containers:
+    - name: emailengine
+      volumeMounts:
+        - name: gcp-ksa
+          mountPath: /var/run/secrets/tokens/gcp-ksa
+          readOnly: true
+  volumes:
+    - name: gcp-ksa
+      projected:
+        sources:
+          - serviceAccountToken:
+              path: token
+              audience: https://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID
+              expirationSeconds: 3600
+```
+
+The Kubernetes kubelet rotates this token automatically before expiry; EmailEngine re-reads the file on every cold token refresh.
+
+### Configure EmailEngine
+
+In the EmailEngine OAuth2 app form:
+
+1. Select **Gmail Service Accounts** as the provider.
+2. Choose **Workload Identity Federation (keyless)** as the authentication method.
+3. Fill in the **Google Cloud Project ID**, **Client Email**, and **Service client** fields with the same values you would use for the key-based flow. The "Load configuration from the external-account JSON file" button auto-fills the client email from the impersonation URL.
+4. Paste the contents of `external-account.json` into the **External account configuration** textarea, or use the file upload button.
+5. Click **Register app**.
+
+EmailEngine validates the JSON shape on save and rejects unsupported credential sources or malformed configurations up front.
+
+### Troubleshooting
+
+When token acquisition fails, EmailEngine surfaces a stable error code that points at the failing step:
+
+| Error code | What it means | Likely fix |
+|---|---|---|
+| `EExternalAccountConfig` | The stored JSON is malformed, has the wrong `type`, or uses an unsupported credential source. | Re-run `gcloud iam workload-identity-pools create-cred-config` and re-paste the JSON. Ensure `type` is `external_account` and `credential_source` uses `file` or `url`. |
+| `ESubjectTokenRead` | EmailEngine could not read the subject token (file missing, IMDS unreachable, empty response). | Verify the projected token volume is mounted at the expected path. For `url` sources, confirm the IMDS endpoint is reachable and the workload has the right metadata headers. |
+| `ESTSExchange` | Google STS rejected the token exchange. | Common causes: wrong `audience`, Kubernetes service account not bound to the Google service account via Workload Identity, or the workload identity pool provider is disabled. Check the `error_description` in the EmailEngine error log. |
+| `EImpersonate` | The federated identity could not impersonate the target service account. | Grant `roles/iam.serviceAccountTokenCreator` to the workload identity pool member on the target service account (or to the service account itself if it impersonates itself). |
+| `ESignJwt` | The `iamcredentials.googleapis.com:signJwt` call failed. | If status is 403, the service account is missing `roles/iam.serviceAccountTokenCreator` on itself. If status is 429, requests are being rate-limited - this is rare under normal token-refresh cadence. |
+| `EUnknownAuthMethod` | EmailEngine received an unrecognized `authMethod` value. | Should not occur via the admin UI; indicates direct API misuse. |
+
+If domain-wide delegation has not been authorized in the Workspace admin console for the impersonating service account, the final token exchange at `oauth2.googleapis.com/token` returns `unauthorized_client` regardless of WIF status. That error path is identical to the key-based flow.
+
+### Hosted EmailEngine
+
+The hosted EmailEngine service does not run inside your workload-identity boundary, so WIF is not available there. Hosted customers continue with the key-based flow.
 
 ## Step 8: Add Email Accounts
 
