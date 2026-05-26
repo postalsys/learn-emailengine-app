@@ -489,35 +489,65 @@ Steps 1-4 and 6 of this guide are unchanged. You still:
 - Enable domain-wide delegation in the Google Workspace admin console with the same scopes (`https://mail.google.com/`)
 - Enable the Gmail API
 
-What changes is Step 5 - instead of generating and downloading a JSON key, you create an external account credential configuration that points at your workload's identity source.
+Instead of Step 5 (generating and downloading a JSON key), federation replaces the signing key with a chain you set up once: enable two APIs, create a workload identity pool and provider, grant the pool one IAM binding on the service account, and point EmailEngine at an external account credential configuration that reads your workload's identity token. The following subsections walk through each part.
 
-### Required IAM bindings
+### Enable the required APIs
 
-In addition to the standard DWD setup, the service account needs one extra permission so it can sign JWTs for itself via the IAM Credentials API.
+In the Google Cloud project, enable the two APIs the federation flow calls:
 
-**1. Bind your workload identity to the Google service account.**
-
-For GKE, annotate the Kubernetes Service Account so it can impersonate the Google service account:
+- **Security Token Service API** (`sts.googleapis.com`) - exchanges the workload's OIDC token for a federated Google access token.
+- **IAM Service Account Credentials API** (`iamcredentials.googleapis.com`) - signs the JWT bearer assertion (`signJwt`).
 
 ```bash
-gcloud iam service-accounts add-iam-policy-binding \
-  GSA_EMAIL \
-  --role=roles/iam.workloadIdentityUser \
-  --member="serviceAccount:PROJECT_ID.svc.id.goog[NAMESPACE/KSA_NAME]"
+gcloud services enable sts.googleapis.com iamcredentials.googleapis.com --project=PROJECT_ID
 ```
 
-For EKS/AKS/OIDC providers, follow the equivalent binding for your workload identity pool provider.
+### Create a Workload Identity Pool and provider
 
-**2. Grant the service account permission to sign JWTs for itself.**
+Create a workload identity pool and an OIDC provider that trusts the OIDC issuer of the environment EmailEngine runs in (for GKE, the cluster's OIDC issuer URL; for EKS, the cluster OIDC provider URL; for any other source, its issuer).
 
 ```bash
-gcloud iam service-accounts add-iam-policy-binding \
-  GSA_EMAIL \
+# Create the pool
+gcloud iam workload-identity-pools create POOL_ID \
+  --project=PROJECT_ID \
+  --location=global \
+  --display-name="EmailEngine WIF pool"
+
+# Create an OIDC provider in the pool
+gcloud iam workload-identity-pools providers create-oidc PROVIDER_ID \
+  --project=PROJECT_ID \
+  --location=global \
+  --workload-identity-pool=POOL_ID \
+  --issuer-uri="https://ISSUER_OF_YOUR_WORKLOAD" \
+  --attribute-mapping="google.subject=assertion.sub"
+```
+
+:::note Attribute mapping
+`google.subject=assertion.sub` maps the `sub` claim of the workload's OIDC token to the federated principal that the IAM binding below references. Add an `--attribute-condition` if you want to restrict which workload identities the pool accepts.
+:::
+
+You will also need the project **number** (not the ID) - it is part of the pool audience used in the binding and the credential configuration:
+
+```bash
+gcloud projects describe PROJECT_ID --format="value(projectNumber)"
+```
+
+### Grant the pool access to the service account
+
+This is the one federation-specific binding the service account needs. EmailEngine calls `iamcredentials.googleapis.com signJwt` **as the federated pool principal** - it does not first impersonate the service account - so that principal must hold **Service Account Token Creator** (`roles/iam.serviceAccountTokenCreator`) on the target service account:
+
+```bash
+gcloud iam service-accounts add-iam-policy-binding GSA_EMAIL \
+  --project=PROJECT_ID \
   --role=roles/iam.serviceAccountTokenCreator \
-  --member="serviceAccount:GSA_EMAIL"
+  --member="principalSet://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/*"
 ```
 
-This is what allows EmailEngine to call `iamcredentials.googleapis.com:signJwt` for the service account.
+The `principalSet://.../*` member grants every identity from the pool. To scope it to a single workload identity, use a `principal://.../subject/SUBJECT_VALUE` member instead, where `SUBJECT_VALUE` is the `sub` claim of the workload's OIDC token.
+
+:::danger Workload Identity User is not sufficient
+A common mistake - including in Google's own "Grant access" helper - is to grant `roles/iam.workloadIdentityUser`. That role permits `generateAccessToken` but **not** `signJwt`, so EmailEngine's token acquisition fails with a `403` on `signJwt` (surfaced as the `ESignJwt` error). Because EmailEngine signs the assertion directly via `signJwt`, the pool principal must have **`roles/iam.serviceAccountTokenCreator`** on the service account. Do not grant the service account this role on itself - the federated pool principal is the caller, not the service account.
+:::
 
 ### Generate the external account credential configuration
 
@@ -607,17 +637,45 @@ In the EmailEngine OAuth2 app form:
 
 EmailEngine validates the JSON shape on save and rejects unsupported credential sources or malformed configurations up front.
 
+:::important Client Email must match the impersonated service account
+In federation mode EmailEngine issues the JWT bearer assertion as the service account named in the configuration's `service_account_impersonation_url`. The **Client Email** field must be that same service account address. If they differ, EmailEngine rejects the configuration with `EServiceAccountMismatch` rather than failing later with an opaque `invalid_grant`.
+:::
+
+The authentication method (service account key vs Workload Identity Federation) is fixed once the application is created. To switch methods, create a new application.
+
+### Verify the setup
+
+After registering the app, use the built-in setup verifier to confirm every step works before pointing real accounts at it. On the OAuth2 application page click **Verify setup**, or call the API:
+
+```bash
+curl -X POST https://your-ee.com/v1/oauth2/APP_ID/verify \
+  -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "account": "user@yourdomain.com" }'
+```
+
+The verifier runs the real authentication chain and reports each step as `ok`, `fail`, or `skip` with an actionable hint:
+
+1. **Configuration** - the external account JSON is structurally valid.
+2. **Read OIDC subject token** - the credential source (file or url) is readable.
+3. **STS token exchange** - the pool, provider, audience, and issuer line up.
+4. **Sign assertion (signJwt)** - the pool principal can sign as the service account. This is what catches the Token Creator binding mistake described above.
+5. **Domain-wide delegation token** - Google issues an access token for the impersonated user (requires the `account` field).
+6. **Mailbox access** - a live, read-only IMAP login confirms the token works and that IMAP access is enabled for the domain.
+
+Steps 1-4 run without an `account`; supply a mailbox address in your Workspace domain to also exercise steps 5-6. The verifier is read-only - it never modifies a mailbox or sends mail.
+
 ### Troubleshooting
 
-When token acquisition fails, EmailEngine surfaces a stable error code that points at the failing step:
+When token acquisition fails, EmailEngine surfaces a stable error code that points at the failing step. The **Verify setup** action above reports the same codes per step.
 
 | Error code | What it means | Likely fix |
 |---|---|---|
 | `EExternalAccountConfig` | The stored JSON is malformed, has the wrong `type`, or uses an unsupported credential source. | Re-run `gcloud iam workload-identity-pools create-cred-config` and re-paste the JSON. Ensure `type` is `external_account` and `credential_source` uses `file` or `url`. |
-| `ESubjectTokenRead` | EmailEngine could not read the subject token (file missing, IMDS unreachable, empty response). | Verify the projected token volume is mounted at the expected path. For `url` sources, confirm the IMDS endpoint is reachable and the workload has the right metadata headers. |
-| `ESTSExchange` | Google STS rejected the token exchange. | Common causes: wrong `audience`, Kubernetes service account not bound to the Google service account via Workload Identity, or the workload identity pool provider is disabled. Check the `error_description` in the EmailEngine error log. |
-| `EImpersonate` | The federated identity could not impersonate the target service account. | Grant `roles/iam.serviceAccountTokenCreator` to the workload identity pool member on the target service account (or to the service account itself if it impersonates itself). |
-| `ESignJwt` | The `iamcredentials.googleapis.com:signJwt` call failed. | If status is 403, the service account is missing `roles/iam.serviceAccountTokenCreator` on itself. If status is 429, requests are being rate-limited - this is rare under normal token-refresh cadence. |
+| `EServiceAccountMismatch` | The **Client Email** field does not match the service account in the `service_account_impersonation_url`. | Set Client Email to the same service account address the impersonation URL points at. |
+| `ESubjectTokenRead` | EmailEngine could not read the subject token (file missing, URL unreachable, empty response). | Verify the projected token volume is mounted at the path in `credential_source.file`. For `url` sources, confirm the endpoint is reachable and any required headers are set. |
+| `ESTSExchange` | Google STS rejected the token exchange. | Common causes: wrong `audience`, the workload's OIDC issuer does not match the provider's `issuer-uri`, the subject token's audience does not match the provider, or the pool/provider is disabled. Check the `error_description` in the EmailEngine error log. |
+| `ESignJwt` | The `iamcredentials.googleapis.com signJwt` call failed. | A `403` means the federated pool principal is missing **`roles/iam.serviceAccountTokenCreator`** on the service account (see the binding above - `workloadIdentityUser` is not enough). A `429` means requests are being rate-limited, which is rare under normal token-refresh cadence. |
 | `EUnknownAuthMethod` | EmailEngine received an unrecognized `authMethod` value. | Should not occur via the admin UI; indicates direct API misuse. |
 
 If domain-wide delegation has not been authorized in the Workspace admin console for the impersonating service account, the final token exchange at `oauth2.googleapis.com/token` returns `unauthorized_client` regardless of WIF status. That error path is identical to the key-based flow.
