@@ -314,24 +314,22 @@ curl https://oauth2.googleapis.com/token
 
    **Solution:**
 
-   - Verify credentials in Google Cloud Console
-   - Ensure credentials match environment variables
-   - Check for trailing spaces in environment variables
-
-   ```bash
-   # Print without newline to check
-   echo -n "$EENGINE_GMAIL_CLIENT_ID" | xxd
-   ```
+   - Verify the client ID and secret in Google Cloud Console (or the Microsoft Entra app for Outlook)
+   - Update the values in the EmailEngine OAuth2 application (dashboard under Configuration > OAuth2, or `PUT /v1/oauth2/{app}`). OAuth2 credentials are stored on the OAuth2 application, not in environment variables
+   - Check for trailing spaces when pasting the client ID/secret into the app form
+   - After updating, use the OAuth2 app "Verify setup" action to confirm the credentials work
 
 2. **Incorrect redirect URI**
 
    **Solution:**
 
-   ```bash
-   # Set correct base URL
-   export EENGINE_BASE_URL=https://emailengine.example.com
+   Set EmailEngine's service URL correctly - it is the `serviceUrl` setting (configured in the dashboard under Configuration, or via the `EENGINE_SETTINGS` JSON), not a standalone environment variable. The OAuth2 redirect URI is derived from it.
 
-   # Verify redirect URI in OAuth2 provider
+   ```bash
+   # Provide serviceUrl through prepared settings
+   export EENGINE_SETTINGS='{"serviceUrl":"https://emailengine.example.com"}'
+
+   # Verify the redirect URI registered in the OAuth2 provider
    # Should match: https://emailengine.example.com/oauth
    ```
 

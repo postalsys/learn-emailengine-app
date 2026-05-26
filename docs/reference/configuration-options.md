@@ -894,15 +894,15 @@ Concurrency for notification/webhook queue.
 EENGINE_NOTIFY_QC=4
 ```
 
-### Queue Cleanup Time
+### Queue History Size
 
 **Environment:** `EENGINE_QUEUE_REMOVE_AFTER`
-**Default:** `0` (no cleanup)
+**Default:** `0` (keep none)
 
-Time to keep completed jobs before cleanup.
+Number of completed and failed queue entries to retain for debugging (this is a count of jobs, not a duration). Stored internally as the `queueKeep` setting.
 
 ```bash
-EENGINE_QUEUE_REMOVE_AFTER=86400000
+EENGINE_QUEUE_REMOVE_AFTER=1000
 ```
 
 ## SMTP Proxy Server

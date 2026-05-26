@@ -95,9 +95,9 @@ await transporter.sendMail({
 });
 ```
 
-### Using Email Address
-
-You can also use the email address as username:
+:::warning The SMTP username is always the account ID
+EmailEngine matches the SMTP `AUTH` username against the **account ID** - the identifier you assigned when registering the account, not the mailbox email address. An email address only works as the username if the account ID happens to be that exact string. Always authenticate with the account ID.
+:::
 
 ```python
 # Example: Python smtplib
@@ -110,7 +110,7 @@ msg['From'] = 'sender@example.com'
 msg['To'] = 'recipient@example.com'
 
 server = smtplib.SMTP('emailengine.example.com', 2525)
-server.login('sender@example.com', 'your-api-token')
+server.login('example', 'your-api-token')  # Account ID as username
 server.send_message(msg)
 server.quit()
 ```
@@ -128,7 +128,7 @@ server.quit()
    - **Port**: 2525
    - **Connection security**: None (or SSL/TLS if TLS is enabled on the server)
    - **Authentication method**: Normal password
-   - **Username**: Account ID or email address
+   - **Username**: Account ID (the identifier assigned when registering the account)
    - **Password**: API token
 
 #### Apple Mail
@@ -139,7 +139,7 @@ server.quit()
 4. Configure **Outgoing Mail Server**:
    - **Host Name**: emailengine.example.com
    - **Port**: 2525
-   - **User Name**: Account ID or email address
+   - **User Name**: Account ID (the identifier assigned when registering the account)
    - **Password**: API token
 
 ### Programming Languages
@@ -358,10 +358,10 @@ Messages sent via the SMTP interface are treated the same as messages sent via R
 - Webhook notifications (`messageSent`, `messageDeliveryError`, `messageFailed`)
 - Visible in Bull Board queue UI
 
-Query queue status:
+Query queue status (the outbox is a single global queue, not scoped per account):
 
 ```bash
-curl "https://ee.example.com/v1/account/example/outbox" \
+curl "https://ee.example.com/v1/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 

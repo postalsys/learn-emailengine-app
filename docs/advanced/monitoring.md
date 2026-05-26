@@ -466,7 +466,7 @@ The dashboard includes an `Instance` variable for filtering by EmailEngine insta
 1. Click the gear icon on the dashboard to access **Settings**
 2. Go to **Variables**
 3. Edit the `host` variable if needed to match your Prometheus labels
-4. The default query `label_values(emailengine_info, instance)` should auto-populate with your instances
+4. The default query `label_values(emailengine_config, instance)` should auto-populate with your instances
 
 ### Dashboard Variables
 
@@ -474,7 +474,7 @@ The dashboard uses these variables for filtering:
 
 | Variable | Description | Default Query |
 |----------|-------------|---------------|
-| `$host` | EmailEngine instance filter | `label_values(emailengine_info, instance)` |
+| `$host` | EmailEngine instance filter | `label_values(emailengine_config, instance)` |
 
 Select different instances from the dropdown at the top of the dashboard to filter all panels.
 

@@ -120,6 +120,20 @@ On May 14, 2025, at 10:30 AM, Original Sender wrote:
 
 When `false`, only your new content is included.
 
+### Complete reference object fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `message` | string | EmailEngine message ID to reply to or forward. Required unless `threadId` is supplied. |
+| `action` | string | `reply` (default), `reply-all`, or `forward`. |
+| `inline` | boolean | Include the original message as quoted text (default `false`). |
+| `forwardAttachments` | boolean | Include original attachments when forwarding (only valid when `action` is `forward`; default `false`). |
+| `ignoreMissing` | boolean | Continue sending even if the referenced message cannot be found (default `false`). |
+| `messageId` | string | Verify the referenced email's `Message-ID` matches this value before proceeding. |
+| `threadId` | string | Gmail thread ID to attach the outgoing message to. Used only by Gmail-API accounts; ignored for IMAP and Microsoft Graph accounts, which thread via the RFC `In-Reply-To`/`References` headers. When both `message` and `threadId` are provided, the supplied `threadId` takes precedence over the value derived from the referenced message. |
+
+At least one of `message` or `threadId` must be present.
+
 ### Overriding Auto-Generated Fields
 
 You can override any automatically set fields:

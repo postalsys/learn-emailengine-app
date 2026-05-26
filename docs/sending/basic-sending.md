@@ -581,10 +581,10 @@ curl "http://127.0.0.1:3000/v1/account/example/messages?path=Sent" \
 
 ### Monitor Queue
 
-Check the outbox queue status:
+Check the outbox queue status. The outbox is a single global queue (it is not scoped per account):
 
 ```bash
-curl "http://127.0.0.1:3000/v1/account/example/outbox" \
+curl "http://127.0.0.1:3000/v1/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 

@@ -409,7 +409,7 @@ Advanced configuration options for debugging and performance tuning.
 | `EENGINE_LOG_RAW` | boolean | `false` | Log raw IMAP protocol traffic (debug only) | `true` |
 | `EENGINE_DISABLE_COMPRESSION` | boolean | `false` | Disable IMAP COMPRESS extension | `true` |
 | `EENGINE_DISABLE_MESSAGE_BROWSER` | boolean | `false` | Disable web-based message browser | `true` |
-| `EENGINE_CORS_ORIGIN` | string | none | CORS allowed origins (space or comma separated) | `https://app.example.com` |
+| `EENGINE_CORS_ORIGIN` | string | none | CORS allowed origins (whitespace separated) | `https://app.example.com` |
 | `EENGINE_CORS_MAX_AGE` | number | `60` | CORS preflight cache duration in seconds | `3600` |
 
 **Examples:**

@@ -271,7 +271,7 @@ Most successful responses follow this structure:
 | Code                     | Description                  | Solution              |
 | ------------------------ | ---------------------------- | --------------------- |
 | `InvalidRequest`         | Request validation failed    | Check required fields |
-| `AuthenticationRequired` | Missing authentication       | Provide valid token   |
+| `InvalidToken`           | Missing or invalid API token | Provide a valid token |
 | `AccountNotFound`        | Account doesn't exist        | Verify account ID     |
 | `MessageNotFound`        | Message doesn't exist        | Check message ID      |
 | `RateLimitExceeded`      | Too many requests            | Implement backoff     |

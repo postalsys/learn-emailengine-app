@@ -462,13 +462,11 @@ Error: connect ECONNREFUSED 127.0.0.1:6379
 
 **Solution:** Verify `REDIS_URL` is correct and Redis is running.
 
-**Invalid secret:**
+**Encrypted data cannot be decrypted:**
 
-```
-Error: EENGINE_SECRET must be at least 32 characters
-```
+EmailEngine does not enforce a minimum length for `EENGINE_SECRET`, but the secret must stay the same across restarts. If the secret changes, previously encrypted values (OAuth2 tokens, passwords) can no longer be decrypted.
 
-**Solution:** Generate longer secret key.
+**Solution:** Use a single, stable secret for the lifetime of the deployment (a 32-byte random value such as `openssl rand -hex 32` is recommended) and store it securely.
 
 ### Generate Secrets
 

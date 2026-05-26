@@ -96,8 +96,8 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/v1/account/{account}/messages/move` | Move multiple messages |
-| `POST` | `/v1/account/{account}/messages/delete` | Delete multiple messages |
+| `PUT` | `/v1/account/{account}/messages/move` | Move multiple messages |
+| `PUT` | `/v1/account/{account}/messages/delete` | Delete multiple messages |
 
 ### Export Operations (Beta)
 
@@ -135,7 +135,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | `GET` | `/v1/templates/template/{template}` | Get template |
 | `PUT` | `/v1/templates/template/{template}` | Update template |
 | `DELETE` | `/v1/templates/template/{template}` | Delete template |
-| `GET` | `/v1/templates/account/{account}` | List account's templates |
+| `DELETE` | `/v1/templates/account/{account}` | Delete all templates for an account |
 
 ### Settings & Configuration
 
@@ -151,9 +151,9 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/v1/webhookRoutes` | List webhook routes |
-| `POST` | `/v1/webhookRoutes/webhookRoute` | Create webhook route |
-| `PUT` | `/v1/webhookRoutes/webhookRoute/{webhookRoute}` | Update route |
-| `DELETE` | `/v1/webhookRoutes/webhookRoute/{webhookRoute}` | Delete route |
+| `GET` | `/v1/webhookRoutes/webhookRoute/{webhookRoute}` | Get a webhook route |
+
+Webhook routes are read-only through the API - create and edit them in the EmailEngine dashboard. Webhook delivery itself is configured via `POST /v1/settings` (`webhooks`, `webhooksEnabled`, `webhookEvents`).
 
 ### OAuth2 Applications
 
@@ -181,7 +181,6 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 |--------|----------|-------------|
 | `GET` | `/v1/tokens` | List all tokens |
 | `POST` | `/v1/token` | Create token |
-| `GET` | `/v1/token/{token}` | Get token |
 | `DELETE` | `/v1/token/{token}` | Delete token |
 | `GET` | `/v1/tokens/account/{account}` | List account tokens |
 
@@ -551,7 +550,8 @@ curl -X POST "https://emailengine.example.com/v1/authentication/form" \
 | `AccountNotFound` | Account doesn't exist |
 | `MessageNotFound` | Message doesn't exist |
 | `InvalidRequest` | Request validation failed |
-| `AuthenticationRequired` | Missing API token |
+| `InvalidToken` | Missing or invalid API access token |
+| `AccountAlreadyExists` | An account with the same ID (or OAuth2 user) already exists |
 | `RateLimitExceeded` | Too many requests |
 | `ConnectionError` | Can't connect to mail server |
 

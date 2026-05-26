@@ -82,11 +82,12 @@ Missing or invalid authentication credentials.
 **Example:**
 ```json
 {
-  "error": "Authentication required",
-  "code": "AuthenticationRequired",
+  "error": "Missing or invalid API key",
   "statusCode": 401
 }
 ```
+
+A `code` field is included only when EmailEngine recognizes a specific token problem (for example `InvalidToken`). A plain missing-credentials response returns the standard 401 without a custom `code`.
 
 **Common Causes:**
 - Missing Authorization header
@@ -107,21 +108,22 @@ Valid authentication but insufficient permissions.
 **Example:**
 ```json
 {
-  "error": "Insufficient permissions",
-  "code": "InsufficientPermissions",
+  "error": "Unauthorized scope",
   "statusCode": 403
 }
 ```
 
+A 403 response carries a descriptive message such as `Unauthorized scope`, `Unauthorized account`, `Unauthorized address`, or `Unauthorized referrer`, but no custom `code` field.
+
 **Common Causes:**
 - Token has restricted scope
-- Account-specific token used for wrong account
-- Operation not permitted for license type
+- Account-specific token used for a different account
+- Request origin not in the allowed referrer/address list
 
 **Solutions:**
-- Use token with appropriate scope
-- Verify account ownership
-- Upgrade license if needed
+- Use a token with the appropriate scope
+- Verify the token is bound to the correct account
+- Check the allowed referrers/addresses configuration
 
 ---
 
@@ -150,28 +152,26 @@ Requested resource does not exist.
 
 ---
 
-#### 409 Conflict
+#### 400 - Duplicate resource
 
-Request conflicts with current resource state.
+EmailEngine reports a duplicate account as a `400 Bad Request` with the code `AccountAlreadyExists` (it does not use `409 Conflict`).
 
 **Example:**
 ```json
 {
-  "error": "Account already exists",
-  "code": "AccountExists",
-  "statusCode": 409
+  "error": "This account already exists",
+  "code": "AccountAlreadyExists",
+  "statusCode": 400
 }
 ```
 
 **Common Causes:**
-- Duplicate account registration
-- Concurrent modification conflict
-- Resource in invalid state for operation
+- Registering an account ID that already exists
+- Registering an OAuth2 account whose user already belongs to another account
 
 **Solutions:**
-- Use different account ID
-- Update existing resource instead
-- Check resource state
+- Use a different account ID
+- Update the existing account instead (the create endpoint also updates an existing account)
 
 ---
 
@@ -236,7 +236,6 @@ Unexpected server error occurred.
 ```json
 {
   "error": "Internal server error",
-  "code": "InternalError",
   "statusCode": 500
 }
 ```
@@ -255,13 +254,13 @@ Unexpected server error occurred.
 
 #### 502 Bad Gateway
 
-EmailEngine received invalid response from upstream service (IMAP/SMTP server).
+EmailEngine could not complete an operation because the upstream mail server (IMAP/SMTP) was unavailable. The response carries the underlying code (for example `IMAPUnavailable`), not a generic "BadGateway" code.
 
 **Example:**
 ```json
 {
-  "error": "Bad gateway",
-  "code": "BadGateway",
+  "error": "Server unavailable",
+  "code": "IMAPUnavailable",
   "statusCode": 502
 }
 ```
@@ -337,54 +336,24 @@ Specified account does not exist.
 
 ---
 
-#### AccountExists
+#### AccountAlreadyExists
 
-Account with this ID already exists.
-
-**HTTP Status:** 409
-
-**Example:**
-```json
-{
-  "error": "Account already exists",
-  "code": "AccountExists",
-  "statusCode": 409,
-  "details": {
-    "account": "user@example.com"
-  }
-}
-```
-
-**Solutions:**
-- Use different account ID
-- Update existing account instead
-- Delete old account first
-
----
-
-#### InvalidAccountConfig
-
-Account configuration is invalid.
+An account with this ID (or, for OAuth2 accounts, the same upstream user) already exists.
 
 **HTTP Status:** 400
 
 **Example:**
 ```json
 {
-  "error": "Invalid IMAP configuration",
-  "code": "InvalidAccountConfig",
-  "statusCode": 400,
-  "details": {
-    "field": "imap.host",
-    "issue": "Required field missing"
-  }
+  "error": "This account already exists",
+  "code": "AccountAlreadyExists",
+  "statusCode": 400
 }
 ```
 
 **Solutions:**
-- Check required fields
-- Verify configuration format
-- Review account setup docs
+- Use a different account ID
+- Update the existing account instead (the create endpoint also updates an existing account)
 
 ---
 
@@ -439,57 +408,11 @@ Message exceeds size limits.
 - Compress attachments
 - Increase `EENGINE_MAX_BODY_SIZE`
 
----
-
-#### InvalidMessageFormat
-
-Message format is invalid.
-
-**HTTP Status:** 400
-
-**Example:**
-```json
-{
-  "error": "Invalid email format",
-  "code": "InvalidMessageFormat",
-  "statusCode": 400,
-  "details": {
-    "field": "to",
-    "issue": "At least one recipient required"
-  }
-}
-```
-
-**Solutions:**
-- Verify required fields (to, subject, text/html)
-- Check email address format
-- Validate attachment encoding
+Note: invalid request payloads (such as a submit call with no recipients or a malformed address) are rejected as a generic `400 Bad Request` validation error, not a dedicated message-format code.
 
 ---
 
 ### Authentication Errors
-
-#### AuthenticationRequired
-
-Request requires authentication.
-
-**HTTP Status:** 401
-
-**Example:**
-```json
-{
-  "error": "Authentication required",
-  "code": "AuthenticationRequired",
-  "statusCode": 401
-}
-```
-
-**Solutions:**
-- Include Authorization header
-- Provide valid access token
-- Check token not expired
-
----
 
 #### InvalidToken
 
@@ -511,31 +434,7 @@ Access token is invalid or expired.
 - Verify token format
 - Check token not revoked
 
----
-
-#### InsufficientPermissions
-
-Token lacks required permissions.
-
-**HTTP Status:** 403
-
-**Example:**
-```json
-{
-  "error": "Insufficient permissions for this operation",
-  "code": "InsufficientPermissions",
-  "statusCode": 403,
-  "details": {
-    "required": "api",
-    "provided": "metrics"
-  }
-}
-```
-
-**Solutions:**
-- Use token with correct scope
-- Generate new token with wider scope
-- Verify account-specific token for correct account
+Note: a request with a restricted-scope or wrong-account token is rejected as a `403 Forbidden` with a descriptive message (such as `Unauthorized scope`), without a dedicated permissions code.
 
 ---
 
@@ -543,16 +442,16 @@ Token lacks required permissions.
 
 #### ConnectionError
 
-Failed to connect to mail server.
+Failed to connect to the mail server.
 
-**HTTP Status:** 502
+**HTTP Status:** 503
 
 **Example:**
 ```json
 {
-  "error": "Connection to mail server failed",
+  "error": "Failed to connect to IMAP server",
   "code": "ConnectionError",
-  "statusCode": 502,
+  "statusCode": 503,
   "details": {
     "host": "imap.example.com",
     "reason": "ECONNREFUSED"
@@ -604,109 +503,7 @@ Authentication to mail server failed.
 
 ---
 
-#### TLSError
-
-TLS/SSL connection error.
-
-**HTTP Status:** 502
-
-**Example:**
-```json
-{
-  "error": "TLS connection failed",
-  "code": "TLSError",
-  "statusCode": 502,
-  "details": {
-    "reason": "CERT_HAS_EXPIRED"
-  }
-}
-```
-
-**Common Causes:**
-- Expired SSL certificate
-- Self-signed certificate
-- Certificate mismatch
-- Outdated TLS version
-
-**Solutions:**
-- Verify server certificate is valid
-- Use `secure: false` for self-signed (dev only)
-- Update mail server TLS configuration
-
----
-
-### Webhook Errors
-
-#### WebhookDeliveryFailed
-
-Failed to deliver webhook to endpoint.
-
-**Example Logged:**
-```json
-{
-  "error": "Webhook delivery failed",
-  "code": "WebhookDeliveryFailed",
-  "url": "https://your-app.com/webhook",
-  "statusCode": 500,
-  "attempts": 3
-}
-```
-
-**Common Causes:**
-- Webhook endpoint down
-- Webhook endpoint timeout (default 90s, configurable via `EENGINE_FETCH_TIMEOUT`)
-- Invalid response code
-- Network connectivity
-
-**Solutions:**
-- Verify webhook endpoint is accessible
-- Reduce webhook processing time
-- Return 2xx status code
-- Check webhook logs
-
----
-
-#### InvalidWebhookSignature
-
-Webhook signature verification failed.
-
-**HTTP Status:** 401 (at webhook receiver)
-
-**Common Causes:**
-- Incorrect webhook secret
-- Payload modified in transit
-- Signature calculation mismatch
-
-**Solutions:**
-- Verify webhook secret matches
-- Check signature calculation
-- Review signature verification code
-
----
-
 ### License Errors
-
-#### LicenseRequired
-
-Operation requires valid license.
-
-**HTTP Status:** 403
-
-**Example:**
-```json
-{
-  "error": "License required for this operation",
-  "code": "LicenseRequired",
-  "statusCode": 403
-}
-```
-
-**Solutions:**
-- Activate license key
-- Upgrade license
-- Contact sales for license
-
----
 
 #### ELicenseExpired
 
@@ -730,32 +527,6 @@ License has expired.
 
 ---
 
-#### AccountLimitExceeded
-
-Maximum account limit reached.
-
-**HTTP Status:** 403
-
-**Example:**
-```json
-{
-  "error": "Account limit exceeded",
-  "code": "AccountLimitExceeded",
-  "statusCode": 403,
-  "details": {
-    "limit": 100,
-    "current": 100
-  }
-}
-```
-
-**Solutions:**
-- Upgrade license
-- Remove unused accounts
-- Contact sales for higher limit
-
----
-
 ## Provider-Specific Errors
 
 Errors from mail servers (IMAP/SMTP) and OAuth2 providers.
@@ -776,8 +547,8 @@ Common IMAP server response codes:
 **Example Error:**
 ```json
 {
-  "error": "IMAP command failed",
-  "code": "IMAPError",
+  "error": "IMAP server is currently unavailable",
+  "code": "IMAPUnavailable",
   "statusCode": 502,
   "details": {
     "command": "LOGIN",
@@ -814,11 +585,10 @@ Common SMTP error codes:
 **Example Error:**
 ```json
 {
-  "error": "SMTP delivery failed",
-  "code": "SMTPError",
+  "error": "SMTP server is currently unavailable",
+  "code": "SMTPUnavailable",
   "statusCode": 502,
   "details": {
-    "smtpCode": 550,
     "smtpResponse": "550 5.1.1 <user@example.com>: Recipient address rejected: User unknown",
     "recipient": "user@example.com"
   }
@@ -908,9 +678,9 @@ OAuth2 redirect URI doesn't match configured value.
 ```
 
 **Solutions:**
-- Verify `EENGINE_BASE_URL` is correct
-- Check OAuth2 app redirect URI configuration
-- Ensure protocol (http/https) matches
+- Verify EmailEngine's `serviceUrl` setting is correct (set it in the dashboard or via `EENGINE_SETTINGS`); the OAuth2 redirect URI is derived from it
+- Check that the redirect URI registered in the OAuth2 provider (Google/Microsoft) matches EmailEngine's `serviceUrl` + `/oauth`
+- Ensure the protocol (http/https) matches
 
 ---
 

@@ -50,11 +50,13 @@ EmailEngine supports multiple sending approaches:
    - Webhook notifications for delivery status
    - Best for application integration
 
-2. **SMTP Gateway**
-   - Direct SMTP server provided by EmailEngine
+2. **SMTP Interface**
+   - Direct SMTP server provided by EmailEngine (its own MSA)
    - Use standard SMTP clients/libraries
-   - EmailEngine routes to the correct account
+   - EmailEngine routes to the correct account based on the authenticated account ID
    - Best for legacy applications
+
+   Not to be confused with an SMTP **Gateway**, which is a separate feature - an outbound relay account (such as Amazon SES or a corporate smarthost) that you select per message via the `gateway` field.
 
 ## Quick Examples
 

@@ -51,8 +51,8 @@
     "bulkOperations": {
       "description": "Perform operations on multiple messages at once",
       "endpoints": [
-        {"method": "POST", "path": "/v1/account/{account}/messages/move", "description": "Move multiple messages"},
-        {"method": "POST", "path": "/v1/account/{account}/messages/delete", "description": "Delete multiple messages"}
+        {"method": "PUT", "path": "/v1/account/{account}/messages/move", "description": "Move multiple messages"},
+        {"method": "PUT", "path": "/v1/account/{account}/messages/delete", "description": "Delete multiple messages"}
       ]
     },
     "mailboxManagement": {
@@ -106,16 +106,14 @@
         {"method": "GET", "path": "/v1/templates/template/{template}", "description": "Get template"},
         {"method": "PUT", "path": "/v1/templates/template/{template}", "description": "Update template"},
         {"method": "DELETE", "path": "/v1/templates/template/{template}", "description": "Delete template"},
-        {"method": "GET", "path": "/v1/templates/account/{account}", "description": "List account templates"}
+        {"method": "DELETE", "path": "/v1/templates/account/{account}", "description": "Delete all templates for an account"}
       ]
     },
     "webhooks": {
       "description": "Real-time notifications for email events",
       "endpoints": [
         {"method": "GET", "path": "/v1/webhookRoutes", "description": "List webhook routes"},
-        {"method": "POST", "path": "/v1/webhookRoutes/webhookRoute", "description": "Create route"},
-        {"method": "PUT", "path": "/v1/webhookRoutes/webhookRoute/{webhookRoute}", "description": "Update route"},
-        {"method": "DELETE", "path": "/v1/webhookRoutes/webhookRoute/{webhookRoute}", "description": "Delete route"}
+        {"method": "GET", "path": "/v1/webhookRoutes/webhookRoute/{webhookRoute}", "description": "Get a webhook route. Webhook routes are read-only via the API; create and edit them in the EmailEngine dashboard"}
       ],
       "configurationViaSettings": {
         "endpoint": "POST /v1/settings",
@@ -147,7 +145,6 @@
       "endpoints": [
         {"method": "GET", "path": "/v1/tokens", "description": "List tokens"},
         {"method": "POST", "path": "/v1/token", "description": "Create token"},
-        {"method": "GET", "path": "/v1/token/{token}", "description": "Get token"},
         {"method": "DELETE", "path": "/v1/token/{token}", "description": "Delete token"},
         {"method": "GET", "path": "/v1/tokens/account/{account}", "description": "List account tokens"}
       ]
@@ -253,10 +250,10 @@
     {"code": "AccountNotFound", "status": 404, "retryable": false, "description": "Account doesn't exist"},
     {"code": "MessageNotFound", "status": 404, "retryable": false, "description": "Message doesn't exist"},
     {"code": "InvalidRequest", "status": 400, "retryable": false, "description": "Request validation failed"},
-    {"code": "AuthenticationRequired", "status": 401, "retryable": false, "description": "Missing API token"},
+    {"code": "InvalidToken", "status": 401, "retryable": false, "description": "Missing or invalid API access token"},
     {"code": "RateLimitExceeded", "status": 429, "retryable": true, "description": "Too many requests"},
     {"code": "ConnectionError", "status": 503, "retryable": true, "description": "Mail server connection failed"},
-    {"code": "DuplicateAccount", "status": 409, "retryable": false, "description": "Account ID already exists"}
+    {"code": "AccountAlreadyExists", "status": 400, "retryable": false, "description": "An account with the same ID (or OAuth2 user) already exists"}
   ],
   "searchParameters": [
     {"name": "from", "type": "string", "description": "Sender address or name"},

@@ -105,17 +105,15 @@ Triggered when a new account is registered in EmailEngine.
   "account": "user@example.com",
   "date": "2025-01-15T10:30:00.000Z",
   "data": {
-    "account": "user@example.com",
-    "name": "John Doe",
-    "email": "user@example.com"
+    "account": "user@example.com"
   }
 }
 ```
 
 **Fields:**
 - `data.account` (string) - Account identifier
-- `data.name` (string) - Display name for the account
-- `data.email` (string) - Primary email address
+
+To get the account's display name, email address and connection state after this event, query the account API endpoint (`GET /v1/account/:account`).
 
 **Use Cases:**
 - Send welcome notification
@@ -195,22 +193,16 @@ Triggered when account authentication fails.
   "account": "user@example.com",
   "date": "2025-01-15T10:30:00.000Z",
   "data": {
-    "account": "user@example.com",
-    "error": {
-      "message": "Invalid credentials",
-      "code": "EAUTH",
-      "serverResponseCode": "NO"
-    }
+    "response": "Invalid credentials (Failure)",
+    "serverResponseCode": "AUTHENTICATIONFAILED"
   }
 }
 ```
 
 **Fields:**
-- `data.account` (string) - Account identifier
-- `data.error` (object) - Authentication error details
-  - `data.error.message` (string) - Error description
-  - `data.error.code` (string) - Error code
-  - `data.error.serverResponseCode` (string, optional) - Server response
+- `data.response` (string) - Human-readable error description (often the server's response text)
+- `data.serverResponseCode` (string, optional) - Server or error response code (for example `AUTHENTICATIONFAILED`, or `OauthRenewError` for OAuth2 accounts)
+- `data.tokenRequest` (object, optional) - OAuth2 token-renewal details when the failure occurred while refreshing an access token (includes `grant`, `provider`, `status`, `clientId`, `scopes`)
 
 **Use Cases:**
 - Prompt user to re-authenticate
@@ -232,13 +224,13 @@ Triggered when account authenticates successfully.
   "account": "user@example.com",
   "date": "2025-01-15T10:30:00.000Z",
   "data": {
-    "account": "user@example.com"
+    "user": "user@example.com"
   }
 }
 ```
 
 **Fields:**
-- `data.account` (string) - Account identifier
+- `data.user` (string) - The username (login) that authenticated successfully
 
 **Use Cases:**
 - Clear authentication error flags
@@ -260,20 +252,15 @@ Triggered when connection to the email server fails.
   "account": "user@example.com",
   "date": "2025-01-15T10:30:00.000Z",
   "data": {
-    "account": "user@example.com",
-    "error": {
-      "message": "Connection timeout",
-      "code": "ECONNECTION"
-    }
+    "response": "connect ECONNREFUSED 192.168.1.100:993",
+    "serverResponseCode": "ECONNREFUSED"
   }
 }
 ```
 
 **Fields:**
-- `data.account` (string) - Account identifier
-- `data.error` (object) - Connection error details
-  - `data.error.message` (string) - Error description
-  - `data.error.code` (string) - Error code
+- `data.response` (string) - Human-readable connection error description
+- `data.serverResponseCode` (string, optional) - Connection error code (for example `ECONNREFUSED`, `ETIMEDOUT`, `ENOTFOUND`)
 
 **Use Cases:**
 - Monitor server availability
@@ -371,9 +358,8 @@ Triggered when a new message arrives in any mailbox. Also triggered when message
       {
         "id": "att_456",
         "contentType": "application/pdf",
-        "disposition": "attachment",
         "filename": "document.pdf",
-        "size": 52341,
+        "encodedSize": 52341,
         "embedded": false,
         "inline": false,
         "contentId": "<part1.abc@example.com>"
@@ -440,13 +426,13 @@ Included when **Configuration → Webhooks → Attachments** is enabled (`notify
 - `data.attachments` (array of objects, optional) - Attachment metadata
   - `id` (string) - Attachment identifier
   - `contentType` (string) - MIME type
-  - `disposition` (string) - Content disposition ("attachment" or "inline")
   - `filename` (string) - Filename
-  - `encodedSize` (number) - Size in bytes (transfer encoded)
+  - `encodedSize` (number) - Size of the attachment as stored in the email (base64 encoded); the decoded file size is approximately 75% of this value
   - `embedded` (boolean, optional) - Is embedded image
   - `inline` (boolean, optional) - Is inline attachment
   - `encodedInMessage` (boolean, optional) - Whether the attachment belongs to an enclosed message/rfc822 part rather than the top-level message
   - `contentId` (string, optional) - Content-ID header value
+  - `method` (string, optional) - Calendar method (REQUEST, REPLY, CANCEL, etc.) for iCalendar attachments
 
 **Gmail-Specific Fields:**
 
@@ -474,11 +460,13 @@ Included when headers are specified in `notifyHeaders` setting:
 
 Included when AI features are enabled:
 
-- `data.summary` (string, optional) - AI-generated summary (when `generateEmailSummary: true`)
+- `data.summary` (object, optional) - AI-generated analysis (when `generateEmailSummary: true`). Contains `summary` (text), `sentiment`, `shouldReply` (boolean), `events` (array), `actions` (array), plus generation metadata (`id`, `tokens`, `model`)
 - `data.embeddings` (array of numbers, optional) - Vector embeddings (when `openAiGenerateEmbeddings: true`)
 - `data.riskAssessment` (object, optional) - AI risk analysis
-  - `data.riskAssessment.score` (number) - Risk score (0-1)
-  - `data.riskAssessment.reasons` (array of strings) - Risk factors
+  - `data.riskAssessment.risk` (integer) - Risk score where a higher value indicates higher risk
+  - `data.riskAssessment.assessment` (string) - Human-readable explanation of the risk score
+  - `data.riskAssessment.id` (string, optional) - Generation identifier
+  - `data.riskAssessment.tokens` (number, optional) - Tokens consumed generating the assessment
 
 **Use Cases:**
 - Real-time email notifications
@@ -544,20 +532,18 @@ Triggered when a message is deleted from a mailbox or moved to another folder.
   "date": "2025-01-15T10:30:00.000Z",
   "data": {
     "id": "AAAABAABNc",
-    "uid": 12345,
-    "path": "INBOX",
-    "emailId": "abc123",
-    "threadId": "thread_xyz"
+    "uid": 12345
   }
 }
 ```
 
 **Fields:**
+- `path` (string) - Mailbox path the message was deleted from (top-level field, alongside `account`)
+- `specialUse` (string, optional) - Special-use flag of that mailbox (top-level field)
 - `data.id` (string) - EmailEngine message ID
 - `data.uid` (number) - IMAP UID (no longer valid)
-- `data.path` (string) - Mailbox path where deleted from
-- `data.emailId` (string, optional) - RFC 8474 Email ID
-- `data.threadId` (string, optional) - Thread ID (Gmail)
+
+For IMAP accounts the `data` object contains only `id` and `uid`. Gmail API and Microsoft Graph accounts include provider-specific fields (for example Gmail adds `threadId` and the last known `labels`). See [messageDeleted](/docs/webhooks/messagedeleted) for the per-provider payloads.
 
 **Use Cases:**
 - Sync deletions to local database
@@ -584,12 +570,6 @@ Triggered when message flags or labels change (read/unread, flagged, etc.).
   "data": {
     "id": "AAAABAABNc",
     "uid": 12345,
-    "path": "INBOX",
-    "emailId": "abc123",
-    "threadId": "thread_xyz",
-    "flags": ["\\Seen", "\\Flagged"],
-    "unseen": false,
-    "flagged": true,
     "changes": {
       "flags": {
         "added": ["\\Seen"],
@@ -607,14 +587,10 @@ Triggered when message flags or labels change (read/unread, flagged, etc.).
 ```
 
 **Fields:**
+- `path` (string) - Mailbox path (top-level field, alongside `account`)
+- `specialUse` (string, optional) - Special-use flag of that mailbox (top-level field)
 - `data.id` (string) - EmailEngine message ID
 - `data.uid` (number) - IMAP UID
-- `data.path` (string) - Mailbox path
-- `data.emailId` (string, optional) - RFC 8474 Email ID
-- `data.threadId` (string, optional) - Thread ID (Gmail)
-- `data.flags` (array of strings) - Current IMAP flags
-- `data.unseen` (boolean) - Current unread status
-- `data.flagged` (boolean) - Current flagged status
 - `data.changes` (object) - Change details
   - `data.changes.flags` (object) - Flag changes
     - `data.changes.flags.added` (array of strings) - Newly added flags
@@ -650,15 +626,19 @@ Triggered when a previously seen message is no longer found in the mailbox (may 
   "data": {
     "id": "AAAABAABNc",
     "uid": 12345,
-    "path": "INBOX"
+    "missingRetries": 5,
+    "missingDelay": 12450
   }
 }
 ```
 
 **Fields:**
+- `path` (string) - Mailbox path (top-level field, alongside `account`)
+- `specialUse` (string, optional) - Special-use flag of that mailbox (top-level field)
 - `data.id` (string) - EmailEngine message ID
 - `data.uid` (number) - IMAP UID (no longer valid)
-- `data.path` (string) - Mailbox path
+- `data.missingRetries` (number, optional) - Number of resynchronization attempts made before the message was reported missing
+- `data.missingDelay` (number, optional) - Delay in milliseconds before the message was confirmed missing
 
 **Use Cases:**
 - Detect sync issues
@@ -686,9 +666,8 @@ Triggered when a new mailbox (folder) is created.
   "data": {
     "path": "Projects/2025",
     "name": "2025",
-    "delimiter": "/",
-    "parent": "Projects",
-    "specialUse": null
+    "specialUse": false,
+    "uidValidity": "1697551353"
   }
 }
 ```
@@ -696,9 +675,8 @@ Triggered when a new mailbox (folder) is created.
 **Fields:**
 - `data.path` (string) - Full mailbox path
 - `data.name` (string) - Mailbox name (last component of path)
-- `data.delimiter` (string) - Path delimiter character (usually "/" or ".")
-- `data.parent` (string, optional) - Parent mailbox path
-- `data.specialUse` (string, optional) - Special-use flag (e.g., "\Sent", "\Drafts", "\Trash")
+- `data.specialUse` (string or `false`) - Special-use flag (e.g., "\Sent", "\Drafts", "\Trash"), or `false` when the folder has no special use
+- `data.uidValidity` (string) - The folder's UIDVALIDITY value (sent as a string)
 
 **Use Cases:**
 - Sync folder structure
@@ -722,7 +700,7 @@ Triggered when a mailbox (folder) is deleted.
   "data": {
     "path": "Old/Archive",
     "name": "Archive",
-    "specialUse": null
+    "specialUse": false
   }
 }
 ```
@@ -730,7 +708,7 @@ Triggered when a mailbox (folder) is deleted.
 **Fields:**
 - `data.path` (string) - Deleted mailbox path
 - `data.name` (string) - Mailbox name
-- `data.specialUse` (string, optional) - Special-use flag
+- `data.specialUse` (string or `false`) - Special-use flag, or `false` when the folder has no special use
 
 **Use Cases:**
 - Remove folder from UI
@@ -754,16 +732,20 @@ Triggered when the UIDVALIDITY of a folder changes. This indicates the folder wa
   "date": "2025-01-15T10:30:00.000Z",
   "data": {
     "path": "INBOX",
-    "oldUidValidity": "1234567890",
-    "newUidValidity": "1234567899"
+    "name": "INBOX",
+    "specialUse": "\\Inbox",
+    "uidValidity": "1234567899",
+    "prevUidValidity": "1234567890"
   }
 }
 ```
 
 **Fields:**
 - `data.path` (string) - Mailbox path that was reset
-- `data.oldUidValidity` (string) - Previous UIDVALIDITY value
-- `data.newUidValidity` (string) - New UIDVALIDITY value
+- `data.name` (string) - Mailbox name (last component of path)
+- `data.specialUse` (string or `false`) - Special-use flag of the folder, or `false` when it has no special use
+- `data.uidValidity` (string) - New UIDVALIDITY value (sent as a string)
+- `data.prevUidValidity` (string) - Previous UIDVALIDITY value (sent as a string)
 
 **Use Cases:**
 - Invalidate cached message UIDs
@@ -793,32 +775,27 @@ Triggered when a message is successfully accepted by the mail server (MTA).
   "data": {
     "messageId": "<abc123@example.com>",
     "originalMessageId": "<original123@example.com>",
+    "response": "250 2.0.0 Ok: queued as ABC123",
     "queueId": "queue_456",
-    "to": ["recipient@example.com"],
-    "subject": "Test Email",
-    "response": "250 2.0.0 OK",
-    "smtpResponse": "250 2.0.0 OK: queued as ABC123",
     "envelope": {
       "from": "sender@example.com",
       "to": ["recipient@example.com"]
-    },
-    "gateway": "custom-gateway-id"
+    }
   }
 }
 ```
 
 **Fields:**
 - `data.messageId` (string) - Final Message-ID (may be rewritten by server)
-- `data.originalMessageId` (string, optional) - Original Message-ID when server rewrites it (Amazon SES, AWS WorkMail, Microsoft Graph)
+- `data.originalMessageId` (string, optional) - Original Message-ID when the server rewrites it (Amazon SES, AWS WorkMail, Microsoft Graph)
+- `data.response` (string) - The mail server's response to the message submission (typically the full SMTP `250` line)
 - `data.queueId` (string) - Internal queue identifier
-- `data.to` (array of strings) - Recipients list
-- `data.subject` (string) - Email subject
-- `data.response` (string) - SMTP response code
-- `data.smtpResponse` (string) - Full SMTP response from server
 - `data.envelope` (object) - SMTP envelope
   - `data.envelope.from` (string) - Envelope sender (MAIL FROM)
   - `data.envelope.to` (array of strings) - Envelope recipients (RCPT TO)
-- `data.gateway` (string, optional) - Gateway identifier if sent through custom SMTP gateway
+- `data.networkRouting` (object, optional) - Present only when a custom local address or proxy was used; may contain `localAddress`, `proxy`, `name`, and `requestedLocalAddress`
+
+There is no `to`, `subject`, or `gateway` field in this payload - the recipients are in `envelope.to`. To correlate the event with the original send, match on `queueId` (or `messageId`).
 
 **Message-ID Rewriting:**
 
@@ -848,14 +825,13 @@ if (event.event === 'messageSent') {
 
   // Notify user
   await notifyUser({
-    message: `Email "${data.subject}" sent successfully`
+    message: `Message ${data.messageId} sent successfully`
   });
 
   // Analytics
   await trackEvent('email_sent', {
     account: event.account,
-    recipients: data.to.length,
-    gateway: data.gateway
+    recipients: data.envelope.to.length
   });
 }
 ```
@@ -875,19 +851,18 @@ Triggered when email sending fails. EmailEngine retries automatically. You recei
   "date": "2025-01-15T10:30:00.000Z",
   "data": {
     "queueId": "queue_456",
-    "to": ["invalid@example.com"],
-    "subject": "Test Email",
-    "error": "Recipient address rejected",
-    "errorCode": "EPROTOCOL",
-    "response": "550 5.1.1 User unknown",
-    "smtpResponse": "550 5.1.1 <invalid@example.com>: Recipient address rejected: User unknown",
-    "smtpResponseCode": 550,
     "envelope": {
       "from": "sender@example.com",
       "to": ["invalid@example.com"]
     },
     "messageId": "<abc123@example.com>",
+    "error": "Recipient address rejected: User unknown",
+    "errorCode": "EPROTOCOL",
+    "smtpResponse": "550 5.1.1 <invalid@example.com>: Recipient address rejected: User unknown",
+    "smtpResponseCode": 550,
+    "smtpCommand": "RCPT TO",
     "job": {
+      "id": "42",
       "attemptsMade": 1,
       "attempts": 10,
       "nextAttempt": "2025-01-15T10:07:45.465Z"
@@ -898,21 +873,23 @@ Triggered when email sending fails. EmailEngine retries automatically. You recei
 
 **Fields:**
 - `data.queueId` (string) - Internal queue ID
-- `data.to` (array of strings) - Recipients list
-- `data.subject` (string) - Email subject
-- `data.error` (string) - Error message
-- `data.errorCode` (string) - Error code (e.g., "EPROTOCOL", "ECONNECTION", "EAUTH")
-- `data.response` (string) - SMTP error code
-- `data.smtpResponse` (string) - Full SMTP error response
-- `data.smtpResponseCode` (number, optional) - Numeric SMTP response code
 - `data.envelope` (object) - SMTP envelope
   - `data.envelope.from` (string) - Envelope sender
   - `data.envelope.to` (array of strings) - Envelope recipients
 - `data.messageId` (string) - Message-ID header
+- `data.error` (string) - Error message
+- `data.errorCode` (string) - Error code (e.g., "EPROTOCOL", "ECONNECTION", "EAUTH")
+- `data.smtpResponse` (string, optional) - Full SMTP error response from the server
+- `data.smtpResponseCode` (number, optional) - Numeric SMTP response code
+- `data.smtpCommand` (string, optional) - SMTP command that triggered the error (for example `RCPT TO`)
+- `data.networkRouting` (object, optional) - Present only when a custom local address or proxy was used
 - `data.job` (object) - Queue job status
+  - `data.job.id` (string) - BullMQ job identifier
   - `data.job.attemptsMade` (number) - Current attempt number
   - `data.job.attempts` (number) - Maximum attempts (default 10)
   - `data.job.nextAttempt` (string) - ISO 8601 timestamp of next retry
+
+There is no `to`, `subject`, or `response` field in this payload - recipients are in `envelope.to` and the server response text is in `smtpResponse`.
 
 **Common SMTP Error Codes:**
 - `550 5.1.1` - User unknown / mailbox not found
@@ -945,8 +922,7 @@ Triggered when EmailEngine abandons delivery after all retry attempts fail. This
     "queueId": "queue_456",
     "error": "Error: Invalid login: 535 5.7.8 Error: authentication failed",
     "networkRouting": {
-      "localAddress": "192.168.1.100",
-      "localPort": 54321
+      "localAddress": "192.168.1.100"
     }
   }
 }
@@ -956,9 +932,7 @@ Triggered when EmailEngine abandons delivery after all retry attempts fail. This
 - `data.messageId` (string) - Message-ID header
 - `data.queueId` (string) - Internal queue ID
 - `data.error` (string) - Final error message (first line of stack trace)
-- `data.networkRouting` (object, optional) - Network information
-  - `data.networkRouting.localAddress` (string) - Local IP address used
-  - `data.networkRouting.localPort` (number) - Local port used
+- `data.networkRouting` (object, optional) - Present only when a custom local address or proxy was used; may contain `localAddress`, `proxy`, `name`, and `requestedLocalAddress`
 
 **Use Cases:**
 - Notify sender of permanent failure
@@ -984,12 +958,8 @@ Triggered when a bounce (DSN - Delivery Status Notification) message is received
   "date": "2025-01-15T10:30:00.000Z",
   "data": {
     "bounceMessage": "AAAAAQAABWw",
-    "messageId": "<abc123@example.com>",
     "recipient": "bounced@example.com",
-    "bounceType": "hard",
     "action": "failed",
-    "diagnosticCode": "550 5.1.1 User unknown",
-    "status": "5.1.1",
     "response": {
       "source": "smtp",
       "message": "550 5.1.1 <bounced@example.com>: Recipient address rejected: User unknown in relay recipient table",
@@ -998,33 +968,36 @@ Triggered when a bounce (DSN - Delivery Status Notification) message is received
       "recommendedAction": "remove"
     },
     "mta": "mx.example.com",
-    "originalRecipient": "original@example.com",
-    "queueId": "BFC608226A"
+    "queueId": "BFC608226A",
+    "messageId": "<abc123@example.com>",
+    "messageHeaders": {
+      "from": ["sender@example.com"],
+      "to": ["bounced@example.com"],
+      "subject": ["Newsletter"],
+      "message-id": ["<abc123@example.com>"]
+    }
   }
 }
 ```
 
 **Fields:**
 - `data.bounceMessage` (string) - EmailEngine ID of the bounce message itself
-- `data.messageId` (string) - Original Message-ID that bounced
-- `data.recipient` (string) - Bounced recipient address
-- `data.bounceType` (string, optional) - "hard" (permanent) or "soft" (temporary)
+- `data.recipient` (string, optional) - Bounced recipient address
 - `data.action` (string) - DSN action ("failed", "delayed", "delivered", "relayed", "expanded")
-- `data.diagnosticCode` (string, optional) - Diagnostic reason for bounce
-- `data.status` (string, optional) - DSN status code (e.g., "5.1.1")
 - `data.response` (object, optional) - Parsed bounce response
-  - `data.response.source` (string) - Source of bounce ("smtp", "dns", etc.)
-  - `data.response.message` (string) - Bounce message
-  - `data.response.status` (string) - Status code
+  - `data.response.source` (string, optional) - Source of the diagnostic code (e.g., "smtp")
+  - `data.response.message` (string, optional) - Bounce message
+  - `data.response.status` (string, optional) - Enhanced status code (e.g., "5.1.1")
   - `data.response.category` (string, optional) - ML-classified bounce category (see table below)
   - `data.response.recommendedAction` (string, optional) - Suggested action: "remove", "retry", "review", "fix_configuration", "retry_different_ip", or "remove_content"
-  - `data.response.blocklist` (object, optional) - Blocklist details when bounce indicates a blocklist issue
+  - `data.response.blocklist` (object, optional) - Blocklist details when the bounce indicates a blocklist issue
     - `data.response.blocklist.name` (string) - Blocklist name (e.g., "Spamhaus ZEN")
     - `data.response.blocklist.type` (string) - "ip" or "domain"
   - `data.response.retryAfter` (number, optional) - Suggested retry delay in seconds (when timing found in error message)
-- `data.mta` (string, optional) - Mail Transfer Agent that generated the bounce
-- `data.originalRecipient` (string, optional) - Original recipient (before forwarding)
-- `data.queueId` (string, optional) - MTA queue identifier
+- `data.mta` (string, optional) - Reporting Mail Transfer Agent hostname
+- `data.queueId` (string, optional) - MTA queue identifier (Postfix-specific)
+- `data.messageId` (string, optional) - Original Message-ID that bounced
+- `data.messageHeaders` (object, optional) - Headers parsed from the original bounced message (keys are lowercased header names, values are arrays)
 
 **ML Bounce Categories:**
 
@@ -1049,13 +1022,13 @@ EmailEngine uses machine learning to classify bounces into detailed categories:
 | `geo_blocked` | Geographic rejection | retry_different_ip |
 | `unknown` | Unclassified | review |
 
-**Bounce Types:**
-- **Hard bounce**: Permanent failure (invalid email, domain not found, user unknown)
-- **Soft bounce**: Temporary failure (mailbox full, server down, greylisting)
+**Permanent vs temporary failures:**
+
+The payload does not include a `bounceType` field. Use `action` (`failed` indicates a permanent failure, `delayed` a temporary one) together with `response.status` (a `5.x.x` enhanced status code is permanent, `4.x.x` is temporary) and `response.recommendedAction` to decide how to handle the bounce.
 
 **Use Cases:**
-- Remove hard bounces from mailing lists
-- Retry soft bounces based on `recommendedAction` and `retryAfter`
+- Remove permanently failed recipients (`action: "failed"`) from mailing lists
+- Retry temporary failures based on `recommendedAction` and `retryAfter`
 - Detect and respond to blocklist issues
 - Email validation
 - Delivery reporting
@@ -1109,6 +1082,7 @@ Triggered when an ARF (Abuse Reporting Format) feedback loop complaint is receiv
   - `data.arf.source` (string, optional) - Provider name (e.g., "Hotmail", "Yahoo")
   - `data.arf.feedbackType` (string) - Feedback type ("abuse", "fraud", "virus", "not-spam")
   - `data.arf.abuseType` (string, optional) - Specific abuse type
+  - `data.arf.originalMailFrom` (string, optional) - Envelope sender of the original email
   - `data.arf.originalRcptTo` (array of strings, optional) - Original recipients
   - `data.arf.arrivalDate` (string, optional) - When complaint was generated (ISO 8601)
   - `data.arf.sourceIp` (string, optional) - IP address that sent the original email
@@ -1597,17 +1571,30 @@ When AI features are enabled (OpenAI integration):
 
 Enable: `generateEmailSummary: true`
 
-Adds: `data.summary` (string) - AI-generated summary of email content
+Adds: `data.summary` (object) - AI-generated analysis of the email content
 
 Example:
 ```json
 {
   "data": {
     "subject": "Q4 Sales Report",
-    "summary": "Sales increased 23% in Q4. Top performers: Product A (+45%), Product B (+12%). Request for Q1 strategy meeting."
+    "summary": {
+      "id": "chatcmpl-7IzVIEp5UL3hdQ3aZJ8AHyrJrt3R0",
+      "tokens": 2060,
+      "model": "gpt-4",
+      "sentiment": "neutral",
+      "summary": "Sales increased 23% in Q4. Top performers: Product A (+45%), Product B (+12%). Request for Q1 strategy meeting.",
+      "shouldReply": true,
+      "events": [],
+      "actions": [
+        { "description": "Schedule Q1 strategy meeting", "dueDate": "2025-01-31" }
+      ]
+    }
   }
 }
 ```
+
+`data.summary` is an object, not a plain string. The human-readable text is in `data.summary.summary`.
 
 ### Vector Embeddings
 
@@ -1629,16 +1616,16 @@ Adds: `data.riskAssessment` (object) - AI-powered risk analysis
 {
   "data": {
     "riskAssessment": {
-      "score": 0.85,
-      "reasons": [
-        "Urgent payment request",
-        "Suspicious sender domain",
-        "Contains external link"
-      ]
+      "id": "chatcmpl-7IzVIEp5UL3hdQ3aZJ8AHyrJrt3R0",
+      "tokens": 320,
+      "risk": 7,
+      "assessment": "The sender domain does not match the reply-to address and the message contains an urgent payment request."
     }
   }
 }
 ```
+
+`risk` is an integer where a higher value indicates higher risk; `assessment` is a human-readable explanation. There is no `score` or `reasons` field.
 
 ## Event Handling Best Practices
 

@@ -194,7 +194,7 @@ EmailEngine includes an optional SMTP server for standard email client integrati
 5. Save settings
 
 **Important Notes**:
-- TLS/STARTTLS support available via `smtpServerTLSEnabled` setting
+- Implicit TLS support available via the `smtpServerTLSEnabled` setting. STARTTLS is not supported - when TLS is enabled the server listens for TLS connections directly
 - Can enable HAProxy PROXY protocol support
 - Authentication optional but recommended
 
@@ -321,7 +321,7 @@ with smtplib.SMTP('localhost', 2525) as smtp:
 - **Header addresses**: `To`, `Cc`, `Bcc` headers are informational only
 - **Bcc header**: Automatically removed from messages
 - **Mandatory headers**: `Message-ID`, `MIME-Version`, `Date` added if missing
-- **TLS**: Enable via `smtpServerTLSEnabled` setting, or use HAProxy for TLS termination
+- **TLS**: Enable implicit TLS via the `smtpServerTLSEnabled` setting (STARTTLS is not supported), or use HAProxy for TLS termination
 
 ## Scheduled Sending
 
@@ -609,16 +609,16 @@ View queue status in Bull Board:
 ### Retry Behavior
 
 **Default Retry Strategy**:
-EmailEngine uses exponential backoff with a base delay of 5 seconds:
+EmailEngine uses exponential backoff with a base delay of 5 seconds. The delay before the next attempt is `2^(attempts made) x 5s`, so the interval doubles after each failure:
 
 - Initial attempt: Immediate
-- Retry 1: ~5 seconds later (5s x 2^0)
-- Retry 2: ~10 seconds later (5s x 2^1)
-- Retry 3: ~20 seconds later (5s x 2^2)
-- Retry 4: ~40 seconds later (5s x 2^3)
+- Retry 1: ~10 seconds later (2^1 x 5s)
+- Retry 2: ~20 seconds later (2^2 x 5s)
+- Retry 3: ~40 seconds later (2^3 x 5s)
+- Retry 4: ~80 seconds later (2^4 x 5s)
 - And so on, doubling each time
 
-Default maximum attempts: 10
+A small amount of jitter (up to 20%) is applied to each delay to avoid a thundering herd. Default maximum attempts: 10
 
 Configure retry attempts in **Configuration → General Settings → Retry Attempts**.
 
