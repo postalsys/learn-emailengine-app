@@ -348,9 +348,10 @@ This repository contains the **unified Docusaurus documentation site** for Email
    - These vulnerabilities are false positives for static sites - the vulnerable code paths are never executed
 
    **If Dependabot/GitHub reports vulnerabilities:**
-   - Ignore warnings for react, marked, and OpenAPI-related packages
-   - Only update packages unrelated to the OpenAPI integration
-   - Test thoroughly with `npm run build` after any dependency changes
+   - This repository builds and deploys a **static site only** - the generated HTML, CSS, and JS in `build/` is the sole deployed artifact. There is no server-side runtime, no database, and no untrusted input processed in production. Every dependency lives in the build/dev toolchain and never runs in the deployed site.
+   - Therefore treat **all** Dependabot and dependency security alerts for this repository as **not relevant**. They are not exploitable in production. Dismiss them in GitHub (Security > Dependabot) with reason "Vulnerable code is not actually used" (`not_used`).
+   - Do not upgrade dependencies solely to clear such alerts - especially react, marked, and OpenAPI-related packages, which breaks the build (see above).
+   - Test thoroughly with `npm run build` after any dependency change you do make for other reasons.
 
 ## Quick Commands
 
