@@ -103,7 +103,7 @@ services:
             "messageSent",
             "messageDeliveryError"
           ],
-          "notifyText": "EmailEngine notification",
+          "notifyText": true,
           "serviceUrl": "https://emailengine.example.com"
         }
 ```
@@ -145,8 +145,8 @@ EENGINE_SETTINGS='{
     "messageSent",
     "messageDeliveryError"
   ],
-  "notifyText": "New email notification",
-  "notifyTextSize": 100,
+  "notifyText": true,
+  "notifyTextSize": 1000,
   "serviceUrl": "https://emailengine.example.com"
 }'
 ```

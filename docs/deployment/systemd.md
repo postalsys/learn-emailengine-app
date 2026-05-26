@@ -620,7 +620,7 @@ After=network.target redis.service
 [Service]
 Type=simple
 User=emailengine
-ExecStart=/usr/bin/emailengine --port=%i
+ExecStart=/usr/bin/emailengine --api.port=%i
 Restart=always
 
 [Install]

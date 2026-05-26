@@ -94,12 +94,13 @@ curl -XPOST "http://127.0.0.1:3000/v1/authentication/form" \
   -H "Content-Type: application/json" \
   -d '{
     "account": "user-mailru-account",
-    "type": "oauth2",
-    "provider": "mailRu",
+    "type": "mailRu",
     "name": "User Mail.ru Account",
     "redirectUrl": "https://your-app.com/callback"
   }'
 ```
+
+The `type` field pre-selects an account type so the user skips the type-selection screen. Set it to your Mail.ru OAuth2 application's ID (the legacy key `mailRu` also resolves to the built-in Mail.ru app). There is no separate `provider` field on this endpoint - omit `type` entirely to let the user choose from all configured account types.
 
 **Response:**
 

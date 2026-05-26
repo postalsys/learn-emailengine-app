@@ -238,62 +238,11 @@ PRINT("Events: " + route.events)
 }
 ```
 
-### 4. Update Webhook Route
+:::note Webhook routes are read-only through the API
+The API exposes only the two read endpoints above (`GET /v1/webhookRoutes` and `GET /v1/webhookRoutes/webhookRoute/:webhookRoute`). There are no API endpoints to create, update, or delete a webhook route - manage them in the EmailEngine dashboard under **Webhooks**.
 
-Update an existing webhook route configuration.
-
-**Endpoint:** `PUT /v1/webhookRoutes/webhookRoute/:webhookRoute`
-
-**Example:**
-
-**Pseudo code:**
-```
-// Update webhook route configuration
-routeId = "route_123abc"
-
-response = HTTP_PUT(
-  "http://localhost:3000/v1/webhookRoutes/webhookRoute/" + routeId,
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      events: ["messageNew", "messageDeleted", "messageSent"],
-      enabled: true
-    }
-  }
-)
-
-result = PARSE_JSON(response.body)
-PRINT("Webhook updated: " + result.success)
-```
-
-### 5. Delete Webhook Route
-
-Remove a webhook route.
-
-**Endpoint:** `DELETE /v1/webhookRoutes/webhookRoute/:webhookRoute`
-
-**Example:**
-
-**Pseudo code:**
-```
-// Delete webhook route
-routeId = "route_123abc"
-
-response = HTTP_DELETE(
-  "http://localhost:3000/v1/webhookRoutes/webhookRoute/" + routeId,
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
-  }
-)
-
-result = PARSE_JSON(response.body)
-PRINT("Webhook deleted: " + result.success)
-```
+This is separate from the primary webhook target, which you configure with `POST /v1/settings` (see "Register Webhook" above). Webhook routes are an advanced feature for fanning events out to multiple destinations with custom filter/map functions.
+:::
 
 ## Webhook Configuration
 

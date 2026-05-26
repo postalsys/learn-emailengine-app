@@ -134,11 +134,11 @@ EmailEngine v2.61.1 (LICENSE_EMAILENGINE)
 # Redis with username and password
 --dbs.redis="redis://user:password@remote.example.com:6379/8"
 
-# Redis Sentinel
---dbs.redis="redis+sentinel://sentinel1:26379,sentinel2:26379/mymaster/8"
+# TLS connection (Redis over TLS)
+--dbs.redis="rediss://user:password@remote.example.com:6380/8"
 ```
 
-**Important:** Use the same Redis database number as your EmailEngine instance.
+**Important:** Use the same Redis database number as your EmailEngine instance. EmailEngine accepts only `redis://` and `rediss://` (TLS) connection strings - Redis Sentinel and Redis Cluster connection URLs are not supported.
 
 #### Encryption Secret
 

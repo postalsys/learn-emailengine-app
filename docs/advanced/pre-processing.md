@@ -27,7 +27,7 @@ EmailEngine supports pre-processing for:
 - **Webhooks** - Filter or modify webhook payloads before delivery
 - **Custom Routes** - Transform data before processing
 
-Pre-processing functions are small JavaScript snippets that run in a secure sandbox environment.
+Pre-processing functions are small JavaScript snippets that run in an isolated execution context with a restricted set of globals and an enforced timeout.
 
 ## Function Types
 
@@ -439,9 +439,11 @@ payload.data.headers; // { "auto-submitted": [...], ... }
 payload.data.attachments; // [...]
 ```
 
-## Sandbox Environment
+## Execution Environment
 
-Pre-processing functions run in a secure sandbox with limited access:
+Pre-processing functions run in an isolated execution context (built on Node's `vm` module) with a restricted set of globals and an enforced timeout. Note that Node's `vm` is an isolation mechanism, not a hardened security boundary - only run pre-processing code you trust.
+
+The context exposes a limited set of capabilities:
 
 **Available:**
 
