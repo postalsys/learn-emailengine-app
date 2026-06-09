@@ -80,10 +80,12 @@ flowchart TD
 EmailEngine automatically adds these headers to emails sent with a `listId`:
 
 ```
-List-ID: <newsletter-weekly.example.com>
+List-ID: <newsletter-weekly.emailengine.example.com>
 List-Unsubscribe: <https://emailengine.example.com/unsubscribe?data=abc123&sig=xyz>
 List-Unsubscribe-Post: List-Unsubscribe=One-Click
 ```
+
+The `List-ID` value combines the `listId` with the hostname of your configured `serviceUrl` (here `https://emailengine.example.com`).
 
 **One-Click Unsubscribe (RFC 8058):**
 

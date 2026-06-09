@@ -368,6 +368,7 @@ const sidebars: SidebarsConfig = {
         'api/get-v-1-oauth-2-app',
         'api/delete-v-1-oauth-2-app',
         'api/put-v-1-oauth-2-app',
+        'api/post-v-1-oauth-2-app-verify',
         'api/get-v-1-pubsub-status'
       ],
     },

@@ -282,8 +282,6 @@ EmailEngine does NOT support horizontal scaling. Running multiple EmailEngine in
 
 ```log
 {"level":30,"msg":"Started API server thread","port":3000,"host":"0.0.0.0"}
-{"level":30,"msg":"All required threads are available","threads":["api","imap","webhooks","submit"]}
-{"level":30,"msg":"Account state change","account":"user@gmail.com","state":"connected"}
 ```
 
 ### Metrics

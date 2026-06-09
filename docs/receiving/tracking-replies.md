@@ -227,11 +227,12 @@ app.post('/webhooks/emailengine', async (req, res) => {
 });
 
 async function handleNewMessage(event) {
-  const { account, data } = event;
+  // The folder path lives at the payload root, not inside the data object
+  const { account, path, data } = event;
 
   // Check if this is a reply
   if (data.inReplyTo) {
-    await handlePotentialReply(account, data);
+    await handlePotentialReply(account, path, data);
   }
 }
 
@@ -243,7 +244,7 @@ app.listen(3000);
 Match the `In-Reply-To` header to your stored Message-IDs:
 
 ```javascript
-async function handlePotentialReply(accountId, message) {
+async function handlePotentialReply(accountId, path, message) {
   const inReplyTo = message.inReplyTo;
 
   // Check if replying to one of our tracked messages
@@ -256,7 +257,7 @@ async function handlePotentialReply(accountId, message) {
 
   // Verify it's in inbox (not spam/trash)
   const isInInbox = (
-    message.path === 'INBOX' ||
+    path === 'INBOX' ||
     (message.labels && message.labels.includes('\\Inbox'))
   );
 
@@ -325,6 +326,10 @@ async function isAutoResponse(message) {
   return false; // Appears to be genuine reply
 }
 ```
+
+:::info Header Availability
+Full message headers are not available for Microsoft Graph API (Outlook) accounts, so this header-based filtering pattern applies to IMAP and Gmail accounts. For MS Graph accounts, rely on subject-based checks and sender verification instead.
+:::
 
 ### Check Sender
 
@@ -514,9 +519,9 @@ app.post('/webhooks/emailengine', async (req, res) => {
     const original = trackedEmails.get(event.data.inReplyTo);
 
     if (original) {
-      // Check if in inbox
+      // Check if in inbox (the folder path is at the payload root, not in event.data)
       const inInbox = (
-        event.data.path === 'INBOX' ||
+        event.path === 'INBOX' ||
         (event.data.labels || []).includes('\\Inbox')
       );
 

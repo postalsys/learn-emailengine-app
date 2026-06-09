@@ -28,7 +28,7 @@ Email accounts are the core resource in EmailEngine. Each account represents a c
   "name": "John Doe",
   "email": "user@example.com",
   "state": "connected",
-  "syncTime": 1640995200000,
+  "syncTime": "2025-01-15T10:30:00.000Z",
   "notifyFrom": "2025-01-01T00:00:00.000Z",
   "lastError": null,
   "imap": {
@@ -44,7 +44,6 @@ Email accounts are the core resource in EmailEngine. Each account represents a c
     "disabled": false
   },
   "oauth2": {
-    "enabled": true,
     "provider": "gmail",
     "auth": {
       "user": "user@example.com"
@@ -81,12 +80,12 @@ Register a new email account with EmailEngine.
 | `account` | string | Yes | Unique account identifier (usually email address) |
 | `name` | string | Yes | Display name for the account |
 | `email` | string | No | Email address (defaults to `account`) |
-| `imap` | object | Yes* | IMAP connection settings |
+| `imap` | object | No | IMAP connection settings |
 | `smtp` | object | No | SMTP connection settings |
 | `oauth2` | object | No | OAuth2 settings |
 | `notifyFrom` | string | No | ISO date to send webhooks from (default: account creation time) |
 
-*Either `imap` or `oauth2` is required.
+Only `account` and `name` are required by the schema. In practice, provide either `imap` (usually together with `smtp`) or `oauth2` so the account can actually connect to a mail server.
 
 **IMAP Configuration:**
 
@@ -214,9 +213,11 @@ PRINT("Account registered: " + result.account)
 ```json
 {
   "account": "user@example.com",
-  "state": "init"
+  "state": "new"
 }
 ```
+
+The `state` field in this response indicates whether the account was created (`new`) or an existing account with the same ID was updated (`existing`).
 
 **Use Cases:**
 - Onboarding new users to your application
@@ -361,11 +362,13 @@ PRINT("Last sync: " + details.syncTime)
   "name": "John Doe",
   "email": "user@example.com",
   "state": "connected",
-  "syncTime": 1640995200000,
+  "syncTime": "2025-01-15T10:30:00.000Z",
   "lastError": null,
   "counters": {
-    "sent": 42,
-    "received": 128
+    "events": {
+      "messageNew": 30,
+      "messageDeleted": 5
+    }
   }
 }
 ```
@@ -450,7 +453,7 @@ response = HTTP_PUT(
 )
 
 result = PARSE_JSON(response.body)
-PRINT("Account updated: " + result.success)
+PRINT("Account updated: " + result.account)
 ```
 
 </TabItem>
@@ -471,6 +474,12 @@ Remove an account and stop synchronization.
 
 **Endpoint:** `DELETE /v1/account/:account`
 
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `revoke` | boolean | If `true`, EmailEngine attempts to revoke the upstream OAuth2 grant at the provider before deleting the account. Currently supported for individual Gmail OAuth grants; for Gmail service-account integrations, Outlook, and non-OAuth2 accounts the flag is a no-op. Revoke failures are logged and do not block deletion. Default: `false` |
+
 **Examples:**
 
 <Tabs groupId="programming-language">
@@ -478,6 +487,10 @@ Remove an account and stop synchronization.
 
 ```bash
 curl -X DELETE "http://localhost:3000/v1/account/user@example.com" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+# Also revoke the OAuth2 grant at the provider (Gmail OAuth accounts)
+curl -X DELETE "http://localhost:3000/v1/account/user@example.com?revoke=true" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -499,7 +512,7 @@ response = HTTP_DELETE(
 )
 
 result = PARSE_JSON(response.body)
-PRINT("Account deleted: " + result.success)
+PRINT("Account deleted: " + result.deleted)
 ```
 
 </TabItem>
@@ -508,8 +521,8 @@ PRINT("Account deleted: " + result.success)
 **Response:**
 ```json
 {
-  "success": true,
-  "account": "user@example.com"
+  "account": "user@example.com",
+  "deleted": true
 }
 ```
 
@@ -535,7 +548,9 @@ Force reconnection to mail server (useful after credential updates).
 
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com/reconnect" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"reconnect": true}'
 ```
 
 </TabItem>
@@ -550,13 +565,17 @@ response = HTTP_PUT(
   "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/reconnect",
   {
     headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: {
+      reconnect: true
     }
   }
 )
 
 result = PARSE_JSON(response.body)
-PRINT("Reconnection initiated: " + result.success)
+PRINT("Reconnection requested: " + result.reconnect)
 ```
 
 </TabItem>
@@ -583,7 +602,9 @@ Closes the existing IMAP connection entirely and opens a new one. This is a full
 
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com/reconnect" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"reconnect": true}'
 ```
 
 **When to use:**
@@ -603,7 +624,9 @@ Triggers an immediate mailbox synchronization without disconnecting. Refreshes t
 
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com/sync" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"sync": true}'
 ```
 
 **When to use:**
@@ -623,7 +646,9 @@ Deletes all cached email data (message indexes, folder lists, bounce data) from 
 
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com/flush" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"flush": true}'
 ```
 
 :::warning Destructive Operation
@@ -729,13 +754,13 @@ curl -X POST "http://localhost:3000/v1/verifyAccount" \
 | `name` | string | Display name |
 | `email` | string | Email address |
 | `state` | string | Connection state (see Account States) |
-| `syncTime` | number | Unix timestamp of last sync |
+| `syncTime` | string | ISO 8601 date-time of the last sync |
 | `notifyFrom` | string | ISO date to send webhooks from |
 | `lastError` | object | Last error details (if any) |
 | `imap` | object | IMAP connection settings |
 | `smtp` | object | SMTP connection settings |
 | `oauth2` | object | OAuth2 configuration |
-| `counters` | object | Message statistics |
+| `counters` | object | Cumulative event counters (`counters.events`) for the account lifetime |
 
 ### Account States
 
@@ -859,8 +884,11 @@ Update passwords programmatically:
 
 ```
 // Pseudo code: Rotate account credentials
-function rotateCredentials(account, newPassword) {
+function rotateCredentials(account, username, newPassword) {
   // Step 1: Update credentials
+  // Use "partial": true so only the auth object is updated instead of
+  // replacing the whole imap/smtp configuration. The auth object must
+  // include both user and pass.
   HTTP_PUT(
     "http://localhost:3000/v1/account/" + URL_ENCODE(account),
     {
@@ -869,8 +897,8 @@ function rotateCredentials(account, newPassword) {
         "Content-Type": "application/json"
       },
       body: {
-        imap: { auth: { pass: newPassword } },
-        smtp: { auth: { pass: newPassword } }
+        imap: { partial: true, auth: { user: username, pass: newPassword } },
+        smtp: { partial: true, auth: { user: username, pass: newPassword } }
       }
     }
   )
@@ -879,7 +907,11 @@ function rotateCredentials(account, newPassword) {
   HTTP_PUT(
     "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/reconnect",
     {
-      headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
+      headers: {
+        "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+        "Content-Type": "application/json"
+      },
+      body: { reconnect: true }
     }
   )
 
@@ -904,9 +936,9 @@ function getSyncStatus(account) {
 
   details = PARSE_JSON(response.body)
 
-  // Calculate status
+  // Calculate status (syncTime is an ISO 8601 date-time string)
   currentTime = CURRENT_TIMESTAMP()
-  timeSinceSync = currentTime - details.syncTime
+  timeSinceSync = currentTime - PARSE_DATE(details.syncTime)
   isHealthy = (details.state == "connected" AND details.lastError == null)
 
   return {
@@ -933,11 +965,17 @@ function getSyncStatus(account) {
 **Solution:** Use PUT to update existing account or choose different account ID.
 
 **Authentication Failed:**
+
+`POST /v1/account` does not validate credentials at registration time - invalid credentials surface later when the account moves to the `authenticationError` state. To check credentials up front, use `POST /v1/verifyAccount`, which reports the server response:
 ```json
 {
-  "error": "Authentication failed",
-  "code": "AuthenticationError",
-  "statusCode": 400
+  "imap": {
+    "success": false,
+    "error": "Authentication failed",
+    "code": "AUTHENTICATIONFAILED",
+    "responseText": "NO [AUTHENTICATIONFAILED] Invalid credentials"
+  },
+  "smtp": { "success": true }
 }
 ```
 **Solution:** Verify credentials, check if 2FA/app passwords are required.

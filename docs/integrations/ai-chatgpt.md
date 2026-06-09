@@ -418,6 +418,10 @@ function trackEmailMetrics(webhook):
 
 ### 6. Smart Email Search Assistant
 
+:::warning Deprecated Feature
+The `POST /v1/chat/{account}` endpoint is part of the deprecated Document Store feature and is excluded from the current OpenAPI specification. It only works when Document Store (Elasticsearch) indexing and the "Chat with emails" feature are both enabled. Avoid building new integrations on this endpoint.
+:::
+
 Build conversational email search for users:
 
 **cURL:**
@@ -672,12 +676,12 @@ The filter function runs in the same sandbox as other pre-processing functions:
 
 - Standard JavaScript (ES6+)
 - `Date`, `Math`, `JSON`, `RegExp`
+- `fetch` - Make HTTP requests (a wrapped fetch implementation is injected into the sandbox)
 - `env` - Script environment variables (from `scriptEnv` setting)
 - `logger` - Pino.js logger for debugging
 
 **Not Available:**
 
-- `fetch` - No external HTTP requests
 - `require()` - No module imports
 - Filesystem or system access
 

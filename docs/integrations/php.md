@@ -36,14 +36,16 @@ composer require postalsys/emailengine-php
 
 require 'vendor/autoload.php';
 
-use EmailEnginePhp\EmailEngine;
+use Postalsys\EmailEnginePhp\EmailEngine;
 
-// Initialize EmailEngine client
-$ee = new EmailEngine([
+// Initialize EmailEngine client from an options array
+$ee = EmailEngine::fromOptions([
     'access_token' => '3eb50ef80efb67885af...',
     'ee_base_url' => 'http://127.0.0.1:3000/',
 ]);
 ```
+
+The constructor also accepts positional arguments (`new EmailEngine($accessToken, $eeBaseUrl)`); `EmailEngine::fromOptions()` is the array-style alternative.
 
 ### Configuration Options
 
@@ -174,11 +176,11 @@ echo "Message sent! Message ID: " . $submit_response['messageId'] . "\n";
 
 ### Message Options
 
-**Required Fields**:
-- `from`: Sender address (object with `name` and `address`)
+**Main Fields**:
+- `from`: Sender address (object with `name` and `address`). Optional - defaults to the account's configured identity if omitted
 - `to`: Array of recipient addresses
 
-**Optional Fields**:
+**Other Fields**:
 - `cc`: Carbon copy recipients (array)
 - `bcc`: Blind carbon copy recipients (array)
 - `subject`: Email subject line
@@ -224,9 +226,9 @@ $submit_response = $ee->request('post', '/v1/account/example/submit', [
 <?php
 
 // Get messages from inbox
-$messages = $ee->request('get', '/v1/account/example/messages', [
-    'path' => 'INBOX',
-]);
+// "path" is a required query parameter, so include it in the URL -
+// the third request() argument would be sent as a JSON body instead
+$messages = $ee->request('get', '/v1/account/example/messages?path=INBOX');
 
 foreach ($messages['messages'] as $message) {
     echo "From: " . $message['from']['address'] . "\n";
@@ -311,8 +313,12 @@ try {
     echo "Error: " . $e->getMessage() . "\n";
 
     // Handle specific error cases
-    if (strpos($e->getMessage(), 'Account already exists') !== false) {
-        echo "This account is already registered\n";
+    // Note: re-registering an existing account ID is not an error - the
+    // request succeeds and returns "state": "existing". A duplicate error
+    // (code "AccountAlreadyExists") only occurs when another account for
+    // the same OAuth2 user already exists.
+    if (strpos($e->getMessage(), 'Another account for the same OAuth2 user already exists') !== false) {
+        echo "An account for this OAuth2 user is already registered\n";
     }
 }
 ```
@@ -322,7 +328,7 @@ try {
 | Error | Cause | Solution |
 |-------|-------|----------|
 | `Invalid access token` | Wrong or expired token | Generate new token in EmailEngine |
-| `Account already exists` | Account ID already in use | Use different account ID or delete existing |
+| `AccountAlreadyExists` | Another account for the same OAuth2 user already exists | Use the existing account or delete it first (re-registering the same account ID is not an error - it returns `"state": "existing"`) |
 | `Authentication failed` | Wrong credentials | Verify email credentials |
 | `Connection failed` | Cannot reach email server | Check server hostname and port |
 
@@ -401,7 +407,7 @@ Here's a complete example of a simple email automation:
 
 require 'vendor/autoload.php';
 
-use EmailEnginePhp\EmailEngine;
+use Postalsys\EmailEnginePhp\EmailEngine;
 
 class EmailAutomation
 {
@@ -409,7 +415,7 @@ class EmailAutomation
 
     public function __construct($token, $baseUrl)
     {
-        $this->ee = new EmailEngine([
+        $this->ee = EmailEngine::fromOptions([
             'access_token' => $token,
             'ee_base_url' => $baseUrl,
         ]);

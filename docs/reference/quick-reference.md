@@ -59,7 +59,7 @@ See [Webhook Events Reference](/docs/reference/webhook-events) for complete payl
 | `GET` | `/v1/account/{account}/message/{message}/source` | Get raw email |
 | `DELETE` | `/v1/account/{account}/message/{message}` | Delete message |
 | `PUT` | `/v1/account/{account}/message/{message}` | Update flags/move |
-| `GET` | `/v1/account/{account}/search` | Search messages |
+| `POST` | `/v1/account/{account}/search` | Search messages |
 
 ### Sending Emails
 
@@ -86,12 +86,12 @@ See [Webhook Events Reference](/docs/reference/webhook-events) for complete payl
 
 ## Environment Variables
 
-### Required
+### Strongly Recommended
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `EENGINE_REDIS` | Redis connection URL | `redis://localhost:6379/8` |
-| `EENGINE_SECRET` | Encryption secret (32+ chars) | `openssl rand -hex 32` |
+| `EENGINE_REDIS` | Redis connection URL (defaults to `redis://127.0.0.1:6379/8` if not set) | `redis://localhost:6379/8` |
+| `EENGINE_SECRET` | Encryption secret (32+ chars) - optional, but stored credentials are not encrypted without it | `openssl rand -hex 32` |
 
 ### Server Configuration
 
@@ -154,9 +154,12 @@ See [Environment Variables](/docs/configuration/environment-variables) for compl
 
 ### Webhook Delivery Status
 
+Webhook deliveries are BullMQ jobs and use BullMQ state names:
+
 | Status | Description |
 |--------|-------------|
-| `queued` | Waiting to send |
+| `waiting` | Waiting to send |
+| `delayed` | Scheduled for a later attempt (e.g. retry backoff) |
 | `active` | Currently sending |
 | `completed` | Successfully delivered |
 | `failed` | Delivery failed (will retry) |
@@ -284,9 +287,17 @@ curl -X POST http://localhost:3000/v1/account/user123/submit \
 
 ### Search Messages
 
+Search is a `POST` request - the search criteria go in the JSON body, and the mailbox path is passed as the `path` query parameter:
+
 ```bash
-curl "http://localhost:3000/v1/account/user123/search?search[subject]=invoice" \
-  -H "Authorization: Bearer $TOKEN"
+curl -X POST "http://localhost:3000/v1/account/user123/search?path=INBOX" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "search": {
+      "subject": "invoice"
+    }
+  }'
 ```
 
 ### Configure Webhooks

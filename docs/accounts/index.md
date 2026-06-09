@@ -285,7 +285,7 @@ const { url } = await formResponse.json();
 // Redirect user to: url
 ```
 
-[Learn about hosted authentication →](/docs/accounts/authentication-server)
+[Learn about hosted authentication →](/docs/accounts/hosted-authentication)
 
 **Via Web Interface:**
 
@@ -354,7 +354,9 @@ If an account enters an error state, you can trigger a reconnection using the [r
 
 ```bash
 curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"reconnect": true}'
 ```
 
 ### Flushing Accounts
@@ -540,7 +542,7 @@ const apiResponse = await fetch('https://www.googleapis.com/gmail/v1/users/me/pr
 The `/v1/account/{account}/oauth-token` endpoint is **disabled by default** for security reasons. You must explicitly enable it before use.
 
 **To enable via Web UI:**
-1. Navigate to **Configuration** > **Service Configuration**
+1. Navigate to **Configuration** > **General Settings**
 2. Check **Allow OAuth2 Token Access via API**
 3. Click **Save**
 

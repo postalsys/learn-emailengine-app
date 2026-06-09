@@ -95,15 +95,7 @@ curl -X POST "http://localhost:3000/v1/settings" \
 - `dedicated` - Each account consistently uses the same IP from the pool (based on account ID hashing)
 - `random` - Each connection uses a randomly selected IP from the pool
 
-Alternatively, add to your TOML configuration file under `[service]`:
-
-```toml
-# config.toml
-[service]
-localAddresses = "192.168.1.100,192.168.1.101,192.168.1.102"
-```
-
-Note: Strategy settings (`imapStrategy`, `smtpStrategy`) must be configured via the API or web interface, not TOML.
+Note: These settings are runtime settings stored in Redis - they cannot be set via the TOML configuration file. To preconfigure them at startup, use the `EENGINE_SETTINGS` environment variable with a JSON value, for example `EENGINE_SETTINGS='{"localAddresses":["192.168.1.100","192.168.1.101"],"smtpStrategy":"dedicated"}'`.
 
 ### Method 2: Dedicated Strategy (Recommended)
 

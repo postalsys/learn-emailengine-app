@@ -22,7 +22,7 @@ EENGINE_FEATURE_<NAME>=true
 
 **Enabling a feature:**
 
-Set the value to any of these (case-insensitive): `y`, `yes`, `1`, `t`, `true`
+Use one of the conventional values: `y`, `yes`, `1`, `true`
 
 ```bash
 EENGINE_FEATURE_EXAMPLE=true
@@ -30,15 +30,15 @@ EENGINE_FEATURE_EXAMPLE=1
 EENGINE_FEATURE_EXAMPLE=yes
 ```
 
+Note that the value check is loose - any value matching the regular expression `/^y|1|t/i` enables the flag. This means a value starting with "y", or containing "1" or "t" anywhere, counts as enabled (for example, `EENGINE_FEATURE_EXAMPLE=later` would enable the flag because it contains a "t"). Stick to the conventional values above to avoid surprises.
+
 **Disabling a feature:**
 
-Set the value to any other value, or remove the environment variable entirely:
+Remove the environment variable entirely. This is the only safe way to disable a feature flag.
 
-```bash
-EENGINE_FEATURE_EXAMPLE=false
-EENGINE_FEATURE_EXAMPLE=0
-EENGINE_FEATURE_EXAMPLE=no
-```
+:::warning Do not set a "disable" value
+Setting a feature flag environment variable to a non-enabling value such as `false`, `0`, or `no` prevents EmailEngine from starting in current versions - the startup code throws an error when it encounters such a value. Always unset the variable instead.
+:::
 
 ### Name Formatting
 

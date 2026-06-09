@@ -34,10 +34,10 @@ The Submit API sends emails and provides real-time delivery status via webhooks.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `to` | array | Yes | Recipient addresses |
+| `to` | array | No | Recipient addresses (can be omitted when derived from `reference` or supplied via `mailMerge`) |
 | `subject` | string | No | Email subject |
-| `text` | string | No* | Plain text content |
-| `html` | string | No* | HTML content |
+| `text` | string | No | Plain text content |
+| `html` | string | No | HTML content |
 | `from` | object | No | Custom from address |
 | `cc` | array | No | CC recipients |
 | `bcc` | array | No | BCC recipients |
@@ -46,7 +46,7 @@ The Submit API sends emails and provides real-time delivery status via webhooks.
 | `headers` | object | No | Custom headers |
 | `reference` | object | No | For replies/forwards |
 
-*Either `text` or `html` is required.
+No field is strictly required by the schema. In practice, provide `text` and/or `html` for the message content - or send a complete MIME message with `raw`, or use a stored `template` instead.
 
 ### Address Format
 
@@ -218,7 +218,8 @@ The Submit API triggers these webhook events:
   "data": {
     "queueId": "queue_456def",
     "error": "Mailbox not found",
-    "response": "550 5.1.1 User unknown"
+    "smtpResponse": "550 5.1.1 User unknown",
+    "smtpResponseCode": 550
   }
 }
 ```
@@ -457,18 +458,9 @@ Best practice: Always provide both `text` and `html` for maximum compatibility.
 }
 ```
 
-**URL Reference:**
-```json
-{
-  "attachments": [
-    {
-      "filename": "image.jpg",
-      "href": "https://example.com/images/photo.jpg",
-      "contentType": "image/jpeg"
-    }
-  ]
-}
-```
+**Referencing an Existing Attachment:**
+
+Attachment content must always be provided as a base64-encoded `content` string - fetching attachments from a URL is not supported. To attach a file that already exists in the mailbox (for example when forwarding), set the attachment's `reference` field to an existing attachment ID instead of providing `content`.
 
 **Inline Images:**
 ```json

@@ -279,6 +279,23 @@ const results = await searchByDateRange(
 
 This allows using Gmail's powerful search operators directly. See [Gmail search operators](https://support.google.com/mail/answer/7190).
 
+### Label and Category Filtering
+
+**labels** - Filter by Gmail labels or Outlook categories (Gmail and MS Graph accounts)
+
+```javascript
+{ search: { labels: { has: ['Important'] } } }            // Has the "Important" label
+{ search: { labels: { has: ['Work', 'Urgent'] } } }       // Has ALL of these labels
+{ search: { labels: { not: ['Processed'] } } }            // Has NONE of these labels
+{ search: { labels: { has: ['Work'], not: ['Done'] } } }  // Combine both
+```
+
+- `has` matches messages that carry **all** of the listed labels/categories
+- `not` excludes messages that carry **any** of the listed labels/categories
+- Gmail API accounts: compiles to native `label:`/`-label:` query terms
+- MS Graph (Outlook) accounts: filters by message categories
+- Not supported for generic IMAP accounts or in `useOutlookSearch` mode - searching an account that cannot satisfy the filter returns HTTP 422
+
 ### Advanced IMAP Operators
 
 **modseq** - Modification sequence (IMAP with CONDSTORE extension)
@@ -293,8 +310,9 @@ This allows using Gmail's powerful search operators directly. See [Gmail search 
 
 :::warning Provider Limitations
 - `gmailRaw`: Gmail API only
+- `labels`: Gmail and MS Graph (Outlook) accounts only - not supported for generic IMAP or in `useOutlookSearch` mode (returns HTTP 422 if the account cannot satisfy the filter)
 - `emailId`, `threadId`, `emailIds`: Gmail and modern IMAP servers with RFC 8474 support
-- `seq`, `modseq`, `deleted`: Traditional IMAP only
+- `seq`, `modseq`, `deleted`, `answered`: Traditional IMAP only
 - **Microsoft Graph API limitations:**
   - `to`, `cc`, `bcc`, `larger`, `smaller` fields are **not supported** for search by default
   - Use `from` and `subject` for filtering, or search `body` for recipient names
@@ -376,7 +394,7 @@ console.log(`Found ${invoices.messages.length} large unread invoices from last 7
 ```javascript
 async function searchWithAttachments(accountId, folderPath) {
   // Note: Not all IMAP servers support attachment search
-  // Alternative: List messages and filter by hasAttachments field
+  // Alternative: List messages and filter by the attachments array
 
   const params = new URLSearchParams({
     path: folderPath,
@@ -393,7 +411,7 @@ async function searchWithAttachments(accountId, folderPath) {
   const data = await response.json();
 
   // Filter messages with attachments
-  return data.messages.filter(msg => msg.hasAttachments);
+  return data.messages.filter(msg => msg.attachments && msg.attachments.length > 0);
 }
 ```
 
@@ -860,29 +878,33 @@ async function cachedSearch(accountId, folderPath, searchCriteria) {
 Gmail API search has some differences:
 - Labels are used instead of folders
 - All messages are in `[Gmail]/All Mail`
-- Use `labels` field to filter by label
+- Use the `labels` search filter to filter by label server-side
 
 ```javascript
 async function searchGmailByLabel(accountId, label) {
-  const params = new URLSearchParams({
-    path: '[Gmail]/All Mail'
-  });
+  const params = new URLSearchParams({ path: '\\All' });
 
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/messages?${params}`,
+    `https://your-emailengine.com/v1/account/${accountId}/search?${params}`,
     {
-      headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        search: {
+          labels: { has: [label] }
+        }
+      })
     }
   );
 
-  const data = await response.json();
-
-  // Filter by label
-  return data.messages.filter(msg =>
-    msg.labels && msg.labels.includes(label)
-  );
+  return await response.json();
 }
 ```
+
+You can also use `gmailRaw` with `label:` terms for more complex label queries.
 
 ### IMAP Limitations
 

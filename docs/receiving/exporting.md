@@ -56,7 +56,7 @@ curl -X POST "https://your-emailengine.com/v1/account/{account}/export" \
 |-----------|------|---------|-------------|
 | `startDate` | ISO 8601 | Required | Export messages from this date |
 | `endDate` | ISO 8601 | Required | Export messages until this date |
-| `folders` | array | All (except Junk/Trash) | Folder paths or special-use flags to export |
+| `folders` | array | All Mail (Gmail/Outlook API); all folders except Junk and Trash (other accounts) | Folder paths or special-use flags to export |
 | `textType` | string | `*` | Text content: `plain`, `html`, `*` (both) |
 | `maxBytes` | number | 5242880 | Maximum bytes for text content (0 = unlimited) |
 | `includeAttachments` | boolean | false | Include attachment content as base64 |
@@ -86,11 +86,12 @@ Exports progress through these states:
 
 | Status | Phase | Description |
 |--------|-------|-------------|
-| `queued` | `pending` | Export is waiting in the queue |
+| `queued` | - | Export is waiting in the queue (no `phase` field is set) |
 | `processing` | `indexing` | Scanning folders and queuing messages |
 | `processing` | `exporting` | Fetching and writing messages to file |
 | `completed` | `complete` | Export finished successfully |
 | `failed` | - | Export encountered an error |
+| `cancelled` | - | Export was cancelled before completion |
 
 ### Progress Fields
 
@@ -270,12 +271,12 @@ Additional settings control maximum export sizes:
 
 ### Configuration
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `exportPath` | setting | OS temp dir | Directory for export files |
-| `exportMaxAge` | setting | 24 hours | File retention time |
-| `EENGINE_EXPORT_PATH` | env | - | Override export directory |
-| `EENGINE_EXPORT_MAX_AGE` | env | - | Override retention (ms) |
+File storage is configured with environment variables (these options are not available through the settings API or UI):
+
+| Environment Variable | Default | Description |
+|----------------------|---------|-------------|
+| `EENGINE_EXPORT_PATH` | OS temp dir | Directory for export files |
+| `EENGINE_EXPORT_MAX_AGE` | 24 hours | File retention time in milliseconds |
 
 ### Encryption
 
@@ -354,51 +355,9 @@ This will:
 - Delete the export file from disk
 - Remove the export record from the system
 
-### Resume Failed Export
+### Handling Failed Exports
 
-If an export fails but made progress, you can resume it from the last checkpoint instead of starting over. Check the `resumable` field in the export status response:
-
-```bash
-curl -X POST "https://your-emailengine.com/v1/account/{account}/export/{exportId}/resume" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
-**When is an export resumable?**
-
-An export is marked as `resumable: true` when:
-- The export made progress (processed at least one message)
-- Messages remain to be processed
-- The account was not deleted during the export
-
-**Response:**
-
-```json
-{
-  "exportId": "exp_abc123def456abc123def456",
-  "status": "queued",
-  "resumed": true,
-  "previousProgress": {
-    "messagesExported": 750,
-    "messagesSkipped": 5
-  }
-}
-```
-
-The resumed export continues from where it left off, preserving already-exported messages in the output file.
-
-**Error handling:**
-
-If the export is not resumable, the API returns an error:
-
-```json
-{
-  "statusCode": 400,
-  "error": "Bad Request",
-  "message": "Export is not resumable"
-}
-```
-
-In this case, delete the failed export and create a new one.
+Failed exports cannot be resumed. If an export ends up in the `failed` state, check the `error` field in the status response for details, then delete the failed export and create a new one (using a narrower date range if the failure was caused by size or rate limits).
 
 ## Best Practices
 
@@ -408,13 +367,13 @@ For very large exports (millions of messages):
 
 1. **Use date range filtering** - Split large exports into smaller date ranges
 2. **Monitor progress** - Poll the status endpoint to track completion
-3. **Handle failures gracefully** - Check the `error` field if status is `failed`
-4. **Download promptly** - Files expire after `exportMaxAge` (default 24 hours)
+3. **Handle failures gracefully** - Check the `error` field if status is `failed`; delete the failed export and create a new one (exports cannot be resumed)
+4. **Download promptly** - Files expire after the retention period set by `EENGINE_EXPORT_MAX_AGE` (default 24 hours)
 
 ### Production Usage
 
-1. **Configure storage path** - Set `exportPath` or `EENGINE_EXPORT_PATH` to a dedicated volume with sufficient space
-2. **Set appropriate retention** - Adjust `exportMaxAge` based on your download SLA
+1. **Configure storage path** - Set the `EENGINE_EXPORT_PATH` environment variable to a dedicated volume with sufficient space
+2. **Set appropriate retention** - Adjust the `EENGINE_EXPORT_MAX_AGE` environment variable (in milliseconds) based on your download SLA
 3. **Monitor disk space** - Large exports can consume significant disk space
 4. **Use webhooks** - Set up webhook handlers for `exportCompleted` and `exportFailed` events instead of polling
 

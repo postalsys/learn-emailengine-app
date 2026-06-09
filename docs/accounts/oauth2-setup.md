@@ -222,6 +222,17 @@ Both Google and Microsoft allow downloading credentials as JSON files:
 
 EmailEngine can auto-fill fields from Google's JSON file.
 
+### Verifying the App Setup
+
+After configuring an OAuth2 app, use the **Verify setup** button on the app's page in the EmailEngine dashboard (or the [`POST /v1/oauth2/{app}/verify`](/docs/api/post-v-1-oauth-2-app-verify) API endpoint) to test the configuration before connecting accounts.
+
+The verifier runs the real provider authentication chain step by step and reports each step as passed, failed, or skipped, with an actionable hint for failures:
+
+- **Service-account apps (Gmail/Outlook)** - checks the credentials, token exchange, and domain-wide delegation. Provide a test mailbox address to also perform a live IMAP login or Gmail/MS Graph API probe.
+- **Regular (3-legged) apps** - performs a configuration-only check, since user consent is required for a full token exchange.
+
+The verifier is read-only: it does not modify any mailbox and does not send mail. This makes misconfigurations visible immediately instead of surfacing only when the first account fails to connect.
+
 ## OAuth2 Scopes
 
 Scopes define what your application can access.

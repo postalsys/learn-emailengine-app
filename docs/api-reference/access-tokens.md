@@ -25,6 +25,16 @@ All tokens are 64-character hexadecimal strings (32 bytes):
 f05d76644ea39c4a2ee33e7bffe55808b716a34b51d67b388c7d60498b0f89bc
 ```
 
+### Token ID
+
+EmailEngine stores only the SHA-256 hash of each token, never the token value itself. This hash is the token's stable identifier:
+
+- Returned as the `id` field by `GET /v1/tokens` and `GET /v1/tokens/account/{account}`
+- Shown in the admin UI access tokens list as the "Token ID" column (first 8 hex characters, full hash on hover)
+- Included in log entries, so API requests can be correlated to the token that made them
+
+The token value cannot be recovered from the `id`. `DELETE /v1/token/{token}` accepts either the original token value or the token `id`.
+
 ## Token Types
 
 ### System-Wide Tokens
@@ -230,9 +240,11 @@ For complete export/import workflows and prepared token configuration, see [Prep
 **Via API:**
 
 ```bash
-curl -X DELETE http://localhost:3000/v1/token/TOKEN_HASH \
+curl -X DELETE http://localhost:3000/v1/token/TOKEN_VALUE_OR_ID \
   -H "Authorization: Bearer ADMIN_TOKEN"
 ```
+
+The path parameter accepts either the original token value or the token `id` (the SHA-256 hash shown by the token listing endpoints), so tokens can be revoked even if the original value is no longer available.
 
 [Detailed API reference →](/docs/api/delete-v-1-token-token)
 

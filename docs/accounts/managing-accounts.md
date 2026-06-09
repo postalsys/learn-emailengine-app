@@ -547,6 +547,17 @@ curl -X DELETE https://your-ee.com/v1/account/user123 \
 - Server-side folders remain
 - OAuth2 tokens remain valid (until revoked by provider or you)
 
+**Revoking the OAuth2 grant on delete:**
+
+Pass `revoke=true` to also revoke the upstream OAuth2 grant at the provider before the account is removed:
+
+```bash
+curl -X DELETE "https://your-ee.com/v1/account/user123?revoke=true" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+This is currently supported for individual Gmail OAuth grants. For Gmail service-account integrations, Outlook, and non-OAuth2 accounts the flag is a no-op. If revocation fails, the failure is logged and the account is still deleted.
+
 :::warning Irreversible
 Deleting an account cannot be undone. You'll need to re-add the account if needed later.
 :::

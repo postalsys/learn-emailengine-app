@@ -25,7 +25,7 @@ This page assumes you have already created a Google Cloud project and OAuth2 cre
 | [Read-Only](#read-only) | `gmail.readonly` + `gmail.labels` | Yes | No | No | Yes | Yes | Restricted |
 | [Send-Only](#send-only) | `gmail.send` | No | Yes | No | No | No | Sensitive |
 
-**Manage Labels** refers to creating, renaming, and deleting labels (folders). The `gmail.labels` scope is also required for EmailEngine to list labels properly.
+**Manage Labels** refers to creating, renaming, and deleting labels (folders). The `gmail.labels` scope is included in the default scope presets so that label listing and modification work consistently - listing labels also works with `gmail.readonly` alone.
 
 ## Google's Scope Classifications
 
@@ -114,7 +114,7 @@ In EmailEngine, this scope is used with the IMAP/SMTP backend (`baseScopes: "ima
 
 ### Setup via Web UI
 
-1. Go to **Configuration** > **OAuth2** > **Add new OAuth2 app**
+1. Go to **Configuration** > **OAuth2** > **Create OAuth2 app**
 2. Select **Gmail** as the provider
 3. Upload your Google credentials JSON file or enter Client ID and Client Secret manually
 4. For **Base scope**, select **IMAP and SMTP**
@@ -188,7 +188,7 @@ This is the default scope when using the Gmail API backend. It provides full rea
 
 ### Setup via Web UI
 
-1. Go to **Configuration** > **OAuth2** > **Add new OAuth2 app**
+1. Go to **Configuration** > **OAuth2** > **Create OAuth2 app**
 2. Select **Gmail** as the provider
 3. Upload your Google credentials JSON file or enter Client ID and Client Secret manually
 4. For **Base scope**, select **Gmail API**
@@ -278,7 +278,7 @@ With this scope combination, EmailEngine API calls that attempt to modify, move,
 
 ### Setup via Web UI
 
-1. Go to **Configuration** > **OAuth2** > **Add new OAuth2 app** (or edit an existing one)
+1. Go to **Configuration** > **OAuth2** > **Create OAuth2 app** (or edit an existing one)
 2. Select **Gmail** as the provider
 3. For **Base scope**, select **Gmail API**
 4. Click the **Read-Only + Send** preset button
@@ -359,8 +359,8 @@ Provides read access to messages and labels. Cannot send, modify, or delete mess
 - Webhook notifications for incoming messages (e.g., `messageNew`) work normally
 - Locale detection
 
-:::warning gmail.labels is required
-The `gmail.labels` scope is required for EmailEngine to list labels (mailboxes) properly. Always include it alongside `gmail.readonly`. Without it, EmailEngine cannot function correctly even for read-only use cases.
+:::info gmail.labels is recommended
+The `gmail.labels` scope is included in this preset so that label listing and label management behave consistently. Listing labels also works with `gmail.readonly` alone, but keeping `gmail.labels` is recommended - it is a non-sensitive scope and does not add to Google's verification requirements.
 :::
 
 ### When to use
@@ -376,7 +376,7 @@ The `gmail.labels` scope is required for EmailEngine to list labels (mailboxes) 
 
 ### Setup via Web UI
 
-1. Go to **Configuration** > **OAuth2** > **Add new OAuth2 app** (or edit an existing one)
+1. Go to **Configuration** > **OAuth2** > **Create OAuth2 app** (or edit an existing one)
 2. Select **Gmail** as the provider
 3. For **Base scope**, select **Gmail API**
 4. Click the **Read-Only** preset button
@@ -471,7 +471,7 @@ EmailEngine activates a special **send-only mode** for accounts with only the `g
 
 ### Setup via Web UI
 
-1. Go to **Configuration** > **OAuth2** > **Add new OAuth2 app** (or edit an existing one)
+1. Go to **Configuration** > **OAuth2** > **Create OAuth2 app** (or edit an existing one)
 2. Select **Gmail** as the provider
 3. For **Base scope**, select **Gmail API**
 4. Click the **Send-Only** preset button

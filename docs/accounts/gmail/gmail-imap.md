@@ -307,7 +307,7 @@ Now that you have your Google Cloud project configured, let's set up EmailEngine
 
 1. Open your EmailEngine dashboard
 2. Navigate to **Configuration** → **OAuth2**
-3. Click **Add application** and select **Gmail**
+3. Click the **Create OAuth2 app** dropdown and select **Gmail**
 
 ![Creating Gmail OAuth2 app in EmailEngine](/img/external/tg5rojB4ov.gif)
 
@@ -418,7 +418,7 @@ curl -X POST https://your-ee.com/v1/account \
 ```
 
 :::info Provider ID
-The `provider` field should be the **OAuth2 application ID** from EmailEngine, which is a base64url encoded string like `AAABlf_0iLgAAAAQ`. You can find this ID in **Configuration → OAuth2 Apps** in the EmailEngine interface. This is NOT the Client ID from Google Cloud Console.
+The `provider` field should be the **OAuth2 application ID** from EmailEngine, which is a base64url encoded string like `AAABlf_0iLgAAAAQ`. You can find this ID in **Configuration → OAuth2** in the EmailEngine interface. This is NOT the Client ID from Google Cloud Console.
 :::
 
 [See full API documentation →](/docs/api/post-v-1-account)

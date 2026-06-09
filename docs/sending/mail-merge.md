@@ -61,7 +61,6 @@ curl -XPOST "https://ee.example.com/v1/account/example/submit" \
 
 ```json
 {
-  "sendAt": "2025-05-14T09:12:23.123Z",
   "mailMerge": [
     {
       "success": true,
@@ -70,7 +69,8 @@ curl -XPOST "https://ee.example.com/v1/account/example/submit" \
         "address": "ada@example.com"
       },
       "messageId": "<91853631-2329-7f13-a4df-da377d873787@example.com>",
-      "queueId": "182080c50b63e7e232a"
+      "queueId": "182080c50b63e7e232a",
+      "sendAt": "2025-05-14T09:12:23.123Z"
     },
     {
       "success": true,
@@ -79,7 +79,8 @@ curl -XPOST "https://ee.example.com/v1/account/example/submit" \
         "address": "grace@example.com"
       },
       "messageId": "<8b47f91c-06f3-b555-ee19-2c99908aff25@example.com>",
-      "queueId": "182080c50f283f49252"
+      "queueId": "182080c50f283f49252",
+      "sendAt": "2025-05-14T09:12:23.123Z"
     }
   ]
 }
@@ -115,7 +116,7 @@ curl -XPOST "https://ee.example.com/v1/account/example/submit" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
   -d '{
-    "subject": "Test message for {{{params.nickname}}}",
+    "subject": "Test message for {{params.nickname}}",
     "html": "<p>Hello {{params.nickname}}, welcome to our service!</p>",
     "mailMerge": [
       {
@@ -140,9 +141,9 @@ curl -XPOST "https://ee.example.com/v1/account/example/submit" \
   }'
 ```
 
-**Important:** For plaintext fields (`subject`, `text`) use triple braces `{{{…}}}` so Handlebars doesn't HTML-escape characters.
+**Important:** Plain-text fields (`subject`, `text`) are rendered without HTML escaping, so double braces `{{…}}` are always safe there - triple braces are never needed.
 
-For HTML fields, use double braces `{{…}}` to escape HTML entities, or triple braces if you want to inject raw HTML.
+For HTML fields (`html`, `previewText`), use double braces `{{…}}` to escape HTML entities, or triple braces `{{{…}}}` if you want to inject raw HTML.
 
 ### Built-in Variables
 
@@ -171,7 +172,7 @@ Include rich personalization data:
 
 ```json
 {
-  "subject": "Your order #{{{params.orderNumber}}} has shipped",
+  "subject": "Your order #{{params.orderNumber}} has shipped",
   "html": `
     <h1>Hi {{params.firstName}},</h1>
     <p>Your order <strong>{{params.orderNumber}}</strong> has shipped!</p>
@@ -248,7 +249,7 @@ curl -XPOST "https://ee.example.com/v1/templates/template" \
     "name": "Welcome Email",
     "description": "Welcome new users",
     "content": {
-      "subject": "Welcome {{{params.nickname}}}!",
+      "subject": "Welcome {{params.nickname}}!",
       "html": "<h1>Hello {{params.nickname}}</h1><p>Welcome to our service!</p>",
       "text": "Hello {{params.nickname}}\n\nWelcome to our service!"
     }
@@ -458,7 +459,7 @@ Each message triggers its own webhooks:
 }
 ```
 
-**messageDeliveryError** (if retry needed):
+**messageDeliveryError** (on every failed delivery attempt, including the final one):
 
 ```json
 {
@@ -531,22 +532,23 @@ app.post('/webhook', async (req, res) => {
 
 ### Template Escaping
 
-**Problem:** Forgetting triple braces leads to subjects like `&lt;Welcome&gt;`.
+**Problem:** Parameter values containing HTML markup are escaped in HTML content. Double braces in `html` HTML-escape the value, so a param like `<b>Ada</b>` renders as literal text instead of bold.
 
 ```json
 {
-  "subject": "Welcome {{params.name}}" // Wrong for plain text!
+  "html": "Hello {{params.signature}}" // HTML in the value gets escaped
 }
 ```
 
-**Solution:** Use triple braces for non-HTML fields:
+**Solution:** Use triple braces in HTML content only when you intend to inject raw HTML:
 
 ```json
 {
-  "subject": "Welcome {{{params.name}}}", // Correct!
-  "html": "Hello {{params.name}}" // Double braces for HTML
+  "html": "Hello {{{params.signature}}}" // Injects raw HTML
 }
 ```
+
+Plain-text fields (`subject`, `text`) are never HTML-escaped, so double braces are always correct there - escaped subjects like `&lt;Welcome&gt;` cannot occur.
 
 ### Queue Timeouts
 

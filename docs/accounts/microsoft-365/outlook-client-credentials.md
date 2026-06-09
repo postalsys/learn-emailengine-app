@@ -187,7 +187,7 @@ Now configure EmailEngine to use the Azure application for mailbox access.
 
 1. Open the EmailEngine dashboard
 2. Navigate to **Configuration** > **OAuth2**
-3. Click **Add application**
+3. Click **Create OAuth2 app**
 4. Select **Outlook (application)**
 
 ### Configure OAuth2 Settings
@@ -219,11 +219,19 @@ curl https://your-ee.com/v1/oauth2 \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN"
 ```
 
-## Step 6: Add Email Accounts via API
+### Verify the Setup
 
-With application access, accounts can **only be added via the REST API**. The hosted authentication form is not available because there is no interactive user login.
+Before adding accounts, use the **Verify setup** button on the OAuth2 app's page (or [`POST /v1/oauth2/{app}/verify`](/docs/api/post-v-1-oauth-2-app-verify)) to test the configuration. The verifier obtains a client-credentials token and - if you provide a test mailbox address - performs a live Microsoft Graph probe against that mailbox. Each step is reported as passed, failed, or skipped with a hint for fixing failures.
 
-### Add Account
+## Step 6: Add Email Accounts
+
+The hosted authentication form is not available for application access because there is no interactive user login. Instead, add accounts either through the REST API or directly from the admin dashboard.
+
+### Add Account via the Admin UI
+
+The OAuth2 app's detail page in the EmailEngine dashboard provides an **Add account** button that opens a dialog asking for the account name and email address and registers the account directly - no API call needed.
+
+### Add Account via API
 
 Add accounts using the [Register Account API endpoint](/docs/api/post-v-1-account):
 
@@ -467,9 +475,9 @@ By default, EmailEngine stores credentials in cleartext in Redis. To protect sen
 Application access uses MS Graph webhook subscriptions for real-time email notifications. EmailEngine requires two publicly reachable HTTPS endpoints:
 
 - `{serviceUrl}/oauth/msg/notification` - Receives change notifications for messages
-- `{serviceUrl}/oauth/msg/lifecycle` - Receives lifecycle events (subscription renewal, reauthorization, missed notifications)
+- `{serviceUrl}/oauth/msg/lifecycle` - Receives lifecycle events (`reauthorizationRequired`, `subscriptionRemoved`, `missed`)
 
-EmailEngine automatically creates and renews these subscriptions. If the endpoints are not reachable from Microsoft's servers, EmailEngine falls back to periodic polling.
+EmailEngine automatically creates these subscriptions and renews them on a timer. Microsoft validates the notification URL when the subscription is created - if the endpoints are not reachable from Microsoft's servers, the subscription cannot be created. EmailEngine retries subscription creation periodically, but new-message detection will not work until the endpoints become reachable. There is no polling fallback for MS Graph accounts.
 
 ### Automatic Recovery for Missed Notifications
 
@@ -484,7 +492,7 @@ EmailEngine handles this automatically:
 No configuration is required - this recovery mechanism is built in and runs automatically for all MS Graph accounts with webhook subscriptions enabled.
 
 :::info Public HTTPS Required
-MS Graph webhook subscriptions require publicly accessible HTTPS endpoints. If your EmailEngine instance is behind a firewall or on a private network, you will need to configure a reverse proxy or tunnel. Without reachable endpoints, EmailEngine will still work but will rely on polling for updates instead of real-time notifications.
+MS Graph webhook subscriptions require publicly accessible HTTPS endpoints. If your EmailEngine instance is behind a firewall or on a private network, you will need to configure a reverse proxy or tunnel. Without reachable endpoints, the subscription cannot be created and new-message detection will not work - EmailEngine keeps retrying subscription creation until the endpoints become reachable. There is no polling fallback for MS Graph accounts.
 :::
 
 ## Official Microsoft Documentation

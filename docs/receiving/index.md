@@ -184,12 +184,18 @@ app.post('/webhooks', async (req, res) => {
 
 async function processNewMessage(event) {
   const { account, data } = event;
-  const { id, subject, from, text, html } = data;
+  const { id, subject, from, text } = data;
 
   console.log(`New message in ${account}:`);
   console.log(`From: ${from.address}`);
   console.log(`Subject: ${subject}`);
   console.log(`Message ID: ${id}`);
+
+  // Text content is only included when webhook text payloads are enabled
+  // (the notifyText setting); HTML is available at text.html
+  if (text && text.html) {
+    console.log(`HTML content: ${text.html.length} characters`);
+  }
 
   // Your processing logic here
 }

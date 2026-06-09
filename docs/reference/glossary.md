@@ -159,9 +159,9 @@ A single task in a queue, such as sending a webhook or submitting an email. Jobs
 
 A process that consumes jobs from a queue and executes them. EmailEngine runs multiple workers for parallel processing.
 
-### Dead Letter Queue
+### Failed Jobs Set
 
-Where failed jobs go after exhausting retry attempts. Accessible via Bull Board for debugging.
+Where failed jobs go after exhausting retry attempts. BullMQ does not have a separate dead letter queue - failed jobs remain in the queue's failed set, accessible via Bull Board for debugging.
 
 ## Gmail-Specific Terms
 
@@ -197,9 +197,9 @@ A mailbox that multiple users can access, common in Microsoft 365. Configured us
 
 ## Performance Terms
 
-### Connection Pool
+### Persistent Connection
 
-A set of reusable connections to email servers. EmailEngine maintains connection pools to reduce overhead of establishing new connections.
+EmailEngine maintains one persistent IMAP connection per account (plus optional subconnections for monitoring additional folders), rather than a pool of reusable connections. Keeping the connection open avoids the overhead of reconnecting and enables real-time IDLE notifications.
 
 ### Rate Limiting
 

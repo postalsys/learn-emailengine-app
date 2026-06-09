@@ -29,7 +29,6 @@ The Messages API allows you to:
 {
   "id": "AAAABAABNc",
   "uid": 12345,
-  "path": "INBOX",
   "emailId": "1234567890abcdef",
   "threadId": "thread_abc123",
   "date": "2025-01-15T10:30:00.000Z",
@@ -55,7 +54,6 @@ The Messages API allows you to:
     "id": "text_id_123",
     "encodedSize": 1234
   },
-  "html": ["html_id_456"],
   "attachments": [
     {
       "id": "attachment_789",
@@ -169,7 +167,6 @@ for each msg in data.messages {
     {
       "id": "AAAABAABNc",
       "uid": 12345,
-      "path": "INBOX",
       "subject": "Meeting Tomorrow",
       "from": {
         "name": "John Doe",
@@ -255,7 +252,6 @@ PRINT("Attachments: " + LENGTH(message.attachments))
 {
   "id": "AAAABAABNc",
   "uid": 12345,
-  "path": "INBOX",
   "subject": "Meeting Tomorrow",
   "from": {
     "name": "John Doe",
@@ -604,7 +600,7 @@ Search messages using advanced query syntax.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `path` | string | Mailbox path (default: INBOX) |
+| `path` | string | Mailbox path (required) |
 | `page` | number | Page number (0-indexed, default 0) |
 | `pageSize` | number | Messages per page (default 20, max 1000) |
 | `cursor` | string | Paging cursor from nextPageCursor or prevPageCursor |
@@ -636,6 +632,7 @@ Search messages using advanced query syntax.
 | `flagged` | boolean | Flagged messages only |
 | `larger` | number | Messages larger than size in bytes |
 | `smaller` | number | Messages smaller than size in bytes |
+| `labels` | object | `{ "has": [...], "not": [...] }` - filter by Gmail labels or Outlook categories. `has` requires all listed labels, `not` excludes messages with any of them. Gmail and MS Graph accounts only; returns HTTP 422 if the account cannot satisfy the filter |
 
 **Examples:**
 
@@ -730,10 +727,9 @@ for each msg in results.messages {
 | `emailId` | string | RFC 8474 Email ID |
 | `threadId` | string | RFC 8474 Thread ID |
 | `date` | string | ISO date string |
-| `flags` | array | IMAP flags |
+| `flags` | array | IMAP flags (a replied message has the `\Answered` entry in this array) |
 | `unseen` | boolean | True if unread |
 | `flagged` | boolean | True if flagged |
-| `answered` | boolean | True if replied |
 | `draft` | boolean | True if draft |
 | `size` | number | Message size in bytes |
 | `subject` | string | Subject line |
@@ -744,9 +740,7 @@ for each msg in results.messages {
 | `replyTo` | array | Reply-To addresses |
 | `messageId` | string | RFC 5322 Message-ID |
 | `inReplyTo` | string | Message-ID being replied to |
-| `references` | array | Thread reference IDs |
-| `text` | object | Plain text content |
-| `html` | array | HTML content parts |
+| `text` | object | Text content metadata; the `text.plain` and `text.html` values are included when the `textType` parameter is requested |
 | `attachments` | array | Attachment metadata |
 
 ### Nested Structures
@@ -788,18 +782,24 @@ for each msg in results.messages {
 
 **List Messages Filters:**
 
+The message listing endpoint only accepts the `path`, `page`, `pageSize`, and `cursor` query parameters - unknown parameters return HTTP 400. To filter by flags, use the search endpoint instead:
+
 ```
-// Unread messages in INBOX
-url = "/v1/account/" + account + "/messages?path=INBOX&unseen=true"
-
-// Flagged messages
-url = "/v1/account/" + account + "/messages?flagged=true"
-
 // Specific mailbox
 url = "/v1/account/" + account + "/messages?path=Archive"
 
 // Pagination
 url = "/v1/account/" + account + "/messages?path=INBOX&page=2&pageSize=100"
+
+// Unread messages in INBOX (use the search endpoint)
+HTTP_POST("/v1/account/" + account + "/search?path=INBOX", {
+  body: { search: { unseen: true } }
+})
+
+// Flagged messages (use the search endpoint)
+HTTP_POST("/v1/account/" + account + "/search?path=INBOX", {
+  body: { search: { flagged: true } }
+})
 ```
 
 ### Search Syntax
@@ -921,12 +921,18 @@ Update multiple messages:
 ```
 // Pseudo code: Mark all unread messages as read
 function markAllAsRead(account, path = "INBOX") {
-  // Step 1: Get all unread messages
+  // Step 1: Get all unread messages (flag filtering requires the search endpoint)
   url = "http://localhost:3000/v1/account/" + URL_ENCODE(account) +
-        "/messages?path=" + path + "&unseen=true"
+        "/search?path=" + path
 
-  response = HTTP_GET(url, {
-    headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
+  response = HTTP_POST(url, {
+    headers: {
+      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+      "Content-Type": "application/json"
+    },
+    body: {
+      search: { unseen: true }
+    }
   })
 
   messages = PARSE_JSON(response.body).messages

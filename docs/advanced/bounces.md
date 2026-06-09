@@ -641,7 +641,7 @@ When a bounce indicates a blocklist issue, the `response.blocklist` object provi
 }
 ```
 
-The `blocklist.type` indicates whether the issue is with your IP address (`ip`) or your domain (`domain`).
+The `blocklist.type` indicates whether the issue is with your IP address (`ip`), your domain (`domain`), or a URI mentioned in the message content (`uri`). If the bounce message references multiple blocklists, the response contains a `lists` array instead, where each entry has `name` and `type` fields: `{"lists": [{"name": "...", "type": "..."}, ...]}`.
 
 ### Retry Timing
 

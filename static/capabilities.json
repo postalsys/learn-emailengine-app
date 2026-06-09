@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "EmailEngine",
   "description": "Self-hosted email API gateway providing REST API access to email accounts via IMAP, SMTP, Gmail API, and Microsoft Graph API",
-  "version": "2.67.0",
+  "version": "2.69.0",
   "documentationUrl": "https://learn.emailengine.app/",
   "openApiSpec": "https://emailengine.dev/swagger.json",
   "authentication": {
@@ -21,7 +21,7 @@
         {"method": "GET", "path": "/v1/accounts", "description": "List all accounts (paginated)"},
         {"method": "GET", "path": "/v1/account/{account}", "description": "Get account details"},
         {"method": "PUT", "path": "/v1/account/{account}", "description": "Update account configuration"},
-        {"method": "DELETE", "path": "/v1/account/{account}", "description": "Delete account"},
+        {"method": "DELETE", "path": "/v1/account/{account}", "description": "Delete account (pass ?revoke=true to also revoke the upstream OAuth2 grant; supported for individual Gmail OAuth grants, no-op otherwise)"},
         {"method": "PUT", "path": "/v1/account/{account}/reconnect", "description": "Force reconnection"},
         {"method": "PUT", "path": "/v1/account/{account}/flush", "description": "Reset sync state"},
         {"method": "PUT", "path": "/v1/account/{account}/sync", "description": "Trigger immediate sync"},
@@ -127,7 +127,8 @@
         {"method": "POST", "path": "/v1/oauth2", "description": "Register app"},
         {"method": "GET", "path": "/v1/oauth2/{app}", "description": "Get app"},
         {"method": "PUT", "path": "/v1/oauth2/{app}", "description": "Update app"},
-        {"method": "DELETE", "path": "/v1/oauth2/{app}", "description": "Delete app"}
+        {"method": "DELETE", "path": "/v1/oauth2/{app}", "description": "Delete app"},
+        {"method": "POST", "path": "/v1/oauth2/{app}/verify", "description": "Verify app setup step by step (read-only diagnostic; optional account address enables live mailbox checks for service-account apps)"}
       ]
     },
     "smtpGateway": {
@@ -143,9 +144,9 @@
     "accessTokens": {
       "description": "Create and manage API access tokens",
       "endpoints": [
-        {"method": "GET", "path": "/v1/tokens", "description": "List tokens"},
+        {"method": "GET", "path": "/v1/tokens", "description": "List tokens (each includes id, the SHA-256 hash identifying the token)"},
         {"method": "POST", "path": "/v1/token", "description": "Create token"},
-        {"method": "DELETE", "path": "/v1/token/{token}", "description": "Delete token"},
+        {"method": "DELETE", "path": "/v1/token/{token}", "description": "Delete token (accepts the token value or its id hash)"},
         {"method": "GET", "path": "/v1/tokens/account/{account}", "description": "List account tokens"}
       ]
     },
@@ -266,7 +267,8 @@
     {"name": "before", "type": "string", "description": "Before date (YYYY-MM-DD)"},
     {"name": "header", "type": "object", "description": "Custom header match"},
     {"name": "emailId", "type": "string", "description": "Specific message ID"},
-    {"name": "threadId", "type": "string", "description": "Specific thread ID"}
+    {"name": "threadId", "type": "string", "description": "Specific thread ID"},
+    {"name": "labels", "type": "object", "description": "{has: [...], not: [...]} - filter by Gmail labels or Outlook categories; has matches messages with ALL listed labels, not excludes messages with ANY of them. Gmail and MS Graph accounts only; HTTP 422 if unsupported"}
   ],
   "environmentVariables": [
     {"name": "EENGINE_REDIS", "required": true, "description": "Redis connection URL", "example": "redis://localhost:6379/8"},

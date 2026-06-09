@@ -104,7 +104,7 @@ If you need to proxy Gmail API or MS Graph accounts, you must reconfigure them t
 
 ### Step 1: Enable IMAP Proxy in EmailEngine
 
-Navigate to **Configuration** → **IMAP Proxy Interface** in EmailEngine dashboard.
+Navigate to **Configuration** → **IMAP Proxy** in EmailEngine dashboard.
 
 **Configuration Options:**
 
@@ -390,6 +390,10 @@ curl https://your-ee.com/v1/tokens/account/user123 \
 }
 ```
 
+:::info Token IDs
+The `id` value is the SHA-256 hash that identifies the token - the raw token value is shown only once at creation and cannot be retrieved later. The `DELETE /v1/token/{token}` endpoint accepts either the raw token or this id.
+:::
+
 ### Revoking Tokens
 
 Immediately invalidate a token:
@@ -601,7 +605,7 @@ EmailEngine also provides an SMTP proxy. With both enabled, email clients get fu
 
 ### Enable SMTP Proxy
 
-In EmailEngine: **Configuration** → **SMTP Proxy Interface**
+In EmailEngine: **Configuration** → **SMTP Interface**
 
 **Settings:**
 

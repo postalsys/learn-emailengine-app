@@ -247,7 +247,7 @@ Since EmailEngine doesn't support multiple instances, focus on Redis high availa
 
 1. **Single EmailEngine instance** (primary)
 2. **Standby EmailEngine instance** (cold standby, not running)
-3. **Redis Sentinel or Cluster** (auto-failover)
+3. **Redis Sentinel** (auto-failover) - Redis Cluster is not supported
 4. **Persistent storage** for Redis
 5. **Health monitoring** to detect failures
 

@@ -32,26 +32,26 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/delete-v-1-account-account",
-          label: "Remove account",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
           id: "api/put-v-1-account-account",
           label: "Update account info",
           className: "api-method put",
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-oauthtoken",
-          label: "Get OAuth2 access token",
-          className: "api-method get",
+          id: "api/delete-v-1-account-account",
+          label: "Remove account",
+          className: "api-method delete",
         },
         {
           type: "doc",
           id: "api/get-v-1-account-account-serversignatures",
           label: "List Account Signatures",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-account-account-oauthtoken",
+          label: "Get OAuth2 access token",
           className: "api-method get",
         },
         {
@@ -112,15 +112,15 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/delete-v-1-account-account-mailbox",
-          label: "Delete mailbox",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
           id: "api/put-v-1-account-account-mailbox",
           label: "Modify mailbox",
           className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "api/delete-v-1-account-account-mailbox",
+          label: "Delete mailbox",
+          className: "api-method delete",
         },
       ],
     },
@@ -138,8 +138,8 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-attachment-attachment",
-          label: "Download attachment",
+          id: "api/get-v-1-account-account-text-text",
+          label: "Retrieve message text",
           className: "api-method get",
         },
         {
@@ -150,20 +150,20 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/delete-v-1-account-account-message-message",
-          label: "Delete message",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
           id: "api/put-v-1-account-account-message-message",
           label: "Update message",
           className: "api-method put",
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-text-text",
-          label: "Retrieve message text",
+          id: "api/delete-v-1-account-account-message-message",
+          label: "Delete message",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-account-account-attachment-attachment",
+          label: "Download attachment",
           className: "api-method get",
         },
         {
@@ -342,15 +342,15 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/delete-v-1-templates-template-template",
-          label: "Remove a template",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
           id: "api/put-v-1-templates-template-template",
           label: "Update a template",
           className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "api/delete-v-1-templates-template-template",
+          label: "Remove a template",
+          className: "api-method delete",
         },
         {
           type: "doc",
@@ -466,21 +466,27 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/delete-v-1-oauth-2-app",
-          label: "Remove OAuth2 application",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
           id: "api/put-v-1-oauth-2-app",
           label: "Update OAuth2 application",
           className: "api-method put",
         },
         {
           type: "doc",
+          id: "api/delete-v-1-oauth-2-app",
+          label: "Remove OAuth2 application",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
           id: "api/get-v-1-pubsub-status",
           label: "List Pub/Sub status",
           className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/post-v-1-oauth-2-app-verify",
+          label: "Verify OAuth2 application setup",
+          className: "api-method post",
         },
       ],
     },

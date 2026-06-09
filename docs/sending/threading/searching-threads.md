@@ -47,12 +47,12 @@ curl -XPOST "https://ee.example.com/v1/account/gmail/search?path=%5CAll" \
   "prevPageCursor": null,
   "messages": [
     {
-      "id": "AAAAKAAACKM",
-      "uid": 2211,
+      "id": "AAAAKAAACKO",
+      "uid": 2213,
       "threadId": "1759349012996310407",
-      "subject": "Project discussion",
+      "subject": "Re: Project discussion",
       "from": { "name": "Colleague", "address": "colleague@example.com" },
-      "date": "2025-10-10T14:30:00.000Z"
+      "date": "2025-10-10T16:20:00.000Z"
     },
     {
       "id": "AAAAKAAACKN",
@@ -63,16 +63,18 @@ curl -XPOST "https://ee.example.com/v1/account/gmail/search?path=%5CAll" \
       "date": "2025-10-10T15:45:00.000Z"
     },
     {
-      "id": "AAAAKAAACKO",
-      "uid": 2213,
+      "id": "AAAAKAAACKM",
+      "uid": 2211,
       "threadId": "1759349012996310407",
-      "subject": "Re: Project discussion",
+      "subject": "Project discussion",
       "from": { "name": "Colleague", "address": "colleague@example.com" },
-      "date": "2025-10-10T16:20:00.000Z"
+      "date": "2025-10-10T14:30:00.000Z"
     }
   ]
 }
 ```
+
+Results are returned newest first.
 
 **Microsoft Graph API Example**:
 
@@ -92,7 +94,7 @@ curl -XPOST "https://ee.example.com/v1/account/outlook-graph/search?path=%5CAll"
 - **Single Request**: Get entire thread in one API call
 - **Complete View**: Includes messages from Inbox, Sent, and all other folders
 - **Efficient**: Faster than multiple folder queries
-- **Sorted**: Messages returned in chronological order
+- **Sorted**: Messages are returned newest first - sort client-side if you need chronological order
 
 ## Folder-by-Folder Search
 

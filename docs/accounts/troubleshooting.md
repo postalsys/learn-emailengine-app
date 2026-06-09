@@ -61,13 +61,15 @@ docker logs -f emailengine
      -H "Authorization: Bearer YOUR_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{
-       "imap": { "auth": { "pass": "correct-password" } },
-       "smtp": { "auth": { "pass": "correct-password" } }
+       "imap": { "partial": true, "auth": { "user": "user@example.com", "pass": "correct-password" } },
+       "smtp": { "partial": true, "auth": { "user": "user@example.com", "pass": "correct-password" } }
      }'
 
    # Then reconnect using the Reconnect Account API endpoint
    curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
-     -H "Authorization: Bearer YOUR_TOKEN"
+     -H "Authorization: Bearer YOUR_TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"reconnect": true}'
    ```
 
 2. **App password required but not used**
@@ -229,7 +231,9 @@ docker logs -f emailengine
    ```bash
    # Trigger reconnection
    curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
-     -H "Authorization: Bearer YOUR_TOKEN"
+     -H "Authorization: Bearer YOUR_TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"reconnect": true}'
    ```
 
 ### State: unset
@@ -261,11 +265,13 @@ docker logs -f emailengine
 curl -X PUT https://your-ee.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{ "imap": { "disabled": false } }'
+  -d '{ "imap": { "partial": true, "disabled": false } }'
 
 # Then reconnect
 curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"reconnect": true}'
 ```
 
 ## Provider-Specific Issues
@@ -406,7 +412,7 @@ iCloud requires 2FA enabled to generate app-specific passwords.
 **Check webhook configuration:**
 
 ```bash
-curl https://your-ee.com/v1/settings \
+curl "https://your-ee.com/v1/settings?webhooks=true" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   | jq '.webhooks'
 ```
@@ -444,8 +450,8 @@ curl https://your-ee.com/v1/settings \
 **Debug webhooks:**
 
 Check webhook queue in Bull Board:
-- Navigate to EmailEngine dashboard → Bull Board
-- Check "webhooks" queue
+- Navigate to **Tools** → **Job Queue** in the EmailEngine dashboard (`/admin/bull-board`)
+- Check the "notify" queue
 - Look for failed jobs and error messages
 
 ### Webhook Delays
@@ -502,6 +508,7 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
   -H "Content-Type: application/json" \
   -d '{
     "imap": {
+      "partial": true,
       "tls": {
         "rejectUnauthorized": false
       }
@@ -534,7 +541,7 @@ No action needed from you. If issues persist, check logs for specific errors.
 ### Slow Initial Sync
 
 **Symptoms:**
-- Account stuck in "connecting" for long time
+- Account stuck in "syncing" for long time
 - First sync takes hours
 
 **Cause:** Large mailbox with many messages

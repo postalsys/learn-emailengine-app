@@ -150,18 +150,22 @@ Additionally, any SMTP response with status code 500 or above (except 503, which
 **What happens**:
 - Job waits until the delay time
 - Then moved to *Waiting*
-- If delayed due to a failure: `messageDeliveryError` webhook is emitted
+- A `messageDeliveryError` webhook is emitted for every failed delivery attempt, including the final one
 
-**Retry schedule** (exponential backoff with 5-second base delay and 20% jitter):
+**Retry schedule** (exponential backoff with 5-second base delay and 20% jitter, computed as 2^(attemptsMade-1) x 5s):
 - Attempt 1: Immediate
-- Attempt 2: ~10 seconds (2^1 x 5s)
-- Attempt 3: ~20 seconds (2^2 x 5s)
-- Attempt 4: ~40 seconds (2^3 x 5s)
-- Attempt 5: ~80 seconds (2^4 x 5s)
-- Attempt 6: ~160 seconds (2^5 x 5s)
+- Attempt 2: ~5 seconds (2^0 x 5s)
+- Attempt 3: ~10 seconds (2^1 x 5s)
+- Attempt 4: ~20 seconds (2^2 x 5s)
+- Attempt 5: ~40 seconds (2^3 x 5s)
+- Attempt 6: ~80 seconds (2^4 x 5s)
 - And so on, doubling each time
 
 The 20% jitter randomizes retry times slightly to prevent multiple failed jobs from retrying at exactly the same moment.
+
+:::info nextAttempt estimate
+The `nextAttempt` value reported by the outbox API is computed as 2^attempts x 5s, so it shows a later time than when the actual retry happens.
+:::
 
 ### 6. Paused
 
@@ -199,7 +203,7 @@ curl -XPUT "https://ee.example.com/v1/settings/queue/submit" \
 
 EmailEngine includes [Bull Board](https://github.com/felixmosh/bull-board), a web UI for BullMQ queues.
 
-**Access**: Navigate to **Tools -> Bull Board** in EmailEngine UI, or go directly to `/admin/bull-board`.
+**Access**: Navigate to **Tools -> Job Queue** in EmailEngine UI, or go directly to `/admin/bull-board`.
 
 **Features**:
 - View job counts by state
@@ -275,7 +279,7 @@ The `progress` field tracks the delivery status of each message:
 The `nextAttempt` field shows when the next delivery attempt is scheduled. It is `false` when no more attempts remain.
 
 :::info Completed and failed jobs
-By default, completed and failed jobs are removed from the queue immediately. The list endpoint only shows jobs still in the queue (waiting, active, delayed, paused, and failed with retention enabled). To keep completed and failed jobs visible, configure the [Job History Limit](#keep-completedfailed-jobs) setting.
+By default, completed and failed jobs are removed from the queue immediately. The list endpoint only queries jobs in the waiting, active, delayed, paused, and failed states - completed jobs never appear here. To keep failed jobs visible in the list, configure the [Job History Limit](#keep-completedfailed-jobs) setting. Retained completed jobs are only visible in Bull Board.
 :::
 
 #### Get a specific message
@@ -355,8 +359,8 @@ To retry a failed job, you need to delete it from the queue and resubmit the mes
 Configure maximum retry attempts via the web UI or API:
 
 **Via Web UI**:
-1. Navigate to **Configuration -> Service**
-2. Set "Delivery Attempts" (default: 10)
+1. Navigate to **Configuration -> General Settings**
+2. Set "Retry Attempts" under the Email Delivery card (default: 10)
 
 **Via API when submitting a message**:
 ```json
@@ -378,14 +382,14 @@ By default, completed and failed jobs are removed from the queue immediately to 
 
 **Enable retention**:
 
-1. Navigate to **Configuration -> Service**
+1. Navigate to **Configuration -> General Settings**
 2. Set **Job History Limit** (`queueKeep`) to the number of completed/failed jobs to keep
 3. Example: Set to 100 to keep the last 100 completed and 100 failed jobs
 
 Retained jobs are also automatically removed after 24 hours, whichever limit is reached first.
 
 :::warning
-This setting only affects new jobs created after the change. Existing jobs keep their original retention policy. Also note that even with retention enabled, the `GET /v1/outbox/{queueId}` endpoint returns 404 for completed and failed jobs because the message content is cleaned up on completion/failure. The retained job metadata is only visible through the list endpoint and Bull Board.
+This setting only affects new jobs created after the change. Existing jobs keep their original retention policy. Also note that even with retention enabled, the `GET /v1/outbox/{queueId}` endpoint returns 404 for completed and failed jobs because the message content is cleaned up on completion/failure. Retained failed jobs are visible through the `GET /v1/outbox` list endpoint and Bull Board; retained completed jobs are only visible in Bull Board.
 :::
 
 ### SMTP Timeout
@@ -419,7 +423,7 @@ Emitted when a job completes successfully:
 
 ### messageDeliveryError
 
-Emitted when a delivery attempt fails but the job will be retried (moves to *Delayed*):
+Emitted on every failed delivery attempt - including the final one, where `messageFailed` is then also emitted. The `job.nextAttempt` field shows when the next retry is scheduled:
 
 ```json
 {

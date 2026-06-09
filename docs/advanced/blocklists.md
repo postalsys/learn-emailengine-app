@@ -221,8 +221,6 @@ Response:
 }
 ```
 
-Removing an address triggers a `listSubscribe` webhook.
-
 [API reference -->](/docs/api/delete-v-1-blocklist-listid)
 
 ## Bounce-Based Blocking
@@ -296,7 +294,7 @@ Triggered when an address is added to a blocklist via the one-click unsubscribe 
 
 ### listSubscribe
 
-Triggered when an address is removed from a blocklist (re-subscribed).
+Triggered when a recipient re-subscribes through the hosted unsubscribe page. Removing an address via the DELETE API does not trigger this event.
 
 [See listSubscribe reference -->](/docs/webhooks/listsubscribe)
 

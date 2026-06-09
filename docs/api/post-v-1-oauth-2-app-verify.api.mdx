@@ -1,0 +1,72 @@
+---
+id: post-v-1-oauth-2-app-verify
+title: "Verify OAuth2 application setup"
+description: "Runs the provider authentication chain step by step and reports which steps pass or fail, with hints for fixing failures. For service-account apps an optional mailbox address enables the delegation and live mailbox checks."
+sidebar_label: "Verify OAuth2 application setup"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+hide_send_button: true
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Verify OAuth2 application setup"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/oauth2/{app}/verify"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Runs the provider authentication chain step by step and reports which steps pass or fail, with hints for fixing failures. For service-account apps an optional mailbox address enables the delegation and live mailbox checks.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)","minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"},{"name":"app","in":"path","schema":{"type":"string","description":"OAuth2 application ID","example":"AAABhaBPHscAAAAH","maxLength":256},"description":"OAuth2 application ID","required":true}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={{"content":{"application/json":{"schema":{"type":"object","properties":{"account":{"type":"string","description":"Mailbox address used to verify domain-wide delegation and live mailbox access","example":"user@example.com","maxLength":256,"x-convert":{"trim":true}},"testConnection":{"type":"boolean","description":"Perform the live IMAP/API connection step when an access token is obtained","default":true}},"title":"VerifyOAuth2AppRequest"}}}}}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Successful","content":{"application/json":{"schema":{"type":"object","properties":{"app":{"type":"string","description":"OAuth2 application ID","example":"AAABhaBPHscAAAAH","maxLength":256},"provider":{"type":"string","description":"Provider type","example":"gmailService"},"authMethod":{"type":"string","description":"Authentication method for service-account apps","example":"externalAccount","nullable":true},"account":{"type":"string","description":"Mailbox used for the delegation/mailbox checks","example":"user@example.com","nullable":true},"ok":{"type":"boolean","description":"True when no verification step failed","example":true},"steps":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string","description":"Step identifier","example":"signJwt"},"label":{"type":"string","description":"Human readable step name","example":"Sign assertion (signJwt)"},"status":{"type":"string","description":"Step outcome","example":"ok","enum":["ok","fail","skip"],"title":"status"},"message":{"type":"string","description":"Outcome detail","example":"Assertion signed via IAM signJwt","nullable":true},"hint":{"type":"string","description":"How to fix a failed step","example":"Grant roles/iam.serviceAccountTokenCreator to the workload principal"}},"title":"OAuth2VerifyStep"},"title":"OAuth2VerifySteps"}},"required":["app"],"title":"VerifyOAuth2AppResponse"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

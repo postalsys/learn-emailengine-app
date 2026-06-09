@@ -370,7 +370,8 @@ return {
 
 ```javascript
 // Extract phone numbers and URLs from email
-const text = payload.data.text || '';
+// payload.data.text is an object - the plain text content is in text.plain
+const text = payload.data.text?.plain || '';
 
 const phoneRegex = /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g;
 const urlRegex = /https?:\/\/[^\s]+/g;

@@ -58,17 +58,22 @@ Bull Board provides a web interface for:
 - SMTP message received
 - Scheduled email reaches send time
 
-**Job Data**:
+**Job Data**: Submit jobs are named `queued` (immediate) or `delayed` (scheduled with `sendAt`). The job data contains only metadata - the actual message content is stored separately in Redis and loaded by the submit worker at send time:
+
 ```json
 {
   "account": "example",
+  "queueId": "1812477e7ed5330eda4",
+  "gateway": null,
   "messageId": "<uuid@example.com>",
-  "from": "sender@example.com",
-  "to": ["recipient@example.com"],
+  "envelope": {
+    "from": "sender@example.com",
+    "to": ["recipient@example.com"]
+  },
   "subject": "Email subject",
-  "content": "...",
-  "sendAt": "2025-10-18T08:00:00.000Z",
-  "attachments": []
+  "proxy": null,
+  "localAddress": null,
+  "created": 1760774400000
 }
 ```
 
@@ -86,17 +91,15 @@ Bull Board provides a web interface for:
 - Account events (`accountAdded`, `authenticationError`)
 - Any webhook-enabled event occurs
 
-**Job Data**:
+**Job Data**: Notify jobs are named after the event type (e.g., `messageNew`), and the job data is the webhook payload itself. The target URL is not stored in the job - it is resolved from settings at delivery time:
+
 ```json
 {
-  "url": "https://your-app.com/webhooks",
+  "serviceUrl": "https://emailengine.example.com",
   "account": "example",
+  "date": "2025-10-18T08:00:00.000Z",
   "event": "messageNew",
-  "payload": {
-    "account": "example",
-    "event": "messageNew",
-    "data": { ... }
-  }
+  "data": { ... }
 }
 ```
 
@@ -309,13 +312,21 @@ Failed:    50   ← High failure rate
 
 ```json
 {
-  "id": "12345",
-  "name": "send-email",
+  "id": "1812477e7ed5330eda4",
+  "name": "queued",
   "data": {
     "account": "example",
-    "from": "sender@example.com",
-    "to": ["invalid@nonexistent.com"],
-    "subject": "Test"
+    "queueId": "1812477e7ed5330eda4",
+    "gateway": null,
+    "messageId": "<uuid@example.com>",
+    "envelope": {
+      "from": "sender@example.com",
+      "to": ["invalid@nonexistent.com"]
+    },
+    "subject": "Test",
+    "proxy": null,
+    "localAddress": null,
+    "created": 1760774400000
   },
   "failedReason": "535 5.7.8 Authentication failed",
   "attemptsMade": 10,
@@ -361,9 +372,9 @@ Error: ECONNREFUSED connect ECONNREFUSED 192.168.1.100:443
 
 **Timeout**:
 ```
-Error: Timeout: webhook endpoint did not respond within 10000ms
+Error: Timeout: webhook endpoint did not respond within 90000ms
 ```
-**Solution**: Optimize webhook handler, respond faster
+**Solution**: Optimize webhook handler, respond faster. The default webhook HTTP timeout is 90 seconds (override with `EENGINE_FETCH_TIMEOUT`).
 
 **Invalid Response**:
 ```
@@ -474,7 +485,7 @@ Webhooks are emitted at specific queue state transitions:
 
 ### Webhook Retry Strategy
 
-**Retry Attempts**: 10 (default, configurable)
+**Retry Attempts**: 10 (fixed - only email submission retries are configurable, via the `deliveryAttempts` setting)
 
 **Retry Delays**: Exponential backoff with a 5-second base delay (5s, 10s, 20s, 40s, 80s, etc.)
 
@@ -520,28 +531,6 @@ EENGINE_REDIS=redis://localhost:6379
 
 # Alternative: Use REDIS_URL
 REDIS_URL=redis://localhost:6379
-```
-
-### Queue Priority
-
-Submit queue supports job priorities (coming soon in future versions):
-
-```javascript
-// High priority (sent first)
-await submitEmail({
-  priority: 1,
-  from: 'urgent@example.com',
-  to: 'vip@example.com',
-  subject: 'Urgent'
-});
-
-// Normal priority
-await submitEmail({
-  priority: 5,
-  from: 'sender@example.com',
-  to: 'user@example.com',
-  subject: 'Newsletter'
-});
 ```
 
 ## Advanced Topics

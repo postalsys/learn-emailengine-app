@@ -206,7 +206,7 @@ curl https://your-ee.com/v1/account/example/oauth-token \
 - `account` - Account ID in EmailEngine
 - `user` - Email address of the account
 - `accessToken` - Currently valid OAuth2 access token
-- `provider` - OAuth2 provider type (`gmail`, `outlook`, `gmailService`, `mailRu`)
+- `provider` - OAuth2 provider type (`gmail`, `gmailService`, `outlook`, `outlookService`, `mailRu`)
 - `registeredScopes` - List of scopes this token has access to
 - `expires` - When the access token expires (ISO 8601)
 

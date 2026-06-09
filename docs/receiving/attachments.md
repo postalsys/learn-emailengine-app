@@ -399,6 +399,7 @@ Convert HTML with inline images to use local files:
 ```javascript
 async function convertHtmlWithInlineImages(message, imageDir) {
   // message.text.html is a string containing the HTML content
+  // (only present when the message was fetched with ?textType=* or ?textType=html)
   let html = message.text && message.text.html ? message.text.html : '';
 
   if (!html) return html;
@@ -423,7 +424,12 @@ async function convertHtmlWithInlineImages(message, imageDir) {
 }
 
 // Usage
-const message = await getMessage('example', 'AAAAAQAAAeE');
+// Fetch the message with ?textType=* so text.html is included in the response
+const message = await fetch(
+  `https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE?textType=*`,
+  { headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' } }
+).then(r => r.json());
+
 await downloadInlineImages('example', message.id, './images');
 const convertedHtml = await convertHtmlWithInlineImages(message, './images');
 
@@ -522,7 +528,7 @@ async function extractAttachmentMetadata(accountId, folderPath) {
   const metadata = [];
 
   for (const message of messages) {
-    if (!message.hasAttachments) continue;
+    if (!message.attachments || !message.attachments.length) continue;
 
     const fullMessage = await getMessage(accountId, message.id);
 

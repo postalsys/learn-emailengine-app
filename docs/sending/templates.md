@@ -51,7 +51,7 @@ curl -XPOST "https://ee.example.com/v1/templates/template" \
     "name": "Welcome Email",
     "description": "Welcome new users to the platform",
     "content": {
-      "subject": "Welcome to {{{params.companyName}}}!",
+      "subject": "Welcome to {{params.companyName}}!",
       "text": "Hello {{params.firstName}},\n\nWelcome to {{params.companyName}}!",
       "html": "<h1>Hello {{params.firstName}}</h1><p>Welcome to <strong>{{params.companyName}}</strong>!</p>"
     }
@@ -82,7 +82,7 @@ Save the `id` value to reference this template when sending.
    - **HTML**: HTML version with optional Handlebars
 4. Click **Save**
 
-The interface shows a preview of how the template will render.
+The template page offers a "Send test email" action so you can check the rendered output in a real mailbox.
 
 ## Using Templates
 
@@ -151,11 +151,11 @@ Insert variables using double or triple braces:
 ```handlebars
 Hello {{params.firstName}} {{params.lastName}}!
 
-Subject: Welcome {{{params.name}}}
+Subject: Welcome {{params.name}}
 ```
 
-- **Double braces** `{{...}}`: HTML-escape the value
-- **Triple braces** `{{{...}}}`: No escaping (use for plain text fields like subject)
+- **Double braces** `{{...}}`: HTML-escape the value in HTML content (`html`, `previewText`, `markdown`); plain-text fields (`subject`, `text`) are rendered without escaping, so double braces are always safe there
+- **Triple braces** `{{{...}}}`: No escaping - only needed in HTML content when you want to inject raw HTML
 
 ### Built-in Variables
 
@@ -495,7 +495,7 @@ Access top-level variables from within nested blocks using `@root`:
 ### Welcome Email
 
 ```handlebars
-Subject: Welcome to {{{params.companyName}}}, {{{params.firstName}}}!
+Subject: Welcome to {{params.companyName}}, {{params.firstName}}!
 
 HTML:
 <html>
@@ -554,7 +554,7 @@ The {{params.companyName}} Team
 ### Order Confirmation
 
 ```handlebars
-Subject: Order #{{{params.orderNumber}}} Confirmed
+Subject: Order #{{params.orderNumber}} Confirmed
 
 HTML:
 <h1>Order Confirmation</h1>
@@ -682,7 +682,7 @@ curl "https://ee.example.com/v1/templates/template/AAABgUIbuG0AAAAE" \
   "created": "2025-05-14T10:00:00.000Z",
   "updated": "2025-05-14T12:00:00.000Z",
   "content": {
-    "subject": "Welcome to {{{params.companyName}}}!",
+    "subject": "Welcome to {{params.companyName}}!",
     "text": "Hello {{params.firstName}}...",
     "html": "<h1>Hello {{params.firstName}}</h1>..."
   }
@@ -699,13 +699,14 @@ curl -XPUT "https://ee.example.com/v1/templates/template/AAABgUIbuG0AAAAE" \
   -H "Content-Type: application/json" \
   -d '{
     "content": {
-      "subject": "Welcome to {{{params.companyName}}}, {{{params.firstName}}}!",
+      "subject": "Welcome to {{params.companyName}}, {{params.firstName}}!",
+      "text": "Hello {{params.firstName}}...",
       "html": "<h1>Updated content</h1>"
     }
   }'
 ```
 
-Only include fields you want to update.
+Top-level fields (`name`, `description`, `format`) are merged - include only the ones you want to change. The `content` object is different: when provided, it replaces the stored content entirely, so resubmit all content fields (`subject`, `text`, `html`, `previewText`) - any field you omit is removed from the template.
 
 ### Delete Template
 

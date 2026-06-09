@@ -146,7 +146,7 @@ Using the special use flag `\Sent` allows EmailEngine to automatically determine
 
 Set up your webhook endpoint in EmailEngine's configuration:
 
-1. Navigate to "Settings" → "Webhooks" in EmailEngine
+1. Navigate to "Configuration" → "Webhooks" in EmailEngine
 2. Enter your CRM webhook endpoint URL
 3. Select event types (recommend "New email" only to reduce load)
 
@@ -484,6 +484,7 @@ EmailEngine tries to automatically detect the Sent Mail folder, but it may not a
 
 $ee->request('put', "/v1/account/$userId", [
     'imap' => [
+        'partial' => true, // Update only the listed fields, keep the rest of the IMAP config
         'sentMailPath' => 'Sent Messages', // User-selected folder
     ],
 ]);

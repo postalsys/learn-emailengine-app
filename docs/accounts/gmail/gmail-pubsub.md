@@ -33,7 +33,7 @@ When creating a Gmail Service Account application in EmailEngine, these settings
 | Setting | Description |
 |---------|-------------|
 | `googleProjectId` | Google Cloud project ID containing the Pub/Sub resources |
-| `serviceKey` | Service account credentials JSON for Pub/Sub management |
+| `serviceKey` | Service account private key in PEM format (the `private_key` field of the JSON key file) |
 | `baseScopes` | Set to `pubsub` for service accounts managing Pub/Sub |
 
 ### OAuth2 Application Settings
@@ -64,7 +64,7 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
   }'
 ```
 
-Or through the admin UI at **Configuration > OAuth2 > Subscriptions**.
+Or through the admin UI at **Configuration > OAuth2 > Gmail Subscriptions**.
 
 :::warning When do expiration changes take effect?
 Changing this setting does **not** immediately update existing subscriptions. The new TTL is applied only when EmailEngine next calls Google's Pub/Sub API for that subscription, which happens when:
@@ -82,8 +82,10 @@ EmailEngine automatically creates and manages these Pub/Sub resources:
 
 | Resource | Naming Pattern | Description |
 |----------|----------------|-------------|
-| Topic | `projects/{projectId}/topics/emailengine-{appId}` | Receives notifications from Gmail |
-| Subscription | `projects/{projectId}/subscriptions/emailengine-{appId}` | EmailEngine polls this for messages |
+| Topic | `projects/{projectId}/topics/ee-pub-{appId}` | Receives notifications from Gmail |
+| Subscription | `projects/{projectId}/subscriptions/ee-sub-{appId}` | EmailEngine polls this for messages |
+
+The default names can be overridden with the `googleTopicName` and `googleSubscriptionName` fields when creating or updating the service account application.
 
 ## API Configuration
 
@@ -98,9 +100,14 @@ curl -X POST "https://emailengine.example.com/v1/oauth2" \
     "provider": "gmailService",
     "enabled": true,
     "baseScopes": "pubsub",
-    "serviceKey": "<base64-encoded-service-account-json>"
+    "googleProjectId": "your-project-id",
+    "serviceClient": "113457912345678901234",
+    "serviceClientEmail": "emailengine@your-project-id.iam.gserviceaccount.com",
+    "serviceKey": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
   }'
 ```
+
+The values come from the service account JSON key file downloaded from Google Cloud: `serviceClient` is the numeric `client_id`, `serviceClientEmail` is the `client_email`, `googleProjectId` is the `project_id`, and `serviceKey` is the PEM-formatted `private_key` string - not the base64-encoded JSON file.
 
 The response includes the application ID:
 
@@ -149,8 +156,8 @@ Response includes Pub/Sub resource names:
   "id": "AAABkQ3c5eQ",
   "name": "Gmail Pub/Sub Manager",
   "provider": "gmailService",
-  "pubSubTopic": "projects/my-project/topics/emailengine-AAABkQ3c5eQ",
-  "pubSubSubscription": "projects/my-project/subscriptions/emailengine-AAABkQ3c5eQ",
+  "pubSubTopic": "projects/my-project/topics/ee-pub-AAABkQ3c5eQ",
+  "pubSubSubscription": "projects/my-project/subscriptions/ee-sub-AAABkQ3c5eQ",
   "pubSubIamPolicy": true
 }
 ```
@@ -193,7 +200,7 @@ A `pubSubError` of `null` means the subscription is healthy. If present, it cont
 The `/v1/pubsub/status` endpoint does not include subscription expiration dates. Expiration is managed by Google Cloud based on the TTL configured in EmailEngine. To check the actual expiration policy on a subscription, use the Google Cloud Console or the `gcloud` CLI:
 
 ```bash
-gcloud pubsub subscriptions describe emailengine-AAABkQ3c5eQ \
+gcloud pubsub subscriptions describe ee-sub-AAABkQ3c5eQ \
   --project=your-project-id \
   --format="value(expirationPolicy.ttl)"
 ```
@@ -228,7 +235,9 @@ includedPermissions:
   - pubsub.topics.get
   - pubsub.topics.setIamPolicy
   - pubsub.topics.getIamPolicy
+  - pubsub.topics.attachSubscription
   - pubsub.subscriptions.create
+  - pubsub.subscriptions.update
   - pubsub.subscriptions.delete
   - pubsub.subscriptions.get
   - pubsub.subscriptions.consume

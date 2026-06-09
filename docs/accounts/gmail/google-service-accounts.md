@@ -365,13 +365,13 @@ The downloaded JSON file contains:
 The important fields for EmailEngine are:
 
 - `client_id`: Maps to "Service client" in EmailEngine
-- `client_email`: Maps to "Service Client Email" in EmailEngine
+- `client_email`: Maps to "Client Email" in EmailEngine
 - `private_key`: Maps to "Secret service key" in EmailEngine
-- `project_id`: Maps to "Google Project ID" in EmailEngine (used for Gmail Push Notifications)
+- `project_id`: Maps to "Google Cloud Project ID" in EmailEngine (used for Gmail Push Notifications)
 
 ## Step 6: Enable Gmail API
 
-Service accounts need Gmail API enabled to resolve account email addresses during setup.
+Enabling the Gmail API is not needed for the IMAP and SMTP base scope - EmailEngine authenticates service account users via JWT and IMAP XOAUTH2 using the email address you provide. The Gmail API must be enabled if the application uses the Gmail API base scope.
 
 Navigate to **APIs & Services** → **Dashboard** and click **Enable APIs and Services**.
 
@@ -397,7 +397,7 @@ Now configure EmailEngine to use the service account.
 
 1. Open EmailEngine dashboard
 2. Navigate to **Configuration** → **OAuth2**
-3. Click **Add application**
+3. Click the **Create OAuth2 app** dropdown
 4. Select **Gmail Service Accounts**
 
 ### Upload Credentials File
@@ -409,9 +409,9 @@ Now configure EmailEngine to use the service account.
 EmailEngine will automatically extract and populate:
 
 - Service client (from `client_id`)
-- Service Client Email (from `client_email`)
+- Client Email (from `client_email`)
 - Secret service key (from `private_key`)
-- Google Project ID (from `project_id`)
+- Google Cloud Project ID (from `project_id`)
 
 ### Select Base Scopes
 
@@ -454,6 +454,10 @@ You can also find the App ID by calling the [List OAuth2 Apps API endpoint](/doc
 curl https://your-ee.com/v1/oauth2 \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN"
 ```
+
+### Verify the Setup
+
+Before adding accounts, use the **Verify setup** button on the OAuth2 app's page (or [`POST /v1/oauth2/{app}/verify`](/docs/api/post-v-1-oauth-2-app-verify)) to test the whole authentication chain. The verifier checks the service account configuration, performs the token exchange, and - if you provide a test mailbox address - validates domain-wide delegation with a live IMAP login or Gmail API probe. Each step is reported as passed, failed, or skipped with a hint for fixing failures, so problems like a missing delegation scope surface immediately instead of when the first account fails to connect.
 
 ## Alternative: Workload Identity Federation (Keyless)
 
@@ -688,6 +692,12 @@ The hosted EmailEngine service does not run inside your workload-identity bounda
 
 With the service account configured, you can now add email accounts without any user interaction.
 
+### Add Account via the Admin UI
+
+Since service-account apps authenticate without an interactive consent screen, the OAuth2 app's detail page in the EmailEngine dashboard provides an **Add account** button. It opens a dialog asking for the account name and email address and registers the account directly - no API call needed.
+
+The button is available for email-scoped service apps (IMAP/SMTP or Gmail API base scopes). Pub/Sub-scoped service apps grant no mailbox access, so they do not offer it.
+
 ### Add Account via API
 
 Add accounts using the [Register Account API endpoint](/docs/api/post-v-1-account):
@@ -766,7 +776,7 @@ Check the accounts list in EmailEngine:
 
 <!-- Shows: Accounts list showing Gmail OAuth2 accounts -->
 
-Service account-based accounts appear as "Gmail OAuth2" accounts in the list.
+Service account-based accounts appear as "OAuth2 (Gmail Service Accounts)" accounts in the list.
 
 ## Account Management
 

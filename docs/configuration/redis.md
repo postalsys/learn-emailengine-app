@@ -25,10 +25,7 @@ redis://[[username:]password@]host[:port][/database]
 **Examples:**
 
 ```bash
-# Local Redis (default port 6379, database 0)
-EENGINE_REDIS="redis://localhost:6379/8"
-
-# Local Redis with database 8
+# Local Redis (default port 6379, default database 8)
 EENGINE_REDIS="redis://localhost:6379/8"
 
 # Remote Redis with password
@@ -173,12 +170,7 @@ redis-cli CONFIG GET maxmemory-policy
 redis-cli CONFIG SET maxmemory-policy noeviction
 ```
 
-**Alternative (if memory limits required):** Use a `volatile-*` policy so only keys with TTL are evicted:
-```ini
-maxmemory-policy volatile-lru
-```
-
-**Never use:** `allkeys-*` policies, as they may evict critical mailbox data.
+**No alternatives:** `noeviction` is the only supported policy. EmailEngine raises a danger-level warning on the dashboard if any other `maxmemory-policy` is configured, and a separate data-loss warning if Redis has actually evicted keys. Do not use `volatile-*` or `allkeys-*` policies - evicted keys mean lost mailbox indexes and credentials.
 
 ### Persistence Configuration (Recommended)
 
@@ -476,7 +468,7 @@ redis-cli CLIENT LIST | wc -l
 | Service | Status | Notes |
 |---------|--------|-------|
 | **Upstash Redis** | Supported with constraints | 1 MB command size limit affects large MIME blobs; free tier quotas are insufficient; must be located in the same cloud region |
-| **Amazon ElastiCache** | Partially supported | Operates in stand-alone mode, but data may be lost on node replacement unless Multi-AZ persistence is enabled |
+| **Amazon ElastiCache** | Not supported | EmailEngine declares ElastiCache incompatible and shows a danger-level dashboard warning - using it as the database backend can result in data loss |
 | **Azure Cache for Redis** | Supported | Use Basic, Standard, or Premium tier; verify persistence is enabled |
 | **Google Cloud Memorystore** | Supported | Use Standard tier with replication for high availability |
 | **Redis Cloud** | Supported | Native Redis service; ensure persistence and eviction policy are configured |
@@ -504,19 +496,9 @@ EENGINE_REDIS="rediss://:YOUR_PASSWORD@YOUR_ENDPOINT.upstash.io:6379"
 </TabItem>
 <TabItem value="elasticache" label="Amazon ElastiCache">
 
-```bash
-# ElastiCache connection string
-EENGINE_REDIS="redis://master.your-cluster.cache.amazonaws.com:6379"
-```
-
-**Important:** Enable Multi-AZ with automatic failover for data persistence.
-
-**Configuration checklist:**
-- ✅ Enable automatic backups
-- ✅ Enable Multi-AZ replication
-- ✅ Set eviction policy to `noeviction`
-- ✅ Deploy in same VPC as EmailEngine
-- ✅ Configure security groups to allow EmailEngine access
+:::danger Not supported
+EmailEngine is incompatible with Amazon ElastiCache as the database backend - using it can result in data loss, and EmailEngine displays a danger-level warning on the dashboard when ElastiCache is detected. Migrate to a standard Redis deployment (self-managed Redis or a compatible managed service) instead.
+:::
 
 </TabItem>
 <TabItem value="azure" label="Azure Cache for Redis">
@@ -609,7 +591,7 @@ redis_latency 103542
 redis_connected_clients 34
 redis_memory_used_bytes 279341568
 redis_memory_max_bytes 17179869184
-redis_mem_fragmentation_ratio 0.06
+redis_mem_fragmentation_ratio 1.06
 redis_instantaneous_ops_per_sec 597
 redis_last_save_time 1762178720
 ```

@@ -61,8 +61,8 @@ Add each shared mailbox individually with its own OAuth2 authentication. A user 
 - Single shared mailbox setups
 - Quick prototyping
 
-:::warning Direct Access Limitation
-With direct access, the authenticating user's credentials are bound to the shared mailbox account. The same user cannot also have their own primary account in EmailEngine. Use delegated access or application access to avoid this limitation.
+:::info Note
+With direct access, the authenticating user's credentials are stored with the shared mailbox account. The same user can still have their own primary account in EmailEngine, and the same mailbox can be added as multiple EmailEngine accounts if needed - each EmailEngine account keeps its own copy of the OAuth2 tokens.
 :::
 
 ## Application Access Setup (Recommended)
@@ -216,6 +216,7 @@ curl -X POST https://your-ee.com/v1/account \
     "name": "Support Mailbox",
     "email": "support@company.com",
     "oauth2": {
+      "provider": "AAABhaBPHscAAAAH",
       "auth": {
         "delegatedUser": "support@company.com",
         "delegatedAccount": "my-account"
@@ -226,6 +227,7 @@ curl -X POST https://your-ee.com/v1/account \
 
 **Key fields:**
 
+- `oauth2.provider` - EmailEngine OAuth2 application ID - use the same application the main account uses. Required when setting delegation fields via the API.
 - `oauth2.auth.delegatedUser` - Email address or Microsoft 365 user ID of the shared mailbox
 - `oauth2.auth.delegatedAccount` - EmailEngine account ID of the main user (from Step 1)
 
@@ -324,6 +326,7 @@ curl -X POST https://your-ee.com/v1/account \
     "account": "shared-support",
     "email": "shared@contoso.com",
     "oauth2": {
+      "provider": "AAABhaBPHscAAAAH",
       "auth": {
         "delegatedUser": "sharedmailbox@contoso.onmicrosoft.com",
         "delegatedAccount": "my-account"
@@ -331,6 +334,8 @@ curl -X POST https://your-ee.com/v1/account \
     }
   }'
 ```
+
+The `provider` value is the same EmailEngine OAuth2 application ID the main account uses - the API requires it when setting delegation fields.
 
 ### With Direct Access
 
@@ -421,46 +426,45 @@ Beyond shared mailboxes, delegation can be used for scenarios where one account 
 
 **Use cases:**
 
-- Transactional email accounts that share SMTP credentials
-- Service accounts where multiple identities send through a common relay
+- Multiple sender identities that share one authenticated account
+- Service accounts where several addresses send through a common Microsoft 365 account
 - Organizations with centralized email sending infrastructure
+
+:::warning OAuth2 Parent Required
+The parent account referenced by `delegatedAccount` must be an OAuth2 account. EmailEngine resolves the parent's OAuth2 tokens and application when sending - a password-based IMAP/SMTP account cannot be used as a delegation parent.
+:::
 
 ### How Delegation Works Internally
 
 When you configure a delegated account, EmailEngine:
 
 1. **Resolves the delegation chain** - Follows `delegatedAccount` references up to 20 hops (with loop detection)
-2. **Loads credentials from the parent account** - Uses the OAuth2 tokens or IMAP/SMTP credentials from the referenced account
+2. **Loads credentials from the parent account** - Uses the OAuth2 tokens from the referenced account
 3. **Sets the identity from the delegated account** - Uses the `email` and `delegatedUser` fields for the From address and mailbox user
 
 ### Configuring Delegated Send Access
 
-**Step 1: Create the parent account with credentials**
+**Step 1: Create the parent account with OAuth2 credentials**
+
+Add a Microsoft 365 account via the hosted authentication form (the user completes the OAuth2 login):
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://your-ee.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "account": "smtp-relay",
-    "name": "SMTP Relay Account",
+    "account": "relay-sender",
+    "name": "Relay Sender",
     "email": "relay@company.com",
-    "smtp": {
-      "host": "smtp.company.com",
-      "port": 587,
-      "secure": false,
-      "auth": {
-        "user": "relay@company.com",
-        "pass": "smtp-password"
-      }
-    }
+    "redirectUrl": "https://myapp.com/settings",
+    "type": "AAABhaBPHscAAAAH"
   }'
 ```
 
-**Step 2: Create delegated accounts that use the parent's SMTP**
+**Step 2: Create delegated accounts that send through the parent**
 
 ```bash
-# Sales team sends through the relay
+# Sales team sends through the relay account
 curl -X POST https://your-ee.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
@@ -469,18 +473,21 @@ curl -X POST https://your-ee.com/v1/account \
     "name": "Sales Team",
     "email": "sales@company.com",
     "oauth2": {
+      "provider": "AAABhaBPHscAAAAH",
       "auth": {
         "delegatedUser": "sales@company.com",
-        "delegatedAccount": "smtp-relay"
+        "delegatedAccount": "relay-sender"
       }
     }
   }'
 ```
 
+The `provider` value is the same EmailEngine OAuth2 application ID the parent account uses - the API requires it when setting delegation fields.
+
 **Step 3: Send emails from delegated accounts**
 
 ```bash
-# Uses smtp-relay credentials but sends from sales@company.com
+# Uses relay-sender credentials but sends from sales@company.com
 curl -X POST https://your-ee.com/v1/account/sales-sender/submit \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \

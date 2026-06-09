@@ -38,7 +38,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | **List accounts** | `GET /v1/accounts` | `page`, `pageSize`, `state` |
 | **Get account** | `GET /v1/account/{account}` | - |
 | **Update account** | `PUT /v1/account/{account}` | Partial updates supported |
-| **Delete account** | `DELETE /v1/account/{account}` | - |
+| **Delete account** | `DELETE /v1/account/{account}` | optional `?revoke=true` to revoke the OAuth2 grant |
 | **Reconnect account** | `PUT /v1/account/{account}/reconnect` | - |
 | **Send email** | `POST /v1/account/{account}/submit` | `to`, `subject`, `text`/`html` |
 | **List messages** | `GET /v1/account/{account}/messages` | `path`, `page`, `pageSize` |
@@ -164,6 +164,7 @@ Webhook routes are read-only through the API - create and edit them in the Email
 | `GET` | `/v1/oauth2/{app}` | Get OAuth2 app |
 | `PUT` | `/v1/oauth2/{app}` | Update OAuth2 app |
 | `DELETE` | `/v1/oauth2/{app}` | Delete OAuth2 app |
+| `POST` | `/v1/oauth2/{app}/verify` | Verify OAuth2 app setup (read-only diagnostic) |
 
 ### SMTP Gateway
 
@@ -179,9 +180,9 @@ Webhook routes are read-only through the API - create and edit them in the Email
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/v1/tokens` | List all tokens |
+| `GET` | `/v1/tokens` | List all tokens (each includes `id`, the SHA-256 hash identifying the token) |
 | `POST` | `/v1/token` | Create token |
-| `DELETE` | `/v1/token/{token}` | Delete token |
+| `DELETE` | `/v1/token/{token}` | Delete token (accepts the token value or its `id` hash) |
 | `GET` | `/v1/tokens/account/{account}` | List account tokens |
 
 ### Blocklists
@@ -710,6 +711,7 @@ The `POST /v1/account/{account}/search` endpoint accepts these search criteria:
 | `header` | object | Custom header match |
 | `emailId` | string | Specific message ID |
 | `threadId` | string | Specific thread ID |
+| `labels` | object | `{ "has": [...], "not": [...] }` - filter by Gmail labels or Outlook categories. `has` matches messages with ALL listed labels, `not` excludes messages with ANY of them. Gmail and MS Graph accounts only; returns HTTP 422 if the account cannot satisfy the filter |
 
 ## See Also
 

@@ -282,7 +282,7 @@ Now configure EmailEngine to use the service account for managing webhooks.
 
 1. Open EmailEngine dashboard
 2. Navigate to **Configuration** → **OAuth2**
-3. Click **Add application**
+3. Click the **Create OAuth2 app** dropdown
 4. Select **Gmail Service Accounts**
 
 ### Configure Service Account Settings
@@ -317,7 +317,7 @@ Now configure the user OAuth application that will authenticate Gmail accounts.
 <!-- Shows: Creating Gmail OAuth2 application in EmailEngine -->
 
 1. Navigate to **Configuration** → **OAuth2**
-2. Click **Add application**
+2. Click the **Create OAuth2 app** dropdown
 3. Select **Gmail**
 
 ### Configure OAuth2 Settings
@@ -339,7 +339,7 @@ Now configure the user OAuth application that will authenticate Gmail accounts.
 **Service Account for managing webhook Pub/Sub:** Select the service account app you created earlier
 
 :::important Link Service Account
-You must select the service account application you created in Step 6. This tells EmailEngine which credentials to use for managing Pub/Sub resources.
+This selector is marked as optional in the UI, but you should select the service account application you created in Step 6. It tells EmailEngine which credentials to use for managing Pub/Sub resources - without it, accounts using this app will not receive real-time notifications or webhooks.
 :::
 
 ### Configuring Limited Scopes
@@ -365,7 +365,7 @@ Add a Gmail account to test the complete flow.
 3. Complete the OAuth2 consent flow
 4. EmailEngine will:
    - Store OAuth2 tokens
-   - Create a Pub/Sub topic and subscription
+   - Register a Gmail watch that points to the Pub/Sub topic created when the service account app was registered
    - Start receiving webhook notifications
 
 ### Via API
@@ -391,8 +391,7 @@ Check the account status in EmailEngine:
 
 - Account should enter "connected" state
 - In Google Cloud Console → Pub/Sub, you should see:
-  - A new topic (created by EmailEngine)
-  - A new subscription (created by EmailEngine)
+  - The topic and subscription that EmailEngine created when you registered the service account app
 
 ## Using Custom Scopes
 
@@ -432,10 +431,11 @@ If you need a public app for any Gmail user:
 
 EmailEngine automatically:
 
-- Creates Pub/Sub topics for each account
-- Creates subscriptions to receive notifications
-- Cleans up resources when accounts are deleted
-- Renews subscriptions before expiration (7 days)
+- Creates one Pub/Sub topic and subscription pair per Pub/Sub service account app, shared by all accounts that use it (created when the app is registered)
+- Registers a Gmail watch (`users.watch`) for each account, pointing at the shared topic
+- Renews each Gmail watch at least daily (watches expire after about 7 days)
+- Recreates the Pub/Sub subscription automatically if Google deletes it due to inactivity (default TTL 31 days, configurable via `gmailSubscriptionTtl`)
+- Deletes the topic and subscription when the OAuth2 app is deleted - not when individual accounts are removed
 
 You can:
 

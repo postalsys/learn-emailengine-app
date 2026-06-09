@@ -99,23 +99,26 @@ Email clients use subject matching as part of threading. Changing the subject (b
 
 ## EmailEngine's Threading Solution
 
-EmailEngine provides native threading support for select providers:
+EmailEngine exposes native thread IDs whenever the underlying mail server provides them:
 
 1. **Gmail (API)**: Uses Gmail's native thread IDs from the Gmail API
 2. **Microsoft Graph API**: Uses Outlook's conversation IDs
+3. **IMAP with extensions**: The IMAP backend returns `threadId` whenever the server supports the OBJECTID extension (RFC 8474) or Gmail's X-GM-EXT-1 extension. This covers Gmail over IMAP and OBJECTID-capable servers such as Yahoo and AOL.
 
-For generic IMAP accounts (including Yahoo, AOL, and other providers), EmailEngine does not provide native threading support. Threads must be built manually by analyzing Message-ID, In-Reply-To, and References headers from email messages.
+Only IMAP servers without these extensions lack native thread IDs. For those accounts, threads must be built manually by analyzing Message-ID, In-Reply-To, and References headers from email messages.
 
 ## Thread ID Format
 
-EmailEngine provides a `threadId` property in message data for supported providers. The format depends on the provider:
+EmailEngine provides a `threadId` property in message data when the server supports threading. The format depends on the provider:
 
-| Provider               | Format                | Example                 |
-| ---------------------- | --------------------- | ----------------------- |
-| Gmail/Google Workspace | Long numeric string   | `"1759349012996310407"` |
-| Microsoft Graph API    | Graph conversation ID | `"AAQkAGI2TH..."`       |
+| Provider                           | Format                | Example                 |
+| ---------------------------------- | --------------------- | ----------------------- |
+| Gmail/Google Workspace (API)       | Long numeric string   | `"1759349012996310407"` |
+| Gmail over IMAP (X-GM-EXT-1)       | Long numeric string   | `"1759349012996310407"` |
+| Microsoft Graph API                | Graph conversation ID | `"AAQkAGI2TH..."`       |
+| IMAP with OBJECTID (Yahoo, AOL)    | Server-assigned ID    | `"M6d99fb603329c098"`   |
 
-Generic IMAP accounts do not have native thread IDs.
+IMAP servers without the OBJECTID or X-GM-EXT-1 extensions do not provide native thread IDs.
 
 ## Where Thread IDs Appear
 
@@ -131,10 +134,10 @@ The `threadId` property is available in:
 EmailEngine does not support thread grouping in message lists. When you list messages and there are multiple messages in the same thread, EmailEngine lists them as separate individual messages, not grouped by thread - even if the mail server supports threading.
 
 **To list messages in a thread:**
-Use the search API with `threadId` query parameter (if the mail server supports it):
+Use the search API with a `threadId` field in the `search` body object (if the mail server supports it). The `path` query parameter is required:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/example/search" \
+curl -XPOST "https://ee.example.com/v1/account/example/search?path=INBOX" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{

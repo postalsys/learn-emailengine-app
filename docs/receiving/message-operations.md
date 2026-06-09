@@ -140,18 +140,32 @@ console.log(`Total messages: ${allInbox.length}`);
 
 ### Filter by Flags
 
-List only unseen messages:
+The listing endpoint only accepts `path`, `cursor`, `page`, and `pageSize` query parameters - it does not support flag filters. To filter by flags, use the [search API](/docs/api/post-v-1-account-account-search) instead.
+
+Find unseen messages:
 
 ```bash
-curl "https://your-emailengine.com/v1/account/example/messages?path=INBOX&unseen=true" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+curl -X POST "https://your-emailengine.com/v1/account/example/search?path=INBOX" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "search": {
+      "unseen": true
+    }
+  }'
 ```
 
-List flagged messages:
+Find flagged messages:
 
 ```bash
-curl "https://your-emailengine.com/v1/account/example/messages?path=INBOX&flagged=true" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+curl -X POST "https://your-emailengine.com/v1/account/example/search?path=INBOX" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "search": {
+      "flagged": true
+    }
+  }'
 ```
 
 **JavaScript Example:**
@@ -160,14 +174,20 @@ curl "https://your-emailengine.com/v1/account/example/messages?path=INBOX&flagge
 async function listUnreadMessages(accountId, folderPath) {
   const params = new URLSearchParams({
     path: folderPath,
-    unseen: 'true',
     pageSize: 100
   });
 
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/messages?${params}`,
+    `https://your-emailengine.com/v1/account/${accountId}/search?${params}`,
     {
-      headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        search: { unseen: true }
+      })
     }
   );
 
@@ -179,10 +199,10 @@ async function listUnreadMessages(accountId, folderPath) {
 
 ### Get Message by ID
 
-Fetch complete message details using the [get message API](/docs/api/get-v-1-account-account-message-message):
+Fetch complete message details using the [get message API](/docs/api/get-v-1-account-account-message-message). Text content is not included by default - add the `textType` query parameter (`plain`, `html`, or `*` for both) to include it:
 
 ```bash
-curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE" \
+curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE?textType=*" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -246,7 +266,7 @@ curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE" \
 ```javascript
 async function getMessage(accountId, messageId) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}`,
+    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}?textType=*`,
     {
       headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
     }
@@ -832,7 +852,7 @@ async function syncMessageFlags(accountId, folderPath, db) {
       flags: message.flags,
       unseen: message.unseen,
       flagged: message.flagged,
-      answered: message.answered
+      answered: message.flags.includes('\\Answered')
     });
   }
 

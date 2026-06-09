@@ -205,7 +205,7 @@ Each cloud environment uses different scope URLs. EmailEngine automatically uses
 
 | Cloud | IMAP Scope | SMTP Scope |
 |-------|------------|------------|
-| Global | `https://outlook.office365.com/IMAP.AccessAsUser.All` | `https://outlook.office365.com/SMTP.Send` |
+| Global | `https://outlook.office.com/IMAP.AccessAsUser.All` | `https://outlook.office.com/SMTP.Send` |
 | GCC High | `https://outlook.office365.us/IMAP.AccessAsUser.All` | `https://outlook.office365.us/SMTP.Send` |
 | DoD | `https://outlook.office365.us/IMAP.AccessAsUser.All` | `https://outlook.office365.us/SMTP.Send` |
 | China | `https://partner.outlook.cn/IMAP.AccessAsUser.All` | `https://partner.outlook.cn/SMTP.Send` |
@@ -366,8 +366,8 @@ Now configure EmailEngine with your Azure application credentials.
 
 1. Open EmailEngine dashboard
 2. Navigate to **Configuration** → **OAuth2**
-3. Click **Add application**
-4. Select **Outlook**
+3. Click **Create OAuth2 app**
+4. Select **Outlook (delegated)** from the dropdown
 
 ### Configure OAuth2 Settings
 
@@ -467,7 +467,7 @@ curl -X POST https://your-ee.com/v1/account \
 ```
 
 :::info Provider ID
-The `provider` field should be the **OAuth2 application ID** from EmailEngine, which is a base64url encoded string like `AAABlf_0iLgAAAAQ`. You can find this ID in **Configuration → OAuth2 Apps** in the EmailEngine interface. This is NOT the Application (client) ID from Azure AD.
+The `provider` field should be the **OAuth2 application ID** from EmailEngine, which is a base64url encoded string like `AAABlf_0iLgAAAAQ`. You can find this ID in **Configuration → OAuth2** in the EmailEngine interface. This is NOT the Application (client) ID from Azure AD.
 :::
 
 [See full API documentation →](/docs/api/post-v-1-account)

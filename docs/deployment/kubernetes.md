@@ -151,7 +151,7 @@ spec:
       containers:
       - name: redis
         image: redis:7-alpine
-        command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+        command: ["redis-server", "--save", "60 10000", "--save", "300 10", "--save", "900 1", "--maxmemory-policy", "noeviction"]
         ports:
         - containerPort: 6379
         volumeMounts:
@@ -249,9 +249,9 @@ spec:
               number: 80
 ```
 
-### Rolling Update Strategy
+### Update Strategy
 
-Configure rolling updates for zero-downtime deployments:
+Use the `Recreate` strategy so the old pod is fully terminated before the new one starts:
 
 ```yaml
 apiVersion: apps/v1
@@ -261,13 +261,10 @@ metadata:
 spec:
   replicas: 1
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+    type: Recreate
 ```
 
-This ensures the new pod is running before the old one is terminated.
+Do not use `RollingUpdate` with `maxSurge` - that briefly runs two EmailEngine instances against the same Redis database, which EmailEngine does not support. The `Recreate` strategy means a short downtime during each deployment, but this is the safe trade-off for a single-instance application.
 
 ## Monitoring
 

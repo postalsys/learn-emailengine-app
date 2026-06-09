@@ -57,11 +57,10 @@ curl "https://ee.example.com/v1/account/gmail/messages?path=INBOX" \
 Gmail supports searching across all folders using the special `\All` path:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/gmail/search" \
+curl -XPOST "https://ee.example.com/v1/account/gmail/search?path=%5CAll" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "\\All",
     "search": {
       "threadId": "1759349012996310407"
     }
@@ -116,11 +115,10 @@ Microsoft Graph API provides native threading support for Outlook/Microsoft 365 
 Like Gmail, Graph API supports the `\All` folder:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/outlook-graph/search" \
+curl -XPOST "https://ee.example.com/v1/account/outlook-graph/search?path=%5CAll" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "\\All",
     "search": {
       "threadId": "AAQkAGI2TH..."
     }
@@ -187,20 +185,18 @@ Unlike Gmail and Graph API, Yahoo/AOL don't support `\All`. To get a complete th
 
 ```bash
 # Search Inbox
-curl -XPOST "https://ee.example.com/v1/account/yahoo/search" \
+curl -XPOST "https://ee.example.com/v1/account/yahoo/search?path=INBOX" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "INBOX",
     "search": { "threadId": "501" }
   }'
 
 # Search Sent
-curl -XPOST "https://ee.example.com/v1/account/yahoo/search" \
+curl -XPOST "https://ee.example.com/v1/account/yahoo/search?path=Sent" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "Sent",
     "search": { "threadId": "501" }
   }'
 
@@ -239,20 +235,18 @@ Generic IMAP doesn't support `\All` folder, so you must search each folder indiv
 
 ```bash
 # Search Inbox
-curl -XPOST "https://ee.example.com/v1/account/generic/search" \
+curl -XPOST "https://ee.example.com/v1/account/generic/search?path=INBOX" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "INBOX",
     "search": { "subject": "Project discussion" }
   }'
 
 # Search Sent
-curl -XPOST "https://ee.example.com/v1/account/generic/search" \
+curl -XPOST "https://ee.example.com/v1/account/generic/search?path=Sent" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "path": "Sent",
     "search": { "subject": "Project discussion" }
   }'
 ```
@@ -330,7 +324,7 @@ curl "https://ee.example.com/v1/account/example" \
 
 Look for:
 
-- `type`: Account type (imap, gmail, gmailService, outlook, mailRu, oauth2)
+- `type`: Account type (imap, gmail, gmailService, outlook, outlookService, mailRu, oauth2)
 
 ### Test Thread ID Availability
 

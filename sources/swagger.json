@@ -1,7 +1,7 @@
 {
   "info": {
     "title": "EmailEngine API",
-    "version": "2.67.0",
+    "version": "2.69.0",
     "description": "EmailEngine provides a RESTful API for managing email accounts, sending messages, and processing email data across multiple providers.\n\n<h3>Authentication</h3>\nAll API requests require authentication using an Access Token. You can generate and manage your tokens from the <a href=\"/admin/tokens\" target=\"_parent\"><strong>Access Tokens</strong></a> page.\n\nInclude your token in requests using one of these methods:\n- Query parameter: <code>?access_token=YOUR_TOKEN</code>\n- Authorization header: <code>Authorization: Bearer YOUR_TOKEN</code>\n\n<h3>Request Processing</h3>\n\n<strong>Sequential Processing:</strong> Requests to the same email account are processed sequentially to maintain data consistency. Multiple simultaneous requests will be queued.\n\n<strong>Timeouts:</strong> Long-running operations may cause queued requests to timeout. Configure appropriate timeout values using the <code>X-EE-Timeout</code> header (in milliseconds).\n\n<h3>Getting Started</h3>\n1. <a href=\"/admin/tokens\" target=\"_parent\">Generate an Access Token</a>\n2. <a href=\"/admin/accounts\" target=\"_parent\">Add an email account</a>\n3. Start making API requests using the endpoints below",
     "contact": {
       "name": "EmailEngine Support",
@@ -1726,7 +1726,7 @@
           "version": {
             "type": "string",
             "description": "EmailEngine version number",
-            "example": "2.67.0"
+            "example": "2.69.0"
           },
           "license": {
             "type": "string",
@@ -1890,6 +1890,20 @@
             },
             "x-convert": {
               "trim": true
+            }
+          },
+          "id": {
+            "type": "string",
+            "description": "Token identifier (SHA-256 hash of the token)",
+            "example": "1bc12baf7f0d5e51fe0a4e0eda06e1be5b8d6cc2c66b95dc0fbe4d2e9f5d5e1a",
+            "x-constraint": {
+              "length": 64
+            },
+            "x-format": {
+              "hex": {
+                "byteAligned": false,
+                "prefix": false
+              }
             }
           }
         },
@@ -3063,6 +3077,228 @@
           }
         }
       },
+      "MailboxSpecialUse": {
+        "type": "string",
+        "description": "Special folder type (Inbox, Sent, Drafts, etc.)",
+        "example": "\\Sent",
+        "enum": [
+          "\\All",
+          "\\Archive",
+          "\\Drafts",
+          "\\Flagged",
+          "\\Junk",
+          "\\Sent",
+          "\\Trash",
+          "\\Inbox"
+        ]
+      },
+      "MailboxSpecialUseSource": {
+        "type": "string",
+        "description": "How the special use was determined: \"user\" (set via API), \"extension\" (server-provided), or \"name\" (guessed from folder name)",
+        "example": "extension",
+        "enum": [
+          "user",
+          "extension",
+          "name"
+        ]
+      },
+      "MailboxResponseStatus": {
+        "type": "object",
+        "description": "Additional mailbox statistics",
+        "properties": {
+          "messages": {
+            "type": "integer",
+            "description": "Message count from STATUS command",
+            "example": 120
+          },
+          "unseen": {
+            "type": "integer",
+            "description": "Unread message count from STATUS command",
+            "example": 120
+          }
+        }
+      },
+      "MailboxResponseItem": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Full path to the mailbox",
+            "example": "Kalender/S&APw-nnip&AOQ-evad"
+          },
+          "delimiter": {
+            "type": "string",
+            "description": "Hierarchy delimiter character used in paths",
+            "example": "/"
+          },
+          "parentPath": {
+            "type": "string",
+            "description": "Path to the parent mailbox",
+            "example": "Kalender"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name of the mailbox",
+            "example": "Sünnipäevad"
+          },
+          "listed": {
+            "type": "boolean",
+            "description": "Whether this mailbox appears in LIST command results",
+            "example": true
+          },
+          "subscribed": {
+            "type": "boolean",
+            "description": "Whether the user is subscribed to this mailbox",
+            "example": true
+          },
+          "specialUse": {
+            "$ref": "#/components/schemas/MailboxSpecialUse"
+          },
+          "specialUseSource": {
+            "$ref": "#/components/schemas/MailboxSpecialUseSource"
+          },
+          "noInferiors": {
+            "type": "boolean",
+            "description": "Whether this mailbox can contain child mailboxes",
+            "example": false
+          },
+          "messages": {
+            "type": "integer",
+            "description": "Total number of messages in the mailbox",
+            "example": 120
+          },
+          "uidNext": {
+            "type": "integer",
+            "description": "Next UID value that will be assigned",
+            "example": 121
+          },
+          "status": {
+            "$ref": "#/components/schemas/MailboxResponseStatus"
+          }
+        },
+        "required": [
+          "path",
+          "parentPath",
+          "name"
+        ]
+      },
+      "MailboxesList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/MailboxResponseItem"
+        }
+      },
+      "MailboxesFilterResponse": {
+        "type": "object",
+        "properties": {
+          "mailboxes": {
+            "$ref": "#/components/schemas/MailboxesList"
+          }
+        }
+      },
+      "ExportListStatusValue": {
+        "type": "string",
+        "description": "Export status",
+        "example": "completed",
+        "enum": [
+          "queued",
+          "processing",
+          "completed",
+          "failed",
+          "cancelled"
+        ]
+      },
+      "ExportListEntry": {
+        "type": "object",
+        "properties": {
+          "exportId": {
+            "type": "string",
+            "description": "Export job identifier",
+            "example": "exp_abc123def456abc123def456"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ExportListStatusValue"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When export was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When export file expires",
+            "example": "2024-01-16T10:30:00Z"
+          }
+        }
+      },
+      "ExportEntries": {
+        "type": "array",
+        "description": "Export entries",
+        "items": {
+          "$ref": "#/components/schemas/ExportListEntry"
+        }
+      },
+      "ExportList": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Total number of exports",
+            "example": 5
+          },
+          "page": {
+            "type": "integer",
+            "description": "Current page number",
+            "example": 0
+          },
+          "pages": {
+            "type": "integer",
+            "description": "Total number of pages",
+            "example": 1
+          },
+          "exports": {
+            "$ref": "#/components/schemas/ExportEntries"
+          }
+        }
+      },
+      "SignatureResponseItem": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Email address associated with the signature",
+            "example": "user@example.com",
+            "x-format": {
+              "email": true
+            }
+          },
+          "signature": {
+            "type": "string",
+            "description": "Signature HTML code",
+            "example": "<div>Best regards,</div>"
+          }
+        },
+        "required": [
+          "address",
+          "signature"
+        ]
+      },
+      "SignatureEntries": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/SignatureResponseItem"
+        }
+      },
+      "AccountSignaturesResponse": {
+        "type": "object",
+        "properties": {
+          "signatures": {
+            "$ref": "#/components/schemas/SignatureEntries"
+          }
+        }
+      },
       "AccountTokenResponse": {
         "type": "object",
         "properties": {
@@ -3403,228 +3639,6 @@
           },
           "messages": {
             "$ref": "#/components/schemas/PageMessages"
-          }
-        }
-      },
-      "MailboxSpecialUse": {
-        "type": "string",
-        "description": "Special folder type (Inbox, Sent, Drafts, etc.)",
-        "example": "\\Sent",
-        "enum": [
-          "\\All",
-          "\\Archive",
-          "\\Drafts",
-          "\\Flagged",
-          "\\Junk",
-          "\\Sent",
-          "\\Trash",
-          "\\Inbox"
-        ]
-      },
-      "MailboxSpecialUseSource": {
-        "type": "string",
-        "description": "How the special use was determined: \"user\" (set via API), \"extension\" (server-provided), or \"name\" (guessed from folder name)",
-        "example": "extension",
-        "enum": [
-          "user",
-          "extension",
-          "name"
-        ]
-      },
-      "MailboxResponseStatus": {
-        "type": "object",
-        "description": "Additional mailbox statistics",
-        "properties": {
-          "messages": {
-            "type": "integer",
-            "description": "Message count from STATUS command",
-            "example": 120
-          },
-          "unseen": {
-            "type": "integer",
-            "description": "Unread message count from STATUS command",
-            "example": 120
-          }
-        }
-      },
-      "MailboxResponseItem": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string",
-            "description": "Full path to the mailbox",
-            "example": "Kalender/S&APw-nnip&AOQ-evad"
-          },
-          "delimiter": {
-            "type": "string",
-            "description": "Hierarchy delimiter character used in paths",
-            "example": "/"
-          },
-          "parentPath": {
-            "type": "string",
-            "description": "Path to the parent mailbox",
-            "example": "Kalender"
-          },
-          "name": {
-            "type": "string",
-            "description": "Display name of the mailbox",
-            "example": "Sünnipäevad"
-          },
-          "listed": {
-            "type": "boolean",
-            "description": "Whether this mailbox appears in LIST command results",
-            "example": true
-          },
-          "subscribed": {
-            "type": "boolean",
-            "description": "Whether the user is subscribed to this mailbox",
-            "example": true
-          },
-          "specialUse": {
-            "$ref": "#/components/schemas/MailboxSpecialUse"
-          },
-          "specialUseSource": {
-            "$ref": "#/components/schemas/MailboxSpecialUseSource"
-          },
-          "noInferiors": {
-            "type": "boolean",
-            "description": "Whether this mailbox can contain child mailboxes",
-            "example": false
-          },
-          "messages": {
-            "type": "integer",
-            "description": "Total number of messages in the mailbox",
-            "example": 120
-          },
-          "uidNext": {
-            "type": "integer",
-            "description": "Next UID value that will be assigned",
-            "example": 121
-          },
-          "status": {
-            "$ref": "#/components/schemas/MailboxResponseStatus"
-          }
-        },
-        "required": [
-          "path",
-          "parentPath",
-          "name"
-        ]
-      },
-      "MailboxesList": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/MailboxResponseItem"
-        }
-      },
-      "MailboxesFilterResponse": {
-        "type": "object",
-        "properties": {
-          "mailboxes": {
-            "$ref": "#/components/schemas/MailboxesList"
-          }
-        }
-      },
-      "ExportListStatusValue": {
-        "type": "string",
-        "description": "Export status",
-        "example": "completed",
-        "enum": [
-          "queued",
-          "processing",
-          "completed",
-          "failed",
-          "cancelled"
-        ]
-      },
-      "ExportListEntry": {
-        "type": "object",
-        "properties": {
-          "exportId": {
-            "type": "string",
-            "description": "Export job identifier",
-            "example": "exp_abc123def456abc123def456"
-          },
-          "status": {
-            "$ref": "#/components/schemas/ExportListStatusValue"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When export was created",
-            "example": "2024-01-15T10:30:00Z"
-          },
-          "expiresAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When export file expires",
-            "example": "2024-01-16T10:30:00Z"
-          }
-        }
-      },
-      "ExportEntries": {
-        "type": "array",
-        "description": "Export entries",
-        "items": {
-          "$ref": "#/components/schemas/ExportListEntry"
-        }
-      },
-      "ExportList": {
-        "type": "object",
-        "properties": {
-          "total": {
-            "type": "integer",
-            "description": "Total number of exports",
-            "example": 5
-          },
-          "page": {
-            "type": "integer",
-            "description": "Current page number",
-            "example": 0
-          },
-          "pages": {
-            "type": "integer",
-            "description": "Total number of pages",
-            "example": 1
-          },
-          "exports": {
-            "$ref": "#/components/schemas/ExportEntries"
-          }
-        }
-      },
-      "SignatureResponseItem": {
-        "type": "object",
-        "properties": {
-          "address": {
-            "type": "string",
-            "description": "Email address associated with the signature",
-            "example": "user@example.com",
-            "x-format": {
-              "email": true
-            }
-          },
-          "signature": {
-            "type": "string",
-            "description": "Signature HTML code",
-            "example": "<div>Best regards,</div>"
-          }
-        },
-        "required": [
-          "address",
-          "signature"
-        ]
-      },
-      "SignatureEntries": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/SignatureResponseItem"
-        }
-      },
-      "AccountSignaturesResponse": {
-        "type": "object",
-        "properties": {
-          "signatures": {
-            "$ref": "#/components/schemas/SignatureEntries"
           }
         }
       },
@@ -3980,6 +3994,20 @@
             "x-convert": {
               "trim": true
             }
+          },
+          "id": {
+            "type": "string",
+            "description": "Token identifier (SHA-256 hash of the token)",
+            "example": "1bc12baf7f0d5e51fe0a4e0eda06e1be5b8d6cc2c66b95dc0fbe4d2e9f5d5e1a",
+            "x-constraint": {
+              "length": 64
+            },
+            "x-format": {
+              "hex": {
+                "byteAligned": false,
+                "prefix": false
+              }
+            }
           }
         },
         "required": [
@@ -4081,6 +4109,151 @@
           "id",
           "name"
         ]
+      },
+      "ExportStatusValue": {
+        "type": "string",
+        "description": "Export status",
+        "example": "processing",
+        "enum": [
+          "queued",
+          "processing",
+          "completed",
+          "failed",
+          "cancelled"
+        ]
+      },
+      "ExportPhase": {
+        "type": "string",
+        "description": "Current export phase",
+        "example": "indexing",
+        "enum": [
+          "indexing",
+          "exporting",
+          "complete"
+        ]
+      },
+      "ExportStatusFolders": {
+        "type": "array",
+        "description": "Folders being exported",
+        "items": {
+          "type": "string"
+        }
+      },
+      "ExportProgress": {
+        "type": "object",
+        "properties": {
+          "foldersScanned": {
+            "type": "integer",
+            "description": "Number of folders scanned",
+            "example": 1
+          },
+          "foldersTotal": {
+            "type": "integer",
+            "description": "Total number of folders to scan",
+            "example": 2
+          },
+          "messagesQueued": {
+            "type": "integer",
+            "description": "Number of messages queued for export",
+            "example": 1500
+          },
+          "messagesExported": {
+            "type": "integer",
+            "description": "Number of messages exported",
+            "example": 500
+          },
+          "messagesSkipped": {
+            "type": "integer",
+            "description": "Number of messages skipped (deleted or inaccessible)",
+            "example": 5
+          },
+          "bytesWritten": {
+            "type": "integer",
+            "description": "Bytes written to export file",
+            "example": 52428800
+          }
+        }
+      },
+      "ExportStatus": {
+        "type": "object",
+        "properties": {
+          "exportId": {
+            "type": "string",
+            "description": "Export job identifier",
+            "example": "exp_abc123def456abc123def456"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ExportStatusValue"
+          },
+          "phase": {
+            "$ref": "#/components/schemas/ExportPhase"
+          },
+          "folders": {
+            "$ref": "#/components/schemas/ExportStatusFolders"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Export start date filter",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Export end date filter",
+            "example": "2024-12-31T23:59:59Z"
+          },
+          "isEncrypted": {
+            "type": "boolean",
+            "description": "Whether the export file is encrypted",
+            "example": false
+          },
+          "progress": {
+            "$ref": "#/components/schemas/ExportProgress"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When export was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When export file expires",
+            "example": "2024-01-16T10:30:00Z"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "Whether the export was truncated due to message count or size limits",
+            "example": true
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if export failed",
+            "nullable": true
+          }
+        }
+      },
+      "TextResponse": {
+        "type": "object",
+        "properties": {
+          "plain": {
+            "type": "string",
+            "description": "Plaintext content",
+            "example": "Hello world"
+          },
+          "html": {
+            "type": "string",
+            "description": "HTML content",
+            "example": "<p>Hello world</p>"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "Is the current text output capped or not",
+            "example": false
+          }
+        }
       },
       "MessageHeaders": {
         "type": "object",
@@ -4333,151 +4506,6 @@
           },
           "messageSpecialUse": {
             "$ref": "#/components/schemas/MessageSpecialUse"
-          }
-        }
-      },
-      "TextResponse": {
-        "type": "object",
-        "properties": {
-          "plain": {
-            "type": "string",
-            "description": "Plaintext content",
-            "example": "Hello world"
-          },
-          "html": {
-            "type": "string",
-            "description": "HTML content",
-            "example": "<p>Hello world</p>"
-          },
-          "hasMore": {
-            "type": "boolean",
-            "description": "Is the current text output capped or not",
-            "example": false
-          }
-        }
-      },
-      "ExportStatusValue": {
-        "type": "string",
-        "description": "Export status",
-        "example": "processing",
-        "enum": [
-          "queued",
-          "processing",
-          "completed",
-          "failed",
-          "cancelled"
-        ]
-      },
-      "ExportPhase": {
-        "type": "string",
-        "description": "Current export phase",
-        "example": "indexing",
-        "enum": [
-          "indexing",
-          "exporting",
-          "complete"
-        ]
-      },
-      "ExportStatusFolders": {
-        "type": "array",
-        "description": "Folders being exported",
-        "items": {
-          "type": "string"
-        }
-      },
-      "ExportProgress": {
-        "type": "object",
-        "properties": {
-          "foldersScanned": {
-            "type": "integer",
-            "description": "Number of folders scanned",
-            "example": 1
-          },
-          "foldersTotal": {
-            "type": "integer",
-            "description": "Total number of folders to scan",
-            "example": 2
-          },
-          "messagesQueued": {
-            "type": "integer",
-            "description": "Number of messages queued for export",
-            "example": 1500
-          },
-          "messagesExported": {
-            "type": "integer",
-            "description": "Number of messages exported",
-            "example": 500
-          },
-          "messagesSkipped": {
-            "type": "integer",
-            "description": "Number of messages skipped (deleted or inaccessible)",
-            "example": 5
-          },
-          "bytesWritten": {
-            "type": "integer",
-            "description": "Bytes written to export file",
-            "example": 52428800
-          }
-        }
-      },
-      "ExportStatus": {
-        "type": "object",
-        "properties": {
-          "exportId": {
-            "type": "string",
-            "description": "Export job identifier",
-            "example": "exp_abc123def456abc123def456"
-          },
-          "status": {
-            "$ref": "#/components/schemas/ExportStatusValue"
-          },
-          "phase": {
-            "$ref": "#/components/schemas/ExportPhase"
-          },
-          "folders": {
-            "$ref": "#/components/schemas/ExportStatusFolders"
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Export start date filter",
-            "example": "2024-01-01T00:00:00Z"
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Export end date filter",
-            "example": "2024-12-31T23:59:59Z"
-          },
-          "isEncrypted": {
-            "type": "boolean",
-            "description": "Whether the export file is encrypted",
-            "example": false
-          },
-          "progress": {
-            "$ref": "#/components/schemas/ExportProgress"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When export was created",
-            "example": "2024-01-15T10:30:00Z"
-          },
-          "expiresAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When export file expires",
-            "example": "2024-01-16T10:30:00Z"
-          },
-          "truncated": {
-            "type": "boolean",
-            "description": "Whether the export was truncated due to message count or size limits",
-            "example": true
-          },
-          "error": {
-            "type": "string",
-            "description": "Error message if export failed",
-            "nullable": true
           }
         }
       },
@@ -5021,6 +5049,15 @@
           }
         }
       },
+      "authMethod": {
+        "type": "string",
+        "description": "Authentication method for Gmail service account (\"serviceKey\" or \"externalAccount\")",
+        "example": "externalAccount",
+        "enum": [
+          "serviceKey",
+          "externalAccount"
+        ]
+      },
       "CreateOAuth2App": {
         "type": "object",
         "properties": {
@@ -5133,6 +5170,18 @@
               "trim": true
             }
           },
+          "authMethod": {
+            "$ref": "#/components/schemas/authMethod"
+          },
+          "externalAccount": {
+            "type": "string",
+            "description": "Google external_account credential JSON for Workload Identity Federation",
+            "example": "{\"type\":\"external_account\",\"audience\":\"//iam.googleapis.com/projects/.../providers/...\",...}",
+            "maxLength": 65536,
+            "x-convert": {
+              "trim": true
+            }
+          },
           "authority": {
             "type": "string",
             "description": "Microsoft tenant configuration (common, organizations, consumers, or tenant ID)",
@@ -5169,8 +5218,7 @@
           "name",
           "provider",
           "serviceClient",
-          "serviceClientEmail",
-          "serviceKey"
+          "serviceClientEmail"
         ]
       },
       "CreateAppResponse": {
@@ -6201,317 +6249,6 @@
           "id"
         ]
       },
-      "ExportFolders": {
-        "type": "array",
-        "description": "Folder paths or special-use flags (e.g., \\Inbox, \\Sent, \\All) to export from. If empty/omitted, Gmail/Outlook API accounts export from All Mail folder; other accounts export all folders except Junk and Trash.",
-        "x-constraint": {
-          "single": true
-        },
-        "items": {
-          "type": "string",
-          "example": "INBOX",
-          "maxLength": 1024
-        }
-      },
-      "ExportTextType": {
-        "type": "string",
-        "description": "Text content to include: \"plain\", \"html\", \"*\" (both), or omit for metadata only",
-        "example": "*",
-        "default": "*",
-        "enum": [
-          "plain",
-          "html",
-          "*"
-        ]
-      },
-      "ExportRequest": {
-        "type": "object",
-        "properties": {
-          "folders": {
-            "$ref": "#/components/schemas/ExportFolders"
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Export messages from this date",
-            "example": "2024-01-01T00:00:00Z"
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Export messages until this date",
-            "example": "2024-12-31T23:59:59Z"
-          },
-          "textType": {
-            "$ref": "#/components/schemas/ExportTextType"
-          },
-          "maxBytes": {
-            "type": "integer",
-            "description": "Maximum bytes for text content (0 = unlimited)",
-            "example": 5242880,
-            "default": 5242880,
-            "minimum": 0
-          },
-          "includeAttachments": {
-            "type": "boolean",
-            "description": "Include attachment content as base64 blob in attachments array",
-            "default": false
-          }
-        },
-        "required": [
-          "startDate",
-          "endDate"
-        ]
-      },
-      "CreateExportResponse": {
-        "type": "object",
-        "properties": {
-          "exportId": {
-            "type": "string",
-            "description": "Export job identifier",
-            "example": "exp_abc123def456abc123def456"
-          },
-          "status": {
-            "type": "string",
-            "description": "Export status",
-            "example": "queued"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When export was created",
-            "example": "2024-01-15T10:30:00Z"
-          }
-        }
-      },
-      "Headers": {
-        "type": "object",
-        "description": "Search specific email headers",
-        "example": {
-          "Message-ID": "<1DAF52A51E674A2@example.com>"
-        }
-      },
-      "EmailIds": {
-        "type": "array",
-        "description": "List of specific email IDs to fetch. When provided, other search criteria are ignored. Useful for bulk operations on known messages.",
-        "example": [
-          "1278455344230334865"
-        ],
-        "x-constraint": {
-          "single": true
-        },
-        "items": {
-          "type": "string",
-          "description": "Globally unique email identifier (when supported by the email server)",
-          "example": "1278455344230334865",
-          "maxLength": 256
-        }
-      },
-      "SearchQuery": {
-        "type": "object",
-        "description": "Search criteria for filtering messages",
-        "properties": {
-          "seq": {
-            "type": "string",
-            "description": "Sequence number range (e.g., \"1:10\" or \"1,3,5\"). Only supported for IMAP.",
-            "maxLength": 8192
-          },
-          "answered": {
-            "type": "boolean",
-            "description": "Filter for messages that have been replied to. Only supported for IMAP."
-          },
-          "deleted": {
-            "type": "boolean",
-            "description": "Filter for messages marked for deletion. Only supported for IMAP."
-          },
-          "draft": {
-            "type": "boolean",
-            "description": "Filter for draft messages"
-          },
-          "unseen": {
-            "type": "boolean",
-            "description": "Filter for unread messages"
-          },
-          "flagged": {
-            "type": "boolean",
-            "description": "Filter for flagged/starred messages"
-          },
-          "seen": {
-            "type": "boolean",
-            "description": "Filter for read messages"
-          },
-          "from": {
-            "type": "string",
-            "description": "Search in From addresses",
-            "maxLength": 256
-          },
-          "to": {
-            "type": "string",
-            "description": "Search in To addresses. Not supported for MS Graph API.",
-            "maxLength": 256
-          },
-          "cc": {
-            "type": "string",
-            "description": "Search in Cc addresses. Not supported for MS Graph API.",
-            "maxLength": 256
-          },
-          "bcc": {
-            "type": "string",
-            "description": "Search in Bcc addresses. Not supported for MS Graph API.",
-            "maxLength": 256
-          },
-          "body": {
-            "type": "string",
-            "description": "Search in message body content",
-            "maxLength": 256
-          },
-          "subject": {
-            "type": "string",
-            "description": "Search in message subject",
-            "example": "Hello world",
-            "maxLength": 2560
-          },
-          "larger": {
-            "type": "integer",
-            "description": "Find messages larger than specified size in bytes. Not supported for MS Graph API.",
-            "minimum": 0,
-            "maximum": 1073741824
-          },
-          "smaller": {
-            "type": "integer",
-            "description": "Find messages smaller than specified size in bytes. Not supported for MS Graph API.",
-            "minimum": 0,
-            "maximum": 1073741824
-          },
-          "uid": {
-            "type": "string",
-            "description": "UID range (e.g., \"100:200\" or \"150,200,250\"). Only supported for IMAP.",
-            "maxLength": 8192
-          },
-          "modseq": {
-            "type": "integer",
-            "description": "Find messages with modification sequence higher than specified value. Only supported for IMAP with CONDSTORE.",
-            "minimum": 0
-          },
-          "before": {
-            "type": "string",
-            "format": "date",
-            "description": "Find messages received before this date"
-          },
-          "since": {
-            "type": "string",
-            "format": "date",
-            "description": "Find messages received after this date"
-          },
-          "sentBefore": {
-            "type": "string",
-            "format": "date",
-            "description": "Find messages sent before this date"
-          },
-          "sentSince": {
-            "type": "string",
-            "format": "date",
-            "description": "Find messages sent after this date"
-          },
-          "emailId": {
-            "type": "string",
-            "description": "Globally unique email identifier (when supported by the email server)",
-            "example": "1278455344230334865",
-            "maxLength": 256
-          },
-          "threadId": {
-            "type": "string",
-            "description": "Thread identifier for email conversations (when supported by the email server)",
-            "example": "1694936993596975454"
-          },
-          "header": {
-            "$ref": "#/components/schemas/Headers"
-          },
-          "gmailRaw": {
-            "type": "string",
-            "description": "Gmail search syntax (only works with Gmail accounts)",
-            "example": "has:attachment in:unread",
-            "maxLength": 1024
-          },
-          "emailIds": {
-            "$ref": "#/components/schemas/EmailIds"
-          }
-        }
-      },
-      "MessageSearchPayload": {
-        "type": "object",
-        "example": {
-          "search": {
-            "unseen": true,
-            "flagged": true,
-            "from": "nyan.cat@example.com",
-            "body": "Hello world",
-            "subject": "Hello world",
-            "sentBefore": "2024-08-09",
-            "sentSince": "2022-08-09",
-            "emailId": "1278455344230334865",
-            "threadId": "1266894439832287888",
-            "header": {
-              "Message-ID": "<12345@example.com>"
-            },
-            "gmailRaw": "has:attachment in:unread"
-          }
-        },
-        "properties": {
-          "search": {
-            "$ref": "#/components/schemas/SearchQuery"
-          }
-        },
-        "required": [
-          "search"
-        ]
-      },
-      "MailboxPath": {
-        "type": "array",
-        "description": "Mailbox path as an array or a string. If account is namespaced then namespace prefix is added by default.",
-        "example": [
-          "Parent folder",
-          "Subfolder"
-        ],
-        "x-constraint": {
-          "single": true
-        },
-        "items": {
-          "type": "string",
-          "maxLength": 256
-        }
-      },
-      "CreateMailbox": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "$ref": "#/components/schemas/MailboxPath"
-          }
-        }
-      },
-      "CreateMailboxResponse": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string",
-            "description": "Full path to mailbox",
-            "example": "Kalender/S&APw-nnip&AOQ-evad"
-          },
-          "mailboxId": {
-            "type": "string",
-            "description": "Mailbox ID (if server has support)",
-            "example": "1439876283476"
-          },
-          "created": {
-            "type": "boolean",
-            "description": "Was the mailbox created",
-            "example": true
-          }
-        },
-        "required": [
-          "path"
-        ]
-      },
       "MessageAction": {
         "type": "string",
         "description": "Action type: \"reply\" (reply to sender), \"reply-all\" (reply to all recipients), or \"forward\" (forward to new recipients)",
@@ -6559,11 +6296,13 @@
             "description": "Verify the Message-ID of the referenced email matches this value before proceeding",
             "example": "<test123@example.com>",
             "maxLength": 996
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Gmail thread ID to attach the outgoing message to. Used only by Gmail-API accounts; ignored for IMAP and Microsoft Graph backends, which derive threading from RFC In-Reply-To/References headers. When both \"message\" and \"threadId\" are provided, the caller-supplied \"threadId\" takes precedence over the value derived from the referenced message.",
+            "example": "1694936993596975454"
           }
-        },
-        "required": [
-          "message"
-        ]
+        }
       },
       "SmtpEnvelopeTo": {
         "type": "array",
@@ -7352,6 +7091,368 @@
           }
         }
       },
+      "MailboxPath": {
+        "type": "array",
+        "description": "Mailbox path as an array or a string. If account is namespaced then namespace prefix is added by default.",
+        "example": [
+          "Parent folder",
+          "Subfolder"
+        ],
+        "x-constraint": {
+          "single": true
+        },
+        "items": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "CreateMailbox": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "$ref": "#/components/schemas/MailboxPath"
+          }
+        }
+      },
+      "CreateMailboxResponse": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Full path to mailbox",
+            "example": "Kalender/S&APw-nnip&AOQ-evad"
+          },
+          "mailboxId": {
+            "type": "string",
+            "description": "Mailbox ID (if server has support)",
+            "example": "1439876283476"
+          },
+          "created": {
+            "type": "boolean",
+            "description": "Was the mailbox created",
+            "example": true
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "ExportFolders": {
+        "type": "array",
+        "description": "Folder paths or special-use flags (e.g., \\Inbox, \\Sent, \\All) to export from. If empty/omitted, Gmail/Outlook API accounts export from All Mail folder; other accounts export all folders except Junk and Trash.",
+        "x-constraint": {
+          "single": true
+        },
+        "items": {
+          "type": "string",
+          "example": "INBOX",
+          "maxLength": 1024
+        }
+      },
+      "ExportTextType": {
+        "type": "string",
+        "description": "Text content to include: \"plain\", \"html\", or \"*\" (both)",
+        "example": "*",
+        "default": "*",
+        "enum": [
+          "plain",
+          "html",
+          "*"
+        ]
+      },
+      "ExportRequest": {
+        "type": "object",
+        "properties": {
+          "folders": {
+            "$ref": "#/components/schemas/ExportFolders"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Export messages from this date",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Export messages until this date",
+            "example": "2024-12-31T23:59:59Z"
+          },
+          "textType": {
+            "$ref": "#/components/schemas/ExportTextType"
+          },
+          "maxBytes": {
+            "type": "integer",
+            "description": "Maximum bytes for text content (0 = unlimited)",
+            "example": 5242880,
+            "default": 5242880,
+            "minimum": 0
+          },
+          "includeAttachments": {
+            "type": "boolean",
+            "description": "Include attachment content as base64 blob in attachments array",
+            "default": false
+          }
+        },
+        "required": [
+          "startDate",
+          "endDate"
+        ]
+      },
+      "CreateExportResponse": {
+        "type": "object",
+        "properties": {
+          "exportId": {
+            "type": "string",
+            "description": "Export job identifier",
+            "example": "exp_abc123def456abc123def456"
+          },
+          "status": {
+            "type": "string",
+            "description": "Export status",
+            "example": "queued"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When export was created",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        }
+      },
+      "Headers": {
+        "type": "object",
+        "description": "Search specific email headers",
+        "example": {
+          "Message-ID": "<1DAF52A51E674A2@example.com>"
+        }
+      },
+      "HasLabels": {
+        "type": "array",
+        "description": "Match messages that contain ALL of these labels/categories. Supported for Gmail and MS Graph (Outlook) accounts only.",
+        "example": [
+          "Horizon"
+        ],
+        "x-constraint": {
+          "single": true
+        },
+        "items": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      "NotLabels": {
+        "type": "array",
+        "description": "Match messages that contain NONE of these labels/categories. Supported for Gmail and MS Graph (Outlook) accounts only.",
+        "example": [
+          "Horizon"
+        ],
+        "x-constraint": {
+          "single": true
+        },
+        "items": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      "LabelFilter": {
+        "type": "object",
+        "description": "Filter by Gmail labels or MS Graph (Outlook) categories. Not supported for generic IMAP accounts.",
+        "properties": {
+          "has": {
+            "$ref": "#/components/schemas/HasLabels"
+          },
+          "not": {
+            "$ref": "#/components/schemas/NotLabels"
+          }
+        }
+      },
+      "EmailIds": {
+        "type": "array",
+        "description": "List of specific email IDs to fetch. When provided, other search criteria are ignored. Useful for bulk operations on known messages.",
+        "example": [
+          "1278455344230334865"
+        ],
+        "x-constraint": {
+          "single": true
+        },
+        "items": {
+          "type": "string",
+          "description": "Globally unique email identifier (when supported by the email server)",
+          "example": "1278455344230334865",
+          "maxLength": 256
+        }
+      },
+      "SearchQuery": {
+        "type": "object",
+        "description": "Search criteria for filtering messages",
+        "properties": {
+          "seq": {
+            "type": "string",
+            "description": "Sequence number range (e.g., \"1:10\" or \"1,3,5\"). Only supported for IMAP.",
+            "maxLength": 8192
+          },
+          "answered": {
+            "type": "boolean",
+            "description": "Filter for messages that have been replied to. Only supported for IMAP."
+          },
+          "deleted": {
+            "type": "boolean",
+            "description": "Filter for messages marked for deletion. Only supported for IMAP."
+          },
+          "draft": {
+            "type": "boolean",
+            "description": "Filter for draft messages"
+          },
+          "unseen": {
+            "type": "boolean",
+            "description": "Filter for unread messages"
+          },
+          "flagged": {
+            "type": "boolean",
+            "description": "Filter for flagged/starred messages"
+          },
+          "seen": {
+            "type": "boolean",
+            "description": "Filter for read messages"
+          },
+          "from": {
+            "type": "string",
+            "description": "Search in From addresses",
+            "maxLength": 256
+          },
+          "to": {
+            "type": "string",
+            "description": "Search in To addresses. Not supported for MS Graph API.",
+            "maxLength": 256
+          },
+          "cc": {
+            "type": "string",
+            "description": "Search in Cc addresses. Not supported for MS Graph API.",
+            "maxLength": 256
+          },
+          "bcc": {
+            "type": "string",
+            "description": "Search in Bcc addresses. Not supported for MS Graph API.",
+            "maxLength": 256
+          },
+          "body": {
+            "type": "string",
+            "description": "Search in message body content",
+            "maxLength": 256
+          },
+          "subject": {
+            "type": "string",
+            "description": "Search in message subject",
+            "example": "Hello world",
+            "maxLength": 2560
+          },
+          "larger": {
+            "type": "integer",
+            "description": "Find messages larger than specified size in bytes. Not supported for MS Graph API.",
+            "minimum": 0,
+            "maximum": 1073741824
+          },
+          "smaller": {
+            "type": "integer",
+            "description": "Find messages smaller than specified size in bytes. Not supported for MS Graph API.",
+            "minimum": 0,
+            "maximum": 1073741824
+          },
+          "uid": {
+            "type": "string",
+            "description": "UID range (e.g., \"100:200\" or \"150,200,250\"). Only supported for IMAP.",
+            "maxLength": 8192
+          },
+          "modseq": {
+            "type": "integer",
+            "description": "Find messages with modification sequence higher than specified value. Only supported for IMAP with CONDSTORE.",
+            "minimum": 0
+          },
+          "before": {
+            "type": "string",
+            "format": "date",
+            "description": "Find messages received before this date"
+          },
+          "since": {
+            "type": "string",
+            "format": "date",
+            "description": "Find messages received after this date"
+          },
+          "sentBefore": {
+            "type": "string",
+            "format": "date",
+            "description": "Find messages sent before this date"
+          },
+          "sentSince": {
+            "type": "string",
+            "format": "date",
+            "description": "Find messages sent after this date"
+          },
+          "emailId": {
+            "type": "string",
+            "description": "Globally unique email identifier (when supported by the email server)",
+            "example": "1278455344230334865",
+            "maxLength": 256
+          },
+          "threadId": {
+            "type": "string",
+            "description": "Thread identifier for email conversations (when supported by the email server)",
+            "example": "1694936993596975454"
+          },
+          "header": {
+            "$ref": "#/components/schemas/Headers"
+          },
+          "gmailRaw": {
+            "type": "string",
+            "description": "Gmail search syntax (only works with Gmail accounts)",
+            "example": "has:attachment in:unread",
+            "maxLength": 1024
+          },
+          "labels": {
+            "$ref": "#/components/schemas/LabelFilter"
+          },
+          "emailIds": {
+            "$ref": "#/components/schemas/EmailIds"
+          }
+        }
+      },
+      "MessageSearchPayload": {
+        "type": "object",
+        "example": {
+          "search": {
+            "unseen": true,
+            "flagged": true,
+            "from": "nyan.cat@example.com",
+            "body": "Hello world",
+            "subject": "Hello world",
+            "sentBefore": "2024-08-09",
+            "sentSince": "2022-08-09",
+            "emailId": "1278455344230334865",
+            "threadId": "1266894439832287888",
+            "header": {
+              "Message-ID": "<12345@example.com>"
+            },
+            "gmailRaw": "has:attachment in:unread",
+            "labels": {
+              "has": [
+                "Important"
+              ],
+              "not": [
+                "Horizon"
+              ]
+            }
+          }
+        },
+        "properties": {
+          "search": {
+            "$ref": "#/components/schemas/SearchQuery"
+          }
+        },
+        "required": [
+          "search"
+        ]
+      },
       "Flags": {
         "type": "array",
         "description": "Message flags",
@@ -7693,229 +7794,108 @@
           }
         }
       },
-      "EmptyLicenseResponse": {
-        "type": "object",
-        "properties": {
-          "active": {
-            "type": "boolean",
-            "example": false
-          },
-          "details": {
-            "type": "boolean",
-            "example": false
-          },
-          "type": {
-            "type": "string",
-            "example": "SSPL-1.0-or-later"
-          }
-        }
-      },
-      "DeleteAccountResponse": {
+      "VerifyOAuth2AppRequest": {
         "type": "object",
         "properties": {
           "account": {
             "type": "string",
-            "description": "Unique identifier for the email account",
-            "example": "user123",
+            "description": "Mailbox address used to verify domain-wide delegation and live mailbox access",
+            "example": "user@example.com",
             "maxLength": 256,
             "x-convert": {
               "trim": true
             }
           },
-          "deleted": {
+          "testConnection": {
             "type": "boolean",
-            "description": "Was the account deleted",
-            "default": true
-          }
-        },
-        "required": [
-          "account"
-        ]
-      },
-      "DeleteBlocklistResponse": {
-        "type": "object",
-        "properties": {
-          "deleted": {
-            "type": "boolean",
-            "description": "Was the address removed from the list",
+            "description": "Perform the live IMAP/API connection step when an access token is obtained",
             "default": true
           }
         }
       },
-      "DeleteGatewayResponse": {
-        "type": "object",
-        "properties": {
-          "gateway": {
-            "type": "string",
-            "description": "Gateway ID",
-            "example": "example",
-            "maxLength": 256
-          },
-          "deleted": {
-            "type": "boolean",
-            "description": "Was the gateway deleted",
-            "default": true
-          }
-        },
-        "required": [
-          "gateway"
+      "status": {
+        "type": "string",
+        "description": "Step outcome",
+        "example": "ok",
+        "enum": [
+          "ok",
+          "fail",
+          "skip"
         ]
       },
-      "DeleteAppRequestResponse": {
+      "OAuth2VerifyStep": {
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "description": "Step identifier",
+            "example": "signJwt"
+          },
+          "label": {
+            "type": "string",
+            "description": "Human readable step name",
+            "example": "Sign assertion (signJwt)"
+          },
+          "status": {
+            "$ref": "#/components/schemas/status"
+          },
+          "message": {
+            "type": "string",
+            "description": "Outcome detail",
+            "example": "Assertion signed via IAM signJwt",
+            "nullable": true
+          },
+          "hint": {
+            "type": "string",
+            "description": "How to fix a failed step",
+            "example": "Grant roles/iam.serviceAccountTokenCreator to the workload principal"
+          }
+        }
+      },
+      "OAuth2VerifySteps": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/OAuth2VerifyStep"
+        }
+      },
+      "VerifyOAuth2AppResponse": {
+        "type": "object",
+        "properties": {
+          "app": {
             "type": "string",
             "description": "OAuth2 application ID",
             "example": "AAABhaBPHscAAAAH",
             "maxLength": 256
           },
-          "deleted": {
-            "type": "boolean",
-            "description": "Was the OAuth2 application deleted",
-            "default": true
-          },
-          "accounts": {
-            "type": "integer",
-            "description": "The number of accounts registered with this application. Not available for legacy apps.",
-            "example": 12
-          }
-        },
-        "required": [
-          "id"
-        ]
-      },
-      "DeleteOutboxEntryResponse": {
-        "type": "object",
-        "properties": {
-          "deleted": {
-            "type": "boolean",
-            "description": "Was the message deleted",
-            "default": true
-          }
-        }
-      },
-      "DeleteTokenRequestResponse": {
-        "type": "object",
-        "properties": {
-          "deleted": {
-            "type": "boolean",
-            "description": "Was the token deleted",
-            "default": true
-          }
-        }
-      },
-      "DeleteMailboxResponse": {
-        "type": "object",
-        "properties": {
-          "path": {
+          "provider": {
             "type": "string",
-            "description": "Full path to mailbox",
-            "example": "Kalender/S&APw-nnip&AOQ-evad"
+            "description": "Provider type",
+            "example": "gmailService"
           },
-          "deleted": {
-            "type": "boolean",
-            "description": "Was the mailbox deleted",
-            "example": true
-          }
-        },
-        "required": [
-          "path"
-        ]
-      },
-      "FlushTemplatesResponse": {
-        "type": "object",
-        "properties": {
-          "deleted": {
-            "type": "boolean",
-            "description": "Were the templates flushed",
-            "default": true
+          "authMethod": {
+            "type": "string",
+            "description": "Authentication method for service-account apps",
+            "example": "externalAccount",
+            "nullable": true
           },
           "account": {
             "type": "string",
-            "description": "Unique identifier for the email account",
-            "example": "user123",
-            "maxLength": 256,
-            "x-convert": {
-              "trim": true
-            }
-          }
-        },
-        "required": [
-          "account"
-        ]
-      },
-      "DeleteTemplateResponse": {
-        "type": "object",
-        "properties": {
-          "deleted": {
-            "type": "boolean",
-            "description": "Was the template deleted",
-            "default": true
+            "description": "Mailbox used for the delegation/mailbox checks",
+            "example": "user@example.com",
+            "nullable": true
           },
-          "account": {
-            "type": "string",
-            "description": "Unique identifier for the email account",
-            "example": "user123",
-            "maxLength": 256,
-            "x-convert": {
-              "trim": true
-            }
-          },
-          "id": {
-            "type": "string",
-            "description": "Template ID",
-            "example": "AAABgS-UcAYAAAABAA",
-            "maxLength": 256
-          }
-        },
-        "required": [
-          "account",
-          "id"
-        ]
-      },
-      "DeleteExportResponse": {
-        "type": "object",
-        "properties": {
-          "deleted": {
+          "ok": {
             "type": "boolean",
-            "description": "True if export was deleted",
+            "description": "True when no verification step failed",
             "example": true
-          }
-        }
-      },
-      "MessageMovedToTrash": {
-        "type": "object",
-        "description": "Present if message was moved to Trash",
-        "properties": {
-          "destination": {
-            "type": "string",
-            "description": "Trash folder path",
-            "example": "Trash"
           },
-          "message": {
-            "type": "string",
-            "description": "Message ID in Trash",
-            "example": "AAAAAwAAAWg"
+          "steps": {
+            "$ref": "#/components/schemas/OAuth2VerifySteps"
           }
         },
         "required": [
-          "destination",
-          "message"
+          "app"
         ]
-      },
-      "MessageDeleteResponse": {
-        "type": "object",
-        "properties": {
-          "deleted": {
-            "type": "boolean",
-            "description": "Was the delete action executed",
-            "example": false
-          },
-          "moved": {
-            "$ref": "#/components/schemas/MessageMovedToTrash"
-          }
-        }
       },
       "ImapUpdateAccessToken": {
         "type": "string",
@@ -8566,6 +8546,70 @@
           "id"
         ]
       },
+      "TargetMailboxPath": {
+        "type": "array",
+        "description": "New mailbox path as an array or a string. If account is namespaced then namespace prefix is added by default. Optional.",
+        "example": [
+          "Parent folder",
+          "Subfolder"
+        ],
+        "x-constraint": {
+          "single": true
+        },
+        "items": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "ModifyMailbox": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Mailbox folder path to modify",
+            "example": "Folder Name"
+          },
+          "newPath": {
+            "$ref": "#/components/schemas/TargetMailboxPath"
+          },
+          "subscribed": {
+            "type": "boolean",
+            "description": "Change mailbox subscription status. Only applies to IMAP accounts, ignored for Gmail and Outlook.",
+            "example": true
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "ModifyMailboxResponse": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Mailbox folder path",
+            "example": "Mail"
+          },
+          "newPath": {
+            "type": "string",
+            "description": "Full path to mailbox if renamed",
+            "example": "Kalender/S&APw-nnip&AOQ-evad"
+          },
+          "renamed": {
+            "type": "boolean",
+            "description": "Was the mailbox renamed",
+            "example": true
+          },
+          "subscribed": {
+            "type": "boolean",
+            "description": "Subscription status after modification",
+            "example": true
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
       "AddFlags": {
         "type": "array",
         "description": "Flags to add to the message",
@@ -8840,70 +8884,6 @@
             "default": false
           }
         }
-      },
-      "TargetMailboxPath": {
-        "type": "array",
-        "description": "New mailbox path as an array or a string. If account is namespaced then namespace prefix is added by default. Optional.",
-        "example": [
-          "Parent folder",
-          "Subfolder"
-        ],
-        "x-constraint": {
-          "single": true
-        },
-        "items": {
-          "type": "string",
-          "maxLength": 256
-        }
-      },
-      "ModifyMailbox": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string",
-            "description": "Mailbox folder path to modify",
-            "example": "Folder Name"
-          },
-          "newPath": {
-            "$ref": "#/components/schemas/TargetMailboxPath"
-          },
-          "subscribed": {
-            "type": "boolean",
-            "description": "Change mailbox subscription status. Only applies to IMAP accounts, ignored for Gmail and Outlook.",
-            "example": true
-          }
-        },
-        "required": [
-          "path"
-        ]
-      },
-      "ModifyMailboxResponse": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string",
-            "description": "Mailbox folder path",
-            "example": "Mail"
-          },
-          "newPath": {
-            "type": "string",
-            "description": "Full path to mailbox if renamed",
-            "example": "Kalender/S&APw-nnip&AOQ-evad"
-          },
-          "renamed": {
-            "type": "boolean",
-            "description": "Was the mailbox renamed",
-            "example": true
-          },
-          "subscribed": {
-            "type": "boolean",
-            "description": "Subscription status after modification",
-            "example": true
-          }
-        },
-        "required": [
-          "path"
-        ]
       },
       "RequestSync": {
         "type": "object",
@@ -9373,6 +9353,230 @@
         "required": [
           "path"
         ]
+      },
+      "EmptyLicenseResponse": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean",
+            "example": false
+          },
+          "details": {
+            "type": "boolean",
+            "example": false
+          },
+          "type": {
+            "type": "string",
+            "example": "SSPL-1.0-or-later"
+          }
+        }
+      },
+      "DeleteAccountResponse": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string",
+            "description": "Unique identifier for the email account",
+            "example": "user123",
+            "maxLength": 256,
+            "x-convert": {
+              "trim": true
+            }
+          },
+          "deleted": {
+            "type": "boolean",
+            "description": "Was the account deleted",
+            "default": true
+          }
+        },
+        "required": [
+          "account"
+        ]
+      },
+      "DeleteBlocklistResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "description": "Was the address removed from the list",
+            "default": true
+          }
+        }
+      },
+      "DeleteGatewayResponse": {
+        "type": "object",
+        "properties": {
+          "gateway": {
+            "type": "string",
+            "description": "Gateway ID",
+            "example": "example",
+            "maxLength": 256
+          },
+          "deleted": {
+            "type": "boolean",
+            "description": "Was the gateway deleted",
+            "default": true
+          }
+        },
+        "required": [
+          "gateway"
+        ]
+      },
+      "DeleteAppRequestResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "OAuth2 application ID",
+            "example": "AAABhaBPHscAAAAH",
+            "maxLength": 256
+          },
+          "deleted": {
+            "type": "boolean",
+            "description": "Was the OAuth2 application deleted",
+            "default": true
+          },
+          "accounts": {
+            "type": "integer",
+            "description": "The number of accounts registered with this application. Not available for legacy apps.",
+            "example": 12
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "DeleteOutboxEntryResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "description": "Was the message deleted",
+            "default": true
+          }
+        }
+      },
+      "DeleteTokenRequestResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "description": "Was the token deleted",
+            "default": true
+          }
+        }
+      },
+      "DeleteMailboxResponse": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Full path to mailbox",
+            "example": "Kalender/S&APw-nnip&AOQ-evad"
+          },
+          "deleted": {
+            "type": "boolean",
+            "description": "Was the mailbox deleted",
+            "example": true
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "FlushTemplatesResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "description": "Were the templates flushed",
+            "default": true
+          },
+          "account": {
+            "type": "string",
+            "description": "Unique identifier for the email account",
+            "example": "user123",
+            "maxLength": 256,
+            "x-convert": {
+              "trim": true
+            }
+          }
+        },
+        "required": [
+          "account"
+        ]
+      },
+      "DeleteTemplateResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "description": "Was the template deleted",
+            "default": true
+          },
+          "account": {
+            "type": "string",
+            "description": "Unique identifier for the email account",
+            "example": "user123",
+            "maxLength": 256,
+            "x-convert": {
+              "trim": true
+            }
+          },
+          "id": {
+            "type": "string",
+            "description": "Template ID",
+            "example": "AAABgS-UcAYAAAABAA",
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "account",
+          "id"
+        ]
+      },
+      "DeleteExportResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "description": "True if export was deleted",
+            "example": true
+          }
+        }
+      },
+      "MessageMovedToTrash": {
+        "type": "object",
+        "description": "Present if message was moved to Trash",
+        "properties": {
+          "destination": {
+            "type": "string",
+            "description": "Trash folder path",
+            "example": "Trash"
+          },
+          "message": {
+            "type": "string",
+            "description": "Message ID in Trash",
+            "example": "AAAAAwAAAWg"
+          }
+        },
+        "required": [
+          "destination",
+          "message"
+        ]
+      },
+      "MessageDeleteResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "description": "Was the delete action executed",
+            "example": false
+          },
+          "moved": {
+            "$ref": "#/components/schemas/MessageMovedToTrash"
+          }
+        }
       }
     }
   },
@@ -11131,54 +11335,6 @@
           }
         }
       },
-      "delete": {
-        "summary": "Remove account",
-        "operationId": "deleteV1AccountAccount",
-        "description": "Stop processing and clear the account's cache",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          }
-        ],
-        "tags": [
-          "Account"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DeleteAccountResponse"
-                }
-              }
-            }
-          }
-        }
-      },
       "put": {
         "summary": "Update account info",
         "operationId": "putV1AccountAccount",
@@ -11230,6 +11386,64 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UpdateAccountResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove account",
+        "operationId": "deleteV1AccountAccount",
+        "description": "Stop processing and clear the account's cache. Pass revoke=true to also attempt revocation of the upstream OAuth2 grant at the provider before the account is removed.",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          },
+          {
+            "name": "revoke",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "If true, EmailEngine attempts to revoke the upstream OAuth2 grant at the provider before deleting the account. Currently supported for individual Gmail OAuth grants. For Gmail Workspace service-account integrations (gmailService), Outlook, and non-OAuth2 accounts the flag is a no-op. Revoke failures are logged and do not block deletion.",
+              "default": false
+            },
+            "description": "If true, EmailEngine attempts to revoke the upstream OAuth2 grant at the provider before deleting the account. Currently supported for individual Gmail OAuth grants. For Gmail Workspace service-account integrations (gmailService), Outlook, and non-OAuth2 accounts the flag is a no-op. Revoke failures are logged and do not block deletion."
+          }
+        ],
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteAccountResponse"
                 }
               }
             }
@@ -11617,51 +11831,6 @@
           }
         }
       },
-      "delete": {
-        "summary": "Remove OAuth2 application",
-        "operationId": "deleteV1Oauth2App",
-        "description": "Delete OAuth2 application data",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "app",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "OAuth2 application ID",
-              "example": "AAABhaBPHscAAAAH",
-              "maxLength": 256
-            },
-            "description": "OAuth2 application ID",
-            "required": true
-          }
-        ],
-        "tags": [
-          "OAuth2 Applications"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DeleteAppRequestResponse"
-                }
-              }
-            }
-          }
-        }
-      },
       "put": {
         "summary": "Update OAuth2 application",
         "operationId": "putV1Oauth2App",
@@ -11710,6 +11879,51 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UpdateOAuthAppResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove OAuth2 application",
+        "operationId": "deleteV1Oauth2App",
+        "description": "Delete OAuth2 application data",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "app",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "OAuth2 application ID",
+              "example": "AAABhaBPHscAAAAH",
+              "maxLength": 256
+            },
+            "description": "OAuth2 application ID",
+            "required": true
+          }
+        ],
+        "tags": [
+          "OAuth2 Applications"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteAppRequestResponse"
                 }
               }
             }
@@ -11863,6 +12077,192 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PubSubStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/account/{account}/mailboxes": {
+      "get": {
+        "summary": "List mailboxes",
+        "operationId": "getV1AccountAccountMailboxes",
+        "description": "Lists all available mailboxes",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          },
+          {
+            "name": "counters",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "If true, then includes message counters in the response",
+              "default": false
+            },
+            "description": "If true, then includes message counters in the response"
+          }
+        ],
+        "tags": [
+          "Mailbox"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailboxesFilterResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/account/{account}/exports": {
+      "get": {
+        "summary": "List exports",
+        "operationId": "getV1AccountAccountExports",
+        "description": "Lists all exports for an account with pagination.",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Page number (zero indexed)",
+              "example": 0,
+              "default": 0,
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "description": "Page number (zero indexed)"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "How many entries per page",
+              "example": 20,
+              "default": 20,
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "description": "How many entries per page"
+          }
+        ],
+        "tags": [
+          "Export (Beta)"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/account/{account}/server-signatures": {
+      "get": {
+        "summary": "List Account Signatures",
+        "operationId": "getV1AccountAccountServersignatures",
+        "description": "Returns signatures associated with the account. Currently only Gmail is supported, and only \"new message\" signatures from the \"sendAs\" list are returned.",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSignaturesResponse"
                 }
               }
             }
@@ -12089,192 +12489,6 @@
         }
       }
     },
-    "/v1/account/{account}/mailboxes": {
-      "get": {
-        "summary": "List mailboxes",
-        "operationId": "getV1AccountAccountMailboxes",
-        "description": "Lists all available mailboxes",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          },
-          {
-            "name": "counters",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "description": "If true, then includes message counters in the response",
-              "default": false
-            },
-            "description": "If true, then includes message counters in the response"
-          }
-        ],
-        "tags": [
-          "Mailbox"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MailboxesFilterResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/account/{account}/exports": {
-      "get": {
-        "summary": "List exports",
-        "operationId": "getV1AccountAccountExports",
-        "description": "Lists all exports for an account with pagination.",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "description": "Page number (zero indexed)",
-              "example": 0,
-              "default": 0,
-              "minimum": 0,
-              "maximum": 1048576
-            },
-            "description": "Page number (zero indexed)"
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "description": "How many entries per page",
-              "example": 20,
-              "default": 20,
-              "minimum": 1,
-              "maximum": 1000
-            },
-            "description": "How many entries per page"
-          }
-        ],
-        "tags": [
-          "Export (Beta)"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExportList"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/account/{account}/server-signatures": {
-      "get": {
-        "summary": "List Account Signatures",
-        "operationId": "getV1AccountAccountServersignatures",
-        "description": "Returns signatures associated with the account. Currently only Gmail is supported, and only \"new message\" signatures from the \"sendAs\" list are returned.",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          }
-        ],
-        "tags": [
-          "Account"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccountSignaturesResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/v1/delivery-test/check/{deliveryTest}": {
       "get": {
         "summary": "Check test status",
@@ -12490,51 +12704,6 @@
           }
         }
       },
-      "delete": {
-        "summary": "Remove a template",
-        "operationId": "deleteV1TemplatesTemplateTemplate",
-        "description": "Delete a stored template",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "template",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Template ID",
-              "example": "example",
-              "maxLength": 256
-            },
-            "description": "Template ID",
-            "required": true
-          }
-        ],
-        "tags": [
-          "Templates"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DeleteTemplateResponse"
-                }
-              }
-            }
-          }
-        }
-      },
       "put": {
         "summary": "Update a template",
         "operationId": "putV1TemplatesTemplateTemplate",
@@ -12583,6 +12752,51 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UpdateTemplateResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove a template",
+        "operationId": "deleteV1TemplatesTemplateTemplate",
+        "description": "Delete a stored template",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "template",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Template ID",
+              "example": "example",
+              "maxLength": 256
+            },
+            "description": "Template ID",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Templates"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteTemplateResponse"
                 }
               }
             }
@@ -12687,11 +12901,11 @@
         }
       }
     },
-    "/v1/account/{account}/attachment/{attachment}": {
+    "/v1/account/{account}/export/{exportId}": {
       "get": {
-        "summary": "Download attachment",
-        "operationId": "getV1AccountAccountAttachmentAttachment",
-        "description": "Fetches attachment file as a binary stream",
+        "summary": "Get export status",
+        "operationId": "getV1AccountAccountExportExportid",
+        "description": "Returns the status and progress of an export job.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -12720,28 +12934,181 @@
             "required": true
           },
           {
-            "name": "attachment",
+            "name": "exportId",
             "in": "path",
             "schema": {
               "type": "string",
-              "description": "Attachment ID",
-              "example": "AAAAAQAACnAcde",
-              "maxLength": 2048
+              "description": "Export job identifier",
+              "example": "exp_abc123def456abc123def456",
+              "pattern": "^exp_[a-f0-9]{24}$"
             },
-            "description": "Attachment ID",
+            "description": "Export job identifier",
             "required": true
+          }
+        ],
+        "tags": [
+          "Export (Beta)"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportStatus"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete export",
+        "operationId": "deleteV1AccountAccountExportExportid",
+        "description": "Cancels a pending export or deletes a completed export. Removes both Redis data and the export file.",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          },
+          {
+            "name": "exportId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Export job identifier",
+              "example": "exp_abc123def456abc123def456",
+              "pattern": "^exp_[a-f0-9]{24}$"
+            },
+            "description": "Export job identifier",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Export (Beta)"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteExportResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/account/{account}/text/{text}": {
+      "get": {
+        "summary": "Retrieve message text",
+        "operationId": "getV1AccountAccountTextText",
+        "description": "Retrieves message text",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          },
+          {
+            "name": "text",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Message text ID",
+              "example": "AAAAAQAACnAcdfaaN",
+              "maxLength": 10240
+            },
+            "description": "Message text ID",
+            "required": true
+          },
+          {
+            "name": "maxBytes",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Max length of text content",
+              "example": 52428800,
+              "minimum": 0,
+              "maximum": 1073741824
+            },
+            "description": "Max length of text content"
+          },
+          {
+            "name": "textType",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Which text content to return, use * for all. By default all contents are returned.",
+              "example": "*",
+              "default": "*",
+              "enum": [
+                "html",
+                "plain",
+                "*"
+              ],
+              "x-convert": {
+                "case": "lower"
+              }
+            },
+            "description": "Which text content to return, use * for all. By default all contents are returned."
           }
         ],
         "tags": [
           "Message"
         ],
         "responses": {
-          "default": {
+          "200": {
             "description": "Successful",
             "content": {
-              "application/octet-stream": {
+              "application/json": {
                 "schema": {
-                  "type": "string"
+                  "$ref": "#/components/schemas/TextResponse"
                 }
               }
             }
@@ -12880,6 +13247,75 @@
           }
         }
       },
+      "put": {
+        "summary": "Update message",
+        "operationId": "putV1AccountAccountMessageMessage",
+        "description": "Update message information. Mainly this means changing message flag values",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          },
+          {
+            "name": "message",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Message ID",
+              "example": "AAAAAQAACnA",
+              "maxLength": 256
+            },
+            "description": "Message ID",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Message"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageUpdateResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "summary": "Delete message",
         "operationId": "deleteV1AccountAccountMessageMessage",
@@ -12949,11 +13385,13 @@
             }
           }
         }
-      },
-      "put": {
-        "summary": "Update message",
-        "operationId": "putV1AccountAccountMessageMessage",
-        "description": "Update message information. Mainly this means changing message flag values",
+      }
+    },
+    "/v1/account/{account}/attachment/{attachment}": {
+      "get": {
+        "summary": "Download attachment",
+        "operationId": "getV1AccountAccountAttachmentAttachment",
+        "description": "Fetches attachment file as a binary stream",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -12982,312 +13420,26 @@
             "required": true
           },
           {
-            "name": "message",
+            "name": "attachment",
             "in": "path",
             "schema": {
               "type": "string",
-              "description": "Message ID",
-              "example": "AAAAAQAACnA",
-              "maxLength": 256
+              "description": "Attachment ID",
+              "example": "AAAAAQAACnAcde",
+              "maxLength": 2048
             },
-            "description": "Message ID",
+            "description": "Attachment ID",
             "required": true
           }
         ],
         "tags": [
           "Message"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MessageUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageUpdateResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/account/{account}/text/{text}": {
-      "get": {
-        "summary": "Retrieve message text",
-        "operationId": "getV1AccountAccountTextText",
-        "description": "Retrieves message text",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          },
-          {
-            "name": "text",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Message text ID",
-              "example": "AAAAAQAACnAcdfaaN",
-              "maxLength": 10240
-            },
-            "description": "Message text ID",
-            "required": true
-          },
-          {
-            "name": "maxBytes",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "description": "Max length of text content",
-              "example": 52428800,
-              "minimum": 0,
-              "maximum": 1073741824
-            },
-            "description": "Max length of text content"
-          },
-          {
-            "name": "textType",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "description": "Which text content to return, use * for all. By default all contents are returned.",
-              "example": "*",
-              "default": "*",
-              "enum": [
-                "html",
-                "plain",
-                "*"
-              ],
-              "x-convert": {
-                "case": "lower"
-              }
-            },
-            "description": "Which text content to return, use * for all. By default all contents are returned."
-          }
-        ],
-        "tags": [
-          "Message"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TextResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/account/{account}/export/{exportId}": {
-      "get": {
-        "summary": "Get export status",
-        "operationId": "getV1AccountAccountExportExportid",
-        "description": "Returns the status and progress of an export job.",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          },
-          {
-            "name": "exportId",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Export job identifier",
-              "example": "exp_abc123def456abc123def456",
-              "pattern": "^exp_[a-f0-9]{24}$"
-            },
-            "description": "Export job identifier",
-            "required": true
-          }
-        ],
-        "tags": [
-          "Export (Beta)"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ExportStatus"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete export",
-        "operationId": "deleteV1AccountAccountExportExportid",
-        "description": "Cancels a pending export or deletes a completed export. Removes both Redis data and the export file.",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          },
-          {
-            "name": "exportId",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Export job identifier",
-              "example": "exp_abc123def456abc123def456",
-              "pattern": "^exp_[a-f0-9]{24}$"
-            },
-            "description": "Export job identifier",
-            "required": true
-          }
-        ],
-        "tags": [
-          "Export (Beta)"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DeleteExportResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/account/{account}/export/{exportId}/download": {
-      "get": {
-        "summary": "Download export file",
-        "operationId": "getV1AccountAccountExportExportidDownload",
-        "description": "Downloads the completed export file as gzip-compressed NDJSON.",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          },
-          {
-            "name": "exportId",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Export job identifier",
-              "example": "exp_abc123def456abc123def456",
-              "pattern": "^exp_[a-f0-9]{24}$"
-            },
-            "description": "Export job identifier",
-            "required": true
-          }
-        ],
-        "tags": [
-          "Export (Beta)"
         ],
         "responses": {
           "default": {
             "description": "Successful",
             "content": {
-              "application/gzip": {
+              "application/octet-stream": {
                 "schema": {
                   "type": "string"
                 }
@@ -13350,6 +13502,68 @@
             "description": "Successful",
             "content": {
               "message/rfc822": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/account/{account}/export/{exportId}/download": {
+      "get": {
+        "summary": "Download export file",
+        "operationId": "getV1AccountAccountExportExportidDownload",
+        "description": "Downloads the completed export file as gzip-compressed NDJSON.",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          },
+          {
+            "name": "exportId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Export job identifier",
+              "example": "exp_abc123def456abc123def456",
+              "pattern": "^exp_[a-f0-9]{24}$"
+            },
+            "description": "Export job identifier",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Export (Beta)"
+        ],
+        "responses": {
+          "default": {
+            "description": "Successful",
+            "content": {
+              "application/gzip": {
                 "schema": {
                   "type": "string"
                 }
@@ -13623,6 +13837,274 @@
         }
       }
     },
+    "/v1/account/{account}/submit": {
+      "post": {
+        "summary": "Submit message for delivery",
+        "operationId": "postV1AccountAccountSubmit",
+        "description": "Submit message for delivery. If reference message ID is provided then EmailEngine adds all headers and flags required for a reply/forward automatically.",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "description": "Unique key to prevent duplicate processing of the same request",
+              "minLength": 0,
+              "maxLength": 1024,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique key to prevent duplicate processing of the same request"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          },
+          {
+            "name": "documentStore",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "If enabled then fetch email used as a reference template from the Document Store",
+              "default": false
+            },
+            "description": "If enabled then fetch email used as a reference template from the Document Store"
+          },
+          {
+            "name": "useStructuredFormat",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "For MS Graph accounts: If true, uses structured JSON format (respects from field for shared mailboxes, breaks calendar invites and special MIME types). If false, sends as raw MIME (preserves calendar invites, ignores from field). Default is false (raw MIME).",
+              "default": false
+            },
+            "description": "For MS Graph accounts: If true, uses structured JSON format (respects from field for shared mailboxes, breaks calendar invites and special MIME types). If false, sends as raw MIME (preserves calendar invites, ignores from field). Default is false (raw MIME)."
+          }
+        ],
+        "tags": [
+          "Submit"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitMessage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitMessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/account/{account}/mailbox": {
+      "post": {
+        "summary": "Create mailbox",
+        "operationId": "postV1AccountAccountMailbox",
+        "description": "Create new mailbox folder",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Mailbox"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMailbox"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateMailboxResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Modify mailbox",
+        "operationId": "putV1AccountAccountMailbox",
+        "description": "Modify an existing mailbox folder (rename or change subscription status)",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Mailbox"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModifyMailbox"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModifyMailboxResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete mailbox",
+        "operationId": "deleteV1AccountAccountMailbox",
+        "description": "Delete existing mailbox folder",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Mailbox folder path to delete",
+              "example": "My Outdated Mail"
+            },
+            "description": "Mailbox folder path to delete",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Mailbox"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteMailboxResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/account/{account}/export": {
       "post": {
         "summary": "Create export",
@@ -13769,9 +14251,9 @@
             "in": "query",
             "schema": {
               "type": "boolean",
-              "description": "MS Graph only. If enabled, uses the $search parameter for MS Graph search queries instead of $filter. This allows searching the \"to\", \"cc\", \"bcc\", \"larger\", \"smaller\", \"body\", \"before\", \"sentBefore\", \"since\", and the \"sentSince\" fields. Note that $search returns up to 1,000 results, does not indicate the total number of matching results or pages, and returns results sorted by relevance rather than date."
+              "description": "MS Graph only. If enabled, uses the $search parameter for MS Graph search queries instead of $filter. This allows searching the \"to\", \"cc\", \"bcc\", \"larger\", \"smaller\", \"body\", \"before\", \"sentBefore\", \"since\", and the \"sentSince\" fields. Note that $search returns up to 1,000 results, does not indicate the total number of matching results or pages, and returns results sorted by relevance rather than date. The \"labels\" filter is not available in this mode - leave this option disabled to filter by category."
             },
-            "description": "MS Graph only. If enabled, uses the $search parameter for MS Graph search queries instead of $filter. This allows searching the \"to\", \"cc\", \"bcc\", \"larger\", \"smaller\", \"body\", \"before\", \"sentBefore\", \"since\", and the \"sentSince\" fields. Note that $search returns up to 1,000 results, does not indicate the total number of matching results or pages, and returns results sorted by relevance rather than date."
+            "description": "MS Graph only. If enabled, uses the $search parameter for MS Graph search queries instead of $filter. This allows searching the \"to\", \"cc\", \"bcc\", \"larger\", \"smaller\", \"body\", \"before\", \"sentBefore\", \"since\", and the \"sentSince\" fields. Note that $search returns up to 1,000 results, does not indicate the total number of matching results or pages, and returns results sorted by relevance rather than date. The \"labels\" filter is not available in this mode - leave this option disabled to filter by category."
           }
         ],
         "tags": [
@@ -13793,274 +14275,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageList"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/account/{account}/mailbox": {
-      "post": {
-        "summary": "Create mailbox",
-        "operationId": "postV1AccountAccountMailbox",
-        "description": "Create new mailbox folder",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          }
-        ],
-        "tags": [
-          "Mailbox"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateMailbox"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateMailboxResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete mailbox",
-        "operationId": "deleteV1AccountAccountMailbox",
-        "description": "Delete existing mailbox folder",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          },
-          {
-            "name": "path",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "description": "Mailbox folder path to delete",
-              "example": "My Outdated Mail"
-            },
-            "description": "Mailbox folder path to delete",
-            "required": true
-          }
-        ],
-        "tags": [
-          "Mailbox"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DeleteMailboxResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "summary": "Modify mailbox",
-        "operationId": "putV1AccountAccountMailbox",
-        "description": "Modify an existing mailbox folder (rename or change subscription status)",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          }
-        ],
-        "tags": [
-          "Mailbox"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ModifyMailbox"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ModifyMailboxResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/account/{account}/submit": {
-      "post": {
-        "summary": "Submit message for delivery",
-        "operationId": "postV1AccountAccountSubmit",
-        "description": "Submit message for delivery. If reference message ID is provided then EmailEngine adds all headers and flags required for a reply/forward automatically.",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "idempotency-key",
-            "in": "header",
-            "schema": {
-              "type": "string",
-              "description": "Unique key to prevent duplicate processing of the same request",
-              "minLength": 0,
-              "maxLength": 1024,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique key to prevent duplicate processing of the same request"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          },
-          {
-            "name": "documentStore",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "description": "If enabled then fetch email used as a reference template from the Document Store",
-              "default": false
-            },
-            "description": "If enabled then fetch email used as a reference template from the Document Store"
-          },
-          {
-            "name": "useStructuredFormat",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "description": "For MS Graph accounts: If true, uses structured JSON format (respects from field for shared mailboxes, breaks calendar invites and special MIME types). If false, sends as raw MIME (preserves calendar invites, ignores from field). Default is false (raw MIME).",
-              "default": false
-            },
-            "description": "For MS Graph accounts: If true, uses structured JSON format (respects from field for shared mailboxes, breaks calendar invites and special MIME types). If false, sends as raw MIME (preserves calendar invites, ignores from field). Default is false (raw MIME)."
-          }
-        ],
-        "tags": [
-          "Submit"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubmitMessage"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SubmitMessageResponse"
                 }
               }
             }
@@ -14186,11 +14400,11 @@
         }
       }
     },
-    "/v1/token/{token}": {
-      "delete": {
-        "summary": "Remove a token",
-        "operationId": "deleteV1TokenToken",
-        "description": "Delete an access token",
+    "/v1/oauth2/{app}/verify": {
+      "post": {
+        "summary": "Verify OAuth2 application setup",
+        "operationId": "postV1Oauth2AppVerify",
+        "description": "Runs the provider authentication chain step by step and reports which steps pass or fail, with hints for fixing failures. For service-account apps an optional mailbox address enables the delegation and live mailbox checks.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -14204,96 +14418,37 @@
             "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
           },
           {
-            "name": "token",
+            "name": "app",
             "in": "path",
             "schema": {
               "type": "string",
-              "description": "Access token",
-              "example": "123456",
-              "x-constraint": {
-                "length": 64
-              },
-              "x-format": {
-                "hex": {
-                  "byteAligned": false,
-                  "prefix": false
-                }
-              }
+              "description": "OAuth2 application ID",
+              "example": "AAABhaBPHscAAAAH",
+              "maxLength": 256
             },
-            "description": "Access token",
+            "description": "OAuth2 application ID",
             "required": true
           }
         ],
         "tags": [
-          "Access Tokens"
+          "OAuth2 Applications"
         ],
-        "responses": {
-          "200": {
-            "description": "Successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DeleteTokenRequestResponse"
-                }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOAuth2AppRequest"
               }
             }
           }
-        }
-      }
-    },
-    "/v1/templates/account/{account}": {
-      "delete": {
-        "summary": "Flush templates",
-        "operationId": "deleteV1TemplatesAccountAccount",
-        "description": "Delete all stored templates for an account",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          },
-          {
-            "name": "account",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
-              }
-            },
-            "description": "Unique identifier for the email account",
-            "required": true
-          },
-          {
-            "name": "force",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "description": "Must be true in order to flush templates",
-              "default": false
-            },
-            "description": "Must be true in order to flush templates"
-          }
-        ],
-        "tags": [
-          "Templates"
-        ],
+        },
         "responses": {
           "200": {
             "description": "Successful",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FlushTemplatesResponse"
+                  "$ref": "#/components/schemas/VerifyOAuth2AppResponse"
                 }
               }
             }
@@ -14748,6 +14903,121 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageMoveResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/token/{token}": {
+      "delete": {
+        "summary": "Remove a token",
+        "operationId": "deleteV1TokenToken",
+        "description": "Delete an access token",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "token",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Access token",
+              "example": "123456",
+              "x-constraint": {
+                "length": 64
+              },
+              "x-format": {
+                "hex": {
+                  "byteAligned": false,
+                  "prefix": false
+                }
+              }
+            },
+            "description": "Access token",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Access Tokens"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteTokenRequestResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/templates/account/{account}": {
+      "delete": {
+        "summary": "Flush templates",
+        "operationId": "deleteV1TemplatesAccountAccount",
+        "description": "Delete all stored templates for an account",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "account",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier for the email account",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Unique identifier for the email account",
+            "required": true
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "description": "Must be true in order to flush templates",
+              "default": false
+            },
+            "description": "Must be true in order to flush templates"
+          }
+        ],
+        "tags": [
+          "Templates"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlushTemplatesResponse"
                 }
               }
             }

@@ -769,6 +769,7 @@ curl -X POST https://your-ee.com/v1/settings \
 
 - `socks5://` - SOCKS5 proxy (recommended)
 - `socks4://` - SOCKS4 proxy
+- `socks4a://` - SOCKS4a proxy
 - `socks://` - Generic SOCKS proxy
 - `http://` - HTTP proxy
 - `https://` - HTTPS proxy
@@ -776,9 +777,19 @@ curl -X POST https://your-ee.com/v1/settings \
 Per-account proxy settings override the global proxy setting.
 
 :::warning IMAP and SMTP Only
-Proxy settings apply only to IMAP and SMTP connections. HTTP requests made by EmailEngine (OAuth2 token exchange, Gmail API, Microsoft Graph API, license validation, etc.) are **not** routed through the proxy and will always use direct connections.
+The `proxyEnabled` and `proxyUrl` settings apply only to IMAP and SMTP socket connections. HTTP requests made by EmailEngine (webhooks, OAuth2 token exchange, Gmail API, Microsoft Graph API, license validation, etc.) are **not** routed through this proxy.
 
-If your environment requires proxying HTTP traffic, configure a system-wide HTTP proxy using standard environment variables (`HTTP_PROXY`, `HTTPS_PROXY`) at the operating system level.
+To proxy HTTP traffic, use the separate HTTP proxy settings instead: set `httpProxyEnabled` and `httpProxyUrl` via the settings API, or use the `EENGINE_HTTP_PROXY_ENABLED` and `EENGINE_HTTP_PROXY_URL` environment variables. Note that EmailEngine does not honor the standard `HTTP_PROXY`/`HTTPS_PROXY` environment variables.
+
+```bash
+curl -X POST https://your-ee.com/v1/settings \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "httpProxyEnabled": true,
+    "httpProxyUrl": "http://proxy.example.com:3128"
+  }'
+```
 
 For environments with strict outbound firewalls, see [Outbound Connection Whitelist](/docs/deployment/security#outbound-connection-whitelist) for a list of domains that EmailEngine needs to reach.
 :::

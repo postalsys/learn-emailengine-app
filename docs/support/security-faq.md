@@ -96,11 +96,14 @@ EmailEngine supports secret rotation:
 # Re-encrypt with a new secret
 emailengine encrypt \
   --service.secret="new-secret" \
+  --decrypt="old-secret" \
   --dbs.redis="redis://localhost:6379"
 ```
 
+The `--decrypt` argument can be repeated if data was encrypted with multiple old secrets.
+
 The migration will:
-1. Decrypt data with the old secret (from current config)
+1. Decrypt data with the old secret(s) provided via `--decrypt`
 2. Re-encrypt with the new secret
 3. Update all stored credentials
 
