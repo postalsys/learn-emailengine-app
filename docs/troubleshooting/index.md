@@ -90,7 +90,7 @@ emailengine --help
    # Generate a secret
    openssl rand -hex 32
 
-   # Add it to your .env file or export it
+   # Add it to your .env file so the same value persists across restarts
    echo "EENGINE_SECRET=generated-value-here" >> .env
    ```
 

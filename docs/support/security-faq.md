@@ -33,18 +33,14 @@ For production deployments, always configure `EENGINE_SECRET`.
 
 ## How do I enable encryption?
 
-Set the `EENGINE_SECRET` environment variable before starting EmailEngine:
+Set the `EENGINE_SECRET` environment variable before starting EmailEngine. Generate the secret once and store it permanently - if a different or missing secret is used after a restart, the stored credentials cannot be decrypted:
 
 ```bash
-# Generate a secure 256-bit secret
-openssl rand -hex 32
-
-# Set the environment variable
-export EENGINE_SECRET=your-generated-secret-here
-
-# Or add to .env file
+# Generate the secret once and persist it in an .env file
 echo "EENGINE_SECRET=$(openssl rand -hex 32)" >> .env
 ```
+
+Alternatively, generate the value with `openssl rand -hex 32` and store it in a secrets manager, then provide it to EmailEngine on every start. Do not generate the secret inline in an ephemeral shell session (`export EENGINE_SECRET=$(openssl rand -hex 32)`) - the value would be lost with the session.
 
 For existing installations with unencrypted data, run the encryption migration:
 

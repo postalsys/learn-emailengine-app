@@ -39,10 +39,20 @@ EmailEngine will start on **http://localhost:3000**
 :::warning Production Security
 For production deployments, you **must** configure `EENGINE_SECRET` to encrypt stored credentials. Without this setting, account passwords and OAuth tokens are stored unencrypted in Redis.
 
+Generate the secret once, store it permanently (in a secrets manager or an `.env` file that is included in your backups), and pass the same value to EmailEngine on every start:
+
 ```bash
-# Generate and set encryption secret
-export EENGINE_SECRET=$(openssl rand -hex 32)
+# Generate the secret once and persist it
+echo "EENGINE_SECRET=$(openssl rand -hex 32)" >> .env
+
+# Pass the persisted value to the container on every start
+docker run -p 3000:3000 \
+  --env-file .env \
+  --env EENGINE_REDIS="redis://host.docker.internal:6379/8" \
+  postalsys/emailengine:v2
 ```
+
+Never generate the secret inline when starting the service (for example `export EENGINE_SECRET=$(openssl rand -hex 32)`) - the value is lost when the shell session ends, and after a restart with a different or missing secret EmailEngine cannot decrypt the stored credentials, so every account would have to be re-authenticated.
 
 See [Credential Security](/docs/support/security-faq) for details on how EmailEngine protects your data.
 :::
