@@ -40,7 +40,7 @@ Set the `EENGINE_SECRET` environment variable before starting EmailEngine. Gener
 echo "EENGINE_SECRET=$(openssl rand -hex 32)" >> .env
 ```
 
-Alternatively, generate the value with `openssl rand -hex 32` and store it in a secrets manager, then provide it to EmailEngine on every start. Do not generate the secret inline in an ephemeral shell session (`export EENGINE_SECRET=$(openssl rand -hex 32)`) - the value would be lost with the session.
+Alternatively, generate the value with `openssl rand -hex 32` and store it in a secrets manager, then provide it to EmailEngine on every start.
 
 For existing installations with unencrypted data, run the encryption migration:
 

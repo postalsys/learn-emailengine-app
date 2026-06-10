@@ -222,7 +222,7 @@ smtp.office365.com:587
 EmailEngine uses `EENGINE_SECRET` as the master encryption key for all sensitive data stored in Redis. This environment variable is critical for security and data recovery.
 
 :::danger Critical - Store This Secret Permanently
-The `EENGINE_SECRET` must be stored permanently in your configuration. If lost, you cannot decrypt any stored credentials and must re-authenticate all accounts. Never generate it inline with `export EENGINE_SECRET=$(openssl rand -hex 32)` as the secret will be lost when the session ends.
+The `EENGINE_SECRET` must be stored permanently in your configuration. If lost, you cannot decrypt any stored credentials and must re-authenticate all accounts.
 :::
 
 **What EENGINE_SECRET encrypts:**

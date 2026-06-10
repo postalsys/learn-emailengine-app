@@ -187,7 +187,7 @@ By default, credentials are stored in **cleartext** in Redis. This is acceptable
 
 ### Production Security (Required)
 
-Configure the `EENGINE_SECRET` environment variable to enable **AES-256-GCM encryption** for all sensitive data. Generate the secret once and store it permanently - for example in an `.env` file that is included in your backups, or in a secrets manager:
+Configure the `EENGINE_SECRET` environment variable to enable **AES-256-GCM encryption** for all sensitive data. Generate the secret once and store it permanently - for example in an `.env` file or a secrets manager:
 
 ```bash
 # Generate the secret once and persist it
@@ -197,7 +197,7 @@ echo "EENGINE_SECRET=$(openssl rand -hex 32)" >> .env
 With encryption enabled, all credentials are encrypted before being written to Redis. The same secret value must be provided on every start.
 
 :::danger Critical
-If you lose the `EENGINE_SECRET`, encrypted credentials cannot be recovered and every account must be re-authenticated. Never generate the secret inline when starting the service (for example `export EENGINE_SECRET=$(openssl rand -hex 32)`) - the value is lost when the shell session ends. Store the secret securely and include it in your backup strategy.
+If you lose the `EENGINE_SECRET`, encrypted credentials cannot be recovered and every account must be re-authenticated. Store this secret securely and include it in your backup strategy.
 :::
 
 [Complete security guide](/docs/support/security-faq) | [Encryption details](/docs/advanced/encryption)
