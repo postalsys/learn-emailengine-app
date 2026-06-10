@@ -59,7 +59,7 @@ Install on Ubuntu, Debian, CentOS, or RHEL.
 
 #### [macOS Installation](/docs/installation/macos)
 
-Install on macOS (Intel or Apple Silicon).
+Install on macOS (Apple Silicon or Intel).
 
 **Methods:**
 

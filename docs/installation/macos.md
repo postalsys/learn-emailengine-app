@@ -6,13 +6,13 @@ sidebar_position: 3
 
 # Installing EmailEngine on macOS
 
-Complete guide for installing EmailEngine on macOS systems (Intel and Apple Silicon).
+Complete guide for installing EmailEngine on macOS systems (Apple Silicon and Intel).
 
 ## Overview
 
 EmailEngine can be installed on macOS using two methods:
 
-1. **PKG Installer** - Graphical installer for both Intel and Apple Silicon Macs
+1. **PKG Installer** - Graphical installer for both Apple Silicon and Intel Macs
 2. **Source Installation** - Run from source (requires Node.js 20+, recommended 24+)
 
 ### System Requirements
@@ -50,15 +50,6 @@ The easiest way to install EmailEngine on macOS.
 
 ### Download Installer
 
-**For Intel Macs:**
-```bash
-# Download latest version
-curl -LO https://go.emailengine.app/emailengine.pkg
-
-# Or download specific version (e.g., 2.55.4)
-curl -LO https://go.emailengine.app/download/v2.55.4/emailengine.pkg
-```
-
 **For Apple Silicon (M1 and newer):**
 ```bash
 # Download latest version
@@ -66,6 +57,15 @@ curl -LO https://go.emailengine.app/emailengine-arm.pkg
 
 # Or download specific version (e.g., 2.55.4)
 curl -LO https://go.emailengine.app/download/v2.55.4/emailengine-arm.pkg
+```
+
+**For Intel Macs:**
+```bash
+# Download latest version
+curl -LO https://go.emailengine.app/emailengine.pkg
+
+# Or download specific version (e.g., 2.55.4)
+curl -LO https://go.emailengine.app/download/v2.55.4/emailengine.pkg
 ```
 
 ### Install
