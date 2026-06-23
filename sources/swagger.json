@@ -1023,7 +1023,7 @@
           "nextAttempt": {
             "type": "string",
             "format": "date-time",
-            "description": "Next delivery attempt time",
+            "description": "Next delivery attempt time (approximate, computed from the retry backoff without jitter)",
             "example": "2021-02-17T13:43:18.860Z"
           },
           "attemptsMade": {
