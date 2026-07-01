@@ -668,22 +668,26 @@ payload.data.text;         // { encodedSize: { plain, html } }
 payload.data.attachments;  // Attachment metadata array
 ```
 
-### Sandbox Environment
+### Execution Environment
 
-The filter function runs in the same sandbox as other pre-processing functions:
+The filter function runs in the same execution context as other pre-processing functions:
 
 **Available:**
 
 - Standard JavaScript (ES6+)
 - `Date`, `Math`, `JSON`, `RegExp`
-- `fetch` - Make HTTP requests (a wrapped fetch implementation is injected into the sandbox)
+- `fetch` - Make HTTP requests (a wrapped fetch implementation is injected)
 - `env` - Script environment variables (from `scriptEnv` setting)
 - `logger` - Pino.js logger for debugging
 
-**Not Available:**
+**Not injected as globals:**
 
-- `require()` - No module imports
-- Filesystem or system access
+- `require()` - modules are not provided
+- Filesystem or system helpers are not provided
+
+:::warning Not a security sandbox
+Filter and pre-processing functions run on Node's `vm` module, which is an isolation convenience, **not** a hardened security boundary - code executed here can reach the host process and runs with full server privileges. Only enable and author functions you fully trust; never expose function authoring to untrusted users. See [Execution Environment](/docs/advanced/pre-processing#execution-environment).
+:::
 
 ### Debugging Filters
 
