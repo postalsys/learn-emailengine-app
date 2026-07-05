@@ -251,6 +251,10 @@ EmailEngine automatically renews Gmail watch subscriptions to maintain push noti
 - **Renewal frequency**: EmailEngine renews watches before expiration
 - **Account storage**: Last watch time is stored per account (`lastWatch` field)
 
+:::info Topic region policies
+Renewal only succeeds if Google's Gmail push service can publish to the topic. A message storage policy that restricts the topic to specific regions with in-transit enforcement blocks renewals - see [Watch renewal fails with a message storage policy error](#watch-renewal-fails-with-a-message-storage-policy-error).
+:::
+
 ### Force Watch Renewal
 
 To force a watch renewal for an account:
@@ -308,6 +312,24 @@ This triggers a full account reconnection, including watch renewal.
    ```
 2. Force account reconnection to renew watch
 3. Verify webhook worker is running (`threads{type="webhooks"}` metric)
+
+### Watch Renewal Fails with a Message Storage Policy Error
+
+**Symptoms:**
+
+- An account's **Change subscription** status shows **Failed** in the admin UI, with the error **OAuth2 request failed**
+- The **Show details** view contains a `FAILED_PRECONDITION` region error, for example: _"The topic's message storage policy requires enforcement in transit, but the Publish request was received by a Pub/Sub server in a non-allowed region."_
+
+**Cause:**
+
+The topic has a message storage policy with in-transit enforcement (`enforce_in_transit`) that limits it to specific regions - often applied through an organization-level "Enforce in-transit regions for Pub/Sub messages" policy. Notifications are published to the topic by Google's Gmail push service (`gmail-api-push@system.gserviceaccount.com`), not by EmailEngine. That publisher routes through Google's global infrastructure and cannot be pinned to a region, so the publish is rejected. This is a general limitation of Gmail push - no client controls which region Gmail publishes from - and it cannot be avoided by pointing EmailEngine at a regional Pub/Sub endpoint.
+
+**Solution:**
+
+Choose one of the following:
+
+1. **Keep real-time push - relax the topic policy.** Remove in-transit enforcement on the EmailEngine topic, or ask whoever manages your Google Cloud organization policies to exclude this topic or project so the Gmail publisher is allowed. In-transit enforcement also rejects EmailEngine's own subscription pulls on the global endpoint, so lifting it is required for Pub/Sub notifications to work end to end.
+2. **Drop Pub/Sub - use polling instead.** Create the Gmail OAuth2 application without a linked service account (leave `pubSubApp` unset). EmailEngine then skips the watch entirely and falls back to polling each account about every 10 minutes for changes. Real-time push is lost, but the accounts sync normally and the policy is never triggered.
 
 ### Debugging Pub/Sub in Logs
 
