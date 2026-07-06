@@ -18,13 +18,15 @@ EmailEngine stores the following data in [Redis](/docs/configuration/redis):
 |--------------|----------|-----------|-----------|
 | **Account credentials** | IMAP/SMTP passwords, OAuth tokens | Yes | Until account deleted |
 | **Account metadata** | Email address, account ID, connection state | No | Until account deleted |
-| **Message index** | Message UIDs, flags, folder structure | No | Until account deleted or [flushed](/docs/api/put-v-1-account-account-flush) |
+| **Message index** | Message UIDs, flags, email IDs, labels, folder structure | No | Until account deleted or [flushed](/docs/api/put-v-1-account-account-flush) |
 | **OAuth configuration** | Client IDs, client secrets | Yes | Until removed |
 | **Application settings** | Webhook URLs, [API tokens](/docs/api-reference/access-tokens) | No | Persistent |
 | **Queue jobs** | Pending emails, webhook deliveries | No | Until processed (typically minutes) |
 | **Logs** | Connection events, errors | No | [Configurable](/docs/advanced/logging) (default: 10,000 entries) |
 
 \* Encryption requires [`EENGINE_SECRET`](/docs/advanced/encryption) to be configured. Without it, all data is stored in cleartext.
+
+API access tokens are a special case: they are never stored in recoverable form. Only a SHA-256 hash of each token is kept, so a token cannot be read back after it is created (whether or not `EENGINE_SECRET` is set).
 
 ### What EmailEngine Does NOT Store
 
@@ -34,16 +36,25 @@ EmailEngine stores the following data in [Redis](/docs/configuration/redis):
 - **Historical message content** - No email archive or backup functionality
 - **User browsing data** - No cookies or tracking outside admin interface session
 
+:::note Document Store and AI features
+The list above reflects EmailEngine's default behavior. Two optional features change what is stored, and neither is enabled unless you configure it:
+
+- **Document Store** (a deprecated, Elasticsearch-backed index, disabled by default) persists full message bodies, all headers, attachment content, text previews, and AI-generated summaries and embeddings in Elasticsearch.
+- **AI processing** (disabled by default) sends message content - subject and body - to your configured LLM provider (OpenAI by default) to generate summaries or embeddings.
+:::
+
 ### No Developer Access
 
-EmailEngine is fully self-hosted. EmailEngine developers have no access to your instance, data, or credentials. There is no remote management, telemetry collection, or backdoor access.
+EmailEngine is fully self-hosted. EmailEngine developers have no access to your instance, data, or credentials. There is no remote management or backdoor access.
 
 **Outbound connections:** EmailEngine makes limited outbound requests for operational purposes:
 
-- `postalsys.com` - License key validation (required)
-- `api.github.com` - Version update checks (optional, for admin dashboard notifications)
+- `postalsys.com` - License validation, required for licensed installations. The daily validation request sends your license key, a stable instance ID, and an anonymized feature beacon (described below).
+- `api.github.com` - Version update checks (optional, for admin dashboard notifications). Nothing is sent beyond a standard User-Agent header.
 
-These requests contain no user data, email content, or account information. See [Outbound Connection Whitelist](/docs/deployment/security#outbound-connection-whitelist) for the complete list of external domains.
+Neither request includes email content, message headers, email addresses, or credentials. See [Outbound Connection Whitelist](/docs/deployment/security#outbound-connection-whitelist) for the complete list of external domains, including those used by optional features such as OAuth2 providers, AI processing, and account autodiscovery.
+
+**Anonymized feature beacon:** The license validation request includes a compact, anonymized snapshot of how the instance is configured - which features are enabled (for example webhooks, OAuth2 providers, or AI processing), coarse magnitude tiers (buckets, not exact counts) for accounts and other entities, the list of mail providers in use, and runtime context such as the Node.js version and CPU architecture. It never includes email content, email addresses, URLs, credentials, or other personal data. Set `EENGINE_BEACON_DISABLED=true` to disable it.
 
 ### Data Flow
 
@@ -153,7 +164,7 @@ If your application uses Gmail OAuth and will be used by external users (not jus
 | Internal app (same Google Workspace domain) | No |
 | External app, under 100 users | Limited (unverified warning shown) |
 | External app, over 100 users | Yes |
-| Using sensitive scopes (gmail.modify, mail.google.com) | Yes, with security assessment |
+| Using restricted scopes (gmail.modify, mail.google.com) | Yes, with security assessment |
 
 ### Data Handling Documentation
 
@@ -183,7 +194,7 @@ Google requires documentation of your data handling practices. Key points for Em
 
 ### Security Assessment
 
-For sensitive scopes, Google requires a third-party security assessment. Prepare by:
+For restricted scopes, Google requires an independent third-party security assessment. Prepare by:
 
 1. **Enable encryption** - Set [`EENGINE_SECRET`](/docs/advanced/encryption) for all credential encryption
 2. **Secure Redis** - [Authentication, network isolation](/docs/configuration/redis), TLS if remote
