@@ -180,6 +180,7 @@ These domains are only needed if you use specific features:
 | `api.nodemailer.com` | 443 | SMTP delivery testing service. Used by the "Test Delivery" feature to verify SMTP configuration. |
 | `acme-v02.api.letsencrypt.org` | 443 | Let's Encrypt ACME protocol. Required only if using EmailEngine's built-in TLS certificate provisioning. |
 | `*.okta.com` | 443 | Okta SSO authentication. Required only if using Okta single sign-on for the admin interface. |
+| Your OIDC provider | 443 | OpenID Connect discovery, token exchange, and userinfo requests. Required only if using OIDC single sign-on for the admin interface. |
 
 #### User-Configured Endpoints
 
@@ -528,9 +529,57 @@ EmailEngine logs all admin authentication events with structured data for securi
 
 These events are written to the application log (stdout). Use these log entries to detect unauthorized access attempts and feed them into your SIEM or log aggregation system.
 
-### Single Sign-On (Okta)
+### Single Sign-On (SSO)
 
-EmailEngine supports Okta-based SSO for the admin interface. When configured, administrators authenticate via Okta instead of the built-in password login.
+EmailEngine supports single sign-on for the admin interface, either through any OpenID Connect provider (Keycloak, Microsoft Entra ID, Google, Authentik, and others) or through the dedicated Okta integration. When signed in through SSO, multi-factor authentication is handled by the identity provider - EmailEngine does not prompt for TOTP - and the local password, TOTP, and passkey settings cannot be managed from that session.
+
+#### OpenID Connect
+
+**Setup:**
+
+1. Register a confidential web application (authorization code flow) at your identity provider
+2. Set the sign-in redirect URI to `{serviceUrl}/admin/login/oidc`
+3. Configure the environment variables:
+
+```bash
+OIDC_ISSUER=https://keycloak.example.com/realms/main
+OIDC_CLIENT_ID=your-client-id
+OIDC_CLIENT_SECRET=your-client-secret
+# Optional: label for the sign-in button (default "SSO")
+OIDC_PROVIDER_NAME=Keycloak
+```
+
+4. Restart EmailEngine
+
+All three of `OIDC_ISSUER`, `OIDC_CLIENT_ID`, and `OIDC_CLIENT_SECRET` must be set. When enabled, a sign-in button appears on the admin login page, labeled with the provider name from `OIDC_PROVIDER_NAME`. Password login continues to work alongside SSO unless you enable SSO-only mode (see below).
+
+At startup, EmailEngine fetches the provider's discovery document from `<issuer>/.well-known/openid-configuration`. The `issuer` value in the discovery document must exactly match `OIDC_ISSUER`. If discovery fails, for example because the identity provider is unreachable, SSO is disabled for that run and the regular password login remains available - an identity provider outage cannot lock you out of the admin interface.
+
+**Restricting who can sign in:**
+
+By default, anyone the identity provider authenticates can access the admin interface. Use the allow-list variables to narrow this down:
+
+```bash
+# Exact emails and/or @domain entries, comma-separated
+OIDC_ALLOWED_USERS=admin@example.com,@example.com
+
+# Group names, matched against the groups claim in the userinfo response
+OIDC_ALLOWED_GROUPS=emailengine-admins
+# Claim that carries group membership (default "groups"); dotted paths work too
+OIDC_GROUPS_CLAIM=realm_access.roles
+```
+
+A user is allowed if they match either list. The allow-lists are re-checked on every request, so removing a user from the lists (and restarting EmailEngine) also ends their existing session.
+
+**SSO-only mode:**
+
+Set `OIDC_FORCED=true` to make SSO the only way to sign in. The login page then redirects straight to the identity provider, and password and passkey sign-in are refused. If discovery fails at startup, the local login form is shown as a fallback.
+
+**Signing out of the identity provider:**
+
+By default, signing out of EmailEngine only ends the EmailEngine session - the identity provider session stays active, so the next sign-in may complete without a prompt. Set `OIDC_LOGOUT=true` to also end the identity provider session on logout (RP-initiated logout). Optionally set `OIDC_POST_LOGOUT_REDIRECT_URI` to `{serviceUrl}/admin/login?loggedout=1` to return to an EmailEngine signed-out screen afterwards; this URL must be registered as a post-logout redirect URI at the identity provider. Without it, the identity provider shows its own logged-out page.
+
+#### Okta
 
 **Setup:**
 

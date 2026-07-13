@@ -378,7 +378,45 @@ EENGINE_REQUIRE_API_AUTH=false
 
 ## Single Sign-On (SSO)
 
-Enable Okta-based single sign-on for the EmailEngine admin interface. All three variables must be set to activate Okta SSO.
+Enable single sign-on for the EmailEngine admin interface, either through a generic OpenID Connect provider or through the dedicated Okta integration. See [Single Sign-On](/docs/deployment/security#single-sign-on-sso) in the security guide for the setup procedure.
+
+### OpenID Connect (OIDC)
+
+All three of `OIDC_ISSUER`, `OIDC_CLIENT_ID`, and `OIDC_CLIENT_SECRET` must be set to activate OIDC SSO.
+
+| Variable | Type | Default | Description | Example |
+|----------|------|---------|-------------|---------|
+| `OIDC_ISSUER` | string | none | Issuer base URL of the OpenID Connect provider. Must match the `issuer` value in the provider's discovery document. | `https://keycloak.example.com/realms/main` |
+| `OIDC_CLIENT_ID` | string | none | Client ID of the registered application | `emailengine-admin` |
+| `OIDC_CLIENT_SECRET` | string | none | Client secret of the registered application | `your-client-secret` |
+| `OIDC_PROVIDER_NAME` | string | `SSO` | Label shown on the sign-in button | `Keycloak` |
+| `OIDC_SCOPES` | string | `openid profile email` | Scopes to request, space or comma separated. `openid` is always included. | `openid profile email groups` |
+| `OIDC_ALLOWED_USERS` | string | none | Comma-separated allow-list of emails and/or `@domain` entries. Case-insensitive. Empty means any authenticated user is allowed. | `admin@example.com,@example.com` |
+| `OIDC_ALLOWED_GROUPS` | string | none | Comma-separated allow-list of group names, matched against the groups claim. A user is allowed if they match either `OIDC_ALLOWED_USERS` or `OIDC_ALLOWED_GROUPS`. | `emailengine-admins` |
+| `OIDC_GROUPS_CLAIM` | string | `groups` | Userinfo claim that carries group membership. Dotted paths are supported. | `realm_access.roles` |
+| `OIDC_FORCED` | boolean | `false` | SSO-only login. The login page redirects straight to the identity provider and password/passkey sign-in is disabled. | `true` |
+| `OIDC_LOGOUT` | boolean | `false` | Also end the identity provider session on logout (RP-initiated logout) | `true` |
+| `OIDC_POST_LOGOUT_REDIRECT_URI` | string | none | Where the identity provider returns after logout. Must be registered as a post-logout redirect URI at the provider. | `https://emailengine.example.com/admin/login?loggedout=1` |
+
+**Setup:**
+```bash
+OIDC_ISSUER=https://keycloak.example.com/realms/main
+OIDC_CLIENT_ID=your-client-id
+OIDC_CLIENT_SECRET=your-client-secret
+OIDC_PROVIDER_NAME=Keycloak
+```
+
+**Identity provider application configuration:**
+- Application type: confidential web application using the authorization code flow
+- Sign-in redirect URI: `{serviceUrl}/admin/login/oidc` (where `serviceUrl` is the public URL configured in EmailEngine settings)
+- The discovery document must be available at `<issuer>/.well-known/openid-configuration`
+- Requires restart after configuration changes
+
+`OIDC_CLIENT_SECRET_FILE` can be used instead of `OIDC_CLIENT_SECRET` to read the value from a file, following the same `_FILE` convention as [`EENGINE_SECRET_FILE`](/docs/advanced/encryption#docker-secrets).
+
+### Okta
+
+All three variables must be set to activate Okta SSO.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
