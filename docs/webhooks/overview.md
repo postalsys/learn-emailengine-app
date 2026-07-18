@@ -61,6 +61,9 @@ Set your webhook endpoint URL in EmailEngine:
 4. Select which events to receive
 5. Click **Update Settings**
 
+![Webhooks configuration page](/img/screenshots/05-webhooks-config.png)
+_The Webhooks settings page with the target URL and event selection_
+
 **Via API:**
 
 Use the [settings API](/docs/api/post-v-1-settings) to configure webhooks:

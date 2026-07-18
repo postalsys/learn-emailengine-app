@@ -158,6 +158,9 @@ graph TB
 5. 14-day trial begins immediately
 6. Full functionality, no limitations
 
+![Unlicensed EmailEngine dashboard with the trial button](/img/screenshots/license-trial-button.png)
+_A fresh, unlicensed installation shows the "Start a 14-day trial" button at the top of the dashboard_
+
 ### Step 2: Create Account (When Ready to Purchase)
 
 1. Visit [https://postalsys.com/](https://postalsys.com/)
@@ -206,8 +209,11 @@ graph TB
 
 1. Access web interface: `http://127.0.0.1:3000`
 2. Navigate to **License** page: `http://127.0.0.1:3000/admin/config/license`
-3. Paste license key in the text field
-4. Click **Update License Key**
+3. Paste the license key into the text field (or use **Upload License File**)
+4. Click **Activate License**
+
+![License configuration page](/img/screenshots/license-config-page.png)
+_The License page accepts an uploaded license file or a pasted license key_
 
 This is the easiest method for manual activation.
 

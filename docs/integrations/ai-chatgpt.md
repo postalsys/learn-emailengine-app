@@ -34,6 +34,9 @@ EmailEngine integrates with OpenAI's API to provide AI-powered email processing 
 4. Select a model from the dropdown
 5. Save configuration
 
+![AI Processing configuration page](/img/screenshots/ai-config.png)
+_The AI Configuration section with the enable checkbox, API key field and model dropdown_
+
 ### Model Selection
 
 EmailEngine dynamically fetches available models from OpenAI's model listing API, so you always have access to the latest models. The model dropdown shows all chat-compatible models available for your API key.
@@ -249,6 +252,9 @@ Customize the AI analysis by modifying the system prompt:
 3. Edit the AI Prompt
 4. Add custom instructions
 5. Save configuration
+
+![AI Instructions prompt editor](/img/screenshots/ai-prompt-editor.png)
+_The AI Instructions section holds the editable system prompt_
 
 #### Example: Add Language Detection
 

@@ -106,6 +106,9 @@ If you need to proxy Gmail API or MS Graph accounts, you must reconfigure them t
 
 Navigate to **Configuration** → **IMAP Proxy** in EmailEngine dashboard.
 
+![IMAP Proxy configuration page](/img/screenshots/imap-proxy-config.png)
+_Enable the proxy and set the listen address, port and TLS options_
+
 **Configuration Options:**
 
 - **Host**: `0.0.0.0` (to allow external connections) or `127.0.0.1` (localhost only)

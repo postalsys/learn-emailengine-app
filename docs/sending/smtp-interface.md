@@ -52,6 +52,9 @@ curl -XPOST "https://ee.example.com/v1/settings" \
 
 Navigate to **Configuration > SMTP Interface** in the EmailEngine admin panel to configure the settings.
 
+![SMTP Interface configuration page](/img/screenshots/smtp-interface-config.png)
+_Enable the SMTP server and set the listen address, port and authentication options_
+
 ### Configuration Options
 
 | Setting | Description | Default |

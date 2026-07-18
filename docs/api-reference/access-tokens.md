@@ -94,6 +94,9 @@ The token value cannot be recovered from the `id`. `DELETE /v1/token/{token}` ac
 5. Click **Generate a token**
 6. Copy the token (shown only once)
 
+![Create token form](/img/screenshots/token-new-form.png)
+_The token form takes a description and the allowed scopes; the generated token value is shown only once_
+
 **Pros:**
 
 - Simple and intuitive
@@ -236,6 +239,9 @@ For complete export/import workflows and prepared token configuration, see [Prep
 2. Find the token to revoke
 3. Click **Delete**
 4. Confirm deletion
+
+![Access token list](/img/screenshots/tokens-list.png)
+_The Access Tokens page lists active tokens with their descriptions and scopes_
 
 **Via API:**
 

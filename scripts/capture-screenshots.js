@@ -237,6 +237,22 @@ async function captureScreenshots() {
     try {
         await login(page);
 
+        // license flow: on an unlicensed instance, capture the dashboard with
+        // the trial button and the license page with the key form, then
+        // activate the 14-day trial so the remaining pages render without
+        // license warning banners
+        await page.goto(`${EE_URL}/admin`, { waitUntil: 'load' });
+        if (await page.locator('#start-trial-btn').count()) {
+            await shot(page, null, 'license-trial-button.png');
+            await shot(page, '/admin/config/license', 'license-config-page.png');
+            await page.goto(`${EE_URL}/admin`, { waitUntil: 'load' });
+            await page.click('#start-trial-btn');
+            await page.waitForSelector('#start-trial-btn', { state: 'detached', timeout: 60000 });
+            console.log('Activated the 14-day trial');
+        } else {
+            console.log('Skipped license-trial-button.png / license-config-page.png (instance already licensed)');
+        }
+
         // accounts list in its empty state, before staging
         const accounts = await api(context, 'GET', '/v1/accounts');
         if (!accounts.total) {
@@ -272,6 +288,31 @@ async function captureScreenshots() {
 
         await shot(page, '/admin/bull-board', '17-bull-board-with-jobs.png', { settle: 2000 });
         await shot(page, '/admin/bull-board/queue/submit', '18-bull-board-submit-queue.png', { settle: 2000 });
+
+        // access tokens: the list (holds this run's own token) and the create
+        // form with description and scope selection filled in
+        await shot(page, '/admin/tokens', 'tokens-list.png');
+        await page.goto(`${EE_URL}/admin/tokens/new`, { waitUntil: 'load' });
+        await page.fill('#description', 'Production API token');
+        await page.check('#scopesAll');
+        await shot(page, null, 'token-new-form.png');
+
+        // configuration pages, shown filled but never submitted (nothing is
+        // persisted and no extra servers are started on the target instance)
+        await page.goto(`${EE_URL}/admin/config/smtp`, { waitUntil: 'load' });
+        await page.check('#smtpServerEnabled');
+        await shot(page, null, 'smtp-interface-config.png');
+
+        await page.goto(`${EE_URL}/admin/config/imap-proxy`, { waitUntil: 'load' });
+        await page.check('#imapProxyServerEnabled');
+        await shot(page, null, 'imap-proxy-config.png');
+
+        await page.goto(`${EE_URL}/admin/config/ai`, { waitUntil: 'load' });
+        await page.check('#generateEmailSummary');
+        await page.fill('#openAiAPIKey', 'sk-demo-0000000000000000000000000000000000000000');
+        await shot(page, null, 'ai-config.png');
+        await page.locator('#prompt_settings').scrollIntoViewIfNeeded();
+        await shot(page, null, 'ai-prompt-editor.png', { settle: 1500 });
 
         // hosted authentication form: provider chooser
         const chooserUrl = await hostedFormUrl(context, {
