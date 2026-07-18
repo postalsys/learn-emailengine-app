@@ -463,6 +463,28 @@ For OAuth2 providers, users are redirected to Google or Microsoft to grant permi
 
 After successful authentication, users are automatically redirected to your application's `redirectUrl`.
 
+### Language and Theme
+
+The hosted pages accept two query arguments that let you match the form to the user's language and to your own application's color scheme. Append them to the URL returned by `POST /v1/authentication/form` - the URL already carries a query string, so use `&`:
+
+```
+https://your-ee.com/accounts/new?data=eyJ...&locale=fr&theme=dark
+```
+
+**Language (`locale`):**
+
+Displays the form in a specific language instead of relying on browser negotiation. Supported values: `en`, `de`, `fr`, `nl`, `et`, `pl`, `ja`. The choice is stored in a cookie, so it persists through the multi-step setup flow. Without the argument, EmailEngine negotiates the language from the browser's `Accept-Language` header, falling back to the server-wide default locale.
+
+[Learn more about translations and language selection →](/docs/advanced/translations)
+
+**Theme (`theme`):**
+
+Forces the light or dark color scheme so the page matches the application the user is coming from. Supported values: `light` and `dark`. The choice is remembered for the rest of the browser session, so it survives the setup steps that follow. Without the argument, the pages follow the visitor's system preference (`prefers-color-scheme`).
+
+:::note Version Availability
+The `theme` argument requires EmailEngine v2.73.0 or later. The `locale` argument works on all recent versions.
+:::
+
 ### Customization Options
 
 **Page Branding:**
@@ -489,13 +511,18 @@ These can be configured via:
 
 ```html
 <style>
-  .btn-primary { background-color: #your-brand-color; }
-  .card { border-radius: 12px; }
+  :root {
+    --ee-primary: #0057b8; /* buttons and links */
+    --ee-page-background: #f4f4f4; /* backdrop behind the page card */
+  }
+  .ee-card {
+    border-radius: 12px;
+  }
 </style>
 ```
 
-:::tip Bootstrap 4 Framework
-EmailEngine's hosted pages use Bootstrap 4. You can use Bootstrap 4 classes and override its variables in your custom CSS. See [Bootstrap 4 documentation](https://getbootstrap.com/docs/4.6/) for available classes and components.
+:::tip Framework-Free Styling
+Since EmailEngine v2.73.0 the hosted pages are framework-free: plain HTML styled by a single standalone stylesheet with stable, human-readable class names (`ee-card`, `ee-btn`, `ee-input`, and so on) and CSS custom properties for the design tokens (colors, radii, shadows). Redefine the tokens in `templateHtmlHead` for quick restyling - your CSS loads after EmailEngine's, so it always wins - or target the `ee-*` classes directly for deeper changes. The stylesheet source (`static/css/public.css` in the EmailEngine repository) documents every token and class. Versions up to v2.72.x used Bootstrap 4 classes (`btn-primary`, `card`) instead.
 :::
 
 **OAuth2 provider settings (configured in Google Cloud Console / Azure AD):**
