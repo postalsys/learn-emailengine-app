@@ -147,15 +147,15 @@ The easiest way to add accounts is using EmailEngine's built-in hosted authentic
 5. EmailEngine handles token management and maintains the connection automatically
 
 :::info OAuth2 Setup Required
-OAuth2 provider buttons (Gmail, Outlook) only appear if OAuth2 apps are configured in EmailEngine. Set these up via **Configuration → OAuth2 Apps** in the web interface, or use the [OAuth2 Apps API](/docs/api/post-v-1-oauth-2). See [Gmail OAuth2 Setup](/docs/accounts/gmail/gmail-imap) and [Outlook OAuth2 Setup](/docs/accounts/microsoft-365/outlook-365) for detailed configuration guides.
+OAuth2 provider buttons (Gmail, Outlook) only appear if OAuth2 apps are configured in EmailEngine. Set these up via **Integrations → OAuth2 Apps** in the web interface, or use the [OAuth2 Apps API](/docs/api/post-v-1-oauth-2). See [Gmail OAuth2 Setup](/docs/accounts/gmail/gmail-imap) and [Outlook OAuth2 Setup](/docs/accounts/microsoft-365/outlook-365) for detailed configuration guides.
 :::
 
 :::tip Admin Testing
-For testing during development, admins can use the web interface: navigate to **Email Accounts** → **Add an account**. This is a convenience wrapper for the same authentication form.
+For testing during development, admins can use the web interface: navigate to **Accounts** → **Add an account**. This is a convenience wrapper for the same authentication form.
 :::
 
 ![Accounts List](/img/screenshots/02-accounts-list.png)
-_Email Accounts page showing empty account list with "Add an account" button_
+_Accounts page showing empty account list with "Add an account" button_
 
 ![Add Account Form](/img/screenshots/04-account-add-form.png)
 _Auto-detected IMAP/SMTP configuration showing server settings, ports, and TLS options_
@@ -204,7 +204,7 @@ $ curl -XPOST "http://127.0.0.1:3000/v1/account" \
 ```
 
 :::info Provider ID
-The `provider` value should be your OAuth2 application ID from EmailEngine, which is a base64url encoded string like `AAABlf_0iLgAAAAQ`. Find this in **Configuration → OAuth2 Apps**.
+The `provider` value should be your OAuth2 application ID from EmailEngine, which is a base64url encoded string like `AAABlf_0iLgAAAAQ`. Find this in **Integrations → OAuth2 Apps**.
 :::
 
 **Outlook Example:**

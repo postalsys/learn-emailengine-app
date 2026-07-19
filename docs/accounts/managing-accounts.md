@@ -188,7 +188,7 @@ Direct user to this URL. After completing setup, they'll be redirected to your `
 
 ### Via Web Dashboard
 
-1. Navigate to **Email Accounts** in EmailEngine dashboard
+1. Navigate to **Accounts** in the EmailEngine dashboard
 2. Click **Add Account** button
 3. Choose authentication method:
    - Manual IMAP/SMTP configuration

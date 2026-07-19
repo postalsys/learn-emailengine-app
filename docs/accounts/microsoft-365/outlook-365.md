@@ -467,7 +467,7 @@ curl -X POST https://your-ee.com/v1/account \
 ```
 
 :::info Provider ID
-The `provider` field should be the **OAuth2 application ID** from EmailEngine, which is a base64url encoded string like `AAABlf_0iLgAAAAQ`. You can find this ID in **Configuration → OAuth2** in the EmailEngine interface. This is NOT the Application (client) ID from Azure AD.
+The `provider` field should be the **OAuth2 application ID** from EmailEngine, which is a base64url encoded string like `AAABlf_0iLgAAAAQ`. You can find this ID in **Integrations → OAuth2 Apps** in the EmailEngine interface. This is NOT the Application (client) ID from Azure AD.
 :::
 
 [See full API documentation →](/docs/api/post-v-1-account)

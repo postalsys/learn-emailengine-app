@@ -769,7 +769,7 @@ Bull Board is always enabled and available at:
 http://localhost:3000/admin/bull-board
 ```
 
-You can also access it from the dashboard sidebar under **Tools** → **Bull Board**.
+You can also access it from the dashboard sidebar under **System** → **Queues**.
 
 See detailed queue monitoring in [Webhooks Guide - Debugging Section](/docs/webhooks/overview#debugging-webhooks).
 

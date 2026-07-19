@@ -86,7 +86,7 @@ curl -X POST https://your-ee.com/v1/account \
   }'
 ```
 
-Replace `AAABkTn2CRQAAAAB` with your OAuth2 application ID from EmailEngine (find it under **Configuration > OAuth2** or via `GET /v1/oauth2`).
+Replace `AAABkTn2CRQAAAAB` with your OAuth2 application ID from EmailEngine (find it under **Integrations > OAuth2 Apps** or via `GET /v1/oauth2`).
 
 No delegation configuration, no interactive login, no extra scopes. The application permissions grant direct access to all mailboxes in the organization.
 
@@ -143,7 +143,7 @@ Delegated access requires a main user account authenticated via OAuth2. Shared m
 
 1. **Azure AD OAuth2 application** configured for delegated access -see [Outlook OAuth2 Setup (Delegated Access)](./outlook-365)
 2. **Shared mailbox permissions** -the main user must have access to the shared mailbox in Microsoft 365 admin center
-3. **OAuth2 app registered in EmailEngine** under **Configuration > OAuth2**
+3. **OAuth2 app registered in EmailEngine** under **Integrations > OAuth2 Apps**
 
 ### Additional Scopes for MS Graph API
 

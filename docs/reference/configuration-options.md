@@ -337,7 +337,7 @@ curl -X POST https://emailengine.example.com/v1/oauth2 \
 
 ### Configuring OAuth2 via Web Interface
 
-1. Navigate to **Configuration > OAuth2**
+1. Navigate to **Integrations > OAuth2 Apps**
 2. Click **Register new application**
 3. Select provider (Gmail, Outlook, Outlook Application Access, Gmail Service Account, or Mail.ru)
 4. Enter your OAuth2 credentials
@@ -348,7 +348,7 @@ curl -X POST https://emailengine.example.com/v1/oauth2 \
 **Setting name:** `gmailSubscriptionTtl`
 **Default:** Google default (31 days)
 
-Controls how long a Gmail Pub/Sub subscription persists without activity before Google automatically deletes it. Configured via `POST /v1/settings` or the admin UI at **Configuration > OAuth2 > Subscriptions**.
+Controls how long a Gmail Pub/Sub subscription persists without activity before Google automatically deletes it. Configured via `POST /v1/settings` or the admin UI at **Integrations > OAuth2 Apps > Gmail Subscriptions**.
 
 | Value | Behavior |
 |-------|----------|

@@ -50,7 +50,7 @@ EmailEngine supports multiple sending approaches:
    - Webhook notifications for delivery status
    - Best for application integration
 
-2. **SMTP Interface**
+2. **SMTP Server**
    - Direct SMTP server provided by EmailEngine (its own MSA)
    - Use standard SMTP clients/libraries
    - EmailEngine routes to the correct account based on the authenticated account ID
@@ -169,6 +169,6 @@ Integrate email into your application logic:
 4. **[Threading](./threading.md)** - Maintain conversation threads
 5. **[Templates](./templates.md)** - Use email templates
 6. **[Outbox Queue](./outbox-queue.md)** - Understanding the queue system
-7. **[SMTP Interface](./smtp-interface.md)** - Alternative SMTP integration
+7. **[SMTP Server](./smtp-interface.md)** - Alternative SMTP integration
 
 

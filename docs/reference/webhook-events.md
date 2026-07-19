@@ -407,7 +407,7 @@ Fields:
 
 **Content Fields (Conditional):**
 
-Included when **Configuration → Webhooks → Text content** is enabled (`notifyText: true`):
+Included when **Configuration → Webhooks → Email Content** is enabled (`notifyText: true`):
 
 - `data.text` (object, optional) - Message text content
   - `data.text.id` (string) - Text content identifier
@@ -438,7 +438,7 @@ Included when **Configuration → Webhooks → Attachments** is enabled (`notify
 
 - `data.labels` (array of strings, optional) - Gmail labels (e.g., "\Important", "\Inbox", "\Starred")
 - `data.category` (string, optional) - Gmail category tab ("primary", "social", "promotions", "updates", "forums")
-  - Requires **Configuration → Service → Labs → Resolve Gmail categories** enabled
+  - Requires **Configuration → Email Processing → Gmail Features → Detect Gmail Categories** enabled
 - `data.messageSpecialUse` (string, optional) - Special-use flag that best classifies the message (prefer over top-level `specialUse`)
 
 **Header Fields (Conditional):**
@@ -1108,7 +1108,7 @@ Triggered when an ARF (Abuse Reporting Format) feedback loop complaint is receiv
 
 Events related to email tracking (opens and clicks).
 
-**Note:** Tracking requires **Configuration → Service → Labs → Track opens and clicks** to be enabled.
+**Note:** Tracking requires **Configuration → Email Processing → Email Tracking** to be enabled.
 
 ### trackOpen
 
@@ -1498,7 +1498,7 @@ Common Gmail labels:
 
 ### Category Tabs
 
-Enable **Configuration → Service → Labs → Resolve Gmail categories** to get:
+Enable **Configuration → Email Processing → Gmail Features → Detect Gmail Categories** to get:
 
 - `data.category` - One of: "primary", "social", "promotions", "updates", "forums"
 
@@ -1810,12 +1810,12 @@ EmailEngine automatically retries failed webhook deliveries:
 After 10 failed attempts, the webhook is marked as undeliverable and moved to the Failed queue.
 
 **Monitor webhooks**:
-- Dashboard: **Tools → Bull Board → notify**
+- Dashboard: **System → Queues → notify**
 - Pending retries: **Delayed** section
 - Undeliverable: **Failed** section
 
 **Configure retention**:
-- **Configuration → Service → Queue Settings**
+- **Configuration → General → Queue Management**
 - Set retention limits for completed/failed jobs
 
 ## Testing Events

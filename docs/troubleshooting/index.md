@@ -315,7 +315,7 @@ curl https://oauth2.googleapis.com/token
    **Solution:**
 
    - Verify the client ID and secret in Google Cloud Console (or the Microsoft Entra app for Outlook)
-   - Update the values in the EmailEngine OAuth2 application (dashboard under Configuration > OAuth2, or `PUT /v1/oauth2/{app}`). OAuth2 credentials are stored on the OAuth2 application, not in environment variables
+   - Update the values in the EmailEngine OAuth2 application (dashboard under Integrations > OAuth2 Apps, or `PUT /v1/oauth2/{app}`). OAuth2 credentials are stored on the OAuth2 application, not in environment variables
    - Check for trailing spaces when pasting the client ID/secret into the app form
    - After updating, use the OAuth2 app "Verify setup" action to confirm the credentials work
 

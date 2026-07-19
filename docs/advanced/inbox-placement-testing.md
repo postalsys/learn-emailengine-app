@@ -210,7 +210,7 @@ For IMAP-connected Gmail accounts, category detection requires **additional IMAP
 
 #### Enable in UI
 
-1. Go to **Configuration** > **General Settings**
+1. Go to **Configuration** > **Email Processing**
 2. Scroll to the **Gmail Features** section
 3. Enable **Detect Gmail Categories (IMAP)**
 4. Save changes

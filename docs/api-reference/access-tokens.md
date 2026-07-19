@@ -267,7 +267,7 @@ Disabling authentication removes all API security. Only use for local developmen
 You can disable the access token requirement for development purposes:
 
 1. Log in to EmailEngine web interface
-2. Navigate to **Configuration** → **General Settings**
+2. Navigate to **Configuration** → **Security**
 3. Uncheck **"Require API Authentication"**
 4. Save settings
 

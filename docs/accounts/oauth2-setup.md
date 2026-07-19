@@ -128,7 +128,7 @@ EmailEngine supports OAuth2 for:
 1. **Create OAuth2 app** with the provider (Google Cloud Console or Azure AD)
 2. **Configure consent screen** and permissions
 3. **Get credentials** (Client ID and Client Secret)
-4. **Add to EmailEngine** via Configuration → OAuth2
+4. **Add to EmailEngine** via Integrations → OAuth2 Apps
 5. **Test** by adding an account
 
 ### OAuth2 Application Types

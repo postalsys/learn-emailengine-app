@@ -203,7 +203,7 @@ curl -XPUT "https://ee.example.com/v1/settings/queue/submit" \
 
 EmailEngine includes [Bull Board](https://github.com/felixmosh/bull-board), a web UI for BullMQ queues.
 
-**Access**: Navigate to **Tools -> Job Queue** in EmailEngine UI, or go directly to `/admin/bull-board`.
+**Access**: Navigate to **System -> Queues** in EmailEngine UI, or go directly to `/admin/bull-board`.
 
 **Features**:
 - View job counts by state
@@ -359,7 +359,7 @@ To retry a failed job, you need to delete it from the queue and resubmit the mes
 Configure maximum retry attempts via the web UI or API:
 
 **Via Web UI**:
-1. Navigate to **Configuration -> General Settings**
+1. Navigate to **Configuration -> Email Processing**
 2. Set "Retry Attempts" under the Email Delivery card (default: 10)
 
 **Via API when submitting a message**:
@@ -382,7 +382,7 @@ By default, completed and failed jobs are removed from the queue immediately to 
 
 **Enable retention**:
 
-1. Navigate to **Configuration -> General Settings**
+1. Navigate to **Configuration -> General**
 2. Set **Job History Limit** (`queueKeep`) to the number of completed/failed jobs to keep
 3. Example: Set to 100 to keep the last 100 completed and 100 failed jobs
 

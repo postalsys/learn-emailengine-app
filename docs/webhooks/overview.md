@@ -481,7 +481,7 @@ If no request appears:
 
 EmailEngine uses BullMQ to manage webhook delivery. To inspect webhook jobs:
 
-1. Go to **Tools → Bull Board**
+1. Go to **System → Queues**
 2. Select **Webhooks** queue
 3. Check these tabs:
    - **Active**: Currently processing
@@ -493,7 +493,7 @@ EmailEngine uses BullMQ to manage webhook delivery. To inspect webhook jobs:
 
 To keep failed jobs for inspection:
 
-1. Go to **Configuration → Service**
+1. Go to **Configuration → General**
 2. Set **Job History Limit** to **100**
 3. Save changes
 
@@ -545,7 +545,7 @@ If message is missing:
 
 If using Gmail API (not IMAP):
 
-1. Go to **Configuration → OAuth2**
+1. Go to **Integrations → OAuth2 Apps**
 2. Select your Gmail OAuth app
 3. Scroll to **Cloud Pub/Sub configuration**
 4. Verify all show **Created** (in green):
@@ -562,7 +562,7 @@ If not created:
 
 If using MS Graph (not IMAP):
 
-1. Go to **Email Accounts**
+1. Go to **Accounts**
 2. Select the account
 3. Scroll to **Change subscription**
 4. Verify status is **Created** and expiration is in future

@@ -289,7 +289,7 @@ const { url } = await formResponse.json();
 
 **Via Web Interface:**
 
-Navigate to **Email Accounts** → **Add Account** in the EmailEngine dashboard.
+Navigate to **Accounts** → **Add an account** in the EmailEngine dashboard.
 
 :::note
 The web interface is a shorthand for the hosted authentication form. When you click "Add Account", EmailEngine generates a hosted authentication form URL and redirects your browser to that form. The experience is identical to what end users see when your application generates the URL via API and redirects them to complete the authentication flow.
@@ -542,7 +542,7 @@ const apiResponse = await fetch('https://www.googleapis.com/gmail/v1/users/me/pr
 The `/v1/account/{account}/oauth-token` endpoint is **disabled by default** for security reasons. You must explicitly enable it before use.
 
 **To enable via Web UI:**
-1. Navigate to **Configuration** > **General Settings**
+1. Navigate to **Configuration** > **Security**
 2. Check **Allow OAuth2 Token Access via API**
 3. Click **Save**
 

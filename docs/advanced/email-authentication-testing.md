@@ -415,5 +415,5 @@ For complete request/response schemas, see the API documentation:
 ## See Also
 
 - [Inbox Placement Testing](/docs/advanced/inbox-placement-testing) - Test whether emails land in inbox or spam
-- [SMTP Interface](/docs/sending/smtp-interface) - Send emails via SMTP protocol
+- [SMTP Server](/docs/sending/smtp-interface) - Send emails via SMTP protocol
 - [Webhooks](/docs/webhooks/overview) - Monitor email events

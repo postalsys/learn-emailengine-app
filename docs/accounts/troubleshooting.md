@@ -450,7 +450,7 @@ curl "https://your-ee.com/v1/settings?webhooks=true" \
 **Debug webhooks:**
 
 Check webhook queue in Bull Board:
-- Navigate to **Tools** → **Job Queue** in the EmailEngine dashboard (`/admin/bull-board`)
+- Navigate to **System** → **Queues** in the EmailEngine dashboard (`/admin/bull-board`)
 - Check the "notify" queue
 - Look for failed jobs and error messages
 

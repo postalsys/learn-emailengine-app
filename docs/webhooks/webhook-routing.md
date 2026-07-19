@@ -1,5 +1,5 @@
 ---
-title: Webhook Routing
+title: Webhook Routes
 sidebar_position: 2
 description: Route webhooks to different endpoints based on account, event type, or custom JavaScript filters
 keywords:
@@ -13,13 +13,13 @@ keywords:
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Webhook Routing
+# Webhook Routes
 
 Webhook routing allows you to define custom conditions that route specific webhook events to different target endpoints. Instead of sending all webhooks to a single global URL, you can create multiple routes with JavaScript filter functions that determine which events should be forwarded to which destinations.
 
 ## Overview
 
-### What is Webhook Routing?
+### What are Webhook Routes?
 
 EmailEngine's webhook routing system enables you to:
 
@@ -29,7 +29,7 @@ EmailEngine's webhook routing system enables you to:
 - **Transform Payloads**: Use mapping functions to transform the webhook payload before delivery
 - **Multiple Destinations**: Send the same event to multiple endpoints if multiple route filters match
 
-### When to Use Webhook Routing
+### When to Use Webhook Routes
 
 **Multi-tenant Applications**
 
@@ -429,7 +429,7 @@ curl -X PUT "https://emailengine.example.com/v1/account/my-account-id" \
 
 ### Creating a New Route
 
-1. Navigate to **Webhook Routing** in the sidebar (under the Webhooks section)
+1. Navigate to **Webhook Routes** in the sidebar (under Integrations)
 
 ![Webhook Routes List](/img/screenshots/webhooks/webhook-routes-list-empty.png)
 
@@ -440,7 +440,7 @@ curl -X PUT "https://emailengine.example.com/v1/account/my-account-id" \
    - **Name**: A descriptive name for the route (e.g., "Notify Slack on Inbox Messages")
    - **Description**: Optional description of what this route does
    - **Target URL**: The webhook endpoint URL that will receive matching events
-   - **Enable this Webhook Routing**: Check to activate the route
+   - **Enable this webhook route**: Check to activate the route
 
 ![New Webhook Route Form](/img/screenshots/webhooks/webhook-route-new-form.png)
 

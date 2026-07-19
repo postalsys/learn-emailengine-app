@@ -28,11 +28,11 @@ EmailEngine manages two primary queues for different operations:
 - **Submit Queue**: Email sending jobs
 - **Notify Queue**: Webhook delivery jobs
 
-All queues are backed by Redis and monitored through Bull Board (previously Arena), accessible via **Tools → Bull Board** in the EmailEngine interface.
+All queues are backed by Redis and monitored through Bull Board (previously Arena), accessible via **System → Queues** in the EmailEngine interface.
 
 ## Accessing Bull Board
 
-**Navigation**: Tools → Bull Board
+**Navigation**: System → Queues
 
 Bull Board provides a web interface for:
 - Viewing queue statistics
@@ -168,7 +168,7 @@ Every job moves through different states during its lifecycle.
 
 **What Happens**: Job stored for reference (if retention enabled), otherwise discarded.
 
-**Retention**: By default, Completed jobs are immediately removed. Enable retention in **Configuration → Service → Job History Limit**.
+**Retention**: By default, Completed jobs are immediately removed. Enable retention in **Configuration → General → Queue Management → Job History Limit**.
 
 **Example**: Email successfully delivered to SMTP server.
 
@@ -276,7 +276,7 @@ Failed:    50   ← High failure rate
 ### Bull Board Monitoring
 
 **Dashboard View**:
-1. Navigate to **Tools → Bull Board**
+1. Navigate to **System → Queues**
 2. View all queues at a glance
 3. Check counts for each state
 4. Identify queues with issues
@@ -292,7 +292,7 @@ Failed:    50   ← High failure rate
 ### Viewing Job Details
 
 **Steps**:
-1. Go to **Tools → Bull Board**
+1. Go to **System → Queues**
 2. Select queue (Submit, Notify, Documents)
 3. Select job state tab (Waiting, Active, Failed, etc.)
 4. Click on a job to view details
@@ -389,7 +389,7 @@ Error: Unexpected status code: 500
 By default, Completed and Failed jobs are immediately removed. To keep them for debugging:
 
 **Steps**:
-1. Navigate to **Configuration → Service**
+1. Navigate to **Configuration → General**
 2. Find **Job History Limit**
 3. Set to desired number (e.g., 100)
 4. Click **Save**
@@ -399,7 +399,7 @@ By default, Completed and Failed jobs are immediately removed. To keep them for 
 ### Retry Failed Job
 
 **Steps**:
-1. Go to **Tools → Bull Board**
+1. Go to **System → Queues**
 2. Select queue
 3. Go to **Failed** tab
 4. Find job to retry
@@ -410,7 +410,7 @@ By default, Completed and Failed jobs are immediately removed. To keep them for 
 ### Delete Job
 
 **Steps**:
-1. Go to **Tools → Bull Board**
+1. Go to **System → Queues**
 2. Select queue and job state
 3. Find job
 4. Click **Delete** button
@@ -420,7 +420,7 @@ By default, Completed and Failed jobs are immediately removed. To keep them for 
 ### Pause Queue
 
 **Steps**:
-1. Go to **Tools → Bull Board**
+1. Go to **System → Queues**
 2. Select queue
 3. Click **Pause** button
 
@@ -435,7 +435,7 @@ By default, Completed and Failed jobs are immediately removed. To keep them for 
 ### Resume Queue
 
 **Steps**:
-1. Go to **Tools → Bull Board**
+1. Go to **System → Queues**
 2. Select paused queue
 3. Click **Resume** button
 
@@ -446,7 +446,7 @@ By default, Completed and Failed jobs are immediately removed. To keep them for 
 ### Empty Queue
 
 **Steps**:
-1. Go to **Tools → Bull Board**
+1. Go to **System → Queues**
 2. Select queue
 3. Select job state (e.g., Failed, Completed)
 4. Click **Empty** button

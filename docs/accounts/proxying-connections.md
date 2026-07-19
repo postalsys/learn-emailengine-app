@@ -608,7 +608,7 @@ EmailEngine also provides an SMTP proxy. With both enabled, email clients get fu
 
 ### Enable SMTP Proxy
 
-In EmailEngine: **Configuration** → **SMTP Interface**
+In EmailEngine: **Configuration** → **SMTP Server**
 
 **Settings:**
 

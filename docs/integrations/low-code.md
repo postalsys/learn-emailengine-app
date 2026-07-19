@@ -15,16 +15,16 @@ EmailEngine makes it possible to integrate with any service that accepts webhook
 
 ### Integration Options
 
-1. **Webhook Routing**: Custom webhook transformations within EmailEngine
+1. **Webhook Routes**: Custom webhook transformations within EmailEngine
 2. **Zapier**: Popular automation platform with 5000+ app integrations
 3. **Make.com** (Integromat): Visual automation builder
 4. **n8n**: Open-source workflow automation
 5. **Discord/Slack**: Team notifications
 6. **Custom Services**: Any webhook-compatible service
 
-## Webhook Routing Feature
+## Webhook Routes Feature
 
-EmailEngine's Webhook Routing allows you to set up custom webhook handling in addition to the default webhook handler.
+EmailEngine's Webhook Routes feature allows you to set up custom webhook handling in addition to the default webhook handler.
 
 ### How It Works
 
@@ -485,7 +485,7 @@ n8n provides visual workflow building with powerful logic.
 
 EmailEngine provides a test interface for webhook routes:
 
-1. Navigate to Webhook Routing in the sidebar
+1. Navigate to Webhook Routes in the sidebar
 2. Create or edit a webhook route
 3. Use the "Test" button
 4. Provide sample payload

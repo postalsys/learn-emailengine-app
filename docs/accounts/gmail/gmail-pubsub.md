@@ -64,7 +64,7 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
   }'
 ```
 
-Or through the admin UI at **Configuration > OAuth2 > Gmail Subscriptions**.
+Or through the admin UI at **Integrations > OAuth2 Apps > Gmail Subscriptions**.
 
 :::warning When do expiration changes take effect?
 Changing this setting does **not** immediately update existing subscriptions. The new TTL is applied only when EmailEngine next calls Google's Pub/Sub API for that subscription, which happens when:

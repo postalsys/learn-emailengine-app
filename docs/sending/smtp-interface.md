@@ -1,14 +1,14 @@
 ---
-title: SMTP Interface
+title: SMTP Server
 sidebar_position: 8
 description: Using EmailEngine's SMTP interface for sending emails with standard SMTP clients
 ---
 
-# SMTP Interface
+# SMTP Server
 
 EmailEngine provides an SMTP interface that allows you to send emails using standard SMTP protocol instead of the REST API. EmailEngine acts as an SMTP proxy - it accepts messages via SMTP and routes them through the appropriate email account. This is useful for legacy applications or when you need to integrate with tools that only support SMTP.
 
-## Why Use the SMTP Interface
+## Why Use the SMTP Server
 
 The SMTP interface is beneficial when:
 
@@ -29,7 +29,7 @@ When the SMTP interface is enabled:
 5. Messages are queued just like with the Submit API
 6. Delivery status tracked via webhooks
 
-## Enabling the SMTP Interface
+## Enabling the SMTP Server
 
 ### Via Settings API (Recommended)
 
@@ -50,9 +50,9 @@ curl -XPOST "https://ee.example.com/v1/settings" \
 
 ### Via Web Interface
 
-Navigate to **Configuration > SMTP Interface** in the EmailEngine admin panel to configure the settings.
+Navigate to **Configuration > SMTP Server** in the EmailEngine admin panel to configure the settings.
 
-![SMTP Interface configuration page](/img/screenshots/smtp-interface-config.png)
+![SMTP Server configuration page](/img/screenshots/smtp-interface-config.png)
 _Enable the SMTP server and set the listen address, port and authentication options_
 
 ### Configuration Options
@@ -93,8 +93,8 @@ const transporter = nodemailer.createTransport({
 await transporter.sendMail({
   from: 'sender@example.com',
   to: 'recipient@example.com',
-  subject: 'Test via SMTP Interface',
-  text: 'Hello from SMTP Interface!'
+  subject: 'Test via SMTP server',
+  text: 'Hello from the SMTP server!'
 });
 ```
 
@@ -107,8 +107,8 @@ EmailEngine matches the SMTP `AUTH` username against the **account ID** - the id
 import smtplib
 from email.mime.text import MIMEText
 
-msg = MIMEText('Hello from SMTP Interface!')
-msg['Subject'] = 'Test via SMTP Interface'
+msg = MIMEText('Hello from the SMTP server!')
+msg['Subject'] = 'Test via SMTP server'
 msg['From'] = 'sender@example.com'
 msg['To'] = 'recipient@example.com'
 
@@ -369,9 +369,9 @@ curl "https://ee.example.com/v1/outbox" \
 ```
 
 
-## When to Use SMTP Interface vs REST API
+## When to Use the SMTP Server vs REST API
 
-### Use SMTP Interface When:
+### Use the SMTP Server When:
 
 - Integrating with legacy systems
 - Using desktop email clients

@@ -187,7 +187,7 @@ EmailEngine includes an optional SMTP server for standard email client integrati
 
 ### Enable SMTP Server
 
-1. Navigate to **Configuration → SMTP Interface**
+1. Navigate to **Configuration → SMTP Server**
 2. Check **Enable SMTP Server**
 3. Configure port (default: 2525)
 4. Set authentication password
@@ -597,7 +597,7 @@ EmailEngine uses BullMQ for reliable message queuing.
 
 View queue status in Bull Board:
 
-1. Navigate to **Tools → Bull Board**
+1. Navigate to **System → Queues**
 2. Select **Submit** queue
 3. View job statuses:
    - **Waiting**: Ready to send immediately
@@ -620,7 +620,7 @@ EmailEngine uses exponential backoff with a base delay of 5 seconds. The delay b
 
 A small amount of jitter (up to 20%) is applied to each delay to avoid a thundering herd. Default maximum attempts: 10
 
-Configure retry attempts in **Configuration → General Settings → Retry Attempts**.
+Configure retry attempts in **Configuration → Email Processing → Retry Attempts**.
 
 ### Manual Queue Management
 
