@@ -117,7 +117,7 @@ EmailEngine exposes Prometheus metrics at `/metrics` endpoint.
 
 #### Step 1: Create Metrics Token
 
-1. Navigate to **Settings** → **Access Tokens** in EmailEngine UI
+1. Navigate to **Integrations** → **Access Tokens** in EmailEngine UI
 2. Click **Create new**
 3. Uncheck **All scopes**
 4. Check only **Metrics** scope

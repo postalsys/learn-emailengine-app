@@ -127,7 +127,7 @@ A specific type of notification, such as `messageNew`, `messageSent`, `authentic
 
 ### Token (API)
 
-An authentication credential for accessing the EmailEngine API. Created in the web interface under Settings > Access Tokens.
+An authentication credential for accessing the EmailEngine API. Created in the web interface under Integrations > Access Tokens.
 
 ### Token Scope
 

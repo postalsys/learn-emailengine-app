@@ -425,7 +425,7 @@ function trackEmailMetrics(webhook):
 ### 6. Smart Email Search Assistant
 
 :::warning Deprecated Feature
-The `POST /v1/chat/{account}` endpoint is part of the deprecated Document Store feature and is excluded from the current OpenAPI specification. It only works when Document Store (Elasticsearch) indexing and the "Chat with emails" feature are both enabled. Avoid building new integrations on this endpoint.
+The `POST /v1/chat/{account}` endpoint is part of the deprecated Document Store feature and is excluded from the current OpenAPI specification. Since EmailEngine v2.71.0 the Document Store is disabled by default, so this endpoint returns `404` unless you enable the startup gate (`EENGINE_DOCUMENT_STORE_ENABLED=true`) in addition to turning on Document Store (Elasticsearch) indexing and the "Chat with emails" feature. Avoid building new integrations on this endpoint.
 :::
 
 Build conversational email search for users:

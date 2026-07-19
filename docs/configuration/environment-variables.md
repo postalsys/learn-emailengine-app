@@ -449,6 +449,7 @@ Advanced configuration options for debugging and performance tuning.
 | `EENGINE_DISABLE_MESSAGE_BROWSER` | boolean | `false` | Disable web-based message browser | `true` |
 | `EENGINE_CORS_ORIGIN` | string | none | CORS allowed origins (whitespace separated) | `https://app.example.com` |
 | `EENGINE_CORS_MAX_AGE` | number | `60` | CORS preflight cache duration in seconds | `3600` |
+| `EENGINE_DOCUMENT_STORE_ENABLED` | boolean | `false` | Enable the deprecated Document Store (Elasticsearch) feature gate | `true` |
 
 **Examples:**
 
@@ -467,6 +468,13 @@ EENGINE_CORS_ORIGIN="https://app.example.com https://admin.example.com"
 ```bash
 EENGINE_DISABLE_COMPRESSION=true
 ```
+
+**Enable the deprecated Document Store:**
+```bash
+EENGINE_DOCUMENT_STORE_ENABLED=true
+```
+
+The Document Store (Elasticsearch) feature is deprecated and disabled by default since EmailEngine v2.71.0. This startup gate must be turned on before EmailEngine will run the document indexing worker or register the Document Store API and admin endpoints (`/v1/chat/{account}`, `/v1/unified/search`, and the `Configuration > Document Store` page). While the gate is off, those endpoints return `404`, even if the runtime "Document Store" setting is still enabled. The equivalent config-file setting is `[documentStore] enabled = true` (CLI flag `--documentStore.enabled=true`).
 
 ## HTTP Proxy
 
@@ -502,7 +510,7 @@ Logging configuration and error tracking.
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
 | `EENGINE_LOG_LEVEL` | string | `trace` | Log level (trace, debug, info, warn, error, fatal) | `info` |
-| `BUGSNAG_API_KEY` | string | none | Bugsnag API key for error tracking | `your-bugsnag-key` |
+| `SENTRY_DSN` | string | none | Sentry DSN for error reporting. When set, it pins the DSN and overrides the runtime Sentry toggle | `https://key@sentry.example.com/1` |
 | `NODE_ENV` | string | `production` | Node.js environment | `development` |
 
 **Log Levels:**
@@ -529,8 +537,11 @@ EENGINE_LOG_LEVEL=info
 
 **Enable error tracking:**
 ```bash
-BUGSNAG_API_KEY=your-bugsnag-api-key-here
+# Pin a Sentry DSN (overrides the runtime toggle)
+SENTRY_DSN=https://public-key@sentry.example.com/1
 ```
+
+Error reporting uses [Sentry](https://sentry.io/) (Bugsnag was removed in EmailEngine v2.70.0). You can also enable it at runtime from Configuration > Logging (settings `sentryEnabled` and `sentryDsn`, applied without a restart). If you enable reporting but leave the DSN empty, reports go to the Sentry instance run by the EmailEngine developers. Setting `SENTRY_DSN` here pins the DSN and takes precedence over the runtime toggle.
 
 [Monitoring and logging →](../advanced/monitoring)
 
@@ -641,7 +652,7 @@ EENGINE_TLS_MIN_DH_SIZE=2048
 
 # Logging
 EENGINE_LOG_LEVEL=info
-BUGSNAG_API_KEY=your-bugsnag-key
+SENTRY_DSN=https://public-key@sentry.example.com/1
 ```
 
 ### Development Setup

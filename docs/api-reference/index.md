@@ -62,7 +62,7 @@ Authorization: Bearer YOUR_ACCESS_TOKEN
 **Via Settings Page (System-Wide Tokens):**
 
 1. Log in to the EmailEngine web interface
-2. Navigate to Settings > Access Tokens
+2. Navigate to Integrations > Access Tokens
 3. Click "Generate new token"
 4. Assign a description and optional scope
 5. Copy the generated token

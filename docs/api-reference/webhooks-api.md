@@ -549,7 +549,7 @@ HTTP allowed for localhost testing only.
 
 Monitor webhooks in real-time via EmailEngine UI:
 
-1. Navigate to Settings > Webhooks
+1. Navigate to Configuration > Webhooks
 2. Click "Tail Webhooks"
 3. See live webhook deliveries
 

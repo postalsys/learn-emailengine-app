@@ -766,13 +766,13 @@ The `fetch` function is available for making external API calls within your func
 
 **Review the webhook queue:**
 
-- Go to **Tools > Bull Board**
+- Go to **System > Queues**
 - Check the "Webhooks" queue for failed jobs
 - Review error messages for delivery failures
 
 **Enable job retention:**
 
-- Go to **Configuration > Service**
+- Go to **Configuration > General**
 - Set "Completed/failed queue entries to keep" to 100
 - Failed webhooks will be visible in Bull Board
 

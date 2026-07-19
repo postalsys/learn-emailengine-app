@@ -356,7 +356,7 @@ When using Microsoft Graph API for Outlook accounts, Microsoft sends webhook not
 By default, EmailEngine uses `serviceUrl` for these webhook URLs. If EmailEngine is fully firewalled but you need to expose only the webhook endpoints, configure a separate `notificationBaseUrl`:
 
 ```bash
-# In Settings > Service Configuration, or via API:
+# In Configuration > General, or via API:
 # serviceUrl: https://internal.example.com (firewalled)
 # notificationBaseUrl: https://webhooks.example.com (publicly accessible)
 ```

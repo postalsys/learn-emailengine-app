@@ -13,7 +13,7 @@ Pre-configure license keys for automated license activation.
 **Manual:**
 1. Start EmailEngine
 2. Log into web interface
-3. Navigate to Settings > License
+3. Navigate to Configuration > License
 4. Enter license key
 5. Click "Activate"
 
