@@ -43,9 +43,12 @@ async function captureScreenshots() {
         });
         console.log('Captured: 01-oauth2-config-empty.png');
 
-        // Screenshot 2: Click dropdown to show provider options
+        // Screenshot 2: Click dropdown to show provider options.
+        // The "Create OAuth2 app" button has a stable id; the generic
+        // `button.dropdown-toggle` selector matches the top-bar user menu first.
         console.log('Opening Add application dropdown...');
-        await page.click('button.dropdown-toggle');
+        await page.click('#create-app-dropdown');
+        await page.waitForSelector('.dropdown-menu [href*="provider="]', { state: 'visible', timeout: 5000 });
         await page.waitForTimeout(500);
         await page.screenshot({
             path: path.join(OUTPUT_DIR, '02-oauth2-add-app-menu.png'),
