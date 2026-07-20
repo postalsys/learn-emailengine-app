@@ -118,9 +118,12 @@ async function captureWebhookRoutingScreenshots() {
         await page.goto(`${EE_URL}/admin/config/webhooks`, { waitUntil: 'load' });
         await shot(page, 'webhook-config-page.png');
 
-        // clean up the demo route
+        // clean up the demo route. "Delete route" lives in the detail-view
+        // row-actions kebab, so the menu has to be opened before the item is
+        // clickable
         await page.goto(`${EE_URL}/admin/webhooks/webhook/${routeId}`, { waitUntil: 'load' });
-        await page.click('#delete-btn');
+        await page.click('button[aria-label="More webhook route actions"]');
+        await page.locator('#delete-btn').click();
         await page.waitForTimeout(500);
         await page.click('#deleteModal button[type="submit"]');
         await page.waitForTimeout(1000);
