@@ -162,7 +162,8 @@ Control worker thread configuration for processing workload.
 
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
-| `EENGINE_WORKERS` | number | `4` | IMAP worker thread count | `8` |
+| `EENGINE_WORKERS` | number | `4` | Account worker thread count - syncs IMAP, Gmail API, and Outlook (Microsoft Graph) accounts | `8` |
+| `EENGINE_WORKERS_API` | number | `1` | API/HTTP worker threads. Values above `1` require `SO_REUSEPORT` (Linux with Node.js 23.1+); other platforms fall back to a single worker | `4` |
 | `EENGINE_WORKERS_SUBMIT` | number | `1` | Worker threads for email submission | `2` |
 | `EENGINE_WORKERS_WEBHOOKS` | number | `1` | Worker threads for webhook delivery | `2` |
 | `EENGINE_WORKERS_EXPORT` | number | `1` | Worker threads for bulk message exports | `2` |
@@ -759,7 +760,8 @@ Common environment variables and their command-line equivalents:
 | `EENGINE_PORT` or `PORT` | `--api.port` | HTTP server port |
 | `EENGINE_LOG_LEVEL` | `--log.level` | Log level |
 | `EENGINE_SECRET` | `--service.secret` | Encryption secret |
-| `EENGINE_WORKERS` | `--workers.imap` | IMAP worker count |
+| `EENGINE_WORKERS` | `--workers.imap` | Account worker count |
+| `EENGINE_WORKERS_API` | `--workers.api` | API/HTTP worker count |
 | `EENGINE_WORKERS_WEBHOOKS` | `--workers.webhooks` | Webhook worker count |
 | `EENGINE_WORKERS_SUBMIT` | `--workers.submit` | Submission worker count |
 | `EENGINE_WORKERS_EXPORT` | `--workers.export` | Export worker count |

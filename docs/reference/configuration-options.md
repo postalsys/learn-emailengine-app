@@ -102,14 +102,14 @@ EENGINE_SETTINGS='{"serviceUrl":"https://emailengine.example.com"}'
 
 ### Workers
 
-#### IMAP Worker Threads
+#### Account Worker Threads
 
 **Environment:** `EENGINE_WORKERS`
 **Command line:** `--workers.imap=4`
 **Config file:** `workers.imap`
 **Default:** `4`
 
-Number of IMAP worker threads for processing accounts.
+Number of account worker threads for processing accounts. These threads sync all account types - IMAP, Gmail API, and Outlook (Microsoft Graph) - not just IMAP.
 
 ```bash
 EENGINE_WORKERS=8
@@ -120,6 +120,20 @@ EENGINE_WORKERS=8
 ```bash
 # Auto-detect CPU cores (Linux)
 EENGINE_WORKERS=$(nproc)
+```
+
+#### API Worker Threads
+
+**Environment:** `EENGINE_WORKERS_API`
+**Command line:** `--workers.api=1`
+**Config file:** `workers.api`
+**Default:** `1`
+
+Number of API/HTTP worker threads that serve the REST API and admin UI. Values above `1` require `SO_REUSEPORT` so the workers can share the listen port, which is only available on **Linux with Node.js 23.1 or newer**. On macOS, Windows, or older Node.js, EmailEngine falls back to a single API worker and shows a notice on the Workers page (`/admin/internals`).
+
+```bash
+# Linux + Node.js >= 23.1
+EENGINE_WORKERS_API=4
 ```
 
 #### Webhook Workers
@@ -1049,7 +1063,8 @@ Only enable if you need to access raw OAuth tokens. This exposes sensitive crede
 | `EENGINE_HOST`               | `127.0.0.1`                | Bind address                                |
 | `EENGINE_REDIS`              | `redis://127.0.0.1:6379/8` | Redis URL                                   |
 | `EENGINE_SECRET`             | None                       | Encryption secret (required for production) |
-| `EENGINE_WORKERS`            | `4`                        | IMAP worker threads                         |
+| `EENGINE_WORKERS`            | `4`                        | Account worker threads (IMAP, Gmail, Graph) |
+| `EENGINE_WORKERS_API`        | `1`                        | API/HTTP worker threads (Linux + reuseport) |
 | `EENGINE_LOG_LEVEL`          | `trace`                    | Log level                                   |
 | `EENGINE_TIMEOUT`            | `10000`                    | Command timeout (ms)                        |
 | `EENGINE_FETCH_BATCH_SIZE`   | `1000`                     | Messages per sync batch                     |

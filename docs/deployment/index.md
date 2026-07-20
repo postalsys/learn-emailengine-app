@@ -286,7 +286,7 @@ curl http://localhost:3000/health
 }
 ```
 
-The health endpoint verifies that all IMAP workers are running and Redis is accessible. It returns a 500 error if any checks fail.
+The health endpoint verifies that all account workers are running and Redis is accessible. It returns a 500 error if any checks fail.
 
 ## Environment-Specific Configuration
 

@@ -50,7 +50,7 @@ Response when healthy:
 ```
 
 The health check verifies:
-- All IMAP workers are available
+- All account workers are available
 - Redis database is accessible and responding
 
 ### Detailed Status Check

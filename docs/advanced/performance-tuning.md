@@ -24,11 +24,11 @@ This guide walks through the main configuration options that affect performance 
 
 ### Worker Threads
 
-EmailEngine spawns a fixed pool of worker threads to keep IMAP sessions alive.
+EmailEngine spawns a fixed pool of worker threads that keep account connections alive and sync mail. Each thread handles a share of your accounts regardless of type - IMAP, Gmail API, and Outlook (Microsoft Graph) accounts all run on these threads.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `EENGINE_WORKERS` | `4` | Number of IMAP worker threads |
+| `EENGINE_WORKERS` | `4` | Number of account worker threads (IMAP, Gmail API, and Outlook/Graph) |
 
 **How it works**: If you have 100 accounts and `EENGINE_WORKERS=4`, each thread handles ~25 accounts.
 
@@ -115,6 +115,22 @@ If you never care about the rest of the mailbox, limit indexing completely:
 - Significantly reduces resource usage by limiting active monitoring
 
 **Use case**: Support systems that only need Inbox and Sent Mail.
+
+## API Workers
+
+The API worker runs the REST API and the admin UI. A single worker is enough for most deployments, but very high HTTP request volumes can be spread across several workers.
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `EENGINE_WORKERS_API` | `1` | Number of API/HTTP worker threads |
+
+**Platform support**: Values above `1` require `SO_REUSEPORT` so the workers can share the listen port. This is only available on **Linux with Node.js 23.1 or newer**. On macOS, Windows, or older Node.js, EmailEngine falls back to a single API worker and shows a notice on the **Workers** page (`/admin/internals`).
+
+**Example**:
+```bash
+# Spread the REST API across 4 workers (Linux + Node.js >= 23.1)
+EENGINE_WORKERS_API=4
+```
 
 ## Webhook Configuration
 
@@ -356,7 +372,7 @@ EENGINE_PORT=3000
 # Redis
 EENGINE_REDIS=redis://redis.internal:6379
 
-# IMAP Workers
+# Account workers
 EENGINE_WORKERS=8                      # 8 worker threads
 EENGINE_CONNECTION_SETUP_DELAY=3s      # 3 second startup delay
 

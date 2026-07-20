@@ -657,7 +657,8 @@ flowchart TD
 | `EENGINE_SECRET` | Prod | Encryption key for credentials (32+ hex chars) |
 | `EENGINE_PORT` | No | API port (default: 3000) |
 | `EENGINE_HOST` | No | Bind address (default: 127.0.0.1) |
-| `EENGINE_WORKERS` | No | IMAP worker count (default: 4) |
+| `EENGINE_WORKERS` | No | Account worker count - IMAP, Gmail API, Outlook/Graph (default: 4) |
+| `EENGINE_WORKERS_API` | No | API/HTTP worker count (default: 1); values >1 need SO_REUSEPORT (Linux, Node.js 23.1+) |
 | `EENGINE_WORKERS_WEBHOOKS` | No | Webhook worker count (default: 1) |
 | `EENGINE_WORKERS_SUBMIT` | No | Submit worker count (default: 1) |
 | `EENGINE_WORKERS_EXPORT` | No | Export worker count (default: 1) |

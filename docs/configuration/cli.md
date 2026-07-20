@@ -188,7 +188,7 @@ emailengine \
 | `--dbs.redis`        | `EENGINE_REDIS`            | Redis connection URL | Required    |
 | `--api.host`         | `EENGINE_HOST`             | API server host      | `127.0.0.1` |
 | `--api.port`         | `EENGINE_PORT`             | API server port      | `3000`      |
-| `--workers.imap`     | `EENGINE_WORKERS`          | IMAP worker count    | `4`         |
+| `--workers.imap`     | `EENGINE_WORKERS`          | Account worker count | `4`         |
 | `--workers.webhooks` | `EENGINE_WORKERS_WEBHOOKS` | Webhook worker count | `1`         |
 | `--log.level`        | `EENGINE_LOG_LEVEL`        | Log level            | `trace`     |
 | `--service.secret`   | `EENGINE_SECRET`           | Encryption secret    | Optional    |

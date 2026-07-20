@@ -500,7 +500,7 @@ Control how many workers process jobs simultaneously for different queue types:
 **Environment Variables**:
 
 ```bash
-# IMAP workers (default: 4) - handles account synchronization
+# Account workers (default: 4) - handles account synchronization (IMAP, Gmail API, Outlook/Graph)
 EENGINE_WORKERS=4
 
 # Webhook workers (default: 1) - handles webhook delivery

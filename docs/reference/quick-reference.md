@@ -99,7 +99,7 @@ See [Webhook Events Reference](/docs/reference/webhook-events) for complete payl
 |----------|---------|-------------|
 | `EENGINE_PORT` | `3000` | HTTP API port |
 | `EENGINE_HOST` | `127.0.0.1` | Bind address |
-| `EENGINE_WORKERS` | `4` | IMAP worker threads |
+| `EENGINE_WORKERS` | `4` | Account worker threads (IMAP, Gmail API, Outlook/Graph) |
 | `EENGINE_LOG_LEVEL` | `trace` | Log level (trace/debug/info/warn/error) |
 
 ### Feature Flags
