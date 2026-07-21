@@ -153,11 +153,11 @@ Redirects for old documentation paths on the main domain.
 | `/hosted-authentication` | `/docs/accounts/hosted-authentication` | Exact | Hosted auth page |
 | `/supported-account-types` | `/docs/accounts` | Exact | Account types overview |
 | `/oauth2-configuration` | `/docs/configuration/oauth2-configuration` | Exact | OAuth2 config |
-| `/gmail-api` | `/docs/accounts/gmail-api` | Exact | Gmail API |
-| `/gmail-over-imap` | `/docs/accounts/gmail-imap` | Exact | Gmail IMAP |
-| `/outlook-and-ms-365` | `/docs/accounts/outlook-365` | Exact | Outlook/MS365 |
-| `/google-service-accounts` | `/docs/accounts/google-service-accounts` | Exact | Service accounts |
-| `/shared-mailboxes-in-ms-365` | `/docs/accounts/shared-mailboxes` | Exact | Shared mailboxes |
+| `/gmail-api` | `/docs/accounts/gmail/gmail-api` | Exact | Gmail API |
+| `/gmail-over-imap` | `/docs/accounts/gmail/gmail-imap` | Exact | Gmail IMAP |
+| `/outlook-and-ms-365` | `/docs/accounts/microsoft-365/outlook-365` | Exact | Outlook/MS365 |
+| `/google-service-accounts` | `/docs/accounts/gmail/google-service-accounts` | Exact | Service accounts |
+| `/shared-mailboxes-in-ms-365` | `/docs/accounts/microsoft-365/shared-mailboxes` | Exact | Shared mailboxes |
 
 ### API and Authentication
 
@@ -177,7 +177,7 @@ Redirects for old documentation paths on the main domain.
 
 | Source | Destination | Match | Description |
 |--------|-------------|-------|-------------|
-| `/webhooks` | `/docs/receiving/webhooks` | Exact | Webhooks |
+| `/webhooks` | `/docs/webhooks/overview` | Exact | Webhooks |
 | `/bounces` | `/docs/advanced/bounces` | Exact | Bounce handling |
 | `/pre-processing-functions` | `/docs/advanced/pre-processing` | Exact | Pre-processing |
 
@@ -215,7 +215,10 @@ Redirects for old documentation paths on the main domain.
 | Source | Destination | Match | Description |
 |--------|-------------|-------|-------------|
 | `/support` | `/docs/support` | Exact | Support page |
-| `/about` | `/docs` | Exact | About page |
+
+> **`/about` is not redirected.** It is a live company page on
+> emailengine.app, along with `/` and `/privacy-policy`. An earlier version of
+> this table mapped `/about` to `/docs`, which would have retired it.
 
 ### Deprecated Pages
 
