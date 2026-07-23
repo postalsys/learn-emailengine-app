@@ -15,6 +15,8 @@ keywords:
 
 Comparing **email-focused self-hosted API** (EmailEngine) vs **multi-channel managed service** (Unipile). This guide helps you choose the right solution for your project.
 
+A shorter, decision-focused version of this comparison — channel scope, pricing arithmetic, and where each product wins — is on the main site: [EmailEngine vs Unipile](https://emailengine.app/unipile-alternative).
+
 :::info Summary
 
 - **Unipile:** Fully managed SaaS with multi-channel messaging (Email + LinkedIn + WhatsApp)

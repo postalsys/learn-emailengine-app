@@ -21,18 +21,18 @@ All blog content has been merged into the unified documentation.
 
 | Source | Destination | Match | Description |
 |--------|-------------|-------|-------------|
-| `/setting-up-gmail-api-access/` | `/docs/accounts/gmail-api` | Exact | Gmail API setup tutorial |
-| `/gmail-api-support-in-emailengine/` | `/docs/accounts/gmail-api` | Exact | Gmail API feature announcement |
-| `/setting-up-gmail-oauth2-for-imap-api/` | `/docs/accounts/gmail-imap` | Exact | Gmail IMAP OAuth2 setup |
-| `/emailengine-and-gmail/` | `/docs/accounts/gmail-imap` | Exact | Gmail integration overview |
-| `/gmail-oauth-service-accounts/` | `/docs/accounts/google-service-accounts` | Exact | Google service accounts guide |
+| `/setting-up-gmail-api-access/` | `/docs/accounts/gmail/gmail-api` | Exact | Gmail API setup tutorial |
+| `/gmail-api-support-in-emailengine/` | `/docs/accounts/gmail/gmail-api` | Exact | Gmail API feature announcement |
+| `/setting-up-gmail-oauth2-for-imap-api/` | `/docs/accounts/gmail/gmail-imap` | Exact | Gmail IMAP OAuth2 setup |
+| `/emailengine-and-gmail/` | `/docs/accounts/gmail/gmail-imap` | Exact | Gmail integration overview |
+| `/gmail-oauth-service-accounts/` | `/docs/accounts/gmail/google-service-accounts` | Exact | Google service accounts guide |
 
 ### Outlook and Microsoft 365 Setup
 
 | Source | Destination | Match | Description |
 |--------|-------------|-------|-------------|
-| `/setting-up-oauth2-with-outlook/` | `/docs/accounts/outlook-365` | Exact | Outlook OAuth2 setup |
-| `/shared-ms365-mailboxes-with-emailengine/` | `/docs/accounts/shared-mailboxes` | Exact | Shared mailboxes guide |
+| `/setting-up-oauth2-with-outlook/` | `/docs/accounts/microsoft-365/outlook-365` | Exact | Outlook OAuth2 setup |
+| `/shared-ms365-mailboxes-with-emailengine/` | `/docs/accounts/microsoft-365/shared-mailboxes` | Exact | Shared mailboxes guide |
 
 ### OAuth2 and Authentication
 
@@ -67,8 +67,8 @@ All blog content has been merged into the unified documentation.
 
 | Source | Destination | Match | Description |
 |--------|-------------|-------|-------------|
-| `/debugging-webhooks-in-emailengine/` | `/docs/receiving/webhooks` | Exact | Webhook debugging |
-| `/tailing-webhooks/` | `/docs/receiving/webhooks` | Exact | Webhook tailing |
+| `/debugging-webhooks-in-emailengine/` | `https://blog.emailengine.app/debugging-webhooks-in-emailengine/` | Exact | Webhook debugging — stayed a blog post, not docs |
+| `/tailing-webhooks/` | `https://blog.emailengine.app/tailing-webhooks/` | Exact | Webhook tailing — stayed a blog post, not docs |
 
 ### Performance and Operations
 
@@ -90,7 +90,7 @@ All blog content has been merged into the unified documentation.
 | Source | Destination | Match | Description |
 |--------|-------------|-------|-------------|
 | `/tracking-bounces/` | `/docs/advanced/bounces` | Exact | Bounce tracking |
-| `/measuging-inbox-spam-placement/` | `/docs/advanced/delivery-testing` | Exact | Delivery testing |
+| `/measuging-inbox-spam-placement/` | `/docs/advanced/inbox-placement-testing` | Exact | Delivery testing |
 
 ### IDs and Technical Details
 
@@ -241,6 +241,13 @@ Redirects for old documentation paths on the main domain.
 
 - All redirects use HTTP 301 (permanent) status code
 - Destinations are relative to `https://learn.emailengine.app`
+- Destinations must be the **final** URL: several `/docs/accounts/*` and other
+  paths are themselves old shapes that only meta-refresh (via
+  `@docusaurus/plugin-client-redirects`) to the current nested pages, because
+  GitHub Pages cannot serve real 301s. Redirecting into one of those stubs
+  chains a 301 into a client-side redirect, which search engines treat as a
+  weaker signal. Check `docusaurus.config.ts`'s `redirects` array: if a
+  destination appears there as a `from`, use its `to` instead.
 - "Exact" match means the path must match exactly
 - "Wildcard" uses pattern matching (e.g., `/page/*`)
 - "Fallback" catches any unmatched paths

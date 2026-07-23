@@ -15,6 +15,8 @@ keywords:
 
 Looking for a **Nylas alternative**? This developer-focused comparison covers features, pricing, and deployment options to help you choose the right email API for your project.
 
+A shorter, decision-focused version of this comparison — architecture, pricing arithmetic, and where each product wins — is on the main site: [EmailEngine vs Nylas](https://emailengine.app/nylas-alternative).
+
 :::info Summary
 
 - **Nylas:** Fully managed SaaS with advanced features and higher cost
