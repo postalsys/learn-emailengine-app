@@ -23,15 +23,6 @@
  * to be somewhere else.
  *
  * Configuration (environment variables):
- *   ALLOW_MISSING_FORMATTED
- *                   Tolerate a payload with no `formatted` key, and skip the
- *                   scenarios that assert a consumer reads it. Needed only
- *                   while the rollout is in progress, which spans three
- *                   deploys: postalsys-web starts sending `formatted`, then
- *                   each consumer starts reading it. Pass it until the last
- *                   consumer has shipped, then stop. Once nobody passes it,
- *                   delete the flag along with the pre-rollout branch of
- *                   figureFor().
  *   REGION_URL      default https://postalsys.com/region.js
  *   MARKETING_URL   default https://emailengine.app/
  *   DOCS_URL        default https://learn.emailengine.app
@@ -41,7 +32,6 @@
  *
  * Example:
  *   npm run verify-pricing
- *   ALLOW_MISSING_FORMATTED=1 npm run verify-pricing
  */
 
 const fs = require('fs');
@@ -59,7 +49,6 @@ try {
 const REGION_URL = process.env.REGION_URL || 'https://postalsys.com/region.js';
 const MARKETING_URL = (process.env.MARKETING_URL || 'https://emailengine.app/').replace(/\/+$/, '') + '/';
 const DOCS_URL = (process.env.DOCS_URL || 'https://learn.emailengine.app').replace(/\/+$/, '');
-const ALLOW_MISSING_FORMATTED = /^(1|true|yes)$/i.test(process.env.ALLOW_MISSING_FORMATTED || '');
 
 // The only hardcoded presentation detail, and it belongs here: a verifier that
 // computes its expectation by calling the code under test asserts nothing. The
@@ -182,18 +171,11 @@ function scanDocPages() {
     return pages.sort((a, b) => a.path.localeCompare(b.path));
 }
 
-// What a consumer should be displaying for a currency. Before the server ships
-// `formatted` this is what the consumers compute themselves; after, it is what
-// the server sends. Both must agree, which is what makes one script correct at
-// every gate. The second branch dies with ALLOW_MISSING_FORMATTED.
+// What a consumer should be displaying for a currency: exactly the string the
+// server sent, since neither consumer formats anything of its own any more.
 function figureFor(payload, currency) {
-    if (payload.formatted && typeof payload.formatted[currency] === 'string') {
-        return payload.formatted[currency];
-    }
-    if (payload.prices && typeof payload.prices[currency] === 'number') {
-        return SYMBOLS[currency] + payload.prices[currency];
-    }
-    return null;
+    const formatted = payload.formatted && payload.formatted[currency];
+    return typeof formatted === 'string' ? formatted : null;
 }
 
 function parseRegionBody(body) {
@@ -243,9 +225,7 @@ async function fetchLivePayload() {
 
     // The contract that makes old and new consumers fail closed identically.
     check('formatted never appears without prices', !payload.formatted || !!payload.prices, `prices=${!!payload.prices} formatted=${!!payload.formatted}`);
-    if (!ALLOW_MISSING_FORMATTED) {
-        check('prices and formatted ship together', !!payload.prices === !!payload.formatted, `prices=${!!payload.prices} formatted=${!!payload.formatted}`);
-    }
+    check('prices and formatted ship together', !!payload.prices === !!payload.formatted, `prices=${!!payload.prices} formatted=${!!payload.formatted}`);
 
     for (const currency of Object.keys(payload.prices || {})) {
         const amount = payload.prices[currency];
@@ -459,9 +439,7 @@ async function checkMarketing(browser, payload) {
         check('the payload was cached under psysRegion', !!cached && !!cached.data, JSON.stringify(cached));
         if (cached && cached.data) {
             check('the cached copy matches the live currency', cached.data.currency === payload.currency, cached.data.currency);
-            if (!ALLOW_MISSING_FORMATTED) {
-                check('the cached copy carries formatted', !!cached.data.formatted, JSON.stringify(cached.data));
-            }
+            check('the cached copy carries formatted', !!cached.data.formatted, JSON.stringify(cached.data));
         }
 
         // The deploy health check greps static markers with curl and executes
@@ -565,32 +543,30 @@ async function checkFailurePaths(browser, payload, authored, docPages) {
         }
     ];
 
-    if (!ALLOW_MISSING_FORMATTED) {
-        degraded.push(
-            {
-                // Without the typeof guard in the consumers this renders
-                // " (995 per year)": a currency-less number in a price
-                // sentence. The highest-value single assertion here.
-                label: 'formatted values are numbers, not strings',
-                options: {
-                    stub: regionScript(
-                        Object.assign({}, payload, {
-                            formatted: Object.keys(payload.prices).reduce((acc, cur) => Object.assign(acc, { [cur]: payload.prices[cur] }), {})
-                        })
-                    )
-                }
-            },
-            {
-                // The transition case: a cache written before the change, with
-                // no network to correct it.
-                label: 'stale old-shape cache, offline',
-                options: { blockRegion: true, seedCache: { country: payload.country, currency: payload.currency, prices: payload.prices } },
-                extra: async page => {
-                    check('the cached currency verdict still applies', (await hasEurClass(page)) === (payload.currency === 'eur'));
-                }
+    degraded.push(
+        {
+            // Without the typeof guard in the consumers this renders
+            // " (995 per year)": a currency-less number in a price
+            // sentence. The highest-value single assertion here.
+            label: 'formatted values are numbers, not strings',
+            options: {
+                stub: regionScript(
+                    Object.assign({}, payload, {
+                        formatted: Object.keys(payload.prices).reduce((acc, cur) => Object.assign(acc, { [cur]: payload.prices[cur] }), {})
+                    })
+                )
             }
-        );
-    }
+        },
+        {
+            // The transition case: a cache written before the change, with
+            // no network to correct it.
+            label: 'stale old-shape cache, offline',
+            options: { blockRegion: true, seedCache: { country: payload.country, currency: payload.currency, prices: payload.prices } },
+            extra: async page => {
+                check('the cached currency verdict still applies', (await hasEurClass(page)) === (payload.currency === 'eur'));
+            }
+        }
+    );
 
     for (const { label, options, extra, allowPageErrors } of degraded) {
         section(`Scenario: ${label}`);
@@ -677,10 +653,6 @@ async function checkFailurePaths(browser, payload, authored, docPages) {
         await stale.context.close();
     }
 
-    if (ALLOW_MISSING_FORMATTED) {
-        return;
-    }
-
     // A cached numeric price that disagrees with the live one must be
     // unreachable, which is the whole point of the change.
     section('Scenario: poisoned old-shape cache');
@@ -734,7 +706,6 @@ async function main() {
     console.log(`region:    ${REGION_URL}`);
     console.log(`marketing: ${MARKETING_URL}`);
     console.log(`docs:      ${DOCS_URL}`);
-    console.log(`mode:      ${ALLOW_MISSING_FORMATTED ? 'formatted optional (rollout in progress)' : 'formatted required'}`);
 
     const docPages = scanDocPages();
     console.log(`docs pages using <Price />: ${docPages.map(entry => `${entry.path} (${entry.count})`).join(', ')}`);
