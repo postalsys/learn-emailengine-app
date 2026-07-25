@@ -5,7 +5,8 @@
 /*
  * Live verification for region-based pricing across the three moving parts:
  * postalsys.com/region.js (the producer), emailengine.app (the price card and
- * FAQ), and learn.emailengine.app (the <Price /> parenthetical).
+ * every prose mention on the three pages that state a price), and
+ * learn.emailengine.app (the <Price /> parenthetical).
  *
  * Almost nothing here is hardcoded. The expected figures are derived from
  * whatever the live payload currently says, the authored fallbacks are scraped
@@ -49,6 +50,14 @@ try {
 const REGION_URL = process.env.REGION_URL || 'https://postalsys.com/region.js';
 const MARKETING_URL = (process.env.MARKETING_URL || 'https://emailengine.app/').replace(/\/+$/, '') + '/';
 const DOCS_URL = (process.env.DOCS_URL || 'https://learn.emailengine.app').replace(/\/+$/, '');
+
+// The marketing pages that state a price. Each carries its own verbatim copy of
+// the inline currency script, so all three are loaded with the live payload: a
+// syntax error in one copy shows up nowhere else. The failure scenarios stay on
+// the landing page, which is the only one with a price card and which carries
+// both span forms anyway.
+const MARKETING_PAGES = ['', 'nylas-alternative', 'unipile-alternative'];
+const marketingUrl = page => MARKETING_URL + page;
 
 // The only hardcoded presentation detail, and it belongs here: a verifier that
 // computes its expectation by calling the code under test asserts nothing. The
@@ -118,14 +127,32 @@ const PARENTHETICAL_RE = / \(.+? per year\)/;
 
 const hasEurClass = page => page.evaluate(() => document.documentElement.classList.contains('currency-eur'));
 
-const marketingSpanTexts = page =>
-    page.evaluate(() => {
-        const out = {};
-        document.querySelectorAll('[data-price]').forEach(el => {
-            out[el.getAttribute('data-price')] = el.textContent;
-        });
-        return out;
-    });
+// Every price span in document order, which is the order the authored ones were
+// scraped in. A map keyed by data-price would collapse the prose spans: there
+// are several of them per page and they are authored with different fallback
+// text ("$995 or €995", "$995 / €995", "$995"), so only position identifies one.
+const marketingSpans = page =>
+    page.evaluate(() =>
+        Array.from(document.querySelectorAll('[data-price]')).map(el => ({
+            key: el.getAttribute('data-price'),
+            text: el.textContent,
+            inCard: !!el.closest('.price-card__figure'),
+            visible: el.offsetParent !== null
+        }))
+    );
+
+// The served bytes, before any JS ran: what a crawler, a curl, or a
+// blocked-script visitor sees. Scraped rather than hardcoded so a copy change
+// does not turn into a false failure.
+function scrapeAuthored(html) {
+    const re = /<span data-price="(usd|eur|local)">([^<]*)<\/span>/g;
+    const out = [];
+    let match;
+    while ((match = re.exec(html)) !== null) {
+        out.push({ key: match[1], text: match[2] });
+    }
+    return out;
+}
 
 // URL a docs source file is published at, honouring a frontmatter slug.
 function urlForDoc(root, file, source) {
@@ -177,6 +204,12 @@ function figureFor(payload, currency) {
     const formatted = payload.formatted && payload.formatted[currency];
     return typeof formatted === 'string' ? formatted : null;
 }
+
+// What a span must read once the payload has been applied. data-price="usd" and
+// "eur" name a currency and sit in the price card, where CSS hides the other
+// one; data-price="local" is the prose form and resolves to whichever currency
+// the visitor got, so a sentence never runs two figures together.
+const expectedFor = (payload, key) => figureFor(payload, key === 'local' ? payload.currency : key);
 
 function parseRegionBody(body) {
     const match = body.match(REGION_BODY_RE);
@@ -367,90 +400,99 @@ async function checkParentheticalCount(page, { label, needle, count }) {
     }
 }
 
-async function checkMarketing(browser, payload) {
-    section('Section 2: emailengine.app with the live payload');
+async function checkMarketingPage(browser, payload, marketingPage) {
+    const url = marketingUrl(marketingPage);
+    const label = `/${marketingPage}`;
+    const isLanding = marketingPage === '';
 
     const { context, page, errors } = await newPage(browser);
     try {
         const since = Date.now();
-        const response = await page.goto(MARKETING_URL, { waitUntil: 'domcontentloaded' });
+        const response = await page.goto(url, { waitUntil: 'domcontentloaded' });
 
-        // The served bytes, before any JS ran: what a crawler, a curl, or a
-        // blocked-script visitor sees. Scraped rather than hardcoded so a copy
-        // change does not turn into a false failure.
-        const html = await response.text();
-        const authored = {};
-        const re = /<span data-price="(usd|eur)">([^<]*)<\/span>/g;
-        let match;
-        while ((match = re.exec(html)) !== null) {
-            authored[match[1]] = match[2];
-        }
-        console.log(`        authored figures: ${JSON.stringify(authored)}`);
+        const authored = scrapeAuthored(await response.text());
+        console.log(`        ${label} authored: ${JSON.stringify(authored.map(span => `${span.key}=${span.text}`))}`);
+        check(`${label} serves at least one price span`, authored.length > 0, `found ${authored.length}`);
 
         await waitForRegionApplied(page, since);
 
-        const spans = await page.locator('[data-price]').all();
-        check('four data-price elements', spans.length === 4, `found ${spans.length}`);
+        // Every span the served bytes carry is still there, in the same order
+        // and with the same role. Rewriting text must not add, drop or reorder.
+        const spans = await marketingSpans(page);
+        check(
+            `${label} DOM carries the same price spans as the served HTML`,
+            spans.map(span => span.key).join(',') === authored.map(span => span.key).join(','),
+            `${JSON.stringify(spans.map(span => span.key))} vs ${JSON.stringify(authored.map(span => span.key))}`
+        );
 
-        for (const currency of Object.keys(SYMBOLS)) {
-            const expected = figureFor(payload, currency);
+        for (let i = 0; i < spans.length; i++) {
+            const expected = expectedFor(payload, spans[i].key);
             if (expected === null) {
                 continue;
             }
-            try {
-                await page.waitForFunction(
-                    ([cur, want]) => Array.from(document.querySelectorAll(`[data-price="${cur}"]`)).every(el => el.textContent === want),
-                    [currency, expected],
-                    { timeout: 15000 }
-                );
-                check(`data-price="${currency}" spans read ${expected}`, true);
-            } catch (err) {
-                const texts = await marketingSpanTexts(page);
-                check(`data-price="${currency}" spans read ${expected}`, false, `got ${JSON.stringify(texts[currency])}`);
-            }
+            check(`${label} span ${i} (${spans[i].key}) reads ${expected}`, spans[i].text === expected, JSON.stringify(spans[i].text));
         }
 
-        check('currency-eur matches the payload currency', (await hasEurClass(page)) === (payload.currency === 'eur'), payload.currency);
+        check(`${label} currency-eur matches the payload currency`, (await hasEurClass(page)) === (payload.currency === 'eur'), payload.currency);
 
         // The hide rule is scoped to .price-card__figure, so exactly one figure
-        // shows and it must be the visitor's currency, while everything outside
-        // the card stays visible.
-        const visibleFigures = await page.locator('.price-card__figure [data-price]:visible').all();
-        check('exactly one price-card figure is visible', visibleFigures.length === 1, `found ${visibleFigures.length}`);
-        if (visibleFigures.length === 1) {
-            const currency = await visibleFigures[0].getAttribute('data-price');
-            check('the visible figure is the visitor currency', currency === payload.currency, `${currency} vs ${payload.currency}`);
+        // shows and it must be the visitor's currency. Everything outside the
+        // card is a "local" span, which resolves in JS rather than in CSS and
+        // therefore has to stay visible.
+        const cardSpans = spans.filter(span => span.inCard);
+        check(`${label} has ${isLanding ? 'a price card' : 'no price card'}`, isLanding === cardSpans.length > 0, `found ${cardSpans.length} card spans`);
+        if (cardSpans.length) {
+            const visibleFigures = cardSpans.filter(span => span.visible);
+            check(`${label} shows exactly one price-card figure`, visibleFigures.length === 1, `found ${visibleFigures.length}`);
+            if (visibleFigures.length === 1) {
+                check(`${label} the visible figure is the visitor currency`, visibleFigures[0].key === payload.currency, `${visibleFigures[0].key} vs ${payload.currency}`);
+            }
         }
 
-        // The FAQ shows both currencies at once, which is why `formatted` is a
-        // map rather than one resolved string.
-        const faqVisible = await page.evaluate(
-            () => Array.from(document.querySelectorAll('[data-price]')).filter(el => !el.closest('.price-card__figure') && el.offsetParent !== null).length
-        );
-        check('both FAQ currency spans stay visible', faqVisible === 2, `found ${faqVisible}`);
+        const prose = spans.filter(span => !span.inCard);
+        check(`${label} every prose price stays visible`, prose.every(span => span.visible), `${prose.filter(span => !span.visible).length} hidden`);
+        check(`${label} every prose price is a "local" span`, prose.every(span => span.key === 'local'), JSON.stringify(prose.map(span => span.key)));
 
-        const cached = await page.evaluate(() => {
-            try {
-                return JSON.parse(window.localStorage.getItem('psysRegion') || 'null');
-            } catch (err) {
-                return null;
+        if (isLanding) {
+            const cached = await page.evaluate(() => {
+                try {
+                    return JSON.parse(window.localStorage.getItem('psysRegion') || 'null');
+                } catch (err) {
+                    return null;
+                }
+            });
+            check('the payload was cached under psysRegion', !!cached && !!cached.data, JSON.stringify(cached));
+            if (cached && cached.data) {
+                check('the cached copy matches the live currency', cached.data.currency === payload.currency, cached.data.currency);
+                check('the cached copy carries formatted', !!cached.data.formatted, JSON.stringify(cached.data));
             }
-        });
-        check('the payload was cached under psysRegion', !!cached && !!cached.data, JSON.stringify(cached));
-        if (cached && cached.data) {
-            check('the cached copy matches the live currency', cached.data.currency === payload.currency, cached.data.currency);
-            check('the cached copy carries formatted', !!cached.data.formatted, JSON.stringify(cached.data));
         }
 
         // The deploy health check greps static markers with curl and executes
         // no JS, so this is the only thing that would catch a syntax error in
-        // the inline block.
-        check('no page errors', errors.length === 0, errors.join(' | '));
+        // the inline block, in any of its three copies.
+        check(`${label} has no page errors`, errors.length === 0, errors.join(' | '));
 
         return authored;
     } finally {
         await context.close();
     }
+}
+
+async function checkMarketing(browser, payload) {
+    section('Section 2: emailengine.app with the live payload');
+
+    let landingAuthored = [];
+    for (const marketingPage of MARKETING_PAGES) {
+        const authored = await checkMarketingPage(browser, payload, marketingPage);
+        if (marketingPage === '') {
+            landingAuthored = authored;
+        }
+    }
+
+    // The failure scenarios run on the landing page only, so that is the copy
+    // they need the authored fallbacks for.
+    return landingAuthored;
 }
 
 async function checkDocs(browser, payload, docPages) {
@@ -494,14 +536,14 @@ async function checkFailurePaths(browser, payload, authored, docPages) {
     const sample = docPages.filter(entry => entry.sample);
 
     const expectAuthoredMarketing = async page => {
-        const texts = await marketingSpanTexts(page);
-        for (const currency of Object.keys(authored)) {
-            check(
-                `marketing ${currency} span keeps its authored value`,
-                texts[currency] === authored[currency],
-                `${JSON.stringify(texts[currency])} vs ${JSON.stringify(authored[currency])}`
-            );
-        }
+        const spans = await marketingSpans(page);
+        const same =
+            spans.length === authored.length && spans.every((span, i) => span.key === authored[i].key && span.text === authored[i].text);
+        check(
+            'every marketing price span keeps its authored value',
+            same,
+            `${JSON.stringify(spans.map(span => span.text))} vs ${JSON.stringify(authored.map(span => span.text))}`
+        );
     };
 
     const expectNoDocFigure = async (page, docPath) => {
@@ -614,8 +656,14 @@ async function checkFailurePaths(browser, payload, authored, docPages) {
         // The authored usd value already equals the live one, so without this
         // wait the span assertion would pass whether the stub ran or not.
         await waitForRegionApplied(usd.page, since);
-        const texts = await marketingSpanTexts(usd.page);
-        check('usd spans read the usd figure', texts.usd === usdFigure, JSON.stringify(texts.usd));
+        const spans = await marketingSpans(usd.page);
+        // Both forms resolve to USD here: the named spans because usd is one of
+        // them, the prose spans because usd is now the visitor's currency.
+        check(
+            'every span reads the usd figure',
+            spans.filter(span => span.key !== 'eur').every(span => span.text === usdFigure),
+            JSON.stringify(spans.map(span => span.text))
+        );
         check('currency-eur is not set for a US visitor', (await hasEurClass(usd.page)) === false);
         const visible = await usd.page.locator('.price-card__figure [data-price]:visible').first().getAttribute('data-price');
         check('the visible price-card figure is usd', visible === 'usd', String(visible));
@@ -645,8 +693,13 @@ async function checkFailurePaths(browser, payload, authored, docPages) {
         const since = Date.now();
         await stale.page.goto(MARKETING_URL, { waitUntil: 'domcontentloaded' });
         await waitForRegionApplied(stale.page, since);
-        const texts = await marketingSpanTexts(stale.page);
-        check('the page corrects itself to the live figure', texts[payload.currency] === liveFigure, JSON.stringify(texts[payload.currency]));
+        const spans = await marketingSpans(stale.page);
+        const corrected = spans.filter(span => span.key === payload.currency || span.key === 'local');
+        check(
+            'the page corrects itself to the live figure',
+            corrected.length > 0 && corrected.every(span => span.text === liveFigure),
+            JSON.stringify(corrected.map(span => span.text))
+        );
         check('the stale currency verdict is overwritten', (await hasEurClass(stale.page)) === (payload.currency === 'eur'));
         check('no page errors', stale.errors.length === 0, stale.errors.join(' | '));
     } finally {

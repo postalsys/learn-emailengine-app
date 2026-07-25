@@ -366,7 +366,7 @@ This repository contains the **unified Docusaurus documentation site** for Email
    - Nothing is rendered during SSR, so the static build and the Algolia index stay free of a number that can go stale. That guarantee depends on the Algolia crawler not executing JavaScript, and its config lives in the Algolia dashboard rather than in this repo, so enabling `renderJavaScript` there would index a live price with no local signal
    - Find every page using it with `grep -rl '<Price' docs/`
    - The figure arrives from region.js already formatted; the plausibility band and the currency symbols live in `postalsys-web`, and a price failing the band means the key is simply absent. Never reintroduce a price range or a symbol map here
-   - Verify with `npm run verify-pricing` after deploying. It checks the live sites, not your working tree, so run it once the deploy has landed, and it needs a browser (`npx playwright install chromium`). It also covers emailengine.app, and is the only check anywhere that would catch a syntax error in that site's inline currency script
+   - Verify with `npm run verify-pricing` after deploying. It checks the live sites, not your working tree, so run it once the deploy has landed, and it needs a browser (`npx playwright install chromium`). It also covers the three emailengine.app pages that state a price, each of which carries its own verbatim copy of that site's inline currency script, and is the only check anywhere that would catch a syntax error in one of them
 
 ## Quick Commands
 
