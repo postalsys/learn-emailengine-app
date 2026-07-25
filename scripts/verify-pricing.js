@@ -25,9 +25,11 @@
  * Configuration (environment variables):
  *   ALLOW_MISSING_FORMATTED
  *                   Tolerate a payload with no `formatted` key, and skip the
- *                   scenarios that exercise it. Needed only while the rollout
- *                   is in progress: pass it until postalsys-web ships
- *                   `formatted`, then stop. Once nobody passes it any more,
+ *                   scenarios that assert a consumer reads it. Needed only
+ *                   while the rollout is in progress, which spans three
+ *                   deploys: postalsys-web starts sending `formatted`, then
+ *                   each consumer starts reading it. Pass it until the last
+ *                   consumer has shipped, then stop. Once nobody passes it,
  *                   delete the flag along with the pre-rollout branch of
  *                   figureFor().
  *   REGION_URL      default https://postalsys.com/region.js

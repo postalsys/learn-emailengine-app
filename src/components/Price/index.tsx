@@ -5,25 +5,24 @@ import {createStorageSlot} from '@docusaurus/theme-common';
  * The current EmailEngine licence price, rendered as a parenthetical that is
  * appended to an authored sentence.
  *
- * The figure and the currency come from https://postalsys.com/region.js, the
+ * The figure arrives ready to display from https://postalsys.com/region.js, the
  * same source emailengine.app reads, so EU visitors are quoted in EUR and
- * everyone else in USD. Nothing renders until a sane figure is in hand, which
- * keeps the static build and the search index free of a number that can go
- * stale, and leaves the authored sentence untouched when the script is
- * blocked, postalsys.com is down, or the visitor has JS disabled.
+ * everyone else in USD. The plausibility band on the amount and the currency
+ * symbols live there too: a price that fails the band means `formatted` is
+ * absent, which is the only signal this component needs. Never reintroduce a
+ * price range here.
  *
- * The band and the currency symbol below are scheduled to go: region.js is
- * moving to sending a pre-formatted string, at which point both collapse into
- * one lookup. They exist in two languages today, here and in the inline script
- * on emailengine.app, with nothing to catch the two copies drifting.
- * `npm run verify-pricing` gates that migration.
+ * Nothing renders until a figure is in hand, which keeps the static build and
+ * the search index free of a number that can go stale, and leaves the authored
+ * sentence untouched when the script is blocked, postalsys.com is down, the
+ * cached copy predates `formatted`, or the visitor has JS disabled.
  */
 
 type Currency = 'usd' | 'eur';
 
 type Region = {
   currency?: Currency;
-  prices?: {usd?: number; eur?: number};
+  formatted?: {usd?: string; eur?: string};
 };
 
 // Bounds how stale a cached price can get if every refresh keeps failing. A
@@ -32,18 +31,13 @@ const CACHE_TTL = 7 * 24 * 3600 * 1000;
 const SCRIPT_SRC = 'https://postalsys.com/region.js';
 const cache = createStorageSlot('psysRegion');
 
-// A band, not just a type check: a backend bug sending cents (99500) or a zero
-// must leave the authored sentence standing rather than render a wrong price.
-const isSane = (value: unknown): value is number =>
-  typeof value === 'number' && value >= 100 && value <= 20000;
-
 function toAmount(region: Region | undefined): string | null {
-  if (!region?.prices) {
-    return null;
-  }
-  const currency = region.currency === 'eur' ? 'eur' : 'usd';
-  const value = region.prices[currency];
-  return isSane(value) ? `${currency === 'eur' ? '€' : '$'}${value}` : null;
+  const currency: Currency = region?.currency === 'eur' ? 'eur' : 'usd';
+  const formatted = region?.formatted?.[currency];
+  // A shape check, not a value check. It has to survive a payload that predates
+  // the key (a cached copy, a server rollback) and one where the key is present
+  // but not a string, which would otherwise render " (995 per year)".
+  return typeof formatted === 'string' && formatted ? formatted : null;
 }
 
 let amount: string | null = null;
