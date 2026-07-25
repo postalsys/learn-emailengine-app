@@ -353,6 +353,20 @@ This repository contains the **unified Docusaurus documentation site** for Email
    - Do not upgrade dependencies solely to clear such alerts - especially react, marked, and OpenAPI-related packages, which breaks the build (see above).
    - Test thoroughly with `npm run build` after any dependency change you do make for other reasons.
 
+8. **Never Hardcode the License Price** - Use the `Price` component
+
+   The price changes and is region-dependent, so no markdown file may state a figure.
+
+   - Usage: add `import Price from '@site/src/components/Price';` after the frontmatter, then append `<Price />` to an authored pricing sentence, with no space before it:
+     ```markdown
+     - **Annual license:** Flat annual fee<Price />, excluding VAT - see [postalsys.com/plans](https://postalsys.com/plans)
+     ```
+   - It renders a parenthetical carrying the current price, or nothing at all. The authored sentence is never modified, so it must read correctly on its own
+   - The figure and currency come from `https://postalsys.com/region.js` (`window.PSYS_REGION`), the same source emailengine.app reads: EUR for EU visitors, USD elsewhere
+   - Nothing is rendered during SSR, so the static build and the Algolia index stay free of a number that can go stale. That guarantee depends on the Algolia crawler not executing JavaScript, and its config lives in the Algolia dashboard rather than in this repo, so enabling `renderJavaScript` there would index a live price with no local signal
+   - Find every page using it with `grep -rl '<Price' docs/`
+   - Verify with `npm run verify-pricing` after deploying. It checks the live sites, not your working tree, so run it once the deploy has landed. It needs a browser (`npx playwright install chromium`), and see the script header for the `ALLOW_MISSING_FORMATTED` rollout switch
+
 ## Quick Commands
 
 ```bash

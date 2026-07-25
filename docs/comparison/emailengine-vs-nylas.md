@@ -11,11 +11,13 @@ keywords:
   - email API for SaaS
 ---
 
+import Price from '@site/src/components/Price';
+
 # EmailEngine vs Nylas: Which Email API is Right for You?
 
 Looking for a **Nylas alternative**? This developer-focused comparison covers features, pricing, and deployment options to help you choose the right email API for your project.
 
-A shorter, decision-focused version of this comparison — architecture, pricing arithmetic, and where each product wins — is on the main site: [EmailEngine vs Nylas](https://emailengine.app/nylas-alternative).
+A shorter, decision-focused version of this comparison, covering architecture, pricing arithmetic, and where each product wins, is on the main site: [EmailEngine vs Nylas](https://emailengine.app/nylas-alternative).
 
 :::info Summary
 
@@ -31,7 +33,7 @@ Choose based on your priorities: operational overhead vs control and cost.
 | ------------------------ | --------------------------- | ---------------------------------- |
 | **Hosting**              | Self-hosted                 | Fully managed SaaS                 |
 | **Data Storage**         | Metadata only (in Redis)    | Full message copies in Nylas cloud |
-| **Pricing Model**        | Flat yearly license         | Per-account (from $1.50/month)     |
+| **Pricing Model**        | Flat yearly license<Price /> | Per-account (from $1.50/month)     |
 | **Setup Time**           | 5-10 minutes                | Instant (signup)                   |
 | **Data Residency**       | Your infrastructure         | Nylas cloud                        |
 | **Webhook Latency**      | Near-instant                | Similar                            |
@@ -180,7 +182,7 @@ See [Threading Documentation](/docs/sending/threading/provider-support) for deta
 
 **Structure:**
 
-- **Annual license:** See [postalsys.com/plans](https://postalsys.com/plans) for current pricing
+- **Annual license:** Flat annual fee<Price />, excluding VAT - see [postalsys.com/plans](https://postalsys.com/plans)
 - **Unlimited mailboxes**
 - **Unlimited API calls**
 - **Unlimited instances**
@@ -189,7 +191,7 @@ See [Threading Documentation](/docs/sending/threading/provider-support) for deta
 
 | Cost Component      | Amount                                                       |
 | ------------------- | ------------------------------------------------------------ |
-| EmailEngine License | Flat annual fee (see [pricing](https://postalsys.com/plans)) |
+| EmailEngine License | Flat annual fee<Price />, see [pricing](https://postalsys.com/plans) |
 | Infrastructure      | Variable (VPS/cloud)                                         |
 | DevOps Time         | Variable                                                     |
 

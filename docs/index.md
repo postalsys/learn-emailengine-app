@@ -16,9 +16,11 @@ keywords:
   - Nylas alternative
 ---
 
+import Price from '@site/src/components/Price';
+
 # Self-Hosted Email API for Developers
 
-**EmailEngine** is a self-hosted email API that lets you add email functionality to any application. Access Gmail, Outlook, and any IMAP mailbox through a single REST API. Unlike per-mailbox services like Nylas, EmailEngine uses flat annual pricing - connect unlimited accounts for one predictable cost.
+**EmailEngine** is a self-hosted email API that lets you add email functionality to any application. Access Gmail, Outlook, and any IMAP mailbox through a single REST API. Unlike per-mailbox services like Nylas, EmailEngine uses flat annual pricing<Price /> - connect unlimited accounts for one predictable cost.
 
 ## What Can You Do With EmailEngine?
 
@@ -202,7 +204,7 @@ EmailEngine provides a comprehensive REST API:
 EmailEngine requires a license key for production use. Get a license:
 
 - **[14-Day Free Trial](https://postalsys.com/plans)** - Full features, no credit card required
-- **[Production License](https://postalsys.com/plans)** - For commercial use
+- **[Production License](https://postalsys.com/plans)** - For commercial use<Price />
 
 ---
 
@@ -244,7 +246,7 @@ EmailEngine works with any email provider: Gmail, Google Workspace, Microsoft 36
 
 ### Is EmailEngine free?
 
-EmailEngine offers a 14-day free trial with full functionality. Production use requires an annual license from [postalsys.com/plans](https://postalsys.com/plans).
+EmailEngine offers a 14-day free trial with full functionality. Production use requires an annual license from [postalsys.com/plans](https://postalsys.com/plans)<Price />.
 
 ### Can I use EmailEngine to send emails?
 

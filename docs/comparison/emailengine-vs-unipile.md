@@ -11,11 +11,13 @@ keywords:
   - multi-channel API alternative
 ---
 
+import Price from '@site/src/components/Price';
+
 # EmailEngine vs Unipile: Email API Comparison
 
 Comparing **email-focused self-hosted API** (EmailEngine) vs **multi-channel managed service** (Unipile). This guide helps you choose the right solution for your project.
 
-A shorter, decision-focused version of this comparison — channel scope, pricing arithmetic, and where each product wins — is on the main site: [EmailEngine vs Unipile](https://emailengine.app/unipile-alternative).
+A shorter, decision-focused version of this comparison, covering channel scope, pricing arithmetic, and where each product wins, is on the main site: [EmailEngine vs Unipile](https://emailengine.app/unipile-alternative).
 
 :::info Summary
 
@@ -31,7 +33,7 @@ Choose based on your priorities: multi-channel integration vs control and cost.
 | ------------------------ | --------------------------- | --------------------------------------- |
 | **Hosting**              | Self-hosted                 | Fully managed SaaS                      |
 | **Data Storage**         | Metadata only (in Redis)    | Full message copies in Unipile cloud    |
-| **Pricing Model**        | Flat yearly license         | Per-account (3-5 EUR/month)             |
+| **Pricing Model**        | Flat yearly license<Price /> | Per-account (3-5 EUR/month)             |
 | **Setup Time**           | 5-10 minutes                | Instant (signup)                        |
 | **Data Residency**       | Your infrastructure         | EU (France - Scaleway)                  |
 | **Multi-Channel**        | Email only                  | Email + LinkedIn + WhatsApp + more      |
@@ -191,7 +193,7 @@ graph LR
 
 **Structure:**
 
-- **Annual license:** See [postalsys.com/plans](https://postalsys.com/plans) for current pricing
+- **Annual license:** Flat annual fee<Price />, excluding VAT - see [postalsys.com/plans](https://postalsys.com/plans)
 - **Unlimited mailboxes**
 - **Unlimited API calls**
 - **Unlimited instances**
@@ -200,7 +202,7 @@ graph LR
 
 | Cost Component      | Amount                                                       |
 | ------------------- | ------------------------------------------------------------ |
-| EmailEngine License | Flat annual fee (see [pricing](https://postalsys.com/plans)) |
+| EmailEngine License | Flat annual fee<Price />, see [pricing](https://postalsys.com/plans) |
 | Infrastructure      | Variable (VPS/cloud)                                         |
 | DevOps Time         | Variable                                                     |
 

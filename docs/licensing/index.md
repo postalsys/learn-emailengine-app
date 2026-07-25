@@ -4,6 +4,8 @@ description: EmailEngine subscription plans, pricing, free trial, and license ke
 sidebar_position: 1
 ---
 
+import Price from '@site/src/components/Price';
+
 # EmailEngine Licensing
 
 Complete information about EmailEngine subscription-based licensing, free trial, activation, and management.
@@ -12,7 +14,7 @@ Complete information about EmailEngine subscription-based licensing, free trial,
 
 - **Free Trial:** 14 days, full functionality, no limitations
 - **Production:** Annual subscription with unlimited license keys
-- **Pricing:** [View current pricing](https://postalsys.com/plans)
+- **Pricing:** Flat annual subscription<Price />, excluding VAT - [view current plans](https://postalsys.com/plans)
 - **License Keys:** Generate unlimited keys per subscription
   :::
 
@@ -87,7 +89,7 @@ Start using EmailEngine immediately. No sign-up, no credit card, no limitations 
 **Pricing:**
 
 - [View current pricing and plans](https://postalsys.com/plans)
-- Annual subscription model
+- Annual subscription model<Price />
 - Flat rate (not per-mailbox or per-instance)
 - Payment via credit card or SEPA direct debit
 
@@ -471,7 +473,7 @@ Note: If automatic renewal fails on a regular plan, an invoice is generated for 
 
 **Q: What currency is pricing in?**
 
-A: See https://postalsys.com/plans for currency options. Credit card payments auto-convert.
+A: EU customers are billed in euros, customers elsewhere in US dollars. See https://postalsys.com/plans for the price in your currency. Credit card payments auto-convert.
 
 ## Need Help?
 

@@ -10,6 +10,8 @@ keywords:
   - email integration platform
 ---
 
+import Price from '@site/src/components/Price';
+
 # What is EmailEngine?
 
 **EmailEngine** is a self-hosted email gateway that allows you to access email accounts over REST API. It provides a unified interface to interact with IMAP and SMTP protocols, as well as native integrations with Gmail API and Microsoft Graph API.
@@ -113,4 +115,4 @@ Get started with EmailEngine in just a few steps:
 
 EmailEngine includes a **14-day free trial** with full functionality and no limitations. No credit card required - just click "Activate Trial" in the dashboard to begin.
 
-For production use, [get a license key](https://postalsys.com/plans) from postalsys.com.
+For production use, [get a license key](https://postalsys.com/plans) from postalsys.com<Price />.

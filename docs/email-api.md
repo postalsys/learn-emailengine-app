@@ -14,6 +14,8 @@ keywords:
   - email API for developers
 ---
 
+import Price from '@site/src/components/Price';
+
 # Email API for Application Integration
 
 EmailEngine provides a comprehensive **REST API for email integration**. Add email sending, receiving, and management to any application without dealing with IMAP/SMTP protocol complexity.
@@ -106,7 +108,7 @@ GET /v1/account/{account}/attachment/{attachment}
 
 | Feature | EmailEngine | Per-Mailbox APIs (Nylas, etc.) |
 |---------|-------------|-------------------------------|
-| **Pricing** | Flat annual | Per mailbox/month |
+| **Pricing** | Flat annual fee<Price /> | Per mailbox/month |
 | **Data Location** | Your servers | Third-party cloud |
 | **Webhooks** | Real-time | Real-time |
 | **Account Limits** | Unlimited | Based on plan |
@@ -119,7 +121,7 @@ With per-mailbox pricing (like Nylas at $1.50/mailbox/month):
 - 500 mailboxes = $750/month = $9,000/year
 - 1000 mailboxes = $1,500/month = $18,000/year
 
-With EmailEngine's flat pricing, you pay one annual fee regardless of mailbox count.
+With EmailEngine's flat pricing, you pay one annual fee<Price /> regardless of mailbox count.
 
 [Compare EmailEngine vs Nylas →](/docs/comparison/emailengine-vs-nylas)
 
