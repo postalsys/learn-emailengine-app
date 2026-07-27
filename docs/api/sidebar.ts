@@ -44,14 +44,14 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-serversignatures",
-          label: "List Account Signatures",
+          id: "api/get-v-1-account-account-oauthtoken",
+          label: "Get OAuth2 access token",
           className: "api-method get",
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-oauthtoken",
-          label: "Get OAuth2 access token",
+          id: "api/get-v-1-account-account-serversignatures",
+          label: "List Account Signatures",
           className: "api-method get",
         },
         {
@@ -138,8 +138,8 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-text-text",
-          label: "Retrieve message text",
+          id: "api/get-v-1-account-account-attachment-attachment",
+          label: "Download attachment",
           className: "api-method get",
         },
         {
@@ -162,8 +162,8 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-attachment-attachment",
-          label: "Download attachment",
+          id: "api/get-v-1-account-account-text-text",
+          label: "Retrieve message text",
           className: "api-method get",
         },
         {
@@ -174,14 +174,14 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/post-v-1-account-account-search",
-          label: "Search for messages",
+          id: "api/post-v-1-account-account-message",
+          label: "Upload message",
           className: "api-method post",
         },
         {
           type: "doc",
-          id: "api/post-v-1-account-account-message",
-          label: "Upload message",
+          id: "api/post-v-1-account-account-search",
+          label: "Search for messages",
           className: "api-method post",
         },
         {
