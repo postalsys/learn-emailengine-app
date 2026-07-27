@@ -416,7 +416,7 @@ docker service create \
   emailengine/emailengine
 ```
 
-The `_FILE` suffix tells EmailEngine to read the secret from the specified file path.
+The `_FILE` suffix tells EmailEngine to read the secret from the specified file path. Most other environment variables accept the same suffix - see [Loading Values From Files](/docs/configuration/environment-variables#loading-values-from-files).
 
 ## Migration Planning
 

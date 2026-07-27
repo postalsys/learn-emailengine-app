@@ -46,6 +46,22 @@ emailengine \
 
 [Complete CLI reference →](/docs/configuration/cli)
 
+## Loading Values From Files
+
+Most variables can be provided as a file path instead of a literal value by appending `_FILE` to the variable name. EmailEngine reads the file at startup and uses its contents as the value. This is the usual way to pass credentials in Docker Swarm and Kubernetes deployments, where secrets are mounted as files rather than set in the environment.
+
+```bash
+EENGINE_SECRET_FILE=/run/secrets/ee_encryption_key
+EENGINE_REDIS_FILE=/run/secrets/redis_url
+```
+
+- A trailing newline is stripped, so a file written with `echo "value" > secret.txt` works as expected. Avoid other whitespace around the value.
+- If both `KEY` and `KEY_FILE` are set, `KEY` is used and the file is ignored
+- Boolean variables work the same way, with the file containing `true` or `false`
+- A file that cannot be read is logged as an error and resolves to an empty value. EmailEngine still starts, so check the logs if a setting seems to be missing.
+
+A few non-secret variables are read straight from the environment and have no `_FILE` counterpart: `EENGINE_REDIS_PREFIX`, `EENGINE_FETCH_TIMEOUT`, `EENGINE_EXPORT_PATH`, `EENGINE_EXPORT_MAX_AGE`, `EENGINE_HTTP_PROXY_ENABLED`, `EENGINE_HTTP_PROXY_URL`, `EENGINE_TLS_MIN_VERSION`, `EENGINE_TLS_MIN_DH_SIZE`, and `EENGINE_TLS_CIPHERS`.
+
 ## Server & Connection
 
 Configure HTTP server and connection settings.
@@ -413,7 +429,7 @@ OIDC_PROVIDER_NAME=Keycloak
 - The discovery document must be available at `<issuer>/.well-known/openid-configuration`
 - Requires restart after configuration changes
 
-`OIDC_CLIENT_SECRET_FILE` can be used instead of `OIDC_CLIENT_SECRET` to read the value from a file, following the same `_FILE` convention as [`EENGINE_SECRET_FILE`](/docs/advanced/encryption#docker-secrets).
+`OIDC_CLIENT_SECRET_FILE` can be used instead of `OIDC_CLIENT_SECRET` to read the client secret from a file. See [Loading Values From Files](#loading-values-from-files).
 
 ### Okta
 
