@@ -103,6 +103,14 @@ EmailEngine finds the point where the sender stopped writing and wraps everythin
 
 Because `details` is closed by default, a message renders as what the sender wrote until the reader opens it. No JavaScript is required for the basic behavior.
 
+Here is the same reply in EmailEngine's own message browser, which labels the control "Show quoted text". Only the two sentences the sender wrote are on screen:
+
+![A reply in the message browser with the quoted thread folded behind a "Show quoted text" control](/img/screenshots/web-safe-html-collapsed.png)
+
+Opening the control reveals the quoted message underneath:
+
+![The same reply expanded, showing the quoted original message below the control](/img/screenshots/web-safe-html-expanded.png)
+
 ### The Marker Contract
 
 | Class | Element | Purpose |

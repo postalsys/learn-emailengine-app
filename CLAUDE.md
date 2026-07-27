@@ -187,10 +187,19 @@ This repository contains the **unified Docusaurus documentation site** for Email
      - Captures pages with test data (accounts with data, message lists, queue details)
 
    - `scripts/capture-api-examples.js` - API response and webhook payload screenshots
+
      - Creates syntax-highlighted code examples for API responses
      - Makes actual API calls to capture real responses
      - Renders JSON responses as styled code blocks using highlight.js
      - GitHub Dark theme for consistent appearance
+
+   - `scripts/capture-collapse-screenshots.sh` - quoted-thread collapse control for `docs/receiving/web-safe-html.md`
+     - Self-contained: boots a throwaway EmailEngine from a local checkout (`EE_REPO`, default `../emailengine`) on the isolated e2e Redis db, then tears it down. Never touches a real install
+     - Stages the conversation it photographs: provisions an Ethereal mailbox, uploads an original message and a Gmail-shaped reply that quotes it as raw RFC822, then opens the reply in the admin message browser
+     - Borrows Playwright, nodemailer and the Ethereal/bootstrap helpers from the EmailEngine checkout, so this repo needs no extra dependencies
+     - Writes `web-safe-html-collapsed.png` and `web-safe-html-expanded.png`
+     - Message bodies are constants at the top of `capture-collapse-screenshots.js` - edit those to photograph a different client's quoting style
+     - `EE_PORT=7098` if something already holds 7099, `EE_HEADED=1` to watch it, `EE_KEEP_RUNNING=1` to leave the instance up
 
    **Output Directories:**
 
@@ -214,6 +223,9 @@ This repository contains the **unified Docusaurus documentation site** for Email
 
    # API examples capture
    node scripts/capture-api-examples.js
+
+   # Quoted-thread collapse control (boots and tears down its own EmailEngine)
+   ./scripts/capture-collapse-screenshots.sh
    ```
 
    **Testing Resources:**
