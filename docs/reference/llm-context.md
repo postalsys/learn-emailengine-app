@@ -42,7 +42,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | **Reconnect account** | `PUT /v1/account/{account}/reconnect` | - |
 | **Send email** | `POST /v1/account/{account}/submit` | `to`, `subject`, `text`/`html` |
 | **List messages** | `GET /v1/account/{account}/messages` | `path`, `page`, `pageSize` |
-| **Get message** | `GET /v1/account/{account}/message/{message}` | `textType`, `embedAttachedImages` |
+| **Get message** | `GET /v1/account/{account}/message/{message}` | `textType`, `embedAttachedImages`, `preProcessHtml`, `webSafeHtml` (shorthand for all three, returns HTML ready to display) |
 | **Search messages** | `POST /v1/account/{account}/search` | `search` object |
 | **Update message** | `PUT /v1/account/{account}/message/{message}` | `flags`, `labels`, `seen` |
 | **Delete message** | `DELETE /v1/account/{account}/message/{message}` | - |
@@ -626,7 +626,7 @@ flowchart TD
 | `notifyAttachments` | boolean | Include attachments in webhook payloads |
 | `notifyAttachmentSize` | number | Max attachment size in webhook payloads (bytes) |
 | `notifyCalendarEvents` | boolean | Include calendar events in webhook payloads |
-| `notifyWebSafeHtml` | boolean | Sanitize HTML in webhook payloads |
+| `notifyWebSafeHtml` | boolean | Replace the HTML body in webhook payloads with a web-safe version (sanitized, inline images embedded, quoted thread history folded into `<details class="ee-collapsed-thread">`) |
 | `locale` | string | UI language/locale |
 | `timezone` | string | Default timezone (IANA identifier) |
 | `templateHeader` | string | Custom HTML header for hosted pages |

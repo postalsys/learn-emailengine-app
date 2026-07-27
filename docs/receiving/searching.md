@@ -1,6 +1,6 @@
 ---
 title: Searching Messages
-sidebar_position: 5
+sidebar_position: 6
 description: "Complete guide to searching emails with EmailEngine - search queries, operators, filters, and best practices"
 keywords:
   - email search

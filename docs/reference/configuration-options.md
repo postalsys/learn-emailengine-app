@@ -620,7 +620,7 @@ Control what data is included in webhook payloads. These are runtime settings co
 | `notifyAttachments` | boolean | `false` | Include attachment data in webhook payloads |
 | `notifyAttachmentSize` | number | none | Max attachment size in webhook payloads (bytes) |
 | `notifyCalendarEvents` | boolean | `false` | Include calendar event data in webhook payloads |
-| `notifyWebSafeHtml` | boolean | `false` | Sanitize HTML content in webhook payloads |
+| `notifyWebSafeHtml` | boolean | `false` | Replace the HTML body in webhook payloads with a [web-safe](/docs/receiving/web-safe-html) version, sanitized and with quoted thread history folded |
 | `notifyHeaders` | string | none | Comma-separated list of email headers to include in webhook payloads |
 
 ```bash

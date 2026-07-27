@@ -1,6 +1,6 @@
 ---
 title: Exporting Messages
-sidebar_position: 10
+sidebar_position: 11
 description: "Bulk export email messages with configurable concurrency for efficient archival and analysis"
 keywords:
   - export emails

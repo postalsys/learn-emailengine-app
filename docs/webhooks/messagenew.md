@@ -118,9 +118,8 @@ The `text` object contains message body information:
 | `id` | string | Text part ID for fetching full content |
 | `encodedSize` | object | Object with `plain` and `html` size values |
 | `plain` | string | Plain text body (if `notifyText` enabled) |
-| `html` | string | HTML body (if `notifyText` enabled) |
-| `_generatedHtml` | string | Web-safe HTML (if `notifyWebSafeHtml` enabled) |
-| `webSafe` | boolean | True if HTML was sanitized for web display |
+| `html` | string | HTML body (if `notifyText` enabled). Holds the [web-safe](/docs/receiving/web-safe-html) version if `notifyWebSafeHtml` is enabled |
+| `webSafe` | boolean | True if the `html` value was processed for web display |
 | `hasMore` | boolean | True if text was truncated due to size limit |
 
 ### Calendar Event Object Structure
@@ -316,7 +315,7 @@ Several settings affect the `messageNew` webhook payload:
 |---------|-------------|
 | `notifyText` | Include message body text in webhook (default: false) |
 | `notifyTextSize` | Maximum text size to include (bytes) |
-| `notifyWebSafeHtml` | Include sanitized HTML safe for web display |
+| `notifyWebSafeHtml` | Replace the HTML body with a [web-safe](/docs/receiving/web-safe-html) version safe for web display. Requires `notifyText` |
 
 ### Header Options
 

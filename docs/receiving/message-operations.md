@@ -201,6 +201,10 @@ async function listUnreadMessages(accountId, folderPath) {
 
 Fetch complete message details using the [get message API](/docs/api/get-v-1-account-account-message-message). Text content is not included by default - add the `textType` query parameter (`plain`, `html`, or `*` for both) to include it:
 
+:::tip Displaying the HTML
+If you intend to render the HTML body in a web page, request it with `webSafeHtml=true` instead. See [Web-Safe HTML](/docs/receiving/web-safe-html).
+:::
+
 ```bash
 curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE?textType=*" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"

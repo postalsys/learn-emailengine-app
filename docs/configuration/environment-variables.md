@@ -467,6 +467,7 @@ Advanced configuration options for debugging and performance tuning.
 | `EENGINE_CORS_ORIGIN` | string | none | CORS allowed origins (whitespace separated) | `https://app.example.com` |
 | `EENGINE_CORS_MAX_AGE` | number | `60` | CORS preflight cache duration in seconds | `3600` |
 | `EENGINE_DOCUMENT_STORE_ENABLED` | boolean | `false` | Enable the deprecated Document Store (Elasticsearch) feature gate | `true` |
+| `EENGINE_DISABLE_THREAD_COLLAPSE` | boolean | `false` | Stop web-safe HTML from folding quoted thread history into a collapsible block | `true` |
 
 **Examples:**
 
@@ -490,6 +491,13 @@ EENGINE_DISABLE_COMPRESSION=true
 ```bash
 EENGINE_DOCUMENT_STORE_ENABLED=true
 ```
+
+**Render quoted thread history inline:**
+```bash
+EENGINE_DISABLE_THREAD_COLLAPSE=true
+```
+
+Since EmailEngine v2.75.0, [web-safe HTML](/docs/receiving/web-safe-html) wraps the quoted tail of a reply in a collapsible block so a message renders as what the sender wrote. Set this to restore the previous output shape, in which the whole thread is rendered inline.
 
 The Document Store (Elasticsearch) feature is deprecated and disabled by default since EmailEngine v2.71.0. This startup gate must be turned on before EmailEngine will run the document indexing worker or register the Document Store API and admin endpoints (`/v1/chat/{account}`, `/v1/unified/search`, and the `Configuration > Document Store` page). While the gate is off, those endpoints return `404`, even if the runtime "Document Store" setting is still enabled. The equivalent config-file setting is `[documentStore] enabled = true` (CLI flag `--documentStore.enabled=true`).
 

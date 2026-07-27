@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "EmailEngine",
   "description": "Self-hosted email API gateway providing REST API access to email accounts via IMAP, SMTP, Gmail API, and Microsoft Graph API",
-  "version": "2.69.0",
+  "version": "2.74.2",
   "documentationUrl": "https://learn.emailengine.app/",
   "openApiSpec": "https://emailengine.dev/swagger.json",
   "authentication": {
@@ -37,7 +37,7 @@
       "features": ["list", "search", "read", "update-flags", "move", "delete", "download-attachments"],
       "endpoints": [
         {"method": "GET", "path": "/v1/account/{account}/messages", "description": "List messages in mailbox"},
-        {"method": "GET", "path": "/v1/account/{account}/message/{message}", "description": "Get message details"},
+        {"method": "GET", "path": "/v1/account/{account}/message/{message}", "description": "Get message details. Pass textType=* for bodies; webSafeHtml=true returns sanitized HTML ready to display, with inline images embedded and quoted thread history wrapped in <details class=\"ee-collapsed-thread\"> (EmailEngine 2.75.0+)"},
         {"method": "GET", "path": "/v1/account/{account}/message/{message}/source", "description": "Get raw RFC822 source"},
         {"method": "PUT", "path": "/v1/account/{account}/message/{message}", "description": "Update flags/labels"},
         {"method": "DELETE", "path": "/v1/account/{account}/message/{message}", "description": "Delete message"},
@@ -51,6 +51,7 @@
     "bulkOperations": {
       "description": "Perform operations on multiple messages at once",
       "endpoints": [
+        {"method": "PUT", "path": "/v1/account/{account}/messages", "description": "Update flags/labels for all messages matching a search"},
         {"method": "PUT", "path": "/v1/account/{account}/messages/move", "description": "Move multiple messages"},
         {"method": "PUT", "path": "/v1/account/{account}/messages/delete", "description": "Delete multiple messages"}
       ]
@@ -60,6 +61,7 @@
       "endpoints": [
         {"method": "GET", "path": "/v1/account/{account}/mailboxes", "description": "List all mailboxes"},
         {"method": "POST", "path": "/v1/account/{account}/mailbox", "description": "Create mailbox"},
+        {"method": "PUT", "path": "/v1/account/{account}/mailbox", "description": "Rename mailbox or change subscription status"},
         {"method": "DELETE", "path": "/v1/account/{account}/mailbox", "description": "Delete mailbox"}
       ]
     },
@@ -175,6 +177,8 @@
         {"method": "GET", "path": "/v1/logs/{account}", "description": "Get account logs"},
         {"method": "GET", "path": "/v1/changes", "description": "Get recent changes"},
         {"method": "GET", "path": "/v1/license", "description": "Get license info"},
+        {"method": "POST", "path": "/v1/license", "description": "Register a license key"},
+        {"method": "DELETE", "path": "/v1/license", "description": "Remove the registered license"},
         {"method": "GET", "path": "/v1/pubsub/status", "description": "List Pub/Sub subscription status"}
       ]
     },
@@ -288,6 +292,7 @@
     {"name": "EENGINE_CORS_ORIGIN", "required": false, "description": "CORS allowed origins (space or comma separated)"},
     {"name": "EENGINE_CORS_MAX_AGE", "required": false, "default": "60", "description": "CORS preflight cache duration in seconds"},
     {"name": "EENGINE_HTTP_PROXY_ENABLED", "required": false, "default": "false", "description": "Enable HTTP proxy for outbound requests"},
-    {"name": "EENGINE_HTTP_PROXY_URL", "required": false, "description": "HTTP/SOCKS proxy URL for outbound requests"}
+    {"name": "EENGINE_HTTP_PROXY_URL", "required": false, "description": "HTTP/SOCKS proxy URL for outbound requests"},
+    {"name": "EENGINE_DISABLE_THREAD_COLLAPSE", "required": false, "default": "false", "description": "Stop web-safe HTML from folding quoted thread history into a collapsible block (EmailEngine 2.75.0+)"}
   ]
 }

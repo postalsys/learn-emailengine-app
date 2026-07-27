@@ -351,7 +351,7 @@ Triggered when a new message arrives in any mailbox. Also triggered when message
       },
       "plain": "Message content...",
       "html": "<p>Message content...</p>",
-      "webSafe": "<p>Sanitized HTML...</p>",
+      "webSafe": true,
       "hasMore": false
     },
     "attachments": [
@@ -415,8 +415,8 @@ Included when **Configuration → Webhooks → Email Content** is enabled (`noti
     - `data.text.encodedSize.plain` (number) - Plain text size in bytes
     - `data.text.encodedSize.html` (number) - HTML size in bytes
   - `data.text.plain` (string) - Plain text content (up to `notifyTextSize` limit)
-  - `data.text.html` (string) - HTML content (up to `notifyTextSize` limit)
-  - `data.text.webSafe` (string, optional) - Sanitized HTML (when `notifyWebSafeHtml: true`)
+  - `data.text.html` (string) - HTML content (up to `notifyTextSize` limit). Holds the [web-safe](/docs/receiving/web-safe-html) version when `notifyWebSafeHtml: true`
+  - `data.text.webSafe` (boolean, optional) - `true` when the HTML above was processed for web display (when `notifyWebSafeHtml: true`)
   - `data.text.hasMore` (boolean) - Content was truncated
 
 **Attachment Fields (Conditional):**

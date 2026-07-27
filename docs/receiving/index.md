@@ -248,11 +248,12 @@ This section covers all aspects of receiving and processing emails:
 1. **[Webhooks](/docs/webhooks/overview)** - Setting up real-time notifications
 2. **[Mailbox Operations](/docs/receiving/mailbox-operations)** - Working with folders and mailboxes
 3. **[Message Operations](/docs/receiving/message-operations)** - Listing, fetching, and managing messages
-4. **[Searching](/docs/receiving/searching)** - Finding messages with search queries
-5. **[Attachments](/docs/receiving/attachments)** - Handling message attachments
-6. **[Tracking Replies](/docs/receiving/tracking-replies)** - Detecting and handling reply emails
-7. **[Tracking Deleted Messages](/docs/receiving/tracking-deleted)** - Monitoring message deletions
-8. **[Continuous Processing](/docs/receiving/continuous-processing)** - Building real-time email processing pipelines
-9. **[Exporting Messages](/docs/receiving/exporting)** - Bulk export with concurrency tuning
+4. **[Web-Safe HTML](/docs/receiving/web-safe-html)** - Displaying message HTML safely in a web page
+5. **[Searching](/docs/receiving/searching)** - Finding messages with search queries
+6. **[Attachments](/docs/receiving/attachments)** - Handling message attachments
+7. **[Tracking Replies](/docs/receiving/tracking-replies)** - Detecting and handling reply emails
+8. **[Tracking Deleted Messages](/docs/receiving/tracking-deleted)** - Monitoring message deletions
+9. **[Continuous Processing](/docs/receiving/continuous-processing)** - Building real-time email processing pipelines
+10. **[Exporting Messages](/docs/receiving/exporting)** - Bulk export with concurrency tuning
 
 

@@ -1,6 +1,6 @@
 ---
 title: Tracking Deleted Messages
-sidebar_position: 8
+sidebar_position: 9
 description: "How EmailEngine detects and tracks message deletions across IMAP accounts"
 keywords:
   - deleted messages

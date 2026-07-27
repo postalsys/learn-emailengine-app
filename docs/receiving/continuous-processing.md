@@ -1,6 +1,6 @@
 ---
 title: Continuous Email Processing
-sidebar_position: 9
+sidebar_position: 10
 description: "Build real-time email processing pipelines with EmailEngine for continuous analysis, archival, and automation"
 keywords:
   - continuous processing
