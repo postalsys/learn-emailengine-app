@@ -132,7 +132,8 @@ const hasEurClass = page => page.evaluate(() => document.documentElement.classLi
 // Every price span in document order, which is the order the authored ones were
 // scraped in. A map keyed by data-price would collapse the prose spans: there
 // are several of them per page and they are authored with different fallback
-// text ("$995 or €995", "$995 / €995", "$995"), so only position identifies one.
+// text ("$1,450 or €1,200", "$1,450 / €1,200", "$1,450"), so only position
+// identifies one.
 const marketingSpans = page =>
     page.evaluate(() =>
         Array.from(document.querySelectorAll('[data-price]')).map(el => ({
@@ -590,7 +591,7 @@ async function checkFailurePaths(browser, payload, authored, docPages) {
     degraded.push(
         {
             // Without the typeof guard in the consumers this renders
-            // " (995 per year)": a currency-less number in a price
+            // " (1450 per year)": a currency-less number in a price
             // sentence. The highest-value single assertion here.
             label: 'formatted values are numbers, not strings',
             options: {

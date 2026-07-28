@@ -36,7 +36,7 @@ function toAmount(region: Region | undefined): string | null {
   const formatted = region?.formatted?.[currency];
   // A shape check, not a value check. It has to survive a payload that predates
   // the key (a cached copy, a server rollback) and one where the key is present
-  // but not a string, which would otherwise render " (995 per year)".
+  // but not a string, which would otherwise render " (1450 per year)".
   return typeof formatted === 'string' && formatted ? formatted : null;
 }
 

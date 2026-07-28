@@ -238,7 +238,7 @@ EmailEngine is a self-hosted email gateway that provides a unified REST API for 
 
 ### How is EmailEngine different from Nylas?
 
-EmailEngine is self-hosted with flat annual pricing, while Nylas is a managed service charging per connected mailbox. EmailEngine gives you full data control and becomes more cost-effective at 30+ mailboxes. [See detailed comparison →](/docs/comparison/emailengine-vs-nylas)
+EmailEngine is self-hosted with flat annual pricing, while Nylas is a managed service charging per connected mailbox. EmailEngine gives you full data control and becomes more cost-effective at 50+ mailboxes. [See detailed comparison →](/docs/comparison/emailengine-vs-nylas)
 
 ### What email providers does EmailEngine support?
 

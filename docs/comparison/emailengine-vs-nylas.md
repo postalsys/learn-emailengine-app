@@ -240,14 +240,14 @@ Enterprise customers can negotiate volume discounts with annual contracts.
 
 **Choose Nylas if:**
 
-- You have very few mailboxes (under 20)
+- You have very few mailboxes (under 30)
 - You value zero DevOps time at extremely high premium
 - You need advanced AI features (sentiment, categorization)
 - You prefer fully managed SaaS
 
 **Choose EmailEngine if:**
 
-- You have 30+ mailboxes
+- You have 50+ mailboxes
 - You have DevOps capacity or existing infrastructure
 - Data sovereignty and privacy are priorities
 - You want predictable, flat-rate pricing
