@@ -96,7 +96,9 @@ const PAGE_META = {
 // exactly: a postalsys.com prefix would swallow region.js.
 const NOISE = [
     /^https:\/\/www\.googletagmanager\.com\//,
-    /^https:\/\/plausible\.emailengine\.dev\//,
+    // Plausible, now proxied through emailengine.app. Scoped to /a/ so it cannot
+    // swallow anything else served from that host.
+    /^https:\/\/emailengine\.app\/a\//,
     /^https:\/\/widget\.senja\.io\//,
     /^https:\/\/fonts\.googleapis\.com\//,
     /^https:\/\/fonts\.gstatic\.com\//,

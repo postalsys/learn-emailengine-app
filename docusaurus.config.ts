@@ -9,13 +9,27 @@ const config: Config = {
   tagline: 'Unified REST API for IMAP, SMTP, Gmail & Microsoft 365',
   favicon: 'img/favicon.ico',
 
-  // Plausible Analytics
+  // Plausible Analytics, loaded from emailengine.app rather than direct.
+  //
+  // EasyPrivacy, which uBlock Origin and AdGuard both enable by default, carries
+  // ://plausible.*/js/script. and ://plausible.*/api/event|. Both match on the
+  // hostname prefix, so the direct plausible.emailengine.dev URLs load for nobody
+  // running a blocker. emailengine.app proxies them first-party (Caddy handle
+  // blocks in its vhost on srv-04, see ../emailengine-web/CLAUDE.md).
+  //
+  // This site is a subdomain of emailengine.app, so a blocker treats those
+  // requests as first-party: uBlock, AdGuard and EasyList all define third-party
+  // by registrable domain (eTLD+1), not by hostname. No $third-party rule applies.
+  //
+  // data-api must be absolute. A relative path would resolve against
+  // learn.emailengine.app, which has no such route.
   scripts: [
     {
-      src: 'https://plausible.emailengine.dev/js/script.js',
+      src: 'https://emailengine.app/a/pv.js',
       defer: true,
       // use aggregated domain
       'data-domain': 'emailengine.app',
+      'data-api': 'https://emailengine.app/a/e',
     },
   ],
 
