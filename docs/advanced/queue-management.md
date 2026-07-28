@@ -500,6 +500,8 @@ Webhooks are emitted at specific queue state transitions:
 
 **Retry Delays**: Exponential backoff with a 5-second base delay (5s, 10s, 20s, 40s, 80s, etc.)
 
+**Exceptions**: A destination EmailEngine refuses itself - a blocked address, or an endpoint that answers with a redirect - moves to Failed on the first attempt, since retrying cannot change the outcome. See [Blocked destinations and redirects](/docs/webhooks/overview#blocked-destinations-and-redirects).
+
 **After All Retries Exhausted**: Job moves to Failed, webhook not delivered.
 
 ## Performance Tuning

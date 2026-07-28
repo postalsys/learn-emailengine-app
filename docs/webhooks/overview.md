@@ -487,7 +487,7 @@ EmailEngine will not deliver to every address. Two refusals come from EmailEngin
 | `EEGRESSBLOCKED` | The destination resolves to an address the egress policy blocks. By default that is the link-local range where cloud instance metadata services live | Point the webhook at a routable address, or widen `EENGINE_WEBHOOK_EGRESS_POLICY` |
 | `EREDIRECTNOTFOLLOWED` | The endpoint answered with a redirect (301, 302, 307, ...). Redirects are not followed, because a permitted host could redirect to a blocked one | Configure the webhook with the endpoint's final URL |
 
-A blocked destination fails immediately without consuming the retry budget, since the same address would be refused on every attempt. A redirect is retried like any other delivery failure.
+Both fail immediately without consuming the retry budget, since the same address would be refused, and the same endpoint would redirect, on every attempt.
 
 Both checks apply to the **Send test webhook** button as well, so the button reports the same refusal you would see on a real delivery. Set `EENGINE_WEBHOOK_EGRESS_POLICY=off` to restore the previous behavior, including following redirects.
 
