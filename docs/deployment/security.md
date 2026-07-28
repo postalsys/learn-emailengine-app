@@ -456,6 +456,17 @@ emailengine.example.com {
 For production deployments, combine `EENGINE_ADMIN_ACCESS_ADDRESSES` with reverse proxy IP restrictions. This provides multiple layers of protection in case one layer is misconfigured.
 :::
 
+:::warning Running behind a reverse proxy
+If you also set `EENGINE_API_PROXY=true`, EmailEngine matches this allowlist against the address in the `X-Forwarded-For` header rather than the connecting socket. Declare which peers are your proxies:
+
+```bash
+EENGINE_API_PROXY=true
+EENGINE_API_PROXY_ADDRESSES=10.0.0.0/8
+```
+
+Without `EENGINE_API_PROXY_ADDRESSES`, EmailEngine trusts the header from any peer, so a client that can reach the port directly can present whatever address the allowlist expects and walk straight through it. See [Trusted Proxy Addresses](/docs/reference/configuration-options#trusted-proxy-addresses).
+:::
+
 ### Passkey Authentication (WebAuthn)
 
 EmailEngine supports passkey (WebAuthn) authentication for the admin interface. Passkeys provide passwordless login using biometric sensors, hardware security keys, or platform authenticators like Touch ID and Windows Hello.

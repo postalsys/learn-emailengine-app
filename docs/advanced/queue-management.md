@@ -178,7 +178,9 @@ Every job moves through different states during its lifecycle.
 
 **How Jobs Enter**: Job failed in Active state and retry limit reached.
 
-**What Happens**: Job stored for debugging (if retention enabled). No further processing.
+**What Happens**: Job stored for debugging. No further processing.
+
+**Retention**: Failed jobs are kept by default, unlike Completed jobs. A failure is the only record that a delivery was given up on, so it is retained even when the Job History Limit is 0. The defaults are the last 500 entries per queue for 7 days, adjustable with `EENGINE_QUEUE_KEEP_FAILED` and `EENGINE_QUEUE_KEEP_FAILED_AGE`.
 
 **Common Failures**:
 - SMTP authentication failed
@@ -252,7 +254,7 @@ graph TD
 
 5. **Completed Count**: Successfully processed jobs
    - Indicates throughput
-   - Only visible if retention enabled
+   - Only visible if retention enabled (Failed jobs are retained regardless)
 
 ### Health Indicators
 
@@ -386,7 +388,7 @@ Error: Unexpected status code: 500
 
 ### Enable Job Retention
 
-By default, Completed and Failed jobs are immediately removed. To keep them for debugging:
+Completed jobs are removed as soon as they finish. To keep them for debugging:
 
 **Steps**:
 1. Navigate to **Configuration → General**
@@ -395,6 +397,15 @@ By default, Completed and Failed jobs are immediately removed. To keep them for 
 4. Click **Save**
 
 **Recommendation**: Keep 50-100 jobs for debugging without excessive memory use.
+
+Failed jobs are not covered by this setting. They are retained by default, because a failed job is the only record that a delivery was given up on:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `EENGINE_QUEUE_KEEP_FAILED` | `500` | Failed entries retained per queue |
+| `EENGINE_QUEUE_KEEP_FAILED_AGE` | `604800` | How long failed entries are retained, in seconds (7 days) |
+
+Raising the Job History Limit above 500 raises the failed-entry floor with it. Lower these if Redis memory is tight: a `messageNew` webhook payload can carry up to `notifyTextSize` of message text, and a receiver that is down turns every event into a retained entry.
 
 ### Retry Failed Job
 

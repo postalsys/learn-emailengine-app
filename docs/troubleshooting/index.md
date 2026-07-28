@@ -454,6 +454,12 @@ journalctl -u emailengine | grep -i webhook
    # Set NODE_TLS_REJECT_UNAUTHORIZED=0
    ```
 
+5. **Destination refused by EmailEngine**
+
+   The webhook error flag on the account or configuration page shows `EEGRESSBLOCKED` (the destination resolves to a blocked address, by default the link-local range used by cloud instance metadata) or `EREDIRECTNOTFOLLOWED` (the endpoint answered with a redirect, which is not followed).
+
+   **Solution:** point the webhook at the endpoint's final, routable URL, or adjust `EENGINE_WEBHOOK_EGRESS_POLICY`. See [Blocked destinations and redirects](/docs/webhooks/overview#blocked-destinations-and-redirects).
+
 #### Webhooks Delayed
 
 **Symptom:** Webhooks delivered but with significant delay

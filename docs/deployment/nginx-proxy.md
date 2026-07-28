@@ -119,6 +119,8 @@ server {
 Setting the `X-Forwarded-*` headers above is not enough on its own. EmailEngine ignores forwarded headers unless you enable `EENGINE_API_PROXY=true` (or `--api.proxy=true`). Without it, the client IP recorded in logs, the IP-based rate limiter, and the `serviceUrl`/redirect scheme detection all see the proxy instead of the real client.
 
 The official Docker image sets `EENGINE_API_PROXY=true` by default, so this applies mainly to bare-metal or SystemD deployments. Only enable it when EmailEngine is actually behind a trusted reverse proxy.
+
+Also set `EENGINE_API_PROXY_ADDRESSES` to the addresses your proxy connects from (for example `EENGINE_API_PROXY_ADDRESSES=127.0.0.1`). Without it the header is honored from any peer, which is safe for logs but not for the [admin interface allowlist](/docs/deployment/security#admin-interface-access-control) or per-token address restrictions.
 :::
 
 **Enable configuration:**

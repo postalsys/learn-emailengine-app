@@ -73,6 +73,7 @@ Configure HTTP server and connection settings.
 | `PORT` | number | `3000` | Alternative to EENGINE_PORT (used by some platforms) | `8080` |
 | `EENGINE_TIMEOUT` | number | `10000` | HTTP request timeout (ms) | `30000` |
 | `EENGINE_API_PROXY` | boolean | `false` | Trust reverse proxy headers (X-Forwarded-For) for client IP | `true` |
+| `EENGINE_API_PROXY_ADDRESSES` | string | none | Comma-separated IPs/CIDRs of the proxies allowed to set X-Forwarded-For. Required for IP allowlists to be trustworthy, see [Reverse Proxy Mode](/docs/reference/configuration-options#reverse-proxy-mode) | `10.0.0.0/8` |
 
 [Access token management →](/docs/api-reference/access-tokens)
 
@@ -89,6 +90,7 @@ EENGINE_PORT=3000
 EENGINE_HOST=127.0.0.1
 EENGINE_PORT=3000
 EENGINE_API_PROXY=true  # Trust X-Forwarded-For headers for client IP
+EENGINE_API_PROXY_ADDRESSES=10.0.0.0/8  # ...but only when the request comes from these peers
 ```
 
 ## Redis
@@ -209,6 +211,8 @@ Configure job queue retention, cleanup, and concurrency.
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
 | `EENGINE_QUEUE_REMOVE_AFTER` | number | `0` | Number of completed jobs to keep in queue (0 = remove immediately) | `5000` |
+| `EENGINE_QUEUE_KEEP_FAILED` | number | `500` | Failed entries retained per queue, regardless of the setting above | `2000` |
+| `EENGINE_QUEUE_KEEP_FAILED_AGE` | seconds | `604800` | How long failed entries are retained (7 days) | `259200` |
 | `EENGINE_SUBMIT_QC` | number | `1` | Concurrency for email submission queue | `4` |
 | `EENGINE_NOTIFY_QC` | number | `1` | Concurrency for notification/webhook queue | `4` |
 | `EENGINE_EXPORT_QC` | number | `1` | Concurrency for export queue | `2` |
@@ -232,6 +236,25 @@ EENGINE_EXPORT_QC=2
 ```bash
 EENGINE_SUBMIT_DELAY=1000  # 1 second between submissions
 ```
+
+## Webhook Delivery
+
+Configure how webhook deliveries are made. Webhook URLs, events, and custom routes are configured in the admin interface, not here.
+
+| Variable | Type | Default | Description | Example |
+|----------|------|---------|-------------|---------|
+| `EENGINE_WEBHOOK_TIMEOUT` | ms | `30000` | Wall-clock timeout for a single delivery attempt | `10000` |
+| `EENGINE_WEBHOOK_EGRESS_POLICY` | string | `link-local` | Which destinations deliveries may reach: `link-local`, `private`, or `off` | `private` |
+
+**Egress policy values:**
+
+| Value | Blocks | Use when |
+|-------|--------|----------|
+| `link-local` (default) | `169.254.0.0/16` and `fe80::/10`, where cloud instance metadata services live, plus the AWS IPv6 and Alibaba metadata addresses | Default. Webhook receivers on your private network keep working |
+| `private` | The above plus RFC1918, loopback, CGNAT, and unique-local addresses | Receivers are all on the public internet |
+| `off` | Nothing | You need the previous behavior, including following redirects |
+
+Any policy other than `off` also stops redirects being followed, since a permitted host could otherwise redirect to a blocked one. See [Blocked destinations and redirects](/docs/webhooks/overview#blocked-destinations-and-redirects).
 
 ## Export Configuration
 

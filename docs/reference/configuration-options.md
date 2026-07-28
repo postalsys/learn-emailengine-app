@@ -579,8 +579,24 @@ When enabled, client IP addresses are read from the `X-Forwarded-For` header ins
 EENGINE_API_PROXY=true
 ```
 
+### Trusted Proxy Addresses
+
+**Environment:** `EENGINE_API_PROXY_ADDRESSES`
+**Default:** none
+
+Comma-separated IP addresses or CIDR ranges of your own proxies. Only requests arriving from one of these peers are allowed to set `X-Forwarded-For`, and entries contributed by these proxies are discarded when resolving the client address.
+
+```bash
+EENGINE_API_PROXY=true
+EENGINE_API_PROXY_ADDRESSES=10.0.0.0/8,192.168.1.10
+```
+
 :::warning Security
-Only enable this if EmailEngine is behind a trusted reverse proxy. Otherwise, clients could spoof their IP address by setting the `X-Forwarded-For` header.
+`X-Forwarded-For` is a list that each proxy appends to, so the left-most entry is whatever the original caller sent. With `EENGINE_API_PROXY=true` and no proxy addresses declared, EmailEngine keeps that left-most entry, which means any client able to reach the port directly chooses the address EmailEngine records.
+
+That is fine for logging, but it is not safe for the two controls that match on the client address: the [admin interface allowlist](/docs/deployment/security#admin-interface-access-control) (`EENGINE_ADMIN_ACCESS_ADDRESSES`) and per-token `restrictions.addresses`. If you rely on either, set `EENGINE_API_PROXY_ADDRESSES` as well, or leave `EENGINE_API_PROXY` disabled so the socket address is used.
+
+EmailEngine logs a warning at startup when it detects an admin allowlist combined with undeclared proxies.
 :::
 
 ## Webhooks
@@ -913,11 +929,25 @@ EENGINE_NOTIFY_QC=4
 **Environment:** `EENGINE_QUEUE_REMOVE_AFTER`
 **Default:** `0` (keep none)
 
-Number of completed and failed queue entries to retain for debugging (this is a count of jobs, not a duration). Stored internally as the `queueKeep` setting.
+Number of completed queue entries to retain for debugging (this is a count of jobs, not a duration). Stored internally as the `queueKeep` setting.
 
 ```bash
 EENGINE_QUEUE_REMOVE_AFTER=1000
 ```
+
+### Failed Entry Retention
+
+**Environment:** `EENGINE_QUEUE_KEEP_FAILED`, `EENGINE_QUEUE_KEEP_FAILED_AGE`
+**Default:** `500` entries, `604800` seconds (7 days)
+
+Failed entries are retained independently of `EENGINE_QUEUE_REMOVE_AFTER`, because a failed job is the only record that a delivery was given up on. Setting the history size above 500 raises this floor with it.
+
+```bash
+EENGINE_QUEUE_KEEP_FAILED=2000
+EENGINE_QUEUE_KEEP_FAILED_AGE=259200  # 3 days
+```
+
+See [Queue Management](/docs/advanced/queue-management#enable-job-retention).
 
 ## SMTP Proxy Server
 
