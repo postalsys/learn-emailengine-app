@@ -48,6 +48,7 @@ EmailEngine supports multiple sending approaches:
    - POST to [Submit Email API endpoint](/docs/api/post-v-1-account-account-submit)
    - Queue-based with automatic retries
    - Webhook notifications for delivery status
+   - Also sends [stored drafts](./basic-sending.md#sending-stored-drafts) by message ID
    - Best for application integration
 
 2. **SMTP Server**
@@ -90,6 +91,15 @@ curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
     },
     "html": "<p>Your reply content</p>"
   }'
+```
+
+### Send a Stored Draft
+
+```bash
+curl -XPOST "https://emailengine.example.com/v1/account/example/message/AAAADQAABl0/submit" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{}'
 ```
 
 ### Mail Merge

@@ -471,6 +471,28 @@ If the same request is sent multiple times with the same `Idempotency-Key` heade
 
 The idempotency key can be any string (0-1024 characters). Use UUIDs or request-specific identifiers.
 
+## Sending Stored Drafts
+
+Send a draft that already exists in the mailbox by referencing its message ID:
+
+```bash
+curl -XPOST "http://127.0.0.1:3000/v1/account/example/message/AAAAAQAACnA/submit" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+The referenced message must be a draft: stored in the Drafts folder or flagged as `\Draft` for IMAP accounts, carrying the `DRAFT` label on Gmail, or a draft message on MS Graph. Drafts can come from the user's mail client, or be created through the [message upload API](/docs/api/post-v-1-account-account-message) by uploading to the Drafts folder with the `\Draft` flag.
+
+The submission is queued like any other email, so scheduled sending, retry handling, gateways, idempotency keys, and the delivery webhooks described below all behave the same as with `/submit`. The response contains the familiar `queueId` and `messageId` values.
+
+What happens to the draft after sending depends on the account type:
+
+- **Gmail and MS Graph accounts** use the provider's native draft-send call. The provider files the message into the Sent Mail folder and removes the draft.
+- **IMAP accounts** download the draft and deliver it over SMTP. A copy is stored in the Sent Mail folder (unless disabled with `copy: false` or the mail server stores sent messages itself, as Gmail and Outlook do for SMTP submissions), and the draft is then deleted. If no sent copy exists anywhere, the draft is moved to Trash instead so its content is not lost.
+
+The request body is optional and accepts the delivery options described above - `envelope`, `copy`, `sentMailPath`, `sendAt`, `deliveryAttempts`, `gateway`, `dsn`, `proxy`, and `localAddress`. Content fields are not accepted; the draft is sent as stored. See the [draft submission API reference](/docs/api/post-v-1-account-account-message-message-submit) for the full schema.
+
 ## Webhook Notifications
 
 EmailEngine sends webhook notifications for delivery status updates. Configure your webhook URL under **Settings → Webhooks**.

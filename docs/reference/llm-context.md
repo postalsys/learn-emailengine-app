@@ -41,6 +41,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | **Delete account** | `DELETE /v1/account/{account}` | optional `?revoke=true` to revoke the OAuth2 grant |
 | **Reconnect account** | `PUT /v1/account/{account}/reconnect` | - |
 | **Send email** | `POST /v1/account/{account}/submit` | `to`, `subject`, `text`/`html` |
+| **Send stored draft** | `POST /v1/account/{account}/message/{message}/submit` | optional delivery options |
 | **List messages** | `GET /v1/account/{account}/messages` | `path`, `page`, `pageSize` |
 | **Get message** | `GET /v1/account/{account}/message/{message}` | `textType`, `embedAttachedImages`, `preProcessHtml`, `webSafeHtml` (shorthand for all three, returns HTML ready to display) |
 | **Search messages** | `POST /v1/account/{account}/search` | `search` object |
@@ -122,6 +123,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/v1/account/{account}/submit` | Send/queue email |
+| `POST` | `/v1/account/{account}/message/{message}/submit` | Send a stored draft by message ID |
 | `GET` | `/v1/outbox` | List queued emails |
 | `GET` | `/v1/outbox/{queueId}` | Get queued email details |
 | `DELETE` | `/v1/outbox/{queueId}` | Cancel queued email |
@@ -694,6 +696,8 @@ The `POST /v1/account/{account}/submit` endpoint accepts these key parameters:
 | `dryRun` | boolean | Preview without sending |
 | `gateway` | string | Use specific SMTP gateway |
 | `deliveryAttempts` | number | Max retry attempts |
+
+To send an email that already exists as a draft, use `POST /v1/account/{account}/message/{message}/submit` with the draft's message ID instead of composing content. The optional body accepts the delivery options above (`envelope`, `copy`, `sentMailPath`, `sendAt`, `deliveryAttempts`, `gateway`, `dsn`, `proxy`, `localAddress`) but no content fields - the draft is sent as stored. Gmail and MS Graph accounts send it with the provider's native draft-send call; the draft is removed after sending on all account types.
 
 ## Search Parameters
 
