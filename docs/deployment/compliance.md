@@ -49,8 +49,8 @@ EmailEngine is fully self-hosted. EmailEngine developers have no access to your 
 
 **Outbound connections:** EmailEngine makes limited outbound requests for operational purposes:
 
-- `postalsys.com` - License validation, required for licensed installations. The daily validation request sends your license key, a stable instance ID, and an anonymized feature beacon (described below).
-- `api.github.com` - Version update checks (optional, for admin dashboard notifications). Nothing is sent beyond a standard User-Agent header.
+- `postalsys.com` - License validation for subscription licenses. The daily validation request sends your license key, a stable instance ID, and an anonymized feature beacon (described below). Perpetual licenses are verified offline and never make this request.
+- `api.github.com` - Version update checks (optional, for admin dashboard notifications). Nothing is sent beyond a standard User-Agent header. Disable with `EENGINE_UPDATE_CHECK_DISABLED=true` (since EmailEngine v2.76.0).
 
 Neither request includes email content, message headers, email addresses, or credentials. See [Outbound Connection Whitelist](/docs/deployment/security#outbound-connection-whitelist) for the complete list of external domains, including those used by optional features such as OAuth2 providers, AI processing, and account autodiscovery.
 
