@@ -41,6 +41,8 @@ Use official and community SDKs for easier integration:
 - **Node.js**: Direct HTTP client integration
 - **Python**: HTTP client integration
 
+For other languages, generate a client from the [OpenAPI specification](/docs/api-reference/openapi-spec) that every EmailEngine instance publishes.
+
 ### Low-Code Platforms
 
 Connect EmailEngine with no-code and low-code automation tools:

@@ -581,6 +581,16 @@ Complete auto-generated API documentation with all endpoints, parameters, and ex
 
 [Browse full API reference](/docs/api/emailengine-api)
 
+### OpenAPI Specification
+
+The machine-readable document behind the reference above, served by every EmailEngine instance at `/swagger.json`.
+
+- Import the API into Postman, Insomnia, or Bruno
+- Generate a typed client in your language
+- Feed the API surface to AI coding assistants
+
+[View OpenAPI documentation](./openapi-spec.md)
+
 ## Support
 
 - **Documentation**: Browse the complete [documentation](/docs)
