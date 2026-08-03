@@ -270,7 +270,10 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Submit',
       collapsed: true,
-      items: ['api/post-v-1-account-account-submit'],
+      items: [
+        'api/post-v-1-account-account-submit',
+        'api/post-v-1-account-account-message-message-submit',
+      ],
     },
     {
       type: 'category',
