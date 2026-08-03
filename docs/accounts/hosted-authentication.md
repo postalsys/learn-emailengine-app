@@ -123,6 +123,7 @@ Direct the user to this URL to begin authentication.
 |-----------|----------|-------------|
 | `account` | No | Account ID. If not provided or `null`, a unique ID is generated automatically. If an existing account ID is provided, that account's settings will be updated |
 | `email` | No | Pre-fill email address on form |
+| `expectedEmail` | No | Restrict the form to a single address - setup is rejected if the user authenticates as someone else |
 | `name` | No | Pre-fill display name on form |
 | `type` | No | Pre-select account type (skips selection screen) |
 | `redirectUrl` | Yes | Where to send user after completion |
@@ -291,7 +292,15 @@ https://myapp.com/settings?account=user123&state=new
 | `state` | Result of the operation: `new` (account was created) or `existing` (existing account was updated) |
 
 :::note Error Handling
-If authentication fails (OAuth2 error, user cancellation, etc.), EmailEngine displays an error page rather than redirecting to your `redirectUrl`. Your application only receives a redirect on successful authentication.
+If authentication fails (OAuth2 error, user cancellation, etc.), EmailEngine displays an error page rather than redirecting to your `redirectUrl`.
+
+The exception is a setup rejected by [`expectedEmail`](#requiring-a-specific-address), which does redirect, so your application can tell the user why nothing was connected:
+
+```
+https://myapp.com/settings?account=user123&error=account_identity_mismatch&error_description=...
+```
+
+Check for `error` before reading `state`. No account was created or modified, so no `state` is sent.
 :::
 
 :::info Account Initialization
@@ -305,7 +314,14 @@ The redirect happens immediately after authentication completes, but the account
 
 ```javascript
 app.get('/settings', async (req, res) => {
-  const { account, state } = req.query;
+  const { account, state, error } = req.query;
+
+  if (error) {
+    // Nothing was connected, e.g. the user signed in as somebody else
+    return res.render('settings', {
+      message: 'Could not connect that email account. Please try again.'
+    });
+  }
 
   if (state === 'new') {
     // New account was created
@@ -334,6 +350,12 @@ app.get('/settings', async (req, res) => {
 def settings():
     account = request.args.get('account')
     state = request.args.get('state')
+    error = request.args.get('error')
+
+    if error:
+        # Nothing was connected, e.g. the user signed in as somebody else
+        flash('Could not connect that email account. Please try again.', 'danger')
+        return render_template('settings.html')
 
     if state == 'new':
         # New account was created
@@ -358,8 +380,13 @@ def settings():
 
 $account = $_GET['account'] ?? null;
 $state = $_GET['state'] ?? null;
+$error = $_GET['error'] ?? null;
 
-if ($state === 'new') {
+if ($error) {
+    // Nothing was connected, e.g. the user signed in as somebody else
+    $message = 'Could not connect that email account. Please try again.';
+    $messageType = 'danger';
+} elseif ($state === 'new') {
     // New account was created
     $stmt = $pdo->prepare('UPDATE users SET email_connected = 1 WHERE id = ?');
     $stmt->execute([$account]);
@@ -398,6 +425,50 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 ```
 
 The authentication form will show this email address, and for Gmail/Outlook, it will be used as the `login_hint` parameter in the OAuth2 flow.
+
+`email` is only a suggestion. The user can type a different address on the IMAP form, or pick a different account on the provider's consent screen, and the setup still completes. Use `expectedEmail` when the address has to be the one you specified.
+
+### Requiring a Specific Address
+
+`expectedEmail` turns the address into a condition. If the user completes the form as someone else, the setup is rejected before any credentials are stored, so an existing account keeps working with the credentials it already had:
+
+```bash
+curl -X POST https://your-ee.com/v1/authentication/form \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "user123",
+    "email": "john@gmail.com",
+    "expectedEmail": "john@gmail.com",
+    "redirectUrl": "https://myapp.com/settings"
+  }'
+```
+
+This matters most for reconnection. Without it, whoever opens the link decides which mailbox the account ends up pointing at - handy when a user is genuinely moving to a new mailbox, unwanted when the account belongs to someone in particular.
+
+What the address is checked against depends on how the user authenticates:
+
+| Setup type | Compared against |
+|------------|------------------|
+| Gmail, Outlook, Mail.ru | The address the provider reports for the account that signed in |
+| IMAP/SMTP | The address entered on the form |
+
+For OAuth2 the provider vouches for the identity, so the check establishes who owns the mailbox. For IMAP it does not: the credentials are entered separately from the address, so a match confirms the account is registered under the expected address rather than proving the mailbox belongs to it.
+
+The value is stored on the account, so it also applies to later links that omit it, and to the **Re-authenticate** button in the EmailEngine dashboard. To move an account to a different address, issue a new form link carrying the new `expectedEmail` - a link that states an address replaces the stored one. To drop the restriction entirely, clear the field with the [update account API](/docs/api/put-v-1-account-account):
+
+```bash
+curl -X PUT https://your-ee.com/v1/account/user123 \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"expectedEmail": null}'
+```
+
+:::note
+The address is recorded when a setup completes, not when the link is generated. A link that was issued with `expectedEmail` but never used leaves nothing behind, so a later link for the same account ID is unrestricted. Put `expectedEmail` on the link that creates the account if you want the restriction to hold from the start.
+:::
+
+Shared and delegated Microsoft 365 mailboxes are a special case: the user signs in with their own account to reach a mailbox belonging to someone else, so `expectedEmail` has to name the person signing in, not the shared mailbox address.
 
 ### Display Name
 

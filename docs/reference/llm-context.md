@@ -491,6 +491,12 @@ curl -X POST "https://emailengine.example.com/v1/authentication/form" \
 
 # Response: {"url": "https://emailengine.example.com/accounts/new?data=..."}
 # Redirect user to this URL to complete authentication
+
+# Add "expectedEmail" to reject the setup unless the user authenticates as that
+# address. Stored on the account, so it also covers later links that omit it.
+# On rejection the user is sent to redirectUrl with
+# error=account_identity_mismatch and no state. Clear it with
+# PUT /v1/account/{account} {"expectedEmail": null}
 ```
 
 ## Account Types

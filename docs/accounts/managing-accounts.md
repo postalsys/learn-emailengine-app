@@ -306,6 +306,8 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
   }'
 ```
 
+`expectedEmail` is set the same way. It restricts which address may be used the next time the account is set up through a [hosted authentication form](/docs/accounts/hosted-authentication#requiring-a-specific-address); send `null` to remove the restriction.
+
 ### Update IMAP/SMTP Settings
 
 **Update specific IMAP properties (recommended):**

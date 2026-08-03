@@ -27,7 +27,7 @@
         {"method": "PUT", "path": "/v1/account/{account}/sync", "description": "Trigger immediate sync"},
         {"method": "GET", "path": "/v1/account/{account}/oauth-token", "description": "Get OAuth2 access token"},
         {"method": "POST", "path": "/v1/verifyAccount", "description": "Test account credentials"},
-        {"method": "POST", "path": "/v1/authentication/form", "description": "Generate hosted auth form URL"},
+        {"method": "POST", "path": "/v1/authentication/form", "description": "Generate hosted auth form URL. Optional expectedEmail restricts the setup to one address"},
         {"method": "GET", "path": "/v1/autoconfig", "description": "Auto-detect IMAP/SMTP settings"},
         {"method": "GET", "path": "/v1/account/{account}/server-signatures", "description": "List server signatures"}
       ]
@@ -259,7 +259,8 @@
     {"code": "InvalidToken", "status": 401, "retryable": false, "description": "Missing or invalid API access token"},
     {"code": "RateLimitExceeded", "status": 429, "retryable": true, "description": "Too many requests"},
     {"code": "ConnectionError", "status": 503, "retryable": true, "description": "Mail server connection failed"},
-    {"code": "AccountAlreadyExists", "status": 400, "retryable": false, "description": "An account with the same ID (or OAuth2 user) already exists"}
+    {"code": "AccountAlreadyExists", "status": 400, "retryable": false, "description": "An account with the same ID (or OAuth2 user) already exists"},
+    {"code": "AccountIdentityMismatch", "status": 403, "retryable": false, "description": "Hosted authentication was completed as a different address than the account's expectedEmail"}
   ],
   "searchParameters": [
     {"name": "from", "type": "string", "description": "Sender address or name"},
