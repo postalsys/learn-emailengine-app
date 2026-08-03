@@ -13,9 +13,9 @@ This repository contains the **unified Docusaurus documentation site** for Email
 
 **✅ Production Ready** - All documentation has been unified and cleaned up. The site is ready for deployment.
 
-- **71 unified documentation files** covering all EmailEngine features
-- **73 auto-generated API docs** from OpenAPI spec
-- **~85,000 lines** of comprehensive documentation
+- **134 unified documentation files** covering all EmailEngine features
+- **80 auto-generated API docs** from OpenAPI spec, plus an overview page
+- **~67,000 lines** of authored documentation
 - **Build status:** ✅ Passing (with minor non-critical anchor warnings)
 
 ## Important Rules
@@ -59,7 +59,7 @@ This repository contains the **unified Docusaurus documentation site** for Email
 
    Two files exist specifically for AI coding assistants and must be updated when the API changes:
 
-   - **`docs/llm-context.md`** - Human-readable AI agent reference document
+   - **`docs/reference/llm-context.md`** - Human-readable AI agent reference document
      - Contains: Complete API endpoint list, webhook events, common patterns, decision trees
      - Update when: New endpoints added, webhooks changed, major features added
      - Location: Appears in the sidebar under "AI Agent Reference"
@@ -79,7 +79,7 @@ This repository contains the **unified Docusaurus documentation site** for Email
 
    **How to Update:**
    1. Check `sources/swagger.json` for the latest API version
-   2. Update `docs/llm-context.md` with new endpoints/features in the appropriate tables
+   2. Update `docs/reference/llm-context.md` with new endpoints/features in the appropriate tables
    3. Update `static/capabilities.json` with corresponding structured data
    4. Verify the version number in both files matches the current API version
    5. Test that `capabilities.json` is valid JSON: `node -e "require('./static/capabilities.json')"`
@@ -180,12 +180,6 @@ This repository contains the **unified Docusaurus documentation site** for Email
      - Uses `fullPage: false` for viewport screenshots, `fullPage: true` for scrollable pages
      - Target URL configured in script (default: `https://localdev.kreata.ee`)
 
-   - `scripts/capture-screenshots-authenticated.js` - Full screenshot capture with login
-
-     - Captures 22 screenshots including authenticated pages
-     - Includes login flow with username/password
-     - Captures pages with test data (accounts with data, message lists, queue details)
-
    - `scripts/capture-api-examples.js` - API response and webhook payload screenshots
 
      - Creates syntax-highlighted code examples for API responses
@@ -217,9 +211,6 @@ This repository contains the **unified Docusaurus documentation site** for Email
    ```bash
    # Basic capture (no authentication needed if EENGINE_REQUIRE_API_AUTH=false)
    node scripts/capture-screenshots.js
-
-   # Full authenticated capture (requires login)
-   node scripts/capture-screenshots-authenticated.js
 
    # API examples capture
    node scripts/capture-api-examples.js
@@ -420,19 +411,23 @@ This is a **unified documentation system** where each feature/topic is covered b
 ```
 docs/
 ├── index.md                 # Landing page
-├── llm-context.md           # AI Agent Reference (for AI coding assistants)
-├── getting-started/         # 3 files - Introduction, quick start, installation
-├── accounts/                # 12 files - Gmail, Outlook, OAuth2, service accounts
-├── sending/                 # 8 files - Basic sending, mail merge, threading, templates
-├── receiving/               # 9 files - Webhooks, messages, searching, attachments
-├── configuration/           # 4 files - Environment variables, Redis, settings
-├── api-reference/           # 5 files - API overview, accounts, messages, sending, webhooks
-├── integrations/            # 6 files - PHP, CRM, AI/ChatGPT, low-code, Cloudflare
-├── advanced/                # 10 files - Performance, monitoring, encryption, IDs
-├── deployment/              # 6 files - Docker, SystemD, Render, Nginx, security
-├── reference/               # 3 files - Webhook events, error codes, config options
-├── support/                 # 2 files - Troubleshooting, license/privacy
-└── api/                     # 73 auto-generated OpenAPI docs (DO NOT EDIT)
+├── getting-started/         # 2 files - Introduction, quick start
+├── installation/            # 6 files - Platform-specific install guides
+├── accounts/                # 19 files - Gmail, Outlook, OAuth2, service accounts
+├── sending/                 # 13 files - Basic sending, mail merge, threading, templates
+├── receiving/               # 10 files - Messages, searching, attachments, web safe HTML
+├── webhooks/                # 26 files - Overview, routing, per-event payload docs
+├── configuration/           # 10 files - Environment variables, Redis, settings
+├── api-reference/           # 7 files - Overview, tokens, accounts, messages, sending, webhooks, OpenAPI
+├── integrations/            # 5 files - PHP, CRM, AI/ChatGPT, low-code
+├── advanced/                # 14 files - Performance, monitoring, encryption, IDs
+├── deployment/              # 7 files - Docker, SystemD, Render, Nginx, security
+├── reference/               # 6 files - Webhook events, error codes, config options, llm-context.md
+├── troubleshooting/         # 1 file  - Common problems and fixes
+├── licensing/               # 1 file  - License and privacy
+├── comparison/              # 2 files - EmailEngine vs Nylas, vs Unipile
+├── support/                 # 2 files - Support channels, security FAQ
+└── api/                     # 80 auto-generated OpenAPI docs (DO NOT EDIT)
 
 static/
 ├── capabilities.json        # Machine-readable API capabilities (for AI agents)
@@ -454,7 +449,7 @@ static/
 3. **OpenAPI Integration** - API docs auto-generated from `sources/swagger.json`
 
    - Plugin: `docusaurus-plugin-openapi-docs`
-   - Output: `docs/api/` (72 endpoint files)
+   - Output: `docs/api/` (80 endpoint files, plus `emailengine-api.info.mdx`)
    - Configuration: See `docusaurus.config.ts` plugins section
    - "Send API Request" button disabled (`hideSendButton: true`) since EmailEngine is self-hosted
    - Server URL automatically replaced with `https://emailengine.example.com`
@@ -517,7 +512,7 @@ EmailEngine provides shortened download URLs that redirect to the latest GitHub 
   - `apiSidebar`: Auto-generated from OpenAPI spec
 
 - **`package.json`** - Dependencies and scripts
-  - Docusaurus 3.9.1
+  - Docusaurus 3.9.2
   - OpenAPI plugin and theme
   - Build, start, serve scripts
 
@@ -527,11 +522,12 @@ The `sources/` directory contains original reference materials used to create th
 
 **Directory Structure:**
 
-- **`sources/swagger.json`** - EmailEngine OpenAPI 3.1 specification (auto-updated on build)
+- **`sources/swagger.json`** - EmailEngine OpenAPI 3.0.0 specification (auto-updated on build)
 
-  - 73 API endpoints
+  - 61 paths, 80 operations, all under `/v1`
   - Auto-downloaded from https://go.emailengine.app/swagger.json during build
-  - Used to generate `docs/api/` content (72 endpoint files)
+  - Used to generate `docs/api/` content (80 endpoint files)
+  - Documented for end users in `docs/api-reference/openapi-spec.md`
   - Run `npm run update-swagger` to update from production
 
 - **`sources/openapi/`** - OpenAPI schema definitions
@@ -576,7 +572,7 @@ The EmailEngine application source code is located at `/Users/andris/Projects/em
 ```
 /Users/andris/Projects/emailengine/
 ├── server.js                 # Main server entry point (110KB - core application)
-├── package.json              # Application metadata (v2.63.4)
+├── package.json              # Application metadata (v2.77.0)
 ├── lib/                      # Core library modules
 │   ├── account.js           # Account management logic (106KB)
 │   ├── schemas.js           # API validation schemas (78KB)
@@ -682,19 +678,11 @@ When documenting EmailEngine features:
 
 ### Important Notes
 
-- The source code is actively developed - check version in `package.json` (currently v2.63.4)
+- The source code is actively developed - check version in `package.json` (currently v2.77.0)
 - OpenAPI spec is generated from this codebase - available at https://go.emailengine.app/swagger.json
 - Web UI templates in `views/` use Handlebars templating
 - Background workers use Bull queues (BullMQ) for job processing
 - Redis is the primary data store - Lua scripts in `lib/lua/` for atomic operations
-
-### Documentation Reports
-
-- **`UNIFIED_DOCS_COMPLETE.md`** - Project completion summary
-- **`CLEANUP_COMPLETE.md`** - Files removed during cleanup
-- **`unified-docs-report.md`** - Original 14K+ word implementation plan
-- **`topic-coverage.md`** - Coverage analysis (149 sources → 71 unified docs)
-- **`content-mapping.md`** - Source-to-destination mapping
 
 ## Documentation Authoring Guidelines
 
@@ -809,8 +797,8 @@ When you run `npm run build`, the following happens automatically:
 
 1. **Downloads latest OpenAPI spec** from https://go.emailengine.app/swagger.json
 2. **Replaces server URL** - Changes `http://0.0.0.0:6677` to `https://emailengine.example.com` (since EmailEngine is self-hosted)
-3. **Regenerates API docs** from the updated spec (73 endpoint files)
-4. **Regenerates API sidebar** with collapsible tag-based groups (17 categories)
+3. **Regenerates API docs** from the updated spec (80 endpoint files)
+4. **Regenerates API sidebar** with collapsible tag-based groups (18 categories)
 5. **Builds the site** with the latest API documentation
 
 This is handled by the `prebuild` script that runs `scripts/update-swagger.js`.
@@ -838,12 +826,12 @@ npm run generate-api-sidebar
 
 #### API Sidebar Structure
 
-The API sidebar is organized by OpenAPI tags into 17 collapsible categories:
+The API sidebar is organized by OpenAPI tags into 18 collapsible categories:
 
 - Account (13 endpoints)
 - Mailbox (4 endpoints)
 - Message (10 endpoints)
-- Submit, Outbox, Delivery Test, Access Tokens, Settings, Templates, Logs, Stats, License, Webhooks, OAuth2 Applications, SMTP Gateway, Blocklists, Multi Message Actions
+- Submit, Outbox, Delivery Test, Access Tokens, Settings, Templates, Logs, Stats, License, Webhooks, OAuth2 Applications, SMTP Gateway, Blocklists, Multi Message Actions, Export (Beta)
 
 The sidebar structure is manually maintained in `sidebars.ts` for full control over organization and ordering.
 
@@ -960,18 +948,17 @@ This documentation was created by:
 5. **Unifying 149 source files** into 71 comprehensive topic-based documentation files
 6. **Removing old content** (blog, old docs, helper scripts) to create single source of truth
 
-**Result:** Production-ready documentation with 100% feature coverage and ~85,000 lines of content.
+**Result of that initial unification:** 100% feature coverage across 71 topic-based files. The site has grown since - see Project Status at the top for current figures.
 
 ## Getting Help
 
 - **Docusaurus docs:** https://docusaurus.io/docs
 - **OpenAPI plugin:** https://github.com/PaloAltoNetworks/docusaurus-openapi-docs
 - **EmailEngine:** https://emailengine.app
-- **Project reports:** See `UNIFIED_DOCS_COMPLETE.md`, `CLEANUP_COMPLETE.md`
 
 ---
 
-**Last Updated:** December 28, 2025
-**Docusaurus Version:** 3.9.1
-**EmailEngine API Version:** 2.63.4
+**Last Updated:** August 3, 2026
+**Docusaurus Version:** 3.9.2
+**EmailEngine API Version:** 2.77.0
 **Status:** Production Ready
