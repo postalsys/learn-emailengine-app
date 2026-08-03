@@ -494,9 +494,11 @@ curl -X POST "https://emailengine.example.com/v1/authentication/form" \
 
 # Add "expectedEmail" to reject the setup unless the user authenticates as that
 # address. Stored on the account, so it also covers later links that omit it.
-# On rejection the user is sent to redirectUrl with
-# error=account_identity_mismatch and no state. Clear it with
-# PUT /v1/account/{account} {"expectedEmail": null}
+# Comparison is exact apart from case, so Gmail dot/googlemail/+tag variants
+# are rejected - pass the address exactly as the provider reports it.
+# A rejected setup is NOT redirected to redirectUrl: EmailEngine shows the user
+# both addresses and a button to retry. Only success redirects.
+# Clear it with PUT /v1/account/{account} {"expectedEmail": null}
 ```
 
 ## Account Types

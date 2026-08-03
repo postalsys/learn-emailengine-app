@@ -259,8 +259,7 @@
     {"code": "InvalidToken", "status": 401, "retryable": false, "description": "Missing or invalid API access token"},
     {"code": "RateLimitExceeded", "status": 429, "retryable": true, "description": "Too many requests"},
     {"code": "ConnectionError", "status": 503, "retryable": true, "description": "Mail server connection failed"},
-    {"code": "AccountAlreadyExists", "status": 400, "retryable": false, "description": "An account with the same ID (or OAuth2 user) already exists"},
-    {"code": "AccountIdentityMismatch", "status": 403, "retryable": false, "description": "Hosted authentication was completed as a different address than the account's expectedEmail"}
+    {"code": "AccountAlreadyExists", "status": 400, "retryable": false, "description": "An account with the same ID (or OAuth2 user) already exists"}
   ],
   "searchParameters": [
     {"name": "from", "type": "string", "description": "Sender address or name"},

@@ -292,15 +292,9 @@ https://myapp.com/settings?account=user123&state=new
 | `state` | Result of the operation: `new` (account was created) or `existing` (existing account was updated) |
 
 :::note Error Handling
-If authentication fails (OAuth2 error, user cancellation, etc.), EmailEngine displays an error page rather than redirecting to your `redirectUrl`.
+If authentication fails (OAuth2 error, user cancellation, a rejected [`expectedEmail`](#requiring-a-specific-address), etc.), EmailEngine displays an error page rather than redirecting to your `redirectUrl`. Your application only receives a redirect on successful authentication.
 
-The exception is a setup rejected by [`expectedEmail`](#requiring-a-specific-address), which does redirect, so your application can tell the user why nothing was connected:
-
-```
-https://myapp.com/settings?account=user123&error=account_identity_mismatch&error_description=...
-```
-
-Check for `error` before reading `state`. No account was created or modified, so no `state` is sent.
+Where the user can fix the problem themselves, that page offers a way back into the flow, so most failures are resolved without returning to your application at all.
 :::
 
 :::info Account Initialization
@@ -314,14 +308,7 @@ The redirect happens immediately after authentication completes, but the account
 
 ```javascript
 app.get('/settings', async (req, res) => {
-  const { account, state, error } = req.query;
-
-  if (error) {
-    // Nothing was connected, e.g. the user signed in as somebody else
-    return res.render('settings', {
-      message: 'Could not connect that email account. Please try again.'
-    });
-  }
+  const { account, state } = req.query;
 
   if (state === 'new') {
     // New account was created
@@ -350,12 +337,6 @@ app.get('/settings', async (req, res) => {
 def settings():
     account = request.args.get('account')
     state = request.args.get('state')
-    error = request.args.get('error')
-
-    if error:
-        # Nothing was connected, e.g. the user signed in as somebody else
-        flash('Could not connect that email account. Please try again.', 'danger')
-        return render_template('settings.html')
 
     if state == 'new':
         # New account was created
@@ -380,13 +361,8 @@ def settings():
 
 $account = $_GET['account'] ?? null;
 $state = $_GET['state'] ?? null;
-$error = $_GET['error'] ?? null;
 
-if ($error) {
-    // Nothing was connected, e.g. the user signed in as somebody else
-    $message = 'Could not connect that email account. Please try again.';
-    $messageType = 'danger';
-} elseif ($state === 'new') {
+if ($state === 'new') {
     // New account was created
     $stmt = $pdo->prepare('UPDATE users SET email_connected = 1 WHERE id = ?');
     $stmt->execute([$account]);
@@ -454,6 +430,10 @@ What the address is checked against depends on how the user authenticates:
 | IMAP/SMTP | The address entered on the form |
 
 For OAuth2 the provider vouches for the identity, so the check establishes who owns the mailbox. For IMAP it does not: the credentials are entered separately from the address, so a match confirms the account is registered under the expected address rather than proving the mailbox belongs to it.
+
+A rejected setup does not return the user to your application. EmailEngine shows them a page naming both the expected address and the one they used, with a button to start the setup again - for OAuth2 that reopens the provider's account picker, so they can switch accounts without going back to you first.
+
+The comparison is exact, apart from letter case and surrounding spaces. Providers that treat several spellings as one mailbox are not accounted for: Google ignores dots, accepts `googlemail.com` for `gmail.com` and strips `+tags`, so `john.doe@gmail.com` is rejected against an account that Google reports as `johndoe@gmail.com`. Pass the address exactly as the provider reports it - the rejection page names both addresses, which is what makes a near-miss like this visible.
 
 The value is stored on the account, so it also applies to later links that omit it, and to the **Re-authenticate** button in the EmailEngine dashboard. To move an account to a different address, issue a new form link carrying the new `expectedEmail` - a link that states an address replaces the stored one. To drop the restriction entirely, clear the field with the [update account API](/docs/api/put-v-1-account-account):
 
