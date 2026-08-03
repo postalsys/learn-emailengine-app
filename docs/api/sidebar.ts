@@ -14,15 +14,9 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "api/get-v-1-accounts",
-          label: "List accounts",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "api/get-v-1-changes",
-          label: "Stream state changes",
-          className: "api-method get",
+          id: "api/post-v-1-account",
+          label: "Register new account",
+          className: "api-method post",
         },
         {
           type: "doc",
@@ -44,9 +38,9 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-serversignatures",
-          label: "List Account Signatures",
-          className: "api-method get",
+          id: "api/put-v-1-account-account-flush",
+          label: "Request account flush",
+          className: "api-method put",
         },
         {
           type: "doc",
@@ -56,21 +50,15 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/post-v-1-account",
-          label: "Register new account",
-          className: "api-method post",
+          id: "api/put-v-1-account-account-reconnect",
+          label: "Request reconnect",
+          className: "api-method put",
         },
         {
           type: "doc",
-          id: "api/post-v-1-verifyaccount",
-          label: "Verify IMAP and SMTP settings",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "api/post-v-1-authentication-form",
-          label: "Generate authentication link",
-          className: "api-method post",
+          id: "api/get-v-1-account-account-serversignatures",
+          label: "List Account Signatures",
+          className: "api-method get",
         },
         {
           type: "doc",
@@ -80,15 +68,27 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/put-v-1-account-account-reconnect",
-          label: "Request reconnect",
-          className: "api-method put",
+          id: "api/get-v-1-accounts",
+          label: "List accounts",
+          className: "api-method get",
         },
         {
           type: "doc",
-          id: "api/put-v-1-account-account-flush",
-          label: "Request account flush",
-          className: "api-method put",
+          id: "api/post-v-1-authentication-form",
+          label: "Generate authentication link",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-changes",
+          label: "Stream state changes",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/post-v-1-verifyaccount",
+          label: "Verify IMAP and SMTP settings",
+          className: "api-method post",
         },
       ],
     },
@@ -98,12 +98,6 @@ const sidebar: SidebarsConfig = {
       collapsible: true,
       collapsed: true,
       items: [
-        {
-          type: "doc",
-          id: "api/get-v-1-account-account-mailboxes",
-          label: "List mailboxes",
-          className: "api-method get",
-        },
         {
           type: "doc",
           id: "api/post-v-1-account-account-mailbox",
@@ -122,6 +116,12 @@ const sidebar: SidebarsConfig = {
           label: "Delete mailbox",
           className: "api-method delete",
         },
+        {
+          type: "doc",
+          id: "api/get-v-1-account-account-mailboxes",
+          label: "List mailboxes",
+          className: "api-method get",
+        },
       ],
     },
     {
@@ -132,15 +132,15 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "api/get-v-1-account-account-messages",
-          label: "List messages in a folder",
+          id: "api/get-v-1-account-account-attachment-attachment",
+          label: "Download attachment",
           className: "api-method get",
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-text-text",
-          label: "Retrieve message text",
-          className: "api-method get",
+          id: "api/post-v-1-account-account-message",
+          label: "Upload message",
+          className: "api-method post",
         },
         {
           type: "doc",
@@ -162,14 +162,20 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/get-v-1-account-account-attachment-attachment",
-          label: "Download attachment",
-          className: "api-method get",
+          id: "api/put-v-1-account-account-message-message-move",
+          label: "Move a message to a specified folder",
+          className: "api-method put",
         },
         {
           type: "doc",
           id: "api/get-v-1-account-account-message-message-source",
           label: "Download raw message",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-account-account-messages",
+          label: "List messages in a folder",
           className: "api-method get",
         },
         {
@@ -180,15 +186,9 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/post-v-1-account-account-message",
-          label: "Upload message",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "api/put-v-1-account-account-message-message-move",
-          label: "Move a message to a specified folder",
-          className: "api-method put",
+          id: "api/get-v-1-account-account-text-text",
+          label: "Retrieve message text",
+          className: "api-method get",
         },
       ],
     },
@@ -200,14 +200,14 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "api/post-v-1-account-account-submit",
-          label: "Submit message for delivery",
+          id: "api/post-v-1-account-account-message-message-submit",
+          label: "Submit a stored draft for delivery",
           className: "api-method post",
         },
         {
           type: "doc",
-          id: "api/post-v-1-account-account-message-message-submit",
-          label: "Submit a stored draft for delivery",
+          id: "api/post-v-1-account-account-submit",
+          label: "Submit message for delivery",
           className: "api-method post",
         },
       ],
@@ -246,15 +246,15 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "api/get-v-1-deliverytest-check-deliverytest",
-          label: "Check test status",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
           id: "api/post-v-1-deliverytest-account-account",
           label: "Create delivery test",
           className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-deliverytest-check-deliverytest",
+          label: "Check test status",
+          className: "api-method get",
         },
       ],
     },
@@ -266,18 +266,6 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "api/get-v-1-tokens",
-          label: "List root tokens",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "api/get-v-1-tokens-account-account",
-          label: "List account tokens",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
           id: "api/post-v-1-token",
           label: "Provision an access token",
           className: "api-method post",
@@ -287,6 +275,18 @@ const sidebar: SidebarsConfig = {
           id: "api/delete-v-1-token-token",
           label: "Remove a token",
           className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-tokens",
+          label: "List root tokens",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-tokens-account-account",
+          label: "List account tokens",
+          className: "api-method get",
         },
       ],
     },
@@ -342,6 +342,18 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "api/delete-v-1-templates-account-account",
+          label: "Flush templates",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "api/post-v-1-templates-template",
+          label: "Create template",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
           id: "api/get-v-1-templates-template-template",
           label: "Get template information",
           className: "api-method get",
@@ -356,18 +368,6 @@ const sidebar: SidebarsConfig = {
           type: "doc",
           id: "api/delete-v-1-templates-template-template",
           label: "Remove a template",
-          className: "api-method delete",
-        },
-        {
-          type: "doc",
-          id: "api/post-v-1-templates-template",
-          label: "Create template",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
-          id: "api/delete-v-1-templates-account-account",
-          label: "Flush templates",
           className: "api-method delete",
         },
       ],
@@ -484,15 +484,15 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/get-v-1-pubsub-status",
-          label: "List Pub/Sub status",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
           id: "api/post-v-1-oauth-2-app-verify",
           label: "Verify OAuth2 application setup",
           className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-pubsub-status",
+          label: "List Pub/Sub status",
+          className: "api-method get",
         },
       ],
     },
@@ -504,9 +504,9 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "api/get-v-1-gateways",
-          label: "List gateways",
-          className: "api-method get",
+          id: "api/post-v-1-gateway",
+          label: "Register new gateway",
+          className: "api-method post",
         },
         {
           type: "doc",
@@ -522,15 +522,15 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/post-v-1-gateway",
-          label: "Register new gateway",
-          className: "api-method post",
-        },
-        {
-          type: "doc",
           id: "api/put-v-1-gateway-edit-gateway",
           label: "Update gateway info",
           className: "api-method put",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-gateways",
+          label: "List gateways",
+          className: "api-method get",
         },
       ],
     },
@@ -540,12 +540,6 @@ const sidebar: SidebarsConfig = {
       collapsible: true,
       collapsed: true,
       items: [
-        {
-          type: "doc",
-          id: "api/get-v-1-blocklists",
-          label: "List blocklists",
-          className: "api-method get",
-        },
         {
           type: "doc",
           id: "api/get-v-1-blocklist-listid",
@@ -563,6 +557,12 @@ const sidebar: SidebarsConfig = {
           id: "api/delete-v-1-blocklist-listid",
           label: "Remove from blocklist",
           className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-blocklists",
+          label: "List blocklists",
+          className: "api-method get",
         },
       ],
     },
@@ -600,9 +600,9 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "api/get-v-1-account-account-exports",
-          label: "List exports",
-          className: "api-method get",
+          id: "api/post-v-1-account-account-export",
+          label: "Create export",
+          className: "api-method post",
         },
         {
           type: "doc",
@@ -624,9 +624,9 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
-          id: "api/post-v-1-account-account-export",
-          label: "Create export",
-          className: "api-method post",
+          id: "api/get-v-1-account-account-exports",
+          label: "List exports",
+          className: "api-method get",
         },
       ],
     },

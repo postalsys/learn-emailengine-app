@@ -16,7 +16,7 @@ import Export from "@theme/ApiExplorer/Export";
 
 <span
   className={"theme-doc-version-badge badge badge--secondary"}
-  children={"Version: 2.75.0"}
+  children={"Version: 2.77.0"}
 >
 </span>
 
@@ -31,23 +31,13 @@ import Export from "@theme/ApiExplorer/Export";
 
 EmailEngine provides a RESTful API for managing email accounts, sending messages, and processing email data across multiple providers.
 
-<h3>Authentication</h3>
-All API requests require authentication using an Access Token. You can generate and manage your tokens from the <a href="/admin/tokens" target="_parent"><strong>Access Tokens</strong></a> page.
+Every request needs an access token, passed either as an `Authorization: Bearer <token>` header or an `?access_token=` query argument. Tokens are issued and revoked on the Access Tokens page of the EmailEngine admin interface.
 
-Include your token in requests using one of these methods:
-- Query parameter: <code>?access_token=YOUR_TOKEN</code>
-- Authorization header: <code>Authorization: Bearer YOUR_TOKEN</code>
+Requests against the same email account are processed sequentially to keep its state consistent, so simultaneous calls for one account queue up behind each other. Long-running operations can be given more room with the `x-ee-timeout` header, in milliseconds.
 
-<h3>Request Processing</h3>
+Every failure returns the same JSON envelope: a numeric `statusCode`, a short `error` label and a human-readable `message`. Each endpoint therefore documents only which status codes it can return and what they mean.
 
-<strong>Sequential Processing:</strong> Requests to the same email account are processed sequentially to maintain data consistency. Multiple simultaneous requests will be queued.
-
-<strong>Timeouts:</strong> Long-running operations may cause queued requests to timeout. Configure appropriate timeout values using the <code>X-EE-Timeout</code> header (in milliseconds).
-
-<h3>Getting Started</h3>
-1. <a href="/admin/tokens" target="_parent">Generate an Access Token</a>
-2. <a href="/admin/accounts" target="_parent">Add an email account</a>
-3. Start making API requests using the endpoints below
+Full documentation: https://learn.emailengine.app/
 
 <div
   style={{"marginBottom":"2rem"}}
