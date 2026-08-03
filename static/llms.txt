@@ -19,7 +19,7 @@ to email accounts via IMAP, SMTP, Gmail API, and Microsoft Graph API.
 
 # Full OpenAPI 3.0 specification
 # Source of truth for all API endpoints and schemas
-https://emailengine.dev/swagger.json
+https://go.emailengine.app/swagger.json
 
 # Documentation sections
 /docs/getting-started - Installation and quick start

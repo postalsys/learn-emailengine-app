@@ -72,7 +72,7 @@ npm run build
 
 The build automatically:
 
-1. Downloads the latest OpenAPI spec from https://emailengine.dev/swagger.json
+1. Downloads the latest OpenAPI spec from https://go.emailengine.app/swagger.json
 2. Updates `sources/swagger.json`
 3. Builds the static site
 

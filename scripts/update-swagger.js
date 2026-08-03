@@ -4,7 +4,7 @@
  * Update swagger.json from EmailEngine production API
  *
  * This script downloads the latest OpenAPI specification from
- * https://emailengine.dev/swagger.json and saves it to sources/swagger.json
+ * https://go.emailengine.app/swagger.json and saves it to sources/swagger.json
  *
  * It runs automatically before builds via the 'prebuild' npm script.
  */
@@ -13,19 +13,48 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const SWAGGER_URL = 'https://emailengine.dev/swagger.json';
+const SWAGGER_URL = 'https://go.emailengine.app/swagger.json';
 const OUTPUT_PATH = path.join(__dirname, '..', 'sources', 'swagger.json');
+const MAX_REDIRECTS = 5;
+
+// Operations we do not document. The release spec is a superset of what a
+// running instance exposes, so it still carries Document Store endpoints that
+// require a deprecated feature to be enabled.
+const EXCLUDED_TAGS = ['Deprecated endpoints (Document Store)'];
 
 console.log('📥 Downloading swagger.json from EmailEngine...');
 console.log(`   Source: ${SWAGGER_URL}`);
 console.log(`   Target: ${OUTPUT_PATH}`);
 
-https.get(SWAGGER_URL, (response) => {
-  if (response.statusCode !== 200) {
-    console.error(`❌ Failed to download swagger.json: HTTP ${response.statusCode}`);
-    process.exit(1);
-  }
+// The short URL redirects to the release asset on GitHub, so follow redirects
+function download(url, redirectsLeft, callback) {
+  https
+    .get(url, (response) => {
+      const { statusCode, headers } = response;
 
+      if (statusCode >= 300 && statusCode < 400 && headers.location) {
+        response.resume();
+        if (redirectsLeft <= 0) {
+          console.error('❌ Failed to download swagger.json: too many redirects');
+          process.exit(1);
+        }
+        return download(new URL(headers.location, url).toString(), redirectsLeft - 1, callback);
+      }
+
+      if (statusCode !== 200) {
+        console.error(`❌ Failed to download swagger.json: HTTP ${statusCode}`);
+        process.exit(1);
+      }
+
+      callback(response);
+    })
+    .on('error', (error) => {
+      console.error('❌ Network error downloading swagger.json:', error.message);
+      process.exit(1);
+    });
+}
+
+download(SWAGGER_URL, MAX_REDIRECTS, (response) => {
   let data = '';
 
   response.on('data', (chunk) => {
@@ -36,6 +65,24 @@ https.get(SWAGGER_URL, (response) => {
     try {
       // Validate JSON
       const json = JSON.parse(data);
+
+      // Drop excluded operations, and any path left without operations
+      let excludedCount = 0;
+      for (const [pathKey, pathItem] of Object.entries(json.paths || {})) {
+        for (const [method, operation] of Object.entries(pathItem)) {
+          const operationTags = (operation && operation.tags) || [];
+          if (operationTags.some(tag => EXCLUDED_TAGS.includes(tag))) {
+            delete pathItem[method];
+            excludedCount++;
+          }
+        }
+        if (!Object.keys(pathItem).length) {
+          delete json.paths[pathKey];
+        }
+      }
+      if (excludedCount) {
+        console.log(`   Excluded ${excludedCount} operation(s) tagged: ${EXCLUDED_TAGS.join(', ')}`);
+      }
 
       // Replace server URL with example domain
       // EmailEngine is self-hosted, so we use an example domain instead of localhost
@@ -96,7 +143,4 @@ https.get(SWAGGER_URL, (response) => {
       process.exit(1);
     }
   });
-}).on('error', (error) => {
-  console.error('❌ Network error downloading swagger.json:', error.message);
-  process.exit(1);
 });

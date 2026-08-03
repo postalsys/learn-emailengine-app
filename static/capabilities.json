@@ -4,7 +4,7 @@
   "description": "Self-hosted email API gateway providing REST API access to email accounts via IMAP, SMTP, Gmail API, and Microsoft Graph API",
   "version": "2.75.0",
   "documentationUrl": "https://learn.emailengine.app/",
-  "openApiSpec": "https://emailengine.dev/swagger.json",
+  "openApiSpec": "https://go.emailengine.app/swagger.json",
   "authentication": {
     "type": "bearer",
     "header": "Authorization",

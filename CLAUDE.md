@@ -530,7 +530,7 @@ The `sources/` directory contains original reference materials used to create th
 - **`sources/swagger.json`** - EmailEngine OpenAPI 3.1 specification (auto-updated on build)
 
   - 73 API endpoints
-  - Auto-downloaded from https://emailengine.dev/swagger.json during build
+  - Auto-downloaded from https://go.emailengine.app/swagger.json during build
   - Used to generate `docs/api/` content (72 endpoint files)
   - Run `npm run update-swagger` to update from production
 
@@ -683,7 +683,7 @@ When documenting EmailEngine features:
 ### Important Notes
 
 - The source code is actively developed - check version in `package.json` (currently v2.63.4)
-- OpenAPI spec is generated from this codebase - available at https://emailengine.dev/swagger.json
+- OpenAPI spec is generated from this codebase - available at https://go.emailengine.app/swagger.json
 - Web UI templates in `views/` use Handlebars templating
 - Background workers use Bull queues (BullMQ) for job processing
 - Redis is the primary data store - Lua scripts in `lib/lua/` for atomic operations
@@ -807,7 +807,7 @@ The API documentation is automatically updated from the EmailEngine production A
 
 When you run `npm run build`, the following happens automatically:
 
-1. **Downloads latest OpenAPI spec** from https://emailengine.dev/swagger.json
+1. **Downloads latest OpenAPI spec** from https://go.emailengine.app/swagger.json
 2. **Replaces server URL** - Changes `http://0.0.0.0:6677` to `https://emailengine.example.com` (since EmailEngine is self-hosted)
 3. **Regenerates API docs** from the updated spec (73 endpoint files)
 4. **Regenerates API sidebar** with collapsible tag-based groups (17 categories)
