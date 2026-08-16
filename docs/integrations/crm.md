@@ -138,7 +138,7 @@ Using the special use flag `\Sent` allows EmailEngine to automatically determine
 - Only list folders you genuinely need for instant notifications
 - Don't include all folders "just in case"
 
-**Read more**: [Sub-connections and Virtual Lists](/docs/advanced/virtual-lists)
+**Read more**: [Enable Sub-Connections](/docs/accounts/managing-accounts#enable-sub-connections)
 
 ## Listening for Webhooks
 

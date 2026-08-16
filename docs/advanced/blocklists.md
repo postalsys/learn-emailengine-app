@@ -29,80 +29,9 @@ Blocklists are collections of email addresses associated with a named list. When
 
 ## How Blocklists Work
 
-### Mail Merge Integration
+A blocklist is only consulted when you send. Passing a `listId` on a mail merge makes EmailEngine check every recipient against the list of that name, skip the ones it finds, and attach one-click unsubscribe headers to the rest so recipients can add themselves to it.
 
-When you send a mail merge with a `listId`, EmailEngine:
-
-1. Checks each recipient against the specified blocklist
-2. Skips blocked recipients (returns them with a `skipped` field in the response)
-3. Adds `List-Unsubscribe` and `List-Unsubscribe-Post` headers to outgoing emails
-4. Makes `{{rcpt.unsubscribeUrl}}` available in templates
-
-### One-Click Unsubscribe Flow
-
-1. EmailEngine adds RFC 8058 compliant headers to mail merge emails
-2. When a recipient clicks unsubscribe in their email client, a POST request is sent to EmailEngine's `/unsubscribe` endpoint
-3. EmailEngine verifies the signed request, adds the recipient to the blocklist, and triggers a `listUnsubscribe` webhook
-4. Future mail merges to the same list automatically skip the unsubscribed address
-
-:::info serviceUrl Required
-For unsubscribe URLs to work, the `serviceUrl` setting must be configured with your EmailEngine instance's public URL. Without it, the unsubscribe links will be invalid.
-
-```bash
-curl -X POST "https://your-ee.com/v1/settings" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"serviceUrl": "https://your-ee.com"}'
-```
-:::
-
-## Sending Mail Merge with Blocklist
-
-Include a `listId` when sending mail merge to enable blocklist checking and unsubscribe headers:
-
-```bash
-curl -X POST "https://your-ee.com/v1/account/user123/submit" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "listId": "weekly-newsletter",
-    "subject": "Weekly Newsletter - {{week}}",
-    "html": "<h1>Hello {{name}}</h1><p>Newsletter content...</p><p><a href=\"{{rcpt.unsubscribeUrl}}\">Unsubscribe</a></p>",
-    "mailMerge": [
-      {
-        "to": {"address": "alice@example.com", "name": "Alice"},
-        "params": {"name": "Alice", "week": "Jan 15"}
-      },
-      {
-        "to": {"address": "bob@example.com", "name": "Bob"},
-        "params": {"name": "Bob", "week": "Jan 15"}
-      }
-    ]
-  }'
-```
-
-Response includes skipped recipients:
-
-```json
-{
-  "mailMerge": [
-    {
-      "success": true,
-      "to": {"address": "alice@example.com"},
-      "messageId": "<abc@example.com>",
-      "queueId": "d41f0423195f271f"
-    },
-    {
-      "success": true,
-      "skipped": {
-        "reason": "unsubscribe",
-        "listId": "weekly-newsletter"
-      },
-      "to": {"address": "bob@example.com"}
-    }
-  ]
-}
-```
+That sending side, including the hosted unsubscribe page and the `serviceUrl` setting it depends on, is covered in [Virtual Mailing Lists](/docs/advanced/virtual-lists). This page covers the store itself: reading it, and writing to it from your own application.
 
 ### List ID Format
 
@@ -111,7 +40,7 @@ List IDs must use a subdomain/hostname format:
 - **Valid:** `newsletter`, `weekly-updates`, `campaign-2024`, `promo-emails`
 - **Invalid:** `my_list` (underscores), `My List` (spaces), `list@domain` (@ symbol)
 
-Lists are created automatically when the first entry is added -- no pre-registration needed.
+Lists are created automatically when the first entry is added, so no pre-registration is needed. Removing the last entry deletes the list again.
 
 ## API Operations
 
@@ -173,7 +102,7 @@ Each entry includes:
 |-------|-------------|
 | `recipient` | Blocked email address (stored lowercase) |
 | `account` | Account that triggered the block |
-| `source` | How the entry was added: `api` or `one-click` |
+| `source` | How the entry was added: `one-click` (mail client unsubscribe button), `form` (hosted unsubscribe page), `api` (Blocklists API) or `admin` (admin interface) |
 | `reason` | Why the address was blocked: `unsubscribe`, `block`, or custom |
 | `messageId` | Original message ID (for unsubscribe entries) |
 | `created` | Timestamp when the entry was added |
@@ -300,19 +229,19 @@ Triggered when a recipient re-subscribes through the hosted unsubscribe page. Re
 
 ## Best Practices
 
-1. **Use descriptive list IDs** -- Name lists after their purpose: `weekly-newsletter`, `product-announcements`, `transactional-bounces`
+1. **Use descriptive list IDs** - Name lists after their purpose: `weekly-newsletter`, `product-announcements`, `transactional-bounces`
 
-2. **Always include unsubscribe links** -- Use `{{rcpt.unsubscribeUrl}}` in mail merge templates to provide RFC 8058 compliant unsubscribe links
+2. **Always include unsubscribe links** - Use `{{rcpt.unsubscribeUrl}}` in mail merge templates to provide RFC 8058 compliant unsubscribe links
 
-3. **Handle bounce webhooks** -- Automatically add hard-bounced addresses to a blocklist to maintain list hygiene
+3. **Handle bounce webhooks** - Automatically add hard-bounced addresses to a blocklist to maintain list hygiene
 
-4. **Monitor blocklist growth** -- Regularly review blocklist sizes via the API to track unsubscribe rates
+4. **Monitor blocklist growth** - Regularly review blocklist sizes via the API to track unsubscribe rates
 
-5. **Configure serviceUrl** -- Ensure the `serviceUrl` setting is configured so unsubscribe links work correctly
+5. **Configure serviceUrl** - Ensure the `serviceUrl` setting is configured so unsubscribe links work correctly
 
 ## See Also
 
-- [Mail Merge](/docs/sending/mail-merge) -- Sending personalized bulk emails
-- [Bounce Detection](/docs/advanced/bounces) -- Automatic bounce handling
-- [Webhook Events Reference](/docs/reference/webhook-events) -- All webhook event types
-- [listUnsubscribe Webhook](/docs/webhooks/listunsubscribe) -- Unsubscribe event details
+- [Virtual Mailing Lists](/docs/advanced/virtual-lists) - The sending side: unsubscribe headers, hosted page and suppression at send time
+- [Mail Merge](/docs/sending/mail-merge) - Sending personalized bulk emails
+- [Bounce Detection](/docs/advanced/bounces) - Automatic bounce handling
+- [Webhook Events Reference](/docs/reference/webhook-events) - All webhook event types
