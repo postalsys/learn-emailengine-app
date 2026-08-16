@@ -174,7 +174,15 @@ Two behaviors are worth knowing when you write that handler:
 
 ## Manage the list
 
-The Suppression Lists section of the admin interface lists every list with its entry count, and lets you add or remove addresses, open a recipient's subscription page, and delete a list outright. The same operations are available over the API:
+Suppression Lists in the admin interface sidebar shows every list that exists, with the number of addresses on each. A list appears here the moment its first address is suppressed.
+
+![Suppression Lists page listing each list with its address count](/img/screenshots/suppression-lists.png)
+
+Opening a list shows what was recorded for each address: why it was suppressed, how it got there, the account that was sending, and when. The `one-click` source below is the mail client unsubscribe button, and `api` is an address the application suppressed itself.
+
+![Entries on a suppression list, with reason, source, account and date columns](/img/screenshots/suppression-list-entries.png)
+
+From these pages you can add or remove addresses, open a recipient's subscription page, and delete a list outright. The same operations are available over the API:
 
 | Operation | Endpoint |
 | --- | --- |
