@@ -1,8 +1,37 @@
+#!/usr/bin/env node
+
+'use strict';
+
+/*
+ * Screenshot capture for the OAuth2 setup documentation
+ * (static/img/oauth2-setup). Companion to capture-screenshots.js - same
+ * configuration, but everything here works through the admin UI, so no API
+ * token is needed.
+ *
+ * Creates one Outlook OAuth2 application along the way. Run it against a
+ * throwaway instance that has NO OAuth2 apps yet, otherwise the empty-state
+ * shot (01) will not be empty.
+ *
+ * Configuration (environment variables):
+ *   EE_URL       Base URL of a running EmailEngine instance
+ *                (default http://127.0.0.1:7003)
+ *   EE_USERNAME  Admin username for /admin/login (default "admin")
+ *   EE_PASSWORD  Admin password; omit if the instance has authentication
+ *                disabled
+ *
+ * Example:
+ *   EE_URL=http://127.0.0.1:7003 EE_PASSWORD=... \
+ *     node scripts/capture-oauth2-screenshots.js
+ */
+
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
-const BASE_URL = 'http://localhost:7003';
+const BASE_URL = (process.env.EE_URL || 'http://127.0.0.1:7003').replace(/\/+$/, '');
+const EE_USERNAME = process.env.EE_USERNAME || 'admin';
+const EE_PASSWORD = process.env.EE_PASSWORD || '';
+
 const OUTPUT_DIR = path.join(__dirname, '..', 'static', 'img', 'oauth2-setup');
 
 // Fake credentials for screenshots
@@ -13,6 +42,22 @@ const OUTLOOK_APP = {
     redirectUrl: 'https://localdev.kreata.ee/oauth',
     authority: 'common'
 };
+
+async function login(page) {
+    await page.goto(`${BASE_URL}/admin`, { waitUntil: 'load' });
+    if (!page.url().includes('/admin/login')) {
+        console.log('No login required');
+        return;
+    }
+    if (!EE_PASSWORD) {
+        throw new Error('The instance requires authentication - set EE_PASSWORD');
+    }
+    console.log('Logging in...');
+    await page.fill('#loginUsername', EE_USERNAME);
+    await page.fill('#loginPassword', EE_PASSWORD);
+    await page.click('form[action="/admin/login"] button[type="submit"]');
+    await page.waitForURL(url => !url.pathname.startsWith('/admin/login'), { timeout: 15000 });
+}
 
 async function captureScreenshots() {
     // Ensure output directory exists
@@ -33,6 +78,8 @@ async function captureScreenshots() {
     const page = await context.newPage();
 
     try {
+        await login(page);
+
         // Screenshot 1: OAuth2 configuration page (empty)
         console.log('Capturing OAuth2 configuration page...');
         await page.goto(`${BASE_URL}/admin/config/oauth`, { waitUntil: 'domcontentloaded', timeout: 60000 });
@@ -117,16 +164,14 @@ async function captureScreenshots() {
         console.log('\nAll OAuth2 screenshots captured successfully!');
         console.log(`Screenshots saved to: ${OUTPUT_DIR}`);
 
-    } catch (error) {
-        console.error('Error capturing screenshots:', error);
-        // Take error screenshot for debugging
-        await page.screenshot({
-            path: path.join(OUTPUT_DIR, 'error-screenshot.png'),
-            fullPage: true
-        });
     } finally {
         await browser.close();
     }
 }
 
-captureScreenshots();
+// Fail loudly: a swallowed error used to leave the previous run's screenshots in
+// place and still exit 0, so a broken capture looked like a successful one.
+captureScreenshots().catch(err => {
+    console.error(err);
+    process.exit(1);
+});

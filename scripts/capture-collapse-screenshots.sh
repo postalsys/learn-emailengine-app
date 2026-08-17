@@ -84,7 +84,7 @@ cd "$EE_REPO"
 
 echo "Using EmailEngine checkout: ${EE_REPO}"
 echo "Flushing the e2e Redis db..."
-node test/e2e/flush-redis.js
+node test/helpers/flush-redis.js
 
 echo "Booting EmailEngine on ${EE_URL} (log: ${SERVER_LOG})..."
 # Own process group so cleanup can take the workers down with the parent.
