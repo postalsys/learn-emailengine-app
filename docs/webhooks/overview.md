@@ -69,7 +69,7 @@ _The Webhooks settings page with the target URL and event selection_
 Use the [settings API](/docs/api/post-v-1-settings) to configure webhooks:
 
 ```bash
-curl -X POST "https://your-emailengine.com/v1/settings" \
+curl -X POST "https://emailengine.example.com/v1/settings" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -92,8 +92,8 @@ See [Webhooks API](/docs/api-reference/webhooks-api) for route management and [P
 
 Your webhook endpoint must:
 - Accept HTTP POST requests
-- Return a 2xx status code quickly (within 5 seconds)
-- Process events asynchronously
+- Return a 2xx status code before the delivery times out (30 seconds by default)
+- Process events asynchronously, so that acknowledging never waits on your own work
 
 <Tabs>
 <TabItem value="nodejs" label="Node.js" default>
@@ -214,6 +214,24 @@ function processEvent($event) {
 
 </TabItem>
 </Tabs>
+
+## Delivery and Retries
+
+Webhooks are queued, not sent inline with the mail operation that produced them, so a slow or unavailable endpoint never blocks syncing.
+
+| Behavior | Value |
+|----------|-------|
+| Success | Any `2xx` response |
+| Attempts | 10, counting the first |
+| Backoff | Exponential, starting at 5 seconds, with 20% jitter |
+| Per-attempt timeout | 30 seconds, configurable with `EENGINE_WEBHOOK_TIMEOUT` |
+| After the last attempt | The delivery moves to the **Failed** tab of the Webhooks queue and is not retried again |
+
+Two failures are treated as final and consume the whole retry budget at once, because retrying could not change the outcome: a destination refused by the [egress policy](#blocked-destinations-and-redirects) (`EEGRESSBLOCKED`) and an endpoint that answers with a redirect (`EREDIRECTNOTFOLLOWED`).
+
+:::warning Design your handler for repeat deliveries
+Because a timed-out or failed attempt is retried, your endpoint will sometimes receive the same event more than once. Respond `2xx` as soon as you have durably accepted the payload and do the real work afterwards, and deduplicate on the `X-EE-Wh-Event-Id` header. This matters most for handlers with side effects, such as creating a ticket or charging for a message.
+:::
 
 ## Webhook Events
 
@@ -536,7 +554,7 @@ Test if events are being generated at all:
 - Check message is visible via API:
 
 ```bash
-curl "https://your-emailengine.com/v1/account/ACCOUNT_ID/messages?path=INBOX" \
+curl "https://emailengine.example.com/v1/account/ACCOUNT_ID/messages?path=INBOX" \
   -H "Authorization: Bearer TOKEN"
 ```
 
@@ -591,12 +609,12 @@ https://YOUR-EMAILENGINE-HOST/oauth/msg/notification
 
 ### Verify Webhook Authenticity
 
-EmailEngine can sign webhooks using HMAC:
+Every webhook is signed with HMAC-SHA256 over the raw request body, sent as `X-EE-Wh-Signature`. The key is the `serviceSecret` setting, which EmailEngine generates automatically the first time it needs one, so the header is present whether or not you configured anything. Set your own value so that you know the secret your handler should verify against.
 
 **1. Set a service secret using the [settings API](/docs/api/post-v-1-settings):**
 
 ```bash
-curl -X POST "https://your-emailengine.com/v1/settings" \
+curl -X POST "https://emailengine.example.com/v1/settings" \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"serviceSecret": "your-secret-key-here"}'
@@ -610,12 +628,16 @@ The signature is computed on the raw request body using HMAC-SHA256 and encoded 
 const crypto = require('crypto');
 
 function verifyWebhookSignature(rawBody, signature, secret) {
-  const expectedSignature = crypto
+  const expected = crypto
     .createHmac('sha256', secret)
     .update(rawBody)
     .digest('base64url');
 
-  return signature === expectedSignature;
+  // Compare in constant time so the comparison cannot be used as an oracle
+  const a = Buffer.from(expected);
+  const b = Buffer.from(signature || '', 'utf8');
+
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
 // Important: Use raw body parser to get the exact bytes for signature verification
@@ -642,7 +664,7 @@ app.post('/webhooks/emailengine', express.raw({ type: 'application/json' }), (re
 By default, EmailEngine triggers `messageNew` webhooks for new messages in all monitored folders. If you only care about incoming mail, enable the `inboxNewOnly` setting to limit `messageNew` webhooks to messages arriving in the Inbox folder only.
 
 ```bash
-curl -X POST "https://your-emailengine.com/v1/settings" \
+curl -X POST "https://emailengine.example.com/v1/settings" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"inboxNewOnly": true}'
@@ -666,7 +688,7 @@ The error flag includes:
 - Error code and HTTP status code
 - Timestamp
 
-This is an internal tracking mechanism -- there is no configuration needed. Check the admin panel or account details API response for the current webhook error status.
+This is an internal tracking mechanism - there is no configuration needed. Check the admin panel or account details API response for the current webhook error status.
 
 ### Use HTTPS
 
@@ -681,10 +703,17 @@ EmailEngine includes the following HTTP headers with each webhook request:
 
 | Header | Description |
 |--------|-------------|
-| `X-EE-Wh-Event-Id` | Unique identifier for this webhook delivery (UUID). Use for deduplication and tracking. |
-| `X-EE-Wh-Signature` | HMAC-SHA256 signature of the request body (base64url encoded). Only present if `serviceSecret` is configured. |
+| `X-EE-Wh-Event-Id` | Unique identifier for the event. Use for deduplication. Present whenever the payload carries an event ID, and moved out of the JSON body into this header. |
+| `X-EE-Wh-Signature` | HMAC-SHA256 signature of the request body, base64url encoded. Always sent, see [Verify Webhook Authenticity](#verify-webhook-authenticity). |
+| `X-EE-Wh-Id` | Queue job ID for this delivery. Identifies the job in **System > Queues**. |
+| `X-EE-Wh-Attempts-Made` | How many attempts have already been made for this delivery. `0` on the first attempt. |
+| `X-EE-Wh-Queued-Time` | How long the event waited in the queue before this attempt, in seconds (for example `3s`). |
+| `X-EE-Wh-Custom-Route` | ID of the [custom route](/docs/webhooks/webhook-routing) that produced this delivery. Only sent for route deliveries. |
+| `User-Agent` | `emailengine/<version>` plus the project URL |
 | `Content-Type` | Always `application/json` |
 | `Content-Length` | Size of the request body in bytes |
+
+Any [custom headers](/docs/webhooks/webhook-routing) configured globally, on a route, or on an account are added to this set.
 
 **Using the Event ID for Deduplication:**
 

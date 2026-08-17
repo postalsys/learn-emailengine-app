@@ -673,7 +673,6 @@ flowchart TD
 | `EENGINE_WORKERS_SUBMIT` | No | Submit worker count (default: 1) |
 | `EENGINE_WORKERS_EXPORT` | No | Export worker count (default: 1) |
 | `EENGINE_LOG_LEVEL` | No | Log level (trace/debug/info/warn/error) |
-| `EENGINE_FEATURE_*` | No | Enable feature flags (set to `true`) |
 | `EENGINE_CORS_MAX_AGE` | No | CORS preflight cache duration in seconds (default: 60) |
 | `EENGINE_HTTP_PROXY_ENABLED` | No | Enable HTTP proxy for outbound requests |
 | `EENGINE_HTTP_PROXY_URL` | No | HTTP/SOCKS proxy URL for outbound requests |

@@ -54,11 +54,15 @@ The easiest way to install EmailEngine on Ubuntu 20.04+ or Debian 11+.
 
 ### What It Installs
 
-- EmailEngine binary
+- EmailEngine binary at `/opt/emailengine`, running as the `emailengine` system user
 - Redis server (configured for production)
 - Caddy reverse proxy with automatic HTTPS
-- SystemD service
+- SystemD service at `/etc/systemd/system/emailengine.service`
 - Upgrade helper script at `/opt/upgrade-emailengine.sh`
+
+:::note This layout differs from the manual install below
+The installer keeps the binary at `/opt/emailengine`. The manual instructions further down place it at `/usr/local/bin/emailengine` instead. Pick one approach and stay with it, since the upgrade helper only knows about the installer's layout.
+:::
 
 ### Features
 
@@ -90,7 +94,7 @@ Replace `example.com` with your domain name, or leave empty to auto-generate one
 
 **Install specific version:**
 ```bash
-./install.sh example.com 2.55.4
+./install.sh example.com 2.78.0
 ```
 
 #### 3. Wait for Completion
@@ -126,7 +130,7 @@ For servers installed with the automated installer:
 sudo /opt/upgrade-emailengine.sh
 
 # Or re-run installer for specific version
-sudo ./install.sh example.com 2.55.4
+sudo ./install.sh example.com 2.78.0
 ```
 
 The upgrade process:
@@ -193,8 +197,8 @@ sudo systemctl restart redis
 # Download latest binary
 wget https://go.emailengine.app/emailengine.tar.gz
 
-# Or download specific version (e.g., 2.55.4)
-wget https://go.emailengine.app/download/v2.55.4/emailengine.tar.gz
+# Or download specific version (e.g., 2.78.0)
+wget https://go.emailengine.app/download/v2.78.0/emailengine.tar.gz
 
 # Extract
 tar xzf emailengine.tar.gz
@@ -298,8 +302,8 @@ sudo systemctl status emailengine
 # Download latest
 wget https://go.emailengine.app/emailengine.tar.gz
 
-# Or download specific version (e.g., 2.55.4)
-wget https://go.emailengine.app/download/v2.55.4/emailengine.tar.gz
+# Or download specific version (e.g., 2.78.0)
+wget https://go.emailengine.app/download/v2.78.0/emailengine.tar.gz
 
 # Extract and replace
 tar xzf emailengine.tar.gz
@@ -352,7 +356,7 @@ server {
     client_body_timeout 90s;
 
     # EventSource endpoint for admin UI updates
-    location /admin/changes {
+    location ~ ^/(admin|v1)/changes {
         proxy_pass http://localhost:3000;
 
         # Disable gzip for EventSource streaming
@@ -457,7 +461,7 @@ server {
     client_body_timeout 90s;
 
     # EventSource endpoint for admin UI updates
-    location /admin/changes {
+    location ~ ^/(admin|v1)/changes {
         proxy_pass http://localhost:3000;
 
         # Disable gzip for EventSource streaming
@@ -534,8 +538,8 @@ emailengine.example.com {
         max_size 100MB
     }
 
-    # EventSource endpoint for admin UI updates
-    @eventsource path /admin/changes
+    # EventSource endpoints: the admin dashboard feed and the API change stream
+    @eventsource path /admin/changes /v1/changes
     handle @eventsource {
         reverse_proxy localhost:3000 {
             # Disable buffering for EventSource streaming

@@ -31,7 +31,7 @@ Gmail has the best native threading support, working with both backend types.
 ### Example Response
 
 ```bash
-curl "https://ee.example.com/v1/account/gmail/messages?path=INBOX" \
+curl "https://emailengine.example.com/v1/account/gmail/messages?path=INBOX" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -57,7 +57,7 @@ curl "https://ee.example.com/v1/account/gmail/messages?path=INBOX" \
 Gmail supports searching across all folders using the special `\All` path:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/gmail/search?path=%5CAll" \
+curl -XPOST "https://emailengine.example.com/v1/account/gmail/search?path=%5CAll" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -115,7 +115,7 @@ Microsoft Graph API provides native threading support for Outlook/Microsoft 365 
 Like Gmail, Graph API supports the `\All` folder:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/outlook-graph/search?path=%5CAll" \
+curl -XPOST "https://emailengine.example.com/v1/account/outlook-graph/search?path=%5CAll" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -185,7 +185,7 @@ Unlike Gmail and Graph API, Yahoo/AOL don't support `\All`. To get a complete th
 
 ```bash
 # Search Inbox
-curl -XPOST "https://ee.example.com/v1/account/yahoo/search?path=INBOX" \
+curl -XPOST "https://emailengine.example.com/v1/account/yahoo/search?path=INBOX" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -193,7 +193,7 @@ curl -XPOST "https://ee.example.com/v1/account/yahoo/search?path=INBOX" \
   }'
 
 # Search Sent
-curl -XPOST "https://ee.example.com/v1/account/yahoo/search?path=Sent" \
+curl -XPOST "https://emailengine.example.com/v1/account/yahoo/search?path=Sent" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -235,7 +235,7 @@ Generic IMAP doesn't support `\All` folder, so you must search each folder indiv
 
 ```bash
 # Search Inbox
-curl -XPOST "https://ee.example.com/v1/account/generic/search?path=INBOX" \
+curl -XPOST "https://emailengine.example.com/v1/account/generic/search?path=INBOX" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -243,7 +243,7 @@ curl -XPOST "https://ee.example.com/v1/account/generic/search?path=INBOX" \
   }'
 
 # Search Sent
-curl -XPOST "https://ee.example.com/v1/account/generic/search?path=Sent" \
+curl -XPOST "https://emailengine.example.com/v1/account/generic/search?path=Sent" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -318,7 +318,7 @@ If you have Microsoft 365 accounts on IMAP backend and want native threading:
 
 ```bash
 # Get account information
-curl "https://ee.example.com/v1/account/example" \
+curl "https://emailengine.example.com/v1/account/example" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -330,7 +330,7 @@ Look for:
 
 ```bash
 # List messages and check for threadId
-curl "https://ee.example.com/v1/account/example/messages?path=INBOX" \
+curl "https://emailengine.example.com/v1/account/example/messages?path=INBOX" \
   -H "Authorization: Bearer <token>"
 ```
 

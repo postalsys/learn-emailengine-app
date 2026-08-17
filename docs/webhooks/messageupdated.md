@@ -45,7 +45,6 @@ The event is triggered after EmailEngine confirms the flag/label change on the m
 | `path` | string | Yes | Mailbox folder path (e.g., "INBOX", "Sent Mail") |
 | `specialUse` | string | No | Special use flag of the folder (e.g., "\Inbox", "\Sent") |
 | `event` | string | Yes | Event type, always "messageUpdated" for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook delivery |
 | `data` | object | Yes | Message update data (see below) |
 
 ### Message Data Fields (`data` object)
@@ -112,15 +111,15 @@ The `changes` object contains flag and/or label changes:
   "account": "user123",
   "date": "2025-10-17T06:43:46.195Z",
   "path": "INBOX",
-  "specialUse": "\Inbox",
+  "specialUse": "\\Inbox",
   "event": "messageUpdated",
   "data": {
     "id": "AAAADAAABy4",
     "uid": 1838,
     "changes": {
       "flags": {
-        "added": ["\Seen"],
-        "value": ["\Seen"]
+        "added": ["\\Seen"],
+        "value": ["\\Seen"]
       }
     }
   }
@@ -135,15 +134,15 @@ The `changes` object contains flag and/or label changes:
   "account": "user123",
   "date": "2025-10-17T07:15:22.456Z",
   "path": "INBOX",
-  "specialUse": "\Inbox",
+  "specialUse": "\\Inbox",
   "event": "messageUpdated",
   "data": {
     "id": "AAAADAAABy8",
     "uid": 1845,
     "changes": {
       "flags": {
-        "added": ["\Seen", "\Flagged"],
-        "value": ["\Seen", "\Flagged"]
+        "added": ["\\Seen", "\\Flagged"],
+        "value": ["\\Seen", "\\Flagged"]
       }
     }
   }
@@ -158,15 +157,15 @@ The `changes` object contains flag and/or label changes:
   "account": "user123",
   "date": "2025-10-17T08:30:15.789Z",
   "path": "INBOX",
-  "specialUse": "\Inbox",
+  "specialUse": "\\Inbox",
   "event": "messageUpdated",
   "data": {
     "id": "AAAADAAABy8",
     "uid": 1845,
     "changes": {
       "flags": {
-        "deleted": ["\Flagged"],
-        "value": ["\Seen"]
+        "deleted": ["\\Flagged"],
+        "value": ["\\Seen"]
       }
     }
   }
@@ -209,8 +208,8 @@ The `changes` object contains flag and/or label changes:
     "threadId": "18b5c7d8e9f01234",
     "changes": {
       "flags": {
-        "added": ["\Seen"],
-        "value": ["\Seen", "\Flagged"]
+        "added": ["\\Seen"],
+        "value": ["\\Seen", "\\Flagged"]
       },
       "labels": {
         "added": ["STARRED"],
@@ -235,8 +234,8 @@ The `changes` object contains flag and/or label changes:
     "id": "AAMkADI2NGVhZTVlLTI1OGItNDUwZS05ZDVkLWQzN2E2MDUyYzc3YQBGAAAAAAI",
     "changes": {
       "flags": {
-        "added": ["\Seen"],
-        "value": ["\Seen"]
+        "added": ["\\Seen"],
+        "value": ["\\Seen"]
       }
     }
   }

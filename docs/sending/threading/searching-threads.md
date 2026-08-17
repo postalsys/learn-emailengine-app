@@ -26,7 +26,7 @@ Gmail and Microsoft Graph API support a special `\All` folder that searches acro
 **Gmail Example** using the [Search Messages API endpoint](/docs/api/post-v-1-account-account-search):
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/gmail/search?path=%5CAll" \
+curl -XPOST "https://emailengine.example.com/v1/account/gmail/search?path=%5CAll" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -79,7 +79,7 @@ Results are returned newest first.
 **Microsoft Graph API Example**:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/outlook-graph/search?path=%5CAll" \
+curl -XPOST "https://emailengine.example.com/v1/account/outlook-graph/search?path=%5CAll" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -111,7 +111,7 @@ For providers without `\All` support, you must search each folder individually.
 **Step 1: Search Inbox**:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/yahoo/search?path=INBOX" \
+curl -XPOST "https://emailengine.example.com/v1/account/yahoo/search?path=INBOX" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -124,7 +124,7 @@ curl -XPOST "https://ee.example.com/v1/account/yahoo/search?path=INBOX" \
 **Step 2: Search Sent**:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/yahoo/search?path=Sent" \
+curl -XPOST "https://emailengine.example.com/v1/account/yahoo/search?path=Sent" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -136,33 +136,31 @@ curl -XPOST "https://ee.example.com/v1/account/yahoo/search?path=Sent" \
 
 **Step 3: Combine Results**:
 
+```javascript
+async function getCompleteThread(account, threadId) {
+  const folders = ['INBOX', '\\Sent', '\\Archive', '\\Drafts'];
+  const path = `https://emailengine.example.com/v1/account/${encodeURIComponent(account)}/search`;
+
+  const perFolder = await Promise.all(
+    folders.map(folder =>
+      fetch(`${path}?path=${encodeURIComponent(folder)}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ search: { threadId } })
+      })
+        .then(res => res.json())
+        .then(data => data.messages || [])
+    )
+  );
+
+  return perFolder
+    .flat()
+    .filter((msg, i, all) => all.findIndex(m => m.id === msg.id) === i)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+}
 ```
-// Pseudo code
-function getCompleteThread(accountId, threadId):
-    folders = ['INBOX', 'Sent', 'Archive', 'Drafts']
-    allMessages = []
 
-    for each folder in folders:
-        // Send HTTP POST request
-        response = HTTP_POST(
-            url: "https://ee.example.com/v1/account/" + accountId + "/search?path=" + folder,
-            headers: {
-                "Authorization": "Bearer " + token,
-                "Content-Type": "application/json"
-            },
-            body: {
-                search: { threadId: threadId }
-            }
-        )
-
-        data = parseJSON(response.body)
-        allMessages.append(data.messages)
-
-    // Sort by date
-    allMessages.sortBy(field: "date", order: ascending)
-
-    return allMessages
-```
+Searching the folders concurrently rather than one after another keeps this close to the latency of the slowest single folder. Referring to folders by their special-use flags (`\Sent`, `\Archive`) rather than by name avoids breaking on localized mailboxes.
 
 ### Limitations
 
@@ -180,55 +178,46 @@ Without native threading support, you can build threads from Message-ID headers.
 
 ### Extract Thread from Headers
 
+A thread is the transitive closure over `Message-ID`, `In-Reply-To`, and `References`. Rather than walking parents and children separately, index every message by its `Message-ID` once, then expand outwards from the starting message:
+
+```javascript
+// Every Message-ID this message is connected to, in either direction
+function linkedIds(msg) {
+  const refs = (msg.headers?.references || []).join(' ');
+  const inReplyTo = (msg.headers?.['in-reply-to'] || []).join(' ');
+
+  return [...`${refs} ${inReplyTo}`.matchAll(/<([^>]+)>/g)].map(m => m[1]);
+}
+
+function buildThread(startId, allMessages) {
+  const byMessageId = new Map(allMessages.map(m => [m.messageId?.replace(/^<|>$/g, ''), m]));
+
+  const thread = new Map();
+  const pending = [byMessageId.get(startId)].filter(Boolean);
+
+  while (pending.length) {
+    const msg = pending.pop();
+    if (thread.has(msg.id)) continue;
+    thread.set(msg.id, msg);
+
+    // Messages this one points at
+    for (const id of linkedIds(msg)) {
+      const parent = byMessageId.get(id);
+      if (parent) pending.push(parent);
+    }
+
+    // Messages that point at this one
+    const own = msg.messageId?.replace(/^<|>$/g, '');
+    for (const other of allMessages) {
+      if (own && linkedIds(other).includes(own)) pending.push(other);
+    }
+  }
+
+  return [...thread.values()].sort((a, b) => new Date(a.date) - new Date(b.date));
+}
 ```
-// Pseudo code
-function buildThreadFromHeaders(message, allMessages):
-    thread = [message]
-    seen = Set([message.id])
 
-    // Find parent messages (from References)
-    if message.headers['references'] exists:
-        // Extract all message IDs wrapped in < >
-        refs = extractMessageIds(message.headers['references'])
-
-        for each ref in refs:
-            refId = ref.removeAngleBrackets()  // Remove < >
-            parent = allMessages.find(m => m.messageId == refId)
-
-            if parent exists and parent.id not in seen:
-                thread.insertAtBeginning(parent)
-                seen.add(parent.id)
-
-    // Find replied messages (from In-Reply-To)
-    if message.headers['in-reply-to'] exists:
-        replyToId = extractMessageId(message.headers['in-reply-to'])
-
-        if replyToId exists:
-            parent = allMessages.find(m => m.messageId == replyToId)
-
-            if parent exists and parent.id not in seen:
-                thread.insertAtBeginning(parent)
-                seen.add(parent.id)
-
-    // Find child messages (messages that reference this one)
-    for each m in allMessages:
-        if m.id in seen:
-            continue
-
-        isChild = false
-        if m.headers['in-reply-to'] contains "<" + message.messageId + ">":
-            isChild = true
-        if m.headers['references'] contains "<" + message.messageId + ">":
-            isChild = true
-
-        if isChild:
-            thread.append(m)
-            seen.add(m.id)
-
-    // Sort chronologically
-    thread.sortBy(field: "date", order: ascending)
-    return thread
-```
+Both header fields hold angle-bracketed IDs, and EmailEngine returns raw header values as arrays, so each one is joined before the IDs are extracted. Request the headers explicitly when searching, since they are not part of the default message listing.
 
 ### Limitations
 
@@ -239,111 +228,64 @@ function buildThreadFromHeaders(message, allMessages):
 
 ## Search Strategy by Provider
 
-### Gmail / Gmail API
+Which approach applies comes down to one question: does the account expose an `\All` folder?
 
-```
-// Pseudo code
-function searchGmailThread(accountId, threadId):
-    // Single request using \All
-    response = HTTP_POST(
-        url: "https://ee.example.com/v1/account/" + accountId + "/search?path=%5CAll",
-        headers: {
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json"
-        },
-        body: {
-            search: { threadId: threadId }
-        }
+| Provider | Strategy | Search by |
+|----------|----------|-----------|
+| Gmail (IMAP and API) | One search against `\All` | `threadId` |
+| Microsoft 365 / Outlook (Graph) | One search against `\All` | `threadId` |
+| Yahoo, AOL, Verizon | One search per folder | `threadId` |
+| Generic IMAP | One search per folder, then thread on headers | `subject`, then `References` |
+
+A single function covers all four, because the only variables are the folders to search and whether the results need merging:
+
+```javascript
+const BASE = 'https://emailengine.example.com';
+const headers = {
+  Authorization: `Bearer ${token}`,
+  'Content-Type': 'application/json'
+};
+
+async function searchThread(account, search, folders = ['\\All']) {
+  const path = `${BASE}/v1/account/${encodeURIComponent(account)}/search`;
+
+  const results = await Promise.all(
+    folders.map(folder =>
+      fetch(`${path}?path=${encodeURIComponent(folder)}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ search })
+      })
+        .then(res => res.json())
+        .then(data => data.messages || [])
     )
+  );
 
-    return parseJSON(response.body)
+  // One \All search returns an already complete thread; per-folder searches need merging
+  return results
+    .flat()
+    .filter((msg, i, all) => all.findIndex(m => m.id === msg.id) === i)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
+// Gmail or Microsoft Graph
+await searchThread('user@gmail.com', { threadId: '501' });
+
+// Yahoo and other providers without \All
+await searchThread('user@yahoo.com', { threadId: '501' }, ['INBOX', '\\Sent']);
 ```
 
-### Microsoft Graph API
+Deduplicating on `id` matters for the per-folder path: a message can legitimately appear in more than one folder, and Gmail's labels make that the norm rather than the exception.
 
-```
-// Pseudo code
-function searchGraphThread(accountId, threadId):
-    // Single request using \All
-    response = HTTP_POST(
-        url: "https://ee.example.com/v1/account/" + accountId + "/search?path=%5CAll",
-        headers: {
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json"
-        },
-        body: {
-            search: { threadId: threadId }
-        }
-    )
+For generic IMAP, search by `subject` first and then group on the `References` and `In-Reply-To` headers, as described in [Building Threads Manually](#building-threads-manually) above.
 
-    return parseJSON(response.body)
-```
-
-### Yahoo / AOL / Verizon
-
-```
-// Pseudo code
-function searchYahooThread(accountId, threadId):
-    // Multiple requests per folder (Yahoo doesn't support \All)
-    folders = ['INBOX', 'Sent']
-    allMessages = []
-
-    for each folder in folders:
-        response = HTTP_POST(
-            url: "https://ee.example.com/v1/account/" + accountId + "/search?path=" + encodeURIComponent(folder),
-            headers: {
-                "Authorization": "Bearer " + token,
-                "Content-Type": "application/json"
-            },
-            body: {
-                search: { threadId: threadId }
-            }
-        )
-
-        data = parseJSON(response.body)
-        allMessages.append(data.messages)
-
-    // Sort by date and return
-    allMessages.sortBy(field: "date", order: ascending)
-    return {
-        messages: allMessages
-    }
-```
-
-### Generic IMAP Manual Threading
-
-```
-// Pseudo code
-function searchGenericThread(accountId, subject):
-    // Search folders individually and build thread manually
-    folders = ['INBOX', 'Sent']
-    allMessages = []
-
-    for each folder in folders:
-        response = HTTP_POST(
-            url: "https://ee.example.com/v1/account/" + accountId + "/search?path=" + encodeURIComponent(folder),
-            headers: {
-                "Authorization": "Bearer " + token,
-                "Content-Type": "application/json"
-            },
-            body: {
-                search: { subject: subject }
-            }
-        )
-
-        data = parseJSON(response.body)
-        allMessages.append(data.messages)
-
-    // Build thread from Message-ID headers
-    return buildThreadFromHeaders(allMessages)
-```
 
 ## Pagination
 
 Thread searches support pagination for long threads:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/gmail/search?path=%5CAll&page=0&pageSize=50" \
+curl -XPOST "https://emailengine.example.com/v1/account/gmail/search?path=%5CAll&page=0&pageSize=50" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{

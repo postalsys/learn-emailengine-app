@@ -118,7 +118,7 @@ When setting up the OAuth2 application in EmailEngine, add extra scopes to the *
 
 **Google Example:**
 
-Navigate to **Configuration** → **OAuth2** → Edit your Gmail app.
+Navigate to **Integrations** > **OAuth2 Apps** → Edit your Gmail app.
 
 **Additional scopes** field:
 
@@ -184,7 +184,7 @@ If you add accounts before configuring all scopes, those accounts will be missin
 Use the [OAuth2 Token API endpoint](/docs/api/get-v-1-account-account-oauthtoken) to retrieve a currently valid access token:
 
 ```bash
-curl https://your-ee.com/v1/account/example/oauth-token \
+curl https://emailengine.example.com/v1/account/example/oauth-token \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN"
 ```
 
@@ -303,7 +303,7 @@ All examples below use the [OAuth2 Token API](/docs/api/get-v-1-account-account-
 Retrieve token from EmailEngine using the [OAuth2 Token API](/docs/api/get-v-1-account-account-oauthtoken):
 
 ```bash
-curl https://your-ee.com/v1/account/example/oauth-token \
+curl https://emailengine.example.com/v1/account/example/oauth-token \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN"
 ```
 
@@ -332,7 +332,7 @@ curl https://gmailpostmastertools.googleapis.com/v1/domains \
 
 ```bash
 # Get token
-TOKEN=$(curl -s https://your-ee.com/v1/account/example/oauth-token \
+TOKEN=$(curl -s https://emailengine.example.com/v1/account/example/oauth-token \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
   | jq -r '.accessToken')
 
@@ -345,7 +345,7 @@ curl https://www.googleapis.com/calendar/v3/users/me/calendarList \
 
 ```bash
 # Get token
-curl https://your-ee.com/v1/account/example/oauth-token \
+curl https://emailengine.example.com/v1/account/example/oauth-token \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN"
 
 # Use with Microsoft Graph
@@ -359,7 +359,7 @@ Using EmailEngine's OAuth2 tokens to create a Google Calendar event:
 
 ```javascript
 // Get current access token from EmailEngine
-const tokenResponse = await fetch("https://your-ee.com/v1/account/user123/oauth-token", {
+const tokenResponse = await fetch("https://emailengine.example.com/v1/account/user123/oauth-token", {
   headers: {
     Authorization: "Bearer YOUR_EMAILENGINE_TOKEN",
   },

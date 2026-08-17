@@ -166,7 +166,7 @@ When configuring OAuth2 in EmailEngine, you'll need:
 
 ### Configuration in EmailEngine
 
-Navigate to **Configuration** → **OAuth2** in EmailEngine dashboard.
+Navigate to **Integrations** > **OAuth2 Apps** in EmailEngine dashboard.
 
 ![OAuth2 configuration page](/img/oauth2-setup/01-oauth2-config-empty.png)
 
@@ -411,7 +411,7 @@ Use this when:
 When generating authentication URLs, you can pre-fill the user's email:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -426,7 +426,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 For Microsoft 365 shared mailboxes:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

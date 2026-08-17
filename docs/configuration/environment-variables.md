@@ -366,6 +366,48 @@ EENGINE_TLS_MIN_DH_SIZE=2048
 EENGINE_TLS_CIPHERS="TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256"
 ```
 
+The variables above apply to connections EmailEngine makes *to* mail servers. The listeners EmailEngine runs itself take their certificates from a separate, per-server prefix.
+
+### Certificates for EmailEngine's Own Listeners
+
+Each server that can terminate TLS reads its certificate material from its own prefix:
+
+| Server | Prefix | Enabled by |
+|--------|--------|------------|
+| API and admin interface | `EENGINE_API_TLS_` | `EENGINE_API_TLS=true` |
+| [SMTP server](/docs/sending/smtp-interface) | `EENGINE_SMTP_TLS_` | The `smtpServerTLSEnabled` setting |
+| [IMAP proxy](/docs/accounts/proxying-connections) | `EENGINE_IMAPPROXY_TLS_` | The `imapProxyServerTLSEnabled` setting |
+
+All three accept the same suffixes:
+
+| Suffix | Purpose |
+|--------|---------|
+| `KEY` | Private key, PEM encoded |
+| `CERT` | Certificate chain, PEM encoded |
+| `CA` | Additional CA certificates |
+| `PASSPHRASE` | Passphrase for an encrypted private key |
+| `DHPARAM` | Diffie-Hellman parameters |
+| `CIPHERS` | Cipher suite list |
+| `ECDH_CURVE` | Named curve for ECDH |
+| `MIN_VERSION` / `MAX_VERSION` | TLS version bounds |
+| `REJECT_UNAUTHORIZED` | Reject clients presenting an untrusted certificate |
+| `REQUEST_CERT` | Ask the client for a certificate |
+
+```bash
+EENGINE_API_TLS=true
+EENGINE_API_TLS_KEY_FILE=/etc/emailengine/tls/api.key
+EENGINE_API_TLS_CERT_FILE=/etc/emailengine/tls/api.crt
+EENGINE_API_TLS_MIN_VERSION=TLSv1.2
+```
+
+The `_FILE` suffix described under [Loading Values From Files](#loading-values-from-files) works here too, which is the usual way to mount a key into a container without putting it in the environment.
+
+:::note A managed certificate wins over these variables
+When the SMTP server starts with TLS enabled, EmailEngine looks for a certificate matching the hostname in `serviceUrl` and uses it if one is valid. That happens after these variables are read, so a certificate EmailEngine manages takes precedence over `EENGINE_SMTP_TLS_CERT`.
+:::
+
+Most deployments do not need any of this, because TLS is terminated at a reverse proxy instead. See [Nginx Reverse Proxy](/docs/deployment/nginx-proxy).
+
 ## Security & Access Control
 
 Security settings and access restrictions.
@@ -530,7 +572,9 @@ EENGINE_BEACON_DISABLED=true
 
 Since EmailEngine v2.75.0, [web-safe HTML](/docs/receiving/web-safe-html) wraps the quoted tail of a reply in a collapsible block so a message renders as what the sender wrote. Set this to restore the previous output shape, in which the whole thread is rendered inline.
 
-The Document Store (Elasticsearch) feature is deprecated and disabled by default since EmailEngine v2.71.0. This startup gate must be turned on before EmailEngine will run the document indexing worker or register the Document Store API and admin endpoints (`/v1/chat/{account}`, `/v1/unified/search`, and the `Configuration > Document Store` page). While the gate is off, those endpoints return `404`, even if the runtime "Document Store" setting is still enabled. The equivalent config-file setting is `[documentStore] enabled = true` (CLI flag `--documentStore.enabled=true`).
+The Document Store (Elasticsearch) feature is deprecated and disabled by default since EmailEngine v2.71.0, and it is **removed from EmailEngine releases starting October 1, 2026**. This startup gate must be turned on before EmailEngine will run the document indexing worker or register the Document Store API and admin endpoints (`/v1/chat/{account}`, `/v1/unified/search`, and the `Configuration > Document Store` page). While the gate is off, those endpoints return `404`, even if the runtime "Document Store" setting is still enabled. The equivalent config-file setting is `[documentStore] enabled = true` (CLI flag `--documentStore.enabled=true`).
+
+If you depend on the Document Store, plan the migration now. Staying on the last release that still ships it means running an EmailEngine that no longer receives security updates.
 
 Since EmailEngine v2.76.0, `EENGINE_UPDATE_CHECK_DISABLED=true` disables the check against `api.github.com` that powers the "update available" notice in the admin dashboard. The check runs once at startup, sends nothing beyond a standard User-Agent header, and fails silently without network access, but it is the only background network call that is not tied to a subscription license. Subscription licenses additionally validate daily against `postalsys.com`, carrying an [anonymized feature beacon](/docs/deployment/compliance#no-developer-access) that `EENGINE_BEACON_DISABLED=true` disables; perpetual licenses are verified offline and never contact the license server at all. With the update check disabled, a perpetual-license instance makes no background network calls whatsoever.
 
@@ -599,7 +643,13 @@ EENGINE_LOG_LEVEL=info
 SENTRY_DSN=https://public-key@sentry.example.com/1
 ```
 
-Error reporting uses [Sentry](https://sentry.io/) (Bugsnag was removed in EmailEngine v2.70.0). You can also enable it at runtime from Configuration > Logging (settings `sentryEnabled` and `sentryDsn`, applied without a restart). If you enable reporting but leave the DSN empty, reports go to the Sentry instance run by the EmailEngine developers. Setting `SENTRY_DSN` here pins the DSN and takes precedence over the runtime toggle.
+Error reporting uses [Sentry](https://sentry.io/) (Bugsnag was removed in EmailEngine v2.70.0). You can also enable it at runtime from Configuration > Logging (settings `sentryEnabled` and `sentryDsn`, applied within a minute and without a restart). If you enable reporting but leave the DSN empty, reports go to `sentry.emailengine.dev`, the Sentry instance run by the EmailEngine developers. Set your own DSN to keep reports in-house. Setting `SENTRY_DSN` here pins the DSN and takes precedence over the runtime toggle.
+
+Reports carry stack traces, account IDs, and error details. They never include credentials or message content.
+
+:::info Trial licenses report errors by default
+Activating a trial license turns error reporting on, so that problems with evaluation instances reach the EmailEngine developers through their shared Sentry instance. This only happens while you have never set `sentryEnabled` yourself. Activating a full license or removing the license turns it back off, and any explicit write to `sentryEnabled` - through the Configuration > Logging form, `POST /v1/settings`, or `EENGINE_SETTINGS` - makes your choice permanent. The Configuration > Logging page tells you when reporting is in this trial-managed state.
+:::
 
 [Monitoring and logging →](../advanced/monitoring)
 
@@ -746,7 +796,7 @@ services:
       - redis-data:/data
 
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     depends_on:
       - redis
     ports:

@@ -42,7 +42,6 @@ The event is triggered after EmailEngine confirms the message is no longer prese
 | `path` | string | Yes | Mailbox folder path where the message was located (e.g., "INBOX") |
 | `specialUse` | string | No | Special use flag of the folder (e.g., "\Inbox", "\Sent", "\Trash") |
 | `event` | string | Yes | Event type, always "messageDeleted" for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook delivery |
 | `data` | object | Yes | Message identification data (see below) |
 
 ### Message Data Fields (`data` object)
@@ -82,7 +81,7 @@ The `messageDeleted` event includes minimal data since the message content is no
   "account": "user123",
   "date": "2025-10-17T06:44:14.660Z",
   "path": "INBOX",
-  "specialUse": "\Inbox",
+  "specialUse": "\\Inbox",
   "event": "messageDeleted",
   "data": {
     "id": "AAAADAAABy4",
@@ -103,7 +102,7 @@ The `messageDeleted` event includes minimal data since the message content is no
   "data": {
     "id": "18b5c7d8e9f01234",
     "threadId": "18b5c7d8e9f01234",
-    "flags": ["\Seen"],
+    "flags": ["\\Seen"],
     "labels": ["INBOX", "IMPORTANT"],
     "category": "primary"
   }

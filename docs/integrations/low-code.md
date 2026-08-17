@@ -126,7 +126,6 @@ if (payload.event === "messageBounce") {
 ```javascript
 return {
     username: 'EmailEngine',
-    avatar_url: 'https://emailengine.app/logo.png',
     content: `**Bounce Alert**`,
     embeds: [{
         title: 'Email Bounced',

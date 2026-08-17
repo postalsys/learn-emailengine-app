@@ -137,7 +137,7 @@ EmailEngine does not support thread grouping in message lists. When you list mes
 Use the search API with a `threadId` field in the `search` body object (if the mail server supports it). The `path` query parameter is required:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/example/search?path=INBOX" \
+curl -XPOST "https://emailengine.example.com/v1/account/example/search?path=INBOX" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{

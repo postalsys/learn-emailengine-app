@@ -128,8 +128,8 @@ cd /opt/emailengine
 # Download latest source distribution
 sudo wget https://go.emailengine.app/source-dist.tar.gz
 
-# Or download specific version (e.g., 2.55.4)
-sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
+# Or download specific version (e.g., 2.78.0)
+sudo wget https://go.emailengine.app/download/v2.78.0/source-dist.tar.gz
 
 # Extract to app directory (includes node_modules)
 sudo tar xzf source-dist.tar.gz -C app --strip-components=1
@@ -422,8 +422,8 @@ sudo mkdir -p app
 # Download new version (latest)
 sudo wget https://go.emailengine.app/source-dist.tar.gz
 
-# Or download specific version (e.g., 2.55.4)
-sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
+# Or download specific version (e.g., 2.78.0)
+sudo wget https://go.emailengine.app/download/v2.78.0/source-dist.tar.gz
 
 # Extract to app directory
 sudo tar xzf source-dist.tar.gz -C app --strip-components=1
@@ -458,8 +458,8 @@ sudo mkdir -p app
 # Download new version (latest)
 sudo wget https://go.emailengine.app/source-dist.tar.gz
 
-# Or download specific version (e.g., 2.55.4)
-sudo wget https://go.emailengine.app/download/v2.55.4/source-dist.tar.gz
+# Or download specific version (e.g., 2.78.0)
+sudo wget https://go.emailengine.app/download/v2.78.0/source-dist.tar.gz
 
 # Extract to app directory
 sudo tar xzf source-dist.tar.gz -C app --strip-components=1

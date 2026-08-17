@@ -107,7 +107,7 @@ emailengine version
 **Output:**
 
 ```
-EmailEngine v2.61.1 (LICENSE_EMAILENGINE)
+EmailEngine v2.78.0 (LICENSE_EMAILENGINE)
 ```
 
 ## Configuration Arguments
@@ -192,6 +192,56 @@ emailengine \
 | `--workers.webhooks` | `EENGINE_WORKERS_WEBHOOKS` | Webhook worker count | `1`         |
 | `--log.level`        | `EENGINE_LOG_LEVEL`        | Log level            | `trace`     |
 | `--service.secret`   | `EENGINE_SECRET`           | Encryption secret    | Optional    |
+
+### All Server Arguments
+
+Run `emailengine --help` for the authoritative list. The full set:
+
+**General**
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--dbs.redis` | Redis connection URL | Required |
+| `--workers.imap` | Account worker threads | `4` |
+| `--workers.webhooks` | Webhook worker threads | `1` |
+| `--settings` | Pre-configured settings as a JSON string | None |
+| `--service.secret` | Key for encrypting stored credentials | None |
+| `--service.commandTimeout` | Maximum time for an IMAP command | `10s` |
+| `--service.setupDelay` | Delay between assigning connections to workers | `0ms` |
+| `--log.level` | Logging level | `trace` |
+| `--log.raw` | Log raw IMAP traffic. Includes unmasked credentials | `false` |
+
+**API server**
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--api.host` | Bind address | `127.0.0.1` |
+| `--api.port` | Port | `3000` |
+| `--api.maxSize` | Maximum attachment size when submitting or uploading | `5M` |
+
+**Background tasks**
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--queues.notify` | Concurrent webhook deliveries | `1` |
+| `--queues.submit` | Concurrent email submissions | `1` |
+
+**SMTP server**
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--smtp.enabled` | Enable the [SMTP submission server](/docs/sending/smtp-interface) | `false` |
+| `--smtp.host` | Bind address | `127.0.0.1` |
+| `--smtp.port` | Port | `2525` |
+| `--smtp.secret` | Shared SMTP password accepted for all accounts | None |
+| `--smtp.proxy` | Accept the HAProxy PROXY protocol | `false` |
+| `--smtp.maxMessageSize` | Maximum accepted email size | `25M` |
+
+**Document Store** (deprecated, removed from releases starting October 1, 2026)
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--documentStore.enabled` | Enable the Document Store feature gate | `false` |
 
 :::tip Environment Variables
 All CLI arguments can also be set as environment variables. See [Environment Variables reference](/docs/configuration/environment-variables) for complete list.
@@ -962,3 +1012,11 @@ else
   exit 1
 fi
 ```
+
+## See Also
+
+- [Environment Variables](/docs/configuration/environment-variables) - The same settings as environment variables, plus those with no CLI equivalent
+- [Configuration Overview](/docs/configuration) - How config files, environment variables, and CLI arguments combine
+- [Prepared Settings](/docs/configuration/prepared-settings) - Provisioning license, token, and password without manual setup
+- [Reset Password](/docs/configuration/reset-password) - The `password` command in detail
+- [Access Tokens](/docs/api-reference/access-tokens) - What `tokens issue` produces and how scopes work

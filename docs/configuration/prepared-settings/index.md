@@ -92,7 +92,7 @@ ENV EENGINE_SETTINGS='{"webhooks":"https://your-app.com/webhook","webhookEvents"
 version: '3.8'
 services:
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     environment:
       EENGINE_SETTINGS: >
         {
@@ -112,7 +112,7 @@ services:
 ```yaml
 services:
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     env_file:
       - ./config/emailengine.env
 ```

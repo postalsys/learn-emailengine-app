@@ -45,7 +45,6 @@ EmailEngine analyzes incoming messages for bounce patterns from various email pr
 | `account` | string | Yes | Account ID that received the bounce message |
 | `date` | string | Yes | ISO 8601 timestamp when the webhook was generated |
 | `event` | string | Yes | Event type, always "messageBounce" for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook delivery |
 | `data` | object | Yes | Bounce data object (see below) |
 
 ### Bounce Data Fields (`data` object)

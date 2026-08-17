@@ -275,13 +275,13 @@ Navigate to **APIs & Services** → **Credentials**, then click **Create Credent
 Add your EmailEngine URL without any path:
 
 - `http://127.0.0.1:3000` (for local testing)
-- `https://your-emailengine-domain.com` (for production)
+- `https://emailengine.example.com` (for production)
 
 **Authorized redirect URIs:**
 Add your EmailEngine URL with the `/oauth` path:
 
 - `http://127.0.0.1:3000/oauth` (for local testing)
-- `https://your-emailengine-domain.com/oauth` (for production)
+- `https://emailengine.example.com/oauth` (for production)
 
 You can add multiple redirect URIs if you want to use the same OAuth2 app with multiple EmailEngine instances (e.g., development, staging, and production environments).
 
@@ -306,7 +306,7 @@ Now that you have your Google Cloud project configured, let's set up EmailEngine
 ### Add OAuth2 Application in EmailEngine
 
 1. Open your EmailEngine dashboard
-2. Navigate to **Configuration** → **OAuth2**
+2. Navigate to **Integrations** > **OAuth2 Apps**
 3. Click the **Create OAuth2 app** dropdown and select **Gmail**
 
 ![Creating Gmail OAuth2 app in EmailEngine](/img/external/tg5rojB4ov.gif)
@@ -365,7 +365,7 @@ Now you can add a Gmail account to test the OAuth2 flow.
 Generate an authentication form URL:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -389,7 +389,7 @@ Response:
 
 ```json
 {
-  "url": "https://your-ee.com/accounts/new?data=eyJhY2NvdW50..."
+  "url": "https://emailengine.example.com/accounts/new?data=eyJhY2NvdW50..."
 }
 ```
 
@@ -402,7 +402,7 @@ Direct the user to this URL to complete authentication.
 If you already have OAuth2 tokens from elsewhere:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

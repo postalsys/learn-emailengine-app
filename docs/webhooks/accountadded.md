@@ -37,7 +37,6 @@ This event fires **before** EmailEngine attempts to connect to the mail server. 
 | `account` | string | Yes | The unique account ID for the newly registered account |
 | `date` | string | Yes | ISO 8601 timestamp when the webhook was generated |
 | `event` | string | Yes | Event type, always `accountAdded` for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook event (UUID format) |
 | `data` | object | Yes | Event data object containing account information |
 
 ### Event Data Fields (`data` object)

@@ -96,7 +96,7 @@ flowchart TD
 Generate a form URL for a user:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -111,7 +111,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 
 ```json
 {
-  "url": "https://your-ee.com/accounts/new?data=eyJhY2NvdW50IjoidXNlcjEyMyIsImVtYWlsIjoiam9obkBnbWFpbC5jb20iLCJuYW1lIjoiSm9obiBEb2UiLCJyZWRpcmVjdFVybCI6Imh0dHBzOi8vbXlhcHAuY29tL3NldHRpbmdzIn0"
+  "url": "https://emailengine.example.com/accounts/new?data=eyJhY2NvdW50IjoidXNlcjEyMyIsImVtYWlsIjoiam9obkBnbWFpbC5jb20iLCJuYW1lIjoiSm9obiBEb2UiLCJyZWRpcmVjdFVybCI6Imh0dHBzOi8vbXlhcHAuY29tL3NldHRpbmdzIn0"
 }
 ```
 
@@ -133,7 +133,7 @@ Direct the user to this URL to begin authentication.
 Use the `type` parameter to bypass the account type selection screen and send users directly to the authentication flow:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -151,7 +151,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 | `"imap"` | Direct to manual IMAP/SMTP configuration form |
 | OAuth2 App ID | Direct to that provider's OAuth2 authorization page |
 
-The OAuth2 App ID (Provider ID) is visible in EmailEngine's **Configuration** > **OAuth2** settings page. This is EmailEngine's internal ID for the OAuth2 application, not the provider's client ID.
+The OAuth2 App ID (Provider ID) is visible in EmailEngine's **Integrations** > **OAuth2 Apps** settings page. This is EmailEngine's internal ID for the OAuth2 application, not the provider's client ID.
 
 :::tip Better User Experience
 Using the `type` parameter provides a smoother experience - users go directly to Google or Microsoft authorization without seeing an intermediate selection screen.
@@ -170,7 +170,7 @@ const axios = require('axios');
 
 async function generateAuthUrl(userId, userEmail, userName) {
   const response = await axios.post(
-    'https://your-ee.com/v1/authentication/form',
+    'https://emailengine.example.com/v1/authentication/form',
     {
       account: userId,
       email: userEmail,
@@ -208,7 +208,7 @@ import requests
 
 def generate_auth_url(user_id, user_email, user_name):
     response = requests.post(
-        'https://your-ee.com/v1/authentication/form',
+        'https://emailengine.example.com/v1/authentication/form',
         json={
             'account': user_id,
             'email': user_email,
@@ -249,7 +249,7 @@ function generateAuthUrl($userId, $userEmail, $userName) {
         'redirectUrl' => 'https://myapp.com/settings'
     ];
 
-    $ch = curl_init('https://your-ee.com/v1/authentication/form');
+    $ch = curl_init('https://emailengine.example.com/v1/authentication/form');
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
@@ -390,7 +390,7 @@ If authentication fails, users see an error page on EmailEngine and can retry. C
 Pre-fill the email address to streamline the process:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -409,7 +409,7 @@ The authentication form will show this email address, and for Gmail/Outlook, it 
 `expectedEmail` turns the address into a condition. If the user completes the form as someone else, the setup is rejected before any credentials are stored, so an existing account keeps working with the credentials it already had:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -438,7 +438,7 @@ The comparison is exact, apart from letter case and surrounding spaces. Provider
 The value is stored on the account, so it also applies to later links that omit it, and to the **Re-authenticate** button in the EmailEngine dashboard. To move an account to a different address, issue a new form link carrying the new `expectedEmail` - a link that states an address replaces the stored one. To drop the restriction entirely, clear the field with the [update account API](/docs/api/put-v-1-account-account):
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"expectedEmail": null}'
@@ -455,7 +455,7 @@ Shared and delegated Microsoft 365 mailboxes are a special case: the user signs 
 Pre-fill the account name:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -475,7 +475,7 @@ This name will be displayed in EmailEngine's account list.
 For Microsoft 365 shared mailboxes, include the `delegated` flag:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -519,7 +519,7 @@ After successful authentication, users are automatically redirected to your appl
 The hosted pages accept two query arguments that let you match the form to the user's language and to your own application's color scheme. Append them to the URL returned by `POST /v1/authentication/form` - the URL already carries a query string, so use `&`:
 
 ```
-https://your-ee.com/accounts/new?data=eyJ...&locale=fr&theme=dark
+https://emailengine.example.com/accounts/new?data=eyJ...&locale=fr&theme=dark
 ```
 
 **Language (`locale`):**
@@ -546,7 +546,7 @@ The `theme` argument requires EmailEngine v2.73.0 or later. The `locale` argumen
 | `templateHtmlHead` | Custom `<head>` content | CSS style overrides, custom fonts |
 
 These can be configured via:
-- **Configuration** → **Service** page in the EmailEngine dashboard
+- **Configuration** → **General** page in the EmailEngine dashboard
 - Settings API (`POST /v1/settings`)
 
 **Example - Add custom header with logo:**

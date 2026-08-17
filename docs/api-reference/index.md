@@ -4,6 +4,9 @@ description: Complete API reference for EmailEngine with authentication, convent
 sidebar_position: 1
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # EmailEngine API Reference
 
 The EmailEngine API provides a comprehensive RESTful interface for managing email accounts, sending and receiving messages, and configuring webhooks. This API allows you to integrate email functionality into your applications without dealing with IMAP/SMTP protocols directly.
@@ -38,7 +41,7 @@ http://localhost:3000/v1
 For production deployments, replace with your EmailEngine instance URL:
 
 ```
-https://emailengine.yourdomain.com/v1
+https://emailengine.example.com/v1
 ```
 
 ### Versioning
@@ -157,29 +160,54 @@ Use JSON for request bodies:
 
 ### Example Requests
 
-**cURL:**
+<Tabs groupId="language">
+<TabItem value="curl" label="cURL" default>
 
 ```bash
 curl http://localhost:3000/v1/accounts \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-**Pseudo code:**
+</TabItem>
+<TabItem value="nodejs" label="Node.js">
 
+```javascript
+const res = await fetch('http://localhost:3000/v1/accounts', {
+  headers: { Authorization: 'Bearer YOUR_ACCESS_TOKEN' }
+});
+
+const { accounts } = await res.json();
 ```
-// Make HTTP GET request to the accounts endpoint
-response = HTTP_GET("http://localhost:3000/v1/accounts", {
-  headers: {
-    "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-  }
-})
 
-// Parse JSON response
-accounts = PARSE_JSON(response.body)
+</TabItem>
+<TabItem value="python" label="Python">
 
-// Display results
-PRINT(accounts)
+```python
+import requests
+
+res = requests.get(
+    'http://localhost:3000/v1/accounts',
+    headers={'Authorization': 'Bearer YOUR_ACCESS_TOKEN'}
+)
+
+accounts = res.json()['accounts']
 ```
+
+</TabItem>
+<TabItem value="php" label="PHP">
+
+```php
+<?php
+$ch = curl_init('http://localhost:3000/v1/accounts');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer YOUR_ACCESS_TOKEN']);
+
+$accounts = json_decode(curl_exec($ch), true)['accounts'];
+curl_close($ch);
+```
+
+</TabItem>
+</Tabs>
 
 ## Response Format
 
@@ -191,15 +219,16 @@ Successful requests return HTTP status codes in the 2xx range:
 - **201 Created**: Resource created successfully
 - **204 No Content**: Request succeeded with no response body
 
-Example success response:
+Example success response, from registering an account:
 
 ```json
 {
-  "success": true,
-  "account": "user@example.com",
-  "state": "connected"
+  "account": "user123",
+  "state": "new"
 }
 ```
+
+Here `state` reports whether the account was created or already existed (`new` or `existing`), not its connection state. Read `/v1/account/{account}` for that.
 
 ### Error Responses
 
@@ -217,27 +246,31 @@ Example error response:
 
 ```json
 {
-  "error": "Account not found",
-  "code": "AccountNotFound",
-  "statusCode": 404
+  "statusCode": 404,
+  "error": "Not Found",
+  "message": "Account not found",
+  "code": "AccountNotFound"
 }
 ```
 
 ### Response Structure
 
-Most successful responses follow this structure:
+Successful responses are not wrapped in an envelope. Each endpoint returns its own object with the fields it documents, so read the [full API reference](/docs/api/emailengine-api) for the exact shape of a given endpoint.
+
+Paginated endpoints share one convention, wrapping their results alongside pagination counters, with the array named after what is being listed:
 
 ```json
 {
-  "success": true,
-  "data": {
-    /* resource data */
-  },
-  "metadata": {
-    /* pagination, timing, etc */
-  }
+  "total": 472,
+  "page": 0,
+  "pages": 24,
+  "nextPageCursor": "eyJhIjoxfQ",
+  "prevPageCursor": null,
+  "messages": []
 }
 ```
+
+Not every list is paginated. `GET /v1/account/{account}/mailboxes` returns the folder tree in one response, as just `{ "mailboxes": [] }`.
 
 ## Error Handling
 
@@ -257,53 +290,63 @@ Most successful responses follow this structure:
 
 ```json
 {
-  "error": "Human-readable error message",
-  "code": "ERROR_CODE",
   "statusCode": 400,
-  "details": {
-    /* optional additional context */
-  }
+  "error": "Bad Request",
+  "message": "Invalid input",
+  "fields": [
+    { "message": "\"pageSize\" must be less than or equal to 1000", "key": "pageSize" }
+  ]
 }
 ```
 
+| Field | Contents |
+|-------|----------|
+| `statusCode` | The HTTP status code, repeated in the body |
+| `error` | The HTTP status text, such as `Bad Request` or `Unauthorized` |
+| `message` | The human-readable reason. **This is the field to show or log**, not `error` |
+| `code` | A machine-readable code, present when the failure has one. See [Error Codes](/docs/reference/error-codes) |
+| `fields` | Present on validation failures, listing each rejected input as `key` and `message` |
+
 ### Common Error Codes
 
-| Code                     | Description                  | Solution              |
-| ------------------------ | ---------------------------- | --------------------- |
-| `InvalidRequest`         | Request validation failed    | Check required fields |
-| `InvalidToken`           | Missing or invalid API token | Provide a valid token |
-| `AccountNotFound`        | Account doesn't exist        | Verify account ID     |
-| `MessageNotFound`        | Message doesn't exist        | Check message ID      |
-| `RateLimitExceeded`      | Too many requests            | Implement backoff     |
-| `ConnectionError`        | Can't connect to mail server | Check credentials     |
+| Code                     | Description                             | Solution                        |
+| ------------------------ | --------------------------------------- | ------------------------------- |
+| `InvalidToken`           | Missing or invalid API token            | Provide a valid token           |
+| `AccountNotFound`        | Account doesn't exist                   | Verify account ID               |
+| `MessageNotFound`        | Message doesn't exist                   | Check message ID                |
+| `AuthenticationFails`    | The mail server rejected the credentials | Re-authorize the account       |
+| `ConnectionError`        | Can't connect to mail server            | Check host, port, and network   |
+| `RateLimitExceeded`      | Too many requests                       | Back off for `ttl` seconds      |
+
+Validation failures do not carry a `code`. They return `400` with a `fields` array instead. See [Error Codes](/docs/reference/error-codes) for the full list.
 
 ### Retry Strategies
 
 For transient errors (429, 500, 503):
 
-```
-// Pseudo code for retry logic with exponential backoff
-function retryRequest(url, options, maxRetries = 3) {
-  for (i = 0; i < maxRetries; i++) {
-    response = HTTP_REQUEST(url, options)
+```javascript
+async function requestWithRetry(url, options, maxRetries = 3) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const res = await fetch(url, options);
+    if (res.ok) return res;
 
-    if (response.status >= 200 AND response.status < 300) {
-      return response
+    if (res.status !== 429 && res.status < 500) {
+      // The request itself is wrong, so retrying it changes nothing
+      const { message } = await res.json();
+      throw new Error(message);
     }
 
-    if (response.status == 429 OR response.status >= 500) {
-      // Exponential backoff: 1s, 2s, 4s
-      delay = POWER(2, i) * 1000  // milliseconds
-      SLEEP(delay)
-      continue
-    }
-
-    THROW_ERROR("Request failed with status: " + response.status)
+    // A 429 tells you exactly how long to wait, so prefer it over guessing
+    const body = await res.json().catch(() => ({}));
+    const delay = body.ttl ? body.ttl * 1000 : 2 ** attempt * 1000;
+    await new Promise(r => setTimeout(r, delay));
   }
 
-  THROW_ERROR("Max retries exceeded")
+  throw new Error('Max retries exceeded');
 }
 ```
+
+Retry only `429` and `5xx`. Every other `4xx` reports something about the request that will not change on its own.
 
 ## Pagination
 
@@ -341,36 +384,30 @@ Paginated responses include navigation metadata:
 
 ### Navigation Example
 
-```
-// Pseudo code: Fetch all pages of messages
-function fetchAllMessages(account) {
-  page = 0
-  allMessages = []
-  hasMore = true
+```javascript
+async function* eachMessage(account, path = 'INBOX') {
+  const base = `http://localhost:3000/v1/account/${encodeURIComponent(account)}/messages`;
 
-  while (hasMore) {
-    // Build URL with pagination parameters
-    url = "http://localhost:3000/v1/account/" + account + "/messages?path=INBOX&page=" + page + "&pageSize=100"
+  for (let page = 0; ; page++) {
+    const res = await fetch(`${base}?path=${encodeURIComponent(path)}&page=${page}&pageSize=100`, {
+      headers: { Authorization: 'Bearer YOUR_ACCESS_TOKEN' }
+    });
 
-    // Make HTTP GET request
-    response = HTTP_GET(url, {
-      headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
-    })
+    const { messages, pages } = await res.json();
+    yield* messages;
 
-    // Parse response
-    data = PARSE_JSON(response.body)
-
-    // Add messages to collection
-    allMessages = allMessages + data.messages
-
-    // Check if more pages exist
-    hasMore = (page < data.pages - 1)
-    page = page + 1
+    if (page >= pages - 1) return;
   }
+}
 
-  return allMessages
+for await (const message of eachMessage('user@example.com')) {
+  console.log(message.id, message.subject);
 }
 ```
+
+:::caution Paging a mailbox that is changing
+Pages are computed per request, so a message arriving mid-walk shifts everything down by one and you can see the same message twice or skip one. Deduplicate on `id` while walking, and prefer [webhooks](/docs/webhooks/overview) over re-listing to keep up with new mail.
+:::
 
 ## Filtering & Search
 
@@ -440,91 +477,51 @@ Learn more in the [Webhooks API documentation](./webhooks-api.md).
 
 ## Quick Start Example
 
-Here's a complete workflow showing the most common operations:
+Register an account, send a message, and subscribe to new mail. Each step is one request:
 
+```javascript
+const BASE = 'http://localhost:3000/v1';
+const TOKEN = 'YOUR_ACCESS_TOKEN';
+
+const api = (path, body) =>
+  fetch(BASE + path, {
+    method: body ? 'POST' : 'GET',
+    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: body && JSON.stringify(body)
+  }).then(res => res.json());
+
+// 1. Register an account. EmailEngine verifies the credentials and starts syncing
+const { account } = await api('/account', {
+  account: 'user@example.com',
+  name: 'John Doe',
+  imap: {
+    host: 'imap.example.com', port: 993, secure: true,
+    auth: { user: 'user@example.com', pass: 'password' }
+  },
+  smtp: {
+    host: 'smtp.example.com', port: 465, secure: true,
+    auth: { user: 'user@example.com', pass: 'password' }
+  }
+});
+
+// 2. Subscribe to new mail before it can arrive
+await api('/settings', {
+  webhooks: 'https://your-app.com/webhook',
+  webhookEvents: ['messageNew']
+});
+
+// 3. Send a message
+const { messageId } = await api(`/account/${encodeURIComponent(account)}/submit`, {
+  to: [{ address: 'recipient@example.com' }],
+  subject: 'Hello from EmailEngine',
+  text: 'This is a test email sent via the API'
+});
+
+// 4. Read the mailbox
+const { messages } = await api(`/account/${encodeURIComponent(account)}/messages?path=INBOX&pageSize=10`);
 ```
-// Pseudo code: Complete EmailEngine API workflow
 
-BASE_URL = "http://localhost:3000/v1"
-TOKEN = "YOUR_ACCESS_TOKEN"
-
-// 1. Register an email account
-registerResponse = HTTP_POST(BASE_URL + "/account", {
-  headers: {
-    "Authorization": "Bearer " + TOKEN,
-    "Content-Type": "application/json"
-  },
-  body: {
-    account: "user@example.com",
-    name: "John Doe",
-    imap: {
-      host: "imap.example.com",
-      port: 993,
-      secure: true,
-      auth: {
-        user: "user@example.com",
-        pass: "password"
-      }
-    },
-    smtp: {
-      host: "smtp.example.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: "user@example.com",
-        pass: "password"
-      }
-    }
-  }
-})
-
-account = PARSE_JSON(registerResponse.body).account
-PRINT("Account registered: " + account)
-
-// 2. Wait for account to connect (or use webhook)
-SLEEP(5000)  // Wait 5 seconds
-
-// 3. Send an email
-sendResponse = HTTP_POST(BASE_URL + "/account/" + account + "/submit", {
-  headers: {
-    "Authorization": "Bearer " + TOKEN,
-    "Content-Type": "application/json"
-  },
-  body: {
-    to: [{ address: "recipient@example.com" }],
-    subject: "Hello from EmailEngine",
-    text: "This is a test email sent via the API"
-  }
-})
-
-messageId = PARSE_JSON(sendResponse.body).messageId
-PRINT("Email sent: " + messageId)
-
-// 4. List recent messages
-messagesResponse = HTTP_GET(
-  BASE_URL + "/account/" + account + "/messages?path=INBOX&pageSize=10",
-  {
-    headers: { "Authorization": "Bearer " + TOKEN }
-  }
-)
-
-messages = PARSE_JSON(messagesResponse.body).messages
-PRINT("Recent messages: " + LENGTH(messages))
-
-// 5. Setup webhook for new messages
-HTTP_POST(BASE_URL + "/settings", {
-  headers: {
-    "Authorization": "Bearer " + TOKEN,
-    "Content-Type": "application/json"
-  },
-  body: {
-    webhooks: "https://your-app.com/webhook",
-    webhookEvents: ["messageNew"]
-  }
-})
-
-PRINT("Webhook configured")
-```
+Registering an account returns as soon as the account is stored, so it is normal for the first `/messages` call to come back empty while the initial sync runs. Rather than sleeping, subscribe to the [`accountInitialized`](/docs/webhooks/accountinitialized) webhook, which fires once the first sync completes.
 
 ## API Categories
 

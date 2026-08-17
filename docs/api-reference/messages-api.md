@@ -132,29 +132,6 @@ for msg in data['messages']:
 ```
 
 </TabItem>
-<TabItem value="pseudocode" label="Pseudo code">
-
-
-```
-// List messages from a mailbox
-account = "user@example.com"
-url = "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/messages?path=INBOX&pageSize=50"
-
-response = HTTP_GET(url, {
-  headers: {
-    "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-  }
-})
-
-data = PARSE_JSON(response.body)
-PRINT("Total messages: " + data.total)
-
-for each msg in data.messages {
-  PRINT(msg.from.address + ": " + msg.subject)
-}
-```
-
-</TabItem>
 </Tabs>
 
 **Response:**
@@ -211,41 +188,10 @@ Retrieve complete message information including body and attachments.
 
 **Examples:**
 
-<Tabs groupId="programming-language">
-<TabItem value="curl" label="cURL">
-
 ```bash
 curl "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
-
-</TabItem>
-<TabItem value="pseudocode" label="Pseudo code">
-
-
-```
-// Get complete message details
-account = "user@example.com"
-messageId = "AAAABAABNc"
-
-response = HTTP_GET(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId,
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
-  }
-)
-
-message = PARSE_JSON(response.body)
-PRINT("Subject: " + message.subject)
-PRINT("From: " + message.from.address)
-PRINT("Text: " + message.text.plain)
-PRINT("Attachments: " + LENGTH(message.attachments))
-```
-
-</TabItem>
-</Tabs>
 
 **Response:**
 ```json
@@ -293,43 +239,11 @@ Retrieve raw RFC822 message source.
 
 **Examples:**
 
-<Tabs groupId="programming-language">
-<TabItem value="curl" label="cURL">
-
 ```bash
 curl "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc/source" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -o message.eml
 ```
-
-</TabItem>
-<TabItem value="pseudocode" label="Pseudo code">
-
-
-```
-// Get raw RFC822 message source
-account = "user@example.com"
-messageId = "AAAABAABNc"
-
-response = HTTP_GET(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId + "/source",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
-  }
-)
-
-source = response.body  // Raw text content
-PRINT("Raw message source:")
-PRINT(source)
-
-// Can save to file or parse with email library
-SAVE_TO_FILE("message.eml", source)
-```
-
-</TabItem>
-</Tabs>
 
 **Use Cases:**
 - Export messages in EML format
@@ -369,9 +283,6 @@ Change message flags like read/unread, flagged, etc.
 
 **Examples:**
 
-<Tabs groupId="programming-language">
-<TabItem value="curl" label="cURL">
-
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -382,53 +293,6 @@ curl -X PUT "http://localhost:3000/v1/account/user@example.com/message/AAAABAABN
     }
   }'
 ```
-
-</TabItem>
-<TabItem value="pseudocode" label="Pseudo code">
-
-
-```
-// Example 1: Mark message as read and flagged
-account = "user@example.com"
-messageId = "AAAABAABNc"
-
-response = HTTP_PUT(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId,
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      flags: {
-        add: ["\\Seen", "\\Flagged"]
-      }
-    }
-  }
-)
-
-result = PARSE_JSON(response.body)
-PRINT("Flags added: " + result.flags.add)
-
-// Example 2: Mark message as unread (remove Seen flag)
-response = HTTP_PUT(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId,
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      flags: {
-        delete: ["\\Seen"]
-      }
-    }
-  }
-)
-```
-
-</TabItem>
-</Tabs>
 
 **Use Cases:**
 - Mark messages as read/unread
@@ -455,47 +319,12 @@ Move a message to a different mailbox.
 
 **Examples:**
 
-<Tabs groupId="programming-language">
-<TabItem value="curl" label="cURL">
-
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc/move" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"path": "Archive"}'
 ```
-
-</TabItem>
-<TabItem value="pseudocode" label="Pseudo code">
-
-
-```
-// Move message to a different mailbox
-account = "user@example.com"
-messageId = "AAAABAABNc"
-
-response = HTTP_PUT(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId + "/move",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      path: "Archive"
-    }
-  }
-)
-
-result = PARSE_JSON(response.body)
-PRINT("Message moved to: " + result.path)
-if (result.id) {
-  PRINT("New message ID: " + result.id)
-}
-```
-
-</TabItem>
-</Tabs>
 
 **Response:**
 ```json
@@ -532,9 +361,6 @@ Delete a message permanently or move to trash.
 
 **Examples:**
 
-<Tabs groupId="programming-language">
-<TabItem value="curl" label="cURL">
-
 ```bash
 # Delete (moves to Trash, or deletes if already in Trash)
 curl -X DELETE "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc" \
@@ -544,42 +370,6 @@ curl -X DELETE "http://localhost:3000/v1/account/user@example.com/message/AAAABA
 curl -X DELETE "http://localhost:3000/v1/account/user@example.com/message/AAAABAABNc?force=true" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
-
-</TabItem>
-<TabItem value="pseudocode" label="Pseudo code">
-
-
-```
-// Example 1: Delete (moves to Trash, or deletes if already in Trash)
-account = "user@example.com"
-messageId = "AAAABAABNc"
-
-response = HTTP_DELETE(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId,
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
-  }
-)
-
-result = PARSE_JSON(response.body)
-PRINT("Message deleted: " + result.deleted)
-// If moved to trash, result.moved contains destination and new message ID
-
-// Example 2: Force delete (delete even if not in Trash)
-response = HTTP_DELETE(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId + "?force=true",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
-  }
-)
-```
-
-</TabItem>
-</Tabs>
 
 **Use Cases:**
 - Delete spam messages
@@ -636,9 +426,6 @@ Search messages using advanced query syntax.
 
 **Examples:**
 
-<Tabs groupId="programming-language">
-<TabItem value="curl" label="cURL">
-
 ```bash
 curl -X POST "http://localhost:3000/v1/account/user@example.com/search?path=INBOX" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -650,60 +437,6 @@ curl -X POST "http://localhost:3000/v1/account/user@example.com/search?path=INBO
     }
   }'
 ```
-
-</TabItem>
-<TabItem value="pseudocode" label="Pseudo code">
-
-
-```
-// Example 1: Search for urgent unread messages from boss
-account = "user@example.com"
-
-response = HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/search?path=INBOX&pageSize=20",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      search: {
-        from: "boss@example.com",
-        subject: "urgent",
-        unseen: true
-      }
-    }
-  }
-)
-
-results = PARSE_JSON(response.body)
-PRINT("Found " + results.total + " messages")
-
-// Example 2: Search for large messages from specific sender
-response = HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/search?path=INBOX",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      search: {
-        from: "client@example.com",
-        larger: 1000000  // > 1 MB
-      }
-    }
-  }
-)
-
-results = PARSE_JSON(response.body)
-for each msg in results.messages {
-  PRINT(msg.subject + " - " + msg.size + " bytes")
-}
-```
-
-</TabItem>
-</Tabs>
 
 **Use Cases:**
 - Find messages from specific sender
@@ -784,210 +517,147 @@ for each msg in results.messages {
 
 The message listing endpoint only accepts the `path`, `page`, `pageSize`, and `cursor` query parameters - unknown parameters return HTTP 400. To filter by flags, use the search endpoint instead:
 
-```
-// Specific mailbox
-url = "/v1/account/" + account + "/messages?path=Archive"
+```bash
+# A specific mailbox
+curl "$BASE/v1/account/$ACCOUNT/messages?path=Archive" -H "$AUTH"
 
-// Pagination
-url = "/v1/account/" + account + "/messages?path=INBOX&page=2&pageSize=100"
+# Pagination
+curl "$BASE/v1/account/$ACCOUNT/messages?path=INBOX&page=2&pageSize=100" -H "$AUTH"
 
-// Unread messages in INBOX (use the search endpoint)
-HTTP_POST("/v1/account/" + account + "/search?path=INBOX", {
-  body: { search: { unseen: true } }
-})
+# Unread messages: filtering by flag needs the search endpoint
+curl -X POST "$BASE/v1/account/$ACCOUNT/search?path=INBOX" \
+  -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{"search": {"unseen": true}}'
 
-// Flagged messages (use the search endpoint)
-HTTP_POST("/v1/account/" + account + "/search?path=INBOX", {
-  body: { search: { flagged: true } }
-})
+# Flagged messages
+curl -X POST "$BASE/v1/account/$ACCOUNT/search?path=INBOX" \
+  -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{"search": {"flagged": true}}'
 ```
 
 ### Search Syntax
 
 **Advanced Search Examples:**
 
+Each of these is the request body for `POST /v1/account/{account}/search`. Terms within one `search` object are combined with AND.
+
+Messages from a domain:
+
+```json
+{ "search": { "from": "@example.com" } }
 ```
-// Messages from domain
-searchCriteria = {
-  search: {
-    from: "@example.com"
-  }
-}
 
-// Date range
-searchCriteria = {
-  search: {
-    since: "2025-01-01T00:00:00.000Z",
-    before: "2025-02-01T00:00:00.000Z"
-  }
-}
+A date range, on the internal date the server assigned:
 
-// Multiple criteria
-searchCriteria = {
-  search: {
-    from: "client@example.com",
-    subject: "invoice",
-    unseen: true,
-    larger: 100000
-  }
-}
+```json
+{ "search": { "since": "2025-01-01T00:00:00.000Z", "before": "2025-02-01T00:00:00.000Z" } }
+```
 
-// Body text search
-searchCriteria = {
-  search: {
-    body: "urgent payment"
+Several criteria at once, here unread invoices over 100 kB from one sender:
+
+```json
+{
+  "search": {
+    "from": "client@example.com",
+    "subject": "invoice",
+    "unseen": true,
+    "larger": 100000
   }
 }
+```
+
+Body text search, which the mail server performs and which is therefore slower than header searches:
+
+```json
+{ "search": { "body": "urgent payment" } }
 ```
 
 ## Common Patterns
 
 ### Pagination
 
-Fetch all messages across pages:
+Walk a folder page by page, stopping once you reach the last one:
 
-```
-// Pseudo code: Fetch all messages with pagination
-function fetchAllMessages(account, path = "INBOX") {
-  page = 0
-  allMessages = []
-  hasMore = true
+```javascript
+async function* eachMessage(account, path = 'INBOX') {
+  const base = `http://localhost:3000/v1/account/${encodeURIComponent(account)}/messages`;
 
-  while (hasMore) {
-    // Build URL with pagination
-    url = "http://localhost:3000/v1/account/" + URL_ENCODE(account) +
-          "/messages?path=" + path + "&page=" + page + "&pageSize=100"
+  for (let page = 0; ; page++) {
+    const res = await fetch(`${base}?path=${encodeURIComponent(path)}&page=${page}&pageSize=100`, {
+      headers: { Authorization: 'Bearer YOUR_ACCESS_TOKEN' }
+    });
 
-    // Make request
-    response = HTTP_GET(url, {
-      headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
-    })
+    const { messages, pages } = await res.json();
+    yield* messages;
 
-    // Parse response
-    data = PARSE_JSON(response.body)
-    allMessages = allMessages + data.messages
-
-    // Check if more pages exist
-    hasMore = (page < data.pages - 1)
-    page = page + 1
+    if (page >= pages - 1) return;
   }
-
-  return allMessages
 }
 ```
+
+Yielding as you go, rather than accumulating into one array, keeps memory flat on a large mailbox. Messages arriving while you walk shift the page boundaries, so deduplicate on `id` if completeness matters.
 
 ### Real-time Sync with Webhooks
 
-Instead of polling, use webhooks:
+Polling a mailbox to notice new mail is the pattern to avoid. Subscribe once, and EmailEngine tells you:
 
+```bash
+curl -X POST http://localhost:3000/v1/settings \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhooks": "https://your-app.com/webhook",
+    "webhooksEnabled": true,
+    "webhookEvents": ["messageNew", "messageDeleted"]
+  }'
 ```
-// Step 1: Setup webhook for new messages
-HTTP_POST("http://localhost:3000/v1/settings", {
-  headers: {
-    "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-    "Content-Type": "application/json"
-  },
-  body: {
-    webhooks: "https://your-app.com/webhook",
-    webhookEvents: ["messageNew", "messageDeleted"]
-  }
-})
 
-// Step 2: Handle webhook in your application
-// This is a webhook endpoint handler (pseudo code for web server)
-function handleWebhook(request, response) {
-  event = PARSE_JSON(request.body)
-
-  if (event.event == "messageNew") {
-    PRINT("New message: " + event.data.subject)
-    // Process new message
-    processNewMessage(event.data)
-  }
-
-  if (event.event == "messageDeleted") {
-    PRINT("Message deleted: " + event.data.id)
-    // Handle deletion
-  }
-
-  // Respond with success
-  response.send({ success: true })
-}
-```
+The [`messageNew`](/docs/webhooks/messagenew) payload already carries the envelope, headers, and optionally the text body, so most handlers never need to fetch the message afterwards. See [Webhook Overview](/docs/webhooks/overview) for building the receiver.
 
 ### Bulk Operations
 
-Update multiple messages:
+Do not loop a request per message. `PUT /v1/account/{account}/messages` applies one update to everything matching a search, in a single call:
 
+```bash
+curl -X PUT "http://localhost:3000/v1/account/user%40example.com/messages?path=INBOX" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "search": { "unseen": true },
+    "update": { "flags": { "add": ["\\Seen"] } }
+  }'
 ```
-// Pseudo code: Mark all unread messages as read
-function markAllAsRead(account, path = "INBOX") {
-  // Step 1: Get all unread messages (flag filtering requires the search endpoint)
-  url = "http://localhost:3000/v1/account/" + URL_ENCODE(account) +
-        "/search?path=" + path
 
-  response = HTTP_POST(url, {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      search: { unseen: true }
-    }
-  })
+The folder is the `path` query parameter, while `search` holds the matching criteria. `PUT /v1/account/{account}/messages/move` and `PUT /v1/account/{account}/messages/delete` follow the same shape to move or delete in bulk.
 
-  messages = PARSE_JSON(response.body).messages
-
-  // Step 2: Update each message
-  for each msg in messages {
-    HTTP_PUT(
-      "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + msg.id,
-      {
-        headers: {
-          "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-          "Content-Type": "application/json"
-        },
-        body: {
-          flags: { add: ["\\Seen"] }
-        }
-      }
-    )
-  }
-
-  PRINT("Marked " + LENGTH(messages) + " messages as read")
-}
-```
+:::caution An empty `search` matches every message
+`search` is required, but `{}` is valid and selects the whole folder. Run the criteria through the [search endpoint](#7-search-messages) first and check the count before reusing them in a bulk delete or move.
+:::
 
 ### Attachment Handling
 
-Download all attachments from a message:
+Attachment IDs come from the message, so fetching an attachment is always a two-step operation:
 
-```
-// Pseudo code: Download all attachments from a message
-function downloadAttachments(account, messageId) {
-  // Step 1: Get message details
-  msgUrl = "http://localhost:3000/v1/account/" + URL_ENCODE(account) +
-           "/message/" + messageId
+```javascript
+const account = encodeURIComponent('user@example.com');
+const base = `http://localhost:3000/v1/account/${account}`;
+const headers = { Authorization: 'Bearer YOUR_ACCESS_TOKEN' };
 
-  msgResponse = HTTP_GET(msgUrl, {
-    headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
-  })
+const message = await fetch(`${base}/message/AAAABAABNc`, { headers }).then(r => r.json());
 
-  message = PARSE_JSON(msgResponse.body)
-
-  // Step 2: Download each attachment
-  for each attachment in message.attachments {
-    attUrl = "http://localhost:3000/v1/account/" + URL_ENCODE(account) +
-             "/attachment/" + attachment.id
-
-    attResponse = HTTP_GET(attUrl, {
-      headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
-    })
-
-    // Save to file or process
-    fileData = attResponse.body
-    SAVE_TO_FILE(attachment.filename, fileData)
-
-    PRINT("Downloaded: " + attachment.filename)
-  }
+for (const attachment of message.attachments || []) {
+  const res = await fetch(`${base}/attachment/${attachment.id}`, { headers });
+  // The response is the raw file, not JSON
+  await writeFile(attachment.filename, Buffer.from(await res.arrayBuffer()));
 }
 ```
+
+The attachment endpoint returns the decoded file with its own content type, not a JSON wrapper. See [Attachments](/docs/receiving/attachments) for inline images, size limits, and streaming large files.
+
+## See Also
+
+- [Message Operations](/docs/receiving/message-operations) - Flags, moves, deletes, and folder handling in depth
+- [Searching Messages](/docs/receiving/searching) - The full search grammar and provider differences
+- [Attachments](/docs/receiving/attachments) - Downloading, inline images, and size limits
+- [Sending API](/docs/api-reference/sending-api) - Submitting, scheduling, and the outbox
+- [Message IDs Explained](/docs/advanced/ids-explained) - How `id`, `uid`, `emailId`, and `messageId` differ

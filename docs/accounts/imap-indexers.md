@@ -88,7 +88,7 @@ The fast indexer only tracks the highest UID (unique identifier) seen in each ma
 Set the default indexer for all new IMAP accounts via API:
 
 ```bash
-curl -X POST https://your-ee.com/v1/settings \
+curl -X POST https://emailengine.example.com/v1/settings \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -107,7 +107,7 @@ Changing the global default only affects newly created accounts. Existing accoun
 Set the indexer when creating an account:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -130,7 +130,7 @@ curl -X POST https://your-ee.com/v1/account \
 Use the [flush API](/docs/api/put-v-1-account-account-flush) to change the indexer for an existing account:
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123/flush \
+curl -X PUT https://emailengine.example.com/v1/account/user123/flush \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -156,7 +156,7 @@ For pipelines that only process incoming emails (AI analysis, vector embeddings,
 
 ```bash
 # Use fast indexer - only need new messages
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -173,7 +173,7 @@ For CRM systems that need complete email sync including deletions:
 
 ```bash
 # Use full indexer - need all changes
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -189,7 +189,7 @@ To trigger webhooks for existing emails (e.g., initial data import):
 
 ```bash
 # Flush with notifyFrom in the past
-curl -X PUT https://your-ee.com/v1/account/user123/flush \
+curl -X PUT https://emailengine.example.com/v1/account/user123/flush \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -205,7 +205,7 @@ This triggers `messageNew` webhooks for all existing emails in the account.
 Check the current indexer setting for an account:
 
 ```bash
-curl https://your-ee.com/v1/account/user123 \
+curl https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

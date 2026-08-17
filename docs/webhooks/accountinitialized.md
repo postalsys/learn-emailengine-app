@@ -46,7 +46,6 @@ This ensures the event fires only on the first successful connection, not on rou
 | `account` | string | Yes | The unique account ID for the initialized account |
 | `date` | string | Yes | ISO 8601 timestamp when the webhook was generated |
 | `event` | string | Yes | Event type, always `accountInitialized` for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook event (UUID format) |
 | `data` | object | Yes | Event data object containing initialization details |
 
 ### Event Data Fields (`data` object)

@@ -114,7 +114,7 @@ In EmailEngine, this scope is used with the IMAP/SMTP backend (`baseScopes: "ima
 
 ### Setup via Web UI
 
-1. Go to **Configuration** > **OAuth2** > **Create OAuth2 app**
+1. Go to **Integrations** > **OAuth2 Apps** > **Create OAuth2 app**
 2. Select **Gmail** as the provider
 3. Upload your Google credentials JSON file or enter Client ID and Client Secret manually
 4. For **Base scope**, select **IMAP and SMTP**
@@ -188,7 +188,7 @@ This is the default scope when using the Gmail API backend. It provides full rea
 
 ### Setup via Web UI
 
-1. Go to **Configuration** > **OAuth2** > **Create OAuth2 app**
+1. Go to **Integrations** > **OAuth2 Apps** > **Create OAuth2 app**
 2. Select **Gmail** as the provider
 3. Upload your Google credentials JSON file or enter Client ID and Client Secret manually
 4. For **Base scope**, select **Gmail API**
@@ -278,7 +278,7 @@ With this scope combination, EmailEngine API calls that attempt to modify, move,
 
 ### Setup via Web UI
 
-1. Go to **Configuration** > **OAuth2** > **Create OAuth2 app** (or edit an existing one)
+1. Go to **Integrations** > **OAuth2 Apps** > **Create OAuth2 app** (or edit an existing one)
 2. Select **Gmail** as the provider
 3. For **Base scope**, select **Gmail API**
 4. Click the **Read-Only + Send** preset button
@@ -376,7 +376,7 @@ The `gmail.labels` scope is included in this preset so that label listing and la
 
 ### Setup via Web UI
 
-1. Go to **Configuration** > **OAuth2** > **Create OAuth2 app** (or edit an existing one)
+1. Go to **Integrations** > **OAuth2 Apps** > **Create OAuth2 app** (or edit an existing one)
 2. Select **Gmail** as the provider
 3. For **Base scope**, select **Gmail API**
 4. Click the **Read-Only** preset button
@@ -471,7 +471,7 @@ EmailEngine activates a special **send-only mode** for accounts with only the `g
 
 ### Setup via Web UI
 
-1. Go to **Configuration** > **OAuth2** > **Create OAuth2 app** (or edit an existing one)
+1. Go to **Integrations** > **OAuth2 Apps** > **Create OAuth2 app** (or edit an existing one)
 2. Select **Gmail** as the provider
 3. For **Base scope**, select **Gmail API**
 4. Click the **Send-Only** preset button

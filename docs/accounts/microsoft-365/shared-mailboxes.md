@@ -72,7 +72,7 @@ Application access is the simplest way to add shared mailboxes. You need an Azur
 Once your application is configured in EmailEngine, add a shared mailbox with a single API call:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -94,7 +94,7 @@ No delegation configuration, no interactive login, no extra scopes. The applicat
 
 ```bash
 # Support mailbox
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -107,7 +107,7 @@ curl -X POST https://your-ee.com/v1/account \
   }'
 
 # Sales mailbox
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -120,7 +120,7 @@ curl -X POST https://your-ee.com/v1/account \
   }'
 
 # Info mailbox
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -189,7 +189,7 @@ If using the IMAP/SMTP backend, no additional scopes are needed. Shared mailbox 
 Add the main user account via the hosted authentication form:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -208,7 +208,7 @@ The user completes the OAuth2 login, and the account is added to EmailEngine.
 Add shared mailboxes that reference the main account:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -240,7 +240,7 @@ Direct access adds the shared mailbox as a standalone account. A user who has pe
 ### Via Hosted Authentication Form
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -267,7 +267,7 @@ The user signs in with their **own Microsoft 365 account** (not the shared mailb
 If you manage OAuth2 tokens externally:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -303,7 +303,7 @@ Set the `email` field to the public address and use `delegatedUser` (or `auth.us
 ### With Application Access
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -319,7 +319,7 @@ curl -X POST https://your-ee.com/v1/account \
 ### With Delegated Access
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -346,7 +346,7 @@ The hosted authentication form (`/v1/authentication/form`) does not support UPN 
 Using the OAuth2 authorization flow:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -401,7 +401,7 @@ After adding a shared mailbox, verify it's working:
 ### Check Account Status
 
 ```bash
-curl https://your-ee.com/v1/account/shared-support \
+curl https://emailengine.example.com/v1/account/shared-support \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -410,7 +410,7 @@ The account should show `"state": "connected"`. For delegated access accounts, t
 ### Test Sending Email
 
 ```bash
-curl -X POST https://your-ee.com/v1/account/shared-support/submit \
+curl -X POST https://emailengine.example.com/v1/account/shared-support/submit \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -449,7 +449,7 @@ When you configure a delegated account, EmailEngine:
 Add a Microsoft 365 account via the hosted authentication form (the user completes the OAuth2 login):
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -465,7 +465,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 
 ```bash
 # Sales team sends through the relay account
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -488,7 +488,7 @@ The `provider` value is the same EmailEngine OAuth2 application ID the parent ac
 
 ```bash
 # Uses relay-sender credentials but sends from sales@company.com
-curl -X POST https://your-ee.com/v1/account/sales-sender/submit \
+curl -X POST https://emailengine.example.com/v1/account/sales-sender/submit \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

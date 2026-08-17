@@ -186,7 +186,7 @@ Now configure EmailEngine to use the Azure application for mailbox access.
 ### Add Outlook (application) OAuth2 Application
 
 1. Open the EmailEngine dashboard
-2. Navigate to **Configuration** > **OAuth2**
+2. Navigate to **Integrations** > **OAuth2 Apps**
 3. Click **Create OAuth2 app**
 4. Select **Outlook (application)**
 
@@ -215,7 +215,7 @@ After registering, note the **App ID** displayed in the OAuth2 application list.
 You can also find it via the API:
 
 ```bash
-curl https://your-ee.com/v1/oauth2 \
+curl https://emailengine.example.com/v1/oauth2 \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN"
 ```
 
@@ -236,7 +236,7 @@ The OAuth2 app's detail page in the EmailEngine dashboard provides an **Add acco
 Add accounts using the [Register Account API endpoint](/docs/api/post-v-1-account):
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -278,7 +278,7 @@ You can add any mailbox in your organization using the same App ID:
 
 ```bash
 # Add multiple accounts (replace APP_ID with your actual App ID)
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -290,7 +290,7 @@ curl -X POST https://your-ee.com/v1/account \
     }
   }'
 
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -308,7 +308,7 @@ curl -X POST https://your-ee.com/v1/account \
 Check the account status:
 
 ```bash
-curl https://your-ee.com/v1/account/user123 \
+curl https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -319,7 +319,7 @@ The account should show `"state": "connected"` when successfully linked.
 Application access is particularly well-suited for shared mailboxes. Simply use the shared mailbox email address as the `auth.user` value:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -376,7 +376,7 @@ EmailEngine supports multiple Microsoft cloud environments. Select the appropria
 When creating the OAuth2 application via the API, specify the `cloud` parameter:
 
 ```bash
-curl -X POST "https://your-ee.com/v1/oauth2" \
+curl -X POST "https://emailengine.example.com/v1/oauth2" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -406,7 +406,7 @@ You cannot use an app registered in the global Azure portal for government or Ch
 Application access accounts appear like any other OAuth2 account:
 
 ```bash
-curl https://your-ee.com/v1/accounts \
+curl https://emailengine.example.com/v1/accounts \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -415,7 +415,7 @@ curl https://your-ee.com/v1/accounts \
 Update account settings using the [Update Account API endpoint](/docs/api/put-v-1-account-account):
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -428,7 +428,7 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 Delete accounts using the [Delete Account API endpoint](/docs/api/delete-v-1-account-account):
 
 ```bash
-curl -X DELETE https://your-ee.com/v1/account/user123 \
+curl -X DELETE https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

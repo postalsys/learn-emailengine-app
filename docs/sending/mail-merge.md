@@ -34,7 +34,7 @@ Instead of calling the submit API multiple times, you:
 Send the same message to multiple recipients without exposing addresses:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
   -d '{
@@ -112,7 +112,7 @@ For bulk sending, you might not want to save 1000 copies to the Sent Mail folder
 Inject per-recipient data using Handlebars syntax:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
   -d '{
@@ -241,7 +241,7 @@ Combine mail merge with [stored templates](./templates.md) for maximum efficienc
 First, create a template via API or UI:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/templates/template" \
+curl -XPOST "https://emailengine.example.com/v1/templates/template" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -271,7 +271,7 @@ curl -XPOST "https://ee.example.com/v1/templates/template" \
 Reference the template ID in your mail merge:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
   -d '{
@@ -402,7 +402,7 @@ for (let i = 0; i < recipients.length; i += batchSize) {
 Monitor the queue to ensure you're not overwhelming the system:
 
 ```bash
-curl "https://ee.example.com/v1/outbox" \
+curl "https://emailengine.example.com/v1/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 

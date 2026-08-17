@@ -77,7 +77,7 @@ For IMAP accounts, EmailEngine can treat existing emails as "new" by setting `no
 ```javascript
 async function addAccountWithHistoricalProcessing(accountId, credentials) {
   const response = await fetch(
-    'https://your-emailengine.com/v1/account',
+    'https://emailengine.example.com/v1/account',
     {
       method: 'POST',
       headers: {
@@ -123,7 +123,7 @@ Generate an authentication link with `notifyFrom`:
 ```javascript
 async function generateAuthLink(accountId, redirectUrl) {
   const response = await fetch(
-    'https://your-emailengine.com/v1/authentication/form',
+    'https://emailengine.example.com/v1/authentication/form',
     {
       method: 'POST',
       headers: {
@@ -152,7 +152,7 @@ console.log('User authentication URL:', authUrl);
 Enable webhooks to receive email notifications using the [Update Settings API endpoint](/docs/api/post-v-1-settings):
 
 ```bash
-curl -X POST "https://your-emailengine.com/v1/settings" \
+curl -X POST "https://emailengine.example.com/v1/settings" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -170,7 +170,7 @@ curl -X POST "https://your-emailengine.com/v1/settings" \
 For pure processing pipelines (no UI needed), use "fast" indexing:
 
 ```bash
-curl -X POST "https://your-emailengine.com/v1/settings" \
+curl -X POST "https://emailengine.example.com/v1/settings" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

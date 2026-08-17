@@ -43,7 +43,7 @@ You can manage templates in two ways:
 Create a template using the [create template API](/docs/api/post-v-1-templates-template):
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/templates/template" \
+curl -XPOST "https://emailengine.example.com/v1/templates/template" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -91,7 +91,7 @@ The template page offers a "Send test email" action so you can check the rendere
 When sending emails using the Submission API, set the `template` property instead of `subject`, `html`, or `text`:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -118,7 +118,7 @@ EmailEngine loads the template and renders it with your provided params.
 You can include any other valid submission properties:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -628,7 +628,7 @@ HTML:
 Retrieve all templates using the [list templates API](/docs/api/get-v-1-templates):
 
 ```bash
-curl "https://ee.example.com/v1/templates?account=example" \
+curl "https://emailengine.example.com/v1/templates?account=example" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -666,7 +666,7 @@ curl "https://ee.example.com/v1/templates?account=example" \
 Use the [get template API](/docs/api/get-v-1-templates-template-template):
 
 ```bash
-curl "https://ee.example.com/v1/templates/template/AAABgUIbuG0AAAAE" \
+curl "https://emailengine.example.com/v1/templates/template/AAABgUIbuG0AAAAE" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -694,7 +694,7 @@ curl "https://ee.example.com/v1/templates/template/AAABgUIbuG0AAAAE" \
 Use the [update template API](/docs/api/put-v-1-templates-template-template):
 
 ```bash
-curl -XPUT "https://ee.example.com/v1/templates/template/AAABgUIbuG0AAAAE" \
+curl -XPUT "https://emailengine.example.com/v1/templates/template/AAABgUIbuG0AAAAE" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -713,7 +713,7 @@ Top-level fields (`name`, `description`, `format`) are merged - include only the
 Use the [delete template API](/docs/api/delete-v-1-templates-template-template):
 
 ```bash
-curl -XDELETE "https://ee.example.com/v1/templates/template/AAABgUIbuG0AAAAE" \
+curl -XDELETE "https://emailengine.example.com/v1/templates/template/AAABgUIbuG0AAAAE" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -722,7 +722,7 @@ curl -XDELETE "https://ee.example.com/v1/templates/template/AAABgUIbuG0AAAAE" \
 Templates work great with mail merge for bulk personalized sending:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{

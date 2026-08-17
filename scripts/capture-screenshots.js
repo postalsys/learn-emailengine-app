@@ -352,6 +352,12 @@ async function captureScreenshots() {
         await page.locator('#prompt_settings').scrollIntoViewIfNeeded();
         await shot(page, null, 'ai-prompt-editor.png', { settle: 1500 });
 
+        // Logging: shows the account-log toggle and the Sentry error reporting
+        // controls. Left unchecked, since a trial license pre-checks Sentry on
+        // its own and the docs describe both states.
+        await page.goto(`${EE_URL}/admin/config/logging`, { waitUntil: 'load' });
+        await shot(page, null, 'logging-config.png');
+
         // hosted authentication form: provider chooser
         const chooserUrl = await hostedFormUrl(context, {
             name: 'John Doe',

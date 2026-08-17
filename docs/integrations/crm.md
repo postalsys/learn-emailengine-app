@@ -55,7 +55,7 @@ Instead of requesting credentials through your CRM UI, use EmailEngine's built-i
 
 ```bash
 curl -XPOST \
-  "https://ee.example.com/v1/authentication/form" \
+  "https://emailengine.example.com/v1/authentication/form" \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -83,7 +83,7 @@ curl -XPOST \
 
 ```json
 {
-  "url": "https://ee.example.com/accounts/new?data=eyJhY2NvdW50Ijo..."
+  "url": "https://emailengine.example.com/accounts/new?data=eyJhY2NvdW50Ijo..."
 }
 ```
 
@@ -492,219 +492,25 @@ $ee->request('put', "/v1/account/$userId", [
 
 This ensures EmailEngine uses the correct folder for sent mail detection.
 
-## Complete Integration Example
+## Putting It Together
 
-Here's a complete webhook processing system:
+A working CRM integration is four moving parts. Each is covered in its own section above:
 
-```php
-<?php
+| Part | What it does | Section |
+|------|--------------|---------|
+| Account onboarding | Hands the user a hosted form, stores the returned account ID against your CRM user | [Connecting Email Accounts](#connecting-email-accounts) |
+| Webhook receiver | Acknowledges immediately, queues the payload, returns `200` | [Listening for Webhooks](#listening-for-webhooks) |
+| Message registry | Deduplicates on `messageId`, decides inbound vs outbound, links the message to a contact | [Building a Message Registry](#building-a-message-registry) |
+| Outbound send | Posts to `/v1/account/{account}/submit` and records the returned `messageId` | [Sending Emails from CRM](#sending-emails-from-crm) |
 
-class CRMEmailIntegration
-{
-    private $db;
-    private $ee;
+The order matters in one place only: register the account before you subscribe its webhooks to a CRM user, otherwise the first `messageNew` events arrive for an account your registry does not know yet. Buffer unknown accounts rather than dropping them - an account can start syncing before your onboarding transaction commits.
 
-    public function __construct($db, $eeToken, $eeUrl)
-    {
-        $this->db = $db;
-        $this->ee = new EmailEngine([
-            'access_token' => $eeToken,
-            'ee_base_url' => $eeUrl,
-        ]);
-    }
+:::tip Build the webhook receiver first
+Point it at a request bin, connect one real mailbox, and read the actual payloads before writing any classification logic. The shape of `messageNew` for a Gmail account with labels differs from a plain IMAP account, and seeing both early saves reworking the registry later.
+:::
 
-    public function processWebhook($payload)
-    {
-        // Validate webhook
-        if ($payload['event'] !== 'messageNew') {
-            return;
-        }
+For a ready-made client rather than raw HTTP calls, see the [PHP SDK](/docs/integrations/php), which wraps authentication and error handling for the same endpoints used throughout this guide.
 
-        $userId = $payload['account'];
-        $messageId = $payload['data']['messageId'] ?? null;
-
-        // Skip spam indicators
-        if (empty($messageId)) {
-            return;
-        }
-
-        // Check deduplication
-        if (!$this->markMessageAsSeen($userId, $messageId)) {
-            return; // Already processed
-        }
-
-        // Classify and process
-        $direction = $this->classifyDirection($payload);
-
-        if ($direction === 'incoming') {
-            $this->handleIncoming($payload);
-        } elseif ($direction === 'sent') {
-            $this->handleSent($payload);
-        }
-    }
-
-    private function markMessageAsSeen($userId, $messageId)
-    {
-        $result = $this->db->query(
-            "INSERT IGNORE INTO message_registry (user_id, message_id)
-             VALUES (?, ?)",
-            [$userId, $messageId]
-        );
-
-        return $result->affectedRows > 0;
-    }
-
-    private function classifyDirection($payload)
-    {
-        $specialUse = $payload['data']['messageSpecialUse'] ?? null;
-
-        if ($specialUse === '\\Inbox') {
-            return 'incoming';
-        } elseif ($specialUse === '\\Sent') {
-            return 'sent';
-        } elseif ($specialUse === '\\Draft') {
-            return 'draft';
-        } elseif (in_array($specialUse, ['\\Junk', '\\Trash'])) {
-            return 'ignore';
-        }
-
-        // User folders - treat as incoming
-        return 'incoming';
-    }
-
-    private function handleIncoming($payload)
-    {
-        $fromEmail = $payload['data']['from']['address'] ?? null;
-
-        if (empty($fromEmail)) {
-            return;
-        }
-
-        $contact = $this->findContact($fromEmail);
-
-        if ($contact) {
-            $this->logActivity([
-                'contact_id' => $contact['id'],
-                'user_id' => $payload['account'],
-                'direction' => 'incoming',
-                'from' => $fromEmail,
-                'subject' => $payload['data']['subject'] ?? '',
-                'date' => $payload['date'],
-                'message_id' => $payload['data']['messageId'],
-                'thread_id' => $payload['data']['threadId'] ?? null,
-            ]);
-        }
-    }
-
-    private function handleSent($payload)
-    {
-        $recipients = $this->extractRecipients($payload);
-
-        foreach ($recipients as $email) {
-            $contact = $this->findContact($email);
-
-            if ($contact) {
-                $this->logActivity([
-                    'contact_id' => $contact['id'],
-                    'user_id' => $payload['account'],
-                    'direction' => 'sent',
-                    'to' => $email,
-                    'subject' => $payload['data']['subject'] ?? '',
-                    'date' => $payload['date'],
-                    'message_id' => $payload['data']['messageId'],
-                    'thread_id' => $payload['data']['threadId'] ?? null,
-                ]);
-            }
-        }
-    }
-
-    private function extractRecipients($payload)
-    {
-        $recipients = [];
-
-        foreach (['to', 'cc'] as $field) {
-            if (isset($payload['data'][$field])) {
-                foreach ($payload['data'][$field] as $addr) {
-                    if (!empty($addr['address'])) {
-                        $recipients[] = $addr['address'];
-                    }
-                }
-            }
-        }
-
-        return array_unique($recipients);
-    }
-
-    private function findContact($email)
-    {
-        return $this->db->queryOne(
-            "SELECT * FROM contacts WHERE email = ? LIMIT 1",
-            [$email]
-        );
-    }
-
-    private function logActivity($data)
-    {
-        $this->db->query(
-            "INSERT INTO email_activities
-             (contact_id, user_id, direction, subject, email_date, message_id, thread_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())",
-            [
-                $data['contact_id'],
-                $data['user_id'],
-                $data['direction'],
-                $data['subject'],
-                $data['date'],
-                $data['message_id'],
-                $data['thread_id'],
-            ]
-        );
-    }
-
-    public function sendEmail($userId, $toEmail, $subject, $body, $attachments = [])
-    {
-        try {
-            $payload = [
-                'to' => [['address' => $toEmail]],
-                'subject' => $subject,
-                'html' => $body,
-            ];
-
-            if (!empty($attachments)) {
-                $payload['attachments'] = $attachments;
-            }
-
-            $response = $this->ee->request(
-                'post',
-                "/v1/account/$userId/submit",
-                $payload
-            );
-
-            return [
-                'success' => true,
-                'messageId' => $response['messageId'],
-            ];
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
-            ];
-        }
-    }
-}
-
-// Usage
-$integration = new CRMEmailIntegration(
-    $database,
-    getenv('EMAILENGINE_TOKEN'),
-    getenv('EMAILENGINE_URL')
-);
-
-// Process webhook
-$payload = json_decode(file_get_contents('php://input'), true);
-$integration->processWebhook($payload);
-http_response_code(200);
-```
 
 ## Production Considerations
 
@@ -727,7 +533,7 @@ Review what data is stored and your compliance obligations:
 - **Email Content**: Not stored by default (only metadata)
 - **GDPR**: Implement data deletion workflows
 
-**Read more**: Data and Security Compliance guide
+**Read more**: [Data and Security Compliance](/docs/deployment/compliance)
 
 ### Scaling Strategies
 

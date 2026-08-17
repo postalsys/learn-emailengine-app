@@ -75,53 +75,17 @@ Configure a webhook endpoint to receive events.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `webhooks` | string | Yes | Webhook endpoint URL |
-| `webhookEvents` | array | No | Event types to receive (default: all) |
+| `webhooksEnabled` | boolean | No | Turns webhook delivery on or off for all accounts |
+| `webhookEvents` | array | No | Event types to receive. Use `["*"]` for all events |
+
+:::caution Setting a URL is not enough
+Delivery only starts once `webhooksEnabled` is `true`. Setting `webhooks` alone leaves a correctly configured endpoint that never receives anything.
+:::
 
 **Example:**
 
-**Pseudo code:**
-```
-// Register webhook endpoint
-response = HTTP_POST(
-  "http://localhost:3000/v1/settings",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      webhooks: "https://your-app.com/webhook",
-      webhookEvents: ["messageNew", "messageSent", "messageDeliveryError"]
-    }
-  }
-)
-
-result = PARSE_JSON(response.body)
-PRINT("Webhook configured: " + result.success)
-```
-
-<Tabs groupId="programming-language">
-<TabItem value="python" label="Python">
-
-```python
-response = requests.post(
-    'http://localhost:3000/v1/settings',
-    headers={
-        'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-        'Content-Type': 'application/json'
-    },
-    json={
-        'webhooks': 'https://your-app.com/webhook',
-        'webhookEvents': ['messageNew', 'messageSent']
-    }
-)
-
-result = response.json()
-print(f"Webhook configured: {result['success']}")
-```
-
-</TabItem>
-<TabItem value="curl" label="cURL">
+<Tabs groupId="language">
+<TabItem value="curl" label="cURL" default>
 
 ```bash
 curl -X POST http://localhost:3000/v1/settings \
@@ -129,17 +93,59 @@ curl -X POST http://localhost:3000/v1/settings \
   -H "Content-Type: application/json" \
   -d '{
     "webhooks": "https://your-app.com/webhook",
+    "webhooksEnabled": true,
     "webhookEvents": ["messageNew", "messageSent"]
   }'
+```
+
+</TabItem>
+<TabItem value="nodejs" label="Node.js">
+
+```javascript
+const res = await fetch('http://localhost:3000/v1/settings', {
+  method: 'POST',
+  headers: {
+    Authorization: 'Bearer YOUR_ACCESS_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    webhooks: 'https://your-app.com/webhook',
+    webhooksEnabled: true,
+    webhookEvents: ['messageNew', 'messageSent']
+  })
+});
+
+const { updated } = await res.json();
+console.log('Updated settings:', updated);
+```
+
+</TabItem>
+<TabItem value="python" label="Python">
+
+```python
+response = requests.post(
+    'http://localhost:3000/v1/settings',
+    headers={'Authorization': 'Bearer YOUR_ACCESS_TOKEN'},
+    json={
+        'webhooks': 'https://your-app.com/webhook',
+        'webhooksEnabled': True,
+        'webhookEvents': ['messageNew', 'messageSent']
+    }
+)
+
+print('Updated settings:', response.json()['updated'])
 ```
 
 </TabItem>
 </Tabs>
 
 **Response:**
+
+The response lists the setting keys that were changed:
+
 ```json
 {
-  "success": true
+  "updated": ["webhooks", "webhooksEnabled", "webhookEvents"]
 }
 ```
 
@@ -153,22 +159,9 @@ Retrieve all configured webhook routes.
 
 **Example:**
 
-**Pseudo code:**
-```
-// List all webhook routes
-response = HTTP_GET(
-  "http://localhost:3000/v1/webhookRoutes",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
-  }
-)
-
-data = PARSE_JSON(response.body)
-for each webhook in data.webhooks {
-  PRINT(webhook.id + ": " + webhook.targetUrl)
-}
+```bash
+curl "http://localhost:3000/v1/webhookRoutes" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 **Response:**
@@ -201,23 +194,9 @@ Retrieve details of a specific webhook route.
 
 **Example:**
 
-**Pseudo code:**
-```
-// Get specific webhook route details
-routeId = "route_123abc"
-
-response = HTTP_GET(
-  "http://localhost:3000/v1/webhookRoutes/webhookRoute/" + routeId,
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
-  }
-)
-
-route = PARSE_JSON(response.body)
-PRINT("Webhook URL: " + route.targetUrl)
-PRINT("Events: " + route.events)
+```bash
+curl "http://localhost:3000/v1/webhookRoutes/webhookRoute/AAABgS-UcAYAAAABAA" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 **Response:**
@@ -277,13 +256,18 @@ Subscribe to specific event types:
 }
 ```
 
-**Subscribe to all events:**
+**Subscribe to all events** with the `*` wildcard, including event types added in later EmailEngine releases:
+
 ```javascript
 {
-  webhooks: 'https://your-app.com/webhook'
-  // webhookEvents omitted = all events
+  webhooks: 'https://your-app.com/webhook',
+  webhookEvents: ['*']
 }
 ```
+
+:::caution An empty list means no events, not all events
+`webhookEvents` is an allowlist. Leaving it out or setting it to `[]` delivers nothing at all. To receive everything, set it to `['*']` explicitly.
+:::
 
 ### Custom Headers
 
@@ -327,9 +311,12 @@ All webhooks follow this structure:
 
 ```json
 {
-  "event": "messageNew",
-  "account": "user@example.com",
+  "serviceUrl": "https://emailengine.example.com",
+  "account": "user123",
   "date": "2025-01-15T10:30:00.000Z",
+  "path": "INBOX",
+  "specialUse": "\\Inbox",
+  "event": "messageNew",
   "data": {
     /* event-specific data */
   }
@@ -340,10 +327,15 @@ All webhooks follow this structure:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `event` | string | Event type (e.g., "messageNew") |
+| `serviceUrl` | string | The configured service URL of the EmailEngine instance that sent the event |
 | `account` | string | Account identifier |
-| `date` | string | ISO timestamp of event |
+| `date` | string | ISO timestamp of when the event was generated |
+| `path` | string | Folder the event relates to. Omitted for events that are not about a folder |
+| `specialUse` | string | Special-use flag of that folder, such as `\Inbox` or `\Sent`. Only present when the folder has one |
+| `event` | string | Event type, for example `messageNew` |
 | `data` | object | Event-specific payload |
+
+`path` and `specialUse` are only present for folder-scoped events, so an account-level event such as `authenticationError` carries neither. The event ID travels in the `X-EE-Wh-Event-Id` header rather than in the body.
 
 ### Event-Specific Fields
 
@@ -433,35 +425,40 @@ X-EE-Wh-Signature: <base64url-encoded-hmac>
 
 **Verify Signature:**
 
-**Pseudo code:**
-```
-// Pseudo code - implement HMAC-SHA256 verification in your language
-function verifyWebhook(payload, signature, secret) {
-  // Create HMAC with SHA256
-  hmac = CREATE_HMAC("sha256", secret)
-  hmac.UPDATE(payload)  // raw request body as string
-  expectedSignature = hmac.DIGEST_BASE64URL()
+Compute HMAC-SHA256 over the **raw** request body with the `serviceSecret` as the key, base64url encode it, and compare in constant time. Parsing the JSON first and re-serializing it will not reproduce the same bytes, so the signature will not match.
 
-  // Constant-time comparison to prevent timing attacks
-  return CONSTANT_TIME_COMPARE(signature, expectedSignature)
+<Tabs groupId="language">
+<TabItem value="nodejs" label="Node.js" default>
+
+```javascript
+const crypto = require('crypto');
+const express = require('express');
+
+function verifyWebhook(rawBody, signature, secret) {
+  const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('base64url');
+
+  const a = Buffer.from(expected);
+  const b = Buffer.from(signature || '', 'utf8');
+
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-// Example webhook handler
-function handleWebhook(request, response) {
-  signature = request.headers["x-ee-wh-signature"]
-  secret = GET_SERVICE_SECRET()  // Retrieved from EmailEngine settings
+// express.raw keeps the exact bytes that were signed
+app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const signature = req.headers['x-ee-wh-signature'];
 
-  if NOT verifyWebhook(request.rawBody, signature, secret) {
-    return HTTP_RESPONSE(401, { error: "Invalid signature" })
+  if (!verifyWebhook(req.body, signature, process.env.WEBHOOK_SECRET)) {
+    return res.status(401).json({ error: 'Invalid signature' });
   }
 
-  // Process webhook
-  PRINT("Event: " + request.body.event)
-  return HTTP_RESPONSE(200, { success: true })
-}
+  const event = JSON.parse(req.body.toString());
+  console.log('Event:', event.event);
+
+  res.json({ success: true });
+});
 ```
 
-<Tabs groupId="programming-language">
+</TabItem>
 <TabItem value="python" label="Python">
 
 ```python
@@ -512,25 +509,7 @@ location /webhook {
 }
 ```
 
-**Pseudo code:**
-```
-// IP whitelist middleware - implement in your language/framework
-function ipWhitelist(allowedIPs) {
-  return function middleware(request, response, next) {
-    clientIP = request.ip
-    if clientIP NOT IN allowedIPs {
-      return HTTP_RESPONSE(403, { error: "Forbidden" })
-    }
-    next()
-  }
-}
-
-// Apply to webhook endpoint
-ROUTE("POST", "/webhook",
-  ipWhitelist(["1.2.3.4"]),
-  handleWebhook
-)
-```
+Filtering by source address is a useful second layer, but it is not a substitute for verifying the signature: an allowlist only proves where a request came from, not that its contents are untampered. If EmailEngine sits behind a proxy or NAT, the address your application sees is the proxy's, so verify the signature there too.
 
 ### HTTPS Requirement
 
@@ -576,22 +555,24 @@ ngrok http 3000
 
 ### Local Testing
 
-**Simple test endpoint (pseudo code):**
+**A throwaway receiver that prints what arrives:**
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+app.post('/webhook', (req, res) => {
+  console.log(req.body.event, req.body.account);
+  console.dir(req.body.data, { depth: null });
+  res.json({ success: true });
+});
+
+app.listen(3000, () => console.log('Listening on 3000'));
 ```
-// Create basic webhook receiver for testing
-CREATE_HTTP_SERVER(port: 3000)
 
-ROUTE("POST", "/webhook", function(request, response) {
-  PRINT("Webhook received: " + request.body)
-  PRINT("Event: " + request.body.event)
-  PRINT("Account: " + request.body.account)
-
-  return HTTP_RESPONSE(200, { success: true })
-})
-
-START_SERVER()
-PRINT("Webhook receiver listening on port 3000")
-```
+This one skips signature verification on purpose, which is fine while you are inspecting payloads locally but not something to carry into production. See [Webhook Signatures](#webhook-signatures) for the verified version.
 
 **Test with curl:**
 ```bash
@@ -629,273 +610,55 @@ curl -X POST https://your-app.com/webhook \
 - Wrong status code (not 2xx)
 - Signature verification failing
 
-## Common Patterns
+## Building a Receiver
 
-### Event Filtering
+A production webhook endpoint has four jobs, in this order:
 
-Process only specific events:
+1. **Verify the signature** over the raw body, before parsing anything.
+2. **Deduplicate** on the `X-EE-Wh-Event-Id` header, because a retried delivery repeats an event you may already have handled.
+3. **Acknowledge with `2xx`** as soon as the payload is durably stored.
+4. **Do the work afterwards**, off the request path, so a slow database never turns into a retry.
 
-**Pseudo code:**
-```
-// Webhook handler with event filtering
-ROUTE("POST", "/webhook", function(request, response) {
-  event = request.body.event
-  account = request.body.account
-  data = request.body.data
+Getting the order wrong is what causes the two failure modes seen in practice: parsing before verifying makes the signature unverifiable, and working before acknowledging makes EmailEngine retry a request you are still processing.
 
-  switch event {
-    case "messageNew":
-      handleNewMessage(account, data)
-      break
+```javascript
+const crypto = require('crypto');
+const express = require('express');
 
-    case "messageSent":
-      handleMessageSent(account, data)
-      break
+const app = express();
+const SECRET = process.env.WEBHOOK_SECRET; // serviceSecret from EmailEngine settings
 
-    case "messageDeliveryError":
-      handleSendError(account, data)
-      break
+// Raw body: the signature covers the exact bytes, not a re-serialized object
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  // 1. Verify before trusting anything in the payload
+  const expected = crypto.createHmac('sha256', SECRET).update(req.body).digest('base64url');
+  const given = Buffer.from(req.headers['x-ee-wh-signature'] || '', 'utf8');
+  const want = Buffer.from(expected);
 
-    default:
-      PRINT("Unhandled event: " + event)
+  if (given.length !== want.length || !crypto.timingSafeEqual(want, given)) {
+    return res.status(401).json({ error: 'Invalid signature' });
   }
 
-  return HTTP_RESPONSE(200, { success: true })
-})
+  const eventId = req.headers['x-ee-wh-event-id'];
+  const event = JSON.parse(req.body.toString());
+
+  // 2 + 3. Record it, then acknowledge. A conflict means we already have it
+  const isNew = await store.insertIfAbsent(eventId, event);
+  res.json({ success: true });
+
+  if (!isNew) return;
+
+  // 4. Work happens after the response
+  queue.push(event).catch(err => console.error('Enqueue failed', eventId, err));
+});
+
+app.listen(3000);
 ```
 
-### Retry Handling
+Dedupe on the event ID rather than on a composite key you build yourself. `X-EE-Wh-Event-Id` is stable across retries of the same delivery, whereas a key assembled from event type and message ID collides for legitimately distinct events, such as a message that is flagged twice.
 
-Implement idempotent webhook processing:
+:::caution An in-memory set is not deduplication
+A `Set` in the process loses everything on restart and is not shared between instances, so a redeploy or a second replica reprocesses events. Use whatever your application already treats as durable, with a unique constraint on the event ID.
+:::
 
-**Pseudo code:**
-```
-// Track processed webhooks to prevent duplicates
-processedWebhooks = SET()  // or database table
-
-ROUTE("POST", "/webhook", function(request, response) {
-  event = request.body.event
-  account = request.body.account
-  data = request.body.data
-
-  // Generate unique ID for this webhook
-  webhookId = event + "-" + account + "-" + data.id
-
-  // Check if already processed
-  if webhookId IN processedWebhooks {
-    PRINT("Duplicate webhook, skipping")
-    return HTTP_RESPONSE(200, { success: true })
-  }
-
-  try {
-    processWebhook(event, account, data)
-    processedWebhooks.ADD(webhookId)
-    return HTTP_RESPONSE(200, { success: true })
-  } catch error {
-    PRINT_ERROR("Webhook processing error: " + error)
-    return HTTP_RESPONSE(500, { error: error.message })
-  }
-})
-```
-
-### Idempotency
-
-Use message IDs to prevent duplicate processing:
-
-**Pseudo code:**
-```
-// Handle new message with idempotency check
-function handleNewMessage(account, message) {
-  // Check if message already processed
-  exists = DATABASE.FIND_ONE({
-    table: "messages",
-    where: {
-      account: account,
-      messageId: message.id
-    }
-  })
-
-  if exists {
-    PRINT("Message already processed")
-    return
-  }
-
-  // Process new message
-  processMessage(message)
-
-  // Mark as processed
-  DATABASE.INSERT({
-    table: "messages",
-    data: {
-      account: account,
-      messageId: message.id,
-      processedAt: CURRENT_TIMESTAMP()
-    }
-  })
-}
-```
-
-### Queue for Processing
-
-Handle webhooks asynchronously:
-
-**Pseudo code:**
-```
-// Create job queue for webhook processing
-queue = CREATE_JOB_QUEUE("webhooks")
-
-// Webhook endpoint - quick response
-ROUTE("POST", "/webhook", function(request, response) {
-  // Add to queue
-  queue.ADD_JOB(request.body)
-
-  // Respond immediately (< 30 seconds)
-  return HTTP_RESPONSE(200, { success: true })
-})
-
-// Worker process (runs separately)
-queue.PROCESS(function(job) {
-  event = job.data.event
-  account = job.data.account
-  data = job.data.data
-
-  processWebhook(event, account, data)
-})
-```
-
-### Error Handling
-
-Implement robust error handling:
-
-**Pseudo code:**
-```
-// Webhook handler with comprehensive error handling
-ROUTE("POST", "/webhook", function(request, response) {
-  try {
-    event = request.body.event
-    account = request.body.account
-    data = request.body.data
-
-    // Validate payload
-    if NOT event OR NOT account {
-      return HTTP_RESPONSE(400, {
-        error: "Invalid webhook payload"
-      })
-    }
-
-    // Process webhook
-    processWebhook(event, account, data)
-
-    return HTTP_RESPONSE(200, { success: true })
-
-  } catch error {
-    PRINT_ERROR("Webhook error: " + error)
-
-    // Return 500 to trigger EmailEngine retry
-    return HTTP_RESPONSE(500, {
-      error: "Processing failed",
-      message: error.message
-    })
-  }
-})
-```
-
-## Complete Example
-
-Full webhook receiver with all best practices:
-
-**Pseudo code:**
-```
-// Complete webhook receiver implementation
-// Webhook secret for signature verification (serviceSecret from EmailEngine settings)
-WEBHOOK_SECRET = GET_SERVICE_SECRET()
-
-// Verify webhook signature middleware
-function verifySignature(request, response, next) {
-  signature = request.headers["x-ee-wh-signature"]
-  if NOT signature {
-    return HTTP_RESPONSE(401, { error: "Missing signature" })
-  }
-
-  hmac = CREATE_HMAC("sha256", WEBHOOK_SECRET)
-  hmac.UPDATE(request.rawBody)  // raw request body bytes
-  expected = hmac.DIGEST_BASE64URL()
-
-  if NOT CONSTANT_TIME_COMPARE(signature, expected) {
-    return HTTP_RESPONSE(401, { error: "Invalid signature" })
-  }
-
-  next()
-}
-
-// Track processed webhooks for idempotency
-processed = SET()
-
-// Webhook endpoint with middleware
-ROUTE("POST", "/webhook",
-  MIDDLEWARE: [JSON_PARSER, verifySignature],
-  HANDLER: function(request, response) {
-    event = request.body.event
-    account = request.body.account
-    data = request.body.data
-
-    // Generate unique ID
-    webhookId = event + "-" + account + "-" + (data.id OR CURRENT_TIMESTAMP())
-
-    // Check if already processed
-    if webhookId IN processed {
-      return HTTP_RESPONSE(200, { success: true, duplicate: true })
-    }
-
-    try {
-      // Process event
-      switch event {
-        case "messageNew":
-          handleNewMessage(account, data)
-          break
-
-        case "messageSent":
-          handleMessageSent(account, data)
-          break
-
-        case "messageDeliveryError":
-          handleSendError(account, data)
-          break
-
-        default:
-          PRINT("Unhandled event: " + event)
-      }
-
-      // Mark as processed
-      processed.ADD(webhookId)
-
-      return HTTP_RESPONSE(200, { success: true })
-
-    } catch error {
-      PRINT_ERROR("Webhook processing error: " + error)
-      return HTTP_RESPONSE(500, { error: error.message })
-    }
-  }
-)
-
-// Event handler functions
-function handleNewMessage(account, message) {
-  PRINT("New message from " + message.from.address)
-  PRINT("Subject: " + message.subject)
-  // Process message...
-}
-
-function handleMessageSent(account, data) {
-  PRINT("Message sent: " + data.messageId)
-  // Update database...
-}
-
-function handleSendError(account, data) {
-  PRINT_ERROR("Send failed: " + data.error)
-  // Alert admin...
-}
-
-// Start server
-START_SERVER(port: 3000)
-PRINT("Webhook receiver running on port 3000")
-```
+Handle events by type once the payload is on your queue. Only `event` is guaranteed on every payload, so branch on it and ignore what you do not consume. New event types are added in EmailEngine releases, and a receiver that throws on an unrecognized type starts failing after an upgrade.

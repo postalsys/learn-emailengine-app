@@ -203,7 +203,7 @@ ENV EENGINE_PREPARED_TOKEN=hKJpZNlAMzAxZThjNTFhZjgxM2Q3MzUxN...
 ```yaml
 services:
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     environment:
       - EENGINE_PREPARED_TOKEN=${PREPARED_TOKEN}
 ```
@@ -236,7 +236,7 @@ echo "Exported token: $EXPORTED"
 # docker-compose.yml
 services:
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     environment:
       - EENGINE_PREPARED_TOKEN=${EXPORTED_TOKEN}
 ```

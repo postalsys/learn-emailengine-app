@@ -4,6 +4,9 @@ description: API endpoints for sending emails with attachments, templates, and d
 sidebar_position: 4
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Sending API
 
 The Sending API provides endpoints for sending emails through EmailEngine with support for immediate and scheduled delivery, automatic retries, and queue management.
@@ -64,134 +67,150 @@ Or simplified:
 
 ### Examples
 
-**Simple Email:**
+<Tabs groupId="language">
+<TabItem value="curl" label="cURL" default>
 
-**Pseudo code:**
+```bash
+curl -X POST "http://localhost:3000/v1/account/user%40example.com/submit" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": [{ "name": "Jane Smith", "address": "jane@example.com" }],
+    "subject": "Hello from EmailEngine",
+    "text": "This is a test email sent via the API.",
+    "html": "<p>This is a test email sent via the API.</p>"
+  }'
 ```
-// Send a simple email
-account = "user@example.com"
 
-response = HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
+</TabItem>
+<TabItem value="nodejs" label="Node.js">
+
+```javascript
+const account = 'user@example.com';
+
+const res = await fetch(
+  `http://localhost:3000/v1/account/${encodeURIComponent(account)}/submit`,
   {
+    method: 'POST',
     headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
+      Authorization: 'Bearer YOUR_ACCESS_TOKEN',
+      'Content-Type': 'application/json'
     },
-    body: {
-      to: [
-        {
-          name: "Jane Smith",
-          address: "jane@example.com"
-        }
-      ],
-      subject: "Hello from EmailEngine",
-      text: "This is a test email sent via the API.",
-      html: "<p>This is a test email sent via the API.</p>"
-    }
+    body: JSON.stringify({
+      to: [{ name: 'Jane Smith', address: 'jane@example.com' }],
+      subject: 'Hello from EmailEngine',
+      text: 'This is a test email sent via the API.',
+      html: '<p>This is a test email sent via the API.</p>'
+    })
   }
+);
+
+const { messageId, queueId } = await res.json();
+console.log(messageId, queueId);
+```
+
+</TabItem>
+<TabItem value="python" label="Python">
+
+```python
+import requests
+from urllib.parse import quote
+
+account = 'user@example.com'
+
+res = requests.post(
+    f'http://localhost:3000/v1/account/{quote(account)}/submit',
+    headers={'Authorization': 'Bearer YOUR_ACCESS_TOKEN'},
+    json={
+        'to': [{'name': 'Jane Smith', 'address': 'jane@example.com'}],
+        'subject': 'Hello from EmailEngine',
+        'text': 'This is a test email sent via the API.',
+        'html': '<p>This is a test email sent via the API.</p>'
+    }
 )
 
-result = PARSE_JSON(response.body)
-PRINT("Message sent: " + result.messageId)
-PRINT("Queue ID: " + result.queueId)
+result = res.json()
+print(result['messageId'], result['queueId'])
 ```
 
+</TabItem>
+</Tabs>
+
+The account ID goes in the URL path, so remember to URL-encode it. An address that contains `@` or `+` breaks the route otherwise.
+
 **Response:**
+
 ```json
 {
   "response": "Queued for delivery",
-  "messageId": "<abc123@example.com>",
+  "messageId": "<a2184d08-a470-fec6-a493-fa211a3756e9@example.com>",
   "sendAt": "2025-01-15T10:30:00.000Z",
-  "queueId": "queue_456def"
+  "queueId": "d41f0423195f271f"
 }
 ```
 
-**HTML Email with Attachments:**
+Keep the `messageId`. It is the value that comes back in [`messageSent`](/docs/webhooks/messagesent), [`messageDeliveryError`](/docs/webhooks/messagedeliveryerror), and [`messageBounce`](/docs/webhooks/messagebounce) events, so it is how you match a delivery outcome to the message you sent. Use `queueId` to inspect or cancel the message while it is still queued.
 
-**Pseudo code:**
-```
-// Send HTML email with PDF attachment
-account = "user@example.com"
+#### Attachments
 
-response = HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      to: [{ address: "client@example.com" }],
-      subject: "Invoice #12345",
-      html: "<h1>Invoice</h1><p>Please find your invoice attached.</p>",
-      attachments: [
-        {
-          filename: "invoice.pdf",
-          content: "base64_encoded_content_here",
-          encoding: "base64",
-          contentType: "application/pdf"
-        }
-      ]
+Attachments are inlined into the request as base64:
+
+```json
+{
+  "to": [{ "address": "client@example.com" }],
+  "subject": "Invoice #12345",
+  "html": "<h1>Invoice</h1><p>Please find your invoice attached.</p>",
+  "attachments": [
+    {
+      "filename": "invoice.pdf",
+      "content": "JVBERi0xLjQKJcfsj6IK...",
+      "contentType": "application/pdf"
     }
+  ]
+}
+```
+
+#### Replies and forwards
+
+Set `reference` instead of building the threading headers yourself. EmailEngine looks up the referenced message, then adds the `In-Reply-To` and `References` headers so the reply threads correctly in the recipient's client:
+
+```json
+{
+  "to": [{ "address": "original-sender@example.com" }],
+  "subject": "Re: Original Subject",
+  "text": "This is my reply.",
+  "reference": {
+    "message": "AAAABAABNc",
+    "action": "reply"
   }
-)
+}
 ```
 
-**Reply to Email:**
+Forwarding uses the same field with `"action": "forward"`, and `forwardAttachments: true` carries the original attachments along:
 
-**Pseudo code:**
-```
-// Reply to an existing message
-account = "user@example.com"
-
-response = HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      to: [{ address: "original-sender@example.com" }],
-      subject: "Re: Original Subject",
-      text: "This is my reply.",
-      reference: {
-        message: "AAAABAABNc",  // ID of message being replied to
-        action: "reply"
-      }
-    }
+```json
+{
+  "to": [{ "address": "colleague@example.com" }],
+  "reference": {
+    "message": "AAAABAABNc",
+    "action": "forward",
+    "forwardAttachments": true
   }
-)
+}
 ```
 
-**Forward Email:**
+`action` is one of `reply`, `reply-all`, or `forward`, and defaults to `reply`. Useful companions on `reference`:
 
-**Pseudo code:**
-```
-// Forward an existing message
-account = "user@example.com"
+| Field | Effect |
+|-------|--------|
+| `inline` | Quote the original message under your text, the way a mail client does |
+| `ignoreMissing` | Send anyway if the referenced message is gone, instead of failing |
+| `messageId` | Refuse to send unless the referenced message carries this `Message-ID` |
 
-response = HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      to: [{ address: "colleague@example.com" }],
-      subject: "Fwd: Original Subject",
-      text: "See forwarded message below.",
-      reference: {
-        message: "AAAABAABNc",
-        action: "forward",
-        forwardAttachments: true  // Include original attachments
-      }
-    }
-  }
-)
-```
+Omit `subject` and EmailEngine derives it from the referenced message, prefixing `Re:` for a reply or `Fwd:` for a forward unless the subject already starts with one. Omit `to` and the recipients are derived as well.
+
+See [Replies and Forwards](/docs/sending/replies-forwards) for the full behavior.
+
 
 ### Webhooks
 
@@ -241,38 +260,31 @@ To schedule emails for future delivery, use the Submit API with the `sendAt` par
 
 ### Schedule Email Example
 
-**Pseudo code:**
-```
-// Schedule email for future delivery using Submit API
-account = "user@example.com"
-sendAt = "2025-01-20T09:00:00Z"  // ISO 8601 timestamp
+Add `sendAt` with an ISO 8601 timestamp. The message is held in the outbox until then:
 
-response = HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      to: [{ address: "client@example.com" }],
-      subject: "Meeting Reminder",
-      text: "Reminder: Meeting tomorrow at 10 AM.",
-      sendAt: sendAt
-    }
-  }
-)
+```bash
+curl -X POST "http://localhost:3000/v1/account/user%40example.com/submit" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": [{ "address": "client@example.com" }],
+    "subject": "Meeting Reminder",
+    "text": "Reminder: Meeting tomorrow at 10 AM.",
+    "sendAt": "2025-01-20T09:00:00.000Z"
+  }'
 ```
 
 **Response:**
 ```json
 {
   "response": "Queued for delivery",
-  "messageId": "<abc123@example.com>",
+  "messageId": "<a2184d08-a470-fec6-a493-fa211a3756e9@example.com>",
   "sendAt": "2025-01-20T09:00:00.000Z",
-  "queueId": "queue_789ghi"
+  "queueId": "d41f0423195f271f"
 }
 ```
+
+A scheduled message can be [cancelled](#cancel-outbox-message) with its `queueId` at any point before it is sent.
 
 ---
 
@@ -297,25 +309,12 @@ Lists all queued messages across all accounts.
 
 **Example:**
 
-**Pseudo code:**
+```bash
+curl "http://localhost:3000/v1/outbox?pageSize=50" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
-// List all queued messages
-response = HTTP_GET(
-  "http://localhost:3000/v1/outbox?pageSize=50",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
-  }
-)
 
-data = PARSE_JSON(response.body)
-PRINT("Queued messages: " + data.total)
-
-for each msg in data.messages {
-  PRINT(msg.queueId + ": " + msg.subject + " - " + msg.scheduled)
-}
-```
+The response is paginated, with `total`, `page`, `pages`, and a `messages` array of entries in the shape shown below.
 
 ### Get Outbox Message
 
@@ -325,33 +324,25 @@ for each msg in data.messages {
 
 **Example:**
 
-**Pseudo code:**
-```
-// Get details of specific outbox message
-queueId = "outbox_789ghi"
-
-response = HTTP_GET(
-  "http://localhost:3000/v1/outbox/" + queueId,
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
-  }
-)
-
-message = PARSE_JSON(response.body)
-PRINT("Status: " + message.progress.status)
-PRINT("Attempts made: " + message.attemptsMade)
+```bash
+curl "http://localhost:3000/v1/outbox/d41f0423195f271f" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 **Response:**
 ```json
 {
-  "queueId": "outbox_789ghi",
-  "account": "user@example.com",
+  "queueId": "d41f0423195f271f",
+  "account": "user123",
+  "messageId": "<a2184d08-a470-fec6-a493-fa211a3756e9@example.com>",
+  "envelope": {
+    "from": "sender@example.com",
+    "to": ["client@example.com"]
+  },
   "subject": "Newsletter January 2025",
   "created": "2025-01-15T10:00:00.000Z",
-  "scheduled": "2025-01-15T10:00:00.000Z",
+  "scheduled": "2025-01-20T09:00:00.000Z",
+  "nextAttempt": "2025-01-20T09:00:05.000Z",
   "attemptsMade": 0,
   "attempts": 10,
   "progress": {
@@ -359,6 +350,8 @@ PRINT("Attempts made: " + message.attemptsMade)
   }
 }
 ```
+
+`attemptsMade` against `attempts` tells you how much of the retry budget is left, and `nextAttempt` when the next one is due. A message that has exhausted its attempts reports `progress.status` as `error` and carries the failure details.
 
 ### Cancel Outbox Message
 
@@ -368,34 +361,31 @@ PRINT("Attempts made: " + message.attemptsMade)
 
 **Example:**
 
-**Pseudo code:**
-```
-// Cancel queued outbox message
-queueId = "outbox_789ghi"
-
-response = HTTP_DELETE(
-  "http://localhost:3000/v1/outbox/" + queueId,
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
-  }
-)
-
-result = PARSE_JSON(response.body)
-PRINT("Message cancelled: " + result.deleted)
+```bash
+curl -X DELETE "http://localhost:3000/v1/outbox/d41f0423195f271f" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-**Note:** Can only cancel messages with status `queued`. Messages already `processing` or `submitted` cannot be cancelled.
+The response reports whether the entry was removed:
+
+```json
+{ "deleted": true }
+```
+
+**Note:** Only messages still in the `queued` state can be cancelled. Once a submit worker has picked a message up, it is past the point of cancellation, so `deleted` comes back `false`.
 
 ### Outbox Message States
 
 | Status | Description |
 |--------|-------------|
-| `queued` | Waiting to be sent |
-| `processing` | Currently being delivered |
-| `submitted` | Successfully sent |
-| `error` | Failed after max attempts |
+| `queued` | Accepted and waiting for a delivery attempt |
+| `processing` | A submit worker has picked the message up |
+| `smtp-starting` | Opening the SMTP connection to the destination |
+| `smtp-completed` | The SMTP transaction finished and the message was handed over |
+| `submitted` | Delivered to the receiving server. Later bounces arrive as webhooks |
+| `error` | Delivery failed. `progress.error` says why, and whether it will be retried |
+
+`submitted` means the receiving server accepted the message, not that it reached the recipient's inbox. A message can still bounce afterwards, which arrives as a [`messageBounce`](/docs/webhooks/messagebounce) webhook rather than a change to this status.
 
 [Detailed API reference →](/docs/api/get-v-1-outbox)
 
@@ -511,224 +501,46 @@ Attachment content must always be provided as a base64-encoded `content` string 
 }
 ```
 
-## Common Patterns
+## Sending from a Stored Template
 
-### Simple Email
+Rather than assembling subject and body on every call, store the content once as a [template](/docs/sending/templates) and reference it by ID. EmailEngine renders it, so the same template is applied identically no matter which service submits the message:
 
-**Pseudo code:**
-```
-// Send simple text email
-account = "user@example.com"
-
-HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      to: [{ address: "user@example.com" }],
-      subject: "Hello",
-      text: "Hello, World!"
-    }
-  }
-)
-```
-
-### HTML Email with Attachments
-
-**Pseudo code:**
-```
-// Send HTML email with PDF attachment
-account = "user@example.com"
-
-// Read file and encode as base64
-pdfContent = READ_FILE_AS_BASE64("invoice.pdf")
-
-HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      to: [{ address: "client@example.com", name: "John Doe" }],
-      subject: "Your Invoice",
-      html: "<h1>Invoice</h1><p>Attached is your invoice.</p>",
-      text: "Invoice\n\nAttached is your invoice.",
-      attachments: [
-        {
-          filename: "invoice.pdf",
-          content: pdfContent,
-          encoding: "base64",
-          contentType: "application/pdf"
-        }
-      ]
-    }
-  }
-)
-```
-
-### Reply to Email
-
-**Pseudo code:**
-```
-// 1. Get original message to reply to
-account = "user@example.com"
-messageId = "AAAABAABNc"
-
-response = HTTP_GET(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/message/" + messageId,
-  {
-    headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
-  }
-)
-
-originalMsg = PARSE_JSON(response.body)
-
-// 2. Send reply
-HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      to: [originalMsg.from],
-      subject: "Re: " + originalMsg.subject,
-      text: "This is my reply.",
-      reference: {
-        message: messageId,
-        action: "reply"
-      }
-    }
-  }
-)
-```
-
-### Forward Email
-
-**Pseudo code:**
-```
-// Forward email with attachments
-account = "user@example.com"
-messageId = "AAAABAABNc"
-originalMsg = /* retrieved earlier */
-
-HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      to: [{ address: "colleague@example.com" }],
-      subject: "Fwd: " + originalMsg.subject,
-      text: "---------- Forwarded message ---------\n\n" + originalMsg.text.plain,
-      reference: {
-        message: messageId,
-        action: "forward",
-        forwardAttachments: true
-      }
-    }
-  }
-)
-```
-
-### Templated Emails
-
-**Pseudo code:**
-```
-// Simple template replacement function
-function generateEmail(template, data) {
-  return {
-    to: [{ address: data.email, name: data.name }],
-    subject: REPLACE_TEMPLATE_VARS(template.subject, data),
-    html: REPLACE_TEMPLATE_VARS(template.html, data),
-    text: REPLACE_TEMPLATE_VARS(template.text, data)
+```json
+{
+  "to": [{ "name": "John", "address": "john@example.com" }],
+  "template": "welcome-email",
+  "render": {
+    "params": { "name": "John", "activationUrl": "https://example.com/activate/abc" }
   }
 }
+```
 
-// Define template with {{variable}} placeholders
-template = {
-  subject: "Welcome, {{name}}!",
-  html: "<h1>Welcome {{name}}</h1><p>Your account is ready.</p>",
-  text: "Welcome {{name}}!\n\nYour account is ready."
-}
+The template supplies the subject, HTML, and text; `render.params` fills its placeholders. Anything you set explicitly on the request overrides what the template provides.
 
-// Generate email from template
-email = generateEmail(template, {
-  name: "John",
-  email: "john@example.com"
-})
+## Sending to Many Recipients
 
-// Send templated email
-account = "user@example.com"
+Do not loop over recipients calling submit once each. Pass `mailMerge` instead, and EmailEngine generates one personalized message per entry from a single request, each with its own queue entry, tracking, and webhooks:
 
-HTTP_POST(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
+```json
+{
+  "template": "newsletter",
+  "mailMerge": [
+    {
+      "to": { "name": "User One", "address": "user1@example.com" },
+      "params": { "name": "User One" }
     },
-    body: email
-  }
-)
-```
-
-### Bulk Sending
-
-**Pseudo code:**
-```
-// Send bulk campaign by submitting individual emails
-function sendBulkCampaign(account, recipients, content) {
-  queued = []
-
-  // Submit email for each recipient
-  for each recipient in recipients {
-    response = HTTP_POST(
-      "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/submit",
-      {
-        headers: {
-          "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-          "Content-Type": "application/json"
-        },
-        body: {
-          to: [{ address: recipient.email, name: recipient.name }],
-          subject: content.subject,
-          html: REPLACE(content.html, "{{name}}", recipient.name)
-        }
-      }
-    )
-
-    result = PARSE_JSON(response.body)
-    queued.append(result.queueId)
-  }
-
-  PRINT("Sent/queued " + LENGTH(queued) + " emails")
-  return queued
+    {
+      "to": { "name": "User Two", "address": "user2@example.com" },
+      "params": { "name": "User Two" }
+    }
+  ]
 }
-
-// Example usage
-account = "user@example.com"
-
-recipients = [
-  { email: "user1@example.com", name: "User 1" },
-  { email: "user2@example.com", name: "User 2" }
-  // ... more recipients
-]
-
-queueIds = sendBulkCampaign(account, recipients, {
-  subject: "Newsletter",
-  html: "<h1>Hi {{name}}</h1>"
-})
 ```
 
-:::tip Mail Merge
-For true bulk sending with personalization, consider using [Mail Merge](/docs/sending/mail-merge) which sends to multiple recipients in a single API call.
+Using `mailMerge` disables the root-level `to`, `cc`, `bcc`, `messageId`, `envelope`, and `render` keys, since each entry carries its own. The response returns a `mailMerge` array with one result per recipient instead of a single `messageId`.
+
+See [Mail Merge](/docs/sending/mail-merge) for personalization, batching, and how failures for one recipient are reported.
+
+:::warning Sending limits still apply
+Mail merge submits through the account's own mail server, which enforces its own rate and volume limits. Gmail and Microsoft 365 in particular will start deferring or rejecting mail well before a bulk campaign finishes. For genuine bulk mail, send through a [gateway](/docs/sending/basic-sending) built for it.
 :::

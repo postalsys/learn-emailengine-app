@@ -107,7 +107,7 @@ EmailEngine's unique identifier for a message, formatted as a Base64url-encoded 
 
 ### Sub-connection
 
-Additional IMAP connections that EmailEngine opens to improve performance when syncing large mailboxes. Configured via `subconnections` setting.
+A dedicated IMAP connection EmailEngine opens for an extra folder so changes there are detected as quickly as in the primary folder. Without one, a non-primary folder is only picked up on the periodic resync. Configured with the account's `subconnections` setting. Each one is a real IMAP connection, and providers cap how many an account may hold, so add them only for folders that genuinely need real-time updates.
 
 ### Path
 

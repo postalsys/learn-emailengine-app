@@ -15,7 +15,7 @@ This guide covers common issues when working with email accounts in EmailEngine 
 First, check the account's current state using the [Get Account API endpoint](/docs/api/get-v-1-account-account):
 
 ```bash
-curl https://your-ee.com/v1/account/user123 \
+curl https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -57,7 +57,7 @@ docker logs -f emailengine
 
    **Solution:**
    ```bash
-   curl -X PUT https://your-ee.com/v1/account/user123 \
+   curl -X PUT https://emailengine.example.com/v1/account/user123 \
      -H "Authorization: Bearer YOUR_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{
@@ -66,7 +66,7 @@ docker logs -f emailengine
      }'
 
    # Then reconnect using the Reconnect Account API endpoint
-   curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
+   curl -X PUT https://emailengine.example.com/v1/account/user123/reconnect \
      -H "Authorization: Bearer YOUR_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{"reconnect": true}'
@@ -113,7 +113,7 @@ docker logs -f emailengine
    - Have user re-authenticate via hosted authentication form
    - Generate new authentication form URL:
    ```bash
-   curl -X POST https://your-ee.com/v1/authentication/form \
+   curl -X POST https://emailengine.example.com/v1/authentication/form \
      -H "Authorization: Bearer YOUR_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{
@@ -153,7 +153,7 @@ docker logs -f emailengine
 1. **Incorrect host or port**
    ```bash
    # Check current settings
-   curl https://your-ee.com/v1/account/user123 \
+   curl https://emailengine.example.com/v1/account/user123 \
      -H "Authorization: Bearer YOUR_TOKEN" | jq '.imap'
    ```
 
@@ -230,7 +230,7 @@ docker logs -f emailengine
 4. **If stuck >5 minutes:**
    ```bash
    # Trigger reconnection
-   curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
+   curl -X PUT https://emailengine.example.com/v1/account/user123/reconnect \
      -H "Authorization: Bearer YOUR_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{"reconnect": true}'
@@ -262,13 +262,13 @@ docker logs -f emailengine
 **Solution:**
 ```bash
 # Re-enable account if it was disabled
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "imap": { "partial": true, "disabled": false } }'
 
 # Then reconnect
-curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
+curl -X PUT https://emailengine.example.com/v1/account/user123/reconnect \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"reconnect": true}'
@@ -412,7 +412,7 @@ iCloud requires 2FA enabled to generate app-specific passwords.
 **Check webhook configuration:**
 
 ```bash
-curl "https://your-ee.com/v1/settings?webhooks=true" \
+curl "https://emailengine.example.com/v1/settings?webhooks=true" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   | jq '.webhooks'
 ```
@@ -421,7 +421,7 @@ curl "https://your-ee.com/v1/settings?webhooks=true" \
 
 1. **Webhook URL not set**
    ```bash
-   curl -X POST https://your-ee.com/v1/settings \
+   curl -X POST https://emailengine.example.com/v1/settings \
      -H "Authorization: Bearer YOUR_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{ "webhooks": "https://myapp.com/webhooks" }'
@@ -475,12 +475,12 @@ Check webhook queue in Bull Board:
 **Solution:**
 ```bash
 # Check current subconnections
-curl https://your-ee.com/v1/account/user123 \
+curl https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   | jq '.subconnections'
 
 # Reduce sub-connections
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "subconnections": [] }'
@@ -503,7 +503,7 @@ Usually indicates provider issue or misconfigured server.
 
 ```bash
 # Accept self-signed certificates (development only)
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -550,7 +550,7 @@ No action needed from you. If issues persist, check logs for specific errors.
 
 1. **Use path filtering** to sync only needed folders:
    ```bash
-   curl -X PUT https://your-ee.com/v1/account/user123 \
+   curl -X PUT https://emailengine.example.com/v1/account/user123 \
      -H "Authorization: Bearer YOUR_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{
@@ -577,7 +577,7 @@ No action needed from you. If issues persist, check logs for specific errors.
 **Solutions:**
 
 1. **Reduce number of accounts**
-   - Check account count: `curl https://your-ee.com/v1/accounts | jq '.total'`
+   - Check account count: `curl https://emailengine.example.com/v1/accounts | jq '.total'`
    - Scale vertically (increase server resources)
 
 2. **Reduce sub-connections**
@@ -674,17 +674,17 @@ No action needed from you. If issues persist, check logs for specific errors.
 
 ```bash
 # Full account info
-curl https://your-ee.com/v1/account/user123 \
+curl https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   | jq .
 
 # Just the state
-curl https://your-ee.com/v1/account/user123 \
+curl https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   | jq -r .state
 
 # Subconnections info
-curl https://your-ee.com/v1/account/user123 \
+curl https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   | jq '.subconnections'
 ```
@@ -728,7 +728,7 @@ traceroute imap.gmail.com
 
 ```bash
 # Get current token
-curl https://your-ee.com/v1/account/user123/oauth-token \
+curl https://emailengine.example.com/v1/account/user123/oauth-token \
   -H "Authorization: Bearer YOUR_TOKEN"
 
 # Test token with provider API (Gmail example)

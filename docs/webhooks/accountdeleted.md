@@ -38,7 +38,6 @@ This event fires **after** the account has been removed from EmailEngine's confi
 | `account` | string | Yes | The unique account ID of the deleted account |
 | `date` | string | Yes | ISO 8601 timestamp when the webhook was generated |
 | `event` | string | Yes | Event type, always `accountDeleted` for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook event (UUID format) |
 | `data` | object | Yes | Event data object containing account information |
 
 ### Event Data Fields (`data` object)

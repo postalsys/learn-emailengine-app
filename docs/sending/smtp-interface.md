@@ -4,6 +4,9 @@ sidebar_position: 8
 description: Using EmailEngine's SMTP interface for sending emails with standard SMTP clients
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # SMTP Server
 
 EmailEngine provides an SMTP interface that allows you to send emails using standard SMTP protocol instead of the REST API. EmailEngine acts as an SMTP proxy - it accepts messages via SMTP and routes them through the appropriate email account. This is useful for legacy applications or when you need to integrate with tools that only support SMTP.
@@ -36,7 +39,7 @@ When the SMTP interface is enabled:
 Configure the SMTP interface using the Settings API:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/settings" \
+curl -XPOST "https://emailengine.example.com/v1/settings" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -74,55 +77,28 @@ After changing configuration, restart EmailEngine for changes to take effect.
 
 ### Using Account ID and API Token
 
-The most secure method is using account ID as username and API token as password:
+Authenticate with the account ID as the username and an [API token](/docs/api-reference/access-tokens) as the password. The message is then sent through that account, using whatever transport it is configured with.
 
-```javascript
-// Example: Node.js with Nodemailer
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-  host: 'emailengine.example.com',
-  port: 2525,
-  secure: false,
-  auth: {
-    user: 'example',  // Account ID
-    pass: 'your-api-token'  // EmailEngine API token
-  }
-});
-
-await transporter.sendMail({
-  from: 'sender@example.com',
-  to: 'recipient@example.com',
-  subject: 'Test via SMTP server',
-  text: 'Hello from the SMTP server!'
-});
-```
+| SMTP setting | Value |
+|--------------|-------|
+| Host | Your EmailEngine host |
+| Port | `2525` by default, set by `smtpServerPort` |
+| Encryption | None, unless you [enable TLS](#enabling-tls) |
+| Username | The account ID |
+| Password | An EmailEngine API token |
 
 :::warning The SMTP username is always the account ID
 EmailEngine matches the SMTP `AUTH` username against the **account ID** - the identifier you assigned when registering the account, not the mailbox email address. An email address only works as the username if the account ID happens to be that exact string. Always authenticate with the account ID.
 :::
 
-```python
-# Example: Python smtplib
-import smtplib
-from email.mime.text import MIMEText
-
-msg = MIMEText('Hello from the SMTP server!')
-msg['Subject'] = 'Test via SMTP server'
-msg['From'] = 'sender@example.com'
-msg['To'] = 'recipient@example.com'
-
-server = smtplib.SMTP('emailengine.example.com', 2525)
-server.login('example', 'your-api-token')  # Account ID as username
-server.send_message(msg)
-server.quit()
-```
+See [Programming Languages](#programming-languages) below for a worked example in Node.js, Python, PHP, or Ruby.
 
 ## Configuration Examples
 
 ### Desktop Email Clients
 
-#### Thunderbird
+<Tabs groupId="mail-client">
+<TabItem value="thunderbird" label="Thunderbird" default>
 
 1. Go to **Account Settings → Outgoing Server (SMTP)**
 2. Click **Add**
@@ -134,7 +110,8 @@ server.quit()
    - **Username**: Account ID (the identifier assigned when registering the account)
    - **Password**: API token
 
-#### Apple Mail
+</TabItem>
+<TabItem value="apple-mail" label="Apple Mail">
 
 1. Go to **Mail → Preferences → Accounts**
 2. Select your account
@@ -145,9 +122,17 @@ server.quit()
    - **User Name**: Account ID (the identifier assigned when registering the account)
    - **Password**: API token
 
+</TabItem>
+</Tabs>
+
 ### Programming Languages
 
-#### Node.js (Nodemailer)
+Point any SMTP client at the server. The credentials are the same in every case: the account ID as the user name and an API token as the password.
+
+<Tabs groupId="language">
+<TabItem value="nodejs" label="Node.js" default>
+
+Using [Nodemailer](https://nodemailer.com/):
 
 ```javascript
 const nodemailer = require('nodemailer');
@@ -183,7 +168,10 @@ async function sendEmail() {
 sendEmail().catch(console.error);
 ```
 
-#### Python (smtplib)
+</TabItem>
+<TabItem value="python" label="Python">
+
+Using the standard library `smtplib`:
 
 ```python
 import smtplib
@@ -226,7 +214,10 @@ def send_email():
 send_email()
 ```
 
-#### PHP (PHPMailer)
+</TabItem>
+<TabItem value="php" label="PHP">
+
+Using [PHPMailer](https://github.com/PHPMailer/PHPMailer):
 
 ```php
 <?php
@@ -268,7 +259,10 @@ try {
 ?>
 ```
 
-#### Ruby (Mail gem)
+</TabItem>
+<TabItem value="ruby" label="Ruby">
+
+Using the [Mail](https://github.com/mikel/mail) gem:
 
 ```ruby
 require 'mail'
@@ -296,6 +290,9 @@ end
 mail.deliver!
 ```
 
+</TabItem>
+</Tabs>
+
 ## TLS/SSL Support
 
 ### Enabling TLS
@@ -303,7 +300,7 @@ mail.deliver!
 Enable TLS for encrypted connections using the Settings API or web interface:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/settings" \
+curl -XPOST "https://emailengine.example.com/v1/settings" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -364,7 +361,7 @@ Messages sent via the SMTP interface are treated the same as messages sent via R
 Query queue status (the outbox is a single global queue, not scoped per account):
 
 ```bash
-curl "https://ee.example.com/v1/outbox" \
+curl "https://emailengine.example.com/v1/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 

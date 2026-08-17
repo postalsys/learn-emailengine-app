@@ -315,7 +315,7 @@ Monitor `messageBounce`, `messageDeliveryError`, and `messageFailed` events for 
 1. **Store the queue ID** - Save `queueId` when calling the Submit API to correlate with this webhook
 2. **Handle Message-ID changes** - Check for `originalMessageId` to maintain tracking when MTAs override IDs
 3. **Don't assume delivery** - This event confirms MTA acceptance, not inbox delivery
-4. **Process quickly** - Return 2xx status within 5 seconds
+4. **Process quickly** - Return 2xx before the 30 second delivery timeout, then do the work asynchronously
 5. **Use for audit trails** - Log all sent emails for compliance and debugging
 6. **Correlate with bounces** - Match `messageId` with bounce notifications for delivery verification
 

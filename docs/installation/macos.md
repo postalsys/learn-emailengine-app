@@ -55,8 +55,8 @@ The easiest way to install EmailEngine on macOS.
 # Download latest version
 curl -LO https://go.emailengine.app/emailengine-arm.pkg
 
-# Or download specific version (e.g., 2.55.4)
-curl -LO https://go.emailengine.app/download/v2.55.4/emailengine-arm.pkg
+# Or download specific version (e.g., 2.78.0)
+curl -LO https://go.emailengine.app/download/v2.78.0/emailengine-arm.pkg
 ```
 
 **For Intel Macs:**
@@ -64,8 +64,8 @@ curl -LO https://go.emailengine.app/download/v2.55.4/emailengine-arm.pkg
 # Download latest version
 curl -LO https://go.emailengine.app/emailengine.pkg
 
-# Or download specific version (e.g., 2.55.4)
-curl -LO https://go.emailengine.app/download/v2.55.4/emailengine.pkg
+# Or download specific version (e.g., 2.78.0)
+curl -LO https://go.emailengine.app/download/v2.78.0/emailengine.pkg
 ```
 
 ### Install

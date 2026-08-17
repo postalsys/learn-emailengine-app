@@ -122,7 +122,7 @@ services:
 **Docker Run**:
 
 ```bash
-docker run -e EENGINE_SECRET=secret-password emailengine/emailengine
+docker run -e EENGINE_SECRET=secret-password postalsys/emailengine
 ```
 
 **.env File**:
@@ -242,6 +242,23 @@ This will:
 - Decrypt using old secret
 - Re-encrypt using new secret
 - Store updated values
+
+The command reports what it rotated, and it covers every store that holds an encrypted value:
+
+```
+Updated 42/42 accounts
+Updated 3/3 SMTP gateways
+Updated 2/2 OAuth2 apps
+Updated 1 TLS private keys
+```
+
+Settings holding secrets are rotated as well, each reported individually.
+
+:::warning Check the counts before starting EmailEngine again
+A count lower than the total means something did not re-encrypt, and those values remain readable only with the **old** secret. Whatever owns them breaks on next use, with no self-healing path. Keep the old secret until every count reads `n/n`.
+
+Rotating everything requires EmailEngine v2.77.0 or newer. Earlier versions silently skipped SMTP gateways entirely and dropped the `externalAccount` field of OAuth2 apps using workload identity federation, while still reporting success.
+:::
 
 #### 3. Start EmailEngine with New Secret
 
@@ -393,7 +410,7 @@ metadata:
 spec:
   containers:
     - name: emailengine
-      image: emailengine/emailengine
+      image: postalsys/emailengine
       env:
         - name: EENGINE_SECRET
           valueFrom:
@@ -413,7 +430,7 @@ docker service create \
   --name emailengine \
   --secret ee_encryption_key \
   --env EENGINE_SECRET_FILE=/run/secrets/ee_encryption_key \
-  emailengine/emailengine
+  postalsys/emailengine
 ```
 
 The `_FILE` suffix tells EmailEngine to read the secret from the specified file path. Most other environment variables accept the same suffix - see [Loading Values From Files](/docs/configuration/environment-variables#loading-values-from-files).
@@ -493,15 +510,18 @@ If migration fails:
 
 4. **Investigate** issue before retrying
 
-## Conclusion
+## Key Points
 
-:::tip Key Points
+- Set `EENGINE_SECRET` before an instance stores any credentials, so nothing is ever written in the clear
+- EmailEngine must be stopped while enabling, rotating, or removing the secret
+- Keep the old secret until a rotation reports `n/n` for every store
+- Back up Redis before any migration, and rehearse it against a copy first
+- Store the secret where it survives the loss of the server: without it, every stored credential is unrecoverable
 
-- Encryption is essential for production environments
-- Must stop EmailEngine to enable/change encryption
-- Use strong, securely-stored secrets
-- Test in staging before production
-- Always backup before migration
-- Document secret storage location
-- Implement regular rotation schedule
-  :::
+## See Also
+
+- [Environment Variables](/docs/configuration/environment-variables) - `EENGINE_SECRET` and the `_FILE` form for mounted secrets
+- [CLI Reference](/docs/configuration/cli) - Full options for the `encrypt` command
+- [Security Hardening](/docs/deployment/security) - The other half of protecting an instance
+- [Compliance](/docs/deployment/compliance) - What EmailEngine stores, encrypted and not
+- [Redis Configuration](/docs/configuration/redis) - Persistence and access control for the store holding this data

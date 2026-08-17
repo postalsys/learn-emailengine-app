@@ -236,7 +236,7 @@ You cannot use an app registered in the global Azure portal for government or Ch
 **URI:** Your EmailEngine URL with `/oauth` path:
 
 - `http://localhost:3000/oauth` (for local testing)
-- `https://your-emailengine-domain.com/oauth` (for production)
+- `https://emailengine.example.com/oauth` (for production)
 
 :::warning Redirect URL Must Match Exactly
 The redirect URL must match exactly what you'll configure in EmailEngine later. Mismatches will cause OAuth failures.
@@ -365,7 +365,7 @@ Now configure EmailEngine with your Azure application credentials.
 ![Creating Outlook OAuth2 application in EmailEngine](/img/outlook/out010.gif)
 
 1. Open EmailEngine dashboard
-2. Navigate to **Configuration** → **OAuth2**
+2. Navigate to **Integrations** > **OAuth2 Apps**
 3. Click **Create OAuth2 app**
 4. Select **Outlook (delegated)** from the dropdown
 
@@ -432,7 +432,7 @@ The account should enter "connected" state within moments.
 Generate an authentication form URL:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -451,7 +451,7 @@ Direct the user to the returned URL.
 If you already have OAuth2 tokens:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

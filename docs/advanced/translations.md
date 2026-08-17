@@ -41,7 +41,7 @@ EmailEngine determines the language to use based on the following priority order
 Append `?locale={code}` to any public page URL:
 
 ```
-https://your-ee.com/accounts/new?data=...&locale=fr
+https://emailengine.example.com/accounts/new?data=...&locale=fr
 ```
 
 When set via query parameter, the language selection is stored in a session cookie and persists until the session ends or a different language is selected.
@@ -51,7 +51,7 @@ When set via query parameter, the language selection is stored in a session cook
 Set the `X-EE-Locale` header in your request:
 
 ```bash
-curl https://your-ee.com/accounts/new?data=... \
+curl https://emailengine.example.com/accounts/new?data=... \
   -H "X-EE-Locale: de"
 ```
 
@@ -68,7 +68,7 @@ Set the server-wide default locale that applies when no other language preferenc
 **Via API:**
 
 ```bash
-curl -X POST https://your-ee.com/v1/settings \
+curl -X POST https://emailengine.example.com/v1/settings \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -89,7 +89,7 @@ curl -X POST https://your-ee.com/v1/settings \
 When generating authentication form URLs, you can include the locale parameter to display the form in a specific language:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -101,7 +101,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 Then append `&locale=fr` to the returned URL before redirecting the user:
 
 ```
-https://your-ee.com/accounts/new?data=eyJ...&locale=fr
+https://emailengine.example.com/accounts/new?data=eyJ...&locale=fr
 ```
 
 ## What Gets Translated
@@ -148,7 +148,7 @@ API validation error messages are also translated. The same language selection m
 **Example - German validation error:**
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "X-EE-Locale: de" \
   -H "Content-Type: application/json" \

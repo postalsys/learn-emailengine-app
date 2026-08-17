@@ -8,12 +8,14 @@ sidebar_position: 6
 
 EmailEngine describes its entire HTTP API with an OpenAPI document. The same document powers the [full API reference](/docs/api/emailengine-api) on this site, so anything you can read there is also available as machine-readable JSON that API clients, code generators, and testing tools can consume directly.
 
+The one difference is that this site's reference leaves out the two deprecated [Document Store](/docs/configuration/environment-variables#advanced-settings) endpoints, `/v1/chat/{account}` and `/v1/unified/search`. The document itself still describes them.
+
 ## Where to get the document
 
 Every EmailEngine instance serves its own specification:
 
 ```
-https://emailengine.yourdomain.com/swagger.json
+https://emailengine.example.com/swagger.json
 ```
 
 Prefer this copy. It matches the exact version you are running, and its `servers` entry is filled in from the request, so a document downloaded from your own instance already points back at it.
@@ -37,13 +39,13 @@ EmailEngine also renders the same document as a browsable reference in its own a
 | Property         | Value                                                                    |
 | ---------------- | ------------------------------------------------------------------------ |
 | OpenAPI version  | 3.0.0                                                                    |
-| Paths            | 61 paths, 80 operations, all under `/v1`                                 |
+| Paths            | 61 paths, 82 operations, all under `/v1`                                 |
 | Operation IDs    | Every operation has one, derived from method and path (`postV1Account`)  |
 | Authentication   | A single `bearerAuth` scheme, applied to every operation                 |
 | Tags             | 18 tags matching the groups in the API reference sidebar                 |
 | Version          | The `info.version` field is the EmailEngine version that produced it     |
 
-Server URLs in the document are origins only, so generated clients combine a base URL like `https://emailengine.yourdomain.com` with paths that already include the `/v1` prefix.
+Server URLs in the document are origins only, so generated clients combine a base URL like `https://emailengine.example.com` with paths that already include the `/v1` prefix.
 
 ## Importing into an API client
 
@@ -64,7 +66,7 @@ Any OpenAPI generator works. A few common choices:
 
 ```bash
 npx @openapitools/openapi-generator-cli generate \
-  -i https://emailengine.yourdomain.com/swagger.json \
+  -i https://emailengine.example.com/swagger.json \
   -g typescript-fetch \
   -o ./emailengine-client
 ```
@@ -74,7 +76,7 @@ Replace `-g typescript-fetch` with `python`, `go`, `java`, `csharp`, `php`, or a
 **TypeScript types only**, for use with your own fetch calls:
 
 ```bash
-npx openapi-typescript https://emailengine.yourdomain.com/swagger.json \
+npx openapi-typescript https://emailengine.example.com/swagger.json \
   -o ./emailengine.d.ts
 ```
 
@@ -82,7 +84,7 @@ npx openapi-typescript https://emailengine.yourdomain.com/swagger.json \
 
 ```bash
 openapi-python-client generate \
-  --url https://emailengine.yourdomain.com/swagger.json
+  --url https://emailengine.example.com/swagger.json
 ```
 
 Generated method names follow the operation IDs, so registering an account becomes `postV1Account` and listing messages becomes `getV1AccountAccountMessages`. Most generators let you rename these through a mapping file if the defaults read poorly in your codebase.
@@ -94,7 +96,7 @@ PHP developers can skip generation entirely and use the maintained [PHP SDK](/do
 The document changes with each EmailEngine release, mostly through added endpoints and fields. Regenerate after upgrading, and compare `info.version` in your vendored copy against the running instance to see whether anything moved:
 
 ```bash
-curl -s https://emailengine.yourdomain.com/swagger.json | jq -r '.info.version'
+curl -s https://emailengine.example.com/swagger.json | jq -r '.info.version'
 ```
 
 Committing the generated client, rather than generating it during every build, keeps upgrades reviewable as a normal diff.

@@ -81,7 +81,7 @@ server {
     ssl_certificate /etc/ssl/certs/emailengine-fullchain.pem;
 
     # EventSource endpoint for real-time updates (no gzip)
-    location /admin/changes {
+    location ~ ^/(admin|v1)/changes {
         gzip off;
         proxy_http_version 1.1;
         proxy_set_header Connection '';
@@ -256,7 +256,7 @@ server {
     error_log /var/log/nginx/emailengine-error.log warn;
 
     # EventSource endpoint for real-time admin updates (no gzip, no buffering)
-    location /admin/changes {
+    location ~ ^/(admin|v1)/changes {
         gzip off;
         proxy_pass http://emailengine_backend;
         proxy_http_version 1.1;
@@ -684,7 +684,7 @@ server {
     ssl_certificate_key /etc/ssl/private/emailengine-privkey.pem;
 
     # EventSource endpoint (no gzip)
-    location /admin/changes {
+    location ~ ^/(admin|v1)/changes {
         gzip off;
         proxy_pass http://emailengine;
         proxy_http_version 1.1;

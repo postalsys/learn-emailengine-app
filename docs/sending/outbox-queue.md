@@ -185,13 +185,13 @@ The `nextAttempt` value reported by the outbox API is computed as 2^attempts x 5
 
 ```bash
 # Pause queue
-curl -XPUT "https://ee.example.com/v1/settings/queue/submit" \
+curl -XPUT "https://emailengine.example.com/v1/settings/queue/submit" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{"paused": true}'
 
 # Resume queue
-curl -XPUT "https://ee.example.com/v1/settings/queue/submit" \
+curl -XPUT "https://emailengine.example.com/v1/settings/queue/submit" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{"paused": false}'
@@ -220,7 +220,7 @@ The outbox API lists messages across all active queue states: waiting, active, d
 #### List queued messages
 
 ```bash
-curl "https://ee.example.com/v1/outbox" \
+curl "https://emailengine.example.com/v1/outbox" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -263,7 +263,7 @@ curl "https://ee.example.com/v1/outbox" \
 Use the `page` and `pageSize` query parameters for pagination:
 
 ```bash
-curl "https://ee.example.com/v1/outbox?page=0&pageSize=10" \
+curl "https://emailengine.example.com/v1/outbox?page=0&pageSize=10" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -287,7 +287,7 @@ By default, completed and failed jobs are removed from the queue immediately. Th
 Retrieve details for a single queued message by its queue ID:
 
 ```bash
-curl "https://ee.example.com/v1/outbox/4646ac53857fd2b2" \
+curl "https://emailengine.example.com/v1/outbox/4646ac53857fd2b2" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -331,7 +331,7 @@ This endpoint only works for messages that are still queued (waiting, active, de
 Use the [delete outbox entry API](/docs/api/delete-v-1-outbox-queueid):
 
 ```bash
-curl -XDELETE "https://ee.example.com/v1/outbox/4646ac53857fd2b2" \
+curl -XDELETE "https://emailengine.example.com/v1/outbox/4646ac53857fd2b2" \
   -H "Authorization: Bearer <token>"
 ```
 

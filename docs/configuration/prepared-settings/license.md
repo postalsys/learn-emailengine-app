@@ -128,7 +128,7 @@ ENV EENGINE_PREPARED_LICENSE="i0-AgqFsxFWFoWvEDGC7..."
 ```yaml
 services:
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     environment:
       EENGINE_PREPARED_LICENSE: |
         -----BEGIN LICENSE-----
@@ -143,7 +143,7 @@ services:
 ```yaml
 services:
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     environment:
       - EENGINE_PREPARED_LICENSE=${LICENSE_KEY}
 ```

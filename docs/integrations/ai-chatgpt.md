@@ -294,6 +294,25 @@ Result:
 }
 ```
 
+### Settings Reference
+
+Everything on the **Configuration > AI Processing** page is also settable through the [Settings API](/docs/api/post-v-1-settings):
+
+| Setting | Purpose |
+|---------|---------|
+| `openAiAPIKey` | API key. Required before any AI processing runs |
+| `generateEmailSummary` | Turn on summaries, sentiment, events, actions, and risk assessment |
+| `openAiGenerateEmbeddings` | Turn on embedding generation |
+| `openAiModel` | Model name, for example `gpt-5-mini` |
+| `openAiPrompt` | The system prompt, as edited above |
+| `openAiAPIUrl` | Base URL of the API. Point this at Azure OpenAI or an OpenAI-compatible gateway |
+| `openAiTemperature` | Sampling temperature |
+| `openAiTopP` | Nucleus sampling cutoff |
+| `openAiMaxTokens` | Cap on tokens per request |
+| `openAiPreProcessingFn` | JavaScript filter deciding which messages are worth processing, see [below](#ai-pre-processing-filter-openaipreprocessingfn) |
+
+Lowering `openAiMaxTokens` truncates long messages before they reach the model, which is the most direct lever on cost. `openAiPreProcessingFn` is the more selective one, since a message it rejects costs nothing at all.
+
 ### Handling Failures
 
 EmailEngine skips AI processing if:
@@ -311,121 +330,62 @@ If webhooks are configured not to include email content, AI summarization may fa
 
 ## Use Cases and Applications
 
-### 1. Smart Email Routing
+Everything below is driven from the enriched `messageNew` payload. Once AI processing is on, your webhook handler branches on the fields rather than calling any additional endpoint:
 
-Route emails based on AI analysis:
+```javascript
+app.post('/webhook', async (req, res) => {
+  res.json({ success: true });
 
-```
-// Pseudo code - implement in your preferred language
-function routeEmail(webhook):
-  summary = webhook.data.summary
-  riskAssessment = webhook.data.riskAssessment
+  const { event, data } = req.body;
+  if (event !== 'messageNew' || !data.summary) return;
 
-  if riskAssessment.risk >= 4:
-    // High risk - route to spam/security team
-    moveToSpam(webhook.data.id)
-  else if summary.actions AND summary.actions.length > 0:
-    // Has action items - create tasks
-    createTasks(summary.actions)
-  else if summary.shouldReply:
-    // Needs response - add to priority inbox
-    markAsPriority(webhook.data.id)
-```
+  const { summary, riskAssessment } = data;
 
-### 2. Automatic Calendar Events
+  // Fraud triage: risk runs 1 to 5
+  if (riskAssessment?.risk >= 4) {
+    return quarantine(data.id, riskAssessment.assessment);
+  }
 
-Create calendar events from email mentions:
+  // Tasks and calendar entries the model found in the body
+  for (const action of summary.actions || []) {
+    await createTask({ title: action.description, dueDate: action.dueDate });
+  }
 
-```
-// Pseudo code - implement in your preferred language
-function createEventsFromEmail(webhook):
-  events = webhook.data.summary.events OR []
+  for (const ev of summary.events || []) {
+    await createCalendarEvent({ title: ev.description, start: ev.startTime, end: ev.endTime });
+  }
 
-  for each event in events:
-    if event.startTime:
-      createCalendarEvent({
-        title: event.description,
-        start: event.startTime,
-        end: event.endTime OR event.startTime,
-        source: 'email',
-        emailId: webhook.data.id
-      })
+  // Support triage: an unhappy sender who expects an answer goes to the front
+  if (summary.sentiment === 'negative' && summary.shouldReply) {
+    await escalate(data.id);
+  }
+});
 ```
 
-### 3. Task Management Integration
+:::note `riskAssessment` sits next to `summary`, not inside it
+EmailEngine lifts the risk assessment out of the summary object before sending the webhook, so read `data.riskAssessment` rather than `data.summary.riskAssessment`.
+:::
 
-Extract and create tasks:
+Which field drives which workflow:
 
-```
-// Pseudo code - implement in your preferred language
-function createTasksFromEmail(webhook):
-  actions = webhook.data.summary.actions OR []
+| Field | Typical use |
+|-------|-------------|
+| `summary.sentiment` | Support triage, escalating negative mail |
+| `summary.shouldReply` | Priority inbox, SLA timers, follow-up reminders |
+| `summary.actions[]` | Creating tasks with a `description` and `dueDate` |
+| `summary.events[]` | Creating calendar entries from `startTime` and `endTime` |
+| `riskAssessment.risk` | Fraud and phishing quarantine, 1 to 5 |
+| `replyText` | Storing just the new text of a reply, without the quoted thread |
 
-  for each action in actions:
-    createTask({
-      title: action.description,
-      dueDate: action.dueDate,
-      source: webhook.data.from.address,
-      emailSubject: webhook.data.subject,
-      emailId: webhook.data.id
-    })
-```
+The model does not always populate every field. Treat each one as optional and fall back to your existing routing when it is missing, since an OpenAI outage or a rate limit leaves the message delivered but unenriched. See [Handling Failures](#handling-failures).
 
-### 4. Customer Support Triage
-
-Automatically categorize and prioritize support emails:
-
-```
-// Pseudo code - implement in your preferred language
-function triageSupportEmail(webhook):
-  sentiment = webhook.data.summary.sentiment
-  risk = webhook.data.riskAssessment.risk
-
-  priority = 'normal'
-
-  if sentiment == 'negative':
-    priority = 'high'
-  else if risk >= 3:
-    priority = 'spam'
-  else if webhook.data.summary.shouldReply:
-    priority = 'normal'
-  else:
-    priority = 'low'
-
-  assignToQueue(webhook.data, priority)
-```
-
-### 5. Email Analytics Dashboard
-
-Build analytics from AI-processed emails:
-
-```
-// Pseudo code - implement in your preferred language
-function trackEmailMetrics(webhook):
-  summary = webhook.data.summary
-  riskAssessment = webhook.data.riskAssessment
-
-  // Track sentiment distribution
-  incrementMetric('sentiment', summary.sentiment)
-
-  // Track response requirements
-  if summary.shouldReply:
-    incrementMetric('requiresResponse')
-
-  // Track action items
-  if summary.actions AND summary.actions.length > 0:
-    incrementMetric('hasActions', summary.actions.length)
-
-  // Track high-risk emails
-  if riskAssessment.risk >= 4:
-    incrementMetric('highRisk')
-    alertSecurityTeam(webhook.data)
-```
 
 ### 6. Smart Email Search Assistant
 
-:::warning Deprecated Feature
-The `POST /v1/chat/{account}` endpoint is part of the deprecated Document Store feature and is excluded from the current OpenAPI specification. Since EmailEngine v2.71.0 the Document Store is disabled by default, so this endpoint returns `404` unless you enable the startup gate (`EENGINE_DOCUMENT_STORE_ENABLED=true`) in addition to turning on Document Store (Elasticsearch) indexing and the "Chat with emails" feature. Avoid building new integrations on this endpoint.
+:::danger Being removed on October 1, 2026
+The `POST /v1/chat/{account}` endpoint is part of the Document Store feature, which is deprecated and **will be removed from EmailEngine releases starting October 1, 2026**. After that release, syncing to Elasticsearch, chat with email, and unified search are gone. Do not build new integrations on this endpoint.
+
+Until then it is disabled by default: since v2.71.0 the endpoint returns `404` unless you enable the startup gate (`EENGINE_DOCUMENT_STORE_ENABLED=true`) in addition to turning on Document Store (Elasticsearch) indexing and the "Chat with emails" feature. It is also left out of the API reference on this site, though EmailEngine's own [OpenAPI document](/docs/api-reference/openapi-spec) still describes it.
 :::
 
 Build conversational email search for users:
@@ -433,7 +393,7 @@ Build conversational email search for users:
 **cURL:**
 
 ```bash
-curl -X POST "https://ee.example.com/v1/chat/user123" \
+curl -X POST "https://emailengine.example.com/v1/chat/user123" \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -461,38 +421,14 @@ curl -X POST "https://ee.example.com/v1/chat/user123" \
 }
 ```
 
-**Implementation (Pseudo code):**
-
+```bash
+curl -X POST "https://emailengine.example.com/v1/chat/user123" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "question": "Did I receive the invoice from Acme Corp?" }'
 ```
-// Pseudo code - implement in your preferred language
-function searchEmails(userId, question):
-  response = HTTP_POST(
-    url: "https://ee.example.com/v1/chat/" + userId,
-    headers: {
-      "Authorization": "Bearer " + token,
-      "Content-Type": "application/json"
-    },
-    body: {
-      "question": question
-    }
-  )
 
-  data = parse_json(response.body)
-
-  return {
-    answer: data.answer,
-    sourceEmails: data.messages
-  }
-
-// Usage example
-result = searchEmails(
-  userId: 'user123',
-  question: 'Did I receive the invoice from Acme Corp?'
-)
-
-print(result.answer)
-// Output: "Yes, you received an invoice from Acme Corp on October 5th for $1,500."
-```
+The response carries the generated `answer` along with the `messages` it was drawn from, so you can link the reader back to the source email rather than asking them to trust the summary.
 
 ## Privacy and Compliance
 
@@ -751,19 +687,20 @@ OpenAI charges based on token usage. Pricing varies by model and changes over ti
 
 ### Monitoring Token Usage
 
-Track token usage from webhooks:
+Every enriched `messageNew` payload reports what the call cost, so metering needs no separate bookkeeping against OpenAI:
 
-```
-// Pseudo code - implement in your preferred language
-function trackTokenUsage(webhook):
-  if webhook.data.summary exists:
-    tokens = webhook.data.summary.tokens
-    model = webhook.data.summary.model
+```javascript
+app.post('/webhook', (req, res) => {
+  res.json({ success: true });
 
-    logMetric('openai_tokens', {
-      model: model,
-      tokens: tokens,
-      account: webhook.account,
-      timestamp: current_timestamp()
-    })
+  const { summary } = req.body.data || {};
+  if (!summary) return; // AI processing off, skipped, or failed
+
+  metrics.increment('openai.tokens', summary.tokens, {
+    model: summary.model,
+    account: req.body.account
+  });
+});
 ```
+
+Aggregating by `account` shows which mailboxes drive the spend, which is usually a small number of high-volume ones. See [Cost Optimization](#cost-optimization) for narrowing what gets processed.

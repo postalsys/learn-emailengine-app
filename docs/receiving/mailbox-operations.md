@@ -153,7 +153,7 @@ Outlook does **not** expose special-use flags over IMAP. EmailEngine uses heuris
 List all mailboxes for an account using the [mailboxes API](/docs/api/get-v-1-account-account-mailboxes):
 
 ```bash
-curl "https://your-emailengine.com/v1/account/example/mailboxes" \
+curl "https://emailengine.example.com/v1/account/example/mailboxes" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -226,7 +226,7 @@ Find the sent folder regardless of name:
 
 ```javascript
 async function getSentFolder(accountId) {
-  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}/mailboxes`, {
+  const response = await fetch(`https://emailengine.example.com/v1/account/${accountId}/mailboxes`, {
     headers: { Authorization: "Bearer YOUR_ACCESS_TOKEN" },
   });
 
@@ -249,7 +249,7 @@ async function listSentMessagesManual(accountId) {
     throw new Error("Sent folder not found");
   }
 
-  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}/messages?path=${encodeURIComponent(sentPath)}`, {
+  const response = await fetch(`https://emailengine.example.com/v1/account/${accountId}/messages?path=${encodeURIComponent(sentPath)}`, {
     headers: { Authorization: "Bearer YOUR_ACCESS_TOKEN" },
   });
 
@@ -262,7 +262,7 @@ List all messages from the sent folder using special-use flag alias:
 ```javascript
 async function listSentMessages(accountId) {
   // Use special-use flag directly - EmailEngine resolves the actual path
-  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}/messages?path=${encodeURIComponent("\\Sent")}`, {
+  const response = await fetch(`https://emailengine.example.com/v1/account/${accountId}/messages?path=${encodeURIComponent("\\Sent")}`, {
     headers: { Authorization: "Bearer YOUR_ACCESS_TOKEN" },
   });
 
@@ -281,7 +281,7 @@ EmailEngine allows using special-use flags (like `\Sent`, `\Drafts`, `\Trash`) d
 Create a mailbox folder using the [create mailbox API](/docs/api/post-v-1-account-account-mailbox):
 
 ```bash
-curl -X POST "https://your-emailengine.com/v1/account/example/mailbox" \
+curl -X POST "https://emailengine.example.com/v1/account/example/mailbox" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -325,7 +325,7 @@ EmailEngine creates parent folders automatically if needed:
 
 ```javascript
 async function createFolder(accountId, folderPath) {
-  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}/mailbox`, {
+  const response = await fetch(`https://emailengine.example.com/v1/account/${accountId}/mailbox`, {
     method: "POST",
     headers: {
       Authorization: "Bearer YOUR_ACCESS_TOKEN",
@@ -348,7 +348,7 @@ await createFolder("example", ["Personal", "Finance", "2025"]);
 Rename a mailbox using the [rename mailbox API](/docs/api/put-v-1-account-account-mailbox):
 
 ```bash
-curl -X PUT "https://your-emailengine.com/v1/account/example/mailbox" \
+curl -X PUT "https://emailengine.example.com/v1/account/example/mailbox" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -377,7 +377,7 @@ Renaming a parent folder renames all children automatically:
 //   Work/Projects/ProjectA → Work/Archive/ProjectA
 //   Work/Projects/ProjectB → Work/Archive/ProjectB
 
-await fetch(`https://your-emailengine.com/v1/account/example/mailbox`, {
+await fetch(`https://emailengine.example.com/v1/account/example/mailbox`, {
   method: "PUT",
   headers: {
     Authorization: "Bearer YOUR_ACCESS_TOKEN",
@@ -397,7 +397,7 @@ await fetch(`https://your-emailengine.com/v1/account/example/mailbox`, {
 Delete a mailbox using the [delete mailbox API](/docs/api/delete-v-1-account-account-mailbox):
 
 ```bash
-curl -X DELETE "https://your-emailengine.com/v1/account/example/mailbox?path=Work%2FOldProject" \
+curl -X DELETE "https://emailengine.example.com/v1/account/example/mailbox?path=Work%2FOldProject" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -439,7 +439,7 @@ When you delete a folder, all messages in it are permanently deleted (unless the
 You can explicitly configure which folders to use for special purposes:
 
 ```bash
-curl -X PUT "https://your-emailengine.com/v1/account/example" \
+curl -X PUT "https://emailengine.example.com/v1/account/example" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -468,7 +468,7 @@ curl -X PUT "https://your-emailengine.com/v1/account/example" \
 
 ```javascript
 async function setCustomSentFolder(accountId, folderPath) {
-  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}`, {
+  const response = await fetch(`https://emailengine.example.com/v1/account/${accountId}`, {
     method: "PUT",
     headers: {
       Authorization: "Bearer YOUR_ACCESS_TOKEN",
@@ -558,7 +558,7 @@ Outlook categories are **not a replacement for folders**. Unlike Gmail where a l
 
 ```javascript
 async function getInboxPath(accountId) {
-  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}/mailboxes`, {
+  const response = await fetch(`https://emailengine.example.com/v1/account/${accountId}/mailboxes`, {
     headers: { Authorization: "Bearer YOUR_ACCESS_TOKEN" },
   });
 
@@ -575,7 +575,7 @@ async function getInboxPath(accountId) {
 
 ```javascript
 async function getSpecialUseFolders(accountId) {
-  const response = await fetch(`https://your-emailengine.com/v1/account/${accountId}/mailboxes`, {
+  const response = await fetch(`https://emailengine.example.com/v1/account/${accountId}/mailboxes`, {
     headers: { Authorization: "Bearer YOUR_ACCESS_TOKEN" },
   });
 

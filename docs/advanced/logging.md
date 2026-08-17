@@ -119,24 +119,42 @@ Pretty output example:
 
 ### Custom Formatting
 
-Create custom Pino transports for specific formatting:
+EmailEngine writes newline-delimited JSON, one object per line, so any tool that reads NDJSON on stdin can reformat it without EmailEngine knowing about it:
 
-**Custom Transport Example:**
-
-```
-// Pseudo code - implement in your preferred language
-
-function custom_log_transport(log_stream):
-  for each log_object in log_stream:
-    // Custom formatting
-    timestamp = FORMAT_DATE(log_object.time, 'ISO8601')
-    line = CONCAT('[', timestamp, '] ', log_object.level, ': ', log_object.msg)
-    PRINT(line)
-  end for
-end function
+```bash
+emailengine | jq -r '"[\(.time)] \(.level): \(.msg)"'
 ```
 
-Use custom transport by piping EmailEngine logs through your formatting tool.
+For anything beyond ad-hoc inspection, ship the raw JSON to your log platform and format it there. Reformatting before shipping throws away the structured fields that make the logs searchable.
+
+
+## Per-Account Protocol Logs
+
+Separate from the stdout log described above, EmailEngine can keep a per-account record of the IMAP conversation for a connection. This is the log to reach for when one mailbox misbehaves and the process-wide log is too coarse to show why.
+
+![Logging configuration page](/img/screenshots/logging-config.png)
+_Configuration > Logging, with the account log settings and the Sentry error reporting controls_
+
+| Setting | Default | Purpose |
+|---------|---------|---------|
+| `logs.all` | `false` | Collect logs for every account. Without it, logging is enabled per account |
+| `logs.maxLogLines` | `10000` | Entries retained per account |
+
+Retrieve an account's log as a plain text file:
+
+```bash
+curl "https://emailengine.example.com/v1/logs/user123" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -o user123-imap.log
+```
+
+:::warning These logs live in Redis
+Every retained entry consumes RAM on the Redis instance, and `logs.all` multiplies that by your account count. Turn it on to investigate a specific problem and turn it back off afterwards, or raise `maxLogLines` only for the account you are debugging. Changing `logs.all` requires a restart.
+:::
+
+Only IMAP accounts produce these logs. Gmail API and Microsoft Graph accounts talk over HTTPS rather than IMAP, so there is no protocol transcript to record and the endpoint returns nothing for them.
+
+Credentials and message bodies are never written to these logs. To capture the raw protocol exchange in the stdout log instead, see [`EENGINE_LOG_RAW`](/docs/configuration/environment-variables#advanced-settings).
 
 ## Log Rotation
 
@@ -222,7 +240,7 @@ For Docker deployments, mount logs as volumes:
 version: '3.8'
 services:
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     volumes:
       - ./logs:/app/logs
     logging:
@@ -305,7 +323,7 @@ For Docker deployments, use the Elasticsearch logging driver:
 version: '3.8'
 services:
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     logging:
       driver: "fluentd"
       options:
@@ -450,43 +468,13 @@ logs_config:
 version: '3.8'
 services:
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     labels:
       com.datadoghq.ad.logs: '[{"source": "emailengine", "service": "emailengine"}]'
 ```
 
-#### Using HTTP Endpoint
+Point the Agent at the container or the log file rather than writing a forwarder of your own. The Agent handles batching, retries, and back-pressure, none of which a hand-rolled HTTP POST per log line does, and a failed POST inside the logging path is a good way to lose the logs that explain an incident.
 
-Ship logs directly to Datadog:
-
-```
-// Pseudo code - implement in your preferred language
-
-function custom_logger_with_datadog(log_entry):
-  // Prepare log data
-  log_data = {
-    ddsource: 'emailengine',
-    service: 'emailengine',
-    hostname: GET_HOSTNAME(),
-    level: log_entry.level,
-    message: log_entry.msg,
-    timestamp: log_entry.time
-  }
-
-  // Send to Datadog asynchronously
-  HTTP_POST_ASYNC(
-    'https://http-intake.logs.datadoghq.com/v1/input',
-    headers={
-      'Content-Type': 'application/json',
-      'DD-API-KEY': ENV['DATADOG_API_KEY']
-    },
-    body=JSON_ENCODE(log_data)
-  )
-
-  // Also log locally
-  PRINT(log_entry)
-end function
-```
 
 ### Splunk
 
@@ -503,46 +491,8 @@ index = emailengine
 sourcetype = _json
 ```
 
-#### Using HTTP Event Collector
+The Universal Forwarder above is the supported path. If you must use the HTTP Event Collector instead, put a log shipper such as [Vector](https://vector.dev/) or [Fluent Bit](https://fluentbit.io/) between EmailEngine and Splunk: both read NDJSON, buffer to disk, and retry, so a Splunk outage does not become an EmailEngine outage.
 
-```
-// Pseudo code - implement in your preferred language
-
-function splunk_forwarder(log_stream):
-  for each log_line in log_stream:
-    try:
-      log = PARSE_JSON(log_line)
-
-      // Determine severity
-      if log.level >= 50:
-        severity = 'error'
-      else:
-        severity = 'info'
-      end if
-
-      // Send to Splunk HEC
-      HTTP_POST(
-        'https://splunk.example.com:8088/services/collector',
-        headers={
-          'Authorization': CONCAT('Splunk ', ENV['SPLUNK_HEC_TOKEN'])
-        },
-        body=JSON_ENCODE({
-          event: log,
-          severity: severity,
-          source: 'emailengine',
-          sourcetype: '_json',
-          index: 'emailengine'
-        })
-      )
-    catch parse_error:
-      // Ignore parse errors
-      continue
-    end try
-  end for
-end function
-```
-
-Run by piping EmailEngine logs through your forwarder implementation.
 
 ## Debugging with Logs
 

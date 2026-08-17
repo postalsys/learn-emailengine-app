@@ -37,19 +37,21 @@ EmailEngine handles all of this complexity, exposing IMAP functionality through 
 Get all folders/mailboxes in an account:
 
 ```http
-GET /v1/account/{account}/mailboxes
+GET /v1/account/{account}/mailboxes?counters=true
 ```
 
 Response:
 ```json
 {
   "mailboxes": [
-    {"path": "INBOX", "messages": 1523, "unseen": 12},
-    {"path": "Sent", "messages": 892, "unseen": 0},
-    {"path": "Drafts", "messages": 3, "unseen": 0}
+    {"path": "INBOX", "specialUse": "\\Inbox", "status": {"messages": 1523, "unseen": 12}},
+    {"path": "Sent", "specialUse": "\\Sent", "status": {"messages": 892, "unseen": 0}},
+    {"path": "Drafts", "specialUse": "\\Drafts", "status": {"messages": 3, "unseen": 0}}
   ]
 }
 ```
+
+Message counts come from `status`, and only when `counters=true` is set. Without it the folder tree is returned without per-folder counts, which is much cheaper on an account with many folders.
 
 ### List Messages
 
@@ -111,16 +113,26 @@ Response:
 
 ### Search Messages
 
-Search using IMAP search criteria:
+Search using IMAP search criteria. The search terms go in the request body, so this is a POST:
 
 ```http
-GET /v1/account/{account}/search?search[from]=john@example.com&search[subject]=invoice
+POST /v1/account/{account}/search?path=INBOX
+Content-Type: application/json
+
+{
+  "search": { "from": "john@example.com", "subject": "invoice" }
+}
 ```
 
-Or with full-text search:
+Or search the message body:
 
 ```http
-GET /v1/account/{account}/search?search[body]=quarterly%20report
+POST /v1/account/{account}/search?path=INBOX
+Content-Type: application/json
+
+{
+  "search": { "body": "quarterly report" }
+}
 ```
 
 ### Move/Copy Messages
@@ -210,9 +222,10 @@ EmailEngine maintains IMAP IDLE connections and sends webhooks when changes occu
 {
   "event": "messageDeleted",
   "account": "my-account",
+  "path": "INBOX",
   "data": {
     "id": "AAAAAQAACnA",
-    "path": "INBOX"
+    "uid": 1234
   }
 }
 ```
@@ -285,6 +298,7 @@ docker run -p 3000:3000 \
 
 ```bash
 curl -X POST http://localhost:3000/v1/account \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "account": "my-mailbox",
@@ -304,17 +318,20 @@ curl -X POST http://localhost:3000/v1/account \
 ### 3. List Messages
 
 ```bash
-curl http://localhost:3000/v1/account/my-mailbox/messages?path=INBOX
+curl "http://localhost:3000/v1/account/my-mailbox/messages?path=INBOX" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 ### 4. Configure Webhooks
 
 ```bash
-curl -X POST http://localhost:3000/v1/webhooks \
+curl -X POST http://localhost:3000/v1/settings \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "url": "https://yourapp.com/webhooks",
-    "events": ["messageNew", "messageUpdated", "messageDeleted"]
+    "webhooks": "https://yourapp.com/webhooks",
+    "webhooksEnabled": true,
+    "webhookEvents": ["messageNew", "messageUpdated", "messageDeleted"]
   }'
 ```
 

@@ -28,7 +28,7 @@ Message operations allow you to list, fetch, move, delete, and update email mess
 List messages in a folder using the [messages listing API](/docs/api/get-v-1-account-account-messages):
 
 ```bash
-curl "https://your-emailengine.com/v1/account/example/messages?path=INBOX" \
+curl "https://emailengine.example.com/v1/account/example/messages?path=INBOX" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -94,7 +94,7 @@ async function listMessages(accountId, folderPath, page = 0, pageSize = 20) {
   });
 
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/messages?${params}`,
+    `https://emailengine.example.com/v1/account/${accountId}/messages?${params}`,
     {
       headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
     }
@@ -145,7 +145,7 @@ The listing endpoint only accepts `path`, `cursor`, `page`, and `pageSize` query
 Find unseen messages:
 
 ```bash
-curl -X POST "https://your-emailengine.com/v1/account/example/search?path=INBOX" \
+curl -X POST "https://emailengine.example.com/v1/account/example/search?path=INBOX" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -158,7 +158,7 @@ curl -X POST "https://your-emailengine.com/v1/account/example/search?path=INBOX"
 Find flagged messages:
 
 ```bash
-curl -X POST "https://your-emailengine.com/v1/account/example/search?path=INBOX" \
+curl -X POST "https://emailengine.example.com/v1/account/example/search?path=INBOX" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -178,7 +178,7 @@ async function listUnreadMessages(accountId, folderPath) {
   });
 
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?${params}`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?${params}`,
     {
       method: 'POST',
       headers: {
@@ -206,7 +206,7 @@ If you intend to render the HTML body in a web page, request it with `webSafeHtm
 :::
 
 ```bash
-curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE?textType=*" \
+curl "https://emailengine.example.com/v1/account/example/message/AAAAAQAAAeE?textType=*" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -270,7 +270,7 @@ curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE?textTy
 ```javascript
 async function getMessage(accountId, messageId) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}?textType=*`,
+    `https://emailengine.example.com/v1/account/${accountId}/message/${messageId}?textType=*`,
     {
       headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
     }
@@ -294,7 +294,7 @@ console.log(`Body: ${message.text?.plain}`);
 Fetch raw RFC822 message source using the [message source API](/docs/api/get-v-1-account-account-message-message-source):
 
 ```bash
-curl "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE/source" \
+curl "https://emailengine.example.com/v1/account/example/message/AAAAAQAAAeE/source" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -321,7 +321,7 @@ John
 ```javascript
 async function getMessageSource(accountId, messageId) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}/source`,
+    `https://emailengine.example.com/v1/account/${accountId}/message/${messageId}/source`,
     {
       headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
     }
@@ -341,7 +341,7 @@ console.log(source);
 Move a message to another folder using the [move message API](/docs/api/put-v-1-account-account-message-message-move):
 
 ```bash
-curl -X PUT "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE/move" \
+curl -X PUT "https://emailengine.example.com/v1/account/example/message/AAAAAQAAAeE/move" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -366,7 +366,7 @@ The response includes the destination `path` and, if provided by the server, the
 ```javascript
 async function moveMessage(accountId, messageId, targetFolder) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}/move`,
+    `https://emailengine.example.com/v1/account/${accountId}/message/${messageId}/move`,
     {
       method: 'PUT',
       headers: {
@@ -424,7 +424,7 @@ async function trashMessage(accountId, messageId) {
 Delete a message using the [delete message API](/docs/api/delete-v-1-account-account-message-message). By default, the message is moved to Trash. If the message is already in Trash (or if `force=true` is specified), it is permanently deleted.
 
 ```bash
-curl -X DELETE "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE" \
+curl -X DELETE "https://emailengine.example.com/v1/account/example/message/AAAAAQAAAeE" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -455,7 +455,7 @@ To force permanent deletion without moving to Trash first, add `?force=true` to 
 ```javascript
 async function deleteMessage(accountId, messageId) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}`,
+    `https://emailengine.example.com/v1/account/${accountId}/message/${messageId}`,
     {
       method: 'DELETE',
       headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
@@ -510,7 +510,7 @@ This means you can safely use the delete endpoint in most cases - messages get a
 Update message flags using the [update message API](/docs/api/put-v-1-account-account-message-message):
 
 ```bash
-curl -X PUT "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE" \
+curl -X PUT "https://emailengine.example.com/v1/account/example/message/AAAAAQAAAeE" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -540,7 +540,7 @@ The response echoes back the flag operations that were performed.
 ```javascript
 async function markAsRead(accountId, messageId) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}`,
+    `https://emailengine.example.com/v1/account/${accountId}/message/${messageId}`,
     {
       method: 'PUT',
       headers: {
@@ -564,7 +564,7 @@ async function markAsRead(accountId, messageId) {
 ```javascript
 async function markAsUnread(accountId, messageId) {
   return await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}`,
+    `https://emailengine.example.com/v1/account/${accountId}/message/${messageId}`,
     {
       method: 'PUT',
       headers: {
@@ -586,7 +586,7 @@ async function markAsUnread(accountId, messageId) {
 ```javascript
 async function toggleFlag(accountId, messageId, currentlyFlagged) {
   return await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}`,
+    `https://emailengine.example.com/v1/account/${accountId}/message/${messageId}`,
     {
       method: 'PUT',
       headers: {
@@ -608,7 +608,7 @@ async function toggleFlag(accountId, messageId, currentlyFlagged) {
 ```javascript
 async function markAsAnswered(accountId, messageId) {
   return await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}`,
+    `https://emailengine.example.com/v1/account/${accountId}/message/${messageId}`,
     {
       method: 'PUT',
       headers: {
@@ -671,7 +671,7 @@ EmailEngine uses the `labels` array for both Gmail labels and Microsoft Outlook/
 For Gmail or Microsoft Graph accounts, add labels or categories to a message:
 
 ```bash
-curl -X PUT "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE" \
+curl -X PUT "https://emailengine.example.com/v1/account/example/message/AAAAAQAAAeE" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -684,7 +684,7 @@ curl -X PUT "https://your-emailengine.com/v1/account/example/message/AAAAAQAAAeE
 **Example - Add categories to Outlook message:**
 
 ```bash
-curl -X PUT "https://your-emailengine.com/v1/account/outlook-account/message/AAMkADU" \
+curl -X PUT "https://emailengine.example.com/v1/account/outlook-account/message/AAMkADU" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -703,7 +703,7 @@ When using Microsoft Graph API, categories are automatically created if they don
 ```javascript
 async function removeLabel(accountId, messageId, label) {
   return await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}`,
+    `https://emailengine.example.com/v1/account/${accountId}/message/${messageId}`,
     {
       method: 'PUT',
       headers: {
@@ -737,7 +737,7 @@ async function setLabels(accountId, messageId, labels) {
   }
 
   return await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}`,
+    `https://emailengine.example.com/v1/account/${accountId}/message/${messageId}`,
     {
       method: 'PUT',
       headers: {

@@ -11,6 +11,9 @@ keywords:
   - email queue
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 <!--
 SOURCE: sources/blog/2021-08-17-using-as-a-transactional-email-service.md
 Migrated to documentation format with technical how-to content.
@@ -48,7 +51,7 @@ Submit emails using the `/v1/account/{account}/submit` endpoint. EmailEngine con
 ### Basic Example
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -88,7 +91,7 @@ curl -XPOST "https://ee.example.com/v1/account/example/submit" \
 When replying to a message, EmailEngine automatically handles threading headers:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -265,7 +268,8 @@ Required only if SMTP authentication is disabled.
 
 ### SMTP Client Example
 
-**Node.js (nodemailer)**:
+<Tabs groupId="language">
+<TabItem value="nodejs" label="Node.js" default>
 
 ```javascript
 const nodemailer = require('nodemailer');
@@ -296,7 +300,8 @@ const info = await transporter.sendMail(message);
 console.log('Message queued:', info.messageId);
 ```
 
-**Python (smtplib)**:
+</TabItem>
+<TabItem value="python" label="Python">
 
 ```python
 import smtplib
@@ -315,6 +320,9 @@ with smtplib.SMTP('localhost', 2525) as smtp:
     print('Message queued')
 ```
 
+</TabItem>
+</Tabs>
+
 ### Important SMTP Notes
 
 - **Recipient addresses**: Only addresses in `RCPT TO` commands receive email
@@ -332,7 +340,7 @@ Delay message delivery to a specific future time.
 Use the `sendAt` property with ISO timestamp:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
   -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -531,7 +539,7 @@ To correlate bounces with sent messages:
 **1. Store messageId when sending**:
 
 ```javascript
-const response = await fetch('https://ee.example.com/v1/account/example/submit', {
+const response = await fetch('https://emailengine.example.com/v1/account/example/submit', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer TOKEN',

@@ -859,11 +859,17 @@ EENGINE_IMAP_SOCKET_TIMEOUT=300000
 **Environment:** `EENGINE_MAX_IMAP_AUTH_FAILURE_TIME`
 **Default:** `3d` (3 days)
 
-Time before disabling IMAP connections after repeated auth failures.
+How long an account may keep failing authentication before EmailEngine stops retrying it. Once the first authentication error is older than this window, EmailEngine sets `imap.disabled` on the account, records the reason in the account's last error state, and closes the connection. This keeps a mailbox with a changed or revoked password from hammering the mail server indefinitely.
 
 ```bash
 EENGINE_MAX_IMAP_AUTH_FAILURE_TIME=1d
 ```
+
+:::warning The account stays disabled until you re-enable it
+Nothing re-enables the account automatically, not even fixing the password. Clear the "Disable IMAP" checkbox on the account page, or send `imap.disabled: false` with [Update Account](/docs/api/put-v-1-account-account). Watch for [`authenticationError`](/docs/webhooks/authenticationerror) webhooks if you need to react before an account is parked.
+:::
+
+This applies to accounts that authenticate with a password. Accounts whose connection settings come from an OAuth2 provider, including the Gmail and Outlook API account types, are not parked this way.
 
 ### IMAP ID Extension
 

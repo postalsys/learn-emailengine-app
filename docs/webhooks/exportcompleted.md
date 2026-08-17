@@ -43,10 +43,18 @@ This event confirms that the export file is available for download via the [Down
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `exportId` | string | Yes | Unique identifier for the export job |
+| `folders` | array | Yes | Folder paths that were included in the export |
+| `startDate` | string | Yes | ISO 8601 start of the exported date range |
+| `endDate` | string | Yes | ISO 8601 end of the exported date range |
 | `messagesExported` | number | Yes | Total messages successfully written to the export file |
 | `messagesSkipped` | number | Yes | Messages that were skipped (deleted or inaccessible) |
 | `bytesWritten` | number | Yes | Total bytes written to the export file (compressed) |
-| `duration` | number | No | Export duration in milliseconds |
+| `duration` | number | Yes | Export duration in milliseconds |
+| `expiresAt` | string | Yes | ISO 8601 time after which the export file is deleted |
+
+:::warning Download before `expiresAt`
+The export file is removed once it expires, and the export cannot be re-downloaded afterwards. Treat this event as the start of a deadline, not just a completion notice. The retention window is set by `EENGINE_EXPORT_MAX_AGE`.
+:::
 
 ## Example Payload
 
@@ -60,10 +68,14 @@ This event confirms that the export file is available for download via the [Down
   "event": "exportCompleted",
   "data": {
     "exportId": "exp_abc123def456abc123def456",
+    "folders": ["INBOX", "\\Sent"],
+    "startDate": "2024-01-01T00:00:00.000Z",
+    "endDate": "2025-01-01T00:00:00.000Z",
     "messagesExported": 1495,
     "messagesSkipped": 5,
     "bytesWritten": 104857600,
-    "duration": 125000
+    "duration": 125000,
+    "expiresAt": "2025-01-16T14:30:00.000Z"
   }
 }
 ```

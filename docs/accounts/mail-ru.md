@@ -31,7 +31,7 @@ Mail.ru OAuth2 requires the following scopes:
 3. Click **Create Application** (or similar button)
 4. Fill in the application details:
    - **Application Name**: Your application name (e.g., "EmailEngine Integration")
-   - **Redirect URI**: Your EmailEngine callback URL (e.g., `https://your-emailengine-domain/oauth`)
+   - **Redirect URI**: Your EmailEngine callback URL (e.g., `https://emailengine.example.com/oauth`)
    - **Scopes**: Select `userinfo` and `mail.imap`
 
 5. After creating the application, note down:
@@ -47,7 +47,7 @@ Never commit your Client ID and Client Secret to version control. Store them sec
 ### Option A: Via Web UI
 
 1. Open the EmailEngine admin dashboard
-2. Navigate to **Configuration** > **OAuth2 Applications**
+2. Navigate to **Integrations** > **OAuth2 Apps**
 3. Click **Add New Application**
 4. Select **Mail.ru** as the provider
 5. Enter your credentials:
@@ -106,7 +106,7 @@ The `type` field pre-selects an account type so the user skips the type-selectio
 
 ```json
 {
-  "url": "https://your-emailengine-domain/accounts/new?data=..."
+  "url": "https://emailengine.example.com/accounts/new?data=..."
 }
 ```
 

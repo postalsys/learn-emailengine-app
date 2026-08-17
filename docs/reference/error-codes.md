@@ -14,9 +14,10 @@ All EmailEngine API errors follow this structure:
 
 ```json
 {
-  "error": "Human-readable error message",
-  "code": "ERROR_CODE",
   "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Human-readable error message",
+  "code": "ERROR_CODE",
   "details": {
     /* optional additional context */
   }
@@ -25,10 +26,16 @@ All EmailEngine API errors follow this structure:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `error` | string | Human-readable error description |
-| `code` | string | Machine-readable error code |
-| `statusCode` | number | HTTP status code |
+| `statusCode` | number | HTTP status code, repeated in the body |
+| `error` | string | HTTP status text, such as `Bad Request` |
+| `message` | string | Human-readable reason for the failure |
+| `code` | string | Machine-readable error code. Only present when the failure has one |
 | `details` | object | Optional additional error context |
+| `fields` | array | Present on validation failures, one entry per rejected input |
+
+:::warning `error` is the status text, not the reason
+Show and log `message`. The `error` field only repeats the HTTP status phrase, so a handler that reports `error` tells the operator "Bad Request" instead of what was actually wrong.
+:::
 
 ## HTTP Status Codes
 
@@ -55,11 +62,16 @@ Request validation failed due to invalid parameters or malformed request.
 **Example:**
 ```json
 {
-  "error": "Missing required field: account",
-  "code": "InvalidRequest",
-  "statusCode": 400
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Invalid request payload input",
+  "fields": [
+    { "message": "\"account\" is required", "key": "account" }
+  ]
 }
 ```
+
+Input validation failures carry a `fields` array naming each rejected input, and no `code`. Read `fields` to report the specific problem back to the caller.
 
 **Common Causes:**
 - Missing required fields
@@ -82,8 +94,9 @@ Missing or invalid authentication credentials.
 **Example:**
 ```json
 {
-  "error": "Missing or invalid API key",
-  "statusCode": 401
+  "statusCode": 401,
+  "error": "Unauthorized",
+  "message": "Missing or invalid API key"
 }
 ```
 
@@ -108,8 +121,9 @@ Valid authentication but insufficient permissions.
 **Example:**
 ```json
 {
-  "error": "Unauthorized scope",
-  "statusCode": 403
+  "statusCode": 403,
+  "error": "Forbidden",
+  "message": "Unauthorized scope"
 }
 ```
 
@@ -134,9 +148,10 @@ Requested resource does not exist.
 **Example:**
 ```json
 {
-  "error": "Account not found",
-  "code": "AccountNotFound",
-  "statusCode": 404
+  "statusCode": 404,
+  "error": "Not Found",
+  "message": "Account not found",
+  "code": "AccountNotFound"
 }
 ```
 
@@ -159,9 +174,10 @@ EmailEngine reports a duplicate account as a `400 Bad Request` with the code `Ac
 **Example:**
 ```json
 {
-  "error": "This account already exists",
-  "code": "AccountAlreadyExists",
-  "statusCode": 400
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "This account already exists",
+  "code": "AccountAlreadyExists"
 }
 ```
 
@@ -182,8 +198,9 @@ Rate limit exceeded.
 **Example:**
 ```json
 {
-  "error": "Rate limit exceeded",
   "statusCode": 429,
+  "error": "Too Many Requests",
+  "message": "Rate limit exceeded",
   "ttl": 60
 }
 ```
@@ -235,8 +252,9 @@ Unexpected server error occurred.
 **Example:**
 ```json
 {
-  "error": "Internal server error",
-  "statusCode": 500
+  "statusCode": 500,
+  "error": "Internal Server Error",
+  "message": "Internal server error"
 }
 ```
 
@@ -259,9 +277,10 @@ EmailEngine could not complete an operation because the upstream mail server (IM
 **Example:**
 ```json
 {
-  "error": "Server unavailable",
-  "code": "IMAPUnavailable",
-  "statusCode": 502
+  "statusCode": 502,
+  "error": "Bad Gateway",
+  "message": "Server unavailable",
+  "code": "IMAPUnavailable"
 }
 ```
 
@@ -284,9 +303,10 @@ EmailEngine is temporarily unavailable (startup, shutdown, maintenance).
 **Example:**
 ```json
 {
-  "error": "Service unavailable",
-  "code": "ServiceUnavailable",
   "statusCode": 503,
+  "error": "Service Unavailable",
+  "message": "Service unavailable",
+  "code": "ServiceUnavailable",
   "details": {
     "retryAfter": 30
   }
@@ -320,9 +340,10 @@ Specified account does not exist.
 **Example:**
 ```json
 {
-  "error": "Account not found",
-  "code": "AccountNotFound",
   "statusCode": 404,
+  "error": "Not Found",
+  "message": "Account not found",
+  "code": "AccountNotFound",
   "details": {
     "account": "nonexistent@example.com"
   }
@@ -345,9 +366,10 @@ An account with this ID (or, for OAuth2 accounts, the same upstream user) alread
 **Example:**
 ```json
 {
-  "error": "This account already exists",
-  "code": "AccountAlreadyExists",
-  "statusCode": 400
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "This account already exists",
+  "code": "AccountAlreadyExists"
 }
 ```
 
@@ -368,9 +390,10 @@ Specified message does not exist.
 **Example:**
 ```json
 {
-  "error": "Message not found",
-  "code": "MessageNotFound",
   "statusCode": 404,
+  "error": "Not Found",
+  "message": "Message not found",
+  "code": "MessageNotFound",
   "details": {
     "message": "AAAABAABNc"
   }
@@ -393,9 +416,10 @@ Message exceeds size limits.
 **Example:**
 ```json
 {
-  "error": "Message size exceeds limit",
-  "code": "MessageTooLarge",
   "statusCode": 413,
+  "error": "Payload Too Large",
+  "message": "Message size exceeds limit",
+  "code": "MessageTooLarge",
   "details": {
     "size": 26214400,
     "limit": 20971520
@@ -423,9 +447,10 @@ Access token is invalid or expired.
 **Example:**
 ```json
 {
-  "error": "Invalid access token",
-  "code": "InvalidToken",
-  "statusCode": 401
+  "statusCode": 401,
+  "error": "Unauthorized",
+  "message": "Invalid access token",
+  "code": "InvalidToken"
 }
 ```
 
@@ -449,9 +474,10 @@ Failed to connect to the mail server.
 **Example:**
 ```json
 {
-  "error": "Failed to connect to IMAP server",
-  "code": "ConnectionError",
   "statusCode": 503,
+  "error": "Service Unavailable",
+  "message": "Failed to connect to IMAP server",
+  "code": "ConnectionError",
   "details": {
     "host": "imap.example.com",
     "reason": "ECONNREFUSED"
@@ -482,9 +508,10 @@ Authentication to mail server failed.
 **Example:**
 ```json
 {
-  "error": "Requested account can not be authenticated",
-  "code": "AuthenticationFails",
   "statusCode": 503,
+  "error": "Service Unavailable",
+  "message": "Requested account can not be authenticated",
+  "code": "AuthenticationFails",
   "state": "authenticationError"
 }
 ```
@@ -514,9 +541,10 @@ License has expired.
 **Example:**
 ```json
 {
-  "error": "License has expired",
-  "code": "ELicenseExpired",
-  "statusCode": 403
+  "statusCode": 403,
+  "error": "Forbidden",
+  "message": "License has expired",
+  "code": "ELicenseExpired"
 }
 ```
 
@@ -547,9 +575,10 @@ Common IMAP server response codes:
 **Example Error:**
 ```json
 {
-  "error": "IMAP server is currently unavailable",
-  "code": "IMAPUnavailable",
   "statusCode": 502,
+  "error": "Bad Gateway",
+  "message": "IMAP server is currently unavailable",
+  "code": "IMAPUnavailable",
   "details": {
     "command": "LOGIN",
     "response": "NO [AUTHENTICATIONFAILED] Invalid credentials"
@@ -585,9 +614,10 @@ Common SMTP error codes:
 **Example Error:**
 ```json
 {
-  "error": "SMTP server is currently unavailable",
-  "code": "SMTPUnavailable",
   "statusCode": 502,
+  "error": "Bad Gateway",
+  "message": "SMTP server is currently unavailable",
+  "code": "SMTPUnavailable",
   "details": {
     "smtpResponse": "550 5.1.1 <user@example.com>: Recipient address rejected: User unknown",
     "recipient": "user@example.com"
@@ -726,7 +756,7 @@ async function makeRequestWithRetry(url, options, maxRetries = 3) {
       // Don't retry client errors (except rate limit)
       if (response.status >= 400 && response.status < 500 &&
           response.status !== 429) {
-        throw new Error(data.error);
+        throw new Error(data.message);
       }
 
       // Retry on specific status codes
@@ -736,7 +766,7 @@ async function makeRequestWithRetry(url, options, maxRetries = 3) {
         continue;
       }
 
-      throw new Error(data.error);
+      throw new Error(data.message);
 
     } catch (error) {
       if (attempt === maxRetries - 1) {
@@ -753,24 +783,25 @@ Categorize errors for appropriate handling:
 
 ```javascript
 function categorizeError(statusCode, errorCode) {
-  // Client errors - don't retry
-  if (statusCode >= 400 && statusCode < 500 && statusCode !== 429) {
-    return 'CLIENT_ERROR';
+  // Check the error code before the status range: an auth failure is a 4xx too,
+  // and it is fixable by refreshing credentials rather than by changing the request
+  if (errorCode === 'AuthenticationFails' || errorCode === 'InvalidToken') {
+    return 'AUTH_ERROR';
   }
 
-  // Rate limit - retry with backoff
+  // Rate limit - retry after the window given in ttl
   if (statusCode === 429) {
     return 'RATE_LIMIT';
+  }
+
+  // Remaining client errors - the request itself is wrong, retrying will not help
+  if (statusCode >= 400 && statusCode < 500) {
+    return 'CLIENT_ERROR';
   }
 
   // Server errors - retry
   if (statusCode >= 500) {
     return 'SERVER_ERROR';
-  }
-
-  // Authentication - refresh credentials
-  if (errorCode === 'AuthenticationFails' || errorCode === 'InvalidToken') {
-    return 'AUTH_ERROR';
   }
 
   return 'UNKNOWN';

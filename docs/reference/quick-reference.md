@@ -34,6 +34,8 @@ Quick lookup tables for common EmailEngine configuration and API usage.
 | `trackClick` | Link clicked | Tracked link accessed |
 | `listUnsubscribe` | Unsubscribe request | User unsubscribed via List-Unsubscribe |
 | `listSubscribe` | Subscribe request | User re-subscribed to a list |
+| `exportCompleted` | Export finished | A mailbox export job completed successfully |
+| `exportFailed` | Export failed | A mailbox export job stopped with an error |
 
 See [Webhook Events Reference](/docs/reference/webhook-events) for complete payload documentation.
 
@@ -76,6 +78,7 @@ See [Webhook Events Reference](/docs/reference/webhook-events) for complete payl
 |--------|----------|-------------|
 | `GET` | `/v1/account/{account}/mailboxes` | List mailboxes |
 | `POST` | `/v1/account/{account}/mailbox` | Create mailbox |
+| `PUT` | `/v1/account/{account}/mailbox` | Rename mailbox |
 | `DELETE` | `/v1/account/{account}/mailbox` | Delete mailbox |
 
 ### Attachments
@@ -102,7 +105,7 @@ See [Webhook Events Reference](/docs/reference/webhook-events) for complete payl
 | `EENGINE_WORKERS` | `4` | Account worker threads (IMAP, Gmail API, Outlook/Graph) |
 | `EENGINE_LOG_LEVEL` | `trace` | Log level (trace/debug/info/warn/error) |
 
-### Feature Flags
+### Behavior Toggles
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -132,25 +135,28 @@ See [Environment Variables](/docs/configuration/environment-variables) for compl
 | Code | Meaning | Common Cause |
 |------|---------|--------------|
 | `200` | Success | Request completed |
-| `400` | Bad Request | Invalid parameters |
+| `400` | Bad Request | Invalid parameters, or a duplicate account ID (`AccountAlreadyExists`) |
 | `401` | Unauthorized | Missing/invalid token |
 | `403` | Forbidden | Insufficient scope |
 | `404` | Not Found | Account/message doesn't exist |
-| `409` | Conflict | Duplicate account ID |
-| `429` | Too Many Requests | Rate limited |
+| `422` | Unprocessable Entity | The request is valid but the account cannot satisfy it, such as a label search on a non-Gmail mailbox |
+| `429` | Too Many Requests | Rate limited. The body carries `ttl` seconds |
 | `500` | Server Error | Internal error |
-| `502` | Bad Gateway | Upstream provider error |
+| `503` | Service Unavailable | The mail server could not be reached, or the account is not connected |
 
 ### Account Connection States
 
 | State | Description | Action |
 |-------|-------------|--------|
-| `connected` | Active connection | Normal operation |
+| `init` | Registered, not connected yet | Wait |
+| `unset` | No IMAP or OAuth2 configuration | Add connection settings |
 | `connecting` | Establishing connection | Wait for completion |
-| `syncing` | Initial sync in progress | Wait for completion |
-| `disconnected` | Connection lost | Will auto-reconnect |
-| `authenticationError` | Credentials invalid | Update credentials or re-authenticate |
-| `connectError` | Network/server error | Check server availability |
+| `syncing` | Sync in progress | Wait for completion |
+| `connected` | Connected and watching for changes | Normal operation |
+| `disconnected` | Connection dropped | Retried automatically with backoff |
+| `connectError` | Network or TLS failure | Check server availability |
+| `authenticationError` | Credentials rejected | Update credentials or re-authenticate |
+| `paused` | Syncing paused through the API | Resume when needed |
 
 ### Webhook Delivery Status
 
@@ -308,6 +314,17 @@ curl -X POST http://localhost:3000/v1/settings \
   -H "Content-Type: application/json" \
   -d '{
     "webhooks": "https://your-app.com/webhooks",
+    "webhooksEnabled": true,
     "webhookEvents": ["messageNew", "messageSent"]
   }'
 ```
+
+Delivery only starts once `webhooksEnabled` is `true`, and `webhookEvents` is an allowlist. Use `["*"]` to receive every event.
+
+## See Also
+
+- [API Reference Overview](/docs/api-reference) - Authentication, conventions, and error handling
+- [Environment Variables](/docs/configuration/environment-variables) - The complete configuration reference
+- [Webhook Events Reference](/docs/reference/webhook-events) - Full payloads for every event
+- [Error Codes](/docs/reference/error-codes) - Every error code and how to respond to it
+- [Glossary](/docs/reference/glossary) - Terms used throughout the documentation

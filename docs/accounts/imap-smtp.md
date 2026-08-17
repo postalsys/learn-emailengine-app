@@ -101,7 +101,7 @@ When users add accounts through the [hosted authentication form](/docs/accounts/
 Use the [autoconfig endpoint](/docs/api/get-v-1-autoconfig) to detect server settings programmatically:
 
 ```bash
-curl "https://your-ee.com/v1/autoconfig?email=user@example.com" \
+curl "https://emailengine.example.com/v1/autoconfig?email=user@example.com" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -307,7 +307,7 @@ Set `tls.rejectUnauthorized: false` when registering the account:
 To disable certificate verification for all IMAP/SMTP connections, set the `ignoreMailCertErrors` setting:
 
 ```bash
-curl -X POST https://your-ee.com/v1/settings \
+curl -X POST https://emailengine.example.com/v1/settings \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -328,7 +328,7 @@ Only disable certificate verification for development/testing. In production, us
 Add accounts using the [Register Account API endpoint](/docs/api/post-v-1-account):
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -361,7 +361,7 @@ curl -X POST https://your-ee.com/v1/account \
 For read-only access without sending capability:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -385,7 +385,7 @@ curl -X POST https://your-ee.com/v1/account \
 For send-only access without IMAP:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -422,7 +422,7 @@ EmailEngine detects and handles three types of send-only configurations:
 The simplest form - an account with only SMTP credentials and no IMAP section:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -446,7 +446,7 @@ curl -X POST https://your-ee.com/v1/account \
 An account with IMAP credentials but explicitly disabled:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -510,7 +510,7 @@ Send-only accounts have these characteristics:
 The account info endpoint indicates send-only status:
 
 ```bash
-curl "https://your-ee.com/v1/account/smtp-only-account" \
+curl "https://emailengine.example.com/v1/account/smtp-only-account" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -539,7 +539,7 @@ Response for send-only accounts:
 Applications that send notifications, receipts, or alerts without needing to read responses:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account/notifications/submit \
+curl -X POST https://emailengine.example.com/v1/account/notifications/submit \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -563,7 +563,7 @@ When Google or Microsoft only approves limited scopes during app verification, y
 Users can add their own accounts through EmailEngine's web interface:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -588,7 +588,7 @@ EmailEngine can auto-detect settings for many common providers.
 Before adding an account, verify credentials work:
 
 ```bash
-curl -X POST https://your-ee.com/v1/verifyAccount \
+curl -X POST https://emailengine.example.com/v1/verifyAccount \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -694,6 +694,26 @@ The default resync interval is 15 minutes (900 seconds). You can adjust this per
 
 For most use cases, the default 15-minute interval provides a good balance.
 
+### Disabling IMAP4rev2 {#disabling-imap4rev2}
+
+EmailEngine uses IMAP4rev2 when the server advertises it. A few servers advertise the capability but break when it is actually used - this has been seen on Exchange, where connection setup fails. Set `imap.disableIMAP4rev2` to keep the account on IMAP4rev1 without giving up the other extensions EmailEngine negotiates:
+
+```json
+{
+  "imap": {
+    "disableIMAP4rev2": true
+  }
+}
+```
+
+In the admin interface the same option is the "Disable IMAP4rev2" checkbox on the account edit page, alongside "Allow invalid certificates" for the per-account `tls.rejectUnauthorized` override.
+
+:::note Password accounts only
+This option applies to accounts using regular password authentication. OAuth2 accounts build their connection settings from the provider configuration, so the field is ignored there.
+:::
+
+Available since EmailEngine v2.74.0.
+
 ### Path Filtering
 
 Sync only specific folders:
@@ -756,7 +776,7 @@ Set the `proxy` field at the account level (not inside imap/smtp objects):
 Configure a default proxy for all accounts via the settings API:
 
 ```bash
-curl -X POST https://your-ee.com/v1/settings \
+curl -X POST https://emailengine.example.com/v1/settings \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -782,7 +802,7 @@ The `proxyEnabled` and `proxyUrl` settings apply only to IMAP and SMTP socket co
 To proxy HTTP traffic, use the separate HTTP proxy settings instead: set `httpProxyEnabled` and `httpProxyUrl` via the settings API, or use the `EENGINE_HTTP_PROXY_ENABLED` and `EENGINE_HTTP_PROXY_URL` environment variables. Note that EmailEngine does not honor the standard `HTTP_PROXY`/`HTTPS_PROXY` environment variables.
 
 ```bash
-curl -X POST https://your-ee.com/v1/settings \
+curl -X POST https://emailengine.example.com/v1/settings \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

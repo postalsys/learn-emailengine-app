@@ -356,7 +356,7 @@ messageSent             messageDeliveryError
 5. **Alert on spikes** - Monitor for unusual increases in failure rates
 6. **Log for compliance** - Maintain records of delivery failures for audit purposes
 7. **Consider alternatives** - Implement fallback delivery methods for critical emails
-8. **Process quickly** - Return 2xx status within 5 seconds
+8. **Process quickly** - Return 2xx before the 30 second delivery timeout, then do the work asynchronously
 
 ## Related Events
 

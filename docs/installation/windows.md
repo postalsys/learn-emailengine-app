@@ -95,8 +95,8 @@ Open PowerShell and download the Windows executable:
 # Download latest version
 Invoke-WebRequest -Uri "https://go.emailengine.app/emailengine.exe" -OutFile "emailengine.exe"
 
-# Or for specific version (e.g., 2.55.4)
-Invoke-WebRequest -Uri "https://go.emailengine.app/download/v2.55.4/emailengine.exe" -OutFile "emailengine.exe"
+# Or for specific version (e.g., 2.78.0)
+Invoke-WebRequest -Uri "https://go.emailengine.app/download/v2.78.0/emailengine.exe" -OutFile "emailengine.exe"
 ```
 
 **Alternative: Browser download**

@@ -16,9 +16,13 @@ The `connectError` event fires when:
 - The server refuses the connection (port closed, firewall blocking)
 - TLS/SSL handshake fails
 - The server returns a connection-level error before authentication
-- The IMAP or SMTP connection is interrupted unexpectedly
+- The IMAP connection is interrupted unexpectedly
 
 This event is specifically for connection failures that occur **before or outside of authentication**. If the connection succeeds but authentication fails, an [authenticationError](/docs/webhooks/authenticationerror) event is triggered instead.
+
+:::note IMAP accounts only
+Only the IMAP client emits `connectError`. Gmail API and Microsoft Graph accounts reach their provider over HTTPS, so a transport failure there surfaces as a retry or, if the credentials are rejected, as [`authenticationError`](/docs/webhooks/authenticationerror). Do not rely on `connectError` to detect provider outages for API-based accounts.
+:::
 
 EmailEngine uses intelligent error tracking to avoid spamming your webhook endpoint. The event is only sent on the **first occurrence** of a connection error for an account. Subsequent identical errors are suppressed until the account successfully connects again or the error state changes.
 
@@ -41,7 +45,6 @@ EmailEngine uses intelligent error tracking to avoid spamming your webhook endpo
 | `account` | string | Yes | Account ID that experienced the connection failure |
 | `date` | string | Yes | ISO 8601 timestamp when the webhook was generated |
 | `event` | string | Yes | Event type, always "connectError" for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook delivery |
 | `data` | object | Yes | Error details object (see below) |
 
 ### Error Data Fields (`data` object)

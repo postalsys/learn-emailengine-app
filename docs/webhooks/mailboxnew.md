@@ -41,7 +41,6 @@ The event is triggered after EmailEngine has completed the initial sync of the n
 | `path` | string | Yes | Mailbox folder path that was created (e.g., "Projects/Active") |
 | `specialUse` | string | No | Special use flag of the folder if applicable (e.g., "\Archive", "\Junk") |
 | `event` | string | Yes | Event type, always "mailboxNew" for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook delivery |
 | `data` | object | Yes | Folder details |
 
 ### Folder Data Fields (`data` object)

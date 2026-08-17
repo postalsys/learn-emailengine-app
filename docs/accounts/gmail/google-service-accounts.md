@@ -396,7 +396,7 @@ Now configure EmailEngine to use the service account.
 <!-- Shows: EmailEngine OAuth2 configuration page -->
 
 1. Open EmailEngine dashboard
-2. Navigate to **Configuration** → **OAuth2**
+2. Navigate to **Integrations** > **OAuth2 Apps**
 3. Click the **Create OAuth2 app** dropdown
 4. Select **Gmail Service Accounts**
 
@@ -451,7 +451,7 @@ After registering the app, note the **App ID** displayed in the OAuth2 applicati
 You can also find the App ID by calling the [List OAuth2 Apps API endpoint](/docs/api/get-v-1-oauth-2):
 
 ```bash
-curl https://your-ee.com/v1/oauth2 \
+curl https://emailengine.example.com/v1/oauth2 \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN"
 ```
 
@@ -652,7 +652,7 @@ The authentication method (service account key vs Workload Identity Federation) 
 After registering the app, use the built-in setup verifier to confirm every step works before pointing real accounts at it. On the OAuth2 application page click **Verify setup**, or call the API:
 
 ```bash
-curl -X POST https://your-ee.com/v1/oauth2/APP_ID/verify \
+curl -X POST https://emailengine.example.com/v1/oauth2/APP_ID/verify \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "account": "user@yourdomain.com" }'
@@ -703,7 +703,7 @@ The button is available for email-scoped service apps (IMAP/SMTP or Gmail API ba
 Add accounts using the [Register Account API endpoint](/docs/api/post-v-1-account):
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -745,7 +745,7 @@ You can add any user in your organization using the same App ID:
 
 ```bash
 # Add sales team accounts (replace APP_ID with your actual App ID)
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -757,7 +757,7 @@ curl -X POST https://your-ee.com/v1/account \
     }
   }'
 
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -785,7 +785,7 @@ Service account-based accounts appear as "OAuth2 (Gmail Service Accounts)" accou
 Service account accounts appear like any other OAuth2 account:
 
 ```bash
-curl https://your-ee.com/v1/accounts \
+curl https://emailengine.example.com/v1/accounts \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -794,7 +794,7 @@ curl https://your-ee.com/v1/accounts \
 Update account settings using the [Update Account API endpoint](/docs/api/put-v-1-account-account):
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -808,7 +808,7 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 Delete accounts using the [Delete Account API endpoint](/docs/api/delete-v-1-account-account):
 
 ```bash
-curl -X DELETE https://your-ee.com/v1/account/user123 \
+curl -X DELETE https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

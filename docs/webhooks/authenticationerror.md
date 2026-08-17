@@ -38,7 +38,6 @@ EmailEngine uses intelligent error tracking to avoid spamming your webhook endpo
 | `account` | string | Yes | Account ID that failed authentication |
 | `date` | string | Yes | ISO 8601 timestamp when the webhook was generated |
 | `event` | string | Yes | Event type, always "authenticationError" for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook delivery |
 | `data` | object | Yes | Error details object (see below) |
 
 ### Error Data Fields (`data` object)
@@ -241,7 +240,7 @@ If you need to update credentials after an authentication error:
 
 ```bash
 # Update IMAP credentials
-curl -X PUT "https://your-emailengine.com/v1/account/user123" \
+curl -X PUT "https://emailengine.example.com/v1/account/user123" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

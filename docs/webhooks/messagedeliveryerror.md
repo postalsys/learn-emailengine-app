@@ -410,7 +410,7 @@ messageSent             messageDeliveryError
 4. **Handle auth errors specially** - Authentication failures often indicate configuration problems
 5. **Track retry counts** - Know which messages are struggling to deliver
 6. **Consider circuit breakers** - Temporarily pause sending to problematic SMTP servers
-7. **Process quickly** - Return 2xx status within 5 seconds
+7. **Process quickly** - Return 2xx before the 30 second delivery timeout, then do the work asynchronously
 
 ## Related Events
 

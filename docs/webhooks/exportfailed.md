@@ -6,7 +6,7 @@ description: "Webhook event triggered when a bulk email export job fails"
 
 # exportFailed
 
-The `exportFailed` webhook event is triggered when EmailEngine encounters a fatal error while processing a bulk email export job. This event provides error details and indicates whether the export can be resumed.
+The `exportFailed` webhook event is triggered when EmailEngine encounters a fatal error while processing a bulk email export job. It carries the error, the phase the job reached, and how much had been exported before it stopped.
 
 ## When This Event is Triggered
 
@@ -17,15 +17,15 @@ The `exportFailed` event fires when:
 - The export job exceeds the configured timeout
 - Unrecoverable errors exhaust all retry attempts
 
-This event indicates the export has stopped and will not automatically retry. Check the `resumable` field to determine if the export can be manually resumed.
+This event is terminal. The export has stopped, will not retry on its own, and cannot be continued from where it failed.
 
 ## Common Use Cases
 
 - **Error alerting** - Notify administrators of failed exports
-- **Retry automation** - Automatically resume resumable exports
+- **Retry automation** - Start a fresh export, optionally with a narrower scope
 - **User notification** - Inform users their export failed
 - **Audit logging** - Track export failures for troubleshooting
-- **Cleanup** - Delete failed exports that cannot be resumed
+- **Cleanup** - Remove the failed export record once it has been reported
 
 ## Payload Schema
 
@@ -45,25 +45,20 @@ This event indicates the export has stopped and will not automatically retry. Ch
 |-------|------|----------|-------------|
 | `exportId` | string | Yes | Unique identifier for the export job |
 | `error` | string | Yes | Human-readable error message |
-| `code` | string | No | Error code for programmatic handling |
-| `phase` | string | Yes | Export phase when failure occurred (`indexing` or `exporting`) |
-| `resumable` | boolean | Yes | Whether the export can be resumed from checkpoint |
-| `progress` | object | No | Progress at time of failure (if any) |
+| `errorCode` | string | No | Machine-readable error code, when the failure carried one |
+| `phase` | string | Yes | Phase the export was in when it failed: `pending`, `indexing`, or `exporting`. `unknown` if the phase was not recorded |
+| `messagesExported` | number | Yes | Messages written before the failure |
+| `messagesQueued` | number | Yes | Messages that had been queued for export |
 
-### Progress Object Fields
+:::warning A failed export cannot be resumed
+EmailEngine has no checkpoint or resume mechanism for exports. `messagesExported` and `messagesQueued` describe how far the job got, but the partial output is not downloadable and the job cannot continue from where it stopped. Recovering means starting a new export.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `foldersScanned` | number | Folders indexed before failure |
-| `foldersTotal` | number | Total folders to index |
-| `messagesQueued` | number | Messages queued for export |
-| `messagesExported` | number | Messages successfully exported |
-| `messagesSkipped` | number | Messages skipped |
-| `bytesWritten` | number | Bytes written to export file |
+Narrow the folder list or the date range before retrying a large export that keeps failing, so each run has less to lose.
+:::
 
 ## Example Payload
 
-### Network Error During Export (Resumable)
+### Network error while exporting
 
 ```json
 {
@@ -73,246 +68,87 @@ This event indicates the export has stopped and will not automatically retry. Ch
   "event": "exportFailed",
   "data": {
     "exportId": "exp_abc123def456abc123def456",
-    "error": "Network timeout while fetching message batch",
-    "code": "ETIMEDOUT",
+    "error": "Connection reset by peer",
+    "errorCode": "ECONNRESET",
     "phase": "exporting",
-    "resumable": true,
-    "progress": {
-      "foldersScanned": 3,
-      "foldersTotal": 3,
-      "messagesQueued": 1500,
-      "messagesExported": 750,
-      "messagesSkipped": 5,
-      "bytesWritten": 52428800
-    }
+    "messagesExported": 842,
+    "messagesQueued": 1500
   }
 }
 ```
 
-### Account Deleted During Export (Not Resumable)
+### Authentication rejected during indexing
 
 ```json
 {
   "serviceUrl": "https://emailengine.example.com",
-  "account": "deleted-user",
-  "date": "2025-01-15T15:45:00.000Z",
+  "account": "user123",
+  "date": "2025-01-15T09:12:44.000Z",
   "event": "exportFailed",
   "data": {
-    "exportId": "exp_xyz789ghi012xyz789ghi012",
-    "error": "Account was deleted during export",
-    "code": "ACCOUNT_DELETED",
-    "phase": "exporting",
-    "resumable": false,
-    "progress": {
-      "foldersScanned": 2,
-      "foldersTotal": 5,
-      "messagesQueued": 500,
-      "messagesExported": 200,
-      "messagesSkipped": 0,
-      "bytesWritten": 10485760
-    }
-  }
-}
-```
-
-### Authentication Error During Indexing (Not Resumable)
-
-```json
-{
-  "serviceUrl": "https://emailengine.example.com",
-  "account": "oauth-user",
-  "date": "2025-01-15T16:00:00.000Z",
-  "event": "exportFailed",
-  "data": {
-    "exportId": "exp_def456ghi789def456ghi789",
-    "error": "OAuth token expired and could not be refreshed",
-    "code": "AUTH_ERROR",
+    "exportId": "exp_def789abc012def789abc012",
+    "error": "Invalid credentials",
     "phase": "indexing",
-    "resumable": false
+    "messagesExported": 0,
+    "messagesQueued": 0
   }
 }
 ```
 
-### Rate Limited (Resumable)
-
-```json
-{
-  "serviceUrl": "https://emailengine.example.com",
-  "account": "heavy-user",
-  "date": "2025-01-15T17:30:00.000Z",
-  "event": "exportFailed",
-  "data": {
-    "exportId": "exp_ghi012jkl345ghi012jkl345",
-    "error": "Rate limit exceeded after maximum retries",
-    "code": "RATE_LIMITED",
-    "phase": "exporting",
-    "resumable": true,
-    "progress": {
-      "foldersScanned": 1,
-      "foldersTotal": 1,
-      "messagesQueued": 10000,
-      "messagesExported": 3500,
-      "messagesSkipped": 12,
-      "bytesWritten": 524288000
-    }
-  }
-}
-```
+`errorCode` is only present when the underlying failure carried a machine-readable code, so treat it as optional and fall back to `error`.
 
 ## Field Details
 
 ### phase
 
-Indicates where in the export process the failure occurred:
+Where the job was when it failed, which tells you what to fix:
 
-- **`indexing`**: Failure during folder scanning and message queuing
-- **`exporting`**: Failure during message fetching and file writing
+| Phase | Meaning | Usual cause |
+|-------|---------|-------------|
+| `pending` | Queued, not yet started | The worker stopped before picking the job up |
+| `indexing` | Enumerating folders and messages | Credentials rejected, or the account became unreachable |
+| `exporting` | Writing messages to the export file | Connection dropped, provider rate limit, or a timeout |
 
-Failures during `indexing` typically cannot be resumed because the message list is incomplete.
-
-### resumable
-
-Determines whether the export can be continued using the [Create Export API](/docs/api/post-v-1-account-account-export):
-
-**Resumable (`true`) when:**
-- Export made progress (`messagesExported > 0`)
-- Messages remain to process
-- Account still exists
-- Error is transient (network, rate limits)
-
-**Not resumable (`false`) when:**
-- No progress was made
-- Account was deleted
-- Authentication permanently failed
-- Export file is corrupted
+A failure during `indexing` leaves nothing written at all. A failure during `exporting` means a partial file existed, but it is discarded rather than kept.
 
 ### Common Error Codes
 
-| Code | Description | Resumable |
-|------|-------------|-----------|
-| `ETIMEDOUT` | Network timeout | Usually yes |
-| `ECONNRESET` | Connection reset | Usually yes |
-| `RATE_LIMITED` | Provider rate limit exceeded | Yes |
-| `AUTH_ERROR` | Authentication failed | No |
-| `ACCOUNT_DELETED` | Account no longer exists | No |
-| `QUOTA_EXCEEDED` | Disk space exhausted | No |
-| `TIMEOUT` | Export job timeout | Usually yes |
+| Code | Meaning | Worth starting a new export? |
+|------|---------|------------------------------|
+| `ECONNRESET` | The connection to the mail server dropped | Yes |
+| `ETIMEDOUT` | The mail server stopped responding | Yes |
+| `AuthenticationFails` | Credentials were rejected | Only after re-authorizing the account |
+| `NotFound` | The account was deleted while the export ran | No |
 
 ## Handling the Event
 
-### Basic Handler
-
 ```javascript
 async function handleExportFailed(event) {
-  const { account, data } = event;
+  const { exportId, error, errorCode, phase, messagesExported } = event.data;
 
-  console.error(`Export failed for account ${account}`);
-  console.error(`  Export ID: ${data.exportId}`);
-  console.error(`  Error: ${data.error}`);
-  console.error(`  Phase: ${data.phase}`);
-  console.error(`  Resumable: ${data.resumable}`);
+  await db.exports.update(
+    { exportId },
+    { status: 'failed', error, errorCode, phase, messagesExported }
+  );
 
-  if (data.progress) {
-    console.error(`  Progress: ${data.progress.messagesExported}/${data.progress.messagesQueued} messages`);
+  // Credentials keep failing until someone re-authorizes, so do not loop on this
+  if (errorCode === 'AuthenticationFails') {
+    return notifyUserToReauthorize(event.account);
   }
 
-  // Update your database
-  await db.exports.update({
-    exportId: data.exportId,
-    status: 'failed',
-    error: data.error,
-    resumable: data.resumable,
-    failedAt: event.date
-  });
+  // Transient transport failures are worth another attempt, from scratch
+  if (['ECONNRESET', 'ETIMEDOUT'].includes(errorCode)) {
+    const attempts = await db.exports.countAttempts(event.account);
+    if (attempts < 3) {
+      return startExport(event.account);
+    }
+  }
+
+  await alertOperator(event.account, exportId, error);
 }
 ```
 
-### Automatic Resume
-
-```javascript
-async function handleExportFailed(event) {
-  const { account, data } = event;
-
-  if (data.resumable) {
-    console.log(`Attempting to resume export ${data.exportId}`);
-
-    // Wait before retrying (backoff)
-    await sleep(30000);
-
-    try {
-      const response = await fetch(
-        `${EMAILENGINE_URL}/v1/account/${account}/export/${data.exportId}/resume`,
-        {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${API_TOKEN}` }
-        }
-      );
-
-      if (response.ok) {
-        console.log(`Export ${data.exportId} resumed successfully`);
-      } else {
-        console.error(`Failed to resume export: ${response.status}`);
-      }
-    } catch (error) {
-      console.error('Resume request failed:', error);
-    }
-  } else {
-    console.log(`Export ${data.exportId} is not resumable, notifying user`);
-    await notifyUser(account, {
-      type: 'export_failed',
-      exportId: data.exportId,
-      error: data.error
-    });
-  }
-}
-```
-
-### With Alert and Cleanup
-
-```javascript
-async function handleExportFailed(event) {
-  try {
-    const { account, data, date } = event;
-
-    // Log the failure
-    await auditLog.create({
-      type: 'export_failed',
-      account,
-      exportId: data.exportId,
-      error: data.error,
-      code: data.code,
-      phase: data.phase,
-      resumable: data.resumable,
-      progress: data.progress,
-      timestamp: new Date(date)
-    });
-
-    // Alert if critical
-    if (!data.resumable || data.code === 'AUTH_ERROR') {
-      await alerting.send({
-        severity: 'high',
-        message: `Export failed for account ${account}: ${data.error}`,
-        exportId: data.exportId
-      });
-    }
-
-    // Clean up non-resumable exports
-    if (!data.resumable) {
-      await fetch(
-        `${EMAILENGINE_URL}/v1/account/${account}/export/${data.exportId}`,
-        {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${API_TOKEN}` }
-        }
-      );
-    }
-
-  } catch (error) {
-    console.error('Failed to process exportFailed webhook:', error);
-    throw error;
-  }
-}
-```
+Track the attempt count yourself. EmailEngine does not carry one between exports, because each retry is a new job with a new `exportId`.
 
 ## Relationship to Other Events
 
@@ -324,18 +160,17 @@ The `exportFailed` event is part of the export lifecycle:
 4. **exportFailed** - Export encountered a fatal error (this event)
 
 After receiving `exportFailed`:
-- Check `resumable` to determine next steps
-- Resume if possible, or delete and recreate the export
-- Investigate the `error` and `code` for root cause
+- Read `phase` and `errorCode` to decide whether a new export can succeed
+- Fix the underlying cause, then create a new export. There is nothing to resume
+- Delete the failed export record so it does not linger in listings
 
 ## Best Practices
 
-1. **Check resumability first** - Always check `resumable` before deciding on action
-2. **Implement backoff** - Wait before resuming to avoid rapid retry loops
-3. **Monitor error patterns** - Track `code` values to identify systemic issues
-4. **Alert on auth errors** - Authentication failures need user intervention
-5. **Clean up promptly** - Delete non-resumable exports to free resources
-6. **Log progress data** - The `progress` object helps diagnose where failures occur
+1. **Decide from `errorCode`, not from the message** - `error` is human-facing text that can change between releases
+2. **Implement backoff** - Wait before creating a replacement export, so a persistent failure does not become a retry loop
+3. **Cap your own retries** - Each attempt is a new job with a new `exportId`, so EmailEngine cannot count them for you
+4. **Alert on auth errors** - `AuthenticationFails` needs a person to re-authorize the account
+5. **Narrow the scope on repeat failures** - A shorter date range or fewer folders makes a large export far more likely to finish
 
 ## Related Events
 
@@ -345,4 +180,4 @@ After receiving `exportFailed`:
 
 - [Webhooks Overview](/docs/webhooks/overview) - Complete webhook setup guide
 - [Exporting Messages](/docs/receiving/exporting) - Export feature documentation
-- [Create Export API](/docs/api/post-v-1-account-account-export) - Create or resume exports
+- [Create Export API](/docs/api/post-v-1-account-account-export) - Start a new export

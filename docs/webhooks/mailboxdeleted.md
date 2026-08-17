@@ -41,7 +41,6 @@ The event is only triggered for folders that EmailEngine was previously aware of
 | `path` | string | Yes | Mailbox folder path that was deleted (e.g., "Archive/2023") |
 | `specialUse` | string | No | Special use flag of the folder if applicable (e.g., "\Trash", "\Drafts") |
 | `event` | string | Yes | Event type, always "mailboxDeleted" for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook delivery |
 | `data` | object | Yes | Folder details at the time of deletion |
 
 ### Folder Data Fields (`data` object)

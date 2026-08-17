@@ -12,6 +12,9 @@ keywords:
   - email delivery
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 <!--
 SOURCES:
 - docs/usage/bounces.md
@@ -271,276 +274,39 @@ Response includes full bounce details in the `bounces` array.
 
 ## Handling Bounces in Your Application
 
-### Implementation Example
+Bounce handling comes down to correlating two events that can arrive minutes or hours apart:
 
-```
-// Pseudo code - implement in your preferred language
+1. **When you send**, store the `messageId` returned by the submit endpoint against whatever your application calls a recipient - a contact row, a campaign entry, a support ticket.
+2. **When a `messageBounce` webhook arrives**, look up that same value in `data.messageId` and act on the record you find.
 
-// Store sent message IDs
-sent_messages = {}
+EmailEngine does not use [VERP](https://en.wikipedia.org/wiki/Variable_envelope_return_path) return paths, so the Message-ID is the join key. It survives the round trip because the bouncing MTA quotes the original headers back, and EmailEngine reads them out of the bounce report.
 
-// Send email
-function send_email(to, subject, text):
-  // Make HTTP POST request
-  response = HTTP_POST(
-    'https://emailengine.example.com/v1/account/john@example.com/submit',
-    headers={
-      'Authorization': 'Bearer YOUR_TOKEN',
-      'Content-Type': 'application/json'
-    },
-    body=JSON_ENCODE({
-      to: { address: to },
-      subject: subject,
-      text: text
-    })
-  )
+```javascript
+// 1. On send: remember which recipient this Message-ID belongs to
+const res = await fetch(`${EE_URL}/v1/account/${account}/submit`, {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ to: { address: recipient }, subject, text })
+});
+const { messageId } = await res.json();
+await db.sentMessages.insert({ messageId, recipient });
 
-  data = PARSE_JSON(response.body)
+// 2. On webhook: resolve it back
+app.post('/webhooks', async (req, res) => {
+  res.sendStatus(200); // acknowledge first, process afterwards
 
-  // Store message ID for bounce tracking
-  sent_messages[data.messageId] = {
-    to: to,
-    subject: subject,
-    sentAt: CURRENT_TIMESTAMP(),
-    bounced: false
-  }
+  if (req.body.event !== 'messageBounce') return;
 
-  return data.messageId
-end function
+  const { messageId, recipient, response } = req.body.data;
+  const sent = await db.sentMessages.findOne({ messageId });
 
-// Webhook endpoint
-function handle_webhook(request):
-  webhook = request.body
-
-  if webhook.event == 'messageBounce':
-    message_id = webhook.data.messageId
-    recipient = webhook.data.recipient
-    action = webhook.data.action
-    error_msg = webhook.data.response.message
-
-    // Find original sent message
-    sent_message = sent_messages[message_id]
-
-    if sent_message exists:
-      PRINT('Bounce detected for ' + recipient)
-      PRINT('Original subject: ' + sent_message.subject)
-      PRINT('Bounce type: ' + action)
-      PRINT('Error: ' + error_msg)
-
-      // Mark as bounced
-      sent_message.bounced = true
-      sent_message.bounceReason = error_msg
-      sent_message.bounceAction = action
-
-      // Handle hard bounces
-      if action == 'failed':
-        PRINT('Hard bounce - removing ' + recipient + ' from list')
-        CALL remove_from_mailing_list(recipient)
-      end if
-
-      // Handle soft bounces
-      if action == 'delayed':
-        PRINT('Soft bounce - retry ' + recipient + ' later')
-        CALL schedule_retry(recipient, sent_message.subject)
-      end if
-    end if
-  end if
-
-  RESPOND(200, { success: true })
-end function
-
-function remove_from_mailing_list(email):
-  // Remove from your database
-  DATABASE_UPDATE(
-    table='mailing_list',
-    where={ email: email },
-    set={ status: 'bounced', bouncedAt: CURRENT_TIMESTAMP() }
-  )
-end function
-
-function schedule_retry(email, subject):
-  // Schedule retry for soft bounces
-  retry_time = CURRENT_TIMESTAMP() + 3600  // Retry in 1 hour
-
-  DATABASE_INSERT(
-    table='retry_queue',
-    values={
-      email: email,
-      subject: subject,
-      retryAt: retry_time
-    }
-  )
-end function
+  await recordBounce(sent?.recipient || recipient, response);
+});
 ```
 
-### Python Example
+Acknowledge the webhook before doing the work. A delivery that fails or exceeds the per-attempt timeout is retried up to 10 times with exponential backoff, so a slow handler turns one bounce into several deliveries of the same event. Make `recordBounce()` idempotent.
 
-```python
-from flask import Flask, request, jsonify
-import requests
-from datetime import datetime
-
-app = Flask(__name__)
-
-sent_messages = {}
-
-def send_email(to, subject, text):
-    """Send email and track Message-ID"""
-    response = requests.post(
-        'https://emailengine.example.com/v1/account/john@example.com/submit',
-        headers={
-            'Authorization': 'Bearer YOUR_TOKEN',
-            'Content-Type': 'application/json'
-        },
-        json={
-            'to': {'address': to},
-            'subject': subject,
-            'text': text
-        }
-    )
-
-    data = response.json()
-    message_id = data['messageId']
-
-    # Store for bounce tracking
-    sent_messages[message_id] = {
-        'to': to,
-        'subject': subject,
-        'sent_at': datetime.now(),
-        'bounced': False
-    }
-
-    return message_id
-
-@app.route('/webhooks/emailengine', methods=['POST'])
-def webhook_handler():
-    webhook = request.json
-
-    if webhook['event'] == 'messageBounce':
-        data = webhook['data']
-        message_id = data['messageId']
-        recipient = data['recipient']
-        action = data['action']
-        error = data['response']['message']
-
-        # Find original message
-        sent_message = sent_messages.get(message_id)
-
-        if sent_message:
-            print(f"Bounce detected for {recipient}")
-            print(f"Error: {error}")
-
-            # Mark as bounced
-            sent_message['bounced'] = True
-            sent_message['bounce_reason'] = error
-
-            # Handle hard bounces
-            if action == 'failed':
-                remove_from_mailing_list(recipient)
-
-            # Handle soft bounces
-            if action == 'delayed':
-                schedule_retry(recipient, sent_message['subject'])
-
-    return jsonify({'success': True})
-
-def remove_from_mailing_list(email):
-    """Remove bounced email from mailing list"""
-    # Update your database
-    pass
-
-def schedule_retry(email, subject):
-    """Schedule retry for soft bounce"""
-    # Add to retry queue
-    pass
-
-if __name__ == '__main__':
-    app.run(port=3000)
-```
-
-### PHP Example
-
-```php
-<?php
-// send-email.php
-
-function sendEmail($to, $subject, $text) {
-    $data = [
-        'to' => ['address' => $to],
-        'subject' => $subject,
-        'text' => $text
-    ];
-
-    $ch = curl_init('https://emailengine.example.com/v1/account/john@example.com/submit');
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Authorization: Bearer YOUR_TOKEN',
-        'Content-Type: application/json'
-    ]);
-
-    $response = curl_exec($ch);
-    curl_close($ch);
-
-    $result = json_decode($response, true);
-    $messageId = $result['messageId'];
-
-    // Store for bounce tracking
-    $stmt = $pdo->prepare('INSERT INTO sent_messages (message_id, recipient, subject, sent_at) VALUES (?, ?, ?, NOW())');
-    $stmt->execute([$messageId, $to, $subject]);
-
-    return $messageId;
-}
-
-// webhook-handler.php
-
-$webhook = json_decode(file_get_contents('php://input'), true);
-
-if ($webhook['event'] === 'messageBounce') {
-    $messageId = $webhook['data']['messageId'];
-    $recipient = $webhook['data']['recipient'];
-    $action = $webhook['data']['action'];
-    $error = $webhook['data']['response']['message'];
-
-    // Find original message
-    $stmt = $pdo->prepare('SELECT * FROM sent_messages WHERE message_id = ?');
-    $stmt->execute([$messageId]);
-    $sentMessage = $stmt->fetch();
-
-    if ($sentMessage) {
-        error_log("Bounce detected for {$recipient}: {$error}");
-
-        // Mark as bounced
-        $stmt = $pdo->prepare('UPDATE sent_messages SET bounced = 1, bounce_reason = ?, bounce_action = ? WHERE message_id = ?');
-        $stmt->execute([$error, $action, $messageId]);
-
-        // Handle hard bounces
-        if ($action === 'failed') {
-            removeFromMailingList($recipient);
-        }
-
-        // Handle soft bounces
-        if ($action === 'delayed') {
-            scheduleRetry($recipient, $sentMessage['subject']);
-        }
-    }
-}
-
-echo json_encode(['success' => true]);
-
-function removeFromMailingList($email) {
-    global $pdo;
-    $stmt = $pdo->prepare('UPDATE mailing_list SET status = "bounced", bounced_at = NOW() WHERE email = ?');
-    $stmt->execute([$email]);
-}
-
-function scheduleRetry($email, $subject) {
-    global $pdo;
-    $stmt = $pdo->prepare('INSERT INTO retry_queue (email, subject, retry_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))');
-    $stmt->execute([$email, $subject]);
-}
-```
+What `recordBounce()` should do depends on *why* the message bounced, which is what the classification below tells you.
 
 ## SMTP Status Codes
 
@@ -658,160 +424,86 @@ When bounce messages contain timing hints (e.g., "try again in 5 minutes"), the 
 }
 ```
 
-### Using ML Classification in Your Application
+### Acting on the Classification
 
-Here's how to handle bounces based on the ML classification:
+Branch on `recommendedAction` rather than on `category`. The action set is small and stable, while categories are added as the classifier learns new bounce shapes, and an unrecognized category would otherwise fall through your logic silently.
+
+<Tabs>
+<TabItem value="nodejs" label="Node.js" default>
 
 ```javascript
-async function handleBounce(webhook) {
-  const { data } = webhook;
-  const { recipient, response } = data;
+async function recordBounce(recipient, response = {}) {
+  const category = response.category || 'unknown';
 
-  // Get ML classification or fall back to basic detection
-  const category = response?.category || 'unknown';
-  const action = response?.recommendedAction || 'review';
-
-  switch (action) {
+  switch (response.recommendedAction || 'review') {
     case 'remove':
-      // Permanent issue - remove from all lists
-      await db.contacts.update(
-        { email: recipient },
-        {
-          $set: {
-            status: 'bounced',
-            bounceCategory: category,
-            bouncedAt: new Date()
-          }
-        }
-      );
+      // Permanent: the address will never accept mail
+      await db.contacts.update({ email: recipient }, { status: 'bounced', category });
       break;
 
     case 'retry':
-      // Temporary issue - schedule retry
-      const delay = response?.retryAfter || 3600; // Default 1 hour
-      await scheduleRetry(recipient, delay);
-      break;
-
-    case 'fix_configuration':
-      // Configuration issue - alert admin
-      await alertAdmin({
-        type: 'bounce_config_issue',
-        category,
-        message: response?.message,
-        blocklist: response?.blocklist
-      });
+      // Temporary: greylisting, rate limits, a full mailbox
+      await scheduleRetry(recipient, response.retryAfter || 3600);
       break;
 
     case 'retry_different_ip':
-      // IP blocklist - try another sending IP
-      await queueForAlternateIP(recipient, data.messageId);
+      // The sending IP is blocklisted, the address is fine
+      await queueForAlternateIP(recipient, response.blocklist);
       break;
 
-    case 'review':
-    default:
-      // Needs manual review
-      await flagForReview(recipient, category, response?.message);
-  }
+    case 'fix_configuration':
+      // SPF/DKIM/DMARC or relay problem, no per-recipient action helps
+      await alertAdmin(category, response.message);
+      break;
 
-  // Track metrics by category
-  await metrics.increment('bounces', { category, action });
+    case 'remove_content':
+      await quarantineCampaign(recipient, response.message);
+      break;
+
+    default:
+      await flagForReview(recipient, category, response.message);
+  }
 }
 ```
 
-### Python Example with Classification
+</TabItem>
+<TabItem value="python" label="Python">
 
 ```python
-def handle_bounce(webhook):
-    data = webhook['data']
-    recipient = data['recipient']
-    response = data.get('response', {})
-
+def record_bounce(recipient, response=None):
+    response = response or {}
     category = response.get('category', 'unknown')
     action = response.get('recommendedAction', 'review')
-    retry_after = response.get('retryAfter')
-    blocklist = response.get('blocklist')
 
     if action == 'remove':
-        # Hard bounce - remove from list
-        db.contacts.update_one(
-            {'email': recipient},
-            {'$set': {
-                'status': 'bounced',
-                'bounce_category': category,
-                'bounced_at': datetime.now()
-            }}
-        )
-
+        # Permanent: the address will never accept mail
+        contacts.update(recipient, status='bounced', category=category)
     elif action == 'retry':
-        # Soft bounce - schedule retry
-        delay = retry_after or 3600
-        schedule_retry(recipient, delay)
-
-    elif action == 'fix_configuration':
-        # Alert admin about config issues
-        alert_admin(f"Configuration issue: {category}", response.get('message'))
-
+        # Temporary: greylisting, rate limits, a full mailbox
+        schedule_retry(recipient, response.get('retryAfter', 3600))
     elif action == 'retry_different_ip':
-        # IP blocklist issue
-        queue_for_alternate_ip(recipient)
-        if blocklist:
-            log_blocklist_hit(blocklist['name'], blocklist['type'])
-
+        # The sending IP is blocklisted, the address is fine
+        queue_for_alternate_ip(recipient, response.get('blocklist'))
+    elif action == 'fix_configuration':
+        # SPF/DKIM/DMARC or relay problem, no per-recipient action helps
+        alert_admin(category, response.get('message'))
+    elif action == 'remove_content':
+        quarantine_campaign(recipient, response.get('message'))
     else:
-        # Flag for manual review
-        flag_for_review(recipient, category)
-
-    return {'processed': True}
+        flag_for_review(recipient, category, response.get('message'))
 ```
 
-### PHP Example with Classification
+</TabItem>
+</Tabs>
 
-```php
-function handleBounce($webhook) {
-    $data = $webhook['data'];
-    $recipient = $data['recipient'];
-    $response = $data['response'] ?? [];
+:::caution Classification is advisory
+`category` and `recommendedAction` come from a machine learning model reading the server's error text, and they are absent entirely if classification fails. Always default to a review path, and never delete a contact on a single `remove` without also checking `response.status` for a `5.x.x` code if the record matters.
+:::
 
-    $category = $response['category'] ?? 'unknown';
-    $action = $response['recommendedAction'] ?? 'review';
-    $retryAfter = $response['retryAfter'] ?? null;
-    $blocklist = $response['blocklist'] ?? null;
+## See Also
 
-    switch ($action) {
-        case 'remove':
-            // Hard bounce - remove from list
-            $stmt = $pdo->prepare('
-                UPDATE contacts
-                SET status = "bounced",
-                    bounce_category = ?,
-                    bounced_at = NOW()
-                WHERE email = ?
-            ');
-            $stmt->execute([$category, $recipient]);
-            break;
-
-        case 'retry':
-            // Soft bounce - schedule retry
-            $delay = $retryAfter ?? 3600;
-            scheduleRetry($recipient, $delay);
-            break;
-
-        case 'fix_configuration':
-            alertAdmin("Config issue: $category", $response['message'] ?? '');
-            break;
-
-        case 'retry_different_ip':
-            queueForAlternateIP($recipient);
-            if ($blocklist) {
-                logBlocklistHit($blocklist['name'], $blocklist['type']);
-            }
-            break;
-
-        default:
-            flagForReview($recipient, $category);
-    }
-
-    return ['processed' => true];
-}
-```
-
+- [messageBounce webhook](/docs/webhooks/messagebounce) - Full payload reference for the bounce event
+- [messageDeliveryError](/docs/webhooks/messagedeliveryerror) and [messageFailed](/docs/webhooks/messagefailed) - Failures EmailEngine sees while submitting, before a message ever reaches the recipient's server
+- [Suppression Lists](/docs/advanced/blocklists) - Stop sending to addresses that have already bounced
+- [Email Authentication Testing](/docs/advanced/email-authentication-testing) - Diagnose the SPF, DKIM, and DMARC problems behind `fix_configuration` bounces
+- [Webhook Overview](/docs/webhooks/overview) - Delivery, retries, and routing

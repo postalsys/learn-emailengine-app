@@ -47,7 +47,7 @@ Lists are created automatically when the first entry is added, so no pre-registr
 ### List All Blocklists
 
 ```bash
-curl "https://your-ee.com/v1/blocklists" \
+curl "https://emailengine.example.com/v1/blocklists" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -71,7 +71,7 @@ Response:
 ### List Entries in a Blocklist
 
 ```bash
-curl "https://your-ee.com/v1/blocklist/weekly-newsletter?pageSize=50" \
+curl "https://emailengine.example.com/v1/blocklist/weekly-newsletter?pageSize=50" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -112,7 +112,7 @@ Each entry includes:
 ### Add an Address to a Blocklist
 
 ```bash
-curl -X POST "https://your-ee.com/v1/blocklist/weekly-newsletter" \
+curl -X POST "https://emailengine.example.com/v1/blocklist/weekly-newsletter" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -138,7 +138,7 @@ The `added` field is `false` if the address was already in the blocklist.
 ### Remove an Address from a Blocklist
 
 ```bash
-curl -X DELETE "https://your-ee.com/v1/blocklist/weekly-newsletter?recipient=bob@example.com" \
+curl -X DELETE "https://emailengine.example.com/v1/blocklist/weekly-newsletter?recipient=bob@example.com" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -167,7 +167,7 @@ app.post('/webhooks/emailengine', (req, res) => {
 
     // Add hard bounces to blocklist
     if (action === 'failed' || recommendedAction === 'remove') {
-      fetch('https://your-ee.com/v1/blocklist/bounce-hard', {
+      fetch('https://emailengine.example.com/v1/blocklist/bounce-hard', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer YOUR_ACCESS_TOKEN',

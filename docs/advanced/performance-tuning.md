@@ -179,26 +179,20 @@ EENGINE_NOTIFY_QC=4
 
 **Example lightweight handler**:
 
+```javascript
+// Endpoint: accept, hand off, return. Nothing slow on this path
+app.post('/webhooks', express.json(), async (req, res) => {
+  await queue.add('webhook', req.body); // your own queue, not EmailEngine's
+  res.sendStatus(200);
+});
+
+// Worker: a separate process, scaled independently of the endpoint
+worker.process('webhook', async job => {
+  await heavyProcessing(job.data);
+});
 ```
-// Pseudo code - implement in your preferred language
 
-// Webhook endpoint
-function handle_webhook(request):
-  // Return 200 immediately
-  RESPOND(200, 'OK')
-
-  // Queue for background processing
-  REDIS_PUSH('webhook_queue', JSON_ENCODE(request.body))
-end function
-
-// Separate worker processes the queue
-function process_webhook_queue():
-  while true:
-    payload = REDIS_POP_BLOCKING('webhook_queue')
-    CALL heavy_processing(payload)
-  end while
-end function
-```
+Enqueue before responding rather than after. Returning `200` first and then queueing means a crash between the two silently drops the event, and EmailEngine has already been told the delivery succeeded.
 
 ## Email Sending Configuration
 

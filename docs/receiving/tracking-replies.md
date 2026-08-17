@@ -105,7 +105,7 @@ async function sendTrackedEmail(accountId, recipient, subject, content) {
 
   // Send email
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/submit`, // See: /docs/api/post-v-1-account-account-submit
+    `https://emailengine.example.com/v1/account/${accountId}/submit`, // See: /docs/api/post-v-1-account-account-submit
     {
       method: 'POST',
       headers: {
@@ -193,7 +193,7 @@ async function getTrackedEmail(messageId) {
 Enable webhooks for new message events:
 
 ```bash
-curl -X POST "https://your-emailengine.com/v1/settings" \
+curl -X POST "https://emailengine.example.com/v1/settings" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -428,161 +428,23 @@ function extractMetadata(messageId) {
 }
 ```
 
-## Complete Example
+## Putting It Together
 
-Here's a full implementation:
+The three steps above are the whole mechanism. What ties them together is a single stored row per sent message:
 
-```javascript
-const express = require('express');
-const fetch = require('node-fetch');
+| Column | Written when | Used for |
+|--------|--------------|----------|
+| `messageId` | Sending | The join key. Matched against `inReplyTo` and `references` on incoming mail |
+| `recipient`, `subject`, `sentAt` | Sending | Reporting, and calculating response time |
+| `repliedAt`, `replyFrom` | On a matching `messageNew` | Marking the thread answered |
 
-const app = express();
-app.use(express.json());
+Two details decide whether this works in production:
 
-// In-memory store (use database in production)
-const trackedEmails = new Map();
+- **Index on `messageId`.** Every inbound message triggers a lookup, so a table scan per webhook does not survive contact with a busy mailbox.
+- **Check `references` as well as `inReplyTo`.** A reply from a client that threads loosely, or a reply to a reply, may carry your Message-ID only in `references`. Matching on `inReplyTo` alone silently misses those.
 
-// Generate unique Message-ID
-function generateMessageId(accountId, metadata) {
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(7);
-  const data = Buffer.from(JSON.stringify(metadata)).toString('base64url');
-  return `<${timestamp}-${accountId}-${random}-${data}@yourdomain.com>`;
-}
+Filter auto-responses before recording a reply, or vacation autoresponders will close out threads nobody read. See [Filtering Auto-Responses](#filtering-auto-responses) above.
 
-// Send tracked email
-async function sendTrackedEmail(accountId, to, subject, html, metadata = {}) {
-  const messageId = generateMessageId(accountId, metadata);
-
-  await fetch(`https://your-emailengine.com/v1/account/${accountId}/submit`, {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      from: { address: 'noreply@yourcompany.com' },
-      to: [{ address: to }],
-      subject,
-      html,
-      messageId,
-      headers: { 'X-Auto-Response-Suppress': 'OOF, AutoReply' }
-    })
-  });
-
-  // Store for tracking
-  trackedEmails.set(messageId, {
-    messageId,
-    accountId,
-    to,
-    subject,
-    sentAt: new Date(),
-    metadata,
-    replied: false
-  });
-
-  return messageId;
-}
-
-// Check if message is auto-response
-function isAutoResponse(message) {
-  const headers = message.headers || {};
-
-  if (headers['return-path']?.[0] === '<>') return true;
-
-  const autoSubmitted = headers['auto-submitted']?.[0];
-  if (autoSubmitted && autoSubmitted.toLowerCase() !== 'no') return true;
-
-  const subject = (message.subject || '').toLowerCase();
-  if (/out of office|automatic reply|auto:|away:/i.test(subject)) return true;
-
-  if (headers['list-id'] || headers['list-unsubscribe']) return true;
-
-  return false;
-}
-
-// Get message details
-async function getMessage(accountId, messageId) {
-  const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}`, // See: /docs/api/get-v-1-account-account-message-message
-    { headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' } }
-  );
-  return await response.json();
-}
-
-// Handle webhook
-app.post('/webhooks/emailengine', async (req, res) => {
-  const event = req.body;
-  res.status(200).json({ success: true });
-
-  if (event.event === 'messageNew' && event.data.inReplyTo) {
-    const original = trackedEmails.get(event.data.inReplyTo);
-
-    if (original) {
-      // Check if in inbox (the folder path is at the payload root, not in event.data)
-      const inInbox = (
-        event.path === 'INBOX' ||
-        (event.data.labels || []).includes('\\Inbox')
-      );
-
-      if (!inInbox) return;
-
-      // Get full message
-      const fullMessage = await getMessage(event.account, event.data.id);
-
-      // Filter auto-responses
-      if (isAutoResponse(fullMessage)) return;
-
-      // Mark as replied
-      original.replied = true;
-      original.replyReceivedAt = new Date();
-      original.replyFrom = fullMessage.from.address;
-
-      console.log('REPLY RECEIVED!');
-      console.log(`Original: ${original.subject}`);
-      console.log(`From: ${fullMessage.from.address}`);
-      console.log(`Reply: ${fullMessage.subject}`);
-
-      // Trigger your business logic here
-      // - Update CRM
-      // - Send notifications
-      // - Generate reports
-    }
-  }
-});
-
-// API endpoint to send tracked email
-app.post('/api/send-tracked', async (req, res) => {
-  const { accountId, to, subject, html, metadata } = req.body;
-
-  const messageId = await sendTrackedEmail(accountId, to, subject, html, metadata);
-
-  res.json({ success: true, messageId });
-});
-
-// API endpoint to check if email was replied
-app.get('/api/check-reply/:messageId', (req, res) => {
-  const tracked = trackedEmails.get(req.params.messageId);
-
-  if (!tracked) {
-    return res.status(404).json({ error: 'Not found' });
-  }
-
-  res.json({
-    messageId: tracked.messageId,
-    to: tracked.to,
-    subject: tracked.subject,
-    sentAt: tracked.sentAt,
-    replied: tracked.replied,
-    replyReceivedAt: tracked.replyReceivedAt,
-    replyFrom: tracked.replyFrom
-  });
-});
-
-app.listen(3000, () => {
-  console.log('Reply tracking server running on port 3000');
-});
-```
 
 ## Advanced Patterns
 

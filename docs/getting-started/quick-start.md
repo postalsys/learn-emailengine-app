@@ -432,8 +432,7 @@ For testing, use [webhook.site](https://webhook.site) to see webhook payloads:
       "name": "John Doe",
       "address": "john@example.com"
     },
-    "date": "2025-01-15T10:30:00.000Z",
-    "intro": "Thanks for scheduling the meeting..."
+    "date": "2025-01-15T10:30:00.000Z"
   }
 }
 ```
@@ -497,7 +496,6 @@ $ curl "http://127.0.0.1:3000/v1/account/my-account/messages?path=INBOX&pageSize
         "address": "john@example.com"
       },
       "date": "2025-01-15T10:30:00.000Z",
-      "intro": "Thanks for scheduling...",
       "flags": ["\\Seen"],
       "labels": []
     }

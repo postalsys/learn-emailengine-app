@@ -42,7 +42,7 @@ EmailEngine uses two distinct types of configuration:
 
 **Configure via:**
 
-- Web interface (Settings page)
+- Web interface (the Configuration section of the admin dashboard)
 - [Settings API endpoint](/docs/api/post-v-1-settings)
 - [Prepared settings](/docs/configuration/prepared-settings) (environment variable)
 
@@ -78,7 +78,7 @@ emailengine
 version: "3.8"
 services:
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     environment:
       - EENGINE_HOST=0.0.0.0
       - EENGINE_PORT=3000
@@ -267,7 +267,7 @@ EENGINE_LOG_LEVEL=trace
 ```yaml
 services:
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     env_file:
       - .env.production
     environment:
@@ -319,7 +319,7 @@ spec:
     spec:
       containers:
         - name: emailengine
-          image: postalsys/emailengine:latest
+          image: postalsys/emailengine:v2
           envFrom:
             - configMapRef:
                 name: emailengine-config

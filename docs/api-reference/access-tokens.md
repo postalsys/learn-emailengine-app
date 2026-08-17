@@ -41,7 +41,7 @@ The token value cannot be recovered from the `id`. `DELETE /v1/token/{token}` ac
 
 **Created via:**
 
-- Web interface (Dashboard side menu → Access Tokens)
+- Web interface (Integrations > Access Tokens)
 - CLI: `emailengine tokens issue`
 
 **Characteristics:**
@@ -88,7 +88,7 @@ The token value cannot be recovered from the `id`. `DELETE /v1/token/{token}` ac
 **Best for:** Manual token creation, administrative tokens
 
 1. Log in to EmailEngine web interface
-2. Navigate to **Dashboard side menu** → **Access Tokens**
+2. Navigate to **Integrations** > **Access Tokens**
 3. Click **Create new**
 4. Enter description and select scopes
 5. Click **Generate a token**
@@ -235,7 +235,7 @@ For complete export/import workflows and prepared token configuration, see [Prep
 
 **Via web interface:**
 
-1. Navigate to **Dashboard side menu** → **Access Tokens**
+1. Navigate to **Integrations** > **Access Tokens**
 2. Find the token to revoke
 3. Click **Delete**
 4. Confirm deletion

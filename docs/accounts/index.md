@@ -246,7 +246,7 @@ Use the [register account API](/docs/api/post-v-1-account):
 
 ```javascript
 // Add account via REST API
-const response = await fetch('https://your-ee.com/v1/account', {
+const response = await fetch('https://emailengine.example.com/v1/account', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -268,7 +268,7 @@ Generate a form URL and redirect users to it. They enter their credentials, and 
 
 ```javascript
 // Generate authentication form URL
-const formResponse = await fetch('https://your-ee.com/v1/authentication/form', {
+const formResponse = await fetch('https://emailengine.example.com/v1/authentication/form', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -301,7 +301,7 @@ Use the [update account API](/docs/api/put-v-1-account-account):
 
 ```javascript
 // Update account settings
-await fetch('https://your-ee.com/v1/account/user123', {
+await fetch('https://emailengine.example.com/v1/account/user123', {
   method: 'PUT',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -353,7 +353,7 @@ When updating fields within nested objects (like `imap`, `smtp`, or `oauth2`), y
 If an account enters an error state, you can trigger a reconnection using the [reconnect account API](/docs/api/put-v-1-account-account-reconnect):
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
+curl -X PUT https://emailengine.example.com/v1/account/user123/reconnect \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"reconnect": true}'
@@ -369,7 +369,7 @@ The [flush API](/docs/api/put-v-1-account-account-flush) resets the internal ema
 
 ```bash
 # Basic flush - reset index, only notify about new messages going forward
-curl -X PUT https://your-ee.com/v1/account/user123/flush \
+curl -X PUT https://emailengine.example.com/v1/account/user123/flush \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -377,7 +377,7 @@ curl -X PUT https://your-ee.com/v1/account/user123/flush \
   }'
 
 # Flush with options - process existing emails and change indexer
-curl -X PUT https://your-ee.com/v1/account/user123/flush \
+curl -X PUT https://emailengine.example.com/v1/account/user123/flush \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -410,7 +410,7 @@ For Gmail API and MS Graph accounts, `notifyFrom` has no effect. These backends 
 Use the [delete account API](/docs/api/delete-v-1-account-account):
 
 ```bash
-curl -X DELETE https://your-ee.com/v1/account/user123 \
+curl -X DELETE https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -524,7 +524,7 @@ You can retrieve valid access tokens for use in your own Google/Microsoft API ca
 ```javascript
 // Get current OAuth2 access token
 const tokenResponse = await fetch(
-  'https://your-ee.com/v1/account/user123/oauth-token',
+  'https://emailengine.example.com/v1/account/user123/oauth-token',
   {
     headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
   }
@@ -588,7 +588,7 @@ For advanced use cases where you already manage OAuth2 tokens in your applicatio
 **Step 1: Configure the authentication server URL globally:**
 
 ```bash
-curl -X POST https://your-ee.com/v1/settings \
+curl -X POST https://emailengine.example.com/v1/settings \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

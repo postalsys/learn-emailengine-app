@@ -108,7 +108,7 @@
   },
   "info": {
     "title": "EmailEngine API",
-    "version": "2.77.0",
+    "version": "2.78.0",
     "contact": {
       "name": "EmailEngine Support",
       "url": "https://learn.emailengine.app/docs/support",
@@ -593,6 +593,14 @@
           "email": {
             "type": "string",
             "description": "Default email address of the account",
+            "example": "user@example.com",
+            "x-format": {
+              "email": true
+            }
+          },
+          "expectedEmail": {
+            "type": "string",
+            "description": "Pins the account to an email address. A hosted authentication form setup is rejected unless the identity it authenticates matches this address. For OAuth2 the address is compared against what the provider returns, never against caller-supplied hints, so for a shared or delegated mailbox this must be the authenticating principal rather than the mailbox address. For IMAP it is compared against the address entered on the form, which the credentials do not prove ownership of. Once set, the constraint stays on the account and applies to later reauthentication as well.",
             "example": "user@example.com",
             "x-format": {
               "email": true
@@ -1560,6 +1568,14 @@
               "email": true
             }
           },
+          "expectedEmail": {
+            "type": "string",
+            "description": "Pins the account to an email address. A hosted authentication form setup is rejected unless the identity it authenticates matches this address. For OAuth2 the address is compared against what the provider returns, never against caller-supplied hints, so for a shared or delegated mailbox this must be the authenticating principal rather than the mailbox address. For IMAP it is compared against the address entered on the form, which the credentials do not prove ownership of. Once set, the constraint stays on the account and applies to later reauthentication as well.",
+            "example": "user@example.com",
+            "x-format": {
+              "email": true
+            }
+          },
           "copy": {
             "type": "boolean",
             "description": "Copy submitted messages to Sent folder",
@@ -2034,6 +2050,15 @@
             "type": "string",
             "description": "Default email address of the account",
             "example": "user@example.com",
+            "x-format": {
+              "email": true
+            }
+          },
+          "expectedEmail": {
+            "type": "string",
+            "description": "Pins the account to an email address. A hosted authentication form setup is rejected unless the identity it authenticates matches this address. For OAuth2 the address is compared against what the provider returns, never against caller-supplied hints, so for a shared or delegated mailbox this must be the authenticating principal rather than the mailbox address. For IMAP it is compared against the address entered on the form, which the credentials do not prove ownership of. Once set, the constraint stays on the account and applies to later reauthentication as well. Set to `null` to remove the constraint.",
+            "example": "user@example.com",
+            "nullable": true,
             "x-format": {
               "email": true
             }
@@ -6144,6 +6169,14 @@
           "email": {
             "type": "string",
             "description": "Specifies the default email address for this account. Users can change it if needed.",
+            "example": "user@example.com",
+            "x-format": {
+              "email": true
+            }
+          },
+          "expectedEmail": {
+            "type": "string",
+            "description": "Pins the account to an email address. A hosted authentication form setup is rejected unless the identity it authenticates matches this address. For OAuth2 the address is compared against what the provider returns, never against caller-supplied hints, so for a shared or delegated mailbox this must be the authenticating principal rather than the mailbox address. For IMAP it is compared against the address entered on the form, which the credentials do not prove ownership of. Once set, the constraint stays on the account and applies to later reauthentication as well.",
             "example": "user@example.com",
             "x-format": {
               "email": true
@@ -10315,7 +10348,7 @@
           "version": {
             "type": "string",
             "description": "EmailEngine version number",
-            "example": "2.77.0"
+            "example": "2.78.0"
           },
           "license": {
             "type": "string",
@@ -12264,7 +12297,7 @@
       "delete": {
         "summary": "Remove account",
         "operationId": "deleteV1AccountAccount",
-        "description": "Stop processing and clear the account's cache. Pass revoke=true to also attempt revocation of the upstream OAuth2 grant at the provider before the account is removed.",
+        "description": "Stop processing and clear the account's cache. Pass revoke=true to also attempt revocation of the upstream OAuth2 grant at the provider before the account is removed.<br/><br/>Removes the account, its credentials, its cached data and any messages still queued for delivery. Webhook events generated before the deletion are never delivered afterwards and are discarded once the queue reaches them. Records of deliveries that had already failed permanently are not removed here; they expire on the queue retention window, seven days by default.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -12377,7 +12410,10 @@
               }
             }
           }
-        }
+        },
+        "x-ee-behavior": [
+          "Removes the account, its credentials, its cached data and any messages still queued for delivery. Webhook events generated before the deletion are never delivered afterwards and are discarded once the queue reaches them. Records of deliveries that had already failed permanently are not removed here; they expire on the queue retention window, seven days by default."
+        ]
       }
     },
     "/v1/account/{account}/attachment/{attachment}": {
@@ -16585,7 +16621,7 @@
       "post": {
         "summary": "Generate authentication link",
         "operationId": "postV1AuthenticationForm",
-        "description": "Generates a redirect link to the hosted authentication form",
+        "description": "Generates a redirect link to the hosted authentication form<br/><br/>If `expectedEmail` is set and the user completes the form as a different identity, the setup is rejected before any credentials are stored. The user stays on EmailEngine, which names both addresses and offers to restart the setup, so the browser is never redirected to `redirectUrl`.",
         "parameters": [
           {
             "name": "x-ee-timeout",

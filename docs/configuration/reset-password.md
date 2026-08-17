@@ -1,17 +1,50 @@
 ---
 title: Reset Password
-description: Reset admin password using command-line tools or environment variables
+description: Reset the EmailEngine admin password from the command line, including recovery when 2FA or a passkey is lost
 sidebar_position: 11
 ---
 
-If you've forgotten your admin password or need to set it during an automated setup process, you can do so using the command-line interface.
+# Reset the Admin Password
+
+If the admin password has been lost, or you are setting one during an automated deployment, set it with the `password` command. It writes directly to Redis, so EmailEngine does not need to be running.
+
+```bash
+emailengine password -p secretvalue --dbs.redis="redis://127.0.0.1:6379/8"
 ```
-$ emailengine password -p secretvalue --dbs.redis="redis://127.0.0.1:6379/8"
+
+The command prints the password it stored:
+
+```
 secretvalue
 ```
-Where
--   `secretvalue` is the password to use. It must be at least 8 characters long - otherwise the command exits with the error "Password must be at least 8 characters". If a password is not provided, then a random password is generated.
-> You can execute the `emailengine` [command](/docs/installation) on any computer, such as the actual EmailEngine server or your own development machine. Just make sure to use the appropriate Redis URL, which should point to the Redis server associated with your EmailEngine instance. Keep in mind that you must have access to the Redis server from the machine where you're running the `emailengine` command.
-The command returns the updated admin password. This is primarily useful if you did not set the password yourself and skipped the `-p` or `--password` argument.
-* * *
-If you need to reset your password from the command line, be aware that doing so will also disable any two-factor authentication (2FA) setup you may have in place and remove all registered passkeys. If you've lost access to your authenticator app and are unable to log in to your EmailEngine instance, resetting the password through the command line will be necessary to regain access.
+
+## Options
+
+| Option | Effect |
+|--------|--------|
+| `-p`, `--password` | The password to set. Must be at least 8 characters, otherwise the command exits with `Password must be at least 8 characters` |
+| `--hash`, `-r` | Print the PBKDF2 hash instead of the plaintext password. This is the value [`EENGINE_PREPARED_PASSWORD`](/docs/configuration/environment-variables#prepared-configuration) expects |
+| `--dbs.redis` | The Redis URL of the instance to update. Required unless the environment already provides it |
+
+Omit `-p` and a random password is generated and printed. That is the usual choice when you only need to regain access and will change the password again from the interface.
+
+:::info Run it from anywhere with Redis access
+The `emailengine` binary only needs to reach the Redis server, so you can run this from the EmailEngine host or from your own machine. Point `--dbs.redis` at the Redis database that instance uses.
+:::
+
+## Recovering From a Lost Second Factor
+
+Resetting the password is also the way back in when the second factor is gone, because the reset clears it:
+
+- Two-factor authentication is turned off
+- Every registered passkey for the account is deleted
+
+Both happen unconditionally, even when you already know the password. If you only want to rotate the password and keep 2FA, change it from the admin interface instead.
+
+The account name is left as it was, defaulting to `admin` if none was set.
+
+## See Also
+
+- [CLI Reference](/docs/configuration/cli) - Every command-line option, including `password`
+- [Prepared Settings](/docs/configuration/prepared-settings) - Provisioning an instance with a password already set
+- [Security Hardening](/docs/deployment/security) - Admin access controls and authentication options

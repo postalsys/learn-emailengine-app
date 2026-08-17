@@ -546,61 +546,25 @@ EENGINE_REDIS=redis://localhost:6379
 REDIS_URL=redis://localhost:6379
 ```
 
-## Advanced Topics
+## Observing Queue Activity
 
-### Job Events
+EmailEngine's queues are internal. They are a BullMQ implementation detail rather than a public interface, so treat the Redis database as EmailEngine's private storage: adding your own jobs to these queues, or writing to their Redis keys, corrupts state that EmailEngine assumes it owns.
 
-Queue systems emit events for job lifecycle:
+To follow what the queues are doing, use the paths that are supported:
 
-```
-// Pseudo code - implement in your preferred language
+| What you want | How to get it |
+|---------------|---------------|
+| Inspect individual jobs, including failures with full error details | **System > Queues** (Bull Board) in the admin interface |
+| React to delivery outcomes in your own code | [Webhooks](/docs/webhooks/overview), in particular [`messageSent`](/docs/webhooks/messagesent), [`messageDeliveryError`](/docs/webhooks/messagedeliveryerror), and [`messageFailed`](/docs/webhooks/messagefailed) |
+| Check where a specific queued message stands | [`GET /v1/outbox/{queueId}`](/docs/api/get-v-1-outbox-queueid), which reports `progress.status`, `attemptsMade`, and `nextAttempt` |
+| Cancel a message that has not been sent yet | [`DELETE /v1/outbox/{queueId}`](/docs/api/delete-v-1-outbox-queueid) |
+| Track queue depth over time | The [Prometheus metrics endpoint](/docs/advanced/monitoring#prometheus-metrics) |
 
-queue = QUEUE_CONNECT('redis://localhost:6379', 'submit')
+Every one of these survives an upgrade. Direct queue access does not: job names, payload shapes, and retry options change between EmailEngine releases without notice.
 
-// Job completed event
-ON_QUEUE_EVENT(queue, 'completed', function(job, result):
-  PRINT('Job ' + job.id + ' completed: ' + result)
-end function)
+## See Also
 
-// Job failed event
-ON_QUEUE_EVENT(queue, 'failed', function(job, error):
-  PRINT('Job ' + job.id + ' failed: ' + error)
-end function)
-
-// Job delayed event (retry)
-ON_QUEUE_EVENT(queue, 'delayed', function(job, delay):
-  PRINT('Job ' + job.id + ' delayed by ' + delay + 'ms')
-end function)
-```
-
-### Custom Job Processing
-
-For advanced use cases, process jobs programmatically:
-
-```
-// Pseudo code - implement in your preferred language
-
-queue = QUEUE_CONNECT('redis://localhost:6379', 'custom-queue')
-
-// Add custom job
-QUEUE_ADD_JOB(
-  queue,
-  name='my-task',
-  data={ data: 'custom data' },
-  options={
-    delay: 5000,  // 5 second delay
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000
-    }
-  }
-)
-
-// Process custom job
-QUEUE_PROCESS(queue, 'my-task', function(job):
-  PRINT('Processing: ' + job.data)
-  // Your processing logic
-  return { success: true }
-end function)
-```
+- [Monitoring](/docs/advanced/monitoring) - Metrics, health checks, and alerting
+- [Outbox and Queue](/docs/sending/outbox-queue) - The sending queue from the application's side
+- [Performance Tuning](/docs/advanced/performance-tuning) - Worker counts and Redis sizing
+- [Webhook Overview](/docs/webhooks/overview) - Delivery guarantees and retry behavior

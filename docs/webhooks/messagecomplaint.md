@@ -42,7 +42,6 @@ EmailEngine analyzes incoming messages for FBL complaint patterns including:
 | `account` | string | Yes | Account ID that received the complaint message |
 | `date` | string | Yes | ISO 8601 timestamp when the webhook was generated |
 | `event` | string | Yes | Event type, always "messageComplaint" for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook delivery |
 | `data` | object | Yes | Complaint data object (see below) |
 
 ### Complaint Data Fields (`data` object)

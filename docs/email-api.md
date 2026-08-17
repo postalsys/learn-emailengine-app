@@ -94,8 +94,9 @@ POST /v1/account
 Search messages, manage folders, update flags, and download attachments - all through simple REST API calls.
 
 ```javascript
-// Search for emails
-GET /v1/account/{account}/search?search[subject]=invoice&search[from]=billing@
+// Search for emails (terms go in the request body)
+POST /v1/account/{account}/search?path=INBOX
+{ "search": { "subject": "invoice", "from": "billing@" } }
 
 // List messages in a folder
 GET /v1/account/{account}/messages?path=INBOX&page=0&pageSize=20
@@ -178,6 +179,7 @@ tar xzf emailengine.tar.gz
 
 ```bash
 curl -X POST http://localhost:3000/v1/account \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "account": "my-account",
@@ -195,6 +197,7 @@ curl -X POST http://localhost:3000/v1/account \
 
 ```bash
 curl -X POST http://localhost:3000/v1/account/my-account/submit \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "to": [{"address": "recipient@example.com"}],
@@ -210,11 +213,13 @@ curl -X POST http://localhost:3000/v1/account/my-account/submit \
 Configure webhooks to receive real-time notifications:
 
 ```bash
-curl -X POST http://localhost:3000/v1/webhooks \
+curl -X POST http://localhost:3000/v1/settings \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "url": "https://yourapp.com/webhooks/email",
-    "events": ["messageNew", "messageSent", "messageDeliveryError"]
+    "webhooks": "https://yourapp.com/webhooks/email",
+    "webhooksEnabled": true,
+    "webhookEvents": ["messageNew", "messageSent", "messageDeliveryError"]
   }'
 ```
 

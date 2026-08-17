@@ -154,7 +154,7 @@ Continuously export emails to:
 Configure EmailEngine to send webhooks to your application:
 
 ```bash
-curl -X POST "https://your-emailengine.com/v1/settings" \
+curl -X POST "https://emailengine.example.com/v1/settings" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -208,7 +208,7 @@ If you need more information than what's in the webhook using the [Get Message A
 ```javascript
 async function fetchFullMessage(accountId, messageId) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/message/${messageId}`,
+    `https://emailengine.example.com/v1/account/${accountId}/message/${messageId}`,
     {
       headers: {
         'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
@@ -228,7 +228,7 @@ Process message attachments using the [Get Attachment API endpoint](/docs/api/ge
 ```javascript
 async function downloadAttachment(accountId, attachmentId) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/attachment/${attachmentId}`,
+    `https://emailengine.example.com/v1/account/${accountId}/attachment/${attachmentId}`,
     {
       headers: {
         'Authorization': 'Bearer YOUR_ACCESS_TOKEN'

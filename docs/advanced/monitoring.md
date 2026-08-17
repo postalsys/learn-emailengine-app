@@ -253,7 +253,7 @@ threads{type="imap"}
 threads{type="webhooks"}
 
 # Configuration
-emailengine_config{version="v2.61.1"}
+emailengine_config{version="v2.78.0"}
 emailengine_config{config="workersImap"}
 ```
 
@@ -715,49 +715,41 @@ receivers:
 
 ## Integration with Observability Platforms
 
+EmailEngine ships as a self-contained service, so you observe it from the outside rather than by instrumenting it. Two signals cover almost everything:
+
+- The [Prometheus metrics endpoint](#prometheus-metrics) for counters and gauges
+- The [structured JSON logs](/docs/advanced/logging) on stdout for events and errors
+
+Any platform that can scrape Prometheus or read NDJSON works without EmailEngine-specific support.
+
 ### Datadog
 
-Monitor EmailEngine with Datadog APM:
+Use the Datadog Agent's OpenMetrics check to scrape the metrics endpoint:
 
-```
-// Pseudo code - implement in your preferred language
-
-// Initialize Datadog tracer
-DATADOG_INIT({
-  service: 'emailengine',
-  env: ENV['NODE_ENV'],
-  version: APP_VERSION
-})
-
-// Initialize StatsD client
-statsd = STATSD_CLIENT({
-  host: 'datadog-agent',
-  port: 8125,
-  prefix: 'emailengine.'
-})
-
-// Track custom events
-statsd.INCREMENT('accounts.connected')
-statsd.GAUGE('queue.size', queue_size)
-statsd.TIMING('webhook.duration', duration)
+```yaml
+# conf.d/openmetrics.d/conf.yaml
+instances:
+  - openmetrics_endpoint: http://emailengine:3000/metrics
+    namespace: emailengine
+    metrics: ['.*']
+    headers:
+      Authorization: Bearer YOUR_METRICS_TOKEN
 ```
 
-### New Relic
+Ship the logs with the Agent's container or file tailing, as described in [Logging](/docs/advanced/logging#datadog).
 
-Monitor with New Relic APM:
+### Grafana
 
-```bash
-# Install agent
-npm install newrelic
+Scrape the same endpoint with Prometheus and pair it with [Loki](/docs/advanced/logging#grafana-loki) for logs. This is the combination the [alerting rules](#prometheus-alertmanager) below are written against.
 
-# Configure newrelic.js
-# Start with agent
-node -r newrelic server.js
-```
+### Other Platforms
 
-### Elastic APM
+New Relic, Elastic, Honeycomb, and similar tools all accept Prometheus metrics through their own collectors or an OpenTelemetry Collector configured with a `prometheus` receiver. Point the receiver at `/metrics` and the same dashboards and alerts apply.
 
-Monitor with Elasticsearch APM by initializing the APM agent with your language's elastic-apm library, providing service name, server URL, and environment configuration.
+:::note APM agents do not apply here
+Language-level APM agents instrument an application you build and run yourself. EmailEngine is a packaged service, so there is no place to load one, and the metrics endpoint already reports what an agent would have collected.
+:::
+
 
 ## Bull Board Dashboard
 

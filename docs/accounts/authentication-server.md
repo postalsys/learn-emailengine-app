@@ -454,7 +454,7 @@ Your authentication server must return one of the following:
 Set the authentication server URL in EmailEngine settings using the [Update Settings API endpoint](/docs/api/post-v-1-settings):
 
 ```bash
-curl -X POST https://your-ee.com/v1/settings \
+curl -X POST https://emailengine.example.com/v1/settings \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -471,7 +471,7 @@ This tells EmailEngine where to fetch credentials (passwords or access tokens).
 Register accounts where your authentication server returns passwords:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -498,7 +498,7 @@ curl -X POST https://your-ee.com/v1/account \
 Register accounts where your authentication server returns OAuth2 tokens:
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -530,7 +530,7 @@ curl -X POST https://your-ee.com/v1/account \
 #### For Gmail API or MS Graph API
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

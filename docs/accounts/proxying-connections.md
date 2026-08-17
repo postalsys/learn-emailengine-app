@@ -111,21 +111,20 @@ _Enable the proxy and set the listen address, port and TLS options_
 
 **Configuration Options:**
 
-- **Host**: `0.0.0.0` (to allow external connections) or `127.0.0.1` (localhost only)
-- **Port**: Choose a port (e.g., `2993` for TLS, `2143` for non-TLS)
-- **TLS**: Enable with your SSL certificate for secure connections
+| Field | Setting | Purpose |
+|-------|---------|---------|
+| Enable IMAP Proxy | `imapProxyServerEnabled` | Starts the proxy server |
+| Host | `imapProxyServerHost` | `0.0.0.0` to accept external connections, `127.0.0.1` for localhost only |
+| Port | `imapProxyServerPort` | The listening port, for example `2993` |
+| Password | `imapProxyServerPassword` | An optional shared password accepted instead of an access token |
+| Proxy | `imapProxyServerProxy` | Route the proxy's own outbound connections through a SOCKS or HTTP proxy |
+| Enable TLS Encryption | `imapProxyServerTLSEnabled` | Serve implicit TLS rather than plaintext |
 
-**Example Configuration:**
+After saving, EmailEngine starts the proxy on the given host and port.
 
-```
-Host: 0.0.0.0
-Port: 2993
-TLS: Enabled
-Certificate: /path/to/cert.pem
-Key: /path/to/key.pem
-```
-
-After saving, EmailEngine will start the proxy server on the specified host and port.
+:::note TLS needs a Service URL with a real domain
+There is no certificate upload here. When TLS is enabled, EmailEngine serves the certificate it manages for the hostname in your **Service URL**, so the checkbox stays disabled until that URL points at a real domain rather than an IP address or `localhost`. To supply your own certificate instead, set the `EENGINE_IMAPPROXY_TLS_KEY` and `EENGINE_IMAPPROXY_TLS_CERT` [environment variables](/docs/configuration/environment-variables#certificates-for-emailengines-own-listeners).
+:::
 
 ### Step 2: Verify Proxy is Running
 
@@ -186,7 +185,7 @@ The account must be configured to use **IMAP/SMTP**, not Gmail API or MS Graph A
 Create an access token scoped specifically for IMAP proxy access using the [Generate Token API endpoint](/docs/api/post-v-1-token):
 
 ```bash
-curl -X POST https://your-ee.com/v1/token \
+curl -X POST https://emailengine.example.com/v1/token \
   -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -308,29 +307,32 @@ print(f'Found {len(messages[0].split())} messages')
 mail.logout()
 ```
 
-#### Using Generic IMAP Client
+#### Using Node.js
 
-```
-// Pseudo code - use any IMAP library in your preferred language
+Any IMAP client library works. This uses [ImapFlow](https://imapflow.com/), the same library EmailEngine uses internally:
 
-connection = IMAP_CONNECT({
-  user: "user123",
-  password: "6cad01dae08f...458576a026c1ec",
-  host: "localhost",
+```javascript
+const { ImapFlow } = require('imapflow');
+
+const client = new ImapFlow({
+  host: 'localhost',
   port: 2993,
-  tls: true,
-  tlsOptions: {
-    rejectUnauthorized: false  // Only for self-signed certs
-  }
-})
+  secure: true,
+  auth: {
+    user: 'user123',              // The EmailEngine account ID
+    pass: process.env.EE_TOKEN    // An EmailEngine access token
+  },
+  tls: { rejectUnauthorized: false } // Only for a self-signed proxy certificate
+});
 
-if CONNECTION_READY(connection) {
-  mailbox = OPEN_MAILBOX(connection, "INBOX", readOnly: false)
+await client.connect();
 
-  if mailbox {
-    PRINT("INBOX has " + mailbox.messageCount + " messages")
-    CLOSE_CONNECTION(connection)
-  }
+const lock = await client.getMailboxLock('INBOX');
+try {
+  console.log(`INBOX has ${client.mailbox.exists} messages`);
+} finally {
+  lock.release();
+  await client.logout();
 }
 ```
 
@@ -343,7 +345,7 @@ Generate tokens for specific purposes:
 **Backup Script Token:**
 
 ```bash
-curl -X POST https://your-ee.com/v1/token \
+curl -X POST https://emailengine.example.com/v1/token \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -356,7 +358,7 @@ curl -X POST https://your-ee.com/v1/token \
 **Admin Access Token (Multiple Scopes):**
 
 ```bash
-curl -X POST https://your-ee.com/v1/token \
+curl -X POST https://emailengine.example.com/v1/token \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -371,7 +373,7 @@ curl -X POST https://your-ee.com/v1/token \
 See all tokens for an account:
 
 ```bash
-curl https://your-ee.com/v1/tokens/account/user123 \
+curl https://emailengine.example.com/v1/tokens/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -402,7 +404,7 @@ The `id` value is the SHA-256 hash that identifies the token - the raw token val
 Immediately invalidate a token:
 
 ```bash
-curl -X DELETE https://your-ee.com/v1/token/6cad01dae08f...458576a026c1ec \
+curl -X DELETE https://emailengine.example.com/v1/token/6cad01dae08f...458576a026c1ec \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -426,7 +428,7 @@ Best practice: Rotate tokens periodically:
 
 ```bash
 # Generate new token
-NEW_TOKEN=$(curl -X POST https://your-ee.com/v1/token \
+NEW_TOKEN=$(curl -X POST https://emailengine.example.com/v1/token \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -442,7 +444,7 @@ echo "New token: $NEW_TOKEN"
 # ... deploy updated script ...
 
 # Delete old token
-curl -X DELETE https://your-ee.com/v1/token/OLD_TOKEN \
+curl -X DELETE https://emailengine.example.com/v1/token/OLD_TOKEN \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -453,7 +455,7 @@ Restrict tokens to specific IP addresses or networks:
 ### Single IP Address
 
 ```bash
-curl -X POST https://your-ee.com/v1/token \
+curl -X POST https://emailengine.example.com/v1/token \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -468,7 +470,7 @@ curl -X POST https://your-ee.com/v1/token \
 ### IP Range (CIDR)
 
 ```bash
-curl -X POST https://your-ee.com/v1/token \
+curl -X POST https://emailengine.example.com/v1/token \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type": application/json" \
   -d '{
@@ -557,22 +559,19 @@ Benefits:
 
 Test email integration without complex OAuth2 setup:
 
-```
-// Pseudo code - simple IMAP test script
+A connection attempt is enough to confirm the proxy, the account ID, and the token all line up:
 
-connection = IMAP_CONNECT({
-  user: "test-account",
-  password: "test-token-12345",
-  host: "localhost",
-  port: 2993,
-  tls: false  // Development only - use TLS in production!
-})
-
-// Test IMAP functionality
-if CONNECTION_READY(connection) {
-  PRINT("Connected successfully!")
-}
+```bash
+python3 -c "
+import imaplib
+m = imaplib.IMAP4('localhost', 2993)
+m.login('test-account', 'test-token-12345')
+print(m.select('INBOX'))
+m.logout()
+"
 ```
+
+Plain `IMAP4` without TLS is fine against localhost while you are developing. Anything reachable off the host should use the TLS listener, since the token travels as the IMAP password.
 
 ### Monitoring and Alerting
 
@@ -619,7 +618,7 @@ In EmailEngine: **Configuration** → **SMTP Server**
 ### Generate Token with Both Scopes
 
 ```bash
-curl -X POST https://your-ee.com/v1/token \
+curl -X POST https://emailengine.example.com/v1/token \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

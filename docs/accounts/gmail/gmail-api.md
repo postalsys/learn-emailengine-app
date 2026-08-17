@@ -198,13 +198,13 @@ Click **Create credentials** → **OAuth client ID**.
 Add your EmailEngine URL:
 
 - `http://127.0.0.1:3000` (for local testing)
-- `https://your-emailengine-domain.com` (for production)
+- `https://emailengine.example.com` (for production)
 
 **Authorized redirect URIs:**
 Add your EmailEngine URL with `/oauth`:
 
 - `http://127.0.0.1:3000/oauth`
-- `https://your-emailengine-domain.com/oauth`
+- `https://emailengine.example.com/oauth`
 
 Click **Create**.
 
@@ -281,7 +281,7 @@ Now configure EmailEngine to use the service account for managing webhooks.
 <!-- Shows: Creating Gmail Service Account in EmailEngine -->
 
 1. Open EmailEngine dashboard
-2. Navigate to **Configuration** → **OAuth2**
+2. Navigate to **Integrations** > **OAuth2 Apps**
 3. Click the **Create OAuth2 app** dropdown
 4. Select **Gmail Service Accounts**
 
@@ -316,7 +316,7 @@ Now configure the user OAuth application that will authenticate Gmail accounts.
 
 <!-- Shows: Creating Gmail OAuth2 application in EmailEngine -->
 
-1. Navigate to **Configuration** → **OAuth2**
+1. Navigate to **Integrations** > **OAuth2 Apps**
 2. Click the **Create OAuth2 app** dropdown
 3. Select **Gmail**
 
@@ -373,7 +373,7 @@ Add a Gmail account to test the complete flow.
 Generate an authentication form URL:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

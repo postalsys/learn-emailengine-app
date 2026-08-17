@@ -60,7 +60,7 @@ stateDiagram-v2
 Register a new account using the [account registration API](/docs/api/post-v-1-account):
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -93,7 +93,7 @@ curl -X POST https://your-ee.com/v1/account \
 #### OAuth2 (Gmail/Outlook)
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -114,7 +114,7 @@ curl -X POST https://your-ee.com/v1/account \
 #### Service Accounts (Google Workspace)
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -135,7 +135,7 @@ curl -X POST https://your-ee.com/v1/account \
 #### Authentication Server
 
 ```bash
-curl -X POST https://your-ee.com/v1/account \
+curl -X POST https://emailengine.example.com/v1/account \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -164,7 +164,7 @@ curl -X POST https://your-ee.com/v1/account \
 Generate a form URL and redirect users to complete setup:
 
 ```bash
-curl -X POST https://your-ee.com/v1/authentication/form \
+curl -X POST https://emailengine.example.com/v1/authentication/form \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -178,7 +178,7 @@ curl -X POST https://your-ee.com/v1/authentication/form \
 **Response:**
 ```json
 {
-  "url": "https://your-ee.com/accounts/new?data=eyJhY2NvdW50..."
+  "url": "https://emailengine.example.com/accounts/new?data=eyJhY2NvdW50..."
 }
 ```
 
@@ -202,7 +202,7 @@ Direct user to this URL. After completing setup, they'll be redirected to your `
 ### Get Single Account
 
 ```bash
-curl https://your-ee.com/v1/account/user123 \
+curl https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -243,7 +243,7 @@ curl https://your-ee.com/v1/account/user123 \
 ### List All Accounts
 
 ```bash
-curl https://your-ee.com/v1/accounts \
+curl https://emailengine.example.com/v1/accounts \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -274,19 +274,19 @@ curl https://your-ee.com/v1/accounts \
 
 **By state:**
 ```bash
-curl "https://your-ee.com/v1/accounts?state=connected" \
+curl "https://emailengine.example.com/v1/accounts?state=connected" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 **By email pattern:**
 ```bash
-curl "https://your-ee.com/v1/accounts?query=@gmail.com" \
+curl "https://emailengine.example.com/v1/accounts?query=@gmail.com" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 **Pagination:**
 ```bash
-curl "https://your-ee.com/v1/accounts?page=1&pageSize=20" \
+curl "https://emailengine.example.com/v1/accounts?page=1&pageSize=20" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -297,7 +297,7 @@ curl "https://your-ee.com/v1/accounts?page=1&pageSize=20" \
 Use the [update account API](/docs/api/put-v-1-account-account):
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -313,7 +313,7 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 **Update specific IMAP properties (recommended):**
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -328,7 +328,7 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 **Replace entire IMAP configuration:**
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -353,7 +353,7 @@ Note: The `partial` flag only works for main-level objects (`imap`, `smtp`, `oau
 ### Update OAuth2 Tokens
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -369,7 +369,7 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 Monitor additional folders in real-time:
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -398,7 +398,7 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 Sync and monitor only specific folders:
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -424,7 +424,7 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 If EmailEngine doesn't correctly identify your Sent folder:
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -445,7 +445,7 @@ Common sent folder names:
 If an account enters an error state, trigger a reconnection:
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
+curl -X PUT https://emailengine.example.com/v1/account/user123/reconnect \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -485,7 +485,7 @@ curl -X PUT https://your-ee.com/v1/account/user123/reconnect \
 Temporarily stop syncing without deleting:
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -510,7 +510,7 @@ curl -X PUT https://your-ee.com/v1/account/user123 \
 Re-enable a disabled account:
 
 ```bash
-curl -X PUT https://your-ee.com/v1/account/user123 \
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -525,7 +525,7 @@ Account will reconnect and resume syncing.
 Permanently remove an account from EmailEngine using the [delete account API](/docs/api/delete-v-1-account-account):
 
 ```bash
-curl -X DELETE https://your-ee.com/v1/account/user123 \
+curl -X DELETE https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -554,7 +554,7 @@ curl -X DELETE https://your-ee.com/v1/account/user123 \
 Pass `revoke=true` to also revoke the upstream OAuth2 grant at the provider before the account is removed:
 
 ```bash
-curl -X DELETE "https://your-ee.com/v1/account/user123?revoke=true" \
+curl -X DELETE "https://emailengine.example.com/v1/account/user123?revoke=true" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -569,7 +569,7 @@ Deleting an account cannot be undone. You'll need to re-add the account if neede
 Before adding an account, verify credentials work:
 
 ```bash
-curl -X POST https://your-ee.com/v1/verifyAccount \
+curl -X POST https://emailengine.example.com/v1/verifyAccount \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -627,7 +627,7 @@ Use this before adding accounts to catch configuration errors early.
 ### Check Account Status
 
 ```bash
-curl https://your-ee.com/v1/account/user123 \
+curl https://emailengine.example.com/v1/account/user123 \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -651,49 +651,36 @@ Check for accounts in error states:
 
 ```bash
 # Get accounts with authentication errors
-curl "https://your-ee.com/v1/accounts?state=authenticationError" \
+curl "https://emailengine.example.com/v1/accounts?state=authenticationError" \
   -H "Authorization: Bearer YOUR_TOKEN"
 
 # Get accounts with connection errors
-curl "https://your-ee.com/v1/accounts?state=connectError" \
+curl "https://emailengine.example.com/v1/accounts?state=connectError" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### Set Up Monitoring Alerts
 
-**Example monitoring script (pseudo code):**
+A periodic check only has to ask for the one state that does not resolve itself:
 
+```bash
+#!/bin/bash
+
+stuck=$(curl -s "https://emailengine.example.com/v1/accounts?state=authenticationError&pageSize=1000" \
+  -H "Authorization: Bearer YOUR_TOKEN")
+
+count=$(echo "$stuck" | jq '.total')
+
+if [ "$count" -gt 0 ]; then
+  echo "$count account(s) need re-authentication:"
+  echo "$stuck" | jq -r '.accounts[] | "- \(.account) (\(.email))"'
+  # hand off to your alerting here
+fi
 ```
-// Pseudo code - implement in your preferred language
 
-function CHECK_ACCOUNT_HEALTH() {
-  response = HTTP_GET('https://your-ee.com/v1/accounts', {
-    headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
-  })
+`authenticationError` is the state worth paging on: it persists until someone updates the credentials or the user re-authorizes. `connectError` and `disconnected` are retried automatically, so alert on those only when an account stays there across several consecutive checks.
 
-  data = PARSE_JSON(response.body)
-  accounts = data.accounts
-
-  errorAccounts = FILTER(accounts, function(account) {
-    return account.state == 'authenticationError' OR account.state == 'connectError'
-  })
-
-  if LENGTH(errorAccounts) > 0 {
-    PRINT(LENGTH(errorAccounts) + " accounts in error state:")
-    for each account in errorAccounts {
-      PRINT("- " + account.account + " (" + account.email + "): " + account.state)
-    }
-
-    // Send alert (email, Slack, PagerDuty, etc.)
-    SEND_ALERT(errorAccounts)
-  } else {
-    PRINT("All accounts healthy")
-  }
-}
-
-// Run every 5 minutes
-SCHEDULE_INTERVAL(CHECK_ACCOUNT_HEALTH, 300000)  // 5 minutes in milliseconds
-```
+For an event-driven alternative to polling, subscribe to the [`authenticationError`](/docs/webhooks/authenticationerror) webhook, or follow the [account state stream](/docs/api-reference/accounts-api#streaming-account-state-changes).
 
 ## Bulk Operations
 
@@ -704,7 +691,7 @@ SCHEDULE_INTERVAL(CHECK_ACCOUNT_HEALTH, 300000)  // 5 minutes in milliseconds
 
 # Read accounts from CSV
 while IFS=, read -r account_id email password; do
-  curl -X POST https://your-ee.com/v1/account \
+  curl -X POST https://emailengine.example.com/v1/account \
     -H "Authorization: Bearer YOUR_TOKEN" \
     -H "Content-Type: application/json" \
     -d "{
@@ -728,31 +715,25 @@ done < accounts.csv
 
 ### Update Multiple Accounts
 
+There is no bulk account-update endpoint, so apply the change per account. Pace the loop rather than firing every request at once, since each update that changes connection settings causes a reconnect:
+
+```bash
+#!/bin/bash
+
+# Watch the Sent folder in real time on every account
+for account in $(curl -s "https://emailengine.example.com/v1/accounts?pageSize=1000" \
+  -H "Authorization: Bearer YOUR_TOKEN" | jq -r '.accounts[].account'); do
+
+  curl -s -X PUT "https://emailengine.example.com/v1/account/$account" \
+    -H "Authorization: Bearer YOUR_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{"subconnections": ["\\Sent"]}' > /dev/null
+
+  sleep 0.1
+done
 ```
-// Pseudo code - implement in your preferred language
 
-accounts = ['user1', 'user2', 'user3']
-
-function UPDATE_ALL_ACCOUNTS(updates) {
-  for each account in accounts {
-    HTTP_PUT('https://your-ee.com/v1/account/' + account, {
-      headers: {
-        'Authorization': 'Bearer YOUR_TOKEN',
-        'Content-Type': 'application/json'
-      },
-      body: JSON_ENCODE(updates)
-    })
-
-    // Rate limit - wait 100ms between requests
-    SLEEP(100)
-  }
-}
-
-// Enable sub-connections for all accounts
-UPDATE_ALL_ACCOUNTS({
-  subconnections: ['\\Sent']
-})
-```
+Each sub-connection is an additional IMAP connection per account, so read [Sub-Connections](/docs/advanced/performance-tuning#sub-connections-for-selected-folders) before enabling one everywhere.
 
 ### Delete Multiple Accounts
 
@@ -760,13 +741,13 @@ UPDATE_ALL_ACCOUNTS({
 #!/bin/bash
 
 # Delete all accounts matching pattern
-accounts=$(curl -s "https://your-ee.com/v1/accounts?query=test" \
+accounts=$(curl -s "https://emailengine.example.com/v1/accounts?query=test" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   | jq -r '.accounts[].account')
 
 for account in $accounts; do
   echo "Deleting $account..."
-  curl -X DELETE "https://your-ee.com/v1/account/$account" \
+  curl -X DELETE "https://emailengine.example.com/v1/account/$account" \
     -H "Authorization: Bearer YOUR_TOKEN"
   sleep 0.5
 done
@@ -774,96 +755,53 @@ done
 
 ## Common Account Management Patterns
 
-### Trial Period Handling
+### Pausing an Account
 
+To stop syncing an account without deleting it, disable its IMAP connection. Send `partial: true` so the rest of the IMAP configuration survives the update:
+
+```bash
+curl -X PUT "https://emailengine.example.com/v1/account/user123" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "imap": { "partial": true, "disabled": true } }'
 ```
-// Pseudo code - implement in your preferred language
 
-function HANDLE_TRIAL_EXPIRY(accountId) {
-  // Disable account when trial expires
-  HTTP_PUT('https://your-ee.com/v1/account/' + accountId, {
-    headers: {
-      'Authorization': 'Bearer YOUR_TOKEN',
-      'Content-Type': 'application/json'
-    },
-    body: JSON_ENCODE({ disabled: true })
-  })
+Send `"disabled": false` the same way to resume. The account keeps its credentials and folder state throughout, so resuming does not re-download the mailbox.
 
-  PRINT("Account " + accountId + " disabled - trial expired")
-}
-
-// Re-enable when user subscribes
-function HANDLE_SUBSCRIPTION(accountId) {
-  HTTP_PUT('https://your-ee.com/v1/account/' + accountId, {
-    headers: {
-      'Authorization': 'Bearer YOUR_TOKEN',
-      'Content-Type': 'application/json'
-    },
-    body: JSON_ENCODE({ disabled: false })
-  })
-
-  PRINT("Account " + accountId + " re-enabled - subscription active")
-}
-```
+:::warning Always set `partial` when updating `imap` or `smtp`
+Without it, the object you send **replaces** the stored one. A body of `{"imap": {"disabled": true}}` therefore discards the host, port, and credentials, and the account stops working.
+:::
 
 ### Automatic Reconnection
 
+EmailEngine already retries `connectError` and `disconnected` accounts with backoff, so a reconnect loop over them mostly adds load. Reconnect explicitly after you change something, such as rotating a password or completing a re-authorization:
+
+```bash
+curl -X PUT "https://emailengine.example.com/v1/account/user123/reconnect" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "reconnect": true }'
 ```
-// Pseudo code - implement in your preferred language
 
-function AUTO_RECONNECT_ERROR_ACCOUNTS() {
-  response = HTTP_GET('https://your-ee.com/v1/accounts', {
-    headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
-  })
+:::caution The request body is required
+`{"reconnect": true}` must be present. The flag defaults to `false`, so a `PUT` with an empty body is accepted and does nothing.
+:::
 
-  data = PARSE_JSON(response.body)
-  accounts = data.accounts
-
-  for each account in accounts {
-    if account.state == 'connectError' {
-      PRINT("Reconnecting " + account.account + "...")
-
-      HTTP_PUT('https://your-ee.com/v1/account/' + account.account + '/reconnect', {
-        headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
-      })
-
-      SLEEP(1000)  // Wait 1 second between reconnect attempts
-    }
-  }
-}
-
-// Run every hour
-SCHEDULE_INTERVAL(AUTO_RECONNECT_ERROR_ACCOUNTS, 3600000)  // 60 * 60 * 1000 ms
-```
+An account in `authenticationError` will not recover from a reconnect on its own, because the credentials are still the rejected ones. Fix the credentials first, which triggers a reconnect by itself.
 
 ### Credential Rotation
 
+Update only the password and let the reconnect follow from the change:
+
+```bash
+curl -X PUT "https://emailengine.example.com/v1/account/user123" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "imap": { "partial": true, "auth": { "pass": "new-password" } },
+    "smtp": { "partial": true, "auth": { "pass": "new-password" } }
+  }'
 ```
-// Pseudo code - implement in your preferred language
 
-function ROTATE_ACCOUNT_PASSWORD(accountId, newPassword) {
-  // Update password
-  HTTP_PUT('https://your-ee.com/v1/account/' + accountId, {
-    headers: {
-      'Authorization': 'Bearer YOUR_TOKEN',
-      'Content-Type': 'application/json'
-    },
-    body: JSON_ENCODE({
-      imap: {
-        auth: { pass: newPassword }
-      },
-      smtp: {
-        auth: { pass: newPassword }
-      }
-    })
-  })
-
-  // Trigger reconnection
-  HTTP_PUT('https://your-ee.com/v1/account/' + accountId + '/reconnect', {
-    headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
-  })
-
-  PRINT("Password rotated for " + accountId)
-}
-```
+The merge is recursive, so the stored `auth.user` is kept and only the password changes. Updating credentials on an account in an error state triggers a reconnect on its own, so no separate reconnect call is needed.
 

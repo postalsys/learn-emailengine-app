@@ -56,7 +56,7 @@ The constructor also accepts positional arguments (`new EmailEngine($accessToken
 
 **Getting an Access Token**:
 1. Open EmailEngine web interface
-2. Navigate to "Settings" → "Access Tokens"
+2. Navigate to "Integrations" → "Access Tokens"
 3. Click "Create New Token"
 4. Copy the generated token
 
@@ -135,18 +135,9 @@ while (!$account_connected) {
 
 ### Account States
 
-| State | Description |
-|-------|-------------|
-| `init` | Account is being initialized |
-| `connecting` | Connecting to email server |
-| `syncing` | Performing initial synchronization |
-| `connected` | Account is ready to use |
-| `authenticationError` | Authentication failed |
-| `connectError` | Connection failed |
-| `disconnected` | Account is temporarily disconnected |
-| `unset` | Account is not configured |
+Poll until the state reaches `connected` or `syncing`, and stop on `authenticationError`, which will not resolve on its own. See [Account States](/docs/api-reference/accounts-api#account-states) for the complete list.
 
-**Important**: Add a timeout or maximum retry count to avoid infinite loops if the account cannot connect.
+**Important**: Add a timeout or maximum retry count. Without one, an account that can never connect keeps the loop running forever.
 
 ## Sending Emails
 
@@ -398,146 +389,10 @@ $ee->request('post', '/v1/settings', [
 ]);
 ```
 
-## Complete Example Application
+## See Also
 
-Here's a complete example of a simple email automation:
-
-```php
-<?php
-
-require 'vendor/autoload.php';
-
-use Postalsys\EmailEnginePhp\EmailEngine;
-
-class EmailAutomation
-{
-    private $ee;
-
-    public function __construct($token, $baseUrl)
-    {
-        $this->ee = EmailEngine::fromOptions([
-            'access_token' => $token,
-            'ee_base_url' => $baseUrl,
-        ]);
-    }
-
-    public function registerAccount($accountId, $email, $password, $imapHost, $smtpHost)
-    {
-        try {
-            $response = $this->ee->request('post', '/v1/account', [
-                'account' => $accountId,
-                'name' => $email,
-                'email' => $email,
-                'imap' => [
-                    'auth' => ['user' => $email, 'pass' => $password],
-                    'host' => $imapHost,
-                    'port' => 993,
-                    'secure' => true,
-                ],
-                'smtp' => [
-                    'auth' => ['user' => $email, 'pass' => $password],
-                    'host' => $smtpHost,
-                    'port' => 465,
-                    'secure' => true,
-                ],
-            ]);
-
-            return $this->waitForConnection($accountId);
-        } catch (Exception $e) {
-            error_log("Failed to register account: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    private function waitForConnection($accountId, $maxWait = 60)
-    {
-        $startTime = time();
-
-        while (time() - $startTime < $maxWait) {
-            $info = $this->ee->request('get', "/v1/account/$accountId");
-
-            if ($info['state'] === 'connected') {
-                return true;
-            }
-
-            if (in_array($info['state'], ['authenticationError', 'connectError'])) {
-                error_log("Account connection failed: " . $info['state']);
-                return false;
-            }
-
-            sleep(2);
-        }
-
-        error_log("Account connection timeout");
-        return false;
-    }
-
-    public function sendEmail($accountId, $to, $subject, $body)
-    {
-        try {
-            $response = $this->ee->request('post', "/v1/account/$accountId/submit", [
-                'to' => [['address' => $to]],
-                'subject' => $subject,
-                'html' => $body,
-            ]);
-
-            return $response['messageId'];
-        } catch (Exception $e) {
-            error_log("Failed to send email: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    public function getUnreadMessages($accountId)
-    {
-        try {
-            // Use POST search endpoint to filter by unseen messages
-            $response = $this->ee->request('post', "/v1/account/$accountId/search?path=INBOX", [
-                'search' => [
-                    'unseen' => true,
-                ],
-            ]);
-
-            return $response['messages'];
-        } catch (Exception $e) {
-            error_log("Failed to get messages: " . $e->getMessage());
-            return [];
-        }
-    }
-}
-
-// Usage
-$automation = new EmailAutomation(
-    'your-api-token',
-    'http://127.0.0.1:3000/'
-);
-
-// Register account
-if ($automation->registerAccount(
-    'my-account',
-    'user@example.com',
-    'password',
-    'imap.example.com',
-    'smtp.example.com'
-)) {
-    echo "Account registered successfully\n";
-
-    // Send email
-    $messageId = $automation->sendEmail(
-        'my-account',
-        'recipient@example.com',
-        'Hello from PHP',
-        '<p>This is a test email</p>'
-    );
-
-    if ($messageId) {
-        echo "Email sent: $messageId\n";
-    }
-
-    // Check unread messages
-    $messages = $automation->getUnreadMessages('my-account');
-    echo "Unread messages: " . count($messages) . "\n";
-}
-```
-
-
+- [SDK on GitHub](https://github.com/postalsys/emailengine-php) - Source, issues, and the full method list
+- [API Reference Overview](/docs/api-reference) - Authentication, error shape, and pagination conventions
+- [Webhook Overview](/docs/webhooks/overview) - Signature verification and retry behavior for the handler above
+- [CRM Integration Guide](/docs/integrations/crm) - A worked PHP integration built on these same calls
+- [Hosted Authentication](/docs/accounts/hosted-authentication) - Onboarding accounts without handling credentials yourself

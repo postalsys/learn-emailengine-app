@@ -279,7 +279,7 @@ EmailEngine supports two types of tokens:
 **Generate tokens via web UI:**
 
 1. Log in to EmailEngine admin interface
-2. Navigate to **Settings** → **Access Tokens**
+2. Navigate to **Integrations** → **Access Tokens**
 3. Click **Generate New Token**
 4. Set description and permissions
 5. Copy the token immediately (shown only once)
@@ -312,7 +312,7 @@ EmailEngine supports multiple OAuth2 applications, configured through the web UI
 
 **Managing OAuth2 applications:**
 
-- **Web UI:** Navigate to **Settings** > **OAuth2** to create and manage OAuth2 apps
+- **Web UI:** Navigate to **Integrations** > **OAuth2 Apps** to create and manage OAuth2 applications
 - **API:** Use the `/v1/oauth2` endpoints to create, list, update, and delete OAuth2 apps
 
 **Creating an OAuth2 app via API:**
@@ -484,7 +484,7 @@ Passkey registration requires a configured Service URL (`serviceUrl`). The URL's
 
 **Setting up passkeys:**
 
-1. Ensure `serviceUrl` is configured in **Configuration** > **Service**
+1. Ensure `serviceUrl` is configured in **Configuration** > **General**
 2. Navigate to **Account** > **Security** (click your username in the top-right)
 3. In the **Passkeys** section, click **Add passkey**
 4. Enter your current password to verify your identity

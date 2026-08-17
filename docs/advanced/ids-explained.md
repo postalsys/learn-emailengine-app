@@ -67,6 +67,12 @@ EmailEngine encodes three components into the `id`:
 
 This encoding allows EmailEngine to locate the message on the IMAP server quickly.
 
+:::warning An `id` only means something to the instance that issued it
+The folder part of the `id` is a short numeric reference, and the mapping from that number back to a path and UIDValidity is stored in Redis alongside the account. An `id` therefore cannot be resolved by a different EmailEngine instance, and it stops resolving if that Redis database is flushed or restored from a backup taken before the folder was first seen.
+
+Store `messageId` next to any `id` you persist for longer than a request. It is a property of the email itself, so it survives all of the above. See [Choosing an Identifier](#choosing-the-right-identifier) below.
+:::
+
 ### Important Limitations
 
 **Old IDs become invalid after moves**:

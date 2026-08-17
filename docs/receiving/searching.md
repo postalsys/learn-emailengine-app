@@ -45,7 +45,7 @@ EmailEngine provides powerful [search capabilities](/docs/api/post-v-1-account-a
 Find messages with specific subject text:
 
 ```bash
-curl -X POST "https://your-emailengine.com/v1/account/example/search?path=INBOX" \
+curl -X POST "https://emailengine.example.com/v1/account/example/search?path=INBOX" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -60,7 +60,7 @@ curl -X POST "https://your-emailengine.com/v1/account/example/search?path=INBOX"
 ```javascript
 async function searchBySubject(accountId, folderPath, subjectText) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?path=${folderPath}`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?path=${folderPath}`,
     {
       method: 'POST',
       headers: {
@@ -89,7 +89,7 @@ Find messages from a specific sender:
 ```javascript
 async function searchBySender(accountId, folderPath, email) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?path=${folderPath}`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?path=${folderPath}`,
     {
       method: 'POST',
       headers: {
@@ -118,7 +118,7 @@ Find messages from a specific date range:
 ```javascript
 async function searchByDateRange(accountId, folderPath, since, before) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?path=${folderPath}`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?path=${folderPath}`,
     {
       method: 'POST',
       headers: {
@@ -329,7 +329,7 @@ Combine multiple search criteria - all must match:
 ```javascript
 async function searchUnreadFromSender(accountId, folderPath, sender) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?path=${folderPath}`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?path=${folderPath}`,
     {
       method: 'POST',
       headers: {
@@ -362,7 +362,7 @@ async function searchRecentLargeInvoices(accountId) {
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?path=INBOX`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?path=INBOX`,
     {
       method: 'POST',
       headers: {
@@ -402,7 +402,7 @@ async function searchWithAttachments(accountId, folderPath) {
   });
 
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/messages?${params}`,
+    `https://emailengine.example.com/v1/account/${accountId}/messages?${params}`,
     {
       headers: { 'Authorization': 'Bearer YOUR_ACCESS_TOKEN' }
     }
@@ -426,7 +426,7 @@ async function findByMessageId(accountId, messageId) {
 
   for (const folder of folders) {
     const response = await fetch(
-      `https://your-emailengine.com/v1/account/${accountId}/search?path=${folder}`,
+      `https://emailengine.example.com/v1/account/${accountId}/search?path=${folder}`,
       {
         method: 'POST',
         headers: {
@@ -471,7 +471,7 @@ async function searchTodaysMessages(accountId, folderPath) {
   const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?path=${folderPath}`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?path=${folderPath}`,
     {
       method: 'POST',
       headers: {
@@ -500,7 +500,7 @@ async function searchThisMonth(accountId, folderPath) {
   const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?path=${folderPath}`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?path=${folderPath}`,
     {
       method: 'POST',
       headers: {
@@ -525,7 +525,7 @@ async function searchThisMonth(accountId, folderPath) {
 ```javascript
 async function searchUnreadImportant(accountId) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?path=INBOX`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?path=INBOX`,
     {
       method: 'POST',
       headers: {
@@ -556,7 +556,7 @@ async function searchByKeywords(accountId, folderPath, keywords) {
 
   for (const keyword of keywords) {
     const response = await fetch(
-      `https://your-emailengine.com/v1/account/${accountId}/search?path=${folderPath}`,
+      `https://emailengine.example.com/v1/account/${accountId}/search?path=${folderPath}`,
       {
         method: 'POST',
         headers: {
@@ -601,7 +601,7 @@ async function searchWithPagination(accountId, folderPath, searchCriteria, pageS
 
   while (hasMore) {
     const response = await fetch(
-      `https://your-emailengine.com/v1/account/${accountId}/search?path=${folderPath}&page=${page}&pageSize=${pageSize}`,
+      `https://emailengine.example.com/v1/account/${accountId}/search?path=${folderPath}&page=${page}&pageSize=${pageSize}`,
       {
         method: 'POST',
         headers: {
@@ -639,7 +639,7 @@ async function searchMultipleFolders(accountId, folders, searchCriteria) {
   const results = await Promise.all(
     folders.map(async (folder) => {
       const response = await fetch(
-        `https://your-emailengine.com/v1/account/${accountId}/search?path=${folder}`,
+        `https://emailengine.example.com/v1/account/${accountId}/search?path=${folder}`,
         {
           method: 'POST',
           headers: {
@@ -673,7 +673,7 @@ Search and immediately process results:
 ```javascript
 async function searchAndProcess(accountId, folderPath, searchCriteria, processor) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?path=${folderPath}`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?path=${folderPath}`,
     {
       method: 'POST',
       headers: {
@@ -726,7 +726,7 @@ console.log(`Archived ${archived} old messages`);
 ```javascript
 async function search(accountId, folderPath, searchCriteria) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?path=${folderPath}`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?path=${folderPath}`,
     {
       method: 'POST',
       headers: {
@@ -780,7 +780,7 @@ Always limit searches with date ranges when possible:
 // Bad - searches all messages (could be years worth)
 async function search(accountId, folderPath, searchCriteria) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?path=${folderPath}`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?path=${folderPath}`,
     {
       method: 'POST',
       headers: {
@@ -853,7 +853,7 @@ async function cachedSearch(accountId, folderPath, searchCriteria) {
   if (cached) return cached;
 
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?path=${folderPath}`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?path=${folderPath}`,
     {
       method: 'POST',
       headers: {
@@ -885,7 +885,7 @@ async function searchGmailByLabel(accountId, label) {
   const params = new URLSearchParams({ path: '\\All' });
 
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${accountId}/search?${params}`,
+    `https://emailengine.example.com/v1/account/${accountId}/search?${params}`,
     {
       method: 'POST',
       headers: {

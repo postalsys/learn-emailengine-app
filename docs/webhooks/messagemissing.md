@@ -41,7 +41,6 @@ For IMAP accounts, EmailEngine implements exponential backoff retry logic before
 | `path` | string | No | Mailbox folder path where the message should have been found (IMAP only) |
 | `specialUse` | string | No | Special use flag of the folder (e.g., "\Inbox", "\Sent") |
 | `event` | string | Yes | Event type, always "messageMissing" for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook delivery |
 | `data` | object | Yes | Message identification and retry data (see below) |
 
 ### Message Data Fields (`data` object)
@@ -79,7 +78,7 @@ The `messageMissing` event includes identification data and retry statistics:
   "account": "user123",
   "date": "2025-10-17T06:44:14.660Z",
   "path": "INBOX",
-  "specialUse": "\Inbox",
+  "specialUse": "\\Inbox",
   "event": "messageMissing",
   "data": {
     "id": "AAAADAAABy4",

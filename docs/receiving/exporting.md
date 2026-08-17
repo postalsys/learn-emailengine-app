@@ -37,7 +37,7 @@ The export feature:
 Create a new export job using the [Create Export API endpoint](/docs/api/post-v-1-account-account-export):
 
 ```bash
-curl -X POST "https://your-emailengine.com/v1/account/{account}/export" \
+curl -X POST "https://emailengine.example.com/v1/account/{account}/export" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -76,7 +76,7 @@ curl -X POST "https://your-emailengine.com/v1/account/{account}/export" \
 Check export status using the [Get Export Status API endpoint](/docs/api/get-v-1-account-account-export-exportid):
 
 ```bash
-curl "https://your-emailengine.com/v1/account/{account}/export/{exportId}" \
+curl "https://emailengine.example.com/v1/account/{account}/export/{exportId}" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -131,7 +131,7 @@ The response also includes a top-level `truncated` field (boolean) that indicate
 Download a completed export using the [Download Export API endpoint](/docs/api/get-v-1-account-account-export-exportid-download):
 
 ```bash
-curl "https://your-emailengine.com/v1/account/{account}/export/{exportId}/download" \
+curl "https://emailengine.example.com/v1/account/{account}/export/{exportId}/download" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -o export.ndjson.gz
 ```
@@ -220,7 +220,7 @@ EmailEngine fetches messages in batches during export. The batch size can be tun
 Configure via the [Settings API](/docs/api/post-v-1-settings):
 
 ```bash
-curl -X POST "https://your-emailengine.com/v1/settings" \
+curl -X POST "https://emailengine.example.com/v1/settings" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -238,7 +238,7 @@ curl -X POST "https://your-emailengine.com/v1/settings" \
 
 **Outlook:** Microsoft Graph API limits batch requests to 20 items per batch. Setting a higher value has no effect.
 
-**IMAP accounts:** Batch size is not configurable for IMAP -- messages are fetched sequentially.
+**IMAP accounts:** Batch size is not configurable for IMAP - messages are fetched sequentially.
 
 ### Export Limits
 
@@ -319,7 +319,7 @@ Example webhook payload for `exportCompleted`:
 Get all exports for an account using the [List Exports API endpoint](/docs/api/get-v-1-account-account-exports):
 
 ```bash
-curl "https://your-emailengine.com/v1/account/{account}/exports" \
+curl "https://emailengine.example.com/v1/account/{account}/exports" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -346,7 +346,7 @@ Response:
 Cancel a pending export or delete a completed export file using the [Delete Export API endpoint](/docs/api/delete-v-1-account-account-export-exportid):
 
 ```bash
-curl -X DELETE "https://your-emailengine.com/v1/account/{account}/export/{exportId}" \
+curl -X DELETE "https://emailengine.example.com/v1/account/{account}/export/{exportId}" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 

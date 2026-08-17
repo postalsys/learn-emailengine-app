@@ -39,7 +39,7 @@ API access tokens are a special case: they are never stored in recoverable form.
 :::note Document Store and AI features
 The list above reflects EmailEngine's default behavior. Two optional features change what is stored, and neither is enabled unless you configure it:
 
-- **Document Store** (a deprecated, Elasticsearch-backed index, disabled by default) persists full message bodies, all headers, attachment content, text previews, and AI-generated summaries and embeddings in Elasticsearch.
+- **Document Store** (an Elasticsearch-backed index, disabled by default) persists full message bodies, all headers, attachment content, text previews, and AI-generated summaries and embeddings in Elasticsearch. It is deprecated and is removed from EmailEngine releases starting October 1, 2026.
 - **AI processing** (disabled by default) sends message content - subject and body - to your configured LLM provider (OpenAI by default) to generate summaries or embeddings.
 :::
 
@@ -93,7 +93,7 @@ EmailEngine supports **AES-256-GCM** field-level encryption for all sensitive da
 **Not encrypted:**
 - Account IDs and email addresses
 - Message UIDs and folder names
-- Application settings (URLs, feature flags)
+- Application settings (URLs, toggles, webhook routing rules)
 
 See [Secret Encryption](/docs/advanced/encryption) for setup instructions.
 
@@ -107,7 +107,7 @@ Retrieve all stored data for an account:
 
 ```bash
 # Get account information
-curl -X GET "https://your-ee.com/v1/account/user123" \
+curl -X GET "https://emailengine.example.com/v1/account/user123" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -118,7 +118,7 @@ See [Get Account](/docs/api/get-v-1-account-account) API reference. The response
 Delete an account and all associated data:
 
 ```bash
-curl -X DELETE "https://your-ee.com/v1/account/user123" \
+curl -X DELETE "https://emailengine.example.com/v1/account/user123" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -138,7 +138,7 @@ Deletion removes data from EmailEngine only. Emails remain on the mail server.
 Update account information:
 
 ```bash
-curl -X PUT "https://your-ee.com/v1/account/user123" \
+curl -X PUT "https://emailengine.example.com/v1/account/user123" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

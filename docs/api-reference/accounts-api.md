@@ -52,18 +52,7 @@ Email accounts are the core resource in EmailEngine. Each account represents a c
 }
 ```
 
-### Account States
-
-| State | Description |
-|-------|-------------|
-| `init` | Account registered, connection not yet attempted |
-| `connecting` | Attempting to connect to mail server |
-| `syncing` | Connected and synchronizing mailboxes |
-| `connected` | Successfully connected and fully synced |
-| `authenticationError` | Authentication failed (invalid credentials or expired token) |
-| `connectError` | Connection failed (network or server issue) |
-| `disconnected` | Connection closed or lost |
-| `unset` | Initial state before any connection attempt (internal) |
+The `state` field reports where the connection stands. See [Account States](#account-states) for the full list and what each one means for your application.
 
 ## Common Operations
 
@@ -173,42 +162,6 @@ print(f"Account registered: {result['account']}")
 </TabItem>
 </Tabs>
 
-**Pseudo code:**
-```
-// Register a new email account
-response = HTTP_POST("http://localhost:3000/v1/account", {
-  headers: {
-    "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-    "Content-Type": "application/json"
-  },
-  body: {
-    account: "user@example.com",
-    name: "John Doe",
-    imap: {
-      host: "imap.example.com",
-      port: 993,
-      secure: true,
-      auth: {
-        user: "user@example.com",
-        pass: "password"
-      }
-    },
-    smtp: {
-      host: "smtp.example.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: "user@example.com",
-        pass: "password"
-      }
-    }
-  }
-})
-
-result = PARSE_JSON(response.body)
-PRINT("Account registered: " + result.account)
-```
-
 **Response:**
 ```json
 {
@@ -245,36 +198,10 @@ Retrieve all registered accounts.
 
 **Examples:**
 
-<Tabs groupId="programming-language">
-<TabItem value="curl" label="cURL">
-
 ```bash
 curl "http://localhost:3000/v1/accounts?pageSize=50" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
-
-</TabItem>
-<TabItem value="pseudocode" label="Pseudo code">
-
-
-```
-// List all accounts with pagination
-response = HTTP_GET("http://localhost:3000/v1/accounts?pageSize=50", {
-  headers: {
-    "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-  }
-})
-
-data = PARSE_JSON(response.body)
-PRINT("Total accounts: " + data.total)
-
-for each account in data.accounts {
-  PRINT(account.account + ": " + account.state)
-}
-```
-
-</TabItem>
-</Tabs>
 
 **Response:**
 ```json
@@ -322,38 +249,10 @@ Retrieve detailed information about a specific account.
 
 **Examples:**
 
-<Tabs groupId="programming-language">
-<TabItem value="curl" label="cURL">
-
 ```bash
 curl "http://localhost:3000/v1/account/user@example.com" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
-
-</TabItem>
-<TabItem value="pseudocode" label="Pseudo code">
-
-
-```
-// Get detailed information about a specific account
-account = "user@example.com"
-
-response = HTTP_GET(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account),
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
-  }
-)
-
-details = PARSE_JSON(response.body)
-PRINT("Connection state: " + details.state)
-PRINT("Last sync: " + details.syncTime)
-```
-
-</TabItem>
-</Tabs>
 
 **Response:**
 ```json
@@ -411,9 +310,6 @@ Use `"partial": true` inside `imap`, `smtp`, or `oauth2` objects to update only 
 
 **Examples:**
 
-<Tabs groupId="programming-language">
-<TabItem value="curl" label="cURL">
-
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -426,38 +322,6 @@ curl -X PUT "http://localhost:3000/v1/account/user@example.com" \
     }
   }'
 ```
-
-</TabItem>
-<TabItem value="pseudocode" label="Pseudo code">
-
-
-```
-// Update account settings or credentials
-account = "user@example.com"
-
-response = HTTP_PUT(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account),
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      name: "Updated Name",
-      imap: {
-        partial: true,
-        port: 993
-      }
-    }
-  }
-)
-
-result = PARSE_JSON(response.body)
-PRINT("Account updated: " + result.account)
-```
-
-</TabItem>
-</Tabs>
 
 **Use Cases:**
 - Updating account credentials after password change
@@ -482,9 +346,6 @@ Remove an account and stop synchronization.
 
 **Examples:**
 
-<Tabs groupId="programming-language">
-<TabItem value="curl" label="cURL">
-
 ```bash
 curl -X DELETE "http://localhost:3000/v1/account/user@example.com" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
@@ -493,30 +354,6 @@ curl -X DELETE "http://localhost:3000/v1/account/user@example.com" \
 curl -X DELETE "http://localhost:3000/v1/account/user@example.com?revoke=true" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
-
-</TabItem>
-<TabItem value="pseudocode" label="Pseudo code">
-
-
-```
-// Delete an account
-account = "user@example.com"
-
-response = HTTP_DELETE(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account),
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN"
-    }
-  }
-)
-
-result = PARSE_JSON(response.body)
-PRINT("Account deleted: " + result.deleted)
-```
-
-</TabItem>
-</Tabs>
 
 **Response:**
 ```json
@@ -543,43 +380,12 @@ Force reconnection to mail server (useful after credential updates).
 
 **Examples:**
 
-<Tabs groupId="programming-language">
-<TabItem value="curl" label="cURL">
-
 ```bash
 curl -X PUT "http://localhost:3000/v1/account/user@example.com/reconnect" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"reconnect": true}'
 ```
-
-</TabItem>
-<TabItem value="pseudocode" label="Pseudo code">
-
-
-```
-// Force account reconnection
-account = "user@example.com"
-
-response = HTTP_PUT(
-  "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/reconnect",
-  {
-    headers: {
-      "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-      "Content-Type": "application/json"
-    },
-    body: {
-      reconnect: true
-    }
-  }
-)
-
-result = PARSE_JSON(response.body)
-PRINT("Reconnection requested: " + result.reconnect)
-```
-
-</TabItem>
-</Tabs>
 
 **Use Cases:**
 - Testing connection after credential update
@@ -674,7 +480,7 @@ Flush deletes all cached data for the account. This triggers a complete re-index
 | **Flush** | Paused temporarily | Deleted and rebuilt | Minutes to hours | Re-indexes everything |
 
 **Decision guide:**
-1. Try **sync** first -- it's the least disruptive way to get fresh data
+1. Try **sync** first - it's the least disruptive way to get fresh data
 2. Use **reconnect** if the connection itself seems broken or after credential changes
 3. Use **flush** only when cached data is corrupted or fundamentally out of sync
 
@@ -764,191 +570,140 @@ curl -X POST "http://localhost:3000/v1/verifyAccount" \
 
 ### Account States
 
-Detailed state descriptions:
+| State | Meaning |
+|-------|---------|
+| `init` | The account was just registered and has not connected yet |
+| `unset` | No IMAP or OAuth2 configuration is set, so the account is not synced |
+| `connecting` | Connecting to the mail server or authorizing with the provider |
+| `syncing` | Connected and performing the initial or a periodic mailbox sync |
+| `connected` | Connected and watching for changes. This is the healthy steady state |
+| `disconnected` | The connection dropped and EmailEngine is retrying with backoff |
+| `connectError` | The server could not be reached or the TLS handshake failed. Retried with backoff |
+| `authenticationError` | The credentials were rejected. Requires re-authentication before syncing resumes |
+| `paused` | Syncing was paused through the API. No connection is maintained |
 
-**`init`**
-- Account just registered
-- No connection attempt made yet
-- Waiting for initial connection
+`connected` and `syncing` are both healthy. Treat `connecting`, `syncing`, and `disconnected` as transient and let EmailEngine recover on its own. Only `authenticationError` always needs a human or an OAuth2 re-authorization; a `connectError` that persists usually points at the network or the server rather than at the account.
 
-**`connecting`**
-- Attempting to establish connection
-- Authenticating credentials
-- Retrieving mailbox list
+Watch these transitions live instead of polling with the account state stream below.
 
-**`connected`**
-- Successfully connected
-- Actively syncing messages
-- Healthy state
+### Streaming Account State Changes
 
-**`authenticationError`**
-- Invalid credentials
-- OAuth2 token expired
-- Action required: update credentials
+`GET /v1/changes` is a [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) stream that pushes a message every time an account changes state. It is the same feed the admin dashboard uses to repaint its status badges, so a monitoring view can follow every account without polling `/v1/accounts` on a timer.
 
-**`connectError`**
-- Network connectivity issues
-- Mail server unavailable
-- Temporary state, will auto-retry
+```javascript
+const stream = new EventSource(
+  'http://localhost:3000/v1/changes?access_token=YOUR_ACCESS_TOKEN'
+);
 
-**`disconnected`**
-- Manually disconnected via API
-- Not syncing messages
-- Can be reconnected
+stream.onmessage = event => {
+  const { account, type, key, payload } = JSON.parse(event.data);
+  if (type === 'state') {
+    console.log(`${account} is now ${key}`);
+  }
+};
+```
+
+Each message carries:
+
+| Field | Meaning |
+|-------|---------|
+| `account` | The account that changed, or `null` for instance-wide events |
+| `type` | `state` for an account transition. `smtpServerState` and `imapProxyServerState` report the built-in servers starting or failing |
+| `key` | The new value, so for `type: "state"` one of the account states above |
+| `payload` | Extra context, such as `error` on a failure. `null` when there is none |
+| `stateLabel` | A pre-rendered, translated badge label, resolved server-side so the admin UI and any client agree |
+
+The connection stays open until the client closes it, so treat a disconnect as normal and reconnect. `EventSource` does this on its own.
+
+:::note This stream is a signal, not a record
+Events are only delivered to clients connected at the time. Nothing is buffered for a client that is not listening, so a state change during a reconnect is missed. Use it to drive a live view, and read `/v1/account/{account}` for the authoritative current state. For durable delivery, use [webhooks](/docs/webhooks/overview).
+:::
+
+Because `EventSource` cannot set request headers, this endpoint accepts the token as the `access_token` query parameter. Keep in mind that query strings are more likely to end up in proxy and server logs than an `Authorization` header.
 
 ## Common Patterns
 
 ### Bulk Account Registration
 
-Register multiple accounts efficiently:
+Register accounts with bounded concurrency rather than firing every request at once. Each registration opens a connection to a mail server, so an unbounded loop over thousands of accounts will hit provider connection limits before it hits EmailEngine's:
 
-```
-// Pseudo code: Register multiple accounts in parallel
-function registerAccounts(accounts) {
-  results = []
+```javascript
+async function registerAccounts(accounts, concurrency = 5) {
+  const queue = [...accounts];
+  const results = [];
 
-  // Process accounts in parallel
-  for each acc in accounts {
-    response = HTTP_POST("http://localhost:3000/v1/account", {
-      headers: {
-        "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-        "Content-Type": "application/json"
-      },
-      body: acc
-    })
+  const worker = async () => {
+    while (queue.length) {
+      const body = queue.shift();
+      const res = await fetch('http://localhost:3000/v1/account', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer YOUR_ACCESS_TOKEN',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
 
-    result = PARSE_JSON(response.body)
-    results = results + [result]
-  }
+      results.push(
+        res.ok
+          ? { account: body.account, ...(await res.json()) }
+          : { account: body.account, error: (await res.json()).message }
+      );
+    }
+  };
 
-  return results
+  await Promise.all(Array.from({ length: concurrency }, worker));
+  return results;
 }
-
-// Example usage
-accounts = [
-  { account: "user1@example.com", name: "User 1", imap: { /* ... */ } },
-  { account: "user2@example.com", name: "User 2", imap: { /* ... */ } }
-]
-
-results = registerAccounts(accounts)
-PRINT("Registered " + LENGTH(results) + " accounts")
 ```
+
+Registration returns as soon as the account is stored, so a successful response does not mean the mailbox is reachable yet. Watch for [`authenticationError`](/docs/webhooks/authenticationerror) and [`accountInitialized`](/docs/webhooks/accountinitialized) webhooks to learn the real outcome.
+
+See [Performance Tuning](/docs/advanced/performance-tuning) before onboarding accounts in the thousands.
 
 ### Health Monitoring
 
-Monitor account connection health:
+Ask EmailEngine for the accounts in a given state rather than listing everything and filtering client-side:
 
+```bash
+curl "http://localhost:3000/v1/accounts?state=authenticationError&pageSize=1000" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
-// Pseudo code: Monitor account health
-function checkAccountHealth() {
-  // Get all accounts
-  response = HTTP_GET("http://localhost:3000/v1/accounts", {
-    headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
-  })
 
-  accounts = PARSE_JSON(response.body).accounts
+`authenticationError` is the state worth alerting on: it does not clear on its own and needs a credential update or a new OAuth2 authorization. `connectError` and `disconnected` are retried automatically, so alert on those only if an account stays there across several checks, and treat `connecting`, `syncing`, and `connected` as healthy.
 
-  // Find unhealthy accounts
-  unhealthy = []
-  for each acc in accounts {
-    if (acc.state != "connected" AND acc.state != "connecting") {
-      unhealthy = unhealthy + [acc]
-    }
-  }
-
-  // Alert if issues found
-  if (LENGTH(unhealthy) > 0) {
-    PRINT("WARNING: Unhealthy accounts found")
-    for each acc in unhealthy {
-      PRINT("  - " + acc.account + ": " + acc.state)
-    }
-    // Send alerts, attempt reconnection, etc.
-  }
-
-  // Return summary
-  connected = FILTER(accounts, state == "connected")
-  return {
-    total: LENGTH(accounts),
-    connected: LENGTH(connected),
-    unhealthy: LENGTH(unhealthy)
-  }
-}
-
-// Run periodically (every 5 minutes)
-SCHEDULE(checkAccountHealth, interval: 5 * 60 * 1000)
-```
+For a live view rather than a poll, subscribe to the [account state stream](#streaming-account-state-changes).
 
 ### Credential Rotation
 
-Update passwords programmatically:
+Send only the fields that change. Setting `imap.partial` keeps the rest of the IMAP configuration intact, so you do not have to resend host, port, and TLS settings just to replace a password:
 
-```
-// Pseudo code: Rotate account credentials
-function rotateCredentials(account, username, newPassword) {
-  // Step 1: Update credentials
-  // Use "partial": true so only the auth object is updated instead of
-  // replacing the whole imap/smtp configuration. The auth object must
-  // include both user and pass.
-  HTTP_PUT(
-    "http://localhost:3000/v1/account/" + URL_ENCODE(account),
-    {
-      headers: {
-        "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-        "Content-Type": "application/json"
-      },
-      body: {
-        imap: { partial: true, auth: { user: username, pass: newPassword } },
-        smtp: { partial: true, auth: { user: username, pass: newPassword } }
-      }
-    }
-  )
-
-  // Step 2: Force reconnection to apply new credentials
-  HTTP_PUT(
-    "http://localhost:3000/v1/account/" + URL_ENCODE(account) + "/reconnect",
-    {
-      headers: {
-        "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-        "Content-Type": "application/json"
-      },
-      body: { reconnect: true }
-    }
-  )
-
-  PRINT("Credentials rotated and reconnected")
-}
-```
-
-### Account Synchronization Status
-
-Track sync progress:
-
-```
-// Pseudo code: Get account sync status
-function getSyncStatus(account) {
-  // Get account details
-  response = HTTP_GET(
-    "http://localhost:3000/v1/account/" + URL_ENCODE(account),
-    {
-      headers: { "Authorization": "Bearer YOUR_ACCESS_TOKEN" }
-    }
-  )
-
-  details = PARSE_JSON(response.body)
-
-  // Calculate status (syncTime is an ISO 8601 date-time string)
-  currentTime = CURRENT_TIMESTAMP()
-  timeSinceSync = currentTime - PARSE_DATE(details.syncTime)
-  isHealthy = (details.state == "connected" AND details.lastError == null)
-
-  return {
-    state: details.state,
-    lastSync: details.syncTime,
-    timeSinceSync: timeSinceSync,
-    isHealthy: isHealthy
+```json
+{
+  "imap": {
+    "partial": true,
+    "auth": { "user": "user@example.com", "pass": "new-password" }
   }
 }
 ```
+
+Updating credentials on an account in an error state triggers a reconnect, so there is no need to call reconnect separately.
+
+### Account Synchronization Status
+
+`GET /v1/account/{account}` reports where an account stands:
+
+```bash
+curl "http://localhost:3000/v1/account/user%40example.com" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+| Field | What it tells you |
+|-------|-------------------|
+| `state` | The current connection state, from the table above |
+| `syncTime` | When the last sync completed. A timestamp that stops advancing points at a stalled account |
+| `lastError` | Details of the most recent failure, or `null`. Present even after EmailEngine has recovered |
+
 
 ## Error Handling
 

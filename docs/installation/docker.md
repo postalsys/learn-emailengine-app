@@ -230,7 +230,7 @@ EENGINE_SECRET=your-generated-secret-here
 REDIS_PASSWORD=your-secure-redis-password
 
 # Version pinning for stability
-EMAILENGINE_VERSION=v2.57.0
+EMAILENGINE_VERSION=v2.78.0
 
 # Bind to all interfaces (if behind reverse proxy)
 EMAILENGINE_API_BIND=0.0.0.0
@@ -248,7 +248,7 @@ RESTART_POLICY=unless-stopped
 ### Security Recommendations
 
 1. **Use Redis password:** Set `REDIS_PASSWORD` for production
-2. **Pin versions:** Specify exact versions (e.g., `EMAILENGINE_VERSION=v2.57.0`)
+2. **Pin versions:** Specify exact versions (e.g., `EMAILENGINE_VERSION=v2.78.0`)
 3. **Bind to localhost:** If using reverse proxy, keep default `127.0.0.1` binding
 4. **Restrict access:** Use firewall rules to limit port access
 5. **Enable TLS:** Use reverse proxy (Nginx/Caddy) with HTTPS
@@ -377,11 +377,19 @@ http {
 
 ### Available Tags
 
-EmailEngine offers various tag types:
+Every release publishes four tags, and master publishes one:
 
-1. **`latest`**: Latest commit from the master branch (development builds)
-2. **`v2`**: Latest tagged release (recommended for production, currently the latest stable version as there is no v3 or later)
-3. **`v2.x.x`**: Specific version (e.g., `v2.55.4`) - pin to a specific release for maximum stability
+| Tag | Points at | Use it when |
+|-----|-----------|-------------|
+| `v2.78.0` | One exact release | You want the image to change only when you change it. The safest choice for production |
+| `v2.78` | Newest patch of that minor | You want patch fixes automatically, without minor upgrades |
+| `v2` | Newest release of the v2 line | You want releases automatically. There is no v3, so this is currently the newest stable build |
+| `latest` | Newest release, same build as `v2` today | Convenience. It will follow a future major version, so avoid pinning production to it |
+| `edge` | Latest commit on master | Testing unreleased changes. Not for production |
+
+:::warning `edge` is the development tag, not `latest`
+`latest` is published by the release workflow and always points at a tagged release. Builds from master are published as `edge`. If you want to try unreleased work, pull `edge` explicitly.
+:::
 
 ### Image Sources
 
@@ -389,7 +397,7 @@ EmailEngine offers various tag types:
 
 ```bash
 docker pull postalsys/emailengine:v2
-docker pull postalsys/emailengine:v2.55.4
+docker pull postalsys/emailengine:v2.78.0
 ```
 
 **GitHub Container Registry (alternative):**
@@ -447,7 +455,7 @@ docker images
 docker pull postalsys/emailengine:v2
 
 # Pull specific version
-docker pull postalsys/emailengine:v2.55.4
+docker pull postalsys/emailengine:v2.78.0
 
 # Remove image
 docker rmi postalsys/emailengine:v2
@@ -510,12 +518,12 @@ docker run -d \
 
 ```bash
 # Use specific version tag
-docker pull postalsys/emailengine:v2.55.4
+docker pull postalsys/emailengine:v2.78.0
 
 # In docker-compose.yml
 services:
   emailengine:
-    image: postalsys/emailengine:v2.55.4
+    image: postalsys/emailengine:v2.78.0
 ```
 
 ## Environment Variables

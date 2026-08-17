@@ -75,6 +75,7 @@ The event is triggered after EmailEngine has fetched and parsed the message meta
 | `headers` | object | No | Selected email headers (if configured) |
 | `text` | object | No | Text content object |
 | `bounces` | array | No | Associated bounce information |
+| `deliveryReport` | object | No | Parsed delivery status notification, set when the message is a "delivered" or "delayed" DSN (see below) |
 | `isAutoReply` | boolean | No | True if detected as auto-reply |
 | `seemsLikeNew` | boolean | No | True if message appears genuinely new (not moved/copied) |
 | `category` | string | No | Message category (e.g., "primary", "social", "promotions") |
@@ -83,6 +84,27 @@ The event is triggered after EmailEngine has fetched and parsed the message meta
 | `summary` | object | No | AI-generated summary (if OpenAI integration enabled) |
 | `riskAssessment` | object | No | AI-generated risk assessment (if enabled) |
 | `embeddings` | object | No | AI-generated embeddings (if enabled) |
+
+### Delivery Report Structure
+
+When an incoming message is a delivery status notification ([RFC 3464](https://www.rfc-editor.org/rfc/rfc3464)) reporting a successful delivery or a delay, EmailEngine parses its `message/delivery-status` part into `data.deliveryReport`. Failures are not reported here - those raise a separate [`messageBounce`](/docs/webhooks/messagebounce) event instead.
+
+Every field of the report is passed through with its name camelCased, so the exact set of keys depends on what the reporting server sent. A value that starts with an address type, such as `rfc822; user@example.com`, is split into a `label` and a `value`, and `Arrival-Date` is normalized to an ISO 8601 timestamp:
+
+```json
+{
+  "deliveryReport": {
+    "reportingMta": { "label": "dns", "value": "mx.example.com" },
+    "arrivalDate": "2026-08-17T09:12:44.000Z",
+    "finalRecipient": { "label": "rfc822", "value": "user@example.com" },
+    "action": "delayed",
+    "status": "4.4.1",
+    "diagnosticCode": { "label": "smtp", "value": "451 4.4.1 Connection timed out" }
+  }
+}
+```
+
+A notification that reports on several recipients is described one recipient at a time, so `action`, `status`, and `diagnosticCode` always belong together rather than being mixed across recipients.
 
 ### Address Object Structure
 
@@ -165,7 +187,7 @@ If OpenAI integration is enabled with `generateEmailSummary`:
   "account": "user123",
   "date": "2025-10-17T06:42:25.056Z",
   "path": "INBOX",
-  "specialUse": "\Inbox",
+  "specialUse": "\\Inbox",
   "event": "messageNew",
   "data": {
     "id": "AAAADAAABy4",
@@ -228,7 +250,7 @@ If OpenAI integration is enabled with `generateEmailSummary`:
       "html": "<div>Hi Jane,<br><br>Please find attached the Q3 report for your review.<br><br>Best regards,<br>John</div>"
     },
     "seemsLikeNew": true,
-    "messageSpecialUse": "\Inbox",
+    "messageSpecialUse": "\\Inbox",
     "threadId": "617dd693-d78b-48df-bc20-6330a5b1fa85"
   }
 }
@@ -244,7 +266,7 @@ When OpenAI integration is enabled:
   "account": "user123",
   "date": "2025-10-17T07:15:00.000Z",
   "path": "INBOX",
-  "specialUse": "\Inbox",
+  "specialUse": "\\Inbox",
   "event": "messageNew",
   "data": {
     "id": "AAAADAAABz0",
@@ -275,7 +297,7 @@ When OpenAI integration is enabled:
       "plain": "Hi team,\n\nReminder that we have our weekly sync meeting this Friday at 3 PM.\n\nPlease come prepared with your status updates.\n\nThanks,\nSarah"
     },
     "seemsLikeNew": true,
-    "messageSpecialUse": "\Inbox",
+    "messageSpecialUse": "\\Inbox",
     "summary": {
       "id": "chatcmpl-abc123xyz",
       "tokens": 580,
@@ -340,10 +362,10 @@ Several settings affect the `messageNew` webhook payload:
 
 | Setting | Description |
 |---------|-------------|
-| `generateEmailSummary` | Generate AI summary for incoming emails |
-| `generateEmbeddings` | Generate AI embeddings for incoming emails |
+| `generateEmailSummary` | Add `summary` and `riskAssessment` to incoming messages |
+| `openAiGenerateEmbeddings` | Add `embeddings` to incoming messages |
 
-Configure these via the [Settings API](/docs/api/post-v-1-settings) or the web UI under Configuration.
+Both need `openAiAPIKey` to be set as well. Configure them through the [Settings API](/docs/api/post-v-1-settings) or under **Configuration > AI Processing**. See [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt) for what the generated fields contain.
 
 ## Handling the Event
 
@@ -373,7 +395,7 @@ If text content is not included in the webhook, fetch it via API:
 ```javascript
 async function getMessageContent(account, messageId) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${account}/message/${messageId}`,
+    `https://emailengine.example.com/v1/account/${account}/message/${messageId}`,
     {
       headers: {
         'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
@@ -389,7 +411,7 @@ async function getMessageContent(account, messageId) {
 ```javascript
 async function downloadAttachment(account, attachmentId) {
   const response = await fetch(
-    `https://your-emailengine.com/v1/account/${account}/attachment/${attachmentId}`,
+    `https://emailengine.example.com/v1/account/${account}/attachment/${attachmentId}`,
     {
       headers: {
         'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
@@ -452,9 +474,9 @@ async function handleMessageNew(event) {
 
 ## Best Practices
 
-1. **Respond quickly** - Return a 2xx status within 5 seconds to prevent retries
+1. **Respond quickly** - Return a 2xx status before the delivery times out (30 seconds by default) to prevent retries
 2. **Process asynchronously** - Queue events for processing after acknowledging receipt
-3. **Handle duplicates** - Use `eventId` or `data.id` to deduplicate if needed
+3. **Handle duplicates** - Deduplicate on the `X-EE-Wh-Event-Id` request header, which is stable across retries of the same delivery
 4. **Check `seemsLikeNew`** - Filter out moved/copied messages when appropriate
 5. **Use message IDs** - Fetch additional data via API using `data.id` when needed
 6. **Configure text inclusion** - Enable `notifyText` only if you need body content in webhooks

@@ -13,6 +13,9 @@ keywords:
   - dns records
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Email Authentication Testing
 
 Verify your email authentication setup (DKIM, SPF, DMARC, BIMI, ARC) by sending a test email to EmailEngine's verification service. This helps identify configuration issues before they affect real email delivery.
@@ -68,7 +71,8 @@ Test results are stored for **1 hour** after the test is initiated. After this p
 
 Initiate a test for any connected email account:
 
-**cURL:**
+<Tabs>
+<TabItem value="curl" label="cURL" default>
 
 ```bash
 curl -X POST "http://localhost:3000/v1/delivery-test/account/my-account" \
@@ -77,7 +81,8 @@ curl -X POST "http://localhost:3000/v1/delivery-test/account/my-account" \
   -d '{}'
 ```
 
-**Node.js:**
+</TabItem>
+<TabItem value="nodejs" label="Node.js">
 
 ```javascript
 const response = await fetch(
@@ -95,6 +100,9 @@ const response = await fetch(
 const result = await response.json();
 console.log('Test ID:', result.deliveryTest);
 ```
+
+</TabItem>
+</Tabs>
 
 **Response:**
 
@@ -130,14 +138,16 @@ This is useful for testing:
 
 Poll the check endpoint with the test ID to get results. The verification server needs time to receive and analyze the email, so you may need to wait a few seconds before results are available.
 
-**cURL:**
+<Tabs>
+<TabItem value="curl" label="cURL" default>
 
 ```bash
 curl "http://localhost:3000/v1/delivery-test/check/6420a6ad-7f82-4e4f-8112-82a9dad1f34d" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-**Node.js:**
+</TabItem>
+<TabItem value="nodejs" label="Node.js">
 
 ```javascript
 async function checkDeliveryTest(testId, maxAttempts = 10) {
@@ -165,52 +175,83 @@ async function checkDeliveryTest(testId, maxAttempts = 10) {
 }
 
 const results = await checkDeliveryTest('6420a6ad-7f82-4e4f-8112-82a9dad1f34d');
-console.log('DKIM:', results.dkim);
-console.log('SPF:', results.spf);
-console.log('DMARC:', results.dmarc);
+console.log('SPF:', results.spf?.status?.result);
+console.log('DKIM:', results.mainSig?.status?.result);
+console.log('DMARC:', results.dmarc?.status?.result);
 ```
+
+</TabItem>
+</Tabs>
 
 **Response:**
 
 ```json
 {
   "success": true,
-  "dkim": {
-    "status": "pass",
-    "domain": "example.com",
-    "selector": "default",
-    "info": "DKIM signature verified"
-  },
   "spf": {
-    "status": "pass",
-    "domain": "example.com",
-    "ip": "203.0.113.10",
-    "info": "SPF record allows this sender"
+    "status": {
+      "result": "pass",
+      "comment": "example.com: domain of sender designates 203.0.113.10 as permitted sender"
+    },
+    "rr": "v=spf1 include:_spf.example.com ~all"
+  },
+  "dkim": {
+    "results": [
+      {
+        "signingDomain": "example.com",
+        "selector": "default",
+        "status": {
+          "result": "pass",
+          "aligned": "example.com"
+        }
+      }
+    ]
   },
   "dmarc": {
-    "status": "pass",
-    "domain": "example.com",
-    "policy": "reject",
-    "info": "DMARC policy satisfied"
-  },
-  "bimi": {
-    "status": "none",
-    "info": "No BIMI record found"
-  },
-  "arc": {
-    "status": "none",
-    "info": "No ARC headers present"
-  },
-  "mainSig": {
     "status": {
-      "aligned": true,
       "result": "pass"
     },
     "domain": "example.com",
-    "selector": "default"
+    "policy": "reject",
+    "p": "reject",
+    "rr": "v=DMARC1; p=reject; rua=mailto:dmarc@example.com",
+    "alignment": {
+      "spf": { "result": "example.com", "strict": false },
+      "dkim": { "result": "example.com", "strict": false }
+    }
+  },
+  "arc": {},
+  "bimi": {},
+  "mainSig": {
+    "signingDomain": "example.com",
+    "selector": "default",
+    "status": {
+      "result": "pass",
+      "aligned": "example.com"
+    }
   }
 }
 ```
+
+While the test message has not arrived yet, the response is `{"success": false, "status": "pending"}` instead. Poll until `success` is `true`.
+
+The per-protocol objects come straight from the verification service, so they carry more detail than shown here. The fields to build on are:
+
+| Field | Meaning |
+|-------|---------|
+| `spf.status.result` | SPF outcome, one of the values in the table below |
+| `spf.rr` | The SPF record that was evaluated |
+| `dkim.results[]` | One entry per DKIM signature on the message, each with `signingDomain`, `selector`, and `status` |
+| `dmarc.status.result` | DMARC outcome |
+| `dmarc.policy` | The policy that applies to this message, taken from the record's `sp` for a subdomain and `p` otherwise |
+| `dmarc.alignment.spf.result` / `dmarc.alignment.dkim.result` | The domain that aligned, or absent when that mechanism did not align. DMARC passes when either one aligns |
+| `mainSig` | The DKIM signature EmailEngine treats as the primary one (see below) |
+
+`status.aligned` on a DKIM result follows the same convention: it holds the aligned domain, or `false` when the signature does not align with the From domain.
+
+:::tip Read `mainSig` rather than picking a signature yourself
+A message can carry several DKIM signatures, and only some of them are aligned with the From domain. EmailEngine picks the meaningful one for you: the first signature that both passes and is aligned, otherwise the first that passes, otherwise the first result. When there are no signatures at all, `mainSig` is `{"status": {"result": "none"}}`, so the field is always safe to read.
+:::
 
 ## Understanding Results
 
@@ -248,9 +289,10 @@ DMARC combines DKIM and SPF results with the domain's policy.
 
 | Status | Meaning |
 |--------|---------|
-| `pass` | Email passes DMARC checks |
-| `fail` | Email fails DMARC checks |
-| `none` | No DMARC record found |
+| `pass` | SPF or DKIM aligned with the From domain |
+| `fail` | Neither SPF nor DKIM aligned |
+| `none` | No DMARC record found for the domain |
+| `temperror` | The DMARC record could not be looked up |
 
 The `policy` field shows what the domain owner wants receiving servers to do with failing emails:
 - `none` - Take no action (monitoring mode)
@@ -279,111 +321,48 @@ ARC preserves authentication results when emails are forwarded.
 
 ## Complete Testing Example
 
-Here's a complete example that runs a delivery test and reports the results:
+Start a test, poll until the verification service has analysed the message, then report the three checks that decide whether mail is accepted:
 
 ```javascript
+const API_URL = 'http://localhost:3000';
+const TOKEN = 'YOUR_ACCESS_TOKEN';
+
+const api = path =>
+  fetch(`${API_URL}${path}`, {
+    method: path.includes('/check/') ? 'GET' : 'POST',
+    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: path.includes('/check/') ? undefined : '{}'
+  }).then(res => res.json());
+
 async function runDeliveryTest(accountId) {
-  const API_URL = 'http://localhost:3000';
-  const TOKEN = 'YOUR_ACCESS_TOKEN';
+  const { deliveryTest } = await api(`/v1/delivery-test/account/${accountId}`);
 
-  // Start the test
-  console.log(`Starting delivery test for account: ${accountId}`);
+  // The message has to be delivered and analysed, so results are not immediate
+  for (let attempt = 0; attempt < 15; attempt++) {
+    await new Promise(r => setTimeout(r, 2000));
 
-  const startResponse = await fetch(
-    `${API_URL}/v1/delivery-test/account/${accountId}`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({})
-    }
-  );
+    const result = await api(`/v1/delivery-test/check/${deliveryTest}`);
+    if (!result.success) continue; // still pending
 
-  const startResult = await startResponse.json();
-
-  if (!startResult.success) {
-    throw new Error('Failed to start delivery test');
+    return {
+      spf: result.spf?.status?.result,
+      dkim: result.mainSig?.status?.result,
+      dkimAligned: !!result.mainSig?.status?.aligned,
+      dmarc: result.dmarc?.status?.result,
+      policy: result.dmarc?.policy
+    };
   }
 
-  const testId = startResult.deliveryTest;
-  console.log(`Test started with ID: ${testId}`);
-
-  // Poll for results
-  console.log('Waiting for results...');
-
-  for (let attempt = 1; attempt <= 15; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const checkResponse = await fetch(
-      `${API_URL}/v1/delivery-test/check/${testId}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${TOKEN}`
-        }
-      }
-    );
-
-    const checkResult = await checkResponse.json();
-
-    if (checkResult.success) {
-      console.log('\n=== Delivery Test Results ===\n');
-
-      // DKIM
-      const dkim = checkResult.dkim || {};
-      console.log(`DKIM: ${dkim.status || 'unknown'}`);
-      if (dkim.domain) console.log(`  Domain: ${dkim.domain}`);
-      if (dkim.selector) console.log(`  Selector: ${dkim.selector}`);
-
-      // SPF
-      const spf = checkResult.spf || {};
-      console.log(`SPF: ${spf.status || 'unknown'}`);
-      if (spf.domain) console.log(`  Domain: ${spf.domain}`);
-      if (spf.ip) console.log(`  IP: ${spf.ip}`);
-
-      // DMARC
-      const dmarc = checkResult.dmarc || {};
-      console.log(`DMARC: ${dmarc.status || 'unknown'}`);
-      if (dmarc.policy) console.log(`  Policy: ${dmarc.policy}`);
-
-      // BIMI
-      const bimi = checkResult.bimi || {};
-      console.log(`BIMI: ${bimi.status || 'unknown'}`);
-
-      // ARC
-      const arc = checkResult.arc || {};
-      console.log(`ARC: ${arc.status || 'unknown'}`);
-
-      // Overall assessment
-      console.log('\n=== Assessment ===\n');
-
-      const issues = [];
-      if (dkim.status !== 'pass') issues.push('DKIM not passing');
-      if (spf.status !== 'pass') issues.push('SPF not passing');
-      if (dmarc.status !== 'pass') issues.push('DMARC not passing');
-
-      if (issues.length === 0) {
-        console.log('All authentication checks passed!');
-      } else {
-        console.log('Issues found:');
-        issues.forEach(issue => console.log(`  - ${issue}`));
-      }
-
-      return checkResult;
-    }
-
-    console.log(`Attempt ${attempt}/15 - waiting for email to be processed...`);
-  }
-
-  throw new Error('Test timed out after 30 seconds');
+  throw new Error('Delivery test did not complete in time');
 }
 
-// Run the test
-runDeliveryTest('my-account')
-  .then(results => console.log('\nTest completed successfully'))
-  .catch(err => console.error('Test failed:', err.message));
+const report = await runDeliveryTest('my-account');
+console.log(report);
+// { spf: 'pass', dkim: 'pass', dkimAligned: true, dmarc: 'pass', policy: 'reject' }
 ```
+
+A passing DKIM signature that is not aligned still fails DMARC, which is why `dkimAligned` is reported separately rather than folded into the DKIM result.
+
 
 ## Troubleshooting Authentication Issues
 

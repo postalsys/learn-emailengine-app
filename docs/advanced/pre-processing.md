@@ -120,9 +120,9 @@ return payload;
 
 Configure pre-processing for webhook routes in the EmailEngine UI.
 
-#### Step 1: Navigate to Webhook Settings
+#### Step 1: Open the webhook route
 
-1. Go to **Settings** → **Webhooks**
+1. Go to **Integrations** → **Webhook Routes**
 2. Click on the webhook route to configure
 3. Scroll to **Pre-Processing Function** section
 

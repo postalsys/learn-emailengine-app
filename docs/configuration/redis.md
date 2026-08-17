@@ -57,7 +57,7 @@ services:
     restart: unless-stopped
 
   emailengine:
-    image: postalsys/emailengine:latest
+    image: postalsys/emailengine:v2
     environment:
       - EENGINE_REDIS=redis://redis:6379
       - EENGINE_HOST=0.0.0.0
@@ -99,7 +99,7 @@ spec:
     spec:
       containers:
       - name: emailengine
-        image: postalsys/emailengine:latest
+        image: postalsys/emailengine:v2
         envFrom:
         - configMapRef:
             name: emailengine-config
@@ -334,7 +334,7 @@ EmailEngine uses JSON logging (pino). Log levels: `60`=FATAL, `50`=ERROR, `40`=W
 
 **Successful connection:**
 ```json
-{"level":30,"time":1762176419767,"pid":93728,"msg":"EmailEngine starting up","version":"2.61.1"}
+{"level":30,"time":1762176419767,"pid":93728,"msg":"EmailEngine starting up","version":"2.78.0"}
 {"level":20,"time":1762176421071,"pid":93728,"msg":"Started API server thread","port":3000,"host":"127.0.0.1"}
 ```
 
@@ -386,7 +386,7 @@ redis-cli INFO memory | grep used_memory_human
 
 ### Memory Sizing
 
-Allocate **1–2 MiB of RAM per account** and provision **2× the calculated baseline** to accommodate:
+Allocate **1-2 MiB of RAM per account** and provision **twice the calculated baseline** to accommodate:
 - Copy-on-write memory during RDB snapshots
 - Webhook and outbox queue bursts
 - Keep usage below **80%** of provisioned memory

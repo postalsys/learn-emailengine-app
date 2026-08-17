@@ -237,6 +237,10 @@ const config: Config = {
             from: '/docs/accounts/shared-mailboxes',
             to: '/docs/accounts/microsoft-365/shared-mailboxes',
           },
+          {
+            from: '/docs/configuration/feature-flags',
+            to: '/docs/configuration/environment-variables',
+          },
         ],
       },
     ],

@@ -1,24 +1,25 @@
 ---
 title: "mailboxReset"
 sidebar_position: 14
-description: "Webhook event triggered when a folder's UIDVALIDITY changes, indicating a mailbox reset"
+description: "Webhook event triggered when EmailEngine rebuilds a folder's index, invalidating previously tracked message UIDs"
 ---
 
 # mailboxReset
 
-The `mailboxReset` webhook event is triggered when EmailEngine detects that the UIDVALIDITY value for a mailbox folder has changed. This is a relatively rare but significant event that indicates the folder has been reset or recreated, invalidating all previously tracked message UIDs.
+The `mailboxReset` webhook event is triggered when EmailEngine has to rebuild its index for a folder from scratch. It is rare but significant: every message UID EmailEngine previously tracked for that folder is no longer meaningful.
 
 ## When This Event is Triggered
 
 The `mailboxReset` event fires when:
 
-- The IMAP server reports a different UIDVALIDITY value than what was previously stored
-- The mailbox folder has been recreated on the server
-- The mail server has performed a mailbox repair or reorganization
-- Server migration or restore from backup results in changed UIDVALIDITY
-- The mail server resets its UID counter for the folder
+- The IMAP server reports a different UIDVALIDITY value than what was previously stored (`reason: "uidValidityChange"`), which happens when a folder is recreated, repaired, migrated, or restored from backup
+- EmailEngine's own stored index for the folder is missing or unusable and has to be rebuilt from the server (`reason: "syncStateLost"`)
 
-UIDVALIDITY is an IMAP mechanism that ensures message UIDs remain valid. When UIDVALIDITY changes, it means all previously assigned UIDs are no longer valid, and the folder must be fully resynchronized.
+UIDVALIDITY is the IMAP mechanism that tells a client whether previously assigned UIDs are still valid. When it changes, they are not, and the folder must be fully resynchronized. A lost local index has the same practical consequence.
+
+:::note No message events are replayed
+Rebuilding the baseline deliberately does not emit `messageNew` for the messages it re-indexes. Without that suppression, a reset on a large folder would replay the entire mailbox to your webhook endpoint. Treat `mailboxReset` itself as the signal to reconcile.
+:::
 
 ## Common Use Cases
 
@@ -41,7 +42,6 @@ UIDVALIDITY is an IMAP mechanism that ensures message UIDs remain valid. When UI
 | `path` | string | Yes | Mailbox folder path that was reset (e.g., "INBOX") |
 | `specialUse` | string | No | Special use flag of the folder (e.g., "\Inbox", "\Sent", "\Trash") |
 | `event` | string | Yes | Event type, always "mailboxReset" for this event |
-| `eventId` | string | Yes | Unique identifier for this webhook delivery |
 | `data` | object | Yes | Reset details including UIDVALIDITY information |
 
 ### Reset Data Fields (`data` object)
@@ -51,8 +51,18 @@ UIDVALIDITY is an IMAP mechanism that ensures message UIDs remain valid. When UI
 | `path` | string | Yes | Mailbox folder path (duplicated from top level) |
 | `name` | string | Yes | Display name of the folder |
 | `specialUse` | string/boolean | No | Special use attribute (e.g., "\Inbox", "\Sent") or `false` if none |
-| `uidValidity` | string | Yes | New UIDVALIDITY value (numeric value as string) |
-| `prevUidValidity` | string/boolean | No | Previous UIDVALIDITY value (numeric value as string), or `false` if not available |
+| `uidValidity` | string/boolean | Yes | New UIDVALIDITY value as a string, or `false` if the server did not report a usable one |
+| `prevUidValidity` | string/boolean | No | Previous UIDVALIDITY value as a string, or `false` if not available. Omitted entirely when there was no previous value |
+| `reason` | string | Yes | Why the folder was reset, see below |
+
+### Reset Reasons
+
+| Reason | Meaning |
+|--------|---------|
+| `uidValidityChange` | The server issued a new UIDVALIDITY for the folder, which invalidates every UID EmailEngine had stored |
+| `syncStateLost` | EmailEngine's own index for the folder was missing or unusable and had to be rebuilt from the server |
+
+Both mean the same thing for your application: the message IDs you previously stored for this folder no longer refer to those messages. Branch on `reason` only if you want to distinguish a server-side renumbering from a local index rebuild.
 
 ## Example Payload
 
@@ -71,7 +81,8 @@ UIDVALIDITY is an IMAP mechanism that ensures message UIDs remain valid. When UI
     "name": "INBOX",
     "specialUse": "\\Inbox",
     "uidValidity": "1697556153",
-    "prevUidValidity": "1695234567"
+    "prevUidValidity": "1695234567",
+    "reason": "uidValidityChange"
   }
 }
 ```
@@ -90,7 +101,8 @@ UIDVALIDITY is an IMAP mechanism that ensures message UIDs remain valid. When UI
     "name": "Tickets",
     "specialUse": false,
     "uidValidity": "1697560312",
-    "prevUidValidity": "1690234567"
+    "prevUidValidity": "1690234567",
+    "reason": "uidValidityChange"
   }
 }
 ```
@@ -111,7 +123,8 @@ When EmailEngine has no record of a previous UIDVALIDITY (e.g., first detection 
     "name": "2024",
     "specialUse": false,
     "uidValidity": "1697564200",
-    "prevUidValidity": false
+    "prevUidValidity": false,
+    "reason": "uidValidityChange"
   }
 }
 ```
@@ -189,11 +202,10 @@ async function handleMailboxReset(event) {
 
 ```javascript
 async function handleMailboxReset(event) {
-  const { account, path, date, data, eventId } = event;
+  const { account, path, date, data } = event;
 
   // Log the reset event
   await auditLog.create({
-    eventId,
     timestamp: new Date(date),
     account,
     action: 'mailbox_reset',

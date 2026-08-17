@@ -15,7 +15,7 @@ Email threading allows related messages to be grouped together as conversations.
 Use EmailEngine's reference API for automatic threading:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -34,7 +34,7 @@ See [Replies & Forwards](./replies-forwards.md) for details.
 Control Message-ID, In-Reply-To, and References headers manually:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/example/submit" \
+curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -154,7 +154,7 @@ EmailEngine provides a `threadId` property that identifies related messages. The
 Gmail and Microsoft Graph API support a special `\All` folder that searches across all mailboxes:
 
 ```bash
-curl -XPOST "https://ee.example.com/v1/account/gmail/search?path=%5CAll" \
+curl -XPOST "https://emailengine.example.com/v1/account/gmail/search?path=%5CAll" \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
