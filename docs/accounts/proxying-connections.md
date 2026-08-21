@@ -182,7 +182,7 @@ The account must be configured to use **IMAP/SMTP**, not Gmail API or MS Graph A
 
 ### Step 4: Generate Access Token for Proxy
 
-Create an access token scoped specifically for IMAP proxy access using the [Generate Token API endpoint](/docs/api/post-v-1-token):
+Create an access token scoped specifically for IMAP proxy access using the [Generate Token API endpoint](/docs/api/post-v-1-tokens):
 
 ```bash
 curl -X POST https://emailengine.example.com/v1/token \

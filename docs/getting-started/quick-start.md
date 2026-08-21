@@ -100,7 +100,7 @@ $ export EMAILENGINE_TOKEN="8bf639ec7c051c3963498c6757b6813bd331afeb677886d44731
 6. Copy the token immediately - it's shown only once
 
 :::info Account-Scoped Tokens
-The [Create Access Token API](/docs/api/post-v-1-token) generates account-scoped tokens that are limited to specific email accounts. For full system access, use the CLI or web interface.
+The [Create Access Token API](/docs/api/post-v-1-tokens) generates account-scoped tokens that are limited to specific email accounts. For full system access, use the CLI or web interface.
 :::
 
 ## Step 4: Add Your First Email Account

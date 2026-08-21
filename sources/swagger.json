@@ -91,7 +91,7 @@
     },
     {
       "name": "Blocklists",
-      "description": "Manage email address blocklists to prevent sending to specific recipients or domains"
+      "description": "Manage suppression lists (blocklists) of addresses that must not receive further emails. The same lists are populated by unsubscribe actions and can be managed in the admin UI under Suppression Lists"
     },
     {
       "name": "Multi Message Actions",
@@ -108,7 +108,7 @@
   },
   "info": {
     "title": "EmailEngine API",
-    "version": "2.78.0",
+    "version": "2.79.1",
     "contact": {
       "name": "EmailEngine Support",
       "url": "https://learn.emailengine.app/docs/support",
@@ -139,10 +139,13 @@
     "schemas": {
       "AccountPath": {
         "type": "array",
-        "description": "Mailbox folders to monitor for changes (IMAP only). Use \"*\" to monitor all folders (default). While you can still access unmonitored folders via API, you won't receive webhooks for changes in those folders.",
+        "description": "Mailbox folders to monitor for changes (IMAP only). Use \"*\" to monitor all folders (default)",
         "example": [
           "*"
         ],
+        "x-meta": {
+          "usage": "Leave this at `\"*\"` unless the account is large and you only care about a few folders. Narrowing it reduces the number of folders EmailEngine keeps open and indexes, which is the main cost of syncing a big mailbox.\n\nUnmonitored folders stay fully reachable through the API. What you give up is webhooks: nothing is emitted for changes in a folder that is not on this list."
+        },
         "nullable": true,
         "x-constraint": {
           "single": true
@@ -171,8 +174,15 @@
       },
       "AccountImapIndexer": {
         "type": "string",
-        "description": "Override global IMAP indexing strategy for this account. \"full\" tracks all changes including deletions, \"fast\" only detects new messages.",
+        "description": "Override the global IMAP indexing strategy for this account",
         "example": "full",
+        "x-meta": {
+          "enumDescriptions": {
+            "full": "Track every change, including deletions. Slower but complete",
+            "fast": "Detect new messages only. Cheaper, but deletions and flag changes are missed"
+          },
+          "usage": "Leave this unset to follow the instance-wide setting, and only override it for accounts whose mailboxes behave differently from the rest of your fleet. A very large mailbox that nothing else writes to is the usual reason."
+        },
         "enum": [
           "full",
           "fast"
@@ -194,6 +204,9 @@
       "ImapAuthentication": {
         "type": "object",
         "description": "Authentication credentials for the IMAP server",
+        "x-meta": {
+          "usage": "Send this for ordinary password authentication. Omit it when `useAuthServer` is on, because EmailEngine then fetches credentials from your authentication server for every connection and a stored password would be dead configuration.\n\nOn an update this replaces the whole credentials object unless `partial` is also set."
+        },
         "enum": [
           false
         ],
@@ -238,7 +251,7 @@
       },
       "ImapConfiguration": {
         "type": "object",
-        "description": "IMAP configuration",
+        "description": "IMAP configuration. Set to `false` when there is no IMAP access to configure.",
         "enum": [
           false
         ],
@@ -246,7 +259,10 @@
           "useAuthServer": {
             "type": "boolean",
             "description": "Use external authentication server to retrieve credentials dynamically",
-            "example": false
+            "example": false,
+            "x-meta": {
+              "usage": "Turn this on when passwords must not be stored in EmailEngine, for instance when they are short-lived or held in your own vault. EmailEngine then calls your authentication server for credentials each time it needs to connect, and the `auth` block must be omitted.\n\nThe authentication server URL itself is an instance-wide setting, not a per-account one."
+            }
           },
           "auth": {
             "$ref": "#/components/schemas/ImapAuthentication"
@@ -262,8 +278,11 @@
           },
           "disableIMAP4rev2": {
             "type": "boolean",
-            "description": "Do not use IMAP4rev2 even if the server supports it. Set this for servers with a broken IMAP4rev2 implementation. Only applies to accounts using regular password authentication.",
-            "example": false
+            "description": "Do not use IMAP4rev2 even if the server supports it",
+            "example": false,
+            "x-meta": {
+              "usage": "Set this only after a server has actually misbehaved. A handful of IMAP servers advertise IMAP4rev2 support and then answer incorrectly, and this forces EmailEngine back to IMAP4rev1 for that account.\n\nIt has no effect on accounts that authenticate with OAuth2."
+            }
           },
           "resyncDelay": {
             "type": "integer",
@@ -340,6 +359,9 @@
       "SmtpAuthentication": {
         "type": "object",
         "description": "Authentication credentials for the SMTP server",
+        "x-meta": {
+          "usage": "Send this for ordinary password authentication. Omit it when `useAuthServer` is on, because EmailEngine then fetches credentials from your authentication server for every connection and a stored password would be dead configuration.\n\nOn an update this replaces the whole credentials object unless `partial` is also set."
+        },
         "enum": [
           false
         ],
@@ -384,7 +406,7 @@
       },
       "SmtpConfiguration": {
         "type": "object",
-        "description": "SMTP configuration",
+        "description": "SMTP configuration. Set to `false` when there is no SMTP access to configure.",
         "enum": [
           false
         ],
@@ -392,7 +414,10 @@
           "useAuthServer": {
             "type": "boolean",
             "description": "Use external authentication server to retrieve credentials dynamically",
-            "example": false
+            "example": false,
+            "x-meta": {
+              "usage": "Turn this on when passwords must not be stored in EmailEngine, for instance when they are short-lived or held in your own vault. EmailEngine then calls your authentication server for credentials each time it needs to connect, and the `auth` block must be omitted.\n\nThe authentication server URL itself is an instance-wide setting, not a per-account one."
+            }
           },
           "auth": {
             "$ref": "#/components/schemas/SmtpAuthentication"
@@ -455,7 +480,7 @@
       },
       "OAuth2": {
         "type": "object",
-        "description": "OAuth2 configuration",
+        "description": "OAuth2 configuration. Set to `false` when the account does not authenticate with OAuth2.",
         "enum": [
           false
         ],
@@ -491,7 +516,10 @@
           "useAuthServer": {
             "type": "boolean",
             "description": "Use external authentication server for token management instead of EmailEngine",
-            "example": false
+            "example": false,
+            "x-meta": {
+              "usage": "Turn this on when passwords must not be stored in EmailEngine, for instance when they are short-lived or held in your own vault. EmailEngine then calls your authentication server for credentials each time it needs to connect, and the `auth` block must be omitted.\n\nThe authentication server URL itself is an instance-wide setting, not a per-account one."
+            }
           },
           "accessToken": {
             "type": "string",
@@ -576,8 +604,11 @@
         "properties": {
           "account": {
             "type": "string",
-            "description": "Account ID. If set to `null`, a unique ID will be generated automatically. If you provide an existing account ID, the settings for that account will be updated instead",
+            "description": "Account ID. If set to `null`, a unique ID will be generated automatically",
             "example": "example",
+            "x-meta": {
+              "usage": "Set this when your own system already has an identifier for the mailbox, for example a user id, so you can address the account later without storing a second id. Leave it `null` and EmailEngine generates one, which comes back in the response.\n\nReusing an existing id is an update, not an error: the registration endpoint applies the new settings to that account rather than creating a second one."
+            },
             "nullable": true,
             "maxLength": 256,
             "x-convert": {
@@ -600,8 +631,11 @@
           },
           "expectedEmail": {
             "type": "string",
-            "description": "Pins the account to an email address. A hosted authentication form setup is rejected unless the identity it authenticates matches this address. For OAuth2 the address is compared against what the provider returns, never against caller-supplied hints, so for a shared or delegated mailbox this must be the authenticating principal rather than the mailbox address. For IMAP it is compared against the address entered on the form, which the credentials do not prove ownership of. Once set, the constraint stays on the account and applies to later reauthentication as well.",
+            "description": "Pins the account to an email address",
             "example": "user@example.com",
+            "x-meta": {
+              "usage": "Set this when the account is created through a hosted authentication form and you already know which mailbox the user is supposed to connect, so a user cannot finish the form against a different account than the one you provisioned.\n\nFor OAuth2 the address is compared against what the provider reports, never against anything the caller supplied, so for a shared or delegated mailbox this has to be the authenticating principal rather than the mailbox address. For IMAP it is compared against the address typed into the form, which the credentials do not prove ownership of.\n\nThe constraint stays on the account and is enforced again on every later reauthentication."
+            },
             "x-format": {
               "email": true
             }
@@ -708,8 +742,14 @@
       },
       "CreateAccountState": {
         "type": "string",
-        "description": "Is the account new or updated existing. Not present when a redirect URL is returned",
+        "description": "Whether the account was created or updated. Not present when a redirect URL is returned",
         "example": "new",
+        "x-meta": {
+          "enumDescriptions": {
+            "new": "The entry did not exist and was created",
+            "existing": "The entry already existed and was updated"
+          }
+        },
         "enum": [
           "existing",
           "new"
@@ -917,7 +957,10 @@
           "useAuthServer": {
             "type": "boolean",
             "description": "Use external authentication server to retrieve credentials dynamically",
-            "example": false
+            "example": false,
+            "x-meta": {
+              "usage": "Turn this on when passwords must not be stored in EmailEngine, for instance when they are short-lived or held in your own vault. EmailEngine then calls your authentication server for credentials each time it needs to connect, and the `auth` block must be omitted.\n\nThe authentication server URL itself is an instance-wide setting, not a per-account one."
+            }
           },
           "auth": {
             "$ref": "#/components/schemas/ImapAuthentication"
@@ -933,8 +976,11 @@
           },
           "disableIMAP4rev2": {
             "type": "boolean",
-            "description": "Do not use IMAP4rev2 even if the server supports it. Set this for servers with a broken IMAP4rev2 implementation. Only applies to accounts using regular password authentication.",
-            "example": false
+            "description": "Do not use IMAP4rev2 even if the server supports it",
+            "example": false,
+            "x-meta": {
+              "usage": "Set this only after a server has actually misbehaved. A handful of IMAP servers advertise IMAP4rev2 support and then answer incorrectly, and this forces EmailEngine back to IMAP4rev1 for that account.\n\nIt has no effect on accounts that authenticate with OAuth2."
+            }
           },
           "resyncDelay": {
             "type": "integer",
@@ -1006,7 +1052,10 @@
           "useAuthServer": {
             "type": "boolean",
             "description": "Use external authentication server to retrieve credentials dynamically",
-            "example": false
+            "example": false,
+            "x-meta": {
+              "usage": "Turn this on when passwords must not be stored in EmailEngine, for instance when they are short-lived or held in your own vault. EmailEngine then calls your authentication server for credentials each time it needs to connect, and the `auth` block must be omitted.\n\nThe authentication server URL itself is an instance-wide setting, not a per-account one."
+            }
           },
           "auth": {
             "$ref": "#/components/schemas/SmtpAuthentication"
@@ -1088,7 +1137,10 @@
           "useAuthServer": {
             "type": "boolean",
             "description": "Use external authentication server for token management instead of EmailEngine",
-            "example": false
+            "example": false,
+            "x-meta": {
+              "usage": "Turn this on when passwords must not be stored in EmailEngine, for instance when they are short-lived or held in your own vault. EmailEngine then calls your authentication server for credentials each time it needs to connect, and the `auth` block must be omitted.\n\nThe authentication server URL itself is an instance-wide setting, not a per-account one."
+            }
           },
           "accessToken": {
             "type": "string",
@@ -1176,6 +1228,10 @@
       "SMTPStatusNetworkRouting": {
         "type": "object",
         "description": "Network routing information for the delivery attempt",
+        "example": {
+          "localAddress": "198.51.100.24",
+          "name": "relay.example.com"
+        },
         "nullable": true
       },
       "SMTPInfoStatus": {
@@ -1247,8 +1303,22 @@
       },
       "AccountType": {
         "type": "string",
-        "description": "Account type: \"imap\" for IMAP accounts, an OAuth2 provider name for OAuth2 accounts, \"oauth2\" when the OAuth2 application is missing, \"delegated\" for delegated accounts, \"sending\" for send-only accounts, \"invalid\" when delegation cannot be resolved",
+        "description": "How the account connects to its mailbox",
         "example": "outlook",
+        "x-meta": {
+          "enumDescriptions": {
+            "imap": "Plain IMAP and SMTP, authenticated with a username and password",
+            "gmail": "Gmail or Google Workspace, through a user-consented OAuth2 app",
+            "gmailService": "Google Workspace through a service account, with no per-user consent screen",
+            "outlook": "Outlook or Microsoft 365, through a user-consented OAuth2 app",
+            "outlookService": "Microsoft 365 through application permissions, with no per-user consent screen",
+            "mailRu": "Mail.ru, through an OAuth2 app",
+            "oauth2": "An OAuth2 account whose application is no longer configured in EmailEngine",
+            "delegated": "A shared or delegated mailbox accessed through another account credentials",
+            "sending": "Send-only. No IMAP access is configured, so nothing is synced",
+            "invalid": "Delegation could not be resolved, so the account cannot be used"
+          }
+        },
         "enum": [
           "imap",
           "gmail",
@@ -1342,20 +1412,24 @@
           },
           "time": {
             "type": "number",
-            "description": "Timestamp of last state change"
+            "description": "Timestamp of last state change",
+            "example": 1625727994336
           },
           "error": {
             "type": "string",
             "description": "Error message if state is error, null after a successful renewal",
+            "example": "Subscription renewal was rejected",
             "nullable": true
           },
           "retryCount": {
             "type": "integer",
-            "description": "How many times the subscription renewal has been retried"
+            "description": "How many times the subscription renewal has been retried",
+            "example": 0
           },
           "createRetryCount": {
             "type": "integer",
-            "description": "How many times the subscription creation has been retried"
+            "description": "How many times the subscription creation has been retried",
+            "example": 0
           }
         }
       },
@@ -1365,12 +1439,14 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Microsoft Graph subscription ID"
+            "description": "Microsoft Graph subscription ID",
+            "example": "0fc0f6bb-a3e1-4f7a-9d3a-8e2f1f8b9c11"
           },
           "expirationDateTime": {
             "type": "string",
             "format": "date-time",
             "description": "When the subscription expires",
+            "example": "2021-07-11T07:06:34.336Z",
             "nullable": true
           },
           "state": {
@@ -1570,8 +1646,11 @@
           },
           "expectedEmail": {
             "type": "string",
-            "description": "Pins the account to an email address. A hosted authentication form setup is rejected unless the identity it authenticates matches this address. For OAuth2 the address is compared against what the provider returns, never against caller-supplied hints, so for a shared or delegated mailbox this must be the authenticating principal rather than the mailbox address. For IMAP it is compared against the address entered on the form, which the credentials do not prove ownership of. Once set, the constraint stays on the account and applies to later reauthentication as well.",
+            "description": "Pins the account to an email address",
             "example": "user@example.com",
+            "x-meta": {
+              "usage": "Set this when the account is created through a hosted authentication form and you already know which mailbox the user is supposed to connect, so a user cannot finish the form against a different account than the one you provisioned.\n\nFor OAuth2 the address is compared against what the provider reports, never against anything the caller supplied, so for a shared or delegated mailbox this has to be the authenticating principal rather than the mailbox address. For IMAP it is compared against the address typed into the form, which the credentials do not prove ownership of.\n\nThe constraint stays on the account and is enforced again on every later reauthentication."
+            },
             "x-format": {
               "email": true
             }
@@ -1734,6 +1813,9 @@
       "ImapUpdateAuthentication": {
         "type": "object",
         "description": "Authentication credentials for the IMAP server",
+        "x-meta": {
+          "usage": "Send this for ordinary password authentication. Omit it when `useAuthServer` is on, because EmailEngine then fetches credentials from your authentication server for every connection and a stored password would be dead configuration.\n\nOn an update this replaces the whole credentials object unless `partial` is also set."
+        },
         "enum": [
           false
         ],
@@ -1777,7 +1859,7 @@
       },
       "IMAPUpdate": {
         "type": "object",
-        "description": "IMAP configuration",
+        "description": "IMAP configuration. Set to `false` to remove the stored IMAP configuration from the account.",
         "enum": [
           false
         ],
@@ -1786,12 +1868,18 @@
             "type": "boolean",
             "description": "Update only the provided fields instead of replacing the entire configuration",
             "example": false,
+            "x-meta": {
+              "usage": "Set this when you are changing one setting and do not want to resend the rest. Without it the configuration object you send replaces the stored one wholesale, so any key you leave out is cleared.\n\nIt applies only to the block it sits in: a partial `imap` update alongside a full `smtp` object updates one and replaces the other."
+            },
             "default": false
           },
           "useAuthServer": {
             "type": "boolean",
             "description": "Use external authentication server to retrieve credentials dynamically",
-            "example": false
+            "example": false,
+            "x-meta": {
+              "usage": "Turn this on when passwords must not be stored in EmailEngine, for instance when they are short-lived or held in your own vault. EmailEngine then calls your authentication server for credentials each time it needs to connect, and the `auth` block must be omitted.\n\nThe authentication server URL itself is an instance-wide setting, not a per-account one."
+            }
           },
           "auth": {
             "$ref": "#/components/schemas/ImapUpdateAuthentication"
@@ -1821,8 +1909,11 @@
           },
           "disableIMAP4rev2": {
             "type": "boolean",
-            "description": "Do not use IMAP4rev2 even if the server supports it. Set this for servers with a broken IMAP4rev2 implementation. Only applies to accounts using regular password authentication.",
-            "example": false
+            "description": "Do not use IMAP4rev2 even if the server supports it",
+            "example": false,
+            "x-meta": {
+              "usage": "Set this only after a server has actually misbehaved. A handful of IMAP servers advertise IMAP4rev2 support and then answer incorrectly, and this forces EmailEngine back to IMAP4rev1 for that account.\n\nIt has no effect on accounts that authenticate with OAuth2."
+            }
           },
           "resyncDelay": {
             "type": "integer",
@@ -1883,6 +1974,9 @@
       "SmtpUpdateAuthentication": {
         "type": "object",
         "description": "Authentication credentials for the SMTP server",
+        "x-meta": {
+          "usage": "Send this for ordinary password authentication. Omit it when `useAuthServer` is on, because EmailEngine then fetches credentials from your authentication server for every connection and a stored password would be dead configuration.\n\nOn an update this replaces the whole credentials object unless `partial` is also set."
+        },
         "enum": [
           false
         ],
@@ -1926,7 +2020,7 @@
       },
       "SMTPUpdate": {
         "type": "object",
-        "description": "SMTP configuration",
+        "description": "SMTP configuration. Set to `false` to remove the stored SMTP configuration from the account.",
         "enum": [
           false
         ],
@@ -1935,12 +2029,18 @@
             "type": "boolean",
             "description": "Update only the provided fields instead of replacing the entire configuration",
             "example": false,
+            "x-meta": {
+              "usage": "Set this when you are changing one setting and do not want to resend the rest. Without it the configuration object you send replaces the stored one wholesale, so any key you leave out is cleared.\n\nIt applies only to the block it sits in: a partial `imap` update alongside a full `smtp` object updates one and replaces the other."
+            },
             "default": false
           },
           "useAuthServer": {
             "type": "boolean",
             "description": "Use external authentication server to retrieve credentials dynamically",
-            "example": false
+            "example": false,
+            "x-meta": {
+              "usage": "Turn this on when passwords must not be stored in EmailEngine, for instance when they are short-lived or held in your own vault. EmailEngine then calls your authentication server for credentials each time it needs to connect, and the `auth` block must be omitted.\n\nThe authentication server URL itself is an instance-wide setting, not a per-account one."
+            }
           },
           "auth": {
             "$ref": "#/components/schemas/SmtpUpdateAuthentication"
@@ -1972,7 +2072,7 @@
       },
       "OAuth2Update": {
         "type": "object",
-        "description": "OAuth2 configuration",
+        "description": "OAuth2 configuration. Set to `false` to remove the stored OAuth2 configuration from the account.",
         "enum": [
           false
         ],
@@ -1981,6 +2081,9 @@
             "type": "boolean",
             "description": "Update only the provided fields instead of replacing the entire configuration",
             "example": false,
+            "x-meta": {
+              "usage": "Set this when you are changing one setting and do not want to resend the rest. Without it the configuration object you send replaces the stored one wholesale, so any key you leave out is cleared.\n\nIt applies only to the block it sits in: a partial `imap` update alongside a full `smtp` object updates one and replaces the other."
+            },
             "default": false
           },
           "authorize": {
@@ -2000,7 +2103,10 @@
           "useAuthServer": {
             "type": "boolean",
             "description": "Use external authentication server for token management instead of EmailEngine",
-            "example": false
+            "example": false,
+            "x-meta": {
+              "usage": "Turn this on when passwords must not be stored in EmailEngine, for instance when they are short-lived or held in your own vault. EmailEngine then calls your authentication server for credentials each time it needs to connect, and the `auth` block must be omitted.\n\nThe authentication server URL itself is an instance-wide setting, not a per-account one."
+            }
           },
           "accessToken": {
             "type": "string",
@@ -2056,8 +2162,11 @@
           },
           "expectedEmail": {
             "type": "string",
-            "description": "Pins the account to an email address. A hosted authentication form setup is rejected unless the identity it authenticates matches this address. For OAuth2 the address is compared against what the provider returns, never against caller-supplied hints, so for a shared or delegated mailbox this must be the authenticating principal rather than the mailbox address. For IMAP it is compared against the address entered on the form, which the credentials do not prove ownership of. Once set, the constraint stays on the account and applies to later reauthentication as well. Set to `null` to remove the constraint.",
+            "description": "Pins the account to an email address. Set to `null` to remove the constraint",
             "example": "user@example.com",
+            "x-meta": {
+              "usage": "Set this when the account is created through a hosted authentication form and you already know which mailbox the user is supposed to connect, so a user cannot finish the form against a different account than the one you provisioned.\n\nFor OAuth2 the address is compared against what the provider reports, never against anything the caller supplied, so for a shared or delegated mailbox this has to be the authenticating principal rather than the mailbox address. For IMAP it is compared against the address typed into the form, which the credentials do not prove ownership of.\n\nThe constraint stays on the account and is enforced again on every later reauthentication."
+            },
             "nullable": true,
             "x-format": {
               "email": true
@@ -2221,7 +2330,10 @@
       },
       "ExportFolders": {
         "type": "array",
-        "description": "Folder paths or special-use flags (e.g., \\Inbox, \\Sent, \\All) to export from. If empty/omitted, Gmail/Outlook API accounts export from All Mail folder; other accounts export all folders except Junk and Trash.",
+        "description": "Folder paths or special-use flags (e.g., \\Inbox, \\Sent, \\All) to export from",
+        "x-meta": {
+          "usage": "Name folders when you want a subset, by path or by special-use flag such as `\\Sent`. Leaving it empty is not \"nothing\", it is a documented default: Gmail and Outlook API accounts export All Mail, and every other account exports every folder except Junk and Trash."
+        },
         "x-constraint": {
           "single": true
         },
@@ -2233,8 +2345,15 @@
       },
       "ExportTextType": {
         "type": "string",
-        "description": "Text content to include: \"plain\", \"html\", or \"*\" (both)",
+        "description": "Which message bodies to include in the export",
         "example": "*",
+        "x-meta": {
+          "enumDescriptions": {
+            "plain": "Plain text bodies only",
+            "html": "HTML bodies only",
+            "*": "Both the plain text and the HTML body"
+          }
+        },
         "default": "*",
         "enum": [
           "plain",
@@ -2335,7 +2454,8 @@
         "type": "array",
         "description": "Folders being exported",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "INBOX"
         }
       },
       "ExportProgress": {
@@ -2430,6 +2550,7 @@
           "error": {
             "type": "string",
             "description": "Error message if export failed",
+            "example": "Mailbox listing failed",
             "nullable": true
           }
         }
@@ -2625,8 +2746,11 @@
           },
           "subscribed": {
             "type": "boolean",
-            "description": "Change mailbox subscription status. Only applies to IMAP accounts, ignored for Gmail and Outlook.",
-            "example": true
+            "description": "Change mailbox subscription status",
+            "example": true,
+            "x-meta": {
+              "usage": "Only IMAP accounts have a subscription list, so this is ignored for Gmail API and MS Graph accounts. It controls whether a folder shows up in clients that list subscribed folders only; it does not affect whether EmailEngine syncs it, which `path` on the account decides."
+            }
           }
         },
         "required": [
@@ -2703,8 +2827,15 @@
       },
       "MailboxSpecialUseSource": {
         "type": "string",
-        "description": "How the special use was determined: \"user\" (set via API), \"extension\" (server-provided), or \"name\" (guessed from folder name)",
+        "description": "How the special-use flag was determined",
         "example": "extension",
+        "x-meta": {
+          "enumDescriptions": {
+            "user": "Set explicitly through the API",
+            "extension": "Reported by the mail server through the SPECIAL-USE extension",
+            "name": "Guessed from the folder name"
+          }
+        },
         "enum": [
           "user",
           "extension",
@@ -2727,7 +2858,8 @@
           },
           "error": {
             "type": "string",
-            "description": "Error message if the STATUS command failed for this mailbox"
+            "description": "Error message if the STATUS command failed for this mailbox",
+            "example": "Mailbox does not exist"
           }
         }
       },
@@ -2839,8 +2971,15 @@
       },
       "MessageAction": {
         "type": "string",
-        "description": "Action type: \"reply\" (reply to sender), \"reply-all\" (reply to all recipients), or \"forward\" (forward to new recipients)",
+        "description": "What to do with the referenced message",
         "example": "reply",
+        "x-meta": {
+          "enumDescriptions": {
+            "reply": "Reply to the sender",
+            "reply-all": "Reply to the sender and every other recipient",
+            "forward": "Forward the message to new recipients"
+          }
+        },
         "default": "reply",
         "enum": [
           "forward",
@@ -2887,8 +3026,11 @@
           },
           "threadId": {
             "type": "string",
-            "description": "Gmail thread ID to attach the outgoing message to. Used only by Gmail-API accounts; ignored for IMAP and Microsoft Graph backends, which derive threading from RFC In-Reply-To/References headers. When both \"message\" and \"threadId\" are provided, the caller-supplied \"threadId\" takes precedence over the value derived from the referenced message.",
-            "example": "1694936993596975454"
+            "description": "Gmail thread ID to attach the outgoing message to",
+            "example": "1694936993596975454",
+            "x-meta": {
+              "usage": "Set this when you know the Gmail thread the outgoing message belongs to and do not want EmailEngine to work it out from the referenced message.\n\nGmail API accounts only. IMAP and MS Graph derive threading from the `In-Reply-To` and `References` headers and ignore it. When both `message` and `threadId` are given, this one wins."
+            }
           }
         }
       },
@@ -3002,8 +3144,11 @@
       },
       "MsgUploadReference": {
         "type": "string",
-        "description": "References an existing attachment by its ID instead of providing new attachment content. If this field is set, the `content` field must not be included. If not set, the `content` field is required.",
+        "description": "References an existing attachment by its ID instead of providing new attachment content",
         "example": "AAAAAQAACnAcde",
+        "x-meta": {
+          "usage": "Use this to forward an attachment that is already on another message without downloading and re-uploading it. Take the id from the attachment list of the referenced message.\n\nIt is exclusive with `content`: send one or the other, never both."
+        },
         "enum": [
           false
         ],
@@ -3088,8 +3233,11 @@
           },
           "raw": {
             "type": "string",
-            "description": "A Base64-encoded email message in RFC 822 format. If you provide other fields along with raw, those fields will override the corresponding values in the raw message.",
+            "description": "A Base64-encoded email message in RFC 822 format",
             "example": "TUlNRS1WZXJzaW9uOiAxLjANClN1YmplY3Q6IGhlbGxvIHdvcmxkDQoNCkhlbGxvIQ0K",
+            "x-meta": {
+              "usage": "Send `raw` when you have already built the MIME message yourself, for example when relaying something you fetched from another system, and it has to go out unchanged.\n\nAnything else you send alongside it overrides the matching header inside it, so a `subject` sent with a raw body replaces the subject in the message. If you are composing from parts, use `text` and `html` and let EmailEngine build the MIME structure."
+            },
             "maxLength": 5242880
           },
           "from": {
@@ -3650,7 +3798,8 @@
           },
           "preview": {
             "type": "string",
-            "description": "Short preview of the message content (Gmail API and MS Graph API accounts only)"
+            "description": "Short preview of the message content (Gmail API and MS Graph API accounts only)",
+            "example": "Hello, here is the report you asked for"
           },
           "category": {
             "$ref": "#/components/schemas/MessageCategory"
@@ -3781,19 +3930,22 @@
       "FlagAddResult": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "\\Seen"
         }
       },
       "FlagDeleteResult": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "\\Seen"
         }
       },
       "FlagSetResult": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "\\Seen"
         }
       },
       "FlagResultList": {
@@ -3853,19 +4005,22 @@
       "LabelAddResult": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "Label_971539351003152516"
         }
       },
       "LabelDeleteResult": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "Label_971539351003152516"
         }
       },
       "LabelSetResult": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "Label_971539351003152516"
         }
       },
       "LabelResultList": {
@@ -4029,7 +4184,10 @@
       },
       "DraftSMTPEnvelope": {
         "type": "object",
-        "description": "An optional object specifying the SMTP envelope used during email transmission. If not provided, the envelope is derived from the draft's message headers. Only used when the message is delivered over SMTP.",
+        "description": "An optional object specifying the SMTP envelope used during email transmission. Only used when the message is delivered over SMTP",
+        "x-meta": {
+          "usage": "Send this only when the SMTP envelope has to differ from the message headers, which in practice means variable envelope return paths, a bounce address that is not the From address, or delivering to an address that does not appear in the headers.\n\nLeft out, the envelope is derived from the headers, which is what you want for an ordinary message."
+        },
         "properties": {
           "from": {
             "type": "string",
@@ -4074,6 +4232,10 @@
       "DsnNotify": {
         "type": "array",
         "description": "Defines the conditions under which a DSN response should be sent",
+        "example": [
+          "failure",
+          "delay"
+        ],
         "x-constraint": {
           "single": true
         },
@@ -4088,6 +4250,7 @@
           "id": {
             "type": "string",
             "description": "The envelope identifier that would be included in the response (ENVID)",
+            "example": "order-4815-notify",
             "maxLength": 256,
             "x-convert": {
               "trim": true
@@ -4102,6 +4265,7 @@
           "recipient": {
             "type": "string",
             "description": "The email address the DSN should be sent (ORCPT)",
+            "example": "bounces@example.com",
             "x-format": {
               "email": true
             },
@@ -4123,8 +4287,11 @@
           },
           "copy": {
             "type": "boolean",
-            "description": "If set then either copies the message to the Sent Mail folder or not. If not set then uses the account's default setting. Only applies to SMTP deliveries - Gmail and MS Graph file sent drafts into the Sent Mail folder themselves.",
+            "description": "If set then either copies the message to the Sent Mail folder or not. If not set then uses the account's default setting",
             "example": null,
+            "x-meta": {
+              "usage": "Leave this unset to follow the account default. Set it explicitly when one message should be filed differently from the rest, for instance an automated notification you do not want in the user Sent folder.\n\nIt only affects SMTP deliveries. Gmail and MS Graph file sent messages themselves, so the flag is a no-op there."
+            },
             "nullable": true
           },
           "sentMailPath": {
@@ -4155,7 +4322,7 @@
           },
           "proxy": {
             "type": "string",
-            "description": "Optional proxy URL to use when connecting to the SMTP server",
+            "description": "Optional proxy URL to use when connecting to the SMTP server. A token with restricted permissions can not set this - it redirects a session that carries the account credentials",
             "example": "socks5://proxy.example.com:1080",
             "x-format": {
               "uri": {
@@ -4192,8 +4359,14 @@
       },
       "status": {
         "type": "string",
-        "description": "Whether the response was generated now (MISS) or returned from the idempotency cache (HIT)",
+        "description": "Whether this response was produced now or replayed from the idempotency cache",
         "example": "MISS",
+        "x-meta": {
+          "enumDescriptions": {
+            "MISS": "The request ran now and this is its result",
+            "HIT": "An identical request ran earlier and its stored result was replayed"
+          }
+        },
         "enum": [
           "MISS",
           "HIT"
@@ -4376,7 +4549,8 @@
           },
           "preview": {
             "type": "string",
-            "description": "Short preview of the message content"
+            "description": "Short preview of the message content",
+            "example": "Hello, here is the report you asked for"
           },
           "category": {
             "$ref": "#/components/schemas/MessageCategory"
@@ -4484,10 +4658,13 @@
       },
       "EmailIds": {
         "type": "array",
-        "description": "List of specific email IDs to fetch. When provided, other search criteria are ignored. Useful for bulk operations on known messages.",
+        "description": "List of specific email IDs to fetch",
         "example": [
           "1278455344230334865"
         ],
+        "x-meta": {
+          "usage": "Use this when you already know which messages you want, typically from an earlier search or from a webhook. It is not a filter that narrows the other criteria - when it is present every other search field is ignored."
+        },
         "x-constraint": {
           "single": true
         },
@@ -4505,6 +4682,7 @@
           "seq": {
             "type": "string",
             "description": "Sequence number range (e.g., \"1:10\" or \"1,3,5\"). Only supported for IMAP.",
+            "example": "1:10",
             "maxLength": 8192
           },
           "answered": {
@@ -4534,26 +4712,31 @@
           "from": {
             "type": "string",
             "description": "Search in From addresses",
+            "example": "nyan.cat@example.com",
             "maxLength": 256
           },
           "to": {
             "type": "string",
             "description": "Search in To addresses. Not supported for MS Graph API.",
+            "example": "support@example.com",
             "maxLength": 256
           },
           "cc": {
             "type": "string",
             "description": "Search in Cc addresses. Not supported for MS Graph API.",
+            "example": "billing@example.com",
             "maxLength": 256
           },
           "bcc": {
             "type": "string",
             "description": "Search in Bcc addresses. Not supported for MS Graph API.",
+            "example": "archive@example.com",
             "maxLength": 256
           },
           "body": {
             "type": "string",
             "description": "Search in message body content",
+            "example": "Hello world",
             "maxLength": 256
           },
           "subject": {
@@ -4565,44 +4748,52 @@
           "larger": {
             "type": "integer",
             "description": "Find messages larger than specified size in bytes. Not supported for MS Graph API.",
+            "example": 1048576,
             "minimum": 0,
             "maximum": 1073741824
           },
           "smaller": {
             "type": "integer",
             "description": "Find messages smaller than specified size in bytes. Not supported for MS Graph API.",
+            "example": 102400,
             "minimum": 0,
             "maximum": 1073741824
           },
           "uid": {
             "type": "string",
             "description": "UID range (e.g., \"100:200\" or \"150,200,250\"). Only supported for IMAP.",
+            "example": "100:200",
             "maxLength": 8192
           },
           "modseq": {
             "type": "integer",
             "description": "Find messages with modification sequence higher than specified value. Only supported for IMAP with CONDSTORE.",
+            "example": 12345,
             "minimum": 0
           },
           "before": {
             "type": "string",
             "format": "date-time",
-            "description": "Find messages received before this date"
+            "description": "Find messages received before this date",
+            "example": "2024-08-09"
           },
           "since": {
             "type": "string",
             "format": "date-time",
-            "description": "Find messages received after this date"
+            "description": "Find messages received after this date",
+            "example": "2022-08-09"
           },
           "sentBefore": {
             "type": "string",
             "format": "date-time",
-            "description": "Find messages sent before this date"
+            "description": "Find messages sent before this date",
+            "example": "2024-08-09"
           },
           "sentSince": {
             "type": "string",
             "format": "date-time",
-            "description": "Find messages sent after this date"
+            "description": "Find messages sent after this date",
+            "example": "2022-08-09"
           },
           "emailId": {
             "type": "string",
@@ -4649,19 +4840,22 @@
       "BulkFlagAddResult": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "\\Seen"
         }
       },
       "BulkFlagDeleteResult": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "\\Seen"
         }
       },
       "BulkFlagSetResult": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "\\Seen"
         }
       },
       "BulkFlagUpdateResponse": {
@@ -4708,19 +4902,22 @@
       "BulkLabelAddResult": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "Label_971539351003152516"
         }
       },
       "BulkLabelDeleteResult": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "Label_971539351003152516"
         }
       },
       "BulkLabelSetResult": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "Label_971539351003152516"
         }
       },
       "BulkLabelUpdateResponse": {
@@ -5213,7 +5410,11 @@
       },
       "RenderValues": {
         "type": "object",
-        "description": "An object of variables for the template renderer"
+        "description": "An object of variables for the template renderer",
+        "example": {
+          "firstName": "Nyan",
+          "orderId": "4815"
+        }
       },
       "MailMergeListEntry": {
         "type": "object",
@@ -5243,7 +5444,10 @@
       },
       "MailMergeList": {
         "type": "array",
-        "description": "Mail merge options. A separate email is generated for each recipient. Using mail merge disables `messageId`, `envelope`, `to`, `cc`, `bcc`, `render` keys for the message root.",
+        "description": "Mail merge options. A separate email is generated for each recipient",
+        "x-meta": {
+          "usage": "Use this to send one personalised message per recipient in a single request, instead of one request each. Each entry gets its own queue id and its own delivery.\n\nIt takes over addressing and rendering for the whole request: `messageId`, `envelope`, `to`, `cc`, `bcc` and `render` at the message root are rejected, because each entry supplies its own."
+        },
         "minItems": 1,
         "items": {
           "$ref": "#/components/schemas/MailMergeListEntry"
@@ -5264,7 +5468,10 @@
       },
       "SMTPEnvelope": {
         "type": "object",
-        "description": "An optional object specifying the SMTP envelope used during email transmission. If not provided, the envelope is automatically derived from the email's message headers. This is useful when you need the envelope addresses to differ from those in the email headers.",
+        "description": "An optional object specifying the SMTP envelope used during email transmission",
+        "x-meta": {
+          "usage": "Send this only when the SMTP envelope has to differ from the message headers, which in practice means variable envelope return paths, a bounce address that is not the From address, or delivering to an address that does not appear in the headers.\n\nLeft out, the envelope is derived from the headers, which is what you want for an ordinary message."
+        },
         "properties": {
           "from": {
             "type": "string",
@@ -5371,7 +5578,13 @@
       },
       "RenderFormat": {
         "type": "string",
-        "description": "Markup language for HTML (\"html\" or \"markdown\")",
+        "description": "Markup language the template is written in",
+        "x-meta": {
+          "enumDescriptions": {
+            "html": "The template is already HTML",
+            "markdown": "The template is Markdown and is converted to HTML"
+          }
+        },
         "default": "html",
         "enum": [
           "html",
@@ -5380,7 +5593,7 @@
       },
       "TemplateRender": {
         "type": "object",
-        "description": "Template rendering options",
+        "description": "Template rendering options. Set to `false` to send the template as-is, without rendering it.",
         "enum": [
           false
         ],
@@ -5412,8 +5625,11 @@
       },
       "AttachmentReference": {
         "type": "string",
-        "description": "References an existing attachment by its ID instead of providing new attachment content. If this field is set, the `content` field must not be included. If not set, the `content` field is required.",
+        "description": "References an existing attachment by its ID instead of providing new attachment content",
         "example": "AAAAAQAACnAcde",
+        "x-meta": {
+          "usage": "Use this to forward an attachment that is already on another message without downloading and re-uploading it. Take the id from the attachment list of the referenced message.\n\nIt is exclusive with `content`: send one or the other, never both."
+        },
         "enum": [
           false
         ],
@@ -5476,6 +5692,7 @@
           "id": {
             "type": "string",
             "description": "The envelope identifier that would be included in the response (ENVID)",
+            "example": "order-4815-notify",
             "maxLength": 256,
             "x-convert": {
               "trim": true
@@ -5490,6 +5707,7 @@
           "recipient": {
             "type": "string",
             "description": "The email address the DSN should be sent (ORCPT)",
+            "example": "bounces@example.com",
             "x-format": {
               "email": true
             },
@@ -5579,8 +5797,11 @@
           },
           "raw": {
             "type": "string",
-            "description": "A Base64-encoded email message in RFC 822 format. If you provide other fields along with raw, those fields will override the corresponding values in the raw message.",
+            "description": "A Base64-encoded email message in RFC 822 format",
             "example": "TUlNRS1WZXJzaW9uOiAxLjANClN1YmplY3Q6IGhlbGxvIHdvcmxkDQoNCkhlbGxvIQ0K",
+            "x-meta": {
+              "usage": "Send `raw` when you have already built the MIME message yourself, for example when relaying something you fetched from another system, and it has to go out unchanged.\n\nAnything else you send alongside it overrides the matching header inside it, so a `subject` sent with a raw body replaces the subject in the message. If you are composing from parts, use `text` and `html` and let EmailEngine build the MIME structure."
+            },
             "maxLength": 5242880
           },
           "to": {
@@ -5619,8 +5840,11 @@
           },
           "copy": {
             "type": "boolean",
-            "description": "If set then either copies the message to the Sent Mail folder or not. If not set then uses the account's default setting.",
+            "description": "If set then either copies the message to the Sent Mail folder or not. If not set then uses the account's default setting",
             "example": null,
+            "x-meta": {
+              "usage": "Leave this unset to follow the account default. Set it explicitly when one message should be filed differently from the rest, for instance an automated notification you do not want in the user Sent folder.\n\nIt only affects SMTP deliveries. Gmail and MS Graph file sent messages themselves, so the flag is a no-op there."
+            },
             "nullable": true
           },
           "sentMailPath": {
@@ -5688,7 +5912,7 @@
           },
           "proxy": {
             "type": "string",
-            "description": "Optional proxy URL to use when connecting to the SMTP server",
+            "description": "Optional proxy URL to use when connecting to the SMTP server. A token with restricted permissions can not set this - it redirects a session that carries the account credentials",
             "example": "socks5://proxy.example.com:1080",
             "x-format": {
               "uri": {
@@ -6122,10 +6346,13 @@
       },
       "AccountFormPath": {
         "type": "array",
-        "description": "Mailbox folders to monitor for changes (IMAP only). Use \"*\" to monitor all folders (default). While you can still access unmonitored folders via API, you won't receive webhooks for changes in those folders.",
+        "description": "Mailbox folders to monitor for changes (IMAP only). Use \"*\" to monitor all folders (default)",
         "example": [
           "*"
         ],
+        "x-meta": {
+          "usage": "Leave this at `\"*\"` unless the account is large and you only care about a few folders. Narrowing it reduces the number of folders EmailEngine keeps open and indexes, which is the main cost of syncing a big mailbox.\n\nUnmonitored folders stay fully reachable through the API. What you give up is webhooks: nothing is emitted for changes in a folder that is not on this list."
+        },
         "nullable": true,
         "x-constraint": {
           "single": true
@@ -6151,8 +6378,11 @@
         "properties": {
           "account": {
             "type": "string",
-            "description": "Account ID. If set to `null`, a unique ID will be generated automatically. If you provide an existing account ID, the settings for that account will be updated instead",
+            "description": "Account ID. If set to `null`, a unique ID will be generated automatically",
             "example": "example",
+            "x-meta": {
+              "usage": "Set this when your own system already has an identifier for the mailbox, for example a user id, so you can address the account later without storing a second id. Leave it `null` and EmailEngine generates one, which comes back in the response.\n\nReusing an existing id is an update, not an error: the registration endpoint applies the new settings to that account rather than creating a second one."
+            },
             "default": null,
             "nullable": true,
             "maxLength": 256,
@@ -6176,8 +6406,11 @@
           },
           "expectedEmail": {
             "type": "string",
-            "description": "Pins the account to an email address. A hosted authentication form setup is rejected unless the identity it authenticates matches this address. For OAuth2 the address is compared against what the provider returns, never against caller-supplied hints, so for a shared or delegated mailbox this must be the authenticating principal rather than the mailbox address. For IMAP it is compared against the address entered on the form, which the credentials do not prove ownership of. Once set, the constraint stays on the account and applies to later reauthentication as well.",
+            "description": "Pins the account to an email address",
             "example": "user@example.com",
+            "x-meta": {
+              "usage": "Set this when the account is created through a hosted authentication form and you already know which mailbox the user is supposed to connect, so a user cannot finish the form against a different account than the one you provisioned.\n\nFor OAuth2 the address is compared against what the provider reports, never against anything the caller supplied, so for a shared or delegated mailbox this has to be the authenticating principal rather than the mailbox address. For IMAP it is compared against the address typed into the form, which the credentials do not prove ownership of.\n\nThe constraint stays on the account and is enforced again on every later reauthentication."
+            },
             "x-format": {
               "email": true
             }
@@ -6399,6 +6632,7 @@
           "remoteAddress": {
             "type": "string",
             "description": "Which IP address triggered the entry",
+            "example": "198.51.100.24",
             "x-format": {
               "ip": {
                 "cidr": "optional",
@@ -6488,6 +6722,7 @@
           "reason": {
             "type": "string",
             "description": "Identifier for the blocking reason",
+            "example": "unsubscribe",
             "default": "block"
           }
         },
@@ -6850,6 +7085,7 @@
           "user": {
             "type": "string",
             "description": "SMTP authentication username",
+            "example": "smtp-user",
             "default": null,
             "maxLength": 1024,
             "x-convert": {
@@ -6859,6 +7095,7 @@
           "pass": {
             "type": "string",
             "description": "SMTP authentication password",
+            "example": "verysecret",
             "default": null,
             "maxLength": 1024
           },
@@ -6893,8 +7130,14 @@
       },
       "CreateGatewayState": {
         "type": "string",
-        "description": "Is the gateway new or updated existing",
+        "description": "Whether the gateway was created or updated",
         "example": "new",
+        "x-meta": {
+          "enumDescriptions": {
+            "new": "The entry did not exist and was created",
+            "existing": "The entry already existed and was updated"
+          }
+        },
         "enum": [
           "existing",
           "new"
@@ -6929,6 +7172,10 @@
       "GatewayErrorNetworkRouting": {
         "type": "object",
         "description": "Network routing information for the delivery attempt",
+        "example": {
+          "localAddress": "198.51.100.24",
+          "name": "relay.example.com"
+        },
         "nullable": true
       },
       "GatewayErrorEntry": {
@@ -7004,6 +7251,7 @@
           "user": {
             "type": "string",
             "description": "SMTP authentication username",
+            "example": "smtp-user",
             "nullable": true,
             "maxLength": 1024,
             "x-convert": {
@@ -7013,6 +7261,7 @@
           "pass": {
             "type": "string",
             "description": "SMTP authentication password. Always returned as the masked value \"******\" when a password is set",
+            "example": "******",
             "maxLength": 1024
           },
           "host": {
@@ -7077,6 +7326,7 @@
           "user": {
             "type": "string",
             "description": "SMTP authentication username",
+            "example": "smtp-user",
             "nullable": true,
             "maxLength": 1024,
             "x-convert": {
@@ -7086,6 +7336,7 @@
           "pass": {
             "type": "string",
             "description": "SMTP authentication password",
+            "example": "verysecret",
             "nullable": true,
             "maxLength": 1024
           },
@@ -7191,6 +7442,7 @@
       },
       "LicenseDetails": {
         "type": "object",
+        "description": "Details of the registered license. False when no license is registered.",
         "enum": [
           false
         ],
@@ -7446,15 +7698,10 @@
             "description": "Is the application enabled",
             "example": true
           },
-          "legacy": {
-            "type": "boolean",
-            "description": "`true` for older OAuth2 apps set via the settings endpoint",
-            "example": true
-          },
           "created": {
             "type": "string",
             "format": "date-time",
-            "description": "The time this entry was added. Not present for legacy apps",
+            "description": "The time this entry was added",
             "example": "2021-02-17T13:43:18.860Z"
           },
           "updated": {
@@ -7694,8 +7941,14 @@
       },
       "authMethod": {
         "type": "string",
-        "description": "Authentication method for Gmail service account (\"serviceKey\" or \"externalAccount\")",
+        "description": "How token requests for the Gmail service account are signed",
         "example": "externalAccount",
+        "x-meta": {
+          "enumDescriptions": {
+            "serviceKey": "Sign token requests with an uploaded service account key",
+            "externalAccount": "Sign token requests through Workload Identity Federation, with no key to store"
+          }
+        },
         "enum": [
           "serviceKey",
           "externalAccount"
@@ -7932,15 +8185,10 @@
             "description": "Is the application enabled",
             "example": true
           },
-          "legacy": {
-            "type": "boolean",
-            "description": "`true` for older OAuth2 apps set via the settings endpoint",
-            "example": true
-          },
           "created": {
             "type": "string",
             "format": "date-time",
-            "description": "The time this entry was added. Not present for legacy apps",
+            "description": "The time this entry was added",
             "example": "2021-02-17T13:43:18.860Z"
           },
           "updated": {
@@ -8017,7 +8265,7 @@
           },
           "accounts": {
             "type": "integer",
-            "description": "The number of accounts registered with this application. Not available for legacy apps.",
+            "description": "The number of accounts registered with this application",
             "example": 12
           },
           "extraScopes": {
@@ -8305,11 +8553,6 @@
             "type": "boolean",
             "description": "Was the application updated",
             "example": true
-          },
-          "legacy": {
-            "type": "boolean",
-            "description": "`true` for older OAuth2 apps set via the settings endpoint",
-            "example": false
           }
         },
         "required": [
@@ -8330,14 +8573,9 @@
             "description": "Was the OAuth2 application deleted",
             "default": true
           },
-          "legacy": {
-            "type": "boolean",
-            "description": "`true` for older OAuth2 apps set via the settings endpoint",
-            "example": false
-          },
           "accounts": {
             "type": "integer",
-            "description": "The number of accounts registered with this application. Not available for legacy apps.",
+            "description": "The number of accounts registered with this application",
             "example": 12
           }
         },
@@ -8528,6 +8766,10 @@
       "OutboxErrorNetworkRouting": {
         "type": "object",
         "description": "Network routing information for the failed delivery attempt",
+        "example": {
+          "localAddress": "198.51.100.24",
+          "name": "relay.example.com"
+        },
         "nullable": true
       },
       "OutboxListProgressError": {
@@ -8619,25 +8861,26 @@
           "gateway": {
             "type": "string",
             "description": "Gateway ID used for delivery, or null when no gateway is set",
-            "example": null,
+            "example": "example",
             "nullable": true,
             "maxLength": 256
           },
           "proxy": {
             "type": "string",
             "description": "Proxy URL used for delivery, or null when no proxy is set",
-            "example": null,
+            "example": "socks5://proxy.example.com:1080",
             "nullable": true
           },
           "localAddress": {
             "type": "string",
             "description": "Local IP address used for delivery, or null when not set",
-            "example": null,
+            "example": "198.51.100.24",
             "nullable": true
           },
           "idempotencyKey": {
             "type": "string",
             "description": "Idempotency key provided when the message was submitted",
+            "example": "submit-12345",
             "nullable": true,
             "maxLength": 1024
           },
@@ -8815,8 +9058,15 @@
       },
       "imapIndexerResponse": {
         "type": "string",
-        "description": "IMAP indexing strategy:\n  * full - Detect new, changed, and deleted messages (slower but complete)\n  * fast - Detect only new messages",
+        "description": "How much of a mailbox EmailEngine tracks on each sync",
         "example": "full",
+        "x-meta": {
+          "enumDescriptions": {
+            "full": "Track every change, including deletions. Slower but complete",
+            "fast": "Detect new messages only. Cheaper, but deletions and flag changes are missed"
+          },
+          "usage": "Leave this unset to follow the instance-wide setting, and only override it for accounts whose mailboxes behave differently from the rest of your fleet. A very large mailbox that nothing else writes to is the usual reason."
+        },
         "enum": [
           "full",
           "fast"
@@ -8839,6 +9089,7 @@
           "maxLogLines": {
             "type": "integer",
             "description": "Maximum number of log entries to retain per account",
+            "example": 10000,
             "default": 10000,
             "minimum": 0,
             "maximum": 1000000
@@ -8888,6 +9139,7 @@
         },
         "items": {
           "type": "string",
+          "example": "198.51.100.24",
           "x-format": {
             "ip": {
               "cidr": "forbidden",
@@ -9027,8 +9279,11 @@
           },
           "openAiAPIUrl": {
             "type": "string",
-            "description": "Base URL for the OpenAI API. Set for OpenAI-compatible services, including any URL path the service mounts the API under - for Azure OpenAI, use https://<your-resource>.openai.azure.com/openai/v1",
+            "description": "Base URL for the OpenAI API",
             "example": "https://api.openai.com",
+            "x-meta": {
+              "usage": "Set this only for an OpenAI-compatible service that is not OpenAI itself, and include whatever path prefix that service mounts its API under. For Azure OpenAI that means `https://<your-resource>.openai.azure.com/openai/v1`, not the bare host."
+            },
             "nullable": true,
             "x-format": {
               "uri": {
@@ -9101,6 +9356,12 @@
               }
             }
           },
+          "tokenAuditLog": {
+            "type": "boolean",
+            "description": "Record which requests each access token makes, readable at GET /v1/tokens/{token}/log. Disabled by default, and entries only exist from the point it is enabled",
+            "example": false,
+            "nullable": true
+          },
           "proxyEnabled": {
             "type": "boolean",
             "description": "Route outbound connections through a proxy server",
@@ -9171,6 +9432,7 @@
           "notifyTextSize": {
             "type": "integer",
             "description": "Maximum size (in bytes) of text content to include in webhook payloads",
+            "example": 1048576,
             "nullable": true,
             "minimum": 0
           },
@@ -9182,36 +9444,13 @@
           "notifyAttachmentSize": {
             "type": "integer",
             "description": "Maximum size (in bytes) per attachment to include in webhook payloads",
+            "example": 5242880,
             "nullable": true,
             "minimum": 0
           },
           "notifyCalendarEvents": {
             "type": "boolean",
             "description": "Include parsed calendar event data in webhook payloads",
-            "nullable": true
-          },
-          "gmailClientSecret": {
-            "type": "boolean",
-            "description": "Whether a value is set for this setting. Secret values are never returned, only a boolean marker",
-            "example": true,
-            "nullable": true
-          },
-          "outlookClientSecret": {
-            "type": "boolean",
-            "description": "Whether a value is set for this setting. Secret values are never returned, only a boolean marker",
-            "example": true,
-            "nullable": true
-          },
-          "mailRuClientSecret": {
-            "type": "boolean",
-            "description": "Whether a value is set for this setting. Secret values are never returned, only a boolean marker",
-            "example": true,
-            "nullable": true
-          },
-          "serviceKey": {
-            "type": "boolean",
-            "description": "Whether a value is set for this setting. Secret values are never returned, only a boolean marker",
-            "example": true,
             "nullable": true
           },
           "documentStorePassword": {
@@ -9261,6 +9500,7 @@
           "smtpServerPort": {
             "type": "integer",
             "description": "Port number for the built-in SMTP server",
+            "example": 2525,
             "nullable": true,
             "minimum": 0,
             "maximum": 65535
@@ -9268,6 +9508,7 @@
           "smtpServerHost": {
             "type": "string",
             "description": "IP address to bind the SMTP server to (empty = all interfaces)",
+            "example": "0.0.0.0",
             "nullable": true,
             "x-format": {
               "ip": {
@@ -9308,6 +9549,7 @@
           "imapProxyServerPort": {
             "type": "integer",
             "description": "Port number for the IMAP proxy server",
+            "example": 9993,
             "nullable": true,
             "minimum": 0,
             "maximum": 65535
@@ -9315,6 +9557,7 @@
           "imapProxyServerHost": {
             "type": "string",
             "description": "IP address to bind the IMAP proxy to (empty = all interfaces)",
+            "example": "0.0.0.0",
             "nullable": true,
             "x-format": {
               "ip": {
@@ -9345,18 +9588,21 @@
           "queueKeep": {
             "type": "integer",
             "description": "Number of completed and failed queue entries to retain for debugging",
+            "example": 50,
             "nullable": true,
             "minimum": 0
           },
           "deliveryAttempts": {
             "type": "integer",
             "description": "Maximum number of delivery attempts before marking a message as permanently failed",
+            "example": 10,
             "nullable": true,
             "minimum": 0
           },
           "gmailSubscriptionTtl": {
             "type": "integer",
             "description": "Gmail Pub/Sub subscription inactivity expiration in days. Empty for Google default (31 days), 0 for no expiration.",
+            "example": 31,
             "nullable": true,
             "minimum": 0,
             "maximum": 365
@@ -9364,6 +9610,7 @@
           "templateHeader": {
             "type": "string",
             "description": "Custom HTML to inject at the top of hosted pages (e.g., for branding)",
+            "example": "<div class=\"brand-bar\">Acme Mail</div>",
             "nullable": true,
             "maxLength": 1048576,
             "x-convert": {
@@ -9373,6 +9620,7 @@
           "templateHtmlHead": {
             "type": "string",
             "description": "Custom HTML to inject into the <head> section of hosted pages (e.g., for analytics)",
+            "example": "<link rel=\"stylesheet\" href=\"https://example.com/brand.css\">",
             "nullable": true,
             "maxLength": 1048576,
             "x-convert": {
@@ -9534,8 +9782,15 @@
       },
       "ImapIndexer": {
         "type": "string",
-        "description": "IMAP indexing strategy:\n  * full - Detect new, changed, and deleted messages (slower but complete)\n  * fast - Detect only new messages",
+        "description": "How much of a mailbox EmailEngine tracks on each sync",
         "example": "full",
+        "x-meta": {
+          "enumDescriptions": {
+            "full": "Track every change, including deletions. Slower but complete",
+            "fast": "Detect new messages only. Cheaper, but deletions and flag changes are missed"
+          },
+          "usage": "Leave this unset to follow the instance-wide setting, and only override it for accounts whose mailboxes behave differently from the rest of your fleet. A very large mailbox that nothing else writes to is the usual reason."
+        },
         "enum": [
           "full",
           "fast"
@@ -9556,6 +9811,7 @@
           "maxLogLines": {
             "type": "integer",
             "description": "Maximum number of log entries to retain per account",
+            "example": 10000,
             "default": 10000,
             "minimum": 0,
             "maximum": 1000000
@@ -9602,6 +9858,7 @@
         },
         "items": {
           "type": "string",
+          "example": "198.51.100.24",
           "x-format": {
             "ip": {
               "cidr": "forbidden",
@@ -9722,8 +9979,11 @@
           },
           "openAiAPIUrl": {
             "type": "string",
-            "description": "Base URL for the OpenAI API. Set for OpenAI-compatible services, including any URL path the service mounts the API under - for Azure OpenAI, use https://<your-resource>.openai.azure.com/openai/v1",
+            "description": "Base URL for the OpenAI API",
             "example": "https://api.openai.com",
+            "x-meta": {
+              "usage": "Set this only for an OpenAI-compatible service that is not OpenAI itself, and include whatever path prefix that service mounts its API under. For Azure OpenAI that means `https://<your-resource>.openai.azure.com/openai/v1`, not the bare host."
+            },
             "x-format": {
               "uri": {
                 "scheme": [
@@ -9786,6 +10046,11 @@
                 "allowRelative": false
               }
             }
+          },
+          "tokenAuditLog": {
+            "type": "boolean",
+            "description": "Record which requests each access token makes, readable at GET /v1/tokens/{token}/log. Disabled by default, and entries only exist from the point it is enabled",
+            "example": false
           },
           "proxyEnabled": {
             "type": "boolean",
@@ -9851,6 +10116,7 @@
           "notifyTextSize": {
             "type": "integer",
             "description": "Maximum size (in bytes) of text content to include in webhook payloads",
+            "example": 1048576,
             "minimum": 0
           },
           "notifyAttachments": {
@@ -9860,6 +10126,7 @@
           "notifyAttachmentSize": {
             "type": "integer",
             "description": "Maximum size (in bytes) per attachment to include in webhook payloads",
+            "example": 5242880,
             "minimum": 0
           },
           "notifyCalendarEvents": {
@@ -9905,12 +10172,14 @@
           "smtpServerPort": {
             "type": "integer",
             "description": "Port number for the built-in SMTP server",
+            "example": 2525,
             "minimum": 0,
             "maximum": 65535
           },
           "smtpServerHost": {
             "type": "string",
             "description": "IP address to bind the SMTP server to (empty = all interfaces)",
+            "example": "0.0.0.0",
             "x-format": {
               "ip": {
                 "cidr": "forbidden",
@@ -9932,6 +10201,7 @@
           "smtpServerPassword": {
             "type": "string",
             "description": "Password for SMTP authentication (null = disable authentication)",
+            "example": "verysecret",
             "nullable": true,
             "maxLength": 1024
           },
@@ -9946,12 +10216,14 @@
           "imapProxyServerPort": {
             "type": "integer",
             "description": "Port number for the IMAP proxy server",
+            "example": 9993,
             "minimum": 0,
             "maximum": 65535
           },
           "imapProxyServerHost": {
             "type": "string",
             "description": "IP address to bind the IMAP proxy to (empty = all interfaces)",
+            "example": "0.0.0.0",
             "x-format": {
               "ip": {
                 "cidr": "forbidden",
@@ -9969,6 +10241,7 @@
           "imapProxyServerPassword": {
             "type": "string",
             "description": "Password for IMAP proxy authentication (null = disable authentication)",
+            "example": "verysecret",
             "nullable": true,
             "maxLength": 1024
           },
@@ -9979,22 +10252,26 @@
           "queueKeep": {
             "type": "integer",
             "description": "Number of completed and failed queue entries to retain for debugging",
+            "example": 50,
             "minimum": 0
           },
           "deliveryAttempts": {
             "type": "integer",
             "description": "Maximum number of delivery attempts before marking a message as permanently failed",
+            "example": 10,
             "minimum": 0
           },
           "gmailSubscriptionTtl": {
             "type": "integer",
             "description": "Gmail Pub/Sub subscription inactivity expiration in days. Empty for Google default (31 days), 0 for no expiration.",
+            "example": 31,
             "minimum": 0,
             "maximum": 365
           },
           "templateHeader": {
             "type": "string",
             "description": "Custom HTML to inject at the top of hosted pages (e.g., for branding)",
+            "example": "<div class=\"brand-bar\">Acme Mail</div>",
             "maxLength": 1048576,
             "x-convert": {
               "trim": true
@@ -10003,6 +10280,7 @@
           "templateHtmlHead": {
             "type": "string",
             "description": "Custom HTML to inject into the <head> section of hosted pages (e.g., for analytics)",
+            "example": "<link rel=\"stylesheet\" href=\"https://example.com/brand.css\">",
             "maxLength": 1048576,
             "x-convert": {
               "trim": true
@@ -10170,8 +10448,8 @@
           },
           "paused": {
             "type": "integer",
-            "description": "Jobs that would be processed once queue processing is resumed",
-            "example": 123
+            "description": "Always 0. BullMQ 6 no longer parks jobs in a separate paused list, so jobs held by a paused queue are counted as waiting. Kept so existing clients still see the key",
+            "example": 0
           },
           "waiting": {
             "type": "integer",
@@ -10242,7 +10520,8 @@
         "type": "array",
         "description": "Warning details",
         "items": {
-          "type": "string"
+          "type": "string",
+          "example": "maxmemory-policy is allkeys-lru"
         }
       },
       "RedisWarningEntry": {
@@ -10348,7 +10627,7 @@
           "version": {
             "type": "string",
             "description": "EmailEngine version number",
-            "example": "2.78.0"
+            "example": "2.79.1"
           },
           "license": {
             "type": "string",
@@ -10385,7 +10664,8 @@
           },
           "redisPing": {
             "type": "number",
-            "description": "Redis latency in milliseconds"
+            "description": "Redis latency in milliseconds",
+            "example": 1.2
           },
           "imapflow": {
             "type": "string",
@@ -10877,32 +11157,12 @@
           "id"
         ]
       },
-      "TokenScope": {
-        "type": "string",
-        "x-meta": {
-          "enumDescriptions": {
-            "api": "Call the REST API",
-            "smtp": "Authenticate against the built-in SMTP submission server",
-            "imap-proxy": "Authenticate against the built-in IMAP proxy"
-          }
-        },
-        "enum": [
-          "api",
-          "smtp",
-          "imap-proxy"
-        ]
-      },
-      "Scopes": {
+      "TokenScopes": {
         "type": "array",
-        "description": "Token permission scopes: \"api\" for REST API access, \"smtp\" for SMTP submission, \"imap-proxy\" for IMAP proxy authentication",
-        "default": [
-          "api"
-        ],
-        "x-constraint": {
-          "single": true
-        },
+        "description": "Scopes this token is valid for",
         "items": {
-          "$ref": "#/components/schemas/TokenScope"
+          "type": "string",
+          "example": "api"
         }
       },
       "ReferrerAllowlist": {
@@ -10988,101 +11248,109 @@
           }
         }
       },
-      "CreateToken": {
-        "type": "object",
-        "properties": {
-          "account": {
-            "type": "string",
-            "description": "Unique identifier for the email account",
-            "example": "user123",
-            "maxLength": 256,
-            "x-convert": {
-              "trim": true
-            }
-          },
-          "description": {
-            "type": "string",
-            "description": "Token description",
-            "example": "Token description",
-            "maxLength": 1024,
-            "x-convert": {
-              "trim": true
-            }
-          },
-          "scopes": {
-            "$ref": "#/components/schemas/Scopes"
-          },
-          "metadata": {
-            "type": "string",
-            "description": "Related metadata in JSON format",
-            "example": "{\"example\": \"value\"}",
-            "maxLength": 1048576
-          },
-          "restrictions": {
-            "$ref": "#/components/schemas/TokenRestrictions"
-          },
-          "ip": {
-            "type": "string",
-            "description": "IP address of the requester",
-            "example": "127.0.0.1",
-            "x-format": {
-              "ip": {
-                "cidr": "forbidden",
-                "version": [
-                  "ipv4",
-                  "ipv6"
-                ]
-              }
-            },
-            "x-convert": {
-              "trim": true
-            }
+      "TokenAction": {
+        "type": "string",
+        "x-meta": {
+          "enumDescriptions": {
+            "read": "Read data without changing anything",
+            "write": "Create or modify data",
+            "send": "Hand a message to a mail server, so it reaches real recipients",
+            "destructive": "Call the endpoints that remove data. Deleting a message is a move to Trash, which a write grant can perform directly, so withholding this narrows the endpoints rather than the outcome for mail"
           }
         },
-        "required": [
-          "account",
-          "description",
-          "scopes"
+        "enum": [
+          "read",
+          "write",
+          "send",
+          "destructive"
         ]
       },
-      "CreateTokenResponse": {
-        "type": "object",
-        "properties": {
-          "token": {
-            "type": "string",
-            "description": "Access token",
-            "example": "123456",
-            "x-constraint": {
-              "length": 64
-            },
-            "x-format": {
-              "hex": {
-                "byteAligned": false,
-                "prefix": false
-              }
-            }
-          }
+      "TokenActions": {
+        "type": "array",
+        "description": "Which kinds of operation this token may perform. Omit to allow all of them",
+        "example": [
+          "read",
+          "write"
+        ],
+        "minItems": 1,
+        "x-constraint": {
+          "single": true
         },
-        "required": [
-          "token"
-        ]
-      },
-      "DeleteTokenRequestResponse": {
-        "type": "object",
-        "properties": {
-          "deleted": {
-            "type": "boolean",
-            "description": "Was the token deleted",
-            "default": true
-          }
+        "items": {
+          "$ref": "#/components/schemas/TokenAction"
         }
       },
-      "TokenScopes": {
+      "TokenGroup": {
+        "type": "string",
+        "x-meta": {
+          "enumDescriptions": {
+            "account": "Manage email accounts and their connection state",
+            "mailbox": "Create, rename, delete and list mailbox folders",
+            "message": "Read, modify, move and delete messages, including bulk actions and search",
+            "submit": "Send email, including scheduled sends and the delivery test. A send may reference a stored message to forward it, so this also reads the message it names",
+            "outbox": "Inspect and cancel queued outbound messages",
+            "export": "Bulk export an account. One call archives every folder, so this is separate from message access",
+            "template": "Manage stored email templates",
+            "blocklist": "Manage suppression lists",
+            "webhook": "Read webhook route definitions",
+            "gateway": "Manage SMTP gateways, which hold outbound SMTP credentials",
+            "events": "Subscribe to the instance-wide change stream, which covers every account",
+            "diagnostics": "Read statistics and service status",
+            "logs": "Read the per-account connection log. Entries are the raw protocol trace, so they include folder names and message subjects"
+          }
+        },
+        "enum": [
+          "account",
+          "mailbox",
+          "message",
+          "submit",
+          "outbox",
+          "export",
+          "template",
+          "blocklist",
+          "webhook",
+          "gateway",
+          "events",
+          "diagnostics",
+          "logs"
+        ]
+      },
+      "TokenGroups": {
         "type": "array",
-        "description": "Scopes this token is valid for",
+        "description": "Which parts of the API this token may reach. Omit to allow all of them",
+        "example": [
+          "message",
+          "mailbox"
+        ],
+        "minItems": 1,
+        "x-constraint": {
+          "single": true
+        },
         "items": {
-          "type": "string",
-          "example": "api"
+          "$ref": "#/components/schemas/TokenGroup"
+        }
+      },
+      "TokenPermissions": {
+        "type": "object",
+        "description": "Restricts a token below its scope. Each axis is an allowlist that only narrows, and both apply together, so an operation must match the actions AND the groups. Endpoints that hand out credentials or change instance configuration can never be reached by a token that sets this field, whatever it lists",
+        "example": {
+          "actions": [
+            "read"
+          ],
+          "groups": [
+            "message",
+            "mailbox"
+          ]
+        },
+        "nullable": true,
+        "minProperties": 1,
+        "properties": {
+          "actions": {
+            "$ref": "#/components/schemas/TokenActions"
+          },
+          "groups": {
+            "$ref": "#/components/schemas/TokenGroups"
+          }
         }
       },
       "TokenAccess": {
@@ -11116,116 +11384,14 @@
           }
         }
       },
-      "RootTokensItem": {
-        "type": "object",
-        "properties": {
-          "description": {
-            "type": "string",
-            "description": "Token description",
-            "example": "Token description",
-            "maxLength": 1024,
-            "x-convert": {
-              "trim": true
-            }
-          },
-          "metadata": {
-            "type": "string",
-            "description": "Related metadata in JSON format",
-            "example": "{\"example\": \"value\"}",
-            "maxLength": 1048576
-          },
-          "ip": {
-            "type": "string",
-            "description": "IP address of the requester",
-            "example": "127.0.0.1",
-            "x-format": {
-              "ip": {
-                "cidr": "forbidden",
-                "version": [
-                  "ipv4",
-                  "ipv6"
-                ]
-              }
-            },
-            "x-convert": {
-              "trim": true
-            }
-          },
-          "remoteAddress": {
-            "type": "string",
-            "description": "IP address of the client that created the token",
-            "example": "127.0.0.1",
-            "x-format": {
-              "ip": {
-                "cidr": "forbidden",
-                "version": [
-                  "ipv4",
-                  "ipv6"
-                ]
-              }
-            },
-            "x-convert": {
-              "trim": true
-            }
-          },
-          "scopes": {
-            "$ref": "#/components/schemas/TokenScopes"
-          },
-          "restrictions": {
-            "$ref": "#/components/schemas/TokenRestrictions"
-          },
-          "created": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The time this token was created",
-            "example": "2021-02-17T13:43:18.860Z"
-          },
-          "expires": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The time this token stops working. Absent for tokens that never expire",
-            "example": "2021-02-17T14:43:18.860Z"
-          },
-          "access": {
-            "$ref": "#/components/schemas/TokenAccess"
-          },
-          "id": {
-            "type": "string",
-            "description": "Token identifier (SHA-256 hash of the token)",
-            "example": "1bc12baf7f0d5e51fe0a4e0eda06e1be5b8d6cc2c66b95dc0fbe4d2e9f5d5e1a",
-            "x-constraint": {
-              "length": 64
-            },
-            "x-format": {
-              "hex": {
-                "byteAligned": false,
-                "prefix": false
-              }
-            }
-          }
-        }
-      },
-      "RootTokensEntries": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/RootTokensItem"
-        }
-      },
-      "RootTokensResponse": {
-        "type": "object",
-        "properties": {
-          "tokens": {
-            "$ref": "#/components/schemas/RootTokensEntries"
-          }
-        }
-      },
-      "AccountTokensItem": {
+      "TokensItem": {
         "type": "object",
         "properties": {
           "account": {
             "type": "string",
-            "description": "Unique identifier for the email account",
+            "description": "Account this token is bound to, or null for an instance-wide token",
             "example": "user123",
+            "nullable": true,
             "maxLength": 256,
             "x-convert": {
               "trim": true
@@ -11286,6 +11452,9 @@
           "restrictions": {
             "$ref": "#/components/schemas/TokenRestrictions"
           },
+          "permissions": {
+            "$ref": "#/components/schemas/TokenPermissions"
+          },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -11315,22 +11484,410 @@
               }
             }
           }
-        },
-        "required": [
-          "account"
-        ]
-      },
-      "AccountTokensEntries": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/AccountTokensItem"
         }
       },
-      "AccountsTokensResponse": {
+      "TokensEntries": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/TokensItem"
+        }
+      },
+      "TokensResponse": {
         "type": "object",
         "properties": {
+          "account": {
+            "type": "string",
+            "description": "The account filter that was applied, or null when every token was listed",
+            "example": "user123",
+            "nullable": true,
+            "maxLength": 256,
+            "x-convert": {
+              "trim": true
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "How many tokens match",
+            "example": 12
+          },
+          "page": {
+            "type": "integer",
+            "description": "Current page (zero indexed)",
+            "example": 0
+          },
+          "pages": {
+            "type": "integer",
+            "description": "Total page count",
+            "example": 1
+          },
           "tokens": {
-            "$ref": "#/components/schemas/AccountTokensEntries"
+            "$ref": "#/components/schemas/TokensEntries"
+          }
+        }
+      },
+      "TokenScope": {
+        "type": "string",
+        "x-meta": {
+          "enumDescriptions": {
+            "api": "Call the REST API",
+            "smtp": "Authenticate against the built-in SMTP submission server",
+            "imap-proxy": "Authenticate against the built-in IMAP proxy"
+          }
+        },
+        "enum": [
+          "api",
+          "smtp",
+          "imap-proxy"
+        ]
+      },
+      "Scopes": {
+        "type": "array",
+        "description": "Token permission scopes: \"api\" for REST API access, \"smtp\" for SMTP submission, \"imap-proxy\" for IMAP proxy authentication",
+        "default": [
+          "api"
+        ],
+        "x-constraint": {
+          "single": true
+        },
+        "items": {
+          "$ref": "#/components/schemas/TokenScope"
+        }
+      },
+      "CreateToken": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string",
+            "description": "Bind the token to one account. Omit for an instance-wide token, which then has to set `permissions`",
+            "example": "user123",
+            "maxLength": 256,
+            "x-convert": {
+              "trim": true
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "Token description",
+            "example": "Token description",
+            "maxLength": 1024,
+            "x-convert": {
+              "trim": true
+            }
+          },
+          "scopes": {
+            "$ref": "#/components/schemas/Scopes"
+          },
+          "metadata": {
+            "type": "string",
+            "description": "Related metadata in JSON format",
+            "example": "{\"example\": \"value\"}",
+            "maxLength": 1048576
+          },
+          "restrictions": {
+            "$ref": "#/components/schemas/TokenRestrictions"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/TokenPermissions"
+          },
+          "expires": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Optional time when this token stops working. Omit for a token that never expires",
+            "example": "2021-02-17T14:43:18.860Z"
+          },
+          "ip": {
+            "type": "string",
+            "description": "IP address of the requester",
+            "example": "127.0.0.1",
+            "x-format": {
+              "ip": {
+                "cidr": "forbidden",
+                "version": [
+                  "ipv4",
+                  "ipv6"
+                ]
+              }
+            },
+            "x-convert": {
+              "trim": true
+            }
+          }
+        },
+        "required": [
+          "description",
+          "scopes"
+        ]
+      },
+      "CreateTokenResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "The access token. This is the only time it is returned - store it now",
+            "example": "9a6d24f8f43e01b1f2c4f11a5c5b8e51fe0a4e0eda06e1be5b8d6cc2c66b95dc",
+            "x-constraint": {
+              "length": 64
+            },
+            "x-format": {
+              "hex": {
+                "byteAligned": false,
+                "prefix": false
+              }
+            }
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier for this token, as reported by the token listings",
+            "example": "1bc12baf7f0d5e51fe0a4e0eda06e1be5b8d6cc2c66b95dc0fbe4d2e9f5d5e1a",
+            "x-constraint": {
+              "length": 64
+            },
+            "x-format": {
+              "hex": {
+                "byteAligned": false,
+                "prefix": false
+              }
+            }
+          }
+        },
+        "required": [
+          "token",
+          "id"
+        ]
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string",
+            "description": "Account this token is bound to, or null for an instance-wide token",
+            "example": "user123",
+            "nullable": true,
+            "maxLength": 256,
+            "x-convert": {
+              "trim": true
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "Token description",
+            "example": "Token description",
+            "maxLength": 1024,
+            "x-convert": {
+              "trim": true
+            }
+          },
+          "metadata": {
+            "type": "string",
+            "description": "Related metadata in JSON format",
+            "example": "{\"example\": \"value\"}",
+            "maxLength": 1048576
+          },
+          "ip": {
+            "type": "string",
+            "description": "IP address of the requester",
+            "example": "127.0.0.1",
+            "x-format": {
+              "ip": {
+                "cidr": "forbidden",
+                "version": [
+                  "ipv4",
+                  "ipv6"
+                ]
+              }
+            },
+            "x-convert": {
+              "trim": true
+            }
+          },
+          "remoteAddress": {
+            "type": "string",
+            "description": "IP address of the client that created the token",
+            "example": "127.0.0.1",
+            "x-format": {
+              "ip": {
+                "cidr": "forbidden",
+                "version": [
+                  "ipv4",
+                  "ipv6"
+                ]
+              }
+            },
+            "x-convert": {
+              "trim": true
+            }
+          },
+          "scopes": {
+            "$ref": "#/components/schemas/TokenScopes"
+          },
+          "restrictions": {
+            "$ref": "#/components/schemas/TokenRestrictions"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/TokenPermissions"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The time this token was created",
+            "example": "2021-02-17T13:43:18.860Z"
+          },
+          "expires": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The time this token stops working. Absent for tokens that never expire",
+            "example": "2021-02-17T14:43:18.860Z"
+          },
+          "access": {
+            "$ref": "#/components/schemas/TokenAccess"
+          },
+          "id": {
+            "type": "string",
+            "description": "Token identifier (SHA-256 hash of the token)",
+            "example": "1bc12baf7f0d5e51fe0a4e0eda06e1be5b8d6cc2c66b95dc0fbe4d2e9f5d5e1a",
+            "x-constraint": {
+              "length": 64
+            },
+            "x-format": {
+              "hex": {
+                "byteAligned": false,
+                "prefix": false
+              }
+            }
+          }
+        }
+      },
+      "DeleteTokenRequestResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "description": "Was the token deleted",
+            "default": true
+          }
+        }
+      },
+      "TokenLogStatus": {
+        "type": "string",
+        "description": "Whether the request was served",
+        "example": "allowed",
+        "enum": [
+          "allowed",
+          "denied"
+        ]
+      },
+      "TokenLogEntry": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the request was made",
+            "example": "2021-02-17T13:43:18.860Z"
+          },
+          "ip": {
+            "type": "string",
+            "description": "Address the request came from",
+            "example": "127.0.0.1",
+            "nullable": true,
+            "x-format": {
+              "ip": {
+                "cidr": "forbidden",
+                "version": [
+                  "ipv4",
+                  "ipv6"
+                ]
+              }
+            },
+            "x-convert": {
+              "trim": true
+            }
+          },
+          "method": {
+            "type": "string",
+            "description": "HTTP method, or the surface name for SMTP and the IMAP proxy",
+            "example": "get",
+            "nullable": true
+          },
+          "path": {
+            "type": "string",
+            "description": "Route that was called",
+            "example": "/v1/account/{account}/messages",
+            "nullable": true
+          },
+          "action": {
+            "type": "string",
+            "description": "Permission action the operation required",
+            "example": "read",
+            "nullable": true
+          },
+          "group": {
+            "type": "string",
+            "description": "Permission group the operation belongs to",
+            "example": "message",
+            "nullable": true
+          },
+          "account": {
+            "type": "string",
+            "description": "Account the request addressed",
+            "example": "user123",
+            "nullable": true,
+            "maxLength": 256,
+            "x-convert": {
+              "trim": true
+            }
+          },
+          "status": {
+            "$ref": "#/components/schemas/TokenLogStatus"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why it was refused. Null when it was allowed",
+            "example": "group",
+            "nullable": true
+          }
+        }
+      },
+      "TokenLogEntries": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/TokenLogEntry"
+        }
+      },
+      "TokenLogResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Token identifier (SHA-256 hash of the token)",
+            "example": "1bc12baf7f0d5e51fe0a4e0eda06e1be5b8d6cc2c66b95dc0fbe4d2e9f5d5e1a",
+            "x-constraint": {
+              "length": 64
+            },
+            "x-format": {
+              "hex": {
+                "byteAligned": false,
+                "prefix": false
+              }
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "How many entries are stored for this token",
+            "example": 120
+          },
+          "page": {
+            "type": "integer",
+            "description": "Current page (zero indexed)",
+            "example": 0
+          },
+          "pages": {
+            "type": "integer",
+            "description": "Total page count",
+            "example": 6
+          },
+          "entries": {
+            "$ref": "#/components/schemas/TokenLogEntries"
           }
         }
       },
@@ -11494,7 +12051,8 @@
           },
           "preview": {
             "type": "string",
-            "description": "Short preview of the message content"
+            "description": "Short preview of the message content",
+            "example": "Hello, here is the report you asked for"
           },
           "category": {
             "$ref": "#/components/schemas/MessageCategory"
@@ -11957,6 +12515,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -12049,14 +12608,16 @@
         },
         "x-ee-behavior": [
           "Credentials are not verified while handling this request. The account connects afterwards, and an authentication failure surfaces as an authenticationError state rather than an error here. Use the account verification endpoint to test credentials up front."
-        ]
+        ],
+        "x-ee-action": "write",
+        "x-ee-group": "admin"
       }
     },
     "/v1/account/{account}": {
       "get": {
         "summary": "Get account info",
         "operationId": "getV1AccountAccount",
-        "description": "Returns stored information about the account. Passwords are not included.<br/><br/>Quota reporting is not available for Gmail API or MS Graph accounts; the quota field is omitted for those.",
+        "description": "Returns stored information about the account. Credentials are masked: stored passwords, the credentials in any proxy or webhook URL, and the values of custom webhook headers all read back as \"******\". A masked value is not the stored one - leave the field out of an update rather than writing it back, otherwise the mask replaces the credential.<br/><br/>Quota reporting is not available for Gmail API or MS Graph accounts; the quota field is omitted for those.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -12064,6 +12625,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -12172,7 +12734,9 @@
         },
         "x-ee-behavior": [
           "Quota reporting is not available for Gmail API or MS Graph accounts; the quota field is omitted for those."
-        ]
+        ],
+        "x-ee-action": "read",
+        "x-ee-group": "account"
       },
       "put": {
         "summary": "Update account info",
@@ -12185,6 +12749,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -12292,7 +12857,9 @@
         },
         "x-ee-behavior": [
           "Credentials are not verified while handling this request. The account connects afterwards, and an authentication failure surfaces as an authenticationError state rather than an error here. Use the account verification endpoint to test credentials up front."
-        ]
+        ],
+        "x-ee-action": "write",
+        "x-ee-group": "admin"
       },
       "delete": {
         "summary": "Remove account",
@@ -12305,6 +12872,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -12330,10 +12898,13 @@
             "in": "query",
             "schema": {
               "type": "boolean",
-              "description": "If true, EmailEngine attempts to revoke the upstream OAuth2 grant at the provider before deleting the account. Currently supported for individual Gmail OAuth grants. For Gmail Workspace service-account integrations (gmailService), Outlook, and non-OAuth2 accounts the flag is a no-op. Revoke failures are logged and do not block deletion.",
+              "description": "Revoke the upstream OAuth2 grant at the provider before deleting the account",
+              "x-meta": {
+                "usage": "Set this when deleting an account should also cut EmailEngine off at the provider, for example because a user asked for their data to be disconnected rather than just removed here.\n\nIt currently works for individual Gmail OAuth2 grants. Gmail Workspace service-account integrations, Outlook and non-OAuth2 accounts ignore it. A failed revocation is logged and never blocks the deletion."
+              },
               "default": false
             },
-            "description": "If true, EmailEngine attempts to revoke the upstream OAuth2 grant at the provider before deleting the account. Currently supported for individual Gmail OAuth grants. For Gmail Workspace service-account integrations (gmailService), Outlook, and non-OAuth2 accounts the flag is a no-op. Revoke failures are logged and do not block deletion."
+            "description": "Revoke the upstream OAuth2 grant at the provider before deleting the account"
           }
         ],
         "tags": [
@@ -12411,9 +12982,12 @@
             }
           }
         },
+        "x-ee-impact": "destructive",
         "x-ee-behavior": [
           "Removes the account, its credentials, its cached data and any messages still queued for delivery. Webhook events generated before the deletion are never delivered afterwards and are discarded once the queue reaches them. Records of deliveries that had already failed permanently are not removed here; they expire on the queue retention window, seven days by default."
-        ]
+        ],
+        "x-ee-action": "destructive",
+        "x-ee-group": "account"
       }
     },
     "/v1/account/{account}/attachment/{attachment}": {
@@ -12428,6 +13002,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -12545,7 +13120,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "message"
       }
     },
     "/v1/account/{account}/export": {
@@ -12560,6 +13137,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -12667,7 +13245,9 @@
         },
         "x-ee-behavior": [
           "Runs as a background job. Follow it either by polling the status endpoint or by waiting for the completion webhook."
-        ]
+        ],
+        "x-ee-action": "write",
+        "x-ee-group": "export"
       }
     },
     "/v1/account/{account}/export/{exportId}": {
@@ -12682,6 +13262,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -12789,7 +13370,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "export"
       },
       "delete": {
         "summary": "Delete export",
@@ -12802,6 +13385,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -12909,7 +13493,10 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "destructive",
+        "x-ee-action": "destructive",
+        "x-ee-group": "export"
       }
     },
     "/v1/account/{account}/export/{exportId}/download": {
@@ -12924,6 +13511,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -13041,7 +13629,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "export"
       }
     },
     "/v1/account/{account}/exports": {
@@ -13056,6 +13646,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -13167,7 +13758,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "export"
       }
     },
     "/v1/account/{account}/flush": {
@@ -13182,6 +13775,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -13287,9 +13881,12 @@
             }
           }
         },
+        "x-ee-impact": "destructive",
         "x-ee-behavior": [
           "The request only schedules the work and returns before it finishes. Watch the account state, or the accountInitialized and authenticationError webhooks, for the result."
-        ]
+        ],
+        "x-ee-action": "destructive",
+        "x-ee-group": "account"
       }
     },
     "/v1/account/{account}/mailbox": {
@@ -13304,6 +13901,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -13418,7 +14016,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "mailbox"
       },
       "put": {
         "summary": "Modify mailbox",
@@ -13431,6 +14031,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -13545,7 +14146,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "mailbox"
       },
       "delete": {
         "summary": "Delete mailbox",
@@ -13558,6 +14161,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -13674,7 +14278,10 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "destructive",
+        "x-ee-action": "destructive",
+        "x-ee-group": "mailbox"
       }
     },
     "/v1/account/{account}/mailboxes": {
@@ -13689,6 +14296,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -13804,7 +14412,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "mailbox"
       }
     },
     "/v1/account/{account}/message": {
@@ -13819,6 +14429,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -13936,7 +14547,9 @@
         },
         "x-ee-behavior": [
           "For MS Graph accounts only drafts can be uploaded, and the draft flag cannot be changed afterwards."
-        ]
+        ],
+        "x-ee-action": "write",
+        "x-ee-group": "message"
       }
     },
     "/v1/account/{account}/message/{message}": {
@@ -13951,6 +14564,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -14018,10 +14632,13 @@
             "in": "query",
             "schema": {
               "type": "boolean",
-              "description": "Shorthand option to fetch and preprocess HTML and inline images. Overrides `textType`, `preProcessHtml`, and `embedAttachedImages` options. Quoted thread history is folded into a single collapsed <details class=\"ee-collapsed-thread\"> element.",
+              "description": "Shorthand option to fetch and preprocess HTML and inline images",
+              "x-meta": {
+                "usage": "Turn this on when you are rendering the message in your own UI and want EmailEngine to do the sanitising. It is a shorthand that overrides `textType`, `preProcessHtml` and `embedAttachedImages`.\n\nQuoted thread history is folded into one collapsed `<details class=\"ee-collapsed-thread\">` element so you can hide it behind a single control. Its `<summary>` is deliberately empty, so supply your own label."
+              },
               "default": false
             },
-            "description": "Shorthand option to fetch and preprocess HTML and inline images. Overrides `textType`, `preProcessHtml`, and `embedAttachedImages` options. Quoted thread history is folded into a single collapsed <details class=\"ee-collapsed-thread\"> element."
+            "description": "Shorthand option to fetch and preprocess HTML and inline images"
           },
           {
             "name": "embedAttachedImages",
@@ -14138,7 +14755,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "message"
       },
       "put": {
         "summary": "Update message",
@@ -14151,6 +14770,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -14280,7 +14900,9 @@
         },
         "x-ee-behavior": [
           "For Gmail API accounts the entire label set cannot be replaced in one call. Add and remove labels individually instead of using the set operation."
-        ]
+        ],
+        "x-ee-action": "write",
+        "x-ee-group": "message"
       },
       "delete": {
         "summary": "Delete message",
@@ -14293,6 +14915,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -14421,9 +15044,12 @@
             }
           }
         },
+        "x-ee-impact": "destructive",
         "x-ee-behavior": [
           "For Gmail API accounts the message is always moved to Trash. The force option, which permanently deletes on IMAP accounts, has no effect."
-        ]
+        ],
+        "x-ee-action": "destructive",
+        "x-ee-group": "message"
       }
     },
     "/v1/account/{account}/message/{message}/move": {
@@ -14438,6 +15064,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -14564,7 +15191,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "message"
       }
     },
     "/v1/account/{account}/message/{message}/source": {
@@ -14579,6 +15208,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -14696,7 +15326,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "message"
       }
     },
     "/v1/account/{account}/message/{message}/submit": {
@@ -14711,6 +15343,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -14722,6 +15355,7 @@
             "schema": {
               "type": "string",
               "description": "Unique key to prevent duplicate processing of the same request",
+              "example": "submit-12345",
               "minLength": 0,
               "maxLength": 1024,
               "x-convert": {
@@ -14852,6 +15486,7 @@
             }
           }
         },
+        "x-ee-impact": "sends",
         "x-ee-behavior": [
           "Delivery is asynchronous. A 2xx means the message was queued, not that it was sent. Failed attempts are retried with exponential backoff up to the configured deliveryAttempts; follow the outcome through the Outbox endpoints or the messageSent, messageDeliveryError and messageFailed webhooks.",
           "For SMTP accounts EmailEngine uploads the sent message to the Sent Mail folder after delivery. Gmail API and MS Graph accounts file sent messages themselves, so no upload is performed."
@@ -14862,7 +15497,9 @@
             "label": "Minimal",
             "source": "curl -X POST \"$EMAILENGINE_URL/v1/account/example/message/AAAAAQAACnA/submit\" \\\n    -H \"Authorization: Bearer $EMAILENGINE_TOKEN\" \\\n    -H \"Content-Type: application/json\" \\\n    -d '{}'"
           }
-        ]
+        ],
+        "x-ee-action": "send",
+        "x-ee-group": "submit"
       }
     },
     "/v1/account/{account}/messages": {
@@ -14877,6 +15514,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -14927,13 +15565,16 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "description": "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts. Deprecated; use the paging cursor instead. If the page cursor value is provided, then the page number value is ignored.",
+              "description": "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts",
               "example": 0,
+              "x-meta": {
+                "usage": "Prefer the paging cursor. This exists for IMAP accounts and for callers written before cursors, and it is ignored entirely when a cursor is also supplied."
+              },
               "default": 0,
               "minimum": 0,
               "maximum": 1048576
             },
-            "description": "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts. Deprecated; use the paging cursor instead. If the page cursor value is provided, then the page number value is ignored."
+            "description": "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts"
           },
           {
             "name": "pageSize",
@@ -15033,7 +15674,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "message"
       },
       "put": {
         "summary": "Update messages",
@@ -15046,6 +15689,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -15174,7 +15818,9 @@
         },
         "x-ee-behavior": [
           "For Gmail API accounts the entire label set cannot be replaced in one call. Add and remove labels individually instead of using the set operation."
-        ]
+        ],
+        "x-ee-action": "write",
+        "x-ee-group": "message"
       }
     },
     "/v1/account/{account}/messages/delete": {
@@ -15189,6 +15835,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -15325,9 +15972,12 @@
             }
           }
         },
+        "x-ee-impact": "destructive",
         "x-ee-behavior": [
           "For Gmail API accounts the message is always moved to Trash. The force option, which permanently deletes on IMAP accounts, has no effect."
-        ]
+        ],
+        "x-ee-action": "destructive",
+        "x-ee-group": "message"
       }
     },
     "/v1/account/{account}/messages/move": {
@@ -15342,6 +15992,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -15467,7 +16118,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "message"
       }
     },
     "/v1/account/{account}/oauth-token": {
@@ -15482,6 +16135,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -15577,7 +16231,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "admin"
       }
     },
     "/v1/account/{account}/reconnect": {
@@ -15592,6 +16248,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -15699,7 +16356,9 @@
         },
         "x-ee-behavior": [
           "The request only schedules the work and returns before it finishes. Watch the account state, or the accountInitialized and authenticationError webhooks, for the result."
-        ]
+        ],
+        "x-ee-action": "write",
+        "x-ee-group": "account"
       }
     },
     "/v1/account/{account}/search": {
@@ -15714,6 +16373,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -15753,13 +16413,16 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "description": "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts. Deprecated; use the paging cursor instead. If the page cursor value is provided, then the page number value is ignored.",
+              "description": "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts",
               "example": 0,
+              "x-meta": {
+                "usage": "Prefer the paging cursor. This exists for IMAP accounts and for callers written before cursors, and it is ignored entirely when a cursor is also supplied."
+              },
               "default": 0,
               "minimum": 0,
               "maximum": 1048576
             },
-            "description": "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts. Deprecated; use the paging cursor instead. If the page cursor value is provided, then the page number value is ignored."
+            "description": "Page number (zero-indexed, so use 0 for the first page). Only supported for IMAP accounts"
           },
           {
             "name": "pageSize",
@@ -15779,9 +16442,12 @@
             "in": "query",
             "schema": {
               "type": "boolean",
-              "description": "MS Graph only. If enabled, uses the $search parameter for MS Graph search queries instead of $filter. This allows searching the \"to\", \"cc\", \"bcc\", \"larger\", \"smaller\", \"body\", \"before\", \"sentBefore\", \"since\", and the \"sentSince\" fields. Note that $search returns up to 1,000 results, does not indicate the total number of matching results or pages, and returns results sorted by relevance rather than date. The \"labels\" filter is not available in this mode - leave this option disabled to filter by category."
+              "description": "MS Graph only. Use the $search parameter for search queries instead of $filter",
+              "x-meta": {
+                "usage": "Turn this on for MS Graph accounts when you need to search fields that the default `$filter` mode cannot reach: `to`, `cc`, `bcc`, `larger`, `smaller`, `body`, `before`, `sentBefore`, `since` and `sentSince`.\n\nWhat you give up is worth checking first. `$search` returns at most 1,000 results, reports neither a total nor a page count, and orders by relevance rather than by date. The `labels` filter is unavailable in this mode, so leave it off when you need to filter by category."
+              }
             },
-            "description": "MS Graph only. If enabled, uses the $search parameter for MS Graph search queries instead of $filter. This allows searching the \"to\", \"cc\", \"bcc\", \"larger\", \"smaller\", \"body\", \"before\", \"sentBefore\", \"since\", and the \"sentSince\" fields. Note that $search returns up to 1,000 results, does not indicate the total number of matching results or pages, and returns results sorted by relevance rather than date. The \"labels\" filter is not available in this mode - leave this option disabled to filter by category."
+            "description": "MS Graph only. Use the $search parameter for search queries instead of $filter"
           },
           {
             "name": "path",
@@ -15897,7 +16563,10 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "readonly",
+        "x-ee-action": "read",
+        "x-ee-group": "message"
       }
     },
     "/v1/account/{account}/server-signatures": {
@@ -15912,6 +16581,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -16007,7 +16677,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "account"
       }
     },
     "/v1/account/{account}/submit": {
@@ -16022,6 +16694,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -16033,6 +16706,7 @@
             "schema": {
               "type": "string",
               "description": "Unique key to prevent duplicate processing of the same request",
+              "example": "submit-12345",
               "minLength": 0,
               "maxLength": 1024,
               "x-convert": {
@@ -16071,10 +16745,13 @@
             "in": "query",
             "schema": {
               "type": "boolean",
-              "description": "For MS Graph accounts: If true, uses structured JSON format (respects from field for shared mailboxes, breaks calendar invites and special MIME types). If false, sends as raw MIME (preserves calendar invites, ignores from field). Default is false (raw MIME).",
+              "description": "For MS Graph accounts: send as structured JSON instead of raw MIME",
+              "x-meta": {
+                "usage": "Turn this on for MS Graph accounts sending from a shared mailbox, because it is the only mode that respects the `from` address.\n\nThe cost is fidelity: structured JSON breaks calendar invites and other special MIME types. The default, raw MIME, preserves them but ignores `from`."
+              },
               "default": false
             },
-            "description": "For MS Graph accounts: If true, uses structured JSON format (respects from field for shared mailboxes, breaks calendar invites and special MIME types). If false, sends as raw MIME (preserves calendar invites, ignores from field). Default is false (raw MIME)."
+            "description": "For MS Graph accounts: send as structured JSON instead of raw MIME"
           }
         ],
         "tags": [
@@ -16171,10 +16848,13 @@
             }
           }
         },
+        "x-ee-impact": "sends",
         "x-ee-behavior": [
           "Delivery is asynchronous. A 2xx means the message was queued, not that it was sent. Failed attempts are retried with exponential backoff up to the configured deliveryAttempts; follow the outcome through the Outbox endpoints or the messageSent, messageDeliveryError and messageFailed webhooks.",
           "For SMTP accounts EmailEngine uploads the sent message to the Sent Mail folder after delivery. Gmail API and MS Graph accounts file sent messages themselves, so no upload is performed."
-        ]
+        ],
+        "x-ee-action": "send",
+        "x-ee-group": "submit"
       }
     },
     "/v1/account/{account}/sync": {
@@ -16189,6 +16869,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -16296,7 +16977,9 @@
         },
         "x-ee-behavior": [
           "The request only schedules the work and returns before it finishes. Watch the account state, or the accountInitialized and authenticationError webhooks, for the result."
-        ]
+        ],
+        "x-ee-action": "write",
+        "x-ee-group": "account"
       }
     },
     "/v1/account/{account}/text/{text}": {
@@ -16311,6 +16994,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -16459,7 +17143,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "message"
       }
     },
     "/v1/accounts": {
@@ -16474,6 +17160,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -16614,7 +17301,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "account"
       }
     },
     "/v1/authentication/form": {
@@ -16629,6 +17318,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -16718,7 +17408,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "admin"
       }
     },
     "/v1/autoconfig": {
@@ -16733,6 +17425,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -16817,14 +17510,16 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "diagnostics"
       }
     },
     "/v1/blocklist/{listId}": {
       "get": {
         "summary": "List blocklist entries",
         "operationId": "getV1BlocklistListid",
-        "description": "List blocked addresses for a list",
+        "description": "List suppressed addresses for a list",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -16832,6 +17527,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -16952,12 +17648,14 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "blocklist"
       },
       "post": {
         "summary": "Add to blocklist",
         "operationId": "postV1BlocklistListid",
-        "description": "Add an email address to a blocklist",
+        "description": "Add an email address to a suppression list. Sending with this listId skips the address",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -16965,6 +17663,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -17068,12 +17767,14 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "blocklist"
       },
       "delete": {
         "summary": "Remove from blocklist",
         "operationId": "deleteV1BlocklistListid",
-        "description": "Delete a blocked email address from a list",
+        "description": "Remove a suppressed email address from a list",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -17081,6 +17782,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -17189,14 +17891,17 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "destructive",
+        "x-ee-action": "destructive",
+        "x-ee-group": "blocklist"
       }
     },
     "/v1/blocklists": {
       "get": {
         "summary": "List blocklists",
         "operationId": "getV1Blocklists",
-        "description": "List blocklists with blocked addresses",
+        "description": "List suppression lists (blocklists) with the number of blocked addresses on each",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -17204,6 +17909,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -17300,7 +18006,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "blocklist"
       }
     },
     "/v1/changes": {
@@ -17315,6 +18023,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -17378,7 +18087,9 @@
         },
         "x-ee-behavior": [
           "A long-lived Server-Sent Events stream rather than a normal request and response. The connection stays open until the client closes it."
-        ]
+        ],
+        "x-ee-action": "read",
+        "x-ee-group": "events"
       }
     },
     "/v1/delivery-test/account/{account}": {
@@ -17393,6 +18104,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -17498,9 +18210,12 @@
             }
           }
         },
+        "x-ee-impact": "sends",
         "x-ee-behavior": [
           "Runs as a background job. Follow it either by polling the status endpoint or by waiting for the completion webhook."
-        ]
+        ],
+        "x-ee-action": "send",
+        "x-ee-group": "submit"
       }
     },
     "/v1/delivery-test/check/{deliveryTest}": {
@@ -17515,6 +18230,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -17614,7 +18330,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "diagnostics"
       }
     },
     "/v1/gateway": {
@@ -17629,6 +18347,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -17708,14 +18427,16 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "admin"
       }
     },
     "/v1/gateway/{gateway}": {
       "get": {
         "summary": "Get gateway info",
         "operationId": "getV1GatewayGateway",
-        "description": "Returns stored information about the gateway. Passwords are not included.",
+        "description": "Returns stored information about the gateway. Credentials are masked: stored passwords, the credentials in any proxy or webhook URL, and the values of custom webhook headers all read back as \"******\". A masked value is not the stored one - leave the field out of an update rather than writing it back, otherwise the mask replaces the credential.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -17723,6 +18444,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -17815,7 +18537,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "gateway"
       },
       "delete": {
         "summary": "Remove SMTP gateway",
@@ -17828,6 +18552,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -17920,7 +18645,10 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "destructive",
+        "x-ee-action": "destructive",
+        "x-ee-group": "gateway"
       }
     },
     "/v1/gateway/edit/{gateway}": {
@@ -17935,6 +18663,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -18036,7 +18765,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "admin"
       }
     },
     "/v1/gateways": {
@@ -18051,6 +18782,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -18147,7 +18879,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "gateway"
       }
     },
     "/v1/license": {
@@ -18162,6 +18896,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -18222,7 +18957,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "admin"
       },
       "post": {
         "summary": "Register a license",
@@ -18235,6 +18972,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -18314,7 +19052,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "admin"
       },
       "delete": {
         "summary": "Remove license",
@@ -18327,6 +19067,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -18387,7 +19128,10 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "destructive",
+        "x-ee-action": "destructive",
+        "x-ee-group": "admin"
       }
     },
     "/v1/logs/{account}": {
@@ -18402,6 +19146,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -18490,7 +19235,9 @@
         },
         "x-ee-behavior": [
           "Only available for IMAP accounts. Gmail API and MS Graph accounts have no equivalent."
-        ]
+        ],
+        "x-ee-action": "read",
+        "x-ee-group": "logs"
       }
     },
     "/v1/oauth2": {
@@ -18505,6 +19252,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -18601,7 +19349,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "admin"
       },
       "post": {
         "summary": "Register OAuth2 application",
@@ -18614,6 +19364,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -18693,7 +19444,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "admin"
       }
     },
     "/v1/oauth2/{app}": {
@@ -18708,6 +19461,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -18800,7 +19554,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "admin"
       },
       "put": {
         "summary": "Update OAuth2 application",
@@ -18813,6 +19569,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -18914,7 +19671,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "admin"
       },
       "delete": {
         "summary": "Remove OAuth2 application",
@@ -18927,6 +19686,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -19019,7 +19779,10 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "destructive",
+        "x-ee-action": "destructive",
+        "x-ee-group": "admin"
       }
     },
     "/v1/oauth2/{app}/verify": {
@@ -19034,6 +19797,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -19135,14 +19899,17 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "readonly",
+        "x-ee-action": "read",
+        "x-ee-group": "admin"
       }
     },
     "/v1/outbox": {
       "get": {
         "summary": "List queued messages",
         "operationId": "getV1Outbox",
-        "description": "Lists messages in the Outbox",
+        "description": "Lists messages in the Outbox. Credentials are masked: stored passwords, the credentials in any proxy or webhook URL, and the values of custom webhook headers all read back as \"******\". A masked value is not the stored one - leave the field out of an update rather than writing it back, otherwise the mask replaces the credential.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -19150,6 +19917,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -19246,14 +20014,16 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "outbox"
       }
     },
     "/v1/outbox/{queueId}": {
       "get": {
         "summary": "Get queued message",
         "operationId": "getV1OutboxQueueid",
-        "description": "Gets a queued message in the Outbox",
+        "description": "Gets a queued message in the Outbox. Credentials are masked: stored passwords, the credentials in any proxy or webhook URL, and the values of custom webhook headers all read back as \"******\". A masked value is not the stored one - leave the field out of an update rather than writing it back, otherwise the mask replaces the credential.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -19261,6 +20031,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -19353,7 +20124,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "outbox"
       },
       "delete": {
         "summary": "Remove a message",
@@ -19366,6 +20139,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -19448,7 +20222,10 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "destructive",
+        "x-ee-action": "destructive",
+        "x-ee-group": "outbox"
       }
     },
     "/v1/pubsub/status": {
@@ -19463,6 +20240,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -19559,14 +20337,16 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "diagnostics"
       }
     },
     "/v1/settings": {
       "get": {
         "summary": "List specific settings",
         "operationId": "getV1Settings",
-        "description": "List setting values for specific keys",
+        "description": "List setting values for specific keys. Credentials are masked: the credentials in any proxy or webhook URL and the values of custom webhook headers read back as \"******\", and encrypted secrets are returned as booleans. A masked value is not the stored one - POST /v1/settings skips it when it matches the stored value and refuses it otherwise.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -19574,6 +20354,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -19804,6 +20585,14 @@
             }
           },
           {
+            "name": "tokenAuditLog",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
             "name": "proxyEnabled",
             "in": "query",
             "schema": {
@@ -19885,158 +20674,6 @@
           },
           {
             "name": "notifyCalendarEvents",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "gmailEnabled",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "gmailClientId",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "gmailClientSecret",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "gmailRedirectUrl",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "gmailExtraScopes",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "outlookEnabled",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "outlookClientId",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "outlookClientSecret",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "outlookRedirectUrl",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "outlookAuthority",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "outlookExtraScopes",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "mailRuEnabled",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "mailRuClientId",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "mailRuClientSecret",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "mailRuRedirectUrl",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "mailRuExtraScopes",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "serviceClient",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "serviceKey",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "serviceExtraScopes",
             "in": "query",
             "schema": {
               "type": "boolean",
@@ -20492,12 +21129,14 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "admin"
       },
       "post": {
         "summary": "Set setting values",
         "operationId": "postV1Settings",
-        "description": "Set setting values for specific keys",
+        "description": "Set setting values for specific keys. Masked credential values (\"******\") read from GET /v1/settings are not accepted: a masked value that matches the stored one is skipped as unchanged, any other value carrying the mask is refused. Send the real credential, or leave the key out to keep the stored value.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -20505,6 +21144,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -20584,7 +21224,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "admin"
       }
     },
     "/v1/settings/queue/{queue}": {
@@ -20599,6 +21241,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -20688,7 +21331,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "admin"
       },
       "put": {
         "summary": "Set queue settings",
@@ -20701,6 +21346,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -20799,7 +21445,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "admin"
       }
     },
     "/v1/stats": {
@@ -20813,6 +21461,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -20896,7 +21545,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "diagnostics"
       }
     },
     "/v1/templates": {
@@ -20911,6 +21562,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -21028,7 +21680,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "template"
       }
     },
     "/v1/templates/account/{account}": {
@@ -21043,6 +21697,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -21148,7 +21803,10 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "destructive",
+        "x-ee-action": "destructive",
+        "x-ee-group": "template"
       }
     },
     "/v1/templates/template": {
@@ -21163,6 +21821,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -21252,7 +21911,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "template"
       }
     },
     "/v1/templates/template/{template}": {
@@ -21267,6 +21928,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -21359,7 +22021,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "template"
       },
       "put": {
         "summary": "Update a template",
@@ -21372,6 +22036,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -21473,7 +22138,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "template"
       },
       "delete": {
         "summary": "Remove a template",
@@ -21486,6 +22153,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -21568,14 +22236,17 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "destructive",
+        "x-ee-action": "destructive",
+        "x-ee-group": "template"
       }
     },
-    "/v1/token": {
-      "post": {
-        "summary": "Provision an access token",
-        "operationId": "postV1Token",
-        "description": "Provisions a new access token for an account",
+    "/v1/tokens": {
+      "get": {
+        "summary": "List access tokens",
+        "operationId": "getV1Tokens",
+        "description": "Lists access tokens. Returns every token on the instance unless narrowed with the account argument. Token values are never returned - only the id each token is listed under.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -21583,6 +22254,147 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Page number (zero indexed, so use 0 for first page)",
+              "example": 0,
+              "default": 0,
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "description": "Page number (zero indexed, so use 0 for first page)"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "How many entries per page",
+              "example": 20,
+              "default": 20,
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "description": "How many entries per page"
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Filter by description, id or account",
+              "example": "agent",
+              "maxLength": 1024,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Filter by description, id or account"
+          },
+          {
+            "name": "account",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "Only list tokens bound to this account. Omit to list every token on the instance",
+              "example": "user123",
+              "maxLength": 256,
+              "x-convert": {
+                "trim": true
+              }
+            },
+            "description": "Only list tokens bound to this account. Omit to list every token on the instance"
+          }
+        ],
+        "tags": [
+          "Access Tokens"
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the matching access tokens. Token values are never returned after creation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokensResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input - the path parameters, query arguments, or request payload did not pass validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed - the access token is missing, invalid, or was not accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied - the access token does not grant permission for this operation (token scope, account, or IP address restriction)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessDeniedErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded - too many requests were made with this access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimitErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - an unexpected error occurred while processing the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "admin"
+      },
+      "post": {
+        "summary": "Provision an access token",
+        "operationId": "postV1Tokens",
+        "description": "Provisions a new access token. Either bind it to an account, or set `permissions` - an instance-wide token that is not narrowed reaches every account and every endpoint, so the API declines to mint one.",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -21672,14 +22484,16 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "write",
+        "x-ee-group": "admin"
       }
     },
-    "/v1/token/{token}": {
-      "delete": {
-        "summary": "Remove a token",
-        "operationId": "deleteV1TokenToken",
-        "description": "Delete an access token",
+    "/v1/tokens/{token}": {
+      "get": {
+        "summary": "Get token info",
+        "operationId": "getV1TokensToken",
+        "description": "Returns stored information about a single access token. The token value itself is never returned - it is only shown once, when the token is created.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -21687,6 +22501,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -21697,8 +22512,8 @@
             "in": "path",
             "schema": {
               "type": "string",
-              "description": "Access token",
-              "example": "123456",
+              "description": "The token id, as reported by POST /v1/tokens and the token listing",
+              "example": "1bc12baf7f0d5e51fe0a4e0eda06e1be5b8d6cc2c66b95dc0fbe4d2e9f5d5e1a",
               "x-constraint": {
                 "length": 64
               },
@@ -21709,7 +22524,123 @@
                 }
               }
             },
-            "description": "Access token",
+            "description": "The token id, as reported by POST /v1/tokens and the token listing",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Access Tokens"
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the stored token record. The token value is not included.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input - the path parameters, query arguments, or request payload did not pass validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed - the access token is missing, invalid, or was not accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied - the access token does not grant permission for this operation (token scope, account, or IP address restriction)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessDeniedErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found - the requested entity (account, message, mailbox, etc.) does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded - too many requests were made with this access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimitErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - an unexpected error occurred while processing the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "admin"
+      },
+      "delete": {
+        "summary": "Remove a token",
+        "operationId": "deleteV1TokensToken",
+        "description": "Delete an access token",
+        "parameters": [
+          {
+            "name": "x-ee-timeout",
+            "in": "header",
+            "schema": {
+              "type": "integer",
+              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
+              "minimum": 0,
+              "maximum": 7200000
+            },
+            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
+          },
+          {
+            "name": "token",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "description": "The access token value, or the token id from a listing",
+              "example": "1bc12baf7f0d5e51fe0a4e0eda06e1be5b8d6cc2c66b95dc0fbe4d2e9f5d5e1a",
+              "x-constraint": {
+                "length": 64
+              },
+              "x-format": {
+                "hex": {
+                  "byteAligned": false,
+                  "prefix": false
+                }
+              }
+            },
+            "description": "The access token value, or the token id from a listing",
             "required": true
           }
         ],
@@ -21777,14 +22708,17 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "destructive",
+        "x-ee-action": "destructive",
+        "x-ee-group": "admin"
       }
     },
-    "/v1/tokens": {
+    "/v1/tokens/{token}/log": {
       "get": {
-        "summary": "List root tokens",
-        "operationId": "getV1Tokens",
-        "description": "Lists access tokens registered for root access",
+        "summary": "Get token audit log",
+        "operationId": "getV1TokensTokenLog",
+        "description": "Lists recent requests made with an access token, newest first. Requires the tokenAuditLog setting to be enabled; it is off by default, and entries only exist from the point it was switched on.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -21792,100 +22726,57 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
-              "minimum": 0,
-              "maximum": 7200000
-            },
-            "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
-          }
-        ],
-        "tags": [
-          "Access Tokens"
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the root access tokens. Token values are never returned after creation.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RootTokensResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication failed - the access token is missing, invalid, or was not accepted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthenticationErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Access denied - the access token does not grant permission for this operation (token scope, account, or IP address restriction)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccessDeniedErrorResponse"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded - too many requests were made with this access token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RateLimitErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error - an unexpected error occurred while processing the request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/tokens/account/{account}": {
-      "get": {
-        "summary": "List account tokens",
-        "operationId": "getV1TokensAccountAccount",
-        "description": "Lists access tokens registered for an account",
-        "parameters": [
-          {
-            "name": "x-ee-timeout",
-            "in": "header",
-            "schema": {
-              "type": "integer",
-              "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
             "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)"
           },
           {
-            "name": "account",
+            "name": "token",
             "in": "path",
             "schema": {
               "type": "string",
-              "description": "Unique identifier for the email account",
-              "example": "user123",
-              "maxLength": 256,
-              "x-convert": {
-                "trim": true
+              "description": "The token id, as reported by POST /v1/tokens and the token listing",
+              "example": "1bc12baf7f0d5e51fe0a4e0eda06e1be5b8d6cc2c66b95dc0fbe4d2e9f5d5e1a",
+              "x-constraint": {
+                "length": 64
+              },
+              "x-format": {
+                "hex": {
+                  "byteAligned": false,
+                  "prefix": false
+                }
               }
             },
-            "description": "Unique identifier for the email account",
+            "description": "The token id, as reported by POST /v1/tokens and the token listing",
             "required": true
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "Page number (zero indexed, so use 0 for first page)",
+              "example": 0,
+              "default": 0,
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "description": "Page number (zero indexed, so use 0 for first page)"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "description": "How many entries per page",
+              "example": 20,
+              "default": 20,
+              "minimum": 1,
+              "maximum": 200
+            },
+            "description": "How many entries per page"
           }
         ],
         "tags": [
@@ -21893,11 +22784,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns the access tokens scoped to the account.",
+            "description": "Returns the recorded requests for this token, newest first.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccountsTokensResponse"
+                  "$ref": "#/components/schemas/TokenLogResponse"
                 }
               }
             }
@@ -21932,6 +22823,16 @@
               }
             }
           },
+          "404": {
+            "description": "Not found - the requested entity (account, message, mailbox, etc.) does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorResponse"
+                }
+              }
+            }
+          },
           "429": {
             "description": "Rate limit exceeded - too many requests were made with this access token",
             "content": {
@@ -21952,7 +22853,10 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "readonly",
+        "x-ee-action": "read",
+        "x-ee-group": "admin"
       }
     },
     "/v1/verifyAccount": {
@@ -21967,6 +22871,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -22046,14 +22951,17 @@
               }
             }
           }
-        }
+        },
+        "x-ee-impact": "readonly",
+        "x-ee-action": "read",
+        "x-ee-group": "admin"
       }
     },
     "/v1/webhookRoutes": {
       "get": {
         "summary": "List webhook routes",
         "operationId": "getV1Webhookroutes",
-        "description": "List custom webhook routes",
+        "description": "List custom webhook routes. Credentials are masked: stored passwords, the credentials in any proxy or webhook URL, and the values of custom webhook headers all read back as \"******\". A masked value is not the stored one - leave the field out of an update rather than writing it back, otherwise the mask replaces the credential.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -22061,6 +22969,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -22157,14 +23066,16 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "webhook"
       }
     },
     "/v1/webhookRoutes/webhookRoute/{webhookRoute}": {
       "get": {
         "summary": "Get webhook route information",
         "operationId": "getV1WebhookroutesWebhookrouteWebhookroute",
-        "description": "Retrieve webhook route content and information",
+        "description": "Retrieve webhook route content and information. Credentials are masked: stored passwords, the credentials in any proxy or webhook URL, and the values of custom webhook headers all read back as \"******\". A masked value is not the stored one - leave the field out of an update rather than writing it back, otherwise the mask replaces the credential.",
         "parameters": [
           {
             "name": "x-ee-timeout",
@@ -22172,6 +23083,7 @@
             "schema": {
               "type": "integer",
               "description": "Request timeout in milliseconds (overrides EENGINE_TIMEOUT environment variable)",
+              "example": 30000,
               "minimum": 0,
               "maximum": 7200000
             },
@@ -22264,7 +23176,9 @@
               }
             }
           }
-        }
+        },
+        "x-ee-action": "read",
+        "x-ee-group": "webhook"
       }
     }
   }

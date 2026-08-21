@@ -266,26 +266,32 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
-          id: "api/post-v-1-token",
+          id: "api/get-v-1-tokens",
+          label: "List access tokens",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/post-v-1-tokens",
           label: "Provision an access token",
           className: "api-method post",
         },
         {
           type: "doc",
-          id: "api/delete-v-1-token-token",
+          id: "api/get-v-1-tokens-token",
+          label: "Get token info",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/delete-v-1-tokens-token",
           label: "Remove a token",
           className: "api-method delete",
         },
         {
           type: "doc",
-          id: "api/get-v-1-tokens",
-          label: "List root tokens",
-          className: "api-method get",
-        },
-        {
-          type: "doc",
-          id: "api/get-v-1-tokens-account-account",
-          label: "List account tokens",
+          id: "api/get-v-1-tokens-token-log",
+          label: "Get token audit log",
           className: "api-method get",
         },
       ],

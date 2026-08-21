@@ -300,9 +300,10 @@ const sidebars: SidebarsConfig = {
       collapsed: true,
       items: [
         'api/get-v-1-tokens',
-        'api/get-v-1-tokens-account-account',
-        'api/post-v-1-token',
-        'api/delete-v-1-token-token'
+        'api/post-v-1-tokens',
+        'api/get-v-1-tokens-token',
+        'api/delete-v-1-tokens-token',
+        'api/get-v-1-tokens-token-log'
       ],
     },
     {
