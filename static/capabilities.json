@@ -207,6 +207,59 @@
       ]
     }
   },
+  "mcp": {
+    "description": "Model Context Protocol server that lets AI agents work with the connected email accounts. Off by default; an admin enables it under Configuration > MCP",
+    "documentationUrl": "https://learn.emailengine.app/docs/mcp",
+    "endpoint": {"method": "POST", "path": "/mcp", "transport": "Streamable HTTP", "payload": "JSON-RPC 2.0"},
+    "stateless": true,
+    "protocolVersions": ["2026-07-28", "2025-11-25", "2025-06-18"],
+    "settings": [
+      {"name": "mcpEnabled", "default": false, "description": "Runtime switch for the MCP endpoint. While off, /mcp answers 404"},
+      {"name": "mcpOAuthEnabled", "default": false, "description": "Built-in OAuth 2.1 authorization server for MCP clients that cannot use a static token. Requires mcpEnabled and serviceUrl"}
+    ],
+    "authentication": {
+      "scopes": ["mcp", "api", "*"],
+      "recommendedScope": "mcp",
+      "description": "Bearer access token. A token with the mcp scope opens this endpoint only and is refused by /v1. Every tool call is dispatched as the equivalent REST request with the same credential, so scopes, permissions, account binding, restrictions and the audit log all apply"
+    },
+    "accessLevels": [
+      {"level": "read", "permissions": {"actions": ["read"], "groups": ["account", "mailbox", "message", "outbox", "template"]}, "description": "Default. List, search and read mail"},
+      {"level": "mail", "permissions": {"actions": ["read", "write", "send"], "groups": ["account", "mailbox", "message", "submit", "outbox", "template"]}, "description": "Read, organize, draft and send. No delete tool"},
+      {"level": "full", "permissions": null, "description": "Every MCP tool, including delete_message. The mcp scope is the bound"}
+    ],
+    "methods": ["initialize", "server/discover", "ping", "tools/list", "tools/call", "resources/list", "resources/read", "resources/templates/list", "subscriptions/listen"],
+    "tools": [
+      {"name": "list_accounts", "behavior": "read-only", "wraps": "GET /v1/accounts", "description": "List accounts on the instance, paged"},
+      {"name": "get_account", "behavior": "read-only", "wraps": "GET /v1/account/{account}", "description": "Account details, connection state and sync status"},
+      {"name": "list_mailboxes", "behavior": "read-only", "wraps": "GET /v1/account/{account}/mailboxes", "description": "Folder tree with counters and special-use roles"},
+      {"name": "list_messages", "behavior": "read-only", "wraps": "GET /v1/account/{account}/messages", "description": "Messages in one folder, newest first, paged"},
+      {"name": "search_messages", "behavior": "read-only", "wraps": "POST /v1/account/{account}/search", "description": "Structured search inside one folder"},
+      {"name": "get_message", "behavior": "read-only", "wraps": "GET /v1/account/{account}/message/{message}", "description": "Envelope, flags, attachment list and text id"},
+      {"name": "get_message_text", "behavior": "read-only", "wraps": "GET /v1/account/{account}/text/{text}", "description": "Message body text and HTML"},
+      {"name": "get_attachment", "behavior": "read-only", "wraps": "GET /v1/account/{account}/attachment/{attachment}", "description": "One attachment inline as base64, up to 1 MB"},
+      {"name": "update_message", "behavior": "write", "wraps": "PUT /v1/account/{account}/message/{message}", "description": "Add or remove flags and Gmail labels"},
+      {"name": "move_message", "behavior": "write", "wraps": "PUT /v1/account/{account}/message/{message}/move", "description": "Move a message to another folder"},
+      {"name": "delete_message", "behavior": "destructive", "wraps": "DELETE /v1/account/{account}/message/{message}", "description": "Move to Trash, or delete permanently from Trash"},
+      {"name": "create_draft", "behavior": "write", "wraps": "POST /v1/account/{account}/message", "description": "Store a message in a folder without sending"},
+      {"name": "send_message", "behavior": "sends-email", "wraps": "POST /v1/account/{account}/submit", "description": "Queue an email for delivery to real recipients"},
+      {"name": "get_outbox", "behavior": "read-only", "wraps": "GET /v1/outbox", "description": "Sending queue, including scheduled messages"},
+      {"name": "list_templates", "behavior": "read-only", "wraps": "GET /v1/templates", "description": "Stored email templates"}
+    ],
+    "resources": {"uriTemplate": "emailengine://account/{account}", "description": "Each connected account the credential can see, readable as JSON", "maxListed": 500},
+    "limits": {"toolResultBytes": 524288, "inlineAttachmentBytes": 1048576, "resourceSubscriptionsPerRequest": 20, "listenStreamsPerCredential": 4},
+    "oauth": {
+      "protectedResourceMetadata": "/.well-known/oauth-protected-resource/mcp",
+      "authorizationServerMetadata": "/.well-known/oauth-authorization-server",
+      "registrationEndpoint": "POST /mcp/oauth/register",
+      "authorizationEndpoint": "GET /admin/mcp/authorize",
+      "tokenEndpoint": "POST /mcp/oauth/token",
+      "grantTypes": ["authorization_code"],
+      "codeChallengeMethods": ["S256"],
+      "clientAuthentication": "none",
+      "refreshTokens": false,
+      "description": "Dynamic client registration (RFC 7591) plus authorization code with mandatory PKCE. Issues an ordinary access token with the mcp scope, revocable on the Access Tokens page"
+    }
+  },
   "webhookEvents": [
     {"event": "messageNew", "category": "message", "description": "New email received in mailbox"},
     {"event": "messageDeleted", "category": "message", "description": "Email deleted from mailbox"},
@@ -293,6 +346,7 @@
     {"name": "EENGINE_CORS_MAX_AGE", "required": false, "default": "60", "description": "CORS preflight cache duration in seconds"},
     {"name": "EENGINE_HTTP_PROXY_ENABLED", "required": false, "default": "false", "description": "Enable HTTP proxy for outbound requests"},
     {"name": "EENGINE_HTTP_PROXY_URL", "required": false, "description": "HTTP/SOCKS proxy URL for outbound requests"},
-    {"name": "EENGINE_DISABLE_THREAD_COLLAPSE", "required": false, "default": "false", "description": "Stop web-safe HTML from folding quoted thread history into a collapsible block (EmailEngine 2.75.0+)"}
+    {"name": "EENGINE_DISABLE_THREAD_COLLAPSE", "required": false, "default": "false", "description": "Stop web-safe HTML from folding quoted thread history into a collapsible block (EmailEngine 2.75.0+)"},
+    {"name": "EENGINE_MCP_ENABLED", "required": false, "default": "true", "description": "Register the MCP endpoint routes. The mcpEnabled setting is the runtime switch"}
   ]
 }

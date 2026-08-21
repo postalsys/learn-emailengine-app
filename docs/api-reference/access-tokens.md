@@ -29,11 +29,11 @@ f05d76644ea39c4a2ee33e7bffe55808b716a34b51d67b388c7d60498b0f89bc
 
 EmailEngine stores only the SHA-256 hash of each token, never the token value itself. This hash is the token's stable identifier:
 
-- Returned as the `id` field by `GET /v1/tokens` and `GET /v1/tokens/account/{account}`
+- Returned as the `id` field by `GET /v1/tokens` (add `?account={account}` to list one account's tokens)
 - Shown in the admin UI access tokens list as the "Token ID" column (first 8 hex characters, full hash on hover)
 - Included in log entries, so API requests can be correlated to the token that made them
 
-The token value cannot be recovered from the `id`. `DELETE /v1/token/{token}` accepts either the original token value or the token `id`.
+The token value cannot be recovered from the `id`. `DELETE /v1/tokens/{token}` accepts either the original token value or the token `id`.
 
 ## Token Types
 
@@ -63,7 +63,7 @@ The token value cannot be recovered from the `id`. `DELETE /v1/token/{token}` ac
 
 **Created via:**
 
-- API: `POST /v1/token` (requires `account` field)
+- API: `POST /v1/tokens` (with an `account` field)
 
 **Characteristics:**
 
@@ -79,7 +79,7 @@ The token value cannot be recovered from the `id`. `DELETE /v1/token/{token}` ac
 - Limited scope for third-party integrations
 - Security-sensitive deployments
 
-**Important:** Tokens created via the API are ALWAYS account-specific. You must provide the `account` field.
+**Important:** A token minted over the API must be narrowed: either bind it to an `account`, or send a `permissions` record. The API declines to mint an instance-wide token that can reach every account and every endpoint - create those in the web interface or with the CLI.
 
 ## Creating Tokens
 
@@ -95,7 +95,7 @@ The token value cannot be recovered from the `id`. `DELETE /v1/token/{token}` ac
 6. Copy the token (shown only once)
 
 ![Create token form](/img/screenshots/token-new-form.png)
-_The token form takes a description and the allowed scopes; the generated token value is shown only once_
+_The token form takes a description, an optional account binding and the allowed scopes, and can narrow what the token may do. The generated token value is shown only once_
 
 **Pros:**
 
@@ -149,14 +149,14 @@ For detailed CLI usage, export/import workflows, and prepared token configuratio
 
 **Best for:** Programmatic token creation, multi-tenant applications
 
-**Endpoint:** `POST /v1/token`
+**Endpoint:** `POST /v1/tokens`
 
-[Detailed API reference →](/docs/api/post-v-1-token)
+[Detailed API reference →](/docs/api/post-v-1-tokens)
 
 **Authentication:** Requires existing valid token
 
 ```bash
-curl -X POST http://localhost:3000/v1/token \
+curl -X POST http://localhost:3000/v1/tokens \
   -H "Authorization: Bearer EXISTING_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -166,26 +166,30 @@ curl -X POST http://localhost:3000/v1/token \
   }'
 ```
 
-**Required fields:**
+**Fields:**
 
-- `account` (string, required): Account ID this token is bound to
 - `description` (string, required): Token description
 - `scopes` (array, required): Token scopes
+- `account` (string): Account ID this token is bound to
+- `permissions` (object): Narrowing for an instance-wide token, as `actions` and `groups` allowlists
+- `restrictions` (object): IP, referrer and rate limits, see [Token Restrictions](#token-restrictions)
+
+Either `account` or `permissions` has to be present.
 
 **Response:**
 
 ```json
 {
-  "token": "a1b2c3d4e5f6...64-char-hex-string"
+  "token": "a1b2c3d4e5f6...64-char-hex-string",
+  "id": "4c2805ce5ea8...64-char-hex-hash"
 }
 ```
 
 **Important notes:**
 
-- API-generated tokens are ALWAYS account-specific
-- The `account` field is mandatory
-- Tokens can only access the specified account
-- You need an existing system-wide token to create account-specific tokens
+- The token value is returned once and stored hashed. The `id` is what the listings report afterwards
+- An unbound token must carry a `permissions` record; without one the request is refused
+- You need an existing full-access token to mint tokens
 
 ## Token Scopes
 
@@ -198,9 +202,14 @@ Scopes define what a token can access:
 | `metrics`    | Metrics only    | Prometheus metrics endpoint only  | Web UI, CLI only        |
 | `smtp`       | SMTP proxy      | SMTP gateway access               | Web UI, CLI, API        |
 | `imap-proxy` | IMAP proxy      | IMAP proxy access                 | Web UI, CLI, API        |
+| `mcp`        | MCP endpoint    | AI agent tool calls at `/mcp`, and nothing on the REST API | Web UI, CLI, API |
 
 :::info API Scope Limitations
-When creating tokens via the `POST /v1/token` API endpoint, only `api`, `smtp`, and `imap-proxy` scopes are available. The `*` (full access) and `metrics` scopes can only be assigned through the Web UI or CLI.
+When creating tokens via the `POST /v1/tokens` API endpoint, only `api`, `smtp`, `imap-proxy`, and `mcp` scopes are available. The `*` (full access) and `metrics` scopes can only be assigned through the Web UI or CLI.
+:::
+
+:::note The `mcp` scope is surface-bound
+A token carrying `mcp` opens the [MCP endpoint](/docs/mcp) and is refused by `/v1` with an "Unauthorized scope" error. Inside MCP it admits only the operations the tool set wraps: reading accounts, folders, messages, the sending queue and templates, modifying and deleting messages, and sending mail. See [MCP Access Control](/docs/mcp/access-control).
 :::
 
 **Multiple scopes:**
@@ -246,13 +255,13 @@ _The Access Tokens page lists active tokens with their descriptions and scopes_
 **Via API:**
 
 ```bash
-curl -X DELETE http://localhost:3000/v1/token/TOKEN_VALUE_OR_ID \
+curl -X DELETE http://localhost:3000/v1/tokens/TOKEN_VALUE_OR_ID \
   -H "Authorization: Bearer ADMIN_TOKEN"
 ```
 
 The path parameter accepts either the original token value or the token `id` (the SHA-256 hash shown by the token listing endpoints), so tokens can be revoked even if the original value is no longer available.
 
-[Detailed API reference →](/docs/api/delete-v-1-token-token)
+[Detailed API reference →](/docs/api/delete-v-1-tokens-token)
 
 :::note CLI Token Deletion
 The CLI does not have a `tokens delete` command. To delete tokens programmatically, use the API endpoint above or the web interface.

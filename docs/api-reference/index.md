@@ -572,6 +572,16 @@ Configure webhooks and event notifications.
 
 [View Webhooks API documentation](./webhooks-api.md)
 
+### MCP Endpoint
+
+Not part of the REST API, but the same functionality for a different caller: `POST /mcp` serves the Model Context Protocol, so an AI agent can call a curated tool set with an access token you narrow and revoke like any other.
+
+- 15 tools over accounts, folders, messages, sending and templates
+- Every tool call is dispatched as the equivalent REST request, with the same permission checks
+- Off by default
+
+[View MCP documentation](/docs/mcp)
+
 ### Full API Reference
 
 Complete auto-generated API documentation with all endpoints, parameters, and examples.

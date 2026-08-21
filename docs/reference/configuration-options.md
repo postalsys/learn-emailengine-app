@@ -1089,6 +1089,53 @@ EENGINE_ENABLE_OAUTH_TOKENS_API=true
 Only enable if you need to access raw OAuth tokens. This exposes sensitive credentials.
 :::
 
+## MCP Endpoint
+
+Serves the [Model Context Protocol](/docs/mcp) at `/mcp` so AI agents can work with the connected accounts. Two switches, both required.
+
+### Register the MCP Routes
+
+**Environment:** `EENGINE_MCP_ENABLED`
+**Config file:** `[mcp] enabled`
+**CLI flag:** `--mcp.enabled`
+**Default:** `true`
+
+Deployment gate. When false, the `/mcp` routes, the OAuth endpoints and the MCP configuration page are not registered at all, and the runtime setting below has no effect. Requires a restart.
+
+```bash
+EENGINE_MCP_ENABLED=false
+```
+
+### Enable the Endpoint
+
+**Setting:** `mcpEnabled`
+**Admin UI:** Configuration > MCP
+**Default:** `false`
+
+The runtime switch. While it is off, every request to `/mcp` answers `404`.
+
+```bash
+curl -X POST "http://127.0.0.1:3000/v1/settings" \
+  -H "Authorization: Bearer $EE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"mcpEnabled": true}'
+```
+
+### Enable OAuth Sign-in for MCP Clients
+
+**Setting:** `mcpOAuthEnabled`
+**Admin UI:** Configuration > MCP
+**Default:** `false`
+
+Runs the built-in OAuth 2.1 authorization server used by MCP clients that cannot be configured with a static access token, such as web connectors. Requires `mcpEnabled` and a configured Service URL; without both, the OAuth discovery endpoints answer `404`.
+
+```bash
+curl -X POST "http://127.0.0.1:3000/v1/settings" \
+  -H "Authorization: Bearer $EE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"mcpOAuthEnabled": true, "serviceUrl": "https://emailengine.example.com"}'
+```
+
 ## Environment Variable Reference
 
 ### Quick Reference Table
@@ -1112,6 +1159,7 @@ Only enable if you need to access raw OAuth tokens. This exposes sensitive crede
 | `EENGINE_CORS_ORIGIN`        | None                       | CORS allowed origin                         |
 | `EENGINE_SMTP_ENABLED`       | `false`                    | Enable SMTP proxy                           |
 | `EENGINE_IMAP_PROXY_ENABLED` | `false`                    | Enable IMAP proxy                           |
+| `EENGINE_MCP_ENABLED`        | `true`                     | Register the MCP endpoint routes            |
 
 ## Configuration File Example
 

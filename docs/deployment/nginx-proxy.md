@@ -95,6 +95,23 @@ server {
         chunked_transfer_encoding off;
     }
 
+    # MCP endpoint - a subscription request answers with an event stream,
+    # so this location must not be buffered either
+    location = /mcp {
+        gzip off;
+        proxy_http_version 1.1;
+        proxy_set_header Connection '';
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header Host $http_host;
+        proxy_pass http://127.0.0.1:3000;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 1h;
+        chunked_transfer_encoding off;
+    }
+
     location / {
         client_max_body_size 50M;  # Allow large email submissions with attachments
         proxy_http_version 1.1;
@@ -268,6 +285,22 @@ server {
         proxy_buffering off;
         proxy_cache off;
         proxy_read_timeout 24h;
+        chunked_transfer_encoding off;
+    }
+
+    # MCP endpoint (no buffering - subscription requests stream notifications)
+    location = /mcp {
+        gzip off;
+        proxy_pass http://emailengine_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Connection '';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 1h;
         chunked_transfer_encoding off;
     }
 

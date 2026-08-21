@@ -278,6 +278,7 @@ const config: Config = {
             {type: 'doc', docId: 'sending/index', label: 'Sending Emails'},
             {type: 'doc', docId: 'receiving/index', label: 'Receiving Emails'},
             {type: 'doc', docId: 'webhooks/overview', label: 'Webhooks'},
+            {type: 'doc', docId: 'mcp/index', label: 'MCP for AI Agents'},
             {type: 'doc', docId: 'configuration/index', label: 'Configuration'},
             {type: 'doc', docId: 'deployment/index', label: 'Deployment'},
             {type: 'doc', docId: 'reference/configuration-options', label: 'Reference'},

@@ -417,6 +417,9 @@ emailengine tokens issue \
 - `"metrics"` - Prometheus metrics endpoint only
 - `"smtp"` - SMTP gateway access
 - `"imap-proxy"` - IMAP proxy access
+- `"mcp"` - [MCP endpoint](/docs/mcp) access for AI agents, and nothing on the REST API
+
+The CLI does not set a permissions record, so an `mcp` token issued here reaches every tool the scope allows. Pair it with `-a` to bind it to one account, or mint a narrowed one in the web interface or over the API. See [MCP Access Control](/docs/mcp/access-control).
 
 **Output:**
 

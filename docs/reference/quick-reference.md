@@ -87,6 +87,16 @@ See [Webhook Events Reference](/docs/reference/webhook-events) for complete payl
 |--------|----------|-------------|
 | `GET` | `/v1/account/{account}/attachment/{attachment}` | Download attachment |
 
+### MCP (AI Agents)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/mcp` | [MCP endpoint](/docs/mcp): JSON-RPC tool calls. Off by default (`mcpEnabled` setting) |
+| `POST` | `/mcp/oauth/register` | Dynamic client registration, when OAuth sign-in is enabled |
+| `POST` | `/mcp/oauth/token` | OAuth token endpoint |
+| `GET` | `/.well-known/oauth-protected-resource/mcp` | Protected resource metadata |
+| `GET` | `/.well-known/oauth-authorization-server` | Authorization server metadata |
+
 ## Environment Variables
 
 ### Strongly Recommended
@@ -112,6 +122,7 @@ See [Webhook Events Reference](/docs/reference/webhook-events) for complete payl
 | `EENGINE_DISABLE_SETUP_WARNINGS` | `false` | Disable admin password warnings |
 | `EENGINE_REQUIRE_API_AUTH` | `true` | Require API authentication |
 | `EENGINE_LOG_RAW` | `false` | Log raw IMAP/SMTP traffic (includes unmasked credentials - debug only) |
+| `EENGINE_MCP_ENABLED` | `true` | Register the [MCP endpoint](/docs/mcp) routes (the `mcpEnabled` setting is the on switch) |
 
 ### Pre-configured Settings
 

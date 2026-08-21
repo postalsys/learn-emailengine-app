@@ -79,6 +79,16 @@ POST /v1/account
 
 Search messages, organize mailboxes, manage flags, and download attachments.
 
+### Connect AI Agents
+
+Expose the connected mailboxes to AI agents over the [Model Context Protocol](/docs/mcp). Point an MCP client at `/mcp`, hand it a narrowed access token, and it can search, read, file, draft and send mail without ever holding a mailbox credential.
+
+```bash
+# Register EmailEngine as an MCP server in Claude Code
+claude mcp add --transport http emailengine https://emailengine.example.com/mcp \
+  --header "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
 ## Why EmailEngine?
 
 ### One API for All Providers
@@ -219,6 +229,7 @@ EmailEngine requires a license key for production use. Get a license:
 **Ready to build?**
 
 - [Explore the API reference](/docs/api-reference) to see all available endpoints
+- [Connect an AI agent over MCP](/docs/mcp) to let assistants work with the mailboxes directly
 - [Check out integration examples](/docs/integrations) for PHP, CRM, AI, and more
 - [Read about performance tuning](/docs/advanced/performance-tuning) for production deployments
 
@@ -251,6 +262,10 @@ EmailEngine offers a 14-day free trial with full functionality. Production use r
 ### Can I use EmailEngine to send emails?
 
 Yes. EmailEngine supports sending emails via SMTP or native APIs (Gmail API, Microsoft Graph) with features like attachments, HTML content, templates, mail merge, and delivery tracking.
+
+### Can AI agents use EmailEngine?
+
+Yes. EmailEngine includes an [MCP server](/docs/mcp), so any Model Context Protocol client - Claude Code, Cursor, a claude.ai connector, or your own agent - can work with the connected mailboxes through a curated tool set. Agents authenticate with narrowed EmailEngine access tokens, so you decide which account they reach and whether they may only read or also send.
 
 ### Where is my email data stored?
 

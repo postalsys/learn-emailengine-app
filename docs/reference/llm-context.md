@@ -29,6 +29,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | Data Storage | Redis (credentials encrypted with `EENGINE_SECRET`) |
 | Message Storage | None - fetched from mail server on demand |
 | Admin Auth | Password + TOTP, passkeys (WebAuthn), SSO (OpenID Connect, Okta) |
+| AI Agents | MCP server at `POST /mcp`, off by default (see [MCP](/docs/mcp)) |
 
 ## Core Capabilities Matrix
 
@@ -212,6 +213,52 @@ Webhook routes are read-only through the API - create and edit them in the Email
 |--------|----------|-------------|
 | `POST` | `/v1/delivery-test/account/{account}` | Start delivery test |
 | `GET` | `/v1/delivery-test/check/{deliveryTest}` | Check test results |
+
+## MCP Endpoint (AI Agents)
+
+EmailEngine also serves the Model Context Protocol, so an AI agent can call a curated tool set instead of the REST API. Off by default; an admin enables it under Configuration > MCP (`mcpEnabled` setting). Full docs: [MCP for AI Agents](/docs/mcp).
+
+| Aspect | Details |
+|--------|---------|
+| Endpoint | `POST /mcp` |
+| Transport | Streamable HTTP, JSON-RPC 2.0, stateless (no session id) |
+| Protocol revisions | `2026-07-28` (modern, per-request `_meta` plus mirrored headers), `2025-11-25` and `2025-06-18` (legacy `initialize` handshake) |
+| Authentication | `Authorization: Bearer <token>`. Prefer a token with the `mcp` scope, which opens this endpoint only |
+| Methods | `initialize`, `server/discover`, `ping`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, `resources/templates/list`, `subscriptions/listen` |
+| Resources | `emailengine://account/{account}` per connected account |
+| OAuth | `mcpOAuthEnabled` plus a Service URL adds dynamic client registration and an authorization code + PKCE flow for web connectors |
+
+Every tool call is dispatched as the equivalent REST request with the caller's own credential, so scopes, permission narrowing, account binding, IP and referrer restrictions, rate limits and the audit log all apply unchanged. `tools/list` is filtered per credential.
+
+### MCP Tools
+
+| Tool | Behavior | Wraps |
+|------|----------|-------|
+| `list_accounts` | read-only | `GET /v1/accounts` |
+| `get_account` | read-only | `GET /v1/account/{account}` |
+| `list_mailboxes` | read-only | `GET /v1/account/{account}/mailboxes` |
+| `list_messages` | read-only | `GET /v1/account/{account}/messages` |
+| `search_messages` | read-only | `POST /v1/account/{account}/search` |
+| `get_message` | read-only | `GET /v1/account/{account}/message/{message}` |
+| `get_message_text` | read-only | `GET /v1/account/{account}/text/{text}` |
+| `get_attachment` | read-only | `GET /v1/account/{account}/attachment/{attachment}` |
+| `update_message` | write | `PUT /v1/account/{account}/message/{message}` |
+| `move_message` | write | `PUT /v1/account/{account}/message/{message}/move` |
+| `delete_message` | destructive | `DELETE /v1/account/{account}/message/{message}` |
+| `create_draft` | write | `POST /v1/account/{account}/message` |
+| `send_message` | sends email | `POST /v1/account/{account}/submit` |
+| `get_outbox` | read-only | `GET /v1/outbox` |
+| `list_templates` | read-only | `GET /v1/templates` |
+
+### MCP Access Levels
+
+| Level | Permissions record |
+|-------|--------------------|
+| Read-only (default) | `{"actions":["read"],"groups":["account","mailbox","message","outbox","template"]}` |
+| Mail agent | `{"actions":["read","write","send"],"groups":["account","mailbox","message","submit","outbox","template"]}` |
+| Full access | no `permissions` record; the `mcp` scope is the bound |
+
+Bind an agent token to one account whenever possible - a bound credential loses the instance-wide tools (`list_accounts`, `get_outbox`) and reaches nothing else.
 
 ## Webhook Events (24 Total)
 
@@ -731,4 +778,5 @@ The `POST /v1/account/{account}/search` endpoint accepts these search criteria:
 - [OpenAPI Specification](/docs/api-reference/openapi-spec) - Download the raw spec or generate a client
 - [Webhook Events Reference](/docs/reference/webhook-events) - Complete webhook payload docs
 - [Quick Reference](/docs/reference/quick-reference) - Tables for common lookups
+- [MCP for AI Agents](/docs/mcp) - Tool set, access control and protocol details for agent access
 - [Machine-Readable Capabilities](/capabilities.json) - JSON capabilities manifest

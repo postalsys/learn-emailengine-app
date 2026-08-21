@@ -131,7 +131,19 @@ An authentication credential for accessing the EmailEngine API. Created in the w
 
 ### Token Scope
 
-Permissions assigned to an API token. Valid scopes: `*` (full access), `api` (API access), `metrics` (Prometheus metrics only), `smtp` (SMTP gateway access), `imap-proxy` (IMAP proxy access).
+Permissions assigned to an API token. Valid scopes: `*` (full access), `api` (API access), `metrics` (Prometheus metrics only), `smtp` (SMTP gateway access), `imap-proxy` (IMAP proxy access), `mcp` ([MCP endpoint](/docs/mcp) access for AI agents).
+
+### MCP (Model Context Protocol)
+
+An open protocol that AI clients use to discover and call external tools. EmailEngine serves it at `POST /mcp`, exposing a curated tool set over the connected accounts. Off by default; see [MCP for AI Agents](/docs/mcp).
+
+### MCP Tool
+
+One callable operation an MCP client is offered, such as `list_messages` or `send_message`. Each tool wraps an EmailEngine API route and is dispatched with the caller's own access token, so REST permissions apply unchanged.
+
+### MCP Access Level
+
+The narrowing chosen when an MCP token is issued: read-only, mail agent (everything except deleting) or full access. Stored as an ordinary token permissions record.
 
 ### Service URL
 

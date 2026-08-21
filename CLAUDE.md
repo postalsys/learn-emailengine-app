@@ -13,7 +13,7 @@ This repository contains the **unified Docusaurus documentation site** for Email
 
 **✅ Production Ready** - All documentation has been unified and cleaned up. The site is ready for deployment.
 
-- **134 unified documentation files** covering all EmailEngine features
+- **139 unified documentation files** covering all EmailEngine features
 - **80 auto-generated API docs** from OpenAPI spec, plus an overview page
 - **~67,000 lines** of authored documentation
 - **Build status:** ✅ Passing (with minor non-critical anchor warnings)
@@ -195,6 +195,13 @@ This repository contains the **unified Docusaurus documentation site** for Email
      - Message bodies are constants at the top of `capture-collapse-screenshots.js` - edit those to photograph a different client's quoting style
      - `EE_PORT=7098` if something already holds 7099, `EE_HEADED=1` to watch it, `EE_KEEP_RUNNING=1` to leave the instance up
 
+   - `scripts/capture-mcp-screenshots.js` - the MCP admin screenshots for `docs/mcp/*`
+     - Needs `EE_URL` and `EE_PASSWORD` (every shot requires an authenticated admin session: minting a token and approving a client both refuse without one). `EE_ACCOUNT` fills the "limit to one account" fields, default `docs-demo-account`
+     - Turns `mcpEnabled` and `mcpOAuthEnabled` ON, mints mcp-scoped tokens and registers a dynamic OAuth client, so point it at a throwaway instance
+     - Deletes existing mcp-scoped tokens first, so re-runs do not stack duplicate rows in the tokens listing
+     - The generated token is redacted in the DOM before the shot, so `mcp-connect-generated.png` never carries a live-looking credential
+     - Writes `mcp-settings`, `mcp-connect-token`, `mcp-connect-generated`, `mcp-connect-oauth`, `mcp-tools-catalog`, `mcp-oauth-consent`, `mcp-token-form` and `mcp-tokens-list`
+
    **Output Directories:**
 
    - UI screenshots: `static/img/screenshots/`
@@ -217,6 +224,9 @@ This repository contains the **unified Docusaurus documentation site** for Email
 
    # Quoted-thread collapse control (boots and tears down its own EmailEngine)
    ./scripts/capture-collapse-screenshots.sh
+
+   # MCP admin screenshots (docs/mcp/*)
+   EE_URL=http://127.0.0.1:7003 EE_PASSWORD=... node scripts/capture-mcp-screenshots.js
    ```
 
    **Testing Resources:**
@@ -417,6 +427,7 @@ docs/
 ├── sending/                 # 13 files - Basic sending, mail merge, threading, templates
 ├── receiving/               # 10 files - Messages, searching, attachments, web safe HTML
 ├── webhooks/                # 26 files - Overview, routing, per-event payload docs
+├── mcp/                     # 5 files  - MCP endpoint for AI agents: overview, connecting, tools, access control, protocol
 ├── configuration/           # 10 files - Environment variables, Redis, settings
 ├── api-reference/           # 7 files - Overview, tokens, accounts, messages, sending, webhooks, OpenAPI
 ├── integrations/            # 5 files - PHP, CRM, AI/ChatGPT, low-code

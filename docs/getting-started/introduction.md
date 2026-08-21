@@ -83,6 +83,10 @@ Register and manage multiple email accounts with automatic connection handling a
 - Delete messages
 - Download attachments
 
+### AI Agent Access (MCP)
+
+Serve the [Model Context Protocol](/docs/mcp) so AI assistants can search, read, organize and send mail through a curated tool set, using narrowed access tokens rather than mailbox credentials.
+
 ### Self-hosted
 
 Run EmailEngine on your own infrastructure for complete control over your email data and privacy.

@@ -20,6 +20,10 @@ EmailEngine integrates with OpenAI's API to provide AI-powered email processing 
 - **Reply Detection**: Identify if sender expects a response
 - **Conversational Search**: Ask questions about your email history
 
+:::tip Looking for agent access instead?
+This page is about EmailEngine calling a model to process incoming mail. If you want the opposite - an AI assistant calling EmailEngine to search, read and send mail on demand - see [MCP for AI Agents](/docs/mcp).
+:::
+
 ### OpenAI API Access
 
 - **Paid Account**: Recommended for production (free accounts have strict rate limits)

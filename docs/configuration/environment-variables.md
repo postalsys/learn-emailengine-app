@@ -532,6 +532,7 @@ Advanced configuration options for debugging and performance tuning.
 | `EENGINE_CORS_ORIGIN` | string | none | CORS allowed origins (whitespace separated) | `https://app.example.com` |
 | `EENGINE_CORS_MAX_AGE` | number | `60` | CORS preflight cache duration in seconds | `3600` |
 | `EENGINE_DOCUMENT_STORE_ENABLED` | boolean | `false` | Enable the deprecated Document Store (Elasticsearch) feature gate | `true` |
+| `EENGINE_MCP_ENABLED` | boolean | `true` | Register the [MCP endpoint](/docs/mcp) routes. Registration alone serves nothing: the `mcpEnabled` setting is the runtime switch | `false` |
 | `EENGINE_DISABLE_THREAD_COLLAPSE` | boolean | `false` | Stop web-safe HTML from folding quoted thread history into a collapsible block | `true` |
 | `EENGINE_BEACON_DISABLED` | boolean | `false` | Disable the anonymized feature beacon that rides on the license validation request | `true` |
 | `EENGINE_UPDATE_CHECK_DISABLED` | boolean | `false` | Disable the update check against the GitHub releases API | `true` |
@@ -564,6 +565,11 @@ EENGINE_DOCUMENT_STORE_ENABLED=true
 EENGINE_DISABLE_THREAD_COLLAPSE=true
 ```
 
+**Remove the MCP endpoint from an instance entirely:**
+```bash
+EENGINE_MCP_ENABLED=false
+```
+
 **Run without background network calls (strict egress or air-gapped):**
 ```bash
 EENGINE_UPDATE_CHECK_DISABLED=true
@@ -575,6 +581,8 @@ Since EmailEngine v2.75.0, [web-safe HTML](/docs/receiving/web-safe-html) wraps 
 The Document Store (Elasticsearch) feature is deprecated and disabled by default since EmailEngine v2.71.0, and it is **removed from EmailEngine releases starting October 1, 2026**. This startup gate must be turned on before EmailEngine will run the document indexing worker or register the Document Store API and admin endpoints (`/v1/chat/{account}`, `/v1/unified/search`, and the `Configuration > Document Store` page). While the gate is off, those endpoints return `404`, even if the runtime "Document Store" setting is still enabled. The equivalent config-file setting is `[documentStore] enabled = true` (CLI flag `--documentStore.enabled=true`).
 
 If you depend on the Document Store, plan the migration now. Staying on the last release that still ships it means running an EmailEngine that no longer receives security updates.
+
+`EENGINE_MCP_ENABLED` is a deployment gate rather than an on switch: it defaults to `true`, and setting it to `false` removes the `/mcp` routes and the MCP configuration page from the instance so the surface does not exist at all. The endpoint itself stays off until an admin enables the `mcpEnabled` setting, which starts out disabled. The equivalent config-file setting is `[mcp] enabled = false` (CLI flag `--mcp.enabled=false`), and a change requires a restart. See [MCP for AI Agents](/docs/mcp).
 
 Since EmailEngine v2.76.0, `EENGINE_UPDATE_CHECK_DISABLED=true` disables the check against `api.github.com` that powers the "update available" notice in the admin dashboard. The check runs once at startup, sends nothing beyond a standard User-Agent header, and fails silently without network access, but it is the only background network call that is not tied to a subscription license. Subscription licenses additionally validate daily against `postalsys.com`, carrying an [anonymized feature beacon](/docs/deployment/compliance#no-developer-access) that `EENGINE_BEACON_DISABLED=true` disables; perpetual licenses are verified offline and never contact the license server at all. With the update check disabled, a perpetual-license instance makes no background network calls whatsoever.
 

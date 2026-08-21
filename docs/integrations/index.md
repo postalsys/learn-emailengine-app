@@ -43,6 +43,12 @@ Use official and community SDKs for easier integration:
 
 For other languages, generate a client from the [OpenAPI specification](/docs/api-reference/openapi-spec) that every EmailEngine instance publishes.
 
+### AI Agents Over MCP
+
+Let an AI client call EmailEngine directly instead of writing an integration for each one. EmailEngine serves the [Model Context Protocol](/docs/mcp) at `/mcp`, so Claude Code, Cursor, claude.ai connectors and agent frameworks can search, read, organize and send mail through a curated tool set, authenticated with a narrowed access token.
+
+**Read more**: [MCP Overview](/docs/mcp)
+
 ### Low-Code Platforms
 
 Connect EmailEngine with no-code and low-code automation tools:
@@ -76,6 +82,8 @@ Enhance email workflows with artificial intelligence:
 - Conversational search
 
 **Read more**: [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt)
+
+For the other direction - an AI agent calling EmailEngine rather than EmailEngine calling a model - see [MCP for AI Agents](/docs/mcp).
 
 ### Marketing Automation
 
