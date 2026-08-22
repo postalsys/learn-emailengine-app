@@ -119,6 +119,18 @@ async function shot(page, file, opts) {
     console.log(`Saved: ${file}`);
 }
 
+// Picks an account in a ui/account-picker field. The field is a search box over
+// GET /admin/accounts/suggestions, not a text input: the posted value lives in a
+// hidden input under `id`, and typing into that directly would leave the picker
+// showing nothing.
+async function pickAccount(page, id, account) {
+    await page.fill(`#${id}-search`, account);
+    const option = page.locator(`#${id}-results .ee-account-picker-option`).first();
+    await option.waitFor({ state: 'visible', timeout: 10000 });
+    await option.click();
+    await page.waitForFunction(inputId => !!document.getElementById(inputId).value, id, { timeout: 5000 });
+}
+
 // The admin pages post their CSRF crumb both as a form field and as a header
 async function crumbOf(page) {
     const crumb = await page.getAttribute('#crumb', 'value');
@@ -216,7 +228,7 @@ async function captureConfigPage(page, account) {
     await page.waitForTimeout(400);
     await page.fill('#mcpGenLabel', 'Claude Code on my laptop');
     if (account) {
-        await page.fill('#mcpGenAccount', account);
+        await pickAccount(page, 'mcpGenAccount', account);
     }
     await page.check('#mcpGenAccessread');
     await shot(page, 'mcp-connect-token.png', { fullPage: true });
@@ -272,8 +284,8 @@ async function captureConsentPage(page, account) {
 
     await page.goto(`${EE_URL}/admin/mcp/authorize?${params.toString()}`, { waitUntil: 'load' });
     if (account) {
-        await page.fill('#account', account);
-        // the tool count follows the field per keystroke; let it repaint
+        await pickAccount(page, 'account', account);
+        // the tool count follows the field; let it repaint
         await page.waitForTimeout(300);
     }
     await shot(page, 'mcp-oauth-consent.png', { fullPage: true });
@@ -288,7 +300,7 @@ async function captureTokenPages(page, account) {
     await page.uncheck('#scopesAll');
     await page.check('#scopesMcp');
     if (account) {
-        await page.fill('#account', account);
+        await pickAccount(page, 'account', account);
     }
     await page.waitForTimeout(500);
     await shot(page, 'mcp-token-form.png', { fullPage: true });

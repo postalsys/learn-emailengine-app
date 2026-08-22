@@ -35,7 +35,7 @@ _The generator: a description to tell agents apart later, an optional account li
 Fill in three things:
 
 1. **What is this token for?** Becomes the token description on the Access Tokens page, prefixed with `MCP:`. Name the agent and the machine, for example "Claude Code on my laptop" - a token is easier to revoke when you can tell which one it is.
-2. **Limit to one account.** Recommended. A bound token reaches that account and nothing else, and the tool list shrinks accordingly: the instance-wide tools (`list_accounts`, `get_outbox`) are not offered, because there is nothing for the agent to enumerate.
+2. **Limit to one account.** Recommended. Search by name, address or account id and pick from the suggestions - the field is a picker, not a box to type an id into. A bound token reaches that account and nothing else, and the tools get simpler with it: the instance-wide listings (`list_accounts`, `get_outbox`) are not offered, and the remaining tools stop asking which account to act on.
 3. **Access level.** Read-only by default. See [Access levels](/docs/mcp/access-control#access-levels) for exactly what each one grants.
 
 The line under the radios counts the tools the resulting credential would actually receive, so you can see the effect of a choice before making it.
@@ -155,7 +155,7 @@ When the client connects, it opens EmailEngine's authorization prompt in your br
 ![MCP authorization prompt](/img/screenshots/mcp-oauth-consent.png)
 _The consent prompt names the client, the address the browser returns to, and what approving grants_
 
-On the prompt you choose the same two things the token generator offers - the access level and an optional account limit - and the text under them spells out what the client will be able to do. **Approve** sends the client back with an authorization code it exchanges for its token; **Deny** sends it back with `error=access_denied` and creates nothing.
+On the prompt you choose the same two things the token generator offers - the access level and an optional account limit, picked by searching for the account - and the text under them spells out what the client will be able to do. **Approve** sends the client back with an authorization code it exchanges for its token; **Deny** sends it back with `error=access_denied` and creates nothing.
 
 Read-only is preselected. It is the right default here: this flow issues credentials to the least controllable clients, running on machines you do not administer.
 

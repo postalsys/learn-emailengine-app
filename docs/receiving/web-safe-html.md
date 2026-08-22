@@ -37,7 +37,9 @@ Add `webSafeHtml=true` to the [get message endpoint](/docs/api/get-v-1-account-a
 | `preProcessHtml` | `true` | Sanitize and repair the HTML |
 | `embedAttachedImages` | `true` | Replace `cid:` references with data URIs |
 
-You can set those three individually if you need a different combination, for example sanitized HTML without the image payloads. `webSafeHtml=true` is the option to reach for when the goal is simply "give me something I can display".
+`webSafeHtml=true` is the option to reach for when the goal is simply "give me something I can display".
+
+An explicit `embedAttachedImages=false` alongside it is honored: you get the sanitized, repaired HTML with the `cid:` references left as they are, which is what you want when the consumer reads the body rather than renders it - EmailEngine's own [MCP tools](/docs/mcp/tools#message-bodies) request exactly that combination. Only `embedAttachedImages` works this way; `textType` and `preProcessHtml` are pinned by the shorthand.
 
 **Response:**
 
@@ -64,6 +66,20 @@ You can set those three individually if you need a different combination, for ex
 ```
 
 Note that `text.plain` is untouched. Only the HTML is processed.
+
+### On the message text endpoint
+
+The [message text endpoint](/docs/api/get-v-1-account-account-text-text) takes the same `webSafeHtml=true`, which is how you fetch a long body that `get message` reported as `hasMore`. There it returns a single rendering rather than the raw parts:
+
+```json
+{
+  "html": "<div>Works for me.</div><details class=\"ee-collapsed-thread\">...</details>",
+  "webSafe": true,
+  "hasMore": false
+}
+```
+
+No `plain` field comes back with it: when a message carries no HTML part, the plaintext one is rendered into HTML instead, so the response is one body rather than two copies of the same message.
 
 ## What the Processing Does
 

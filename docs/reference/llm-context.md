@@ -44,7 +44,8 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | **Send email** | `POST /v1/account/{account}/submit` | `to`, `subject`, `text`/`html` |
 | **Send stored draft** | `POST /v1/account/{account}/message/{message}/submit` | optional delivery options |
 | **List messages** | `GET /v1/account/{account}/messages` | `path`, `page`, `pageSize` |
-| **Get message** | `GET /v1/account/{account}/message/{message}` | `textType`, `embedAttachedImages`, `preProcessHtml`, `webSafeHtml` (shorthand for all three, returns HTML ready to display) |
+| **Get message** | `GET /v1/account/{account}/message/{message}` | `textType`, `embedAttachedImages`, `preProcessHtml`, `webSafeHtml` (shorthand for all three; an explicit `embedAttachedImages=false` still overrides it) |
+| **Get message text** | `GET /v1/account/{account}/text/{text}` | `textType`, `maxBytes`, `webSafeHtml` (returns a single sanitized HTML rendering) |
 | **Search messages** | `POST /v1/account/{account}/search` | `search` object |
 | **Update message** | `PUT /v1/account/{account}/message/{message}` | `flags`, `labels`, `seen` |
 | **Delete message** | `DELETE /v1/account/{account}/message/{message}` | - |
@@ -228,7 +229,9 @@ EmailEngine also serves the Model Context Protocol, so an AI agent can call a cu
 | Resources | `emailengine://account/{account}` per connected account |
 | OAuth | `mcpOAuthEnabled` plus a Service URL adds dynamic client registration and an authorization code + PKCE flow for web connectors |
 
-Every tool call is dispatched as the equivalent REST request with the caller's own credential, so scopes, permission narrowing, account binding, IP and referrer restrictions, rate limits and the audit log all apply unchanged. `tools/list` is filtered per credential.
+Every tool call is dispatched as the equivalent REST request with the caller's own credential, so scopes, permission narrowing, account binding, IP and referrer restrictions, rate limits and the audit log all apply unchanged. `tools/list` is filtered per credential, and a token bound to one account gets tools with no `account` argument (the binding is applied on dispatch).
+
+Tool schemas are narrower than the endpoints they wrap: operator-level fields are hidden (`send_message` has no `gateway`, `envelope`, `headers`, `raw`, tracking or `mailMerge`), rendering options are pinned, and every paged listing caps `pageSize` at 100. `get_message` returns the body inline as sanitized web-safe HTML (32768-character budget, `text.hasMore` when longer, quoted history wrapped in `<details class="ee-collapsed-thread">`); `get_message_text` returns the same rendering with a 65536-character budget. A tool result is truncated above 128 KB.
 
 ### MCP Tools
 
@@ -239,7 +242,7 @@ Every tool call is dispatched as the equivalent REST request with the caller's o
 | `list_mailboxes` | read-only | `GET /v1/account/{account}/mailboxes` |
 | `list_messages` | read-only | `GET /v1/account/{account}/messages` |
 | `search_messages` | read-only | `POST /v1/account/{account}/search` |
-| `get_message` | read-only | `GET /v1/account/{account}/message/{message}` |
+| `get_message` | read-only | `GET /v1/account/{account}/message/{message}` (body inline) |
 | `get_message_text` | read-only | `GET /v1/account/{account}/text/{text}` |
 | `get_attachment` | read-only | `GET /v1/account/{account}/attachment/{attachment}` |
 | `update_message` | write | `PUT /v1/account/{account}/message/{message}` |
@@ -258,7 +261,9 @@ Every tool call is dispatched as the equivalent REST request with the caller's o
 | Mail agent | `{"actions":["read","write","send"],"groups":["account","mailbox","message","submit","outbox","template"]}` |
 | Full access | no `permissions` record; the `mcp` scope is the bound |
 
-Bind an agent token to one account whenever possible - a bound credential loses the instance-wide tools (`list_accounts`, `get_outbox`) and reaches nothing else.
+Bind an agent token to one account whenever possible - a bound credential loses the instance-wide tools (`list_accounts`, `get_outbox`), reaches nothing else, and its remaining tools drop the `account` argument.
+
+Replies and forwards go through the `reference` block on `send_message` and `create_draft`: `{message, action: reply|reply-all|forward, inline, forwardAttachments}`. EmailEngine derives the subject, the recipients and the threading headers from the referenced message.
 
 ## Webhook Events (24 Total)
 

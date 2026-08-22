@@ -21,7 +21,7 @@ For client developers and anyone debugging a connection at the wire level. If yo
 | Batching | Not supported. A JSON array is refused with `-32600` |
 | Other methods | `GET` and `DELETE` answer `405` with `Allow: POST` |
 
-The endpoint also accepts a token as the `access_token` query parameter, like the rest of the API, but the published resource metadata advertises header-based bearer authentication only. Use the header: query strings end up in access logs.
+The endpoint also accepts a token as the `access_token` query parameter, like the rest of the API, but the published resource metadata advertises header-based bearer authentication only. Use the header. EmailEngine redacts that parameter from its own request log, but a reverse proxy, CDN or browser history in front of it records query strings as they are.
 
 `GET` returning `405` is not a failure. The modern protocol revision removed the standalone notification stream and sessions, and `405` is the prescribed answer that also tells a dual-era client this is not an old HTTP+SSE server.
 
@@ -103,7 +103,9 @@ curl -X POST "https://emailengine.example.com/mcp" \
 
 No `Mcp-Session-Id` is returned, and none is expected on later requests. Notifications such as `notifications/initialized` are accepted and answered `202`.
 
-The `instructions` string is orientation for the model: call `list_accounts` first, message ids come from listings, text is fetched separately, and `send_message` reaches real recipients. An account-bound credential gets an extra sentence naming its account.
+The `instructions` string is orientation for the model: message ids come from the listings, bodies arrive as sanitized HTML with quoted history wrapped in a `<details class="ee-collapsed-thread">` element, and `send_message` reaches real recipients.
+
+The opening sentence depends on the credential. An unbound one is told to call `list_accounts` and pass the id it returns. An [account-bound](/docs/mcp/access-control#account-binding) one is told which account it holds and that its tools take no `account` argument, because for that credential the argument is not in the schema at all.
 
 ## Methods
 

@@ -47,11 +47,12 @@ graph LR
     style REST fill:#e8f5e9
 ```
 
-Three consequences worth knowing up front:
+Four consequences worth knowing up front:
 
 - **Nothing bypasses REST enforcement.** Scopes, permission narrowing, account binding, IP and referrer restrictions, rate limits and the token audit log all apply to a tool call exactly as they apply to the equivalent REST call.
 - **The agent never receives mail credentials.** IMAP passwords and OAuth2 refresh tokens stay in EmailEngine. The agent holds an EmailEngine access token, which you can narrow and revoke at any time.
-- **The tool list is per credential.** `tools/list` only advertises tools the calling token can actually use, so an agent does not plan around a call that would come back as a 403.
+- **The tool list is per credential.** `tools/list` only advertises tools the calling token can actually use, so an agent does not plan around a call that would come back as a 403. A token bound to one account gets simpler tools too: they stop asking which account to act on.
+- **Bodies arrive ready to read.** Message text comes back as sanitized HTML with quoted reply history wrapped in a marked element, so a model can tell what the sender wrote this time from the thread quoted under it. See [Message bodies](/docs/mcp/tools#message-bodies).
 
 ## MCP or the REST API?
 

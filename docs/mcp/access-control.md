@@ -85,12 +85,15 @@ Two things to know about the middle level. It can send, which is the irreversibl
 
 Binding a token to an account is the strongest narrowing available, and the one to reach for first. A bound token:
 
-- reaches that account and no other, on every tool that takes an `account` argument
+- reaches that account and no other
 - is not offered `list_accounts` or `get_outbox` at all, because an instance-wide listing is refused for a bound credential and there is no point advertising a tool that can only answer with a 403
-- is told its own account id in the connect instructions, so the agent does not go looking for a listing tool
+- gets simpler tools: the `account` argument disappears from every tool that takes one, and EmailEngine fills the binding in when it dispatches the call
+- is told which account it is working with in the connect instructions, instead of being told to call `list_accounts` and pass an id it cannot look up
 - sees exactly one resource under `resources/list`: its own account
 
 On a multi-tenant instance this is what keeps one customer's agent inside one customer's mailbox. Bind, then choose the access level.
+
+A client working from a stale catalog can still send an `account` argument. It is not silently accepted or silently rewritten: the injected request carries it, and the binding check refuses it exactly as it refuses any other cross-account call.
 
 ## Custom permissions
 
@@ -158,7 +161,7 @@ A rate limit is worth setting on agent tokens specifically. A looping agent can 
 
 ## What a credential sees
 
-`tools/list` is filtered per credential: a tool is advertised only when the caller's permissions allow the operation behind it, and only when the account binding leaves it callable. A read-only token bound to an account is offered eight tools, and nothing that sends, writes or deletes ever appears in its catalog.
+`tools/list` is filtered per credential: a tool is advertised only when the caller's permissions allow the operation behind it, and only when the account binding leaves it callable. A read-only token bound to an account is offered eight tools, none of them taking an `account` argument, and nothing that sends, writes or deletes ever appears in its catalog.
 
 This is advertisement, not enforcement - `tools/call` still dispatches whatever is asked, and the injected request is what refuses it. The point is that the agent plans against a menu it can actually use rather than discovering the boundaries by hitting them.
 
