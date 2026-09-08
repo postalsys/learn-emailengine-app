@@ -352,6 +352,9 @@
     {"name": "EENGINE_HTTP_PROXY_ENABLED", "required": false, "default": "false", "description": "Enable HTTP proxy for outbound requests"},
     {"name": "EENGINE_HTTP_PROXY_URL", "required": false, "description": "HTTP/SOCKS proxy URL for outbound requests"},
     {"name": "EENGINE_DISABLE_THREAD_COLLAPSE", "required": false, "default": "false", "description": "Stop web-safe HTML from folding quoted thread history into a collapsible block (EmailEngine 2.75.0+)"},
-    {"name": "EENGINE_MCP_ENABLED", "required": false, "default": "true", "description": "Register the MCP endpoint routes. The mcpEnabled setting is the runtime switch"}
+    {"name": "EENGINE_MCP_ENABLED", "required": false, "default": "true", "description": "Register the MCP endpoint routes. The mcpEnabled setting is the runtime switch"},
+    {"name": "EENGINE_API_TLS", "required": false, "default": "false", "description": "Serve the API and admin interface over HTTPS. Certificate material comes from the EENGINE_API_TLS_ prefix, or from the certificates EmailEngine manages itself"},
+    {"name": "EENGINE_ACME_DIRECTORY_URL", "required": false, "default": "https://acme-v02.api.letsencrypt.org/directory", "description": "ACME directory of the certificate authority automatic certificates are ordered from. Override together with EENGINE_ACME_ENVIRONMENT"},
+    {"name": "EENGINE_ACME_ENVIRONMENT", "required": false, "default": "emailengine", "description": "Name of the stored ACME account record. Must be changed whenever EENGINE_ACME_DIRECTORY_URL is"}
   ]
 }

@@ -302,15 +302,26 @@ Seeded from the matching `EENGINE_SMTP_*` and `EENGINE_IMAP_PROXY_*` variables a
 | `smtpServerProxy` | boolean | `false` | Accept the HAProxy PROXY protocol |
 | `smtpServerAuthEnabled` | boolean | `true` | Require SMTP authentication |
 | `smtpServerPassword` | string | `null` | Shared password; `null` accepts access tokens with the `smtp` scope instead |
-| `smtpServerTLSEnabled` | boolean | off | Offer TLS and STARTTLS |
+| `smtpServerTLSEnabled` | boolean | off | Serve implicit TLS. `STARTTLS` is disabled in both modes |
 | `imapProxyServerEnabled` | boolean | `false` | Run the IMAP proxy |
 | `imapProxyServerPort` | integer | `2993` | Listening port |
 | `imapProxyServerHost` | string | `127.0.0.1` | Bind address |
 | `imapProxyServerProxy` | boolean | `false` | Accept the HAProxy PROXY protocol |
 | `imapProxyServerPassword` | string | `null` | Shared password; `null` accepts access tokens with the `imap-proxy` scope |
-| `imapProxyServerTLSEnabled` | boolean | off | Offer TLS |
+| `imapProxyServerTLSEnabled` | boolean | off | Serve implicit TLS rather than plaintext |
 
-The maximum message size the SMTP server accepts is a startup variable rather than a setting, `EENGINE_MAX_SMTP_MESSAGE_SIZE`, 25 MB by default. Both listeners take their certificates from the `EENGINE_SMTP_TLS_` and `EENGINE_IMAPPROXY_TLS_` prefixes, described under [TLS Configuration](/docs/configuration/environment-variables#tls-configuration). See [SMTP Interface](/docs/sending/smtp-interface) and [Proxying Connections](/docs/accounts/proxying-connections).
+The maximum message size the SMTP server accepts is a startup variable rather than a setting, `EENGINE_MAX_SMTP_MESSAGE_SIZE`, 25 MB by default. The two settings above only decide whether each listener speaks TLS; which certificate it presents is decided by the settings in the next section. See [SMTP Interface](/docs/sending/smtp-interface) and [Proxying Connections](/docs/accounts/proxying-connections).
+
+### TLS Certificates
+
+Certificates for the listeners EmailEngine runs itself: the SMTP server, the IMAP proxy, and the API when `EENGINE_API_TLS` is on.
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `tlsProvisioning` | string | `acme` | Which certificate sources are served. `acme` orders from Let's Encrypt and also serves an uploaded certificate, `manual` serves only an uploaded one, `self-signed` serves neither |
+| `tlsHostnames` | array of strings | `[]` | Names to hold certificates for beyond the Service URL hostname. Each gets its own certificate, served by SNI |
+
+An uploaded certificate is installed through the admin interface rather than a setting, and material from the `EENGINE_*_TLS_` variables outranks every source above. See [TLS Certificates](/docs/deployment/tls-certificates).
 
 ### Exports
 

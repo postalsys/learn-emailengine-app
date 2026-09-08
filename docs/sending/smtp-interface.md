@@ -311,12 +311,16 @@ TLS is implicit: the client opens a TLS connection from the first byte, the way 
 
 ### Certificate
 
-With TLS enabled, EmailEngine uses the certificate it provisions for the hostname of `serviceUrl`, the same one the hosted pages use. To supply your own, set the PEM content (not a file path) in the environment before starting EmailEngine:
+With TLS enabled, the certificate the listener presents is decided on the **TLS Certificates** page (`/admin/config/tls`): a certificate uploaded there, one ordered from Let's Encrypt, or a self-signed one so the listener always starts. Certificates are held per hostname and selected by SNI, so if your clients connect to a name other than the `serviceUrl` hostname - `smtp.example.com`, typically - add it under **Additional hostnames** and it gets a certificate of its own. [TLS Certificates](/docs/deployment/tls-certificates) covers the whole flow.
+
+To supply your own certificate instead, set the PEM content (not a file path) in the environment before starting EmailEngine:
 
 ```bash
 EENGINE_SMTP_TLS_KEY="$(cat /path/to/private.key)"
 EENGINE_SMTP_TLS_CERT="$(cat /path/to/certificate.crt)"
 ```
+
+Since v2.80.0 material supplied this way takes precedence over any certificate EmailEngine manages, for every hostname it covers. Before that, it was read first and then overwritten by the provisioned certificate for the `serviceUrl` hostname.
 
 Every variable with the `EENGINE_SMTP_TLS_` prefix maps onto the Node.js TLS option of the same name:
 
@@ -410,4 +414,4 @@ curl "https://emailengine.example.com/v1/outbox" \
 - [Transactional email](/docs/sending/transactional-service) - Using the SMTP server as a relay for an existing application
 - [Outbox queue](/docs/sending/outbox-queue) - Where an accepted message goes next
 - [Access tokens](/docs/api-reference/access-tokens) - Minting the token used as the SMTP password
-- [Environment variables](/docs/configuration/environment-variables) - The `EENGINE_SMTP_*` variables that seed these settings
+- [TLS Certificates](/docs/deployment/tls-certificates) - Which certificate this listener presents, and how to get one

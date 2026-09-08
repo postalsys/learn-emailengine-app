@@ -479,7 +479,7 @@ journalctl -u emailengine -f
 ## See Also
 
 - [Security](/docs/deployment/security) - What to lock down before going live
+- [TLS Certificates](/docs/deployment/tls-certificates) - Certificates for the listeners EmailEngine runs itself
 - [Compliance and data handling](/docs/deployment/compliance) - What EmailEngine stores and what it sends out
 - [Monitoring](/docs/advanced/monitoring) - Health checks and metrics for a deployed instance
-- [Performance tuning](/docs/advanced/performance-tuning) - Sizing workers and connections
 - [Installation](/docs/installation) - Getting the software onto the host in the first place

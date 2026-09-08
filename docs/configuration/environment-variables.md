@@ -483,11 +483,39 @@ EENGINE_API_TLS_CERT_FILE=/etc/emailengine/tls/api.crt
 
 The configuration file has a third form: `keyPath`, `certPath`, `caPath`, and `dhparamPath` under `[api.tls]` name files to read, and any other key from the table above is given as a plain value. A variable set in the environment overrides the same key from the file.
 
-:::note A managed certificate wins over these variables
-When the SMTP server or the IMAP proxy starts with TLS enabled, EmailEngine looks for a certificate matching the hostname in `serviceUrl` and uses it if one is valid. That happens after these variables are read, so a certificate EmailEngine manages takes precedence over `EENGINE_SMTP_TLS_CERT` and `EENGINE_IMAPPROXY_TLS_CERT`.
+:::note These variables win over a managed certificate
+Material supplied here is an explicit instruction, so it outranks every certificate EmailEngine obtains on its own - an uploaded one, a Let's Encrypt one, and the self-signed fallback - for each hostname it covers. It is served whatever the `tlsProvisioning` setting is. Names it does not cover fall through to the other sources, so a second configured hostname is still served the certificate that matches it.
+
+Before v2.80.0 this was the other way round: the SMTP server and the IMAP proxy read these variables and then overwrote the result with whatever had been provisioned for the `serviceUrl` hostname, so a pinned certificate was silently replaced.
 :::
 
+Which certificate each listener ends up serving, and how to have one issued, is covered in [TLS Certificates](/docs/deployment/tls-certificates).
+
 Most deployments do not need any of this, because TLS is terminated at a reverse proxy instead. See [Nginx Reverse Proxy](/docs/deployment/nginx-proxy).
+
+### Automatic Certificate Provisioning (ACME)
+
+When no certificate is supplied for a listener, EmailEngine can order one from Let's Encrypt itself. These two variables name the certificate authority it orders from.
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `EENGINE_ACME_DIRECTORY_URL` | string | `https://acme-v02.api.letsencrypt.org/directory` | ACME directory of the certificate authority to order from |
+| `EENGINE_ACME_ENVIRONMENT` | string | `emailengine` | Name of the stored ACME account record |
+
+:::warning Override both or neither
+The environment names the account record and the directory names the certificate authority that issued it. Moving one alone presents an account key the other authority has never seen, and every request is rejected.
+:::
+
+To rehearse issuance against Let's Encrypt staging, which has the same asynchronous order finalization as production and no rate limits worth worrying about:
+
+```bash
+EENGINE_ACME_DIRECTORY_URL=https://acme-staging-v02.api.letsencrypt.org/directory
+EENGINE_ACME_ENVIRONMENT=emailengine-staging
+```
+
+Staging certificates are signed by an untrusted root, so every client refuses them. Never leave an instance that serves real clients pointed at staging. The admin interface shows a warning banner while a staging directory is configured.
+
+Ordering is otherwise controlled by settings rather than variables: `tlsProvisioning` picks the certificate source and `tlsHostnames` adds names beyond the Service URL hostname. See [TLS Certificates](/docs/deployment/tls-certificates).
 
 ## Security & Access Control
 

@@ -1,6 +1,6 @@
 ---
 title: Compliance and Data Handling
-sidebar_position: 7
+sidebar_position: 8
 description: Data storage practices, GDPR compliance, and Google OAuth verification guidance
 ---
 

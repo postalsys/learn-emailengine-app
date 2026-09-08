@@ -118,8 +118,12 @@ After saving, EmailEngine starts the proxy on the given host and port. The plain
 
 This page configures the listener your clients connect to. Routing EmailEngine's own outbound connections through a SOCKS or HTTP proxy is a different setting, `proxyUrl`, described under [Proxy Configuration](/docs/accounts/imap-smtp#proxy-configuration).
 
-:::note TLS needs a Service URL with a real domain
-There is no certificate upload here. When TLS is enabled, EmailEngine serves the certificate it manages for the hostname in your **Service URL**, so the checkbox stays disabled until that URL points at a real domain rather than an IP address or `localhost` (once TLS is on, it can still be switched off). The `EENGINE_IMAPPROXY_TLS_KEY` and `EENGINE_IMAPPROXY_TLS_CERT` [environment variables](/docs/configuration/environment-variables#certificates-for-emailengines-own-listeners) supply a certificate of your own; a valid managed certificate for the Service URL hostname takes precedence over them.
+:::note Which certificate the proxy serves
+The checkbox only decides whether the listener speaks TLS. Which certificate it presents is decided on the **TLS Certificates** page (`/admin/config/tls`), which is also where a certificate is uploaded or ordered from Let's Encrypt. The listener always has something to serve - a self-signed certificate if nothing better exists - so enabling TLS never leaves it unable to start.
+
+Add the name your mail clients connect to under **Additional hostnames** there if it differs from the Service URL hostname. Each name gets its own certificate, selected by SNI.
+
+`EENGINE_IMAPPROXY_TLS_KEY` and `EENGINE_IMAPPROXY_TLS_CERT` supply a certificate of your own, and since v2.80.0 they take precedence over anything EmailEngine manages. See [TLS Certificates](/docs/deployment/tls-certificates).
 :::
 
 ### Step 2: Verify Proxy is Running
@@ -668,4 +672,4 @@ For many concurrent users:
 - [Access tokens](/docs/api-reference/access-tokens) - Scopes, restrictions, and revocation for the tokens used as passwords here
 - [IMAP and SMTP accounts](/docs/accounts/imap-smtp) - The account configuration the proxy relays to
 - [Security](/docs/deployment/security) - Exposing the proxy port safely
-- [Environment variables](/docs/configuration/environment-variables#certificates-for-emailengines-own-listeners) - Supplying your own TLS certificate for the proxy
+- [TLS Certificates](/docs/deployment/tls-certificates) - Which certificate the proxy serves, and how to upload or order one

@@ -1,7 +1,7 @@
 ---
 title: Security Best Practices
 description: Security best practices for production deployments including encryption and access control
-sidebar_position: 6
+sidebar_position: 7
 ---
 
 # Production Security Guide
@@ -646,6 +646,8 @@ server {
 **TLS on the API port itself:**
 
 A reverse proxy is the usual place to terminate TLS. When EmailEngine has to serve HTTPS directly, `EENGINE_API_TLS=true` turns it on, and the certificate material comes from variables with the `EENGINE_API_TLS_` prefix: `EENGINE_API_TLS_KEY`, `EENGINE_API_TLS_CERT`, `EENGINE_API_TLS_CA`, plus `_CIPHERS`, `_MIN_VERSION`, `_MAX_VERSION`, `_ECDH_CURVE`, `_DHPARAM` and `_PASSPHRASE` for the corresponding Node.js TLS options. The same prefix scheme with `EENGINE_SMTP_TLS_` and `EENGINE_IMAPPROXY_TLS_` covers the SMTP and IMAP proxy servers. See [TLS Configuration](/docs/configuration/environment-variables#tls-configuration).
+
+Leave those variables unset and EmailEngine supplies the certificate itself, ordering one from Let's Encrypt or falling back to a self-signed certificate so the listener starts either way. [TLS Certificates](/docs/deployment/tls-certificates) covers the sources, their precedence, and how renewal works.
 
 **IMAP and SMTP connections to mail servers:**
 
