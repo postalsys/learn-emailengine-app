@@ -752,6 +752,16 @@ Since v2.79.9 EmailEngine sends the browser security headers itself, chosen per 
 
 The policy can be switched to report-only or off with `EENGINE_CSP_MODE` (see [Advanced Settings](/docs/configuration/environment-variables#advanced-settings)): in report-only mode violations show in the browser console without blocking anything, which is the way to check a customised deployment before enforcing.
 
+#### CDNs that rewrite the page {#csp-and-html-rewriting}
+
+The admin policy names a nonce that changes on every request, and only the scripts EmailEngine itself rendered carry it. A CDN or proxy that rewrites the HTML between EmailEngine and the browser strips that connection: it re-creates the script elements, and the elements it creates have no nonce, so the browser refuses them.
+
+Cloudflare's Rocket Loader is the case operators hit. It rewrites the `type` of every script on the page so the browser skips it, then runs the scripts itself. Under the admin policy the external files still load, so the page renders and looks completely normal, while every inline script on it is blocked. The symptom is an admin interface where buttons do nothing and panels stay empty, with `Executing inline script violates the following Content Security Policy directive 'script-src ...'` repeated in the browser console.
+
+Turn the optimizer off for the hostname EmailEngine is served from - on Cloudflare, Rocket Loader is under **Speed** > **Optimization**, and a Configuration Rule can scope the change to one hostname without touching the rest of the zone. `EENGINE_CSP_MODE=off` also restores the pre-v2.79.9 behavior, at the cost of the protection.
+
+Since v2.80.1 EmailEngine marks its own script tags `data-cfasync="false"`, which is Cloudflare's documented opt-out, so Rocket Loader leaves them alone. Other rewriting proxies have their own opt-out or none at all.
+
 ### Cross-Origin Requests
 
 The API sends no CORS headers unless `EENGINE_CORS_ORIGIN` lists the origins that may call it from a browser. Leave it unset for a backend-only API; a browser client would otherwise have to carry an access token, which the [restrictions](#per-token-rate-limiting) above can bound but not make safe to publish. See [CORS Configuration](/docs/configuration/environment-variables#cors-configuration).
