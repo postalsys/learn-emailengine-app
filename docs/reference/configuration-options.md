@@ -320,8 +320,11 @@ Certificates for the listeners EmailEngine runs itself: the SMTP server, the IMA
 |---------|------|---------|-------------|
 | `tlsProvisioning` | string | `acme` | Which certificate sources are served. `acme` orders from Let's Encrypt and also serves an uploaded certificate, `manual` serves only an uploaded one, `self-signed` serves neither |
 | `tlsHostnames` | array of strings | `[]` | Names to hold certificates for beyond the Service URL hostname. Each gets its own certificate, served by SNI |
+| `apiTLSCertificate` | string | `auto` | The certificate the API listener presents by default: to a client that names no host, and for every name it covers. `auto`, `manual`, `self-signed`, `acme:<hostname>`, or `env:api` / `env:smtp` / `env:imapProxy` |
+| `smtpServerTLSCertificate` | string | `auto` | The same for the SMTP server |
+| `imapProxyServerTLSCertificate` | string | `auto` | The same for the IMAP proxy |
 
-An uploaded certificate is installed through the admin interface rather than a setting, and material from the `EENGINE_*_TLS_` variables outranks every source above. See [TLS Certificates](/docs/deployment/tls-certificates).
+An uploaded certificate is installed through the admin interface rather than a setting. `auto` presents the listener's own `EENGINE_*_TLS_` material when it is set and otherwise the certificate for the Service URL hostname. See [TLS Certificates](/docs/deployment/tls-certificates#default-certificate-per-listener).
 
 ### Exports
 

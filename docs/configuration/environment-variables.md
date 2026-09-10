@@ -483,8 +483,8 @@ EENGINE_API_TLS_CERT_FILE=/etc/emailengine/tls/api.crt
 
 The configuration file has a third form: `keyPath`, `certPath`, `caPath`, and `dhparamPath` under `[api.tls]` name files to read, and any other key from the table above is given as a plain value. A variable set in the environment overrides the same key from the file.
 
-:::note These variables win over a managed certificate
-Material supplied here is an explicit instruction, so it outranks every certificate EmailEngine obtains on its own - an uploaded one, a Let's Encrypt one, and the self-signed fallback - for each hostname it covers. It is served whatever the `tlsProvisioning` setting is. Names it does not cover fall through to the other sources, so a second configured hostname is still served the certificate that matches it.
+:::note These variables are the listener's automatic default
+Material supplied here is listed on the TLS Certificates page as a certificate of its own (`env:api`, `env:smtp`, `env:imapProxy`) and is what the listener presents by default: to a client that names no host, and for each hostname it covers, ahead of an uploaded certificate, a Let's Encrypt one and the self-signed fallback, whatever the `tlsProvisioning` setting is. Names it does not cover fall through to the other sources, so a second configured hostname is still served the certificate that matches it. Since v2.80.1 the default is a choice: the `apiTLSCertificate`, `smtpServerTLSCertificate` and `imapProxyServerTLSCertificate` settings can point a listener at any other certificate the instance holds, including another listener's environment material. See [Default certificate per listener](/docs/deployment/tls-certificates#default-certificate-per-listener).
 
 Before v2.80.0 this was the other way round: the SMTP server and the IMAP proxy read these variables and then overwrote the result with whatever had been provisioned for the `serviceUrl` hostname, so a pinned certificate was silently replaced.
 :::
