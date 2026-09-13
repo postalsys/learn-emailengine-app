@@ -88,7 +88,7 @@ EmailEngine can **automatically detect IMAP/SMTP server settings** for most emai
 
 ### Via Hosted Authentication Form
 
-When users add accounts through the [hosted authentication form](/docs/accounts/hosted-authentication), EmailEngine attempts to automatically detect the correct server settings based on the email address. In most cases, users only need to enter their email and password. For self-hosted servers or less common providers where auto-detection fails, manual server configuration is required.
+When users add accounts through the [hosted authentication form](/docs/accounts/hosted-authentication), EmailEngine attempts to automatically detect the correct server settings based on the email address. In most cases, users only need to enter their email and password. For self-hosted servers or less common providers where auto-detection fails, manual server configuration is required. Since v2.81.0 a setup link generated with [`skipServerSettings`](/docs/accounts/hosted-authentication#skipping-the-server-settings-step) hides the settings review page entirely when the discovered settings verify against the password the user entered.
 
 ### Via API
 
@@ -117,6 +117,54 @@ Response includes detected IMAP and SMTP settings:
 ```
 
 You can then use these settings when [registering an account](/docs/api/post-v-1-account).
+
+#### Servers That Refuse Anonymous Autodiscovery
+
+`GET /v1/autoconfig` takes the address in a query string, so it never carries a password and always asks anonymously. Hosted Exchange refuses anonymous autodiscovery: it answers with a `401` and a Basic authentication challenge, so an Exchange domain resolves to nothing on the GET.
+
+`POST /v1/autoconfig` (since v2.81.0) takes the same address in a request body, along with credentials to offer if the autodiscovery server asks for them:
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/autoconfig" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "auth": {
+      "pass": "verysecret"
+    }
+  }'
+```
+
+`auth.pass` is required within the `auth` object; `auth.user` is optional and defaults to the email address. Omit `auth` entirely and the endpoint behaves like the GET.
+
+The response is the same shape both endpoints return:
+
+```json
+{
+  "imap": {
+    "host": "ex1.mail.example.net",
+    "port": 993,
+    "secure": true
+  },
+  "smtp": {
+    "host": "ex1.mail.example.net",
+    "port": 587,
+    "secure": false
+  },
+  "_source": "autodiscover"
+}
+```
+
+`_source` names the resolver that answered - `autodiscover` for Exchange, `mx` or `srv` for the other paths. An `auth` object carrying a `user` is included only when the server named the login to use, which the legacy Exchange endpoint does and the SOAP one does not; fall back to the email address when it is absent.
+
+An address whose domain describes no mail server returns an object with `imap` and `smtp` set to `false`. That is a normal answer, not an error.
+
+:::info Where the password is sent
+The password is offered only to the autodiscovery host named by the address domain's own DNS records, and only after that host has refused an anonymous request with a Basic challenge over HTTPS. A server that answers some other way - a parking page returning `404`, a CDN answering `200`, or a host offering only NTLM - never receives it. The credentials are used for the autodiscovery lookup alone and are not stored.
+:::
+
+Because it relays a supplied credential, `POST /v1/autoconfig` belongs to the `provisioning` permission group rather than the `diagnostics` group that covers the GET. An access token restricted to `diagnostics` can call the GET but not the POST.
 
 :::warning Outlook.com / Hotmail.com / Live.com
 Microsoft has **disabled regular password authentication** for consumer accounts. You must use OAuth2 authentication. See the [Outlook OAuth2 guide](./microsoft-365/outlook-365) for setup instructions.

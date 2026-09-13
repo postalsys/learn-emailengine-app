@@ -118,6 +118,7 @@ Direct the user to this URL to begin authentication. The URL is single-use and e
 | `expectedEmail` | No | Restrict the form to a single address - setup is rejected if the user authenticates as someone else |
 | `name` | No | Pre-fill display name on form |
 | `type` | No | Pre-select the account type: `"imap"` or an OAuth2 application ID (skips the selection screen) |
+| `skipServerSettings` | No | Skip the mail server settings step when the IMAP and SMTP settings can be both discovered and verified from the address and password the user enters. IMAP path only, since v2.81.0, see [Skipping the Server Settings Step](#skipping-the-server-settings-step) |
 | `delegated` | No | Register the account as a shared mailbox. Microsoft 365 OAuth2 only |
 | `notifyFrom` | No | Only emit webhooks for messages received after this date. Defaults to the moment the account is created. IMAP only |
 | `subconnections` | No | Folders to watch on their own connection, for immediate notifications |
@@ -153,6 +154,41 @@ The OAuth2 App ID (Provider ID) is visible in EmailEngine's **Integrations** > *
 
 :::tip Better User Experience
 Using the `type` parameter provides a smoother experience - users go directly to Google or Microsoft authorization without seeing an intermediate selection screen.
+:::
+
+### Skipping the Server Settings Step
+
+On the IMAP path the form normally asks for the email address and password, then shows a second page with the discovered IMAP and SMTP settings for the user to review. Set `skipServerSettings` to `true` to remove that second page whenever EmailEngine can both discover the settings and verify them with the password the user entered:
+
+```bash
+curl -X POST https://emailengine.example.com/v1/authentication/form \
+  -H "Authorization: Bearer YOUR_EMAILENGINE_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "user123",
+    "email": "john@example.com",
+    "type": "imap",
+    "skipServerSettings": true,
+    "redirectUrl": "https://myapp.com/settings"
+  }'
+```
+
+The user enters their address and password, sees a page that checks the connection, and is redirected to `redirectUrl` once the account is created. Available since v2.81.0.
+
+**When the step is still shown:**
+
+- Autodiscovery did not return both an IMAP and an SMTP server for the address
+- Autodiscovery returned settings that are incomplete for account creation
+- The connection check failed, for example because the password was wrong or the provider requires an app password
+
+In each of those cases the user is handed the ordinary server settings form, prefilled with whatever was discovered, so the setup continues rather than failing. The parameter removes a step that would have been a formality; it never ends the setup on its own, and it never creates an account from settings that were not verified.
+
+:::note IMAP path only
+`skipServerSettings` has no effect on OAuth2 accounts, which never show a server settings page. Combine it with `type: "imap"` to send the user straight into the IMAP flow.
+:::
+
+:::warning Users lose the chance to correct the settings
+The review page is also where a user can change a discovered value before the account is created - for a self-hosted server reachable under a different name, for instance. Skipping it is best suited to setups where the addresses come from providers with reliable autodiscovery.
 :::
 
 ### Implementation Example

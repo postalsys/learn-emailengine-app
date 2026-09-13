@@ -22,7 +22,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 
 | Aspect | Details |
 |--------|---------|
-| Reference version | EmailEngine 2.79.4 (the OpenAPI spec this page is checked against) |
+| Reference version | EmailEngine 2.81.0 (the OpenAPI spec this page is checked against) |
 | API Style | RESTful JSON |
 | Authentication | Bearer token (`Authorization: Bearer TOKEN`) |
 | Base URL | `https://emailengine.example.com/v1` (a fresh local install listens on `http://127.0.0.1:3000`) |
@@ -59,7 +59,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | **Manage templates** | `POST /v1/templates/template` | `name`, `content`, `format` |
 | **View outbox** | `GET /v1/outbox` | - |
 | **Cancel queued email** | `DELETE /v1/outbox/{queueId}` | - |
-| **Generate auth form** | `POST /v1/authentication/form` | `account`, `redirectUrl` |
+| **Generate auth form** | `POST /v1/authentication/form` | `account`, `redirectUrl`, optional `skipServerSettings` |
 
 ## Complete API Endpoints
 
@@ -78,7 +78,8 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | `GET` | `/v1/account/{account}/oauth-token` | Get current OAuth2 access token |
 | `POST` | `/v1/verifyAccount` | Test account credentials |
 | `POST` | `/v1/authentication/form` | Generate hosted auth form URL |
-| `GET` | `/v1/autoconfig` | Auto-detect IMAP/SMTP settings |
+| `GET` | `/v1/autoconfig` | Auto-detect IMAP/SMTP settings. Anonymous, `diagnostics` permission group |
+| `POST` | `/v1/autoconfig` | Auto-detect IMAP/SMTP settings, offering credentials to a server that refuses anonymous autodiscovery such as hosted Exchange. `provisioning` permission group, since v2.81.0 |
 | `GET` | `/v1/account/{account}/server-signatures` | List server signatures for account |
 
 ### Message Operations

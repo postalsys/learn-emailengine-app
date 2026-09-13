@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "EmailEngine",
   "description": "Self-hosted email API gateway providing REST API access to email accounts via IMAP, SMTP, Gmail API, and Microsoft Graph API",
-  "version": "2.79.5",
+  "version": "2.81.0",
   "documentationUrl": "https://learn.emailengine.app/",
   "openApiSpec": "https://go.emailengine.app/swagger.json",
   "authentication": {
@@ -27,8 +27,9 @@
         {"method": "PUT", "path": "/v1/account/{account}/sync", "description": "Trigger immediate sync"},
         {"method": "GET", "path": "/v1/account/{account}/oauth-token", "description": "Get OAuth2 access token"},
         {"method": "POST", "path": "/v1/verifyAccount", "description": "Test account credentials"},
-        {"method": "POST", "path": "/v1/authentication/form", "description": "Generate hosted auth form URL. Optional expectedEmail restricts the setup to one address"},
-        {"method": "GET", "path": "/v1/autoconfig", "description": "Auto-detect IMAP/SMTP settings"},
+        {"method": "POST", "path": "/v1/authentication/form", "description": "Generate hosted auth form URL. Optional expectedEmail restricts the setup to one address, optional skipServerSettings hides the mail server settings step when the settings can be discovered and verified"},
+        {"method": "GET", "path": "/v1/autoconfig", "description": "Auto-detect IMAP/SMTP settings. Anonymous, diagnostics permission group"},
+        {"method": "POST", "path": "/v1/autoconfig", "description": "Auto-detect IMAP/SMTP settings, offering credentials to a server that refuses anonymous autodiscovery such as hosted Exchange. Provisioning permission group"},
         {"method": "GET", "path": "/v1/account/{account}/server-signatures", "description": "List server signatures"}
       ]
     },
