@@ -1,6 +1,6 @@
 ---
 title: Install EmailEngine - Setup Guide for All Platforms
-description: Install EmailEngine on Linux, macOS, Windows, or Docker, with one-click cloud deployments for Render, DigitalOcean, and Heroku.
+description: Install EmailEngine on Linux, macOS, Windows, or Docker, with one-click cloud deployments for Render, DigitalOcean, Heroku, and Easypanel.
 sidebar_position: 1
 keywords:
   - install EmailEngine
@@ -152,6 +152,18 @@ One-click droplet with everything pre-configured.
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/postalsys/emailengine)
 
 The button reads the `app.json` in the EmailEngine repository. It provisions a `heroku-redis` add-on and sets `EENGINE_WORKERS=1` because the Heroku Redis add-on caps the number of client connections; raise the worker count only together with a larger Redis plan. It also sets `NODE_TLS_REJECT_UNAUTHORIZED=0`, which the template needs to reach the Heroku Redis add-on over TLS and which disables certificate validation for every outbound TLS connection EmailEngine makes.
+
+#### Easypanel
+
+[![Deploy on Easypanel](https://easypanel.io/img/deploy-on-easypanel-40.svg)](https://easypanel.io/templates/emailengine)
+
+[Easypanel](https://easypanel.io) is a self-hosted Docker control panel. Its EmailEngine template is maintained by Easypanel, not by Postal Systems. It creates two services, the EmailEngine container and a password-protected Redis service, and sets `EENGINE_REDIS`, a random `EENGINE_SECRET`, and an `EENGINE_SETTINGS` value that enables the built-in SMTP server with authentication. The admin interface is served on the Easypanel domain through port 3000.
+
+Review these form fields before deploying (template state checked 2026-09-23):
+
+- **App Service Image** defaults to a pinned older release (`postalsys/emailengine:v2.63.3`). Set it to `postalsys/emailengine:v2` to run the current release.
+- **SMTP Password** defaults to `password`. Replace it, because the template publishes the SMTP submission port.
+- **Redis eviction policy** is not set by the template yet (a fix is proposed upstream in [easypanel-io/templates#1588](https://github.com/easypanel-io/templates/pull/1588)). After the first deploy, check the dashboard for the "Unsafe Redis eviction policy" banner, and if it appears, set `maxmemory-policy noeviction` on the Redis service. See [Memory Eviction Policy](/docs/configuration/redis#memory-eviction-policy-required) for why no other policy is supported.
 
 [View all deployment guides →](/docs/deployment)
 
