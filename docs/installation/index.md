@@ -1,6 +1,6 @@
 ---
 title: Install EmailEngine - Setup Guide for All Platforms
-description: Install EmailEngine on Linux, macOS, Windows, or Docker, with one-click cloud deployments for Render, DigitalOcean, Heroku, and Easypanel.
+description: Install EmailEngine on Linux, macOS, Windows, or Docker, with one-click cloud deployments for Render, DigitalOcean, Heroku, Easypanel, and Hostinger.
 sidebar_position: 1
 keywords:
   - install EmailEngine
@@ -164,6 +164,10 @@ Review these form fields before deploying (template state checked 2026-09-23):
 - **App Service Image** defaults to a pinned older release (`postalsys/emailengine:v2.63.3`). Set it to `postalsys/emailengine:v2` to run the current release.
 - **SMTP Password** defaults to `password`. Replace it, because the template publishes the SMTP submission port.
 - **Redis eviction policy** is not set by the template yet (a fix is proposed upstream in [easypanel-io/templates#1588](https://github.com/easypanel-io/templates/pull/1588)). After the first deploy, check the dashboard for the "Unsafe Redis eviction policy" banner, and if it appears, set `maxmemory-policy noeviction` on the Redis service. See [Memory Eviction Policy](/docs/configuration/redis#memory-eviction-policy-required) for why no other policy is supported.
+
+#### Hostinger VPS
+
+[Hostinger](https://www.hostinger.com/applications/emailengine) offers EmailEngine as a one-click Docker application on its VPS plans. The deployment is maintained by Hostinger, not by Postal Systems, and Hostinger does not publish its configuration, so the EmailEngine version and the Redis settings it uses are not documented here. After the first deploy, check the dashboard for the "Unsafe Redis eviction policy" banner, and if it appears, set `maxmemory-policy noeviction` on the Redis instance. See [Memory Eviction Policy](/docs/configuration/redis#memory-eviction-policy-required).
 
 [View all deployment guides →](/docs/deployment)
 
