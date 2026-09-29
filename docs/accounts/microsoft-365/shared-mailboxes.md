@@ -26,6 +26,7 @@ Microsoft 365 shared mailboxes are mailboxes not bound to a specific user. Multi
 | **Adding new mailboxes** | API call only | API call only | Re-authentication |
 | **Admin consent** | Required (once) | Not required | Not required |
 | **Email backend** | MS Graph API only | IMAP/SMTP or MS Graph | IMAP/SMTP or MS Graph |
+| **New mail on MS Graph** | Yes | No, see [below](#ms-graph-api-backend) | No, see [below](#ms-graph-api-backend) |
 | **Personal accounts** | Not supported | Supported | Supported |
 | **Main account usable** | N/A | Yes | No |
 | **Best for** | Enterprise, automation | Multi-mailbox with user consent | Testing, single mailbox |
@@ -135,19 +136,11 @@ curl -X POST https://emailengine.example.com/v1/account \
 
 All mailboxes use the same OAuth2 application. EmailEngine obtains and renews tokens automatically.
 
-## Delegated Access Setup
+## Additional Scopes for MS Graph API
 
-Delegated access requires a main user account authenticated via OAuth2. Shared mailboxes then reference this main account for credentials.
+Delegated access and direct access both read the shared mailbox with a token issued to another user, so on the MS Graph API backend both need these scopes. The base scopes (`Mail.ReadWrite`, `Mail.Send`, `User.Read`) cover only the signed-in user's own mailbox and profile. Without the extra scopes, requests to the shared mailbox fail with `Authorization_RequestDenied` ("Insufficient privileges to complete the operation") and sending fails with "Access is denied".
 
-### Prerequisites
-
-1. **Azure AD OAuth2 application** configured for delegated access - see [Outlook OAuth2 Setup (Delegated Access)](./outlook-365)
-2. **Shared mailbox permissions** - the main user must have access to the shared mailbox in Microsoft 365 admin center
-3. **OAuth2 app registered in EmailEngine** under **Integrations > OAuth2 Apps**
-
-### Additional Scopes for MS Graph API
-
-If using the MS Graph API backend, your OAuth2 application needs additional scopes for shared mailbox access.
+Application access does not need them.
 
 **Step 1: Add scopes in Azure Portal**
 
@@ -177,12 +170,27 @@ If using the MS Graph API backend, your OAuth2 application needs additional scop
 
 Existing accounts need to re-authenticate to pick up the new permissions. Either:
 
-- **Re-add the account** - Delete and re-add the main account in EmailEngine
+- **Re-add the account** - Delete and re-add the account that holds the tokens (the main account for delegated access, the shared mailbox account for direct access)
 - **Generate new auth link** - Use the [Authentication Form API](/docs/api/post-v-1-authentication-form) with the existing account ID to generate a new authentication URL. The user must open this link and grant the new permissions.
+
+**Step 4: Grant mailbox permissions in Exchange**
+
+The scopes only let the token act on permissions the signing-in user already has. That user needs **Full Access** on the shared mailbox to read it and **Send As** (or **Send on Behalf**) to send from it. Assign these in the Exchange admin center under **Recipients** > **Mailboxes** > the shared mailbox > **Delegation**, where Full Access is listed as **Read and manage**.
 
 :::info IMAP/SMTP Backend
 If using the IMAP/SMTP backend, no additional scopes are needed. Shared mailbox access works out of the box.
 :::
+
+## Delegated Access Setup
+
+Delegated access requires a main user account authenticated via OAuth2. Shared mailboxes then reference this main account for credentials.
+
+### Prerequisites
+
+1. **Azure AD OAuth2 application** configured for delegated access - see [Outlook OAuth2 Setup (Delegated Access)](./outlook-365)
+2. **Shared mailbox permissions** - the main user must have access to the shared mailbox in Microsoft 365 admin center
+3. **OAuth2 app registered in EmailEngine** under **Integrations > OAuth2 Apps**
+4. **Additional scopes** if you use the MS Graph API backend - see [Additional Scopes for MS Graph API](#additional-scopes-for-ms-graph-api)
 
 ### Step 1: Add the Main User Account
 
@@ -236,6 +244,8 @@ EmailEngine uses the main account's OAuth2 tokens to access the shared mailbox. 
 ## Direct Access Setup
 
 Direct access adds the shared mailbox as a standalone account. A user who has permissions to the shared mailbox authenticates via OAuth2.
+
+On the MS Graph API backend, the OAuth2 application needs the [additional scopes](#additional-scopes-for-ms-graph-api) before the user signs in. The same scopes apply as for delegated access.
 
 ### Via Hosted Authentication Form
 
@@ -388,7 +398,15 @@ Available with delegated access and direct access only (application access uses 
 
 ### MS Graph API Backend
 
-Available with all three approaches. Provides the best shared mailbox support.
+Available with all three approaches, but only application access receives new mail.
+
+:::warning No change notifications with delegated or direct access
+EmailEngine learns about new and changed messages on the MS Graph API backend through Microsoft Graph change notifications. Microsoft only allows a delegated token to subscribe to the signed-in user's own mailbox, and the `Mail.ReadWrite.Shared` family of scopes does not support subscriptions at all ([Microsoft Graph documentation](https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions#contact-event-and-message)). With delegated or direct access, the subscription for a shared mailbox is refused, so new mail is not synced.
+
+Since v2.80.0, EmailEngine reports this as a connection error with the code `SubscriptionSetupError` once its retries are exhausted. Until a subscription succeeds, the account's own API operations (reading or moving a message) answer with HTTP 503. Earlier versions kept reporting the account as connected.
+
+To sync a shared mailbox over MS Graph, use [application access](#application-access-setup-recommended). To keep delegated or direct access, use the IMAP/SMTP backend instead.
+:::
 
 - No SMTP authentication workarounds needed
 - Emails are sent and managed directly as the shared mailbox
