@@ -160,7 +160,7 @@ async function mintToken(page, payload) {
 // Every run mints tokens, so a second run would otherwise show the listing
 // growing a duplicate set of rows. Only mcp-scoped tokens are touched.
 async function clearMcpTokens(page) {
-    await page.goto(`${EE_URL}/admin/tokens?scope=mcp`, { waitUntil: 'load' });
+    await page.goto(`${EE_URL}/admin/tokens?scope=mcp-manage&scope=mcp`, { waitUntil: 'load' });
     const ids = await page.$$eval('.list-delete-btn[data-delete-id]', buttons => buttons.map(button => button.dataset.deleteId));
     if (!ids.length) {
         return;
@@ -230,7 +230,9 @@ async function captureConfigPage(page, account) {
     if (account) {
         await pickAccount(page, 'mcpGenAccount', account);
     }
-    await page.check('#mcpGenAccessread');
+    // Two sections since 2.80.1: instance management (defaults to Observe) and email
+    // access (defaults to none). The docs describe a read-only mail agent.
+    await page.check('#mcpGen_mail_read');
     await shot(page, 'mcp-connect-token.png', { fullPage: true });
 
     // 3. the same panel after generating a connection command
@@ -249,8 +251,8 @@ async function captureConfigPage(page, account) {
     await page.click('#mcp-connect-oauth-tab');
     await shot(page, 'mcp-connect-oauth.png', { scrollTo: 140 });
 
-    // 5. the tool catalog, expanded. Captured as the card alone: fifteen tools
-    // are taller than the viewport, and a full-page shot of the tab would be
+    // 5. the tool catalog, expanded. Captured as the card alone: the catalog
+    // is taller than the viewport, and a full-page shot of the tab would be
     // mostly the generator above it.
     await openDetails(page, 'Exposed tools');
     await shot(page, 'mcp-tools-catalog.png', { element: 'details:has(summary:text-matches("Exposed tools"))' });
@@ -320,7 +322,7 @@ async function captureTokenPages(page, account) {
         permissions: { actions: ['read'], groups: ['account', 'mailbox', 'message', 'outbox', 'template'] }
     });
 
-    await page.goto(`${EE_URL}/admin/tokens?scope=mcp`, { waitUntil: 'load' });
+    await page.goto(`${EE_URL}/admin/tokens?scope=mcp-manage&scope=mcp`, { waitUntil: 'load' });
     await shot(page, 'mcp-tokens-list.png');
 }
 

@@ -17,9 +17,9 @@ const SWAGGER_URL = 'https://go.emailengine.app/swagger.json';
 const OUTPUT_PATH = path.join(__dirname, '..', 'sources', 'swagger.json');
 const MAX_REDIRECTS = 5;
 
-// Operations we do not document. The release spec is a superset of what a
-// running instance exposes, so it still carries Document Store endpoints that
-// require a deprecated feature to be enabled.
+// Operations we do not document. The Document Store endpoints left the
+// published spec in EmailEngine 2.82.0; the filter stays so that a release
+// which brings a deprecated tag back does not regenerate pages for it.
 const EXCLUDED_TAGS = ['Deprecated endpoints (Document Store)'];
 
 console.log('📥 Downloading swagger.json from EmailEngine...');
