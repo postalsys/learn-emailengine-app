@@ -196,7 +196,7 @@ If the entries have no `threadId`, the backend assigns none, and threads have to
 
 ## See Also
 
-- [Threading overview](/docs/sending/threading/overview) - The headers and IDs this table is about
+- [Threading overview](/docs/sending/threading) - The headers and IDs this table is about
 - [Searching threads](/docs/sending/threading/searching-threads) - The search strategy each provider needs
 - [Account types](/docs/accounts) - Choosing the backend that gives you native threading
 - [Searching messages](/docs/receiving/searching) - What else the search endpoint can filter on

@@ -66,7 +66,7 @@ The `reference` object in the response reports whether the referenced message wa
 - Sets `to` to the referenced message's `Reply-To` address, or to its sender when it names none, unless you supply `to` yourself
 - Adds `Re:` prefix to subject (if not already present)
 - Sets `In-Reply-To` header to original Message-ID
-- Builds `References` header with the thread history
+- Builds the `References` header from the original's `References` (or its `In-Reply-To` when it has none) followed by the original's Message-ID, with missing angle brackets added and repeated IDs dropped. Since v2.82.0 a chain longer than 21 entries is cut to the thread root plus the 20 most recent IDs
 - Marks original message with the `\Answered` flag once the reply is sent
 
 ### Reply All
@@ -123,7 +123,7 @@ On Wed, May 14, 2025 10:30 AM, Original Sender <sender@example.com> wrote:
 > Original message content here
 ```
 
-The date is formatted for the `locale` and `tz` of the submission, falling back to the account's and then the instance's settings. Images the original embeds by Content-ID are carried over so the quote renders. When `inline` is `false`, only your new content is included.
+The date is formatted for the `locale` and `tz` of the submission, falling back to the account's and then the instance's settings. Images the original embeds by Content-ID are carried over so the quote renders. A reply with `html` and no `text` gets its plain-text part generated from the HTML, quote included, and a reply with only `text` gets an HTML part generated from the text so that the quote can be rendered in both. When `inline` is `false`, only your new content is included.
 
 ### Complete reference object fields
 
@@ -132,10 +132,10 @@ The date is formatted for the `locale` and `tz` of the submission, falling back 
 | `message` | string | EmailEngine message ID to reply to or forward. Required unless `threadId` is supplied. |
 | `action` | string | `reply` (default), `reply-all`, or `forward`. |
 | `inline` | boolean | Include the original message as quoted text (default `false`). |
-| `forwardAttachments` | boolean | Include original attachments when forwarding (only valid when `action` is `forward`; default `false`). |
-| `ignoreMissing` | boolean | Continue sending even if the referenced message cannot be found (default `false`). |
-| `messageId` | string | Verify the referenced email's `Message-ID` matches this value before proceeding. |
-| `threadId` | string | Gmail thread ID to attach the outgoing message to. Used only by Gmail API accounts; ignored for IMAP and Microsoft Graph accounts, which thread via the RFC `In-Reply-To`/`References` headers. |
+| `forwardAttachments` | boolean | Include original attachments when forwarding (default `false`). Enabling it with any other `action` is refused with 400; since v2.82.0 an explicit `false` is accepted on a reply. |
+| `ignoreMissing` | boolean | Continue sending even if the referenced message cannot be found (default `false`). Without it, a missing message fails the call with 404 and the code `ReferenceNotFound`. A transient error while fetching the message is retried three times first; with `ignoreMissing` the message is then sent without the derived fields, without it the error is returned. |
+| `messageId` | string | Verify the referenced email's `Message-ID` matches this value before proceeding. A mismatch fails the call with 404 and the code `MessageNotFound`. |
+| `threadId` | string | Gmail thread ID to attach the outgoing message to. Used only by Gmail API accounts; ignored for IMAP and Microsoft Graph accounts, which thread via the RFC `In-Reply-To`/`References` headers. Echoed back as `reference.threadId` in the response. |
 
 At least one of `message` or `threadId` must be present.
 

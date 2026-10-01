@@ -122,7 +122,7 @@ The `name` field is optional but recommended for a better recipient experience.
 
 #### Plain Text and HTML
 
-Always provide both plain text and HTML versions for best compatibility:
+A message can carry both a plain-text and an HTML body:
 
 ```json
 {
@@ -134,12 +134,26 @@ Always provide both plain text and HTML versions for best compatibility:
 
 #### HTML Only
 
-An `html` body with no `text` is sent as HTML only. EmailEngine does not derive a plaintext alternative from it, so supply `text` yourself for clients and filters that prefer one:
+An `html` body with no `text` still goes out as a `multipart/alternative` message: EmailEngine generates the plain-text part from the HTML, rendering each link as its text followed by the URL in square brackets. Supply `text` yourself when the generated wording is not what text-only clients should see:
 
 ```json
 {
   "subject": "HTML Newsletter",
   "html": "<h1>Hello!</h1><p>This is an HTML email.</p>"
+}
+```
+
+A [raw message](#raw-messages) is sent as given, with no generated part.
+
+#### Preview Text
+
+`previewText` is the short line mail clients show after the subject in the inbox list. EmailEngine inserts it into the HTML body as a hidden block, so it has an effect only when the message has `html`:
+
+```json
+{
+  "subject": "Your order has shipped",
+  "html": "<p>Order 4815 is on its way.</p>",
+  "previewText": "Arriving Thursday"
 }
 ```
 
@@ -172,6 +186,8 @@ Add attachments using the `attachments` array:
 - `encoding` - Encoding of `content`. Only `base64` is accepted, and it is the default
 - `reference` - The ID of an attachment on a stored message, taken from that message's attachment list, to attach it without downloading and re-uploading it (optional)
 
+A message can carry up to 500 attachments. Each `content` value, like `text`, `html`, and `raw`, is limited to `EENGINE_MAX_SIZE` (5 MB by default), and the whole request body to `EENGINE_MAX_BODY_SIZE` (50 MB by default); both are described under [environment variables](/docs/configuration/environment-variables#email-protocol-settings).
+
 #### Inline Images
 
 Reference inline images in HTML using Content ID:
@@ -189,6 +205,8 @@ Reference inline images in HTML using Content ID:
   ]
 }
 ```
+
+An `<img>` in `html` whose `src` is a `data:` URI is converted the same way: the image becomes an attachment named `image-1.png` (numbered, with the extension derived from the MIME type) with a generated Content-ID, and the `src` is rewritten to reference it. This applies to the `html` of the call, not to the HTML of a stored template.
 
 ### Custom Headers
 
@@ -237,6 +255,18 @@ Override default sender information:
 
 If `from` is omitted, EmailEngine uses the account's configured email and name. `replyTo` accepts a single address object or a list of them.
 
+### Raw Messages
+
+`raw` carries a complete RFC 822 message, base64-encoded, for a message built elsewhere that has to go out as it is. It cannot be combined with `text`, `html`, or `attachments`:
+
+```json
+{
+  "raw": "TUlNRS1WZXJzaW9uOiAxLjANClN1YmplY3Q6IGhlbGxvIHdvcmxkDQoNCkhlbGxvIQ0K"
+}
+```
+
+Fields sent alongside it are applied to the headers inside the message: `subject`, `from`, `to`, `cc`, `bcc`, and `messageId` replace the matching header, and `headers` adds to them. `envelope` sets the SMTP envelope; without it the envelope is derived from the `From`, `To`, `Cc`, and `Bcc` headers. `Message-ID`, `Date`, and `MIME-Version` are added when missing, and a `Bcc` header is removed before delivery. The `X-EE-*` control headers that the [SMTP server](./smtp-interface.md#emailengine-options-as-headers) reads are read from a raw message too, and removed from it.
+
 ## Advanced Options
 
 ### Scheduled Sending
@@ -267,7 +297,7 @@ Prevent saving a copy to the Sent Mail folder:
 }
 ```
 
-Useful for bulk sending to avoid cluttering the Sent folder. Leave `copy` unset to follow the account's default. The flag only applies to SMTP deliveries: Gmail and MS Graph file sent messages themselves, so it is a no-op for accounts that send through those APIs. `sentMailPath` names a different folder for the copy.
+Leave `copy` unset to follow the account's default, which is to upload a copy after an SMTP delivery, except on Gmail and Microsoft accounts, whose servers file SMTP-sent mail into Sent Mail themselves. A delegated Microsoft 365 account is an exception to the exception: its mail is sent through the owning account, so a copy is uploaded for it. `copy: true` forces the upload even on a Gmail or Microsoft account, and `copy: false` suppresses it. A delivery through a [gateway](#smtp-gateway) is uploaded by default whatever the account type, because the provider never sees it. Deliveries through the Gmail API or MS Graph never upload, as the provider files the message, and `copy` is ignored there. No copy is stored for an account whose IMAP connection is disabled or that has neither an IMAP nor an OAuth2 configuration, nor when the account has no folder flagged `\Sent`; since v2.81.2 that last case is reported with a warning in the log. `sentMailPath` names a different folder for the copy.
 
 ### Custom Message ID
 
@@ -410,7 +440,7 @@ Override the default retry count for this message:
 }
 ```
 
-The default is 10, and the instance-wide default is settable under **Configuration** > **Email Processing**. A higher value keeps a message retrying for longer rather than making it more likely to arrive, so raise it only where a late delivery still has value.
+The value can be 0 to 100; 0 and 1 both mean a single attempt. The default is 10, set instance-wide as **Delivery attempts** under **Configuration** > **Email Processing** (the `deliveryAttempts` key in the [Settings API](/docs/api/post-v-1-settings)). A higher value keeps a message retrying for longer rather than making it more likely to arrive, so raise it only where a late delivery still has value.
 
 #### SMTP Gateway
 
@@ -425,7 +455,7 @@ Route through a specific SMTP gateway:
 }
 ```
 
-Gateways are SMTP accounts (like SendGrid, Mailgun, or Amazon SES) that EmailEngine can use to send emails on behalf of any account. Register gateways via the [Gateway API](/docs/api/post-v-1-gateway).
+A gateway is a named SMTP relay registered with EmailEngine, such as a transactional sending service. The message is delivered through the relay instead of the account's own SMTP server or provider API, and still belongs to the account. [SMTP Gateways](/docs/sending/smtp-gateways) covers the gateway record, the API that manages it, and what changes for a message routed through one.
 
 #### SMTP Envelope
 
@@ -492,7 +522,7 @@ What happens to the draft after sending depends on the account type:
 - **Gmail and MS Graph accounts** use the provider's native draft-send call. The provider files the message into the Sent Mail folder and removes the draft.
 - **IMAP accounts** download the draft and deliver it over SMTP. A copy is stored in the Sent Mail folder (unless disabled with `copy: false` or the mail server stores sent messages itself, as Gmail and Outlook do for SMTP submissions), and the draft is then deleted. If no sent copy exists anywhere, the draft is moved to Trash instead so its content is not lost.
 
-The request body is optional and accepts the delivery options described above - `envelope`, `copy`, `sentMailPath`, `sendAt`, `deliveryAttempts`, `gateway`, `dsn`, `proxy`, and `localAddress`. Content fields are not accepted; the draft is sent as stored. A draft with no recipients is refused with 400 (`DraftHasNoRecipients`). See the [draft submission API reference](/docs/api/post-v-1-account-account-message-message-submit) for the full schema. Draft submission was added in v2.76.0.
+The request body is optional and accepts the delivery options described above - `envelope`, `copy`, `sentMailPath`, `sendAt`, `deliveryAttempts`, `gateway`, `dsn`, `proxy`, and `localAddress`. Content fields are not accepted; the draft is sent as stored, apart from the `X-EE-*` control headers of the [SMTP server](./smtp-interface.md#emailengine-options-as-headers), which are read from the draft and removed. A draft with no recipients is refused with 400 (`DraftHasNoRecipients`). See the [draft submission API reference](/docs/api/post-v-1-account-account-message-message-submit) for the full schema. Draft submission was added in v2.76.0.
 
 ## Webhook Notifications
 
@@ -572,7 +602,7 @@ When this happens, the sender's MTA generates a bounce response email and sends 
 
 See:
 
-- [Bounce Detection](/docs/advanced/bounces) - How EmailEngine detects and processes bounces
+- [Bounce Detection](/docs/sending/deliverability/bounces) - How EmailEngine detects and processes bounces
 - [messageBounce Webhook](/docs/webhooks/messagebounce) - Webhook payload and handling
 
 ## Testing Sent Emails
@@ -668,7 +698,7 @@ See [Gmail Setup](../accounts/gmail/gmail-imap.md) and [Outlook Setup](../accoun
 
 **Solution**:
 
-- Provide both HTML and plain text versions
+- Check the generated plain-text part, or supply `text` yourself
 - Avoid spam trigger words
 - Include unsubscribe links for bulk email
 - Authenticate domain with SPF/DKIM
@@ -687,11 +717,7 @@ For sending multiple emails:
 
 ### Connection Pooling
 
-EmailEngine maintains SMTP connection pools automatically. For high-volume sending:
-
-- Keep accounts connected
-- Avoid frequent reconnections
-- Monitor connection status
+EmailEngine keeps one pooled SMTP connection per distinct connection configuration (server, credentials, proxy, local address, and TLS options), sends up to 100 messages over it, and closes it after 10 minutes without a send. Messages for the same configuration go out one at a time over that connection, and each delivery attempt has a 2 minute socket timeout. Nothing needs configuring for this; the knobs for parallel delivery across accounts are the submit worker settings under [performance tuning](/docs/advanced/performance-tuning).
 
 ### Webhook Processing
 

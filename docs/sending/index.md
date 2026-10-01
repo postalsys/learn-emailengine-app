@@ -10,7 +10,7 @@ Send through a registered account's own SMTP server, or through an external send
 
 ## Why Use EmailEngine for Sending
 
-When your application needs to send email on behalf of users, direct SMTP integration is complex and brittle:
+When your application sends email on behalf of users, talking SMTP to each provider directly means handling:
 
 - **Provider diversity**: Every email provider has different authentication mechanisms, rate limits, and error codes
 - **Credential management**: Securely handling user SMTP credentials is challenging
@@ -18,7 +18,7 @@ When your application needs to send email on behalf of users, direct SMTP integr
 - **Queue management**: Handling message queues and delivery tracking
 - **OAuth complexity**: Modern providers require OAuth2 authentication
 
-EmailEngine puts one REST endpoint in front of all of it, with the same request and response shape whichever provider is behind the account.
+EmailEngine puts one REST endpoint in front of all of it, with the same request and response shape whichever provider is behind the account. The provider-specific differences that remain, such as how a sent copy is filed, are listed on the pages below rather than hidden.
 
 ## Key Capabilities
 
@@ -187,5 +187,6 @@ Integrate email into your application logic:
 - [Outbox queue](/docs/sending/outbox-queue) - What happens between "queued" and "sent"
 - [messageSent](/docs/webhooks/messagesent) and [messageFailed](/docs/webhooks/messagefailed) - The delivery events to handle
 - [Sending API](/docs/api-reference/sending-api) - Every field the submit endpoint accepts
-- [Bounces](/docs/advanced/bounces) - Recognizing a delivery failure that arrives by mail rather than by webhook
-- [SMTP gateways](/docs/sending/transactional-service) - Relaying through a sending service instead of the user's own server
+- [Bounces](/docs/sending/deliverability/bounces) - Recognizing a delivery failure that arrives by mail rather than by webhook
+- [SMTP gateways](/docs/sending/smtp-gateways) - Relaying through a named SMTP relay instead of the account's own server
+- [Deliverability](/docs/sending/deliverability/bounces) - Bounces, authentication and inbox placement tests, suppression lists

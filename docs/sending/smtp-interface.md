@@ -49,7 +49,7 @@ curl -XPOST "https://emailengine.example.com/v1/settings" \
   }'
 ```
 
-The Settings API stores the values but does not restart the SMTP worker. After changing `smtpServerEnabled`, `smtpServerPort`, `smtpServerHost`, or `smtpServerTLSEnabled` through the API, restart EmailEngine (or save the admin page once). The authentication settings and the PROXY protocol flag are read on every new connection, so those take effect immediately either way.
+The Settings API stores the values but does not restart the SMTP worker. After changing `smtpServerEnabled`, `smtpServerPort`, `smtpServerHost`, or `smtpServerTLSEnabled` through the API, restart EmailEngine (or save the admin page once). The authentication settings and the PROXY protocol flag are read on every new connection, so those take effect immediately either way. A change to what the listener serves (`smtpServerTLSCertificate`, `tlsProvisioning`, `tlsHostnames`, or `serviceUrl`) swaps the certificate on the running listener without a restart.
 
 ### Configuration Options
 
@@ -61,6 +61,7 @@ The Settings API stores the values but does not restart the SMTP worker. After c
 | `smtpServerAuthEnabled` | Require `AUTH` before accepting a message | `true` |
 | `smtpServerPassword` | Global password accepted for any account ID. Leave unset to accept access tokens only | not set |
 | `smtpServerTLSEnabled` | Serve implicit TLS instead of plaintext | `false` |
+| `smtpServerTLSCertificate` | The certificate the listener presents by default, as an ID from the [TLS Certificates](/docs/deployment/tls-certificates) page: `manual`, `self-signed`, `acme:<hostname>`, or `env:smtp`. Empty or `auto` lets EmailEngine choose. v2.80.1 and later | not set |
 | `smtpServerProxy` | Expect the PROXY protocol header, for HAProxy `send-proxy` and similar | `false` |
 
 On the first start, `EENGINE_SMTP_ENABLED`, `EENGINE_SMTP_PORT`, `EENGINE_SMTP_HOST`, `EENGINE_SMTP_SECRET`, and `EENGINE_SMTP_PROXY` seed these settings when they have no stored value yet. They are documented under [environment variables](/docs/configuration/environment-variables); once a value is stored, the setting wins.
@@ -78,6 +79,8 @@ The password is one of:
 
 A token without the `smtp` scope is refused with `Access denied, invalid scope`.
 
+Failed logins are budgeted (v2.79.9 and later). After 20 refused logins for one username from one client address within 5 minutes, further attempts for that pair are answered with `454 Too many failed authentication attempts, try again later` until the window passes. A second budget of 100 refused logins per client address, whatever the username, covers attempts whose password is not shaped like an access token, so guessing the global password across account IDs runs out at the same point. Accepted logins do not count.
+
 | SMTP setting | Value |
 |--------------|-------|
 | Host | Your EmailEngine host |
@@ -90,7 +93,7 @@ A token without the `smtp` scope is refused with `Access denied, invalid scope`.
 
 ### Without Authentication
 
-When `smtpServerAuthEnabled` is off, the server does not offer `AUTH`, and the message itself has to say which account sends it: set an `X-EE-Account` header to the account ID. A message without that header is refused with `451 Sender account ID not provided, can not send mail`. The header is removed before delivery.
+When `smtpServerAuthEnabled` is off, the server does not offer `AUTH`, and the message itself has to say which account sends it: set an `X-EE-Account` header to the account ID. A message without that header is refused with `451 Sender account ID not provided, can not send mail`. The header is removed before delivery. If authentication is switched on while a session opened without it is still connected, the next message on that session is refused with `530 Authentication required`.
 
 ## Configuration Examples
 
@@ -322,21 +325,7 @@ EENGINE_SMTP_TLS_CERT="$(cat /path/to/certificate.crt)"
 
 Since v2.80.0 material supplied this way takes precedence over any certificate EmailEngine manages, for every hostname it covers. Before that, it was read first and then overwritten by the provisioned certificate for the `serviceUrl` hostname.
 
-Every variable with the `EENGINE_SMTP_TLS_` prefix maps onto the Node.js TLS option of the same name:
-
-| Variable | TLS option |
-|----------|------------|
-| `EENGINE_SMTP_TLS_KEY` | `key`, the private key in PEM |
-| `EENGINE_SMTP_TLS_CERT` | `cert`, the certificate chain in PEM |
-| `EENGINE_SMTP_TLS_CA` | `ca` |
-| `EENGINE_SMTP_TLS_DHPARAM` | `dhparam` |
-| `EENGINE_SMTP_TLS_PASSPHRASE` | `passphrase` for an encrypted key |
-| `EENGINE_SMTP_TLS_CIPHERS` | `ciphers` |
-| `EENGINE_SMTP_TLS_ECDH_CURVE` | `ecdhCurve` |
-| `EENGINE_SMTP_TLS_MIN_VERSION` | `minVersion`, for example `TLSv1.2` |
-| `EENGINE_SMTP_TLS_MAX_VERSION` | `maxVersion` |
-| `EENGINE_SMTP_TLS_REJECT_UNAUTHORIZED` | `rejectUnauthorized`, a boolean |
-| `EENGINE_SMTP_TLS_REQUEST_CERT` | `requestCert`, a boolean |
+The other `EENGINE_SMTP_TLS_` variables (`CA`, `PASSPHRASE`, `DHPARAM`, `CIPHERS`, `ECDH_CURVE`, `MIN_VERSION`, `MAX_VERSION`, `REJECT_UNAUTHORIZED`, `REQUEST_CERT`) map onto the Node.js TLS option of the same name, and a `_FILE` suffix reads any of them from a file. The suffix table is on [Certificates for EmailEngine's Own Listeners](/docs/configuration/environment-variables#certificates-for-emailengines-own-listeners).
 
 ## Features and Limitations
 
@@ -348,7 +337,9 @@ Every variable with the `EENGINE_SMTP_TLS_` prefix maps onto the Node.js TLS opt
 - Attachments, custom headers, HTML and plain text
 - The same outbox queue, retries, and webhooks as an API submission
 
-Messages larger than 25 MB are refused with `552 Message exceeds fixed maximum message size`. `EENGINE_MAX_SMTP_MESSAGE_SIZE` changes the limit.
+Messages larger than 25 MB are refused with `552 Message exceeds fixed maximum message size`. `EENGINE_MAX_SMTP_MESSAGE_SIZE` changes the limit. A message the MIME parser cannot read is refused with a `552 Failed to parse message` reply as well, so a conforming client does not keep retrying it.
+
+At most 100 clients are connected at a time, because each connection buffers its message in memory up to the size limit. A further connection is answered with `421 Too many connected clients, try again in a moment`, which SMTP clients retry. `EENGINE_SMTP_MAX_CLIENTS` changes the limit.
 
 ### EmailEngine Options as Headers
 
@@ -361,7 +352,7 @@ Some submit-API options have header equivalents, because SMTP has no other way t
 | `X-EE-Send-At` | `sendAt` | An ISO 8601 timestamp or a millisecond epoch. For a time in the future, the `Date` header is rewritten to match |
 | `X-EE-Delivery-Attempts` | `deliveryAttempts` | A number |
 | `X-EE-Gateway` | `gateway` | A gateway ID |
-| `X-EE-Tracking-Enabled` | `trackOpens` and `trackClicks` together | `true`, `yes`, or `1` to enable; anything else disables |
+| `X-EE-Tracking-Enabled` | `trackOpens` and `trackClicks` together | `true`, `yes`, `y`, `on`, `enabled`, or a non-zero number to enable; anything else disables |
 
 `X-EE-Idempotency-Key` was added in v2.52.0.
 
@@ -411,7 +402,7 @@ curl "https://emailengine.example.com/v1/outbox" \
 ## See Also
 
 - [Basic sending](/docs/sending/basic-sending) - The REST equivalent, with every option this page cannot express
-- [Transactional email](/docs/sending/transactional-service) - Using the SMTP server as a relay for an existing application
+- [SMTP gateways](/docs/sending/smtp-gateways) - Relaying a submission through a named SMTP relay, selected with the `X-EE-Gateway` header
 - [Outbox queue](/docs/sending/outbox-queue) - Where an accepted message goes next
 - [Access tokens](/docs/api-reference/access-tokens) - Minting the token used as the SMTP password
 - [TLS Certificates](/docs/deployment/tls-certificates) - Which certificate this listener presents, and how to get one

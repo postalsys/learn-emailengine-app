@@ -243,30 +243,9 @@ Every control header is removed before the message goes out.
 
 ## Delivery through a Gateway
 
-By default a message goes out through the account's own SMTP server or provider API. An SMTP gateway is a separate relay registered with EmailEngine, for bulk or transactional mail that should not count against the mailbox's own sending limits.
+By default a message goes out through the account's own SMTP server or provider API. An SMTP gateway is a separate relay registered with EmailEngine, for bulk or transactional mail that should not count against the mailbox's own sending limits. Name it in the `gateway` field of the submission, or in the `X-EE-Gateway` header of a message handed to the SMTP server, and the message is delivered through the relay while still belonging to the account: its Sent Mail copy, bounce detection and webhooks work as for any other submission. A message queued for a gateway is never sent through the account's own server instead.
 
-Register one with [`POST /v1/gateway`](/docs/api/post-v-1-gateway). It takes `gateway` (the ID you will refer to it by), `name`, `host` and `port` as required fields, plus the optional `user`, `pass` and `secure` (`true` for implicit TLS, usually on port 465). Four more endpoints manage the registry:
-
-| Endpoint | Purpose |
-|----------|---------|
-| [`GET /v1/gateways`](/docs/api/get-v-1-gateways) | List the registered gateways |
-| [`GET /v1/gateway/{gateway}`](/docs/api/get-v-1-gateway-gateway) | Read one gateway, including its last use and last error |
-| [`PUT /v1/gateway/edit/{gateway}`](/docs/api/put-v-1-gateway-edit-gateway) | Change host, port, credentials or name |
-| [`DELETE /v1/gateway/{gateway}`](/docs/api/delete-v-1-gateway-gateway) | Remove it |
-
-Name the gateway on submit to route a message through it:
-
-```json
-{
-  "from": { "address": "sender@example.com" },
-  "to": [{ "address": "recipient@example.com" }],
-  "subject": "Order confirmation",
-  "text": "Your order has shipped.",
-  "gateway": "transactional-relay"
-}
-```
-
-Over SMTP the equivalent is the `X-EE-Gateway` header. The message still belongs to the account: its Sent Mail copy, bounce detection, and webhooks work as for any other submission.
+[SMTP Gateways](/docs/sending/smtp-gateways) documents the gateway record, the API that registers and edits one, the permission groups involved, and what a gateway changes about a delivery.
 
 ## Scheduled Sending
 
@@ -401,7 +380,7 @@ A `messageBounce` payload carries:
 - **messageId**: the `Message-ID` of the original message
 - **bounceMessage**: the EmailEngine ID of the bounce email itself
 
-The webhook is sent only when the report yields `action`, `recipient` and `messageId` together; a bounce that cannot be tied to a sent message is logged instead. With classification enabled, `response` also carries `category`, `recommendedAction`, `blocklist` and `retryAfter`. [Bounces](/docs/advanced/bounces) has the full field list and the categories.
+The webhook is sent only when the report yields `action`, `recipient` and `messageId` together; a bounce that cannot be tied to a sent message is logged instead. With classification enabled, `response` also carries `category`, `recommendedAction`, `blocklist` and `retryAfter`. [Bounces](/docs/sending/deliverability/bounces) has the full field list and the categories.
 
 ### Tracking Bounces
 
@@ -481,7 +460,7 @@ Open **System > Queues** in the admin interface for the Bull Board dashboard and
 
 ### Retry Behavior
 
-A temporary failure is retried with exponential backoff: 5 seconds after the first failed attempt, then 10, 20, 40 seconds and so on, with jitter shortening each delay by up to 20% so that a batch of failures does not retry in lockstep. The default is 10 attempts, set globally as **Retry Attempts** under **Configuration > Email Processing** (`deliveryAttempts` on `POST /v1/settings`) and per message with `deliveryAttempts` on submit or the `X-EE-Delivery-Attempts` header. A permanent rejection, an SMTP 5xx other than 503, ends the job before the attempts run out. [Outbox queue](/docs/sending/outbox-queue) has the full classification.
+A temporary failure is retried with exponential backoff: 5 seconds after the first failed attempt, then 10, 20, 40 seconds and so on, with jitter shortening each delay by up to 20% so that a batch of failures does not retry in lockstep. The default is 10 attempts, set globally as **Delivery attempts** under **Configuration > Email Processing** (`deliveryAttempts` on `POST /v1/settings`) and per message with `deliveryAttempts` on submit or the `X-EE-Delivery-Attempts` header. A permanent rejection, an SMTP 5xx other than 503, ends the job before the attempts run out. [Outbox queue](/docs/sending/outbox-queue) has the full classification.
 
 ### Manual Queue Management
 
@@ -499,6 +478,6 @@ For high-volume sending:
 
 - [SMTP server](/docs/sending/smtp-interface) - The submission interface this page relays through
 - [Outbox queue](/docs/sending/outbox-queue) - Retry behavior and how to watch a backlog
-- [Bounces](/docs/advanced/bounces) - Recognizing a rejection that arrives as mail
-- [Blocklists](/docs/advanced/blocklists) - Suppressing addresses that have already bounced
-- [Delivery testing](/docs/advanced/email-authentication-testing) - Checking SPF, DKIM, and DMARC before a campaign
+- [Bounces](/docs/sending/deliverability/bounces) - Recognizing a rejection that arrives as mail
+- [Suppression Lists](/docs/sending/deliverability/suppression-lists) - Suppressing addresses that have already bounced or unsubscribed
+- [Delivery testing](/docs/sending/deliverability/email-authentication-testing) - Checking SPF, DKIM, and DMARC before a campaign

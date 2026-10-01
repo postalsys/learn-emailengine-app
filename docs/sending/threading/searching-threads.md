@@ -311,5 +311,5 @@ The cursor carries the backend it came from as a prefix: `imap_` for IMAP accoun
 
 - [Provider support](/docs/sending/threading/provider-support) - Which providers support the `\All` folder
 - [Searching messages](/docs/receiving/searching) - The full search term reference
-- [Threading overview](/docs/sending/threading/overview) - Where a `threadId` comes from
+- [Threading overview](/docs/sending/threading) - Where a `threadId` comes from
 - [Messages API](/docs/api-reference/messages-api) - Paging through a large result set

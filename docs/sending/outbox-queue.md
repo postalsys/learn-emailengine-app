@@ -54,6 +54,8 @@ A job in the submit queue moves through these states:
 - **Permanent failure** - Moved to *Failed*, even if attempts remain
 - **Retries exhausted** - Moved to *Failed* after the last attempt
 
+A worker holds a lock on an active job for 3 minutes and renews it while the delivery runs. A job whose worker died (a crash, or a shutdown that could not wait for a long transaction) is detected as stalled within a minute and run again, up to 3 times, after which it fails. Since v2.79.8 a re-run reads the progress the previous run stored and does not send again once that says the server accepted the message, so a stall after the `250` costs the bookkeeping that followed it (the Sent copy, the flags on a replied message), not a duplicate delivery.
+
 ### 3. Completed
 
 **Description**: The SMTP server accepted the message.
@@ -92,6 +94,7 @@ Failed jobs are kept, unlike completed ones: a failure is the only record that a
 | `EENVELOPE` | Invalid sender or recipients |
 | `EMESSAGE` | Message content error |
 | `EPROTOCOL` | SMTP protocol mismatch |
+| `GatewayNotFound` | The gateway the message was queued for has been deleted since |
 
 Everything else (network timeouts, connection resets, a server that closed the connection) is retried.
 
@@ -196,6 +199,7 @@ curl "https://emailengine.example.com/v1/outbox" \
       "gateway": null,
       "proxy": null,
       "localAddress": null,
+      "idempotencyKey": null,
       "created": "2025-05-14T10:00:00.000Z",
       "scheduled": "2025-05-14T10:00:00.000Z",
       "nextAttempt": "2025-05-14T10:00:15.465Z",
@@ -221,7 +225,7 @@ curl "https://emailengine.example.com/v1/outbox?page=0&pageSize=10" \
   -H "Authorization: Bearer <token>"
 ```
 
-`source` says how the message entered the queue: `api`, `smtp` (the [SMTP server](./smtp-interface.md)), `ui` (a test message from the admin interface), or `test` (a [delivery test](/docs/advanced/inbox-placement-testing)).
+`source` says how the message entered the queue: `api`, `smtp` (the [SMTP server](./smtp-interface.md)), `ui` (a test message from the admin interface), or `test` (a [delivery test](/docs/sending/deliverability/inbox-placement-testing)). `idempotencyKey` is the key the submission carried, or `null`. An API submission also carries `useStructuredFormat`, the value of the query parameter of the same name, which only matters for MS Graph deliveries.
 
 The `progress` field tracks the delivery status of each message:
 
@@ -266,7 +270,7 @@ curl -XDELETE "https://emailengine.example.com/v1/outbox/4646ac53857fd2b2" \
 }
 ```
 
-This removes both the stored message and the job. It works for waiting, delayed, and failed jobs; a job that a worker holds at that moment (active) cannot be removed and the response carries `"deleted": false`, as does an unknown queue ID.
+This removes both the stored message and the job. It works for waiting, delayed, and failed jobs. A job that a worker holds at that moment (active) cannot be removed: the response carries `"deleted": false` together with `"locked": true` (v2.79.8 and later), and the call can be repeated once the attempt is over. An unknown queue ID answers `"deleted": false` alone.
 
 Useful for:
 - Cancelling a scheduled send
@@ -284,9 +288,9 @@ The maximum number of delivery attempts is set per instance, and can be overridd
 
 **Instance default**:
 1. Open **Configuration > Email Processing**
-2. Set **Retry Attempts** in the **Email Delivery** card (default: 10)
+2. Set **Delivery attempts** in the **Email Delivery** card (default: 10)
 
-The same value is the `deliveryAttempts` key in the [Settings API](/docs/api/post-v-1-settings).
+The same value is the `deliveryAttempts` key in the [Settings API](/docs/api/post-v-1-settings). Both the setting and the per-message override take 0 to 100; 0 and 1 both mean a single attempt.
 
 **Per message**, in the submit payload:
 
@@ -306,7 +310,7 @@ Permanent errors (see [Failed](#4-failed)) end the job immediately regardless of
 Completed jobs are removed as soon as they finish, to save Redis memory. To keep them:
 
 1. Open **Configuration > General**
-2. Set **Job History Limit** (`queueKeep`) to the number of completed jobs to keep. 0 disables the history
+2. Set **Completed job history limit** (`queueKeep`) to the number of completed jobs to keep. 0 disables the history
 
 Retained completed jobs are also dropped after 24 hours, whichever limit is reached first. Failed jobs have their own floor, described under [Failed](#4-failed): at least 500 entries for 7 days, or the Job History Limit when that is higher.
 
@@ -317,6 +321,10 @@ The retention policy is attached to a job when it is created, so a change applie
 ### SMTP Timeout
 
 The SMTP socket timeout during delivery is 2 minutes. A server that stays silent longer than that fails the attempt with a retriable error.
+
+### Throttling
+
+`EENGINE_SUBMIT_DELAY` makes each submit worker wait that long between two deliveries, so the queue drains at a fixed rate rather than as fast as the servers accept mail. It is a startup variable, described under [environment variables](/docs/configuration/environment-variables#queue-management).
 
 ## Webhook Events
 
@@ -394,4 +402,4 @@ Emitted when a job is finished for good, after the last attempt or on a permanen
 - [Basic Sending](/docs/sending/basic-sending) - How a message enters the queue
 - [messageDeliveryError](/docs/webhooks/messagedeliveryerror) and [messageFailed](/docs/webhooks/messagefailed) - The full payloads of the failure events
 - [Sending API](/docs/api-reference/sending-api) - The outbox endpoints in the API reference
-- [Bounces](/docs/advanced/bounces) - A failure that arrives by mail after the queue reported success
+- [Bounces](/docs/sending/deliverability/bounces) - A failure that arrives by mail after the queue reported success

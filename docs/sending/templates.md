@@ -22,7 +22,7 @@ You can manage templates in two ways:
 1. **Templates API**: Programmatically create, update, and delete templates
 2. **Admin Interface**: Visual interface at **Templates** in the side menu
 
-A template is either bound to one account or public. An account-bound template can only be used by that account; a submit call that names another account's template is refused with 404 (`TemplateNotFound`). A public template (`account: null`) can be used by every account.
+A template is either bound to one account or public. An account-bound template can only be used by that account; a submit call that names another account's template is refused with 404 (`TemplateNotFound`). A public template (`account: null`) can be used by every account. The account is encoded in the template ID, so an ID that EmailEngine did not issue is answered with 404 by every template endpoint (before v2.79.8 a malformed ID produced a 500).
 
 ![Email Templates List](/img/screenshots/15-templates-with-data.png)
 *Email templates list in the admin interface*
@@ -116,7 +116,7 @@ curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
   }'
 ```
 
-EmailEngine loads the template's `subject`, `text`, `html`, and `previewText` into the message, replacing any of those fields given in the same call, and renders them with `render.params`. The template's stored `format` decides how its HTML is interpreted; a `render.format` in the call is overridden by it.
+EmailEngine loads the template's `subject`, `text`, `html`, and `previewText` into the message, replacing the matching fields of the call, and renders them with `render.params`. The template's stored `format` decides how its HTML is interpreted; a `render.format` in the call is overridden by it. A template that carries `html` is always rendered. A template with only a subject or a plain-text body is rendered when the call includes `render` (an empty object is enough); without it the placeholders go out as literal text.
 
 ### With Other Properties
 
@@ -178,7 +178,7 @@ Available variables:
 - `{{account.name}}` - Sender's display name
 - `{{service.url}}` - EmailEngine instance URL (the `serviceUrl` setting, or the submission's `baseUrl`)
 - `{{params.*}}` - Any custom parameters you provide
-- `{{rcpt.unsubscribeUrl}}` - The recipient's unsubscribe link, in a mail merge that names a `listId` (see [virtual mailing lists](/docs/advanced/virtual-lists))
+- `{{rcpt.unsubscribeUrl}}` - The recipient's unsubscribe link, in a mail merge that names a `listId` (see [virtual mailing lists](/docs/sending/deliverability/suppression-lists))
 
 A rendering error (for example an unclosed block) fails the submit call with 422 and `Failed rendering html template`, naming the field that did not compile.
 
@@ -729,7 +729,7 @@ curl -XPUT "https://emailengine.example.com/v1/templates/template/AAABgUIbuG0AAA
   }'
 ```
 
-Top-level fields (`name`, `description`, `format`) are merged - include only the ones you want to change. The `content` object is different: when provided, it replaces the stored content entirely, so resubmit all content fields (`subject`, `text`, `html`, `previewText`) - any field you omit is removed from the template. The response is `{"updated": true, "account": "example", "id": "AAABgUIbuG0AAAAE"}`.
+Top-level fields (`name`, `description`, `format`) are merged - include only the ones you want to change. Before v2.79.8 an update that left `format` out reset it to `html`. The `content` object is different: when provided, it replaces the stored content entirely, so resubmit all content fields (`subject`, `text`, `html`, `previewText`) - any field you omit is removed from the template. The response is `{"updated": true, "account": "example", "id": "AAABgUIbuG0AAAAE"}`.
 
 ### Delete Template
 
@@ -804,5 +804,5 @@ Each recipient gets a personalized email based on their `params`. Give every ent
 - [Mail merge](/docs/sending/mail-merge) - Sending one template to a list with per-recipient values
 - [Basic sending](/docs/sending/basic-sending) - The submit fields a template fills in
 - [Templates API](/docs/api/get-v-1-templates) - The endpoint reference
-- [Virtual mailing lists](/docs/advanced/virtual-lists) - The unsubscribe link a template can place
-- [Pre-processing](/docs/advanced/pre-processing) - Rewriting a message after it is rendered
+- [Virtual mailing lists](/docs/sending/deliverability/suppression-lists) - The unsubscribe link a template can place
+- [Pre-processing](/docs/webhooks/pre-processing) - Rewriting a message after it is rendered

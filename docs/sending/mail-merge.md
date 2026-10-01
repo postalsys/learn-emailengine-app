@@ -174,7 +174,7 @@ Available variables:
 - `{{account.name}}` - The sender's display name
 - `{{service.url}}` - EmailEngine instance URL (the `serviceUrl` setting, or the message's `baseUrl`)
 - `{{params.*}}` - Your custom parameters
-- `{{rcpt.unsubscribeUrl}}` - A signed one-click unsubscribe link for this recipient. Present only when the merge names a `listId`; see [virtual mailing lists](/docs/advanced/virtual-lists)
+- `{{rcpt.unsubscribeUrl}}` - A signed one-click unsubscribe link for this recipient. Present only when the merge names a `listId`; see [virtual mailing lists](/docs/sending/deliverability/suppression-lists)
 
 ### Complex Personalization
 
@@ -369,7 +369,7 @@ All messages will be queued and sent at the specified time. An entry can carry i
 
 ### Unsubscribe Handling
 
-Name a `listId` (a subdomain-shaped identifier, registered on first use) and EmailEngine adds `List-ID`, `List-Unsubscribe`, and `List-Unsubscribe-Post` headers to every copy, with a signed one-click unsubscribe link per recipient. A recipient who has unsubscribed from that list is skipped: their response entry carries `"skipped": { "reason": "unsubscribe", "listId": "weekly-digest" }` instead of a queue ID. `listId` is only accepted together with `mailMerge`, and the headers need `serviceUrl` to be set. [Virtual mailing lists](/docs/advanced/virtual-lists) covers the whole flow.
+Name a `listId` (a subdomain-shaped identifier, registered on first use) and EmailEngine adds `List-ID`, `List-Unsubscribe`, and `List-Unsubscribe-Post` headers to every copy, with a signed one-click unsubscribe link per recipient. A recipient who has unsubscribed from that list is skipped: their response entry has `"success": true` and carries `"skipped": { "reason": "unsubscribe", "listId": "weekly-digest" }` instead of a queue ID. `listId` is only accepted together with `mailMerge`, and the headers need `serviceUrl` to be set. [Suppression Lists](/docs/sending/deliverability/suppression-lists) covers the whole flow.
 
 ## Rate Limiting and Throttling
 
@@ -725,7 +725,6 @@ Test with invalid data to ensure graceful failure:
 ## See Also
 
 - [Templates](/docs/sending/templates) - Storing the subject and body instead of repeating them per send
-- [Virtual mailing lists](/docs/advanced/virtual-lists) - Unsubscribe handling for a recurring send
 - [Outbox queue](/docs/sending/outbox-queue) - Watching a large merge drain
-- [Blocklists](/docs/advanced/blocklists) - Keeping unsubscribed and bounced addresses out of a merge
+- [Suppression Lists](/docs/sending/deliverability/suppression-lists) - Keeping unsubscribed and bounced addresses out of a merge
 - [Sending API](/docs/api-reference/sending-api) - The endpoint reference

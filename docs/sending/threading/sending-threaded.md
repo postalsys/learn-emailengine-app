@@ -119,7 +119,7 @@ curl -XPOST "https://emailengine.example.com/v1/account/example/submit" \
 
 EmailEngine then:
 
-- Builds `References` from the referenced message's `Message-ID`, `In-Reply-To`, and `References`, adding missing angle brackets and dropping duplicates
+- Builds `References` from the referenced message's `References` (or its `In-Reply-To` when it has none) and its `Message-ID`, adding missing angle brackets, dropping duplicates, and, since v2.82.0, cutting a chain longer than 21 entries to the thread root plus the 20 most recent IDs
 - Sets `In-Reply-To` to the referenced message's `Message-ID` for `reply` and `reply-all`
 - Derives the subject with a `Re:` or `Fwd:` prefix unless you supply one
 - Fills in the recipients of a reply
@@ -203,7 +203,7 @@ EmailEngine learns the final ID in these cases:
 
 ## See Also
 
-- [Threading overview](/docs/sending/threading/overview) - What each header does
+- [Threading overview](/docs/sending/threading) - What each header does
 - [Replies and forwards](/docs/sending/replies-forwards) - The automatic alternative to building headers
 - [messageSent webhook](/docs/webhooks/messagesent) - The full payload, including `originalMessageId`
 - [Mail merge](/docs/sending/mail-merge) - Sending a sequence to many recipients
