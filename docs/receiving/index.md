@@ -248,6 +248,9 @@ This section covers all aspects of receiving and processing emails:
 8. **[Tracking Deleted Messages](/docs/receiving/tracking-deleted)** - Monitoring message deletions
 9. **[Continuous Processing](/docs/receiving/continuous-processing)** - Building real-time email processing pipelines
 10. **[Exporting Messages](/docs/receiving/exporting)** - Bulk export with concurrency tuning
+11. **[Message IDs](/docs/receiving/ids-explained)** - What the id, emailId, threadId and Message-ID identifiers are and when each is stable
+12. **[AI Processing](/docs/receiving/ai-processing)** - The summary, sentiment and risk checks EmailEngine can add to a new message
+13. **[IMAP Proxy Server](/docs/receiving/imap-proxy-server)** - Reading an account with a standard IMAP client through EmailEngine
 
 ## See Also
 

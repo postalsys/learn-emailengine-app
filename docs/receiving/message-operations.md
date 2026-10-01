@@ -74,7 +74,7 @@ curl "https://emailengine.example.com/v1/account/example/messages?path=INBOX" \
 }
 ```
 
-Messages are returned newest first. `uid` is present for IMAP accounts only, and `emailId` and `threadId` only when the server provides them (Gmail API, Graph, and IMAP servers with the OBJECTID extension). `total` and `pages` are exact for IMAP accounts, approximate for Gmail API accounts, and can be missing for Graph accounts.
+Messages are returned newest first. Which fields an entry carries, and on which backends, is in the [message object reference](/docs/api-reference/messages-api#fields); `total` and `pages` are exact for IMAP accounts, approximate for Gmail API accounts, and can be missing for Graph accounts.
 
 ### Pagination
 
@@ -272,7 +272,7 @@ If you intend to render the HTML body in a web page, request it with `webSafeHtm
 }
 ```
 
-`headers` holds every header of the message, keyed in lower case, each value an array because a header can repeat. The response also carries `isAutoReply: true` when the message looks like an automatic reply (see [Tracking Email Replies](/docs/receiving/tracking-replies#filtering-auto-responses)) and `bounces` when EmailEngine has matched a bounce to it.
+The response is the [message object](/docs/api-reference/messages-api#the-message-object). Compared with a listing entry it adds `headers`, `sender`, `bcc` and, for a delivery failure report in the Inbox, `isBounce` with `relatedMessageId`; the field reference says which fields each backend returns.
 
 **JavaScript Example:**
 
@@ -343,6 +343,52 @@ const source = await getMessageSource('example', 'AAAAAQAAAeE');
 console.log(source);
 ```
 
+## Uploading Messages
+
+`POST /v1/account/{account}/message` appends a message to a folder without sending it: a draft the user can finish in their mail client, a copy of a message sent elsewhere, or an archived message being migrated. The body names the folder in `path` and carries either `raw`, a base64-encoded RFC 822 message, or the structured fields `from`, `to`, `cc`, `bcc`, `subject`, `text`, `html`, `attachments`, `messageId` and `headers`. `flags` sets the stored flags and `internalDate` the stored date. See the [upload message API](/docs/api/post-v-1-account-account-message) for the full schema.
+
+A draft that a later [draft submission](/docs/sending/basic-sending#sending-stored-drafts) can send is an upload to the Drafts folder with the `\Draft` flag:
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/account/example/message" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "path": "\\Drafts",
+    "flags": ["\\Draft"],
+    "to": [{ "name": "Jane Smith", "address": "jane@company.com" }],
+    "subject": "Meeting Tomorrow",
+    "text": "Hi Jane, can we meet at 10am?"
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "id": "AAAAAgAACrI",
+  "path": "Drafts",
+  "uid": 12345,
+  "uidValidity": "12345",
+  "seq": 12345,
+  "messageId": "<f2f1f9b3-8d0a-4a26-9e59-2c3f6a4f1a3c@example.com>"
+}
+```
+
+`uid`, `uidValidity` and `seq` are present on IMAP accounts only; `messageId` is the generated or supplied Message-ID. With `reference`, the upload becomes a reply or forward of a stored message, with `In-Reply-To` and `References` derived from it the way a [reply submission](/docs/sending/replies-forwards) derives them, and the response adds `reference.success`, which is `false` with `reference.error` when the referenced message was not found.
+
+What is stored depends on the backend:
+
+| Backend         | Behavior                                                                                                                                                                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| IMAP            | An `APPEND` to the folder with the given flags and internal date                                                                                                                                                                                  |
+| Gmail API       | Inserted with the folder's label as its only label, so the message is stored as read. `flags` and `internalDate` are not applied; the stored date follows the message's `Date` header. A `reference.threadId` places the message in that thread |
+| Microsoft Graph | Created in the folder. Of the flags, `\Seen` and `\Draft` are applied; `internalDate` sets the delivery time. A message Graph refuses answers 400 with Graph's error code in `code` (since v2.82.0)                                           |
+
+:::note Threaded uploads on MS Graph
+Since v2.82.0 a reply or forward uploaded to an MS Graph account keeps its `In-Reply-To` and `References` headers, which EmailEngine sets through the MAPI properties Exchange builds them from. Earlier releases rejected every such upload with `InvalidInternetMessageHeader`, because Graph accepts only `x-` prefixed names in `internetMessageHeaders`. Custom headers without that prefix are now dropped rather than failing the request, and at most five are stored.
+:::
+
 ## Moving Messages
 
 ### Move to Different Folder
@@ -368,9 +414,9 @@ curl -X PUT "https://emailengine.example.com/v1/account/example/message/AAAAAQAA
 }
 ```
 
-The response includes the destination `path` and, if the server provides them, the message's new `id` in the target folder and, for IMAP accounts, its new `uid`. An IMAP message gets a new `id` when it moves, because the ID encodes the folder and UID; see [Message IDs](/docs/advanced/ids-explained).
+The response includes the destination `path` and, if the server provides them, the message's new `id` in the target folder and, for IMAP accounts, its new `uid`. An IMAP message gets a new `id` when it moves, because the ID encodes the folder and UID; see [Message IDs](/docs/receiving/ids-explained).
 
-On a Gmail API account a move is a label change: the target label is added and, if you pass `source`, that label is removed. Without `source` the message keeps its old label as well:
+On a Gmail API account a move is a label change: the target label is added and, if you pass `source`, that label is removed. Without `source`, the system folder labels the message carries (`INBOX`, `SPAM`, `TRASH`) are removed and its user labels are kept, which is what a move in Gmail's own interface does. In releases before v2.79.8 the target label was added and every existing label was left in place:
 
 ```json
 {
@@ -505,7 +551,7 @@ What a delete does, and what the response says, depends on the backend:
 | --------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
 | IMAP            | Moves to the `\Trash` folder and returns `deleted: false` with `moved`. A message already in `\Trash` or `\Junk`, or on an account with no Trash folder, is expunged and returns `deleted: true` | Expunges wherever the message is; `deleted: true` |
 | Gmail API       | Adds the `TRASH` label and returns `deleted: true` with `moved.message`                                   | Not supported; the message still goes to Trash    |
-| Microsoft Graph | Moves to Deleted Items and returns `deleted: true` with `moved`                                           | Deletes permanently; `deleted: true`               |
+| Microsoft Graph | Moves to Deleted Items and returns `deleted: true` with `moved`. A message already in Deleted Items is deleted permanently (v2.79.8 and later) | Deletes permanently; `deleted: true`               |
 
 So `deleted: false` is the only reliable signal that a message was moved rather than removed, and it only occurs on IMAP accounts. Check for `moved` when the distinction matters.
 
@@ -933,5 +979,5 @@ async function syncMessageFlags(accountId, folderPath, db) {
 - [Searching messages](/docs/receiving/searching) - Finding the messages to operate on
 - [Attachments](/docs/receiving/attachments) - Downloading what a message carries
 - [Web-safe HTML](/docs/receiving/web-safe-html) - Rendering a body in your own UI
-- [Message IDs](/docs/advanced/ids-explained) - Which identifier survives a move, and which does not
+- [Message IDs](/docs/receiving/ids-explained) - Which identifier survives a move, and which does not
 - [Messages API](/docs/api-reference/messages-api) - The endpoint reference

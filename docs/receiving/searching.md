@@ -14,7 +14,7 @@ keywords:
 
 The [search endpoint](/docs/api/post-v-1-account-account-search) finds messages in a connected account. The search runs on the mail server, so only matching messages are transferred: for IMAP accounts the criteria are translated into an IMAP SEARCH command, for Gmail API accounts into a Gmail query string, and for Microsoft Graph accounts into an OData `$filter` (or `$search`, see below).
 
-The request is a `POST` with the folder in the `path` query parameter and the criteria in a `search` object in the body. The response has the same shape as the [message listing](/docs/receiving/message-operations#listing-messages), newest first, with the same `cursor` paging.
+The request is a `POST` with the folder in the `path` query parameter and the criteria in a `search` object in the body. Both are required; an empty `search` object matches every message in the folder. The response has the same shape as the [message listing](/docs/receiving/message-operations#listing-messages), newest first, with the same `cursor` paging.
 
 ## Basic Search
 
@@ -228,7 +228,7 @@ Size criteria are applied by IMAP accounts, Gmail IMAP included. Microsoft Graph
 { search: { emailIds: ['id1', 'id2', 'id3'] } }
 ```
 
-`emailId` and `threadId` need a server that assigns such IDs: Gmail API, Microsoft Graph, Gmail over IMAP, and IMAP servers with the OBJECTID extension (RFC 8474); other IMAP servers fail the search with a 422 and the code `MissingServerExtension`. The values are the `emailId` and `threadId` fields of listed messages; see [Message IDs](/docs/advanced/ids-explained).
+`emailId` and `threadId` need a server that assigns such IDs: Gmail API, Microsoft Graph, Gmail over IMAP, and IMAP servers with the OBJECTID extension (RFC 8474); other IMAP servers fail the search with a 422 and the code `MissingServerExtension`. The values are the `emailId` and `threadId` fields of listed messages; see [Message IDs](/docs/receiving/ids-explained).
 
 ### Gmail-Specific Operators
 
@@ -610,5 +610,5 @@ async function searchGmailByLabel(accountId, label) {
 
 - [Message operations](/docs/receiving/message-operations) - Acting on the messages a search returns, one at a time or in bulk
 - [Searching threads](/docs/sending/threading/searching-threads) - Retrieving a whole conversation
-- [Message IDs](/docs/advanced/ids-explained) - The identifiers a search result carries
+- [Message IDs](/docs/receiving/ids-explained) - The identifiers a search result carries
 - [Search API](/docs/api/post-v-1-account-account-search) - The endpoint reference

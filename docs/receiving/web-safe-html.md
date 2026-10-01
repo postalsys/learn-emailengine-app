@@ -83,7 +83,7 @@ No `plain` field comes back with it: when a message carries no HTML part, the pl
 
 ## What the Processing Does
 
-**Sanitization.** The HTML goes through [DOMPurify](https://github.com/cure53/DOMPurify) twice, before and after style inlining. Scripts, event handlers, and embedding tags are removed: `script`, `iframe`, `frame`, `frameset`, `noframes`, `object`, `embed`, `applet`, `canvas`, `audio`, `video`, `noscript`, `dialog`, `template`, plus the document-level `title`, `meta`, `link`, `base`, and `basefont`.
+**Sanitization.** The HTML goes through [DOMPurify](https://github.com/cure53/DOMPurify) twice, before and after style inlining. Scripts, event handlers, embedding tags and form controls are removed: `script`, `iframe`, `frame`, `frameset`, `noframes`, `object`, `embed`, `applet`, `canvas`, `audio`, `video`, `noscript`, `dialog`, `template`, `form`, `input`, `button`, `select` and `textarea`, plus the document-level `title`, `meta`, `link`, `base`, and `basefont`. The `action`, `formaction`, `popover` and `popovertarget` attributes are dropped wherever they appear. Only the first 256 KB of `style` text in a message is kept, and a message whose markup nests more than 1,000 levels deep, or that the sanitizer cannot process at all, is rendered as escaped plain text instead.
 
 **Structure repair.** Unclosed and malformed markup is normalized into valid HTML. The result is the content of the message body only, a fragment rather than a full document, so you can inject it into a container element.
 

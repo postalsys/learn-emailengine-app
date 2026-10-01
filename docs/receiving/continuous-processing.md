@@ -717,17 +717,15 @@ app.get('/health', (req, res) => {
 
 ### Watching account state, and polling
 
-Webhooks report messages. Whether an account is still connected and able to produce them is a separate feed: `GET /v1/changes` is a Server-Sent Events stream of account state transitions, the same one the admin dashboard uses, documented under [Streaming Account State Changes](/docs/api-reference/accounts-api#streaming-account-state-changes). It carries no message data, and a listener that was disconnected misses whatever happened in between, so treat it as a live signal and `GET /v1/account/{account}` as the record.
-
-If your endpoint cannot receive webhooks at all, the fallback is to poll the listing. `GET /v1/account/{account}/messages?path=INBOX&pageSize=100` returns the newest messages first, so a poller keeps the newest `uid` it has processed per folder and stops paging as soon as it reaches it. That covers new mail only; it does not see flag changes or deletions, and a busy account is cheaper to follow through webhooks.
+Webhooks report messages. Whether an account is still connected and able to produce them is a separate feed: `GET /v1/changes` streams every account state transition, and the sync warnings an API account raises when it had to skip messages, as Server-Sent Events. The event types, the message format and the polling fallback for an application that cannot receive either are documented under [Streaming Account State Changes](/docs/api-reference/accounts-api#streaming-account-state-changes).
 
 ### Duplicate Detection
 
 The same message can be reported more than once:
 
 - **Retries.** A delivery that your endpoint did not acknowledge is retried with the same body. The `X-EE-Wh-Event-Id` request header is stable across retries of one event, so it is the key for exactly-once handling.
-- **Moves.** Moving a message into a monitored folder makes it a new message there, with a new `id`, and it is reported again. The payload's `seemsLikeNew` is `false` when EmailEngine can tell the message was moved or copied rather than delivered.
-- **Gmail labels over IMAP.** Gmail exposes every label as an IMAP folder, so a message that carries several labels is visible in several folders and is reported once per folder. Over the Gmail API the same message is one object with a `labels` array and is reported once.
+- **Moves.** Moving a message into a monitored folder makes it a new message there, with a new `id`, and it is reported again. The payload's `seemsLikeNew` is `false` when EmailEngine has already seen the message's `emailId` or Message-ID in this account, or when the message is in the Sent folder, and `true` otherwise; Gmail API accounts always report `true`.
+- **Gmail over IMAP.** Gmail exposes every label as an IMAP folder, but EmailEngine syncs only `[Gmail]/All Mail`, `[Gmail]/Spam` and `[Gmail]/Trash` on such an account, so a message that carries several labels is reported once, from All Mail, with its labels in `labels`. Moving it to Spam or Trash removes it from All Mail and reports it again in the destination. Over the Gmail API the same message is one object and is reported once.
 
 To collapse those into one record, key on the message rather than on its location: `emailId` where the server provides one (Gmail, and IMAP servers with the `OBJECTID` extension), and the `Message-ID` header in `messageId` otherwise.
 
@@ -793,5 +791,5 @@ In-memory sets are lost on restart; a production pipeline keeps the same keys in
 - [messageNew webhook](/docs/webhooks/messagenew) - The payload every example on this page consumes
 - [Webhooks overview](/docs/webhooks/overview) - Delivery guarantees and retries for the events driving a pipeline
 - [IMAP indexers](/docs/accounts/imap-indexers) - Choosing how much change detection a pipeline needs
-- [Pre-processing](/docs/advanced/pre-processing) - Filtering events before they reach your endpoint
+- [Pre-processing](/docs/webhooks/pre-processing) - Filtering events before they reach your endpoint
 - [Exporting messages](/docs/receiving/exporting) - Backfilling history the pipeline did not see

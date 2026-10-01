@@ -233,7 +233,7 @@ Additional settings control maximum export sizes:
 
 2. **Disk I/O**: Multiple concurrent gzip streams write to `EENGINE_EXPORT_PATH` at the same time.
 
-3. **Email Provider Limits**: A rate-limited batch is retried up to five times with exponential backoff starting at 5 seconds before the messages in it are skipped. Watch for those retries in the logs before raising the provider batch sizes.
+3. **Email Provider Limits**: On a Gmail API or MS Graph account, a rate-limited batch is retried up to five times with exponential backoff starting at 5 seconds before the messages in it are skipped. On an IMAP account each message fetch that fails on a transient error is retried three times with exponential backoff starting at 2 seconds. Watch for those retries in the logs before raising the provider batch sizes.
 
 4. **Redis**: The index of messages to export lives in Redis for the life of the export and expires with it.
 
@@ -302,7 +302,7 @@ The `exportFailed` payload carries `exportId`, `error`, `errorCode`, the `phase`
 
 ### List Exports
 
-Get all exports for an account using the [List Exports API endpoint](/docs/api/get-v-1-account-account-exports):
+Get all exports for an account using the [List Exports API endpoint](/docs/api/get-v-1-account-account-exports). The listing is paged with the `page` (zero-based, default 0) and `pageSize` (default 20, maximum 1000) query parameters:
 
 ```bash
 curl "https://emailengine.example.com/v1/account/user123/exports" \

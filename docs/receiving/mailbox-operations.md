@@ -37,6 +37,8 @@ For Gmail API accounts a mailbox is a label, and for Microsoft Graph accounts it
 
 It's entirely valid for an account to have only INBOX and no other folders.
 
+EmailEngine compares a configured folder path against the server's spelling of the inbox case-insensitively (v2.80.0 and later), so an account configured with `path: ["INBOX"]` syncs on a server that lists the folder as `Inbox`. Only the top-level inbox name folds this way; a nested path such as `Inbox/Archive` has to match the server's spelling.
+
 ### Folder Hierarchies
 
 Folders can be nested using a delimiter (usually `/` or `.`):
@@ -317,7 +319,7 @@ curl -X POST "https://emailengine.example.com/v1/account/example/mailbox" \
 }
 ```
 
-`mailboxId` is included when the server provides one (Gmail API and Graph accounts, and IMAP servers with the OBJECTID extension). `created` is `false` when the folder already existed on a Gmail API or Graph account, or when an IMAP server refuses with a bare `NO`. An IMAP server that attaches a response code to its refusal, `[ALREADYEXISTS]` for an existing folder, gets a 400 instead, with that code in `code` and the server's text in `details.response`.
+`mailboxId` is included when the server provides one (Gmail API and Graph accounts, and IMAP servers with the OBJECTID extension). `created` is `false` when the folder already existed on a Gmail API or Graph account, or when an IMAP server refuses with a bare `NO`. An IMAP server that attaches a response code to its refusal, `[ALREADYEXISTS]` for an existing folder, gets a 400 instead, with that code in `code` and the server's text in `details.response`. A Gmail API account answers a label name Gmail rejects with a 400 as well, carrying Gmail's error status in `code` and its message in `details.response`.
 
 :::tip Array Syntax for Subfolders
 Use array syntax `["Parent", "Child"]` instead of string `"Parent/Child"` when creating nested folders. Different servers use different delimiters (`/` vs `.`), and the array syntax works universally across all IMAP servers.

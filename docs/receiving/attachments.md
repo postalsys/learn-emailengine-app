@@ -57,7 +57,7 @@ Each attachment includes:
 
 | Field | Type | Meaning |
 |-------|------|---------|
-| `id` | string | Attachment identifier. This is the value the download endpoint takes. It encodes the message and the MIME part, so it changes when the message moves; see [EmailEngine IDs Explained](/docs/advanced/ids-explained) |
+| `id` | string | Attachment identifier. This is the value the download endpoint takes. It encodes the message and the MIME part, so it changes when the message moves; see [EmailEngine IDs Explained](/docs/receiving/ids-explained) |
 | `contentType` | string | MIME type of the part |
 | `filename` | string | Original filename. Absent when the part carries none |
 | `encodedSize` | integer | Size as stored in the message, that is base64-encoded. The decoded file is roughly 75% of this |
@@ -508,13 +508,15 @@ The listing endpoint already includes the `attachments` array for every message,
 ```javascript
 async function extractAttachmentMetadata(accountId, folderPath) {
   const metadata = [];
-  const pageSize = 100;
+  let cursor = null;
 
-  for (let page = 0; ; page++) {
+  do {
     const url = new URL(`${BASE_URL}/v1/account/${accountId}/messages`);
     url.searchParams.set('path', folderPath);
-    url.searchParams.set('page', page);
-    url.searchParams.set('pageSize', pageSize);
+    url.searchParams.set('pageSize', 100);
+    if (cursor) {
+      url.searchParams.set('cursor', cursor);
+    }
 
     const response = await fetch(url, { headers: HEADERS });
     if (!response.ok) {
@@ -540,8 +542,9 @@ async function extractAttachmentMetadata(accountId, folderPath) {
       }
     }
 
-    if (page + 1 >= listing.pages) break;
-  }
+    // nextPageCursor works on every backend; a page number does not (Gmail API rejects page > 0)
+    cursor = listing.nextPageCursor;
+  } while (cursor);
 
   return metadata;
 }
