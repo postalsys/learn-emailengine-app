@@ -279,13 +279,14 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
 |---------|------|---------|-------------|
 | `generateEmailSummary` | boolean | off | Generate a summary for each incoming message. Turning it on also turns `notifyText` on |
 | `openAiAPIKey` | string | unset | OpenAI API key |
-| `openAiModel` | string | unset | Model name |
+| `openAiModel` | string | `gpt-6-luna` | Model name |
 | `openAiAPIUrl` | string | `https://api.openai.com` | API base URL |
-| `openAiTemperature` | number | unset | Sampling temperature |
-| `openAiTopP` | number | unset | Nucleus sampling parameter |
-| `openAiMaxTokens` | number | unset (model-dependent) | Token limit per request |
-| `openAiPrompt` | string | unset | Custom system prompt |
-| `openAiPreProcessingFn` | string | unset | JavaScript filter deciding which messages are processed |
+| `openAiTemperature` | number | unset | Sampling temperature. Not sent to a reasoning model while it reasons |
+| `openAiTopP` | number | unset | Nucleus sampling parameter. Not sent to a reasoning model while it reasons |
+| `openAiReasoningEffort` | string | unset | Reasoning effort for reasoning models (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`). Unset sends `low` to a reasoning model and nothing to any other |
+| `openAiMaxTokens` | number | 30000 | Token budget for the prompt, the instructions and the email together |
+| `openAiPrompt` | string | unset | Instructions for the AI, sent as the system message. Unset means the built-in instructions |
+| `openAiPreProcessingFn` | string | unset | JavaScript filter deciding which messages are processed. Unset means every Inbox message |
 | `openAiGenerateEmbeddings` | boolean | off | Removed in v2.82.0. Still accepted, has no effect |
 
 `openAiAPIUrl` points these calls at an OpenAI-compatible service other than OpenAI itself, and it has to include whatever path prefix that service mounts its API under. For Azure OpenAI that means `https://<your-resource>.openai.azure.com/openai/v1`, not the bare host. See [AI and ChatGPT integration](/docs/integrations/ai-chatgpt) for what the generated fields contain and where they appear.

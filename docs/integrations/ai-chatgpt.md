@@ -44,9 +44,11 @@ _The AI Configuration section with the enable checkbox, API key field and model 
 
 ### Model Selection
 
-The dropdown is populated from your own API key: **Refresh Models** calls the model listing endpoint of the configured API and stores what came back, so the choices are whatever that key can use. Until the first refresh, the dropdown offers a small built-in list; in EmailEngine 2.79.4 (August 2026) that list is GPT-5 Mini (`gpt-5-mini`), GPT-5, and GPT-5 Nano, and the first entry is the one the form starts on.
+The dropdown is populated from your own API key: **Refresh Models** calls the model listing endpoint of the configured API, keeps the chat models of what came back, and stores them, so the choices are whatever that key can use. Until the first refresh, the dropdown offers a small built-in list; in EmailEngine 2.82.0 (October 2026) that list is GPT-6 Luna (`gpt-6-luna`), GPT-6 Sol, GPT-6 Astra, GPT-5.6 Luna, GPT-5.6 Terra, GPT-5.4 Mini, GPT-5.4 Nano and GPT-5 Mini, and the first entry is the one the form starts on.
 
-`openAiModel` has no built-in default of its own. The admin form always submits the selected entry, but a configuration written through the Settings API must set `openAiModel` explicitly, or summary requests fail. Email processing is short-context classification and summarization rather than deep reasoning, so the smallest model in the list is the reasonable starting point; move up only if the summaries or the extracted fields are visibly worse than you need, and compare on your own mail.
+A configuration written through the Settings API that leaves `openAiModel` unset gets `gpt-6-luna`. Email processing is short-context classification and summarization rather than deep reasoning, so the smallest model in the list is the reasonable starting point; move up only if the summaries or the extracted fields are visibly worse than you need, and compare on your own mail.
+
+Reasoning models, GPT-5 and later, take a **Reasoning effort** (`openAiReasoningEffort`). Left at its default, EmailEngine sends `low` to such a model, which keeps the hidden reasoning that is billed as output short, and sends nothing to any other model. A model that does not support the chosen value, or the temperature and top-p set for it, gets the request again without that parameter, so one configuration works across OpenAI's model families and OpenAI-compatible servers.
 
 Because the list comes from the API, a model named here can be retired and a new one can appear without this page changing. Check what the dropdown offers rather than planning around a specific name.
 
@@ -56,12 +58,12 @@ When AI processing is enabled, EmailEngine processes every new message whose fol
 
 1. Email arrives in monitored account
 2. EmailEngine runs the [pre-processing filter](#ai-pre-processing-filter-openaipreprocessingfn), if one is configured
-3. The headers, sender, subject, attachment list, and text are sent to the API for analysis, with a two-minute timeout per message
-4. Analysis results are added to the `messageNew` webhook payload
+3. The decoded subject, sender and date, the headers that identify the message and carry the receiving server's authentication results, the attachment list, and the text are sent to the API for analysis, with a two-minute timeout per message
+4. What the model returns is added to the `messageNew` webhook payload as `summary`
 
 ### Webhook Enhancement
 
-With AI processing enabled, `messageNew` webhooks include additional sections:
+With AI processing enabled, `messageNew` webhooks carry the model's answer as `summary`. With the built-in instructions it looks like this:
 
 ```json
 {
@@ -75,38 +77,38 @@ With AI processing enabled, `messageNew` webhooks include additional sections:
     },
     "subject": "Project meeting tomorrow at 2pm",
     "summary": {
-      "id": "chatcmpl-7IzVIEp5UL3hdQ3aZJ8AHyrJrt3R0",
-      "tokens": 245,
-      "model": "gpt-5-mini",
+      "summary": "Jane asks to attend a project meeting tomorrow at 2pm in conference room A to discuss the Q4 roadmap.",
       "sentiment": "positive",
-      "summary": "Request to attend project meeting tomorrow at 2pm in conference room A to discuss Q4 roadmap.",
       "shouldReply": true,
+      "riskAssessment": {
+        "risk": 1
+      },
       "events": [
         {
           "description": "Project meeting",
-          "startTime": "2023-06-07T14:00:00"
+          "type": "meeting",
+          "startTime": "2023-06-07T14:00:00",
+          "location": "conference room A"
         }
       ],
       "actions": [
         {
-          "description": "Attend project meeting",
+          "description": "Attend the project meeting",
           "dueDate": "2023-06-07"
         }
       ]
-    },
-    "riskAssessment": {
-      "risk": 1,
-      "assessment": "Sender information matches and authentication checks have passed."
     }
   }
 }
 ```
 
+The object is delivered as the model returned it: nothing is added to it and nothing is moved out of it. The properties the built-in instructions ask for are checked on the way (the sentiment is one of its three values, the risk is an integer from 1 to 5, the lists hold objects), and a value that does not fit is dropped rather than passed on.
+
 ### Extracted Information
 
 #### 1. Content Summary
 
-Condensed version of email content (sentence or short paragraph):
+One sentence of at most 150 characters saying what the sender wants or informs about:
 
 ```json
 {
@@ -140,17 +142,19 @@ Boolean flag indicating if sender expects a response:
 
 #### 4. Events List
 
-Events with dates mentioned in the email:
+Meetings, appointments, deadlines and other events with a date or time, each with a `type` of `meeting`, `appointment`, `deadline` or `event`, a `startTime`, and `endTime` and `location` when the email states them. Times are ISO 8601 without a timezone, as local time at the sender:
 
 ```json
 {
   "events": [
     {
       "description": "Flower bouquets for choir teachers",
+      "type": "event",
       "startTime": "2023-05-22"
     },
     {
       "description": "End of year celebration",
+      "type": "event",
       "startTime": "2023-06-15",
       "endTime": "2023-06-15T18:00:00"
     }
@@ -179,51 +183,32 @@ Tasks recipient is expected to perform:
 
 #### 6. Fraud Risk Assessment
 
-Risk score from 1 to 5 (5 being highest risk) with explanation:
+Risk score from 1 to 5 (5 being highest risk), with the factors that raised it when it is above 1. It sits inside `summary`:
 
 ```json
 {
-  "riskAssessment": {
-    "risk": 4,
-    "assessment": "Email contains urgent request for money transfer and sender domain doesn't match claimed identity. Possible phishing attempt."
+  "summary": {
+    "riskAssessment": {
+      "risk": 4,
+      "assessment": "Urgent request for a money transfer, and the sender address does not match the organisation the message claims to come from."
+    }
   }
 }
 ```
+
+The score draws on the `authentication-results` header the receiving server added, which EmailEngine fetches for the summary whatever the `notifyHeaders` setting asks for. A message without one is scored as "authentication unknown", not as failed. The instructions also tell the model that the email is untrusted data, so a message that asks the model to change its analysis counts as a risk factor rather than as an instruction.
 
 **Note**: AI is good at detecting scams but less effective with spam.
 
-### Metadata Storage
+### Request Usage
 
-#### Token Usage
+What each request cost is not part of the webhook payload. EmailEngine logs it at the `info` level for every summary it generated, as the `usage` object of a `Generated email summary` entry: the request id, the model requested and the one the API reports it served, the total, prompt and completion token counts, the request time in milliseconds and how many characters were cut from the text to fit the token budget. The same counts feed two Prometheus counters on `/metrics`: `ai_requests` by `model` and `status` (`success` or `failure`), and `ai_tokens` by `model` and `type` (`prompt` or `completion`).
 
-The `tokens` field shows OpenAI API tokens consumed:
+Before v2.82.0 the request id, token count and model name were merged into the `summary` object itself as `id`, `tokens` and `model`. A handler that read them from there reads the log or the metrics instead.
 
-```json
-{
-  "summary": {
-    "tokens": 2060,
-    "model": "gpt-5-mini"
-  }
-}
-```
+### Custom Instructions
 
-Use this to track API costs and usage.
-
-#### Request ID
-
-The `id` field contains the OpenAI request ID for troubleshooting:
-
-```json
-{
-  "summary": {
-    "id": "chatcmpl-7IzVIEp5UL3hdQ3aZJ8AHyrJrt3R0"
-  }
-}
-```
-
-### Custom Prompts
-
-Customize the AI analysis by modifying the system prompt:
+Customize the AI analysis by editing the instructions, which EmailEngine sends as the system message ahead of the email:
 
 1. Go to **Configuration** > **AI Processing**
 2. Scroll to **AI Instructions** section
@@ -232,7 +217,9 @@ Customize the AI analysis by modifying the system prompt:
 5. Save configuration
 
 ![AI Instructions prompt editor](/img/screenshots/ai-prompt-editor.png)
-_The AI Instructions section holds the editable system prompt_
+_The AI Instructions section holds the editable instructions_
+
+Whatever the instructions ask for is what `summary` carries. The properties of the built-in instructions are still normalized when they appear, so an instruction set that keeps `riskAssessment` but scores it on another scale sees the score clamped to 1 to 5; give such a property a new name instead.
 
 #### Example: Add Language Detection
 
@@ -280,13 +267,14 @@ Everything on the **Configuration > AI Processing** page is also settable throug
 |---------|---------|
 | `openAiAPIKey` | API key. Required before any AI processing runs |
 | `generateEmailSummary` | Turn on summaries, sentiment, events, actions, and risk assessment |
-| `openAiModel` | Model name, for example `gpt-5-mini`. No default |
-| `openAiPrompt` | The system prompt, as edited above |
+| `openAiModel` | Model name, for example `gpt-6-luna`, which is also the default |
+| `openAiPrompt` | The AI instructions, as edited above. Unset means the built-in instructions |
 | `openAiAPIUrl` | Base URL of the API. Point this at Azure OpenAI (`https://<resource>.openai.azure.com/openai/v1`) or an OpenAI-compatible gateway |
-| `openAiTemperature` | Sampling temperature, 0 to 2 |
-| `openAiTopP` | Nucleus sampling cutoff, 0 to 1 |
-| `openAiMaxTokens` | Cap on tokens per request. When unset, the cap follows the model name: 3000 for a name starting with `gpt-3`, 6500 for `gpt-4`, and 18000 for `gpt-5` and every other name |
-| `openAiPreProcessingFn` | JavaScript filter deciding which messages are worth processing, see [below](#ai-pre-processing-filter-openaipreprocessingfn). In 2.79.4 a stored filter is also what switches processing on: with the setting empty, no message is processed. The admin form stores `return true;` when the editor is left at its default, so a configuration written through the Settings API has to set it too |
+| `openAiTemperature` | Sampling temperature, 0 to 2. Not sent to a reasoning model while it reasons |
+| `openAiTopP` | Nucleus sampling cutoff, 0 to 1. Not sent to a reasoning model while it reasons |
+| `openAiReasoningEffort` | Reasoning effort for reasoning models: `none`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`, of which each model family supports a subset. Unset sends `low` to a reasoning model and nothing to any other |
+| `openAiMaxTokens` | Token budget for the prompt, the instructions and the email together. The email text is cut to fit. Defaults to 30000 |
+| `openAiPreProcessingFn` | JavaScript filter deciding which messages are worth processing, see [below](#ai-pre-processing-filter-openaipreprocessingfn). Unset means every Inbox message is processed |
 
 Lowering `openAiMaxTokens` truncates long messages before they reach the model, which is the most direct lever on cost. `openAiPreProcessingFn` is the more selective one, since a message it rejects costs nothing at all.
 
@@ -297,9 +285,9 @@ EmailEngine skips AI processing if:
 - The API request fails or is rate limited
 - The request takes longer than two minutes
 - The message has no text content
-- The pre-processing filter returned a falsy value or threw, or no filter is stored at all (see the settings table above)
+- The pre-processing filter returned a falsy value or threw, or does not compile
 
-In these cases the `summary` and `riskAssessment` sections are omitted from the webhook payload, which is otherwise delivered as usual. A failed API call is logged as `Failed to fetch summary from OpenAI` with the error, and the most recent one is kept for the AI Processing page to display.
+In these cases `summary` is omitted from the webhook payload, which is otherwise delivered as usual. A failed API call is logged as `Failed to fetch summary from OpenAI` with the error, and the most recent one is kept for the AI Processing page to display.
 
 ### Webhook Content Configuration
 
@@ -316,11 +304,11 @@ app.post('/webhook', async (req, res) => {
   const { event, data } = req.body;
   if (event !== 'messageNew' || !data.summary) return;
 
-  const { summary, riskAssessment } = data;
+  const { summary } = data;
 
   // Fraud triage: risk runs 1 to 5
-  if (riskAssessment?.risk >= 4) {
-    return quarantine(data.id, riskAssessment.assessment);
+  if (summary.riskAssessment?.risk >= 4) {
+    return quarantine(data.id, summary.riskAssessment.assessment);
   }
 
   // Tasks and calendar entries the model found in the body
@@ -339,8 +327,8 @@ app.post('/webhook', async (req, res) => {
 });
 ```
 
-:::note `riskAssessment` sits next to `summary`, not inside it
-EmailEngine lifts the risk assessment out of the summary object before sending the webhook, so read `data.riskAssessment` rather than `data.summary.riskAssessment`.
+:::note `riskAssessment` moved inside `summary` in v2.82.0
+Earlier releases lifted the risk assessment out of the summary object into `data.riskAssessment`. Since v2.82.0 the summary is delivered as the model returned it, so read `data.summary.riskAssessment`.
 :::
 
 Which field drives which workflow:
@@ -351,7 +339,7 @@ Which field drives which workflow:
 | `summary.shouldReply` | Priority inbox, SLA timers, follow-up reminders |
 | `summary.actions[]` | Creating tasks with a `description` and `dueDate` |
 | `summary.events[]` | Creating calendar entries from `startTime` and `endTime` |
-| `riskAssessment.risk` | Fraud and phishing quarantine, 1 to 5 |
+| `summary.riskAssessment.risk` | Fraud and phishing quarantine, 1 to 5 |
 
 The model does not always populate every field. Treat each one as optional and fall back to your existing routing when it is missing, since an OpenAI outage or a rate limit leaves the message delivered but unenriched. See [Handling Failures](#handling-failures).
 
@@ -394,7 +382,7 @@ return optedIn.includes(payload.account);
 
 ## AI Pre-Processing Filter (openAiPreProcessingFn)
 
-With the filter at its default (`return true;`, which is what the admin form stores when the editor is left alone), AI processing is applied to every incoming email in the Inbox. The `openAiPreProcessingFn` setting holds a JavaScript function that decides which of those emails get processed, which is the most direct control over AI usage and costs. In 2.79.4 the setting has to be present for any processing to happen: an empty filter switches processing off rather than passing everything.
+With no filter stored, or with the filter at its default (`return true;`, which is what the admin form stores when the editor is left alone), AI processing is applied to every incoming email in the Inbox. The `openAiPreProcessingFn` setting holds a JavaScript function that decides which of those emails get processed, which is the most direct control over AI usage and costs.
 
 ### How It Works
 
@@ -599,34 +587,27 @@ return result;
 
 ### Estimating Costs
 
-The provider charges per token, at a rate that depends on the model and changes over time; check the provider's own pricing page. Every processed message costs the prompt (the system prompt plus the headers, subject, and text, capped by `openAiMaxTokens`) and the structured answer. The `tokens` field in each enriched webhook reports the exact total, so a day of real traffic gives a better estimate than any figure this page could state.
+The provider charges per token, at a rate that depends on the model and changes over time; check the provider's own pricing page. Every processed message costs the prompt (the instructions plus the subject, sender, headers and text, capped by `openAiMaxTokens`), the structured answer, and on a reasoning model the hidden reasoning, which is why the default reasoning effort is `low`. The usage EmailEngine logs for each summary and the `ai_tokens` metric report the exact counts, so a day of real traffic gives a better estimate than any figure this page could state.
 
 ### Cost Optimization
 
 1. **Pick the smallest model that gives usable output**: the fallback list orders them from smallest to largest
 2. **Filter Emails**: `openAiPreProcessingFn` rejects messages before they cost anything; Inbox-only processing is already built in
 3. **Cap the input**: a lower `openAiMaxTokens` truncates long messages before they reach the model
-4. **Monitor Usage**: Track the `tokens` field in webhooks per account
+4. **Monitor Usage**: Watch the `ai_tokens` counter on `/metrics`, or the usage logged per summary when you need it per account
 
 ### Monitoring Token Usage
 
-Every enriched `messageNew` payload reports what the call cost, so metering needs no separate bookkeeping against OpenAI:
+The `ai_tokens` Prometheus counter on `/metrics` reports what the calls cost, by model and split into prompt and completion tokens, and `ai_requests` counts the calls by model and outcome:
 
-```javascript
-app.post('/webhook', (req, res) => {
-  res.json({ success: true });
-
-  const { summary } = req.body.data || {};
-  if (!summary) return; // AI processing off, skipped, or failed
-
-  metrics.increment('openai.tokens', summary.tokens, {
-    model: summary.model,
-    account: req.body.account
-  });
-});
+```
+ai_tokens{model="gpt-6-luna",type="prompt"} 812345
+ai_tokens{model="gpt-6-luna",type="completion"} 40211
+ai_requests{model="gpt-6-luna",status="success"} 1532
+ai_requests{model="gpt-6-luna",status="failure"} 3
 ```
 
-Aggregating by `account` shows which mailboxes drive the spend, which is usually a small number of high-volume ones. See [Cost Optimization](#cost-optimization) for narrowing what gets processed.
+Per account, the log entry `Generated email summary` carries the account, the message and a `usage` object with the same counts for that one request. Aggregating those by account shows which mailboxes drive the spend, which is usually a small number of high-volume ones. See [Cost Optimization](#cost-optimization) for narrowing what gets processed.
 
 ## See Also
 

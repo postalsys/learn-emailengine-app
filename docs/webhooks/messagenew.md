@@ -95,8 +95,7 @@ The unique event identifier is sent as the HTTP header `X-EE-Wh-Event-Id`, not i
 | `missingRetries` | number | No | IMAP only. How many extra fetch attempts were needed before the server returned the message |
 | `missingDelay` | number | No | IMAP only. Milliseconds spent waiting between those attempts |
 | `calendarEvents` | array | No | Parsed calendar event data. Only when `notifyCalendarEvents` is enabled |
-| `summary` | object | No | AI-generated summary. Only when `generateEmailSummary` is enabled |
-| `riskAssessment` | object | No | AI-generated risk assessment. Only when `generateEmailSummary` is enabled |
+| `summary` | object | No | What the AI model returned for the message, including its `riskAssessment`. Only when `generateEmailSummary` is enabled |
 
 ### Delivery Report Structure
 
@@ -191,7 +190,7 @@ If `notifyCalendarEvents` is enabled and the message contains `text/calendar` or
 
 ### AI Fields
 
-`summary` and `riskAssessment` are produced by the OpenAI integration and their contents depend on the configured prompt. See [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt#webhook-enhancement) for the fields each of them carries. Releases before v2.82.0 could also add `embeddings`, vector embeddings of the message text, when `openAiGenerateEmbeddings` was on; that setting is still accepted but has no effect.
+`summary` is the JSON object the AI model returned for the message, and its contents depend on the configured instructions. See [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt#webhook-enhancement) for the properties the built-in instructions ask for. Before v2.82.0 the risk assessment was lifted out of it into a separate `riskAssessment` field and the request id, token count and model name were merged into it; since v2.82.0 the object is delivered as the model returned it, with `riskAssessment` inside. Releases before v2.82.0 could also add `embeddings`, vector embeddings of the message text, when `openAiGenerateEmbeddings` was on; that setting is still accepted but has no effect.
 
 ## Example Payload
 
@@ -356,7 +355,7 @@ Regardless of this setting, EmailEngine always fetches the headers it needs for 
 
 | Setting | Description |
 |---------|-------------|
-| `generateEmailSummary` | Add `summary` and `riskAssessment` to Inbox messages |
+| `generateEmailSummary` | Add `summary` to Inbox messages |
 
 It needs `openAiAPIKey` to be set as well, and it applies only to messages in the Inbox. See [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt) for what the generated fields contain.
 
