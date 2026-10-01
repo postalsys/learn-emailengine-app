@@ -20,7 +20,7 @@ Loaded at startup. Requires a restart to apply changes.
 - The encryption secret and the prepared license, token and password
 - Log level and raw protocol logging
 - TLS material for the listeners EmailEngine runs itself
-- Feature gates such as the MCP routes and the deprecated Document Store
+- Feature gates such as the MCP routes
 
 Some of these variables only seed a runtime setting the first time an instance starts, after which the stored setting is what counts. Each one says so where it is documented.
 
@@ -286,7 +286,7 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
 | `openAiMaxTokens` | number | unset (model-dependent) | Token limit per request |
 | `openAiPrompt` | string | unset | Custom system prompt |
 | `openAiPreProcessingFn` | string | unset | JavaScript filter deciding which messages are processed |
-| `openAiGenerateEmbeddings` | boolean | off | Generate vector embeddings. Turning it on also turns `notifyText` on |
+| `openAiGenerateEmbeddings` | boolean | off | Removed in v2.82.0. Still accepted, has no effect |
 
 `openAiAPIUrl` points these calls at an OpenAI-compatible service other than OpenAI itself, and it has to include whatever path prefix that service mounts its API under. For Azure OpenAI that means `https://<your-resource>.openai.azure.com/openai/v1`, not the bare host. See [AI and ChatGPT integration](/docs/integrations/ai-chatgpt) for what the generated fields contain and where they appear.
 

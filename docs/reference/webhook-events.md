@@ -212,7 +212,7 @@ A message was found in a folder that was not there before. IMAP does not disting
 }
 ```
 
-Key fields: `data.id` (the message ID for API calls), `data.uid`, `data.emailId` and `data.threadId` (when the server provides them), `data.date`, `data.flags`, `data.unseen`, `data.subject`, the address fields `from`, `sender`, `replyTo`, `to`, `cc`, `bcc`, `data.messageId`, `data.inReplyTo`, `data.text` (with `notifyText`), `data.attachments` (with `notifyAttachments`), `data.headers` (with `notifyHeaders`), `data.labels` and `data.category` (Gmail), `data.messageSpecialUse`, `data.seemsLikeNew`, `data.isAutoReply`, `data.isBounce`, `data.isComplaint`, `data.summary` and `data.embeddings` (AI processing). The conditions are summarized under [Conditional fields](#conditional-fields). Full schema: [messageNew](/docs/webhooks/messagenew).
+Key fields: `data.id` (the message ID for API calls), `data.uid`, `data.emailId` and `data.threadId` (when the server provides them), `data.date`, `data.flags`, `data.unseen`, `data.subject`, the address fields `from`, `sender`, `replyTo`, `to`, `cc`, `bcc`, `data.messageId`, `data.inReplyTo`, `data.text` (with `notifyText`), `data.attachments` (with `notifyAttachments`), `data.headers` (with `notifyHeaders`), `data.labels` and `data.category` (Gmail), `data.messageSpecialUse`, `data.seemsLikeNew`, `data.isAutoReply`, `data.isBounce`, `data.isComplaint`, `data.summary` (AI processing). The conditions are summarized under [Conditional fields](#conditional-fields). Full schema: [messageNew](/docs/webhooks/messagenew).
 
 ### messageDeleted
 
@@ -686,7 +686,6 @@ Fields that appear only under a condition. The setting names are `POST /v1/setti
 | `data.attachments[]` | `notifyAttachments` is on; attachments over `notifyAttachmentSize` are skipped |
 | `data.headers` | The header is named in `notifyHeaders` |
 | `data.summary` | `generateEmailSummary` is on |
-| `data.embeddings` | `openAiGenerateEmbeddings` is on |
 | `data.labels` | Gmail accounts (IMAP and API), and MS Graph accounts, where the array carries Outlook categories |
 | `data.category` | Gmail accounts with `resolveGmailCategories` on |
 | `data.emailId`, `data.threadId` | The server provides them: Gmail, MS Graph and IMAP servers with OBJECTID support |

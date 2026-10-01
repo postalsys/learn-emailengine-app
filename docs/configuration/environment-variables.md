@@ -654,7 +654,6 @@ Advanced configuration options for debugging and performance tuning.
 | `EENGINE_DISABLE_MESSAGE_BROWSER` | boolean | `false` | Disable web-based message browser | `true` |
 | `EENGINE_CORS_ORIGIN` | string | none | CORS allowed origins (whitespace separated) | `https://app.example.com` |
 | `EENGINE_CORS_MAX_AGE` | duration | `60` seconds | How long a browser may cache a CORS preflight response. A bare number is milliseconds, so use a unit | `1h` |
-| `EENGINE_DOCUMENT_STORE_ENABLED` | boolean | `false` | Enable the deprecated Document Store (Elasticsearch) feature gate | `true` |
 | `EENGINE_MCP_ENABLED` | boolean | `true` | Register the [MCP endpoint](/docs/mcp) routes. Registration alone serves nothing: the `mcpEnabled` setting is the runtime switch | `false` |
 | `EENGINE_CSP_MODE` | string | `enforce` | How the Content-Security-Policy is delivered: `enforce`, `report-only` (violations are only reported to the browser console) or `off`. The other security headers are unaffected | `report-only` |
 | `EENGINE_DISABLE_THREAD_COLLAPSE` | boolean | `false` | Stop web-safe HTML from folding quoted thread history into a collapsible block | `true` |
@@ -679,11 +678,6 @@ EENGINE_CORS_ORIGIN="https://app.example.com https://admin.example.com"
 EENGINE_DISABLE_COMPRESSION=true
 ```
 
-**Enable the deprecated Document Store:**
-```bash
-EENGINE_DOCUMENT_STORE_ENABLED=true
-```
-
 **Render quoted thread history inline:**
 ```bash
 EENGINE_DISABLE_THREAD_COLLAPSE=true
@@ -702,9 +696,7 @@ EENGINE_BEACON_DISABLED=true
 
 Since EmailEngine v2.75.0, [web-safe HTML](/docs/receiving/web-safe-html) wraps the quoted tail of a reply in a collapsible block so a message renders as what the sender wrote. `EENGINE_DISABLE_THREAD_COLLAPSE=true` restores the previous output shape, in which the whole thread is rendered inline.
 
-The Document Store (Elasticsearch) feature is deprecated and disabled by default since EmailEngine v2.71.0, and it is **removed from EmailEngine releases starting October 1, 2026**. This startup gate must be turned on before EmailEngine will run the document indexing worker or register the Document Store API and admin endpoints (`/v1/chat/{account}`, `/v1/unified/search`, and the `Configuration > Document Store` page). While the gate is off, those endpoints return `404`, even if the runtime "Document Store" setting is still enabled. The equivalent config-file setting is `[documentStore] enabled = true` (CLI flag `--documentStore.enabled=true`).
-
-If you depend on the Document Store, plan the migration now. Staying on the last release that still ships it means running an EmailEngine that no longer receives security updates.
+The Document Store (Elasticsearch) feature was removed in EmailEngine v2.82.0. The last release that includes it is v2.81.2, and its startup gate `EENGINE_DOCUMENT_STORE_ENABLED` (config `[documentStore] enabled`, CLI `--documentStore.enabled`) has no effect on later releases. An instance upgraded with the `documentStoreEnabled` setting still on shows a notice on every admin page until the notice is closed or the setting is cleared through `POST /v1/settings`.
 
 `EENGINE_CSP_MODE` selects how the [Content-Security-Policy](/docs/deployment/security#security-headers) reaches the browser. `enforce` (the default) blocks what the policy forbids. `report-only` keeps only the framing protection enforced and delivers the rest of the policy as `Content-Security-Policy-Report-Only`, so a violation shows up in the browser console without breaking the page - use it to check a customised deployment before enforcing. `off` sends the framing directive only. The equivalent config-file setting is `[api] cspMode`, and a change requires a restart. A CDN that rewrites the HTML on its way to the browser, such as Cloudflare with Rocket Loader enabled, breaks the enforced policy; see [CDNs that rewrite the page](/docs/deployment/security#csp-and-html-rewriting).
 
@@ -1068,7 +1060,6 @@ Environment variables and their command-line equivalents:
 | `EENGINE_MAX_SMTP_MESSAGE_SIZE` | `--smtp.maxMessageSize` | Max message size the SMTP server accepts |
 | `EENGINE_IMAP_PROXY_ENABLED`, `_HOST`, `_PORT`, `_SECRET`, `_PROXY` | `--imap-proxy.enabled`, `--imap-proxy.host`, `--imap-proxy.port`, `--imap-proxy.secret`, `--imap-proxy.proxy` | Built-in IMAP proxy |
 | `EENGINE_MCP_ENABLED` | `--mcp.enabled` | Register the MCP endpoint routes |
-| `EENGINE_DOCUMENT_STORE_ENABLED` | `--documentStore.enabled` | Deprecated Document Store feature gate |
 | `EENGINE_SETTINGS` | `--settings` | Prepared runtime settings |
 | `EENGINE_PREPARED_TOKEN` | `--preparedToken` | Exported token hash |
 | `EENGINE_PREPARED_PASSWORD` | `--preparedPassword` | Admin password hash |

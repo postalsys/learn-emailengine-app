@@ -862,8 +862,6 @@ Since v2.79.9, `proxyEnabled` and `proxyUrl` apply to everything EmailEngine sen
 - Requests to a configured [authentication server](/docs/accounts/authentication-server)
 - EmailEngine's own requests: license validation, update checks, ACME certificate issuance and renewal, OpenAI requests, and error reports to Sentry
 
-The Elasticsearch connection of the deprecated Document Store is the one exception. It never uses a proxy.
-
 Up to v2.79.8 the setting reached IMAP and SMTP sockets only, and HTTP traffic needed the separate settings described below. An instance that already sets both keeps working unchanged.
 
 #### Using a different proxy for HTTP

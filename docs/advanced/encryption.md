@@ -46,11 +46,11 @@ EmailEngine offers **field-level encryption** that encrypts all sensitive fields
 
 - Gateway passwords
 
-**Settings** (`smtpServerPassword`, `imapProxyServerPassword`, `serviceSecret`, `cookiePassword`, `totpSeed`, `openAiAPIKey`, `documentStorePassword`, and the legacy `gmailClientSecret`, `outlookClientSecret`, `mailRuClientSecret`, `gmailServiceKey` and `gmailServiceExternalAccount` values):
+**Settings** (`smtpServerPassword`, `imapProxyServerPassword`, `serviceSecret`, `cookiePassword`, `totpSeed`, `openAiAPIKey`, and the legacy `gmailClientSecret`, `outlookClientSecret`, `mailRuClientSecret`, `gmailServiceKey`, `gmailServiceExternalAccount` and `documentStorePassword` values):
 
 - The SMTP server and IMAP proxy global passwords
 - The `serviceSecret` used for signing, the admin session cookie password and the admin TOTP seed
-- The OpenAI API key and the Document Store password
+- The OpenAI API key
 
 **TLS private keys**:
 

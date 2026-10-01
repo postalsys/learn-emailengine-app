@@ -83,7 +83,7 @@ No field is required by the schema. In practice, provide `text` and/or `html` fo
 | `Idempotency-Key` | header | Replays the stored result for a repeated request with the same key instead of queueing the message again. The response then carries an `idempotency` object with `status` `HIT` or `MISS`. Since v2.52.0 |
 | `X-EE-Timeout` | header | Request timeout in milliseconds, up to `7200000`, overriding `EENGINE_TIMEOUT` |
 | `useStructuredFormat` | query | MS Graph accounts only: send as structured JSON instead of raw MIME. Structured JSON is the only mode that honors a `from` address other than the mailbox's own, which a shared mailbox needs, but it does not preserve calendar invites and other special MIME parts; raw MIME preserves them and ignores `from` |
-| `documentStore` | query | Deprecated. Load the referenced message from the Document Store, which is removed from releases starting 1 October 2026 |
+| `documentStore` | query | Deprecated. Selected the Document Store, which was removed in EmailEngine v2.82.0. The parameter is still accepted and ignored |
 
 ### Address Format
 

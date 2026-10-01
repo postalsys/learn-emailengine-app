@@ -230,10 +230,10 @@ The OAuth2 and subscription metrics, along with the Grafana dashboard, were adde
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
-| `queue_size` | Gauge | `queue`, `state` | Jobs in the `notify`, `submit` and `documents` queues by state: `waiting`, `active`, `delayed`, `paused` |
-| `queues_processed` | Counter | `queue`, `status` | Jobs finished in the `notify` and `submit` queues, and in `documents` when the Document Store is enabled; `status` is `completed` or `failed` |
+| `queue_size` | Gauge | `queue`, `state` | Jobs in the `notify` and `submit` queues by state: `waiting`, `active`, `delayed`, `paused` |
+| `queues_processed` | Counter | `queue`, `status` | Jobs finished in the `notify` and `submit` queues; `status` is `completed` or `failed` |
 
-Since v2.79.1 the gauges are read from BullMQ's own counters. A paused queue holds its jobs in `waiting`, so the `paused` series stays at 0 and is kept only so existing dashboards do not break.
+Since v2.79.1 the gauges are read from BullMQ's own counters. A paused queue holds its jobs in `waiting`, so the `paused` series stays at 0 and is kept only so existing dashboards do not break. Releases before v2.82.0 also reported a `documents` series for the indexing queue of the Document Store, which was removed with that feature.
 
 #### API Metrics
 

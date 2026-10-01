@@ -463,7 +463,7 @@ The response is `{"sync": true}`. Like reconnect, the request schedules the work
 
 **Endpoint:** `PUT /v1/account/:account/flush`
 
-Deletes all cached email data (message indexes, folder lists, bounce data) from Redis, and from the index of the deprecated Document Store when that is enabled, then triggers a full re-sync from scratch. The account is paused during the operation and automatically resumed after completion.
+Deletes all cached email data (message indexes, folder lists, bounce data) from Redis, then triggers a full re-sync from scratch. The account is paused during the operation and automatically resumed after completion.
 
 ```bash
 curl -X PUT "https://emailengine.example.com/v1/account/user@example.com/flush" \

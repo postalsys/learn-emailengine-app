@@ -8,7 +8,7 @@ sidebar_position: 7
 
 EmailEngine describes its entire HTTP API with an OpenAPI document. The same document powers the [full API reference](/docs/api/emailengine-api) on this site, so anything you can read there is also available as machine-readable JSON that API clients, code generators, and testing tools can consume directly.
 
-Two differences. This site's reference leaves out the two deprecated [Document Store](/docs/configuration/environment-variables#advanced-settings) endpoints, `/v1/chat/{account}` and `/v1/unified/search`, which the document itself still describes until the Document Store leaves the releases on 2026-10-01. And neither describes the pre-2.79.0 token paths (`POST /v1/token`, `DELETE /v1/token/{token}`, `GET /v1/tokens/account/{account}`), which still answer for existing integrations but are deliberately left out so that new ones use `/v1/tokens`.
+One difference: neither describes the pre-2.79.0 token paths (`POST /v1/token`, `DELETE /v1/token/{token}`, `GET /v1/tokens/account/{account}`), which still answer for existing integrations but are deliberately left out so that new ones use `/v1/tokens`.
 
 ## Where to get the document
 

@@ -71,7 +71,7 @@ The event carries no `path` or `specialUse`. The unique event identifier is sent
 | `mta` | string | No | Hostname of the server that reported the failure (`Remote-MTA`, or `Reporting-MTA` when there is no remote one), lowercased |
 | `queueId` | string | No | Queue ID from the sending MTA (`X-Postfix-Queue-Id`) |
 | `messageHeaders` | object or null | Yes | Headers of the original bounced message when the bounce included them, otherwise `null` (see below) |
-| `id` | string | No | Deprecated. EmailEngine message ID of the original message, looked up through the Document Store, so present only on IMAP accounts with the Document Store enabled. The Document Store is removed from releases starting 2026-10-01, so do not rely on this field |
+| `id` | string | No | Removed in v2.82.0 together with the Document Store. Releases before that set it, on IMAP accounts with the Document Store enabled, to the EmailEngine message ID of the original message |
 
 ### Response Object Structure
 

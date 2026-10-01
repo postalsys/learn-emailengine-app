@@ -195,7 +195,7 @@ These endpoints depend on your specific configuration:
 | Endpoint Type | Purpose |
 |---------------|---------|
 | Webhook URLs | URLs configured in EmailEngine settings for webhook delivery. Whitelist your webhook receiver endpoints. |
-| Elasticsearch URLs | Only with the deprecated Document Store, which is removed from releases starting 2026-10-01. Whitelist your Elasticsearch cluster while it is in use. |
+| Elasticsearch URLs | Only on releases before v2.82.0 that use the Document Store, which was removed in that release. Whitelist your Elasticsearch cluster while it is in use. |
 | IMAP/SMTP servers | Mail servers for connected accounts. Typically ports 993 (IMAPS), 465/587 (SMTPS/submission), 143 (IMAP), 25 (SMTP). |
 
 #### Minimal Whitelist Example

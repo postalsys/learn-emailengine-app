@@ -18,7 +18,6 @@ EmailEngine integrates with OpenAI's API to provide AI-powered email processing 
 - **Action Items**: Extract tasks and due dates
 - **Fraud Detection**: Assess risk of scam or phishing emails
 - **Reply Detection**: Identify if sender expects a response
-- **Conversational Search**: Ask questions about your email history (Document Store feature, being removed)
 
 :::tip Looking for agent access instead?
 This page is about EmailEngine calling a model to process incoming mail. If you want the opposite - an AI assistant calling EmailEngine to search, read and send mail on demand - see [MCP for AI Agents](/docs/mcp).
@@ -281,7 +280,6 @@ Everything on the **Configuration > AI Processing** page is also settable throug
 |---------|---------|
 | `openAiAPIKey` | API key. Required before any AI processing runs |
 | `generateEmailSummary` | Turn on summaries, sentiment, events, actions, and risk assessment |
-| `openAiGenerateEmbeddings` | Turn on embedding generation |
 | `openAiModel` | Model name, for example `gpt-5-mini`. No default |
 | `openAiPrompt` | The system prompt, as edited above |
 | `openAiAPIUrl` | Base URL of the API. Point this at Azure OpenAI (`https://<resource>.openai.azure.com/openai/v1`) or an OpenAI-compatible gateway |
@@ -359,46 +357,7 @@ The model does not always populate every field. Treat each one as optional and f
 
 ### 6. Smart Email Search Assistant
 
-:::danger Being removed on October 1, 2026
-The `POST /v1/chat/{account}` endpoint is part of the Document Store feature, which is deprecated and **will be removed from EmailEngine releases starting October 1, 2026**. After that release, syncing to Elasticsearch, chat with email, and unified search are gone. Do not build new integrations on this endpoint.
-
-Until then it is disabled by default: since v2.71.0 the endpoint returns `404` unless you enable the startup gate (`EENGINE_DOCUMENT_STORE_ENABLED=true`) in addition to turning on Document Store (Elasticsearch) indexing and the "Chat with emails" feature. It is also left out of the API reference on this site, though EmailEngine's own [OpenAPI document](/docs/api-reference/openapi-spec) still describes it.
-:::
-
-Build conversational email search for users:
-
-**cURL:**
-
-```bash
-curl -X POST "https://emailengine.example.com/v1/chat/user123" \
-  -H "Authorization: Bearer <TOKEN>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "question": "Did I receive the invoice from Acme Corp?"
-  }'
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "answer": "Yes, you received an invoice from Acme Corp on October 5th for $1,500.",
-  "messages": [
-    {
-      "id": "AAAAGQAACeE",
-      "from": {
-        "name": "Acme Corp",
-        "address": "billing@acmecorp.com"
-      },
-      "subject": "Invoice #12345",
-      "date": "2023-10-05T10:00:00.000Z"
-    }
-  ]
-}
-```
-
-The response carries the generated `answer` along with the `messages` it was drawn from, so you can link the reader back to the source email rather than asking them to trust the summary.
+Removed. The `POST /v1/chat/{account}` endpoint and the Document Store it drew its answers from were removed in EmailEngine v2.82.0; the last release that includes them is v2.81.2. For conversational access to a mailbox, connect an assistant through [MCP for AI Agents](/docs/mcp), which searches and reads the live mailbox instead of an index.
 
 ## Privacy and Compliance
 

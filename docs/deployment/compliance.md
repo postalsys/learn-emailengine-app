@@ -36,11 +36,12 @@ API access tokens are a special case: they are never stored in recoverable form.
 - **Historical message content** - No email archive or backup functionality
 - **User browsing data** - No cookies or tracking outside admin interface session
 
-:::note Document Store and AI features
-The list above reflects EmailEngine's default behavior. Two optional features change what is stored, and neither is enabled unless you configure it:
+:::note AI processing
+The list above reflects EmailEngine's default behavior. One optional feature changes what leaves the instance, and it is not enabled unless you configure it:
 
-- **Document Store** (an Elasticsearch-backed index, disabled by default) persists full message bodies, all headers, attachment content, text previews, and AI-generated summaries and embeddings in Elasticsearch. It is deprecated and is removed from EmailEngine releases starting October 1, 2026.
-- **AI processing** (disabled by default) sends message content - subject and body - to your configured LLM provider (OpenAI by default) to generate summaries or embeddings.
+- **AI processing** (disabled by default) sends message content - subject and body - to your configured LLM provider (OpenAI by default) to generate summaries.
+
+Releases before v2.82.0 also offered the Document Store, an Elasticsearch-backed index that persisted full message bodies, all headers, attachment content, text previews and AI output. It was removed in EmailEngine v2.82.0.
 :::
 
 ### No Developer Access

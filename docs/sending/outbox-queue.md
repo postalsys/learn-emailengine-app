@@ -23,7 +23,7 @@ Because the job lives in Redis rather than in the API process, a scheduled or re
 
 ## Queue Technology
 
-EmailEngine uses [BullMQ](https://docs.bullmq.io/) for its queues, backed by Redis. Outbound mail is the `submit` queue; webhooks, exports, and the deprecated Document Store have queues of their own. The [queue management](/docs/advanced/queue-management) page describes the queues as a set, along with Bull Board and worker concurrency. This page stays with the submit queue.
+EmailEngine uses [BullMQ](https://docs.bullmq.io/) for its queues, backed by Redis. Outbound mail is the `submit` queue; webhooks and exports have queues of their own. The [queue management](/docs/advanced/queue-management) page describes the queues as a set, along with Bull Board and worker concurrency. This page stays with the submit queue.
 
 ## Job Lifecycle
 

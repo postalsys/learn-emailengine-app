@@ -23,9 +23,9 @@ EmailEngine manages two primary queues for different operations:
 - **Submit Queue** (`submit`): Email sending jobs
 - **Notify Queue** (`notify`): Webhook delivery jobs
 
-Two more exist: `documents`, the deprecated [Document Store](/docs/configuration/environment-variables#advanced-settings) indexing queue, and `export`, which runs [bulk exports](/docs/receiving/exporting) and is not shown in Bull Board.
+One more exists: `export`, which runs [bulk exports](/docs/receiving/exporting) and is not shown in Bull Board. Releases before v2.82.0 also had `documents`, the indexing queue of the Document Store, which was removed with that feature.
 
-All queues are backed by Redis and monitored through Bull Board (previously Arena), accessible via **System > Queues** in the EmailEngine interface. Bull Board lists each queue under a descriptive name followed by the queue name: **Webhooks Queue - notify**, **Submission Queue - submit**, and **Document Queue - documents**.
+All queues are backed by Redis and monitored through Bull Board (previously Arena), accessible via **System > Queues** in the EmailEngine interface. Bull Board lists each queue under a descriptive name followed by the queue name: **Webhooks Queue - notify** and **Submission Queue - submit**.
 
 EmailEngine 2.79.0 moved from BullMQ 5 to BullMQ 6. The observable differences are noted where they apply below.
 

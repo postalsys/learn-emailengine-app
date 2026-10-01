@@ -27,7 +27,7 @@ Content does pass through Redis in two cases:
 - A submitted message is stored in Redis, in full, from submission until it is delivered, so that the queue can retry it. It is removed once delivery succeeds or the attempts run out
 - Webhook payloads waiting in the notify queue carry whatever the payload includes; with `notifyText` or `notifyAttachments` enabled, that is message content
 
-Neither is encrypted by `EENGINE_SECRET`, which covers credentials only. The deprecated Document Store, which indexed message content in Elasticsearch, is removed from releases starting 2026-10-01.
+Neither is encrypted by `EENGINE_SECRET`, which covers credentials only. The Document Store, which indexed message content in Elasticsearch, was removed in EmailEngine v2.82.0.
 
 ## Are credentials encrypted?
 

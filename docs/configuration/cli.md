@@ -229,12 +229,6 @@ These are the options `emailengine --help` lists:
 | `--smtp.proxy` | Accept the HAProxy PROXY protocol | `false` |
 | `--smtp.maxMessageSize` | Maximum accepted email size | `25M` |
 
-**Document Store** (deprecated, removed from releases starting October 1, 2026)
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--documentStore.enabled` | Enable the Document Store feature gate | `false` |
-
 **MCP**
 
 | Option | Description | Default |

@@ -17,15 +17,14 @@ Pre-processing functions are short pieces of JavaScript that EmailEngine runs ag
 
 ## Where They Run
 
-The same runtime serves three features:
+The same runtime serves two features:
 
 | Feature | Filter function | Map function | Configured at |
 | ------- | --------------- | ------------ | ------------- |
 | [Webhook routes](/docs/webhooks/webhook-routing) | Decides whether the route gets the event | Rewrites the body sent to the route's URL | **Integrations** > **Webhook Routes**, per route |
 | [AI pre-processing filter](/docs/integrations/ai-chatgpt#ai-pre-processing-filter-openaipreprocessingfn) | Decides which messages are sent to the LLM | none | `openAiPreProcessingFn` setting |
-| Document Store pre-processing | Decides which messages are indexed | Rewrites the indexed document | Document Store settings. Deprecated; removed from releases starting 2026-10-01 |
 
-The rest of this page is written for webhook routes. The other two use the same globals, timeout and error handling.
+The rest of this page is written for webhook routes. The AI filter uses the same globals, timeout and error handling. Releases before v2.82.0 ran a third script, the Document Store pre-processing filter and map, which was removed with that feature.
 
 ## Function Format
 
