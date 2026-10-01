@@ -442,32 +442,15 @@ curl -X DELETE https://emailengine.example.com/v1/account/user123 \
 - Review the list of accessed mailboxes regularly
 
 :::warning Enable Field Encryption
-By default, EmailEngine stores credentials in cleartext in Redis. To protect sensitive data like client secrets, enable field encryption. See [Setting Up Encryption](/docs/advanced/encryption) for configuration instructions.
+By default, EmailEngine stores credentials in cleartext in Redis. To protect sensitive data like client secrets, enable field encryption. See [Setting Up Encryption](/docs/deployment/encryption) for configuration instructions.
 :::
 
-## Webhooks for Real-Time Updates
+## Change Notifications
 
-Application access uses MS Graph webhook subscriptions for real-time email notifications. EmailEngine requires two publicly reachable HTTPS endpoints:
-
-- `{serviceUrl}/oauth/msg/notification` - Receives change notifications for messages
-- `{serviceUrl}/oauth/msg/lifecycle` - Receives lifecycle events (`reauthorizationRequired`, `subscriptionRemoved`, `missed`)
-
-EmailEngine automatically creates these subscriptions and renews them on a timer. Microsoft validates the notification URL when the subscription is created - if the endpoints are not reachable from Microsoft's servers, the subscription cannot be created. EmailEngine retries subscription creation periodically, but new-message detection will not work until the endpoints become reachable. There is no polling fallback for MS Graph accounts.
-
-### Automatic Recovery for Missed Notifications
-
-Microsoft Graph may occasionally fail to deliver change notifications - for example, due to transient network issues or service disruptions. When this happens, Microsoft sends a `missed` lifecycle event to inform EmailEngine that notifications were lost.
-
-EmailEngine handles this automatically (since v2.67.0):
-
-1. When a `missed` lifecycle event is received, EmailEngine lists messages received since two minutes before the last notification it processed, or over the last 30 minutes if it has not processed any
-2. Any messages not already processed through normal notifications are synced
-3. A five-minute cooldown per account prevents repeated recovery runs for the same event. **Run sync** on the account page runs the same recovery regardless of the cooldown
-
-No configuration is required - this recovery mechanism is built in and runs automatically for all MS Graph accounts with webhook subscriptions enabled.
+Application access accounts sync through Microsoft Graph change notifications, like every account on the MS Graph API backend. EmailEngine creates a subscription per mailbox, renews it on an hourly pass, recovers notifications Microsoft reports as missed, and reports a mailbox it can no longer subscribe to as a `connectError` with the code `SubscriptionSetupError` (since v2.80.0). The two endpoints Microsoft must reach, the subscription lifetime and retry schedule, the recovery of missed notifications and the `outlookSubscription` field of the account response are described under [MS Graph API Backend](./outlook-365#ms-graph-api-backend) on the delegated access page.
 
 :::info Public HTTPS Required
-MS Graph webhook subscriptions require publicly accessible HTTPS endpoints. If your EmailEngine instance is behind a firewall or on a private network, you will need to configure a reverse proxy or tunnel. Without reachable endpoints, the subscription cannot be created and new-message detection will not work - EmailEngine keeps retrying subscription creation until the endpoints become reachable. There is no polling fallback for MS Graph accounts.
+Microsoft validates the notification URL when the subscription is created, and there is no polling fallback for MS Graph accounts. If your EmailEngine instance is behind a firewall or on a private network, configure a reverse proxy or a tunnel so that `{serviceUrl}/oauth/msg/notification` and `{serviceUrl}/oauth/msg/lifecycle` are reachable from Microsoft's servers; until they are, no new mail is detected.
 :::
 
 ## Official Microsoft Documentation

@@ -123,6 +123,39 @@ curl -X POST https://emailengine.example.com/v1/account \
 [See Gmail OAuth2 guide →](./gmail/gmail-imap)
 [See Outlook OAuth2 guide →](./microsoft-365/outlook-365)
 
+#### OAuth2 Without Tokens (Authorization Redirect)
+
+When your application does not hold the tokens yet, register the account with `oauth2.authorize` set to `true` and no `accessToken` or `refreshToken`. EmailEngine stores the request for 24 hours and answers with the provider's consent URL instead of an account record:
+
+```bash
+curl -X POST https://emailengine.example.com/v1/account \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account": "user123",
+    "name": "John Doe",
+    "email": "john@gmail.com",
+    "oauth2": {
+      "provider": "AAABhaBPHscAAAAH",
+      "authorize": true,
+      "redirectUrl": "https://myapp.com/settings",
+      "auth": {
+        "user": "john@gmail.com"
+      }
+    }
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "redirect": "https://accounts.google.com/o/oauth2/v2/auth?client_id=123456789.apps.googleusercontent.com&response_type=code&state=account%3Aadd%3AcVd7..."
+}
+```
+
+Send the user to `redirect`. The account is created when they complete the consent screen, and the browser is then sent to `oauth2.redirectUrl` when one was given. For a Gmail application the `email` field is passed to Google as the login hint. `authorize` is refused with HTTP 400 for the application-only providers (`gmailService` and `outlookService`), which have no consent screen. The [hosted authentication form](/docs/accounts/hosted-authentication) wraps the same flow in a page of EmailEngine's own and is the usual choice; `authorize` is for applications that want the provider URL directly, for example to work around a [UPN mismatch on a shared mailbox](/docs/accounts/microsoft-365/shared-mailboxes).
+
 #### Service Accounts (Google Workspace)
 
 ```bash
@@ -201,7 +234,7 @@ Direct user to this URL. After completing setup, they'll be redirected to your `
 ### Via Web Dashboard
 
 1. Navigate to **Accounts** in the EmailEngine dashboard
-2. Click **Add an account**, enter a display name and, optionally, an account identifier, then click **Continue**
+2. Click **Add account**, enter a full name and, optionally, an account ID in the **Add an account** dialog, then click **Continue**
 3. On the hosted authentication form, choose **Standard IMAP** or one of the enabled OAuth2 apps (for example, a "Sign in with Microsoft" button)
 4. Complete setup
 5. Account appears in accounts list
@@ -281,11 +314,13 @@ curl https://emailengine.example.com/v1/accounts \
   ],
   "total": 2,
   "page": 0,
-  "pages": 1
+  "pages": 1,
+  "query": false,
+  "state": "*"
 }
 ```
 
-List entries carry `authFailureDisabledAt` only for accounts that EmailEngine [switched off after repeated authentication failures](#accounts-switched-off-after-authentication-failures); it is omitted otherwise.
+`query` echoes the `query` filter, or `false` when none was given, and `state` echoes the `state` filter, or `*`. List entries carry `authFailureDisabledAt` only for accounts that EmailEngine [switched off after repeated authentication failures](#accounts-switched-off-after-authentication-failures); it is omitted otherwise.
 
 ### Filter Accounts
 
@@ -508,7 +543,7 @@ Since v2.79.4, an account that EmailEngine [switched off after repeated authenti
 }
 ```
 
-`error` carries the HTTP status phrase and `message` the explanation. See [Error codes](/docs/reference/error-codes).
+`error` carries the HTTP status phrase and `message` the explanation. See [Error codes](/docs/api-reference/error-codes).
 
 ## Disabling and Enabling Accounts
 
@@ -577,7 +612,7 @@ EmailEngine sets the same `imap.disabled` flag itself when an account keeps fail
 
 Any of the following turns syncing back on:
 
-- **Supply working credentials.** Re-authorizing an OAuth2 account through the [hosted authentication form](/docs/accounts/hosted-authentication) or the account page's **Re-authenticate** button, or registering the account again with `POST /v1/account`, lifts the flag and reconnects the account. `PUT /v1/account/{account}` lifts it when the body carries new OAuth2 tokens, sets `imap.disabled` to `false`, replaces the whole `imap` object, or, in v2.79.5, changes `imap.auth` in a partial update. In v2.79.4 itself a partial update that only changes the password keeps the flag, so add `"disabled": false` next to the new password there
+- **Supply working credentials.** Re-authorizing an OAuth2 account through the [hosted authentication form](/docs/accounts/hosted-authentication) or the account page's **Re-authenticate** button, or registering the account again with `POST /v1/account`, lifts the flag and reconnects the account. (The **Re-authenticate** button did nothing in v2.79.9, blocked by the Content Security Policy that release introduced; v2.80.0 fixed it.) `PUT /v1/account/{account}` lifts it when the body carries new OAuth2 tokens, sets `imap.disabled` to `false`, replaces the whole `imap` object, or, in v2.79.5, changes `imap.auth` in a partial update. In v2.79.4 itself a partial update that only changes the password keeps the flag, so add `"disabled": false` next to the new password there
 - **Resume syncing** on the account page in the admin interface retries with the stored credentials. This is the only admin path for a Gmail API or Microsoft Graph account, whose edit page has no IMAP settings and therefore no "Disable IMAP" checkbox
 - **Saving the edit form** of an IMAP account with new credentials. In v2.79.5 the "Disable IMAP" checkbox is left unchecked for an account the safety net switched off, so the save writes `disabled: false` along with the credentials. In v2.79.4 the box is pre-checked and has to be cleared by hand
 - `{"imap": {"partial": true, "disabled": false}}` through the API, as [above](#enable-account)
@@ -592,6 +627,52 @@ Version notes:
 - v2.79.5 also stop parking [delegated accounts](/docs/accounts/microsoft-365/shared-mailboxes): a shared mailbox has no credential of its own, so only the account it borrows the token from is switched off, and re-authorizing that account brings the shared mailboxes back with it. The same releases include OAuth2 accounts registered with `imap: false` in the safety net, which v2.79.3 and v2.79.4 had skipped
 
 In v2.79.4 an IMAP account in this state is reported with the type `sending` and `sendOnly: true` everywhere, because the two are told apart only by `authFailureDisabledAt`. In v2.79.5 the accounts listing and the admin interface keep the account's own type and show the IMAP settings card with the stored error, since send-only is a configuration and a switch-off is a fault. `GET /v1/account/{account}` still answers `sending` with `sendOnly: true` for such an account, so read the type from the listing, or read `authFailureDisabledAt`, which is unambiguous on both. An OAuth2 account keeps its `gmail` or `outlook` type in every version.
+
+## Flushing Accounts
+
+The [flush API](/docs/api/put-v-1-account-account-flush) resets the internal email index for an account and re-syncs from scratch. This is useful for:
+
+- **Resetting corrupted index** - Fix sync issues by rebuilding the index
+- **Processing existing emails** - Trigger `messageNew` webhooks for existing emails (IMAP only)
+- **Changing indexer type** - Switch between full and fast indexing strategies
+
+```bash
+# Basic flush - reset index, only notify about new messages going forward
+curl -X PUT https://emailengine.example.com/v1/account/user123/flush \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "flush": true
+  }'
+
+# Flush with options - process existing emails and change indexer
+curl -X PUT https://emailengine.example.com/v1/account/user123/flush \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "flush": true,
+    "notifyFrom": "2024-01-01T00:00:00.000Z",
+    "imapIndexer": "full"
+  }'
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `flush` | boolean | Must be `true` to confirm the flush operation |
+| `notifyFrom` | string | Only send webhooks for messages after this date (IMAP only). Defaults to current time, so only new messages trigger webhooks. Set to a past date like `"1970-01-01T00:00:00.000Z"` to process existing emails |
+| `imapIndexer` | string | Set indexing strategy: `"full"` or `"fast"` (IMAP only) |
+
+:::warning One flush at a time
+Only one flush can run at a time across the whole instance. A second request while one is running fails with HTTP 429 and the error code `LockFail`.
+:::
+
+:::note API-Based Backends
+For Gmail API and MS Graph accounts, `notifyFrom` has no effect. These backends only notify about new emails arriving after the account was connected, not existing emails.
+:::
+
+[Learn more about IMAP indexers →](/docs/accounts/imap-indexers)
 
 ## Deleting Accounts
 

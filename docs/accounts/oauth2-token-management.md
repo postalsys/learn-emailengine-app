@@ -23,7 +23,7 @@ When you register OAuth2 accounts in EmailEngine:
 - Tokens can be retrieved for use with other APIs via the [OAuth2 Token API](/docs/api/get-v-1-account-account-oauthtoken)
 
 :::warning Token Encryption
-OAuth2 tokens (including sensitive refresh tokens and client secrets) are stored **encrypted in Redis** only if you configure the `EENGINE_SECRET` environment variable. Without encryption enabled, credentials are stored in **cleartext**. For production deployments, always enable encryption by setting a strong encryption secret. [See encryption documentation](/docs/advanced/encryption)
+OAuth2 tokens (including sensitive refresh tokens and client secrets) are stored **encrypted in Redis** only if you configure the `EENGINE_SECRET` environment variable. Without encryption enabled, credentials are stored in **cleartext**. For production deployments, always enable encryption by setting a strong encryption secret. [See encryption documentation](/docs/deployment/encryption)
 :::
 
 EmailEngine can therefore serve as the OAuth2 token store for the rest of your application, not only for email access.
@@ -109,13 +109,13 @@ Additional OAuth2 scopes with Microsoft accounts are only supported when using t
 
 ### Step 2: Configure Additional Scopes in EmailEngine
 
-When setting up the OAuth2 application in EmailEngine, add extra scopes to the **Additional scopes** field.
+When setting up the OAuth2 application in EmailEngine, add extra scopes to the **List of OAuth2 scopes** field.
 
 **Google Example:**
 
 Navigate to **Integrations** > **OAuth2 Apps**, open your Gmail app and click **Edit app**.
 
-**Additional scopes** field:
+**List of OAuth2 scopes** field:
 
 ```
 https://www.googleapis.com/auth/calendar
@@ -410,7 +410,17 @@ EmailEngine handles token refresh automatically:
 2. Stores the new token and its expiry time in Redis, encrypted when `EENGINE_SECRET` is set
 3. Proceeds with the connection or request using the new token
 
-A refresh that the provider rejects is reported as an [`authenticationError`](/docs/webhooks/authenticationerror) webhook; a transient network failure is retried rather than treated as a rejection.
+A Gmail API or MS Graph account calls its API regularly even when idle (the watch or subscription renewal and the fallback poll), and an IMAP account exercises the refresh token whenever it opens a connection, so a connected account keeps its refresh token in use.
+
+**When a Refresh Fails:**
+
+- A refresh the provider rejects is reported as an [`authenticationError`](/docs/webhooks/authenticationerror) webhook and the account enters the `authenticationError` state, since obtaining a new grant needs the user.
+- A token endpoint that answers 408, 429 or a 5xx, or cannot be reached, is treated as unavailable rather than as a refused credential: the attempt is retried and no webhook is sent (since v2.80.0).
+- An account whose refresh keeps failing for longer than [`EENGINE_MAX_IMAP_AUTH_FAILURE_TIME`](/docs/configuration/environment-variables#max-imap-auth-failure-time), three days by default, is switched off and reports the `unset` state with a non-null `authFailureDisabledAt`. Re-authorizing it through the [hosted authentication form](/docs/accounts/hosted-authentication#re-authorizing-an-existing-account) or the **Re-authenticate** button on its page in the admin interface, or registering it again with fresh tokens, brings it back (since v2.79.4); see [Accounts switched off after authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures). The **Re-authenticate** button did nothing in v2.79.9, blocked by the Content Security Policy that release introduced; v2.80.0 fixed it.
+
+**Revoking Access:**
+
+Deleting a Gmail account from EmailEngine revokes its token at Google; a service-account application holds no per-user grant, so there is nothing to revoke there. A Microsoft account's tokens are only removed from Redis, and the user revokes the grant at https://myapps.microsoft.com. An account that is deleted and added again goes through a new consent flow.
 
 **Your Responsibility:**
 

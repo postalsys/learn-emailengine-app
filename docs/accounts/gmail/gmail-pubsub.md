@@ -259,10 +259,22 @@ includedPermissions:
 
 A Gmail watch (`users.watch`) tells Gmail to publish an account's changes to the topic, and it expires after about 7 days. EmailEngine renews it:
 
-- On account initialization and on every reconnect, if the last watch is more than a day old
+- On account initialization and on every reconnect, if the last successful watch is more than a day old
 - On a timer that fires hourly, or an hour before the expiration Gmail reported, whichever is later
 
-The time of the last successful watch is stored with the account internally; it is not part of the account API response.
+A renewal that fails is retried on the next timer run. Before v2.80.0 a failed renewal counted as a renewal, so a broken watch was retried once a day and lapsed after a week of failures.
+
+### Watch State
+
+`GET /v1/account/{account}` reports the watch as `gmailWatch` (since v2.80.0):
+
+| Field | Description |
+|-------|-------------|
+| `state` | `active` while the watch is armed and has not lapsed, `expired` once it has lapsed, `error` when the last renewal failed |
+| `lastCheck` | When the watch was last renewed, or when a renewal was last attempted |
+| `expires` | When the current watch lapses |
+
+The field is absent for an account that has never armed a watch, and for an account whose OAuth2 application has no linked Pub/Sub app, whatever an earlier configuration left behind; an account re-authorized onto an application without push clears its old record (since v2.80.0). The reason a renewal failed is Google's own response text, so it is shown on the account page in the admin interface rather than returned by the API. A watch that is not `active` does not stop the account syncing: the fallback poll keeps running, so new mail is delayed rather than lost.
 
 :::info Topic region policies
 Renewal only succeeds if Google's Gmail push service can publish to the topic. A message storage policy that restricts the topic to specific regions with in-transit enforcement blocks renewals - see [Watch renewal fails with a message storage policy error](#watch-renewal-fails-with-a-message-storage-policy-error).
@@ -311,12 +323,13 @@ A reconnect re-initializes the account and renews the watch regardless of its ag
 - EmailEngine webhook worker not processing
 
 **Solution:**
-1. Check EmailEngine logs for Pub/Sub errors:
+1. Read `gmailWatch.state` from `GET /v1/account/{account}`; `error` or `expired` means the watch is the problem, and the account page shows Google's response
+2. Check EmailEngine logs for Pub/Sub errors:
    ```bash
    journalctl -u emailengine | grep -i "pub/sub\|pubsub"
    ```
-2. Force account reconnection to renew the watch
-3. Verify the webhook worker is running (`threads{type="webhooks"}` metric)
+3. Force account reconnection to renew the watch
+4. Verify the webhook worker is running (`threads{type="webhooks"}` metric)
 
 ### Watch Renewal Fails with a Message Storage Policy Error
 
@@ -371,45 +384,9 @@ A healthy Pub/Sub integration shows:
 - Successful `oauth2_api_request` metrics
 - `pubSubError: null` for every application in `GET /v1/pubsub/status`
 
-## Architecture
+## How Notifications Reach EmailEngine
 
-```
-                     +-----------------+
-                     |   Gmail API     |
-                     +--------+--------+
-                              |
-                              | Push notification
-                              v
-+----------------+   +--------+--------+   +------------------+
-|  EmailEngine   |<--|  Cloud Pub/Sub  |<--|  Gmail Accounts  |
-|  Webhook       |   |                 |   |  (via watches)   |
-|  Worker        |   +-----------------+   +------------------+
-+-------+--------+
-        |
-        | Pull subscription
-        v
-+-------+--------+
-|  Your App      |
-|  (webhooks)    |
-+----------------+
-```
-
-**Flow:**
-
-1. EmailEngine creates a Pub/Sub topic and subscription when the service account application is registered
-2. EmailEngine registers a Gmail watch for each account, pointing to the topic
-3. Gmail publishes a notification when changes occur
-4. The EmailEngine webhook worker pulls the subscription (up to 100 messages per pull) and acknowledges what it processed
-5. Notifications are converted to webhooks and delivered to your app
-
-## Comparison: Pub/Sub vs IMAP IDLE
-
-| Feature | Gmail API + Pub/Sub | IMAP + IDLE |
-|---------|---------------------|-------------|
-| Connection type | HTTPS pull requests against the subscription | Persistent TCP connection per account |
-| Change detection | Gmail history, triggered by notifications and a 10-minute fallback poll | IMAP IDLE plus periodic resync |
-| Setup | OAuth2 app, service account, Pub/Sub API | OAuth2 app only |
-| Scope requirements | Granular (`gmail.modify` and narrower) | Full scope (`https://mail.google.com/`) |
+EmailEngine creates one Pub/Sub topic and subscription per service account application when the application is registered, registers a Gmail watch for each account that points at the topic, and pulls the subscription in a loop, acknowledging each batch of notifications once it is processed. A notification only says that the account's history changed; the messages themselves are fetched through the Gmail API, and a 10-minute fallback poll covers notifications that never arrive. For how this compares with IMAP IDLE, and when to prefer either, see [Why use the Gmail API instead of IMAP](./gmail-api#why-use-gmail-api-instead-of-imap).
 
 ## See Also
 

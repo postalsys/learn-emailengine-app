@@ -157,7 +157,7 @@ Navigate to **Integrations** > **OAuth2 Apps** in EmailEngine dashboard.
 
 - **Application name**: For example "Production Outlook"
 - **Enable this app**: Check to offer the app on authentication forms
-- **Client Id** (Gmail) or **Azure Application Id** (Outlook): From the provider console
+- **Client ID** (Gmail, Mail.ru) or **Application (client) ID** (Outlook): From the provider console
 - **Client Secret**: From the provider console
 - **Redirect URL**: Your Service URL + `/oauth`. The form pre-fills this from the `serviceUrl` setting
 - **Base scopes**: IMAP/SMTP, or the provider API (MS Graph API or Gmail API)
@@ -242,6 +242,10 @@ EmailEngine treats an account as having read access when the granted scopes incl
 
 See the [Gmail API Scopes Reference](/docs/accounts/gmail/gmail-api-scopes) for detailed setup instructions and EmailEngine feature availability for each scope combination.
 
+### Granular Consent (Google)
+
+Google's consent screen lets a user untick individual permissions. After the callback EmailEngine compares the scopes Google reports as granted with the functional scopes the application requested (the OpenID scopes are not counted). When one is missing it revokes the partial grant, best effort, so that no unused token is left at Google, and shows an error page that names the missing permissions, with a button to start the authorization again. The account is not registered, so a grant that would fail at the first sync is never stored.
+
 ### Outlook Scopes
 
 **For IMAP/SMTP:**
@@ -253,7 +257,7 @@ See the [Gmail API Scopes Reference](/docs/accounts/gmail/gmail-api-scopes) for 
 | `offline_access`        | Allow token refresh (required)            |
 | `openid`, `profile`     | Read the signed-in user's identity        |
 
-If your application doesn't need sending capabilities, you can disable `SMTP.Send` via the **Disabled scopes** field in EmailEngine's OAuth2 app settings.
+If your application doesn't need sending capabilities, you can disable `SMTP.Send` via the **List of disabled OAuth2 scopes** field in EmailEngine's OAuth2 app settings.
 
 **For MS Graph API:**
 
@@ -281,7 +285,7 @@ You can add extra scopes if you want to use OAuth2 tokens for other APIs:
 https://www.googleapis.com/auth/calendar
 ```
 
-Enter them under **Additional scopes** on the app's form, one scope per line. The API field is `extraScopes`.
+Enter them in the **List of OAuth2 scopes** field on the app's form, one scope per line. The API field is `extraScopes`.
 
 :::warning Microsoft Additional Scopes
 A Microsoft access token is issued for one resource, so an app cannot mix the two resource endpoints. With **IMAP/SMTP** as the base scope, every additional scope must come from `https://outlook.office.com/`; with **MS Graph API** as the base scope, every additional scope must come from `https://graph.microsoft.com/`. The form states this rule but does not validate the list; a mixed list is rejected by Microsoft when the user is sent to authorize. So a token that is meant to reach other Graph APIs (calendars, files) needs an app with the MS Graph API base scope.
@@ -293,7 +297,7 @@ A Microsoft access token is issued for one resource, so an app cannot mix the tw
 
 If Google/Microsoft requires narrower scopes, you can disable the default wide scope:
 
-**Disabled scopes** section, one scope per line (the API field is `skipScopes`):
+**List of disabled OAuth2 scopes** field, one scope per line (the API field is `skipScopes`):
 
 ```
 https://mail.google.com/
@@ -364,76 +368,12 @@ The redirect URL is where users return after granting consent.
 
 ## Advanced OAuth2 Features
 
-### Authentication Server
+Each of these has a page of its own; this list only says when to reach for it.
 
-An application that already runs its own OAuth2 flow can keep the tokens and hand EmailEngine a fresh one whenever it connects. Point the `authServer` setting at your endpoint:
-
-```bash
-curl -X POST https://emailengine.example.com/v1/settings \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "authServer": "https://api.example.com/email/auth"
-  }'
-```
-
-Then register accounts with `useAuthServer` set on the `oauth2` object, or on `imap` and `smtp` for password accounts, and no credentials of their own. EmailEngine asks the endpoint for a credential each time it opens a connection, rather than storing and refreshing a token itself.
-
-[Learn more about authentication servers](./authentication-server)
-
-### Pre-filled Email
-
-When generating authentication URLs, you can pre-fill the user's email:
-
-```bash
-curl -X POST https://emailengine.example.com/v1/authentication/form \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "account": "user123",
-    "email": "user@gmail.com",
-    "redirectUrl": "https://myapp.com/settings"
-  }'
-```
-
-### Delegated Access (Shared Mailboxes)
-
-For Microsoft 365 shared mailboxes:
-
-```bash
-curl -X POST https://emailengine.example.com/v1/authentication/form \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "account": "shared-support",
-    "email": "support@company.com",
-    "delegated": true,
-    "redirectUrl": "https://myapp.com/settings"
-  }'
-```
-
-[Learn more about shared mailboxes](./microsoft-365/outlook-365#shared-mailboxes)
-
-### Service Accounts (Google Workspace)
-
-Access any user's mailbox without individual consent:
-
-```json
-{
-  "oauth2": {
-    "provider": "AAABhaBPHscAAAAI",
-    "auth": {
-      "user": "user@company.com"
-    }
-  }
-}
-```
-
-`provider` is the ID of the service-account application you registered in EmailEngine.
-
-Requires domain-wide delegation setup.
-
-[Learn more about service accounts](./gmail/google-service-accounts)
+- **Authentication server** - your application keeps the tokens and hands EmailEngine a fresh credential each time it connects. Set the `authServer` setting and register accounts with `useAuthServer: true`. See [Using an Authentication Server](/docs/accounts/authentication-server).
+- **Pre-filled and required email address** - pass `email` when generating a hosted authentication form to pre-fill it, and `expectedEmail` to refuse any other identity. See [Pre-filling Information](/docs/accounts/hosted-authentication#pre-filling-information).
+- **Delegated access to shared mailboxes** - pass `delegated: true` on the hosted form, or set `oauth2.auth.delegatedUser` on the account. See [Shared Mailboxes (Microsoft 365)](/docs/accounts/microsoft-365/shared-mailboxes).
+- **Service accounts** - a Google Workspace domain can grant a service account access to every mailbox, with no per-user consent. See [Google Service Accounts](/docs/accounts/gmail/google-service-accounts).
 
 ## See Also
 

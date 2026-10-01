@@ -99,14 +99,13 @@ App passwords provide IMAP/SMTP access without OAuth2:
 
 ### OAuth2 (This Guide)
 
-OAuth2 provides the best experience for production applications:
+OAuth2 is the method for production applications:
 
 **Benefits:**
 
 - No password storage
 - Works with 2FA accounts
 - Automatic token refresh
-- Better security
 - Users authenticate once and are not asked again
 
 **Types of OAuth2 Apps:**
@@ -300,14 +299,18 @@ Now that you have your Google Cloud project configured, let's set up EmailEngine
 
 **Base scopes:** Select **IMAP and SMTP**
 
+**Show only Google Workspace accounts on the OAuth2 login page:** Optional (API field `googleWorkspaceAccounts`, since v2.48.2). When checked, EmailEngine adds `hd=*` to Google's authorization URL, so Google's account chooser lists only Google Workspace accounts. It is a hint to the chooser: EmailEngine does not check the domain of the account that signs in.
+
+**Display title:** Optional (API field `title`). Shown above the app's button on the hosted authentication form, so that several apps of the same provider can be told apart.
+
 Click **Register app** to save.
 
 :::tip Base Scopes Selection
 
 - **IMAP and SMTP**: EmailEngine uses IMAP for reading and SMTP for sending (this guide)
-- **Gmail API**: EmailEngine uses Gmail REST API for all operations (requires Cloud Pub/Sub)
+- **Gmail API** (labeled beta in the form): EmailEngine uses the Gmail REST API for all operations. Push notifications need Cloud Pub/Sub; without it the account is polled about every 10 minutes
 
-Choose IMAP and SMTP unless you specifically need Gmail API features.
+Choose IMAP and SMTP unless you need the Gmail API backend.
 :::
 
 ## Step 6: Test the Setup
@@ -419,27 +422,9 @@ Gmail may throttle accounts with unusual activity:
 
 ## Production Considerations
 
-### Security Audit for Public Apps
+### Publishing the App
 
-If you need a public OAuth2 app accessible to any Gmail user:
-
-**Requirements:**
-
-1. **Security audit**: OWASP compliance, penetration testing
-2. **Use case validation**: Not all app types qualify (e.g., email exporters may be blocked)
-3. **Minimum permission set**: Google may reject `https://mail.google.com/` as too broad
-
-**Process:**
-
-- Audit costs significant money and time
-- Must demonstrate why IMAP access is necessary
-- Google may require you to use narrower scopes (which may not work with EmailEngine)
-
-**Alternatives if audit is not feasible:**
-
-- Use Internal apps (Google Workspace only)
-- Use app passwords
-- Consider if your use case can work with narrower scopes
+An app that any Gmail user can authorize has to pass Google's app verification, and `https://mail.google.com/`, the scope IMAP and SMTP need, is a restricted scope, so the verification includes a security assessment. An internal app (Google Workspace only) and an app in testing mode need no verification, with the limits described under [Gmail account types](/docs/accounts/oauth2-setup#gmail-account-types). The scope tiers and what each requires are on the [Gmail API Scopes Reference](./gmail-api-scopes#googles-scope-classifications); an application that cannot justify the full scope can use the [Gmail API](./gmail-api) with a narrower one instead.
 
 ### Managing Multiple OAuth2 Apps
 
@@ -451,48 +436,9 @@ You can configure multiple Gmail OAuth2 applications in EmailEngine:
 
 Each app gets its own settings and can use different scopes or configurations.
 
-### Granular Consent and Scope Validation
+### Consent, Tokens and Recovery
 
-Google supports **granular consent**, allowing users to selectively grant or deny individual permissions during the OAuth2 flow. EmailEngine validates that all required functional scopes were granted after the OAuth2 callback.
-
-If a user deselects a required scope (e.g., unchecks email access), EmailEngine:
-
-1. Detects the missing scope(s)
-2. Revokes the partial token (best-effort) to prevent dangling grants
-3. Shows an error page listing the missing permissions with human-readable descriptions
-4. Offers a "Try Again" button to restart the OAuth2 flow
-
-This prevents accounts from being registered with insufficient permissions, which would cause authentication errors during sync.
-
-### Token Management
-
-EmailEngine automatically:
-
-- Refreshes the access token from the stored refresh token whenever an IMAP or SMTP connection is opened and the cached token is expired or about to expire
-- Stores refresh tokens in Redis, encrypted when [field encryption](/docs/advanced/encryption) is enabled
-- Reports a failed refresh as an [`authenticationError`](/docs/webhooks/authenticationerror), since obtaining a new grant needs the user
-
-An account whose refresh keeps failing for longer than [`EENGINE_MAX_IMAP_AUTH_FAILURE_TIME`](/docs/configuration/environment-variables#max-imap-auth-failure-time) (three days by default) is switched off and reports the `unset` state with a non-null `authFailureDisabledAt`. Re-authorizing it through the hosted authentication form, or re-registering it with fresh tokens, brings it back (since v2.79.4); see [Accounts switched off after authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures).
-
-You can:
-
-- Retrieve the current access token via the API for use with other Google APIs
-- Revoke access by deleting the account
-- Monitor token status via account state
-
-:::warning Refresh Token Expiration
-Google refresh tokens can expire under certain conditions:
-
-- **6 months of inactivity** - If not used to obtain new access tokens
-- **7 days** - If your OAuth app is in "Testing" mode (not published to production)
-- **User revokes access** - Via Google account settings
-- **Password change** - When Gmail scopes are present
-- **Token limit exceeded** - Google allows ~50 refresh tokens per user/client; oldest tokens are invalidated
-
-EmailEngine keeps tokens active by making regular API requests, but if an account is deleted from EmailEngine and re-added later, a new consent flow is required.
-:::
-
-[Learn more about OAuth2 token management >](../oauth2-token-management)
+What happens when a user unticks a permission on Google's consent screen is under [Granular consent](/docs/accounts/oauth2-setup#granular-consent-google). Token refresh, the conditions under which Google invalidates a refresh token, what a failed refresh does to the account and how a switched-off account comes back are on [OAuth2 Token Management](/docs/accounts/oauth2-token-management#token-refresh).
 
 ## See Also
 

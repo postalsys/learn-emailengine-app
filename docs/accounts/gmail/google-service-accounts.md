@@ -37,7 +37,7 @@ Service accounts with domain-wide delegation can access any mailbox in your Goog
 - Service account impersonates users to access their mailboxes
 
 :::info IMAP/SMTP Only
-When using service accounts for email access, EmailEngine connects via IMAP and SMTP with `XOAUTH2`. A Gmail Service Accounts application offers only the **IMAP and SMTP** and **Cloud Pub/Sub** base scopes; the Gmail REST API backend is not available to accounts that authenticate through a service account.
+When using service accounts for email access, EmailEngine connects via IMAP and SMTP with `XOAUTH2`. The OAuth2 application form offers a Gmail Service Accounts application only the **IMAP and SMTP** and **Cloud Pub/Sub** base scopes; the Gmail REST API backend is not offered for accounts that authenticate through a service account.
 :::
 
 **2. Push Notifications for Standard Gmail Accounts (Cloud Pub/Sub)**
@@ -312,10 +312,10 @@ The downloaded JSON file contains:
 
 The important fields for EmailEngine are:
 
-- `client_id`: Maps to "Service client" in EmailEngine
-- `client_email`: Maps to "Client Email" in EmailEngine
-- `private_key`: Maps to "Secret service key" in EmailEngine
-- `project_id`: Maps to "Google Cloud Project ID" in EmailEngine (used for Gmail Push Notifications)
+- `client_id`: Maps to **Service account client ID** in EmailEngine (API field `serviceClient`)
+- `client_email`: Maps to **Service account email** in EmailEngine (`serviceClientEmail`)
+- `private_key`: Maps to **Private key** in EmailEngine (`serviceKey`)
+- `project_id`: Maps to **Google Cloud Project ID** in EmailEngine (`googleProjectId`, used for Gmail push notifications)
 
 ## Step 6: Enable Gmail API (Optional)
 
@@ -344,10 +344,12 @@ Click **Load configuration from the service key file** and select the service ac
 
 EmailEngine extracts and fills in:
 
-- Service client (from `client_id`)
-- Client Email (from `client_email`)
-- Secret service key (from `private_key`)
+- Service account client ID (from `client_id`)
+- Service account email (from `client_email`)
+- Private key (from `private_key`)
 - Google Cloud Project ID (from `project_id`)
+
+The **Authentication method** select stays on **Service account key** for this flow.
 
 ### Select Base Scopes
 
@@ -371,7 +373,7 @@ If you need to configure the same service account in another EmailEngine instanc
 :::
 
 :::warning Enable Field Encryption
-Unless `EENGINE_SECRET` is set, EmailEngine stores credentials in cleartext in Redis. To protect sensitive data like service account private keys, enable field encryption. See [Setting Up Encryption](/docs/advanced/encryption) for configuration instructions.
+Unless `EENGINE_SECRET` is set, EmailEngine stores credentials in cleartext in Redis. To protect sensitive data like service account private keys, enable field encryption. See [Setting Up Encryption](/docs/deployment/encryption) for configuration instructions.
 :::
 
 ### Find Your App ID
@@ -565,14 +567,14 @@ In the EmailEngine OAuth2 app form:
 
 1. Select **Gmail Service Accounts** as the provider.
 2. Choose **Workload Identity Federation (keyless)** as the authentication method.
-3. Fill in the **Google Cloud Project ID**, **Client Email**, and **Service client** fields with the same values you would use for the key-based flow. The "Load configuration from the external-account JSON file" button auto-fills the client email from the impersonation URL.
+3. Fill in the **Google Cloud Project ID**, **Service account email**, and **Service account client ID** fields with the same values you would use for the key-based flow. The **Load configuration from the external-account JSON file** button auto-fills the service account email from the impersonation URL.
 4. Paste the contents of `external-account.json` into the **External account configuration** textarea, or use the file upload button.
 5. Click **Register app**.
 
 EmailEngine validates the configuration on save: it must be JSON with `"type": "external_account"`, carry `audience`, `subject_token_type`, `token_url` and `service_account_impersonation_url`, and `token_url` must point at Google's STS endpoint. A credential source it cannot read is reported when the token is first requested, as `ESubjectTokenRead`.
 
-:::important Client Email must match the impersonated service account
-In federation mode EmailEngine issues the JWT bearer assertion as the service account named in the configuration's `service_account_impersonation_url`. The **Client Email** field must be that same service account address. If they differ, EmailEngine reports `EServiceAccountMismatch` the first time it uses the application (the **Verify setup** check, or the first token request), rather than failing at Google with an opaque `invalid_grant`.
+:::important Service account email must match the impersonated service account
+In federation mode EmailEngine issues the JWT bearer assertion as the service account named in the configuration's `service_account_impersonation_url`. The **Service account email** field must be that same service account address. If they differ, EmailEngine reports `EServiceAccountMismatch` the first time it uses the application (the **Verify setup** check, or the first token request), rather than failing at Google with an opaque `invalid_grant`.
 :::
 
 The authentication method (service account key vs Workload Identity Federation) is fixed once the application is created. To switch methods, create a new application.
@@ -606,7 +608,7 @@ When token acquisition fails, EmailEngine surfaces a stable error code that poin
 | Error code | What it means | Likely fix |
 |---|---|---|
 | `EExternalAccountConfig` | The stored JSON is malformed, has the wrong `type`, or uses an unsupported credential source. | Re-run `gcloud iam workload-identity-pools create-cred-config` and re-paste the JSON. Ensure `type` is `external_account` and `credential_source` uses `file` or `url`. |
-| `EServiceAccountMismatch` | The **Client Email** field does not match the service account in the `service_account_impersonation_url`. | Set Client Email to the same service account address the impersonation URL points at. |
+| `EServiceAccountMismatch` | The **Service account email** field does not match the service account in the `service_account_impersonation_url`. | Set the service account email to the same address the impersonation URL points at. |
 | `ESubjectTokenRead` | EmailEngine could not read the subject token (file missing, URL unreachable, empty response). | Verify the projected token volume is mounted at the path in `credential_source.file`. For `url` sources, confirm the endpoint is reachable and any required headers are set. |
 | `ESTSExchange` | Google STS rejected the token exchange. | Common causes: wrong `audience`, the workload's OIDC issuer does not match the provider's `issuer-uri`, the subject token's audience does not match the provider, or the pool/provider is disabled. Check the `error_description` in the EmailEngine error log. |
 | `ESignJwt` | The `iamcredentials.googleapis.com signJwt` call failed. | A `403` means the federated pool principal is missing **`roles/iam.serviceAccountTokenCreator`** on the service account (see the binding above - `workloadIdentityUser` is not enough). A `429` means requests are being rate-limited, which is rare under normal token-refresh cadence. |
@@ -624,7 +626,7 @@ With the service account configured, you can now add email accounts without any 
 
 ### Add Account via the Admin UI
 
-Since service-account apps authenticate without an interactive consent screen, the OAuth2 app's detail page in the EmailEngine dashboard provides an **Add account** button. It opens a dialog asking for the account name and email address and registers the account directly - no API call needed.
+Since service-account apps authenticate without an interactive consent screen, the OAuth2 app's detail page in the EmailEngine dashboard provides an **Add account** button (since v2.68.0). It opens a dialog asking for the full name, the email address and an optional account ID, and registers the account directly - no API call needed. Leave the ID blank to have one generated; an existing ID updates that account.
 
 The button is available for service apps with the **IMAP and SMTP** base scope. Pub/Sub-scoped service apps grant no mailbox access, so they do not offer it.
 
@@ -733,7 +735,7 @@ curl -X PUT https://emailengine.example.com/v1/account/user123 \
 
 ### Recovering a Switched-Off Account
 
-If domain-wide delegation is revoked or the key is rotated, every account using the application fails authentication. After the failures have run for longer than [`EENGINE_MAX_IMAP_AUTH_FAILURE_TIME`](/docs/configuration/environment-variables#max-imap-auth-failure-time) (three days by default), EmailEngine switches the account off: it reports the `unset` state with a non-null `authFailureDisabledAt`, and a reconnect request returns `{"reconnect": false}`.
+If domain-wide delegation is revoked or the key is rotated, every account using the application fails authentication. A Google token endpoint that answers 408, 429 or a 5xx is not counted as a failure: the attempt is retried and no `authenticationError` is sent (since v2.80.0). After the failures have run for longer than [`EENGINE_MAX_IMAP_AUTH_FAILURE_TIME`](/docs/configuration/environment-variables#max-imap-auth-failure-time) (three days by default), EmailEngine switches the account off: it reports the `unset` state with a non-null `authFailureDisabledAt`, and a reconnect request returns `{"reconnect": false}`.
 
 Once the delegation or key is fixed, bring the account back with **Resume syncing** on its page in the admin interface, or by registering it again with `POST /v1/account` under the same account ID, which lifts the switch and reconnects (since v2.79.4). See [Accounts switched off after authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures).
 

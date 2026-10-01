@@ -174,7 +174,7 @@ With encryption enabled, all credentials are encrypted before being written to R
 If you lose the `EENGINE_SECRET`, encrypted credentials cannot be recovered and every account must be re-authenticated. Store this secret securely and include it in your backup strategy.
 :::
 
-[Complete security guide](/docs/support/security-faq) | [Encryption details](/docs/advanced/encryption)
+[Complete security guide](/docs/support/security-faq) | [Encryption details](/docs/deployment/encryption)
 
 ## Decision Tree: Which Method Should I Use?
 
@@ -200,375 +200,36 @@ graph TD
 
 ## Account Management Tasks
 
-### Adding Accounts
+The lifecycle of a registered account, from registration to deletion, is on [Managing Accounts](/docs/accounts/managing-accounts). In short:
 
-**Via API (Programmatic):**
-
-Use the [register account API](/docs/api/post-v-1-account):
-
-```javascript
-// Add account via REST API
-const response = await fetch('https://emailengine.example.com/v1/account', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    account: 'user123',
-    name: 'John Doe',
-    email: 'john@example.com',
-    imap: {
-      host: 'imap.example.com',
-      port: 993,
-      secure: true,
-      auth: { user: 'john@example.com', pass: 'password' }
-    },
-    smtp: {
-      host: 'smtp.example.com',
-      port: 587,
-      secure: false,
-      auth: { user: 'john@example.com', pass: 'password' }
-    }
-  })
-});
-```
-
-**Via Hosted Authentication Form (User-Friendly):**
-
-Generate a form URL and redirect users to it. They enter their credentials, and EmailEngine handles the rest.
-
-```javascript
-// Generate authentication form URL
-const formResponse = await fetch('https://emailengine.example.com/v1/authentication/form', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    account: 'user123',
-    email: 'john@example.com',
-    redirectUrl: 'https://myapp.com/settings'
-  })
-});
-
-const { url } = await formResponse.json();
-// Redirect user to: url
-```
-
-[Learn about hosted authentication →](/docs/accounts/hosted-authentication)
-
-**Via Web Interface:**
-
-Navigate to **Accounts** > **Add an account** in the EmailEngine dashboard. The dialog asks for a display name and an optional account identifier, and **Continue** opens the hosted authentication form.
-
-:::note
-The web interface is a shorthand for the hosted authentication form. EmailEngine generates a hosted authentication form URL and redirects your browser to it, so the experience is identical to what end users see when your application generates the URL via the API.
-:::
-
-### Updating Accounts
-
-Use the [update account API](/docs/api/put-v-1-account-account):
-
-```javascript
-// Update account settings
-await fetch('https://emailengine.example.com/v1/account/user123', {
-  method: 'PUT',
-  headers: {
-    'Authorization': 'Bearer YOUR_TOKEN',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    name: 'John Doe Updated',
-    subconnections: ['\\Sent']
-  })
-});
-```
-
-:::warning Partial updates for nested objects
-The `imap`, `smtp`, and `oauth2` objects are replaced whole unless the object carries `"partial": true`. This body changes only the Sent folder path and keeps the stored host, port, and credentials:
-
-```json
-{
-  "imap": {
-    "partial": true,
-    "sentMailPath": "Sent Items"
-  }
-}
-```
-:::
-
-### Account States
-
-| State | Description | Actions Available |
-|-------|-------------|-------------------|
-| `init` | The account was just registered and has not connected yet | Wait |
-| `connecting` | Connecting to the mail server or authorizing with the provider | Wait |
-| `syncing` | Connected and performing the initial or a periodic mailbox sync | Wait for the sync to complete |
-| `connected` | Connected and watching for changes. This is the healthy steady state | All operations available |
-| `disconnected` | The connection dropped and EmailEngine is retrying with backoff | Wait for the retry |
-| `authenticationError` | The credentials were rejected. Requires re-authentication before syncing resumes | Update credentials or re-authorize |
-| `connectError` | The server could not be reached or the TLS handshake failed. Retried with backoff | Check connectivity, retry |
-| `paused` | Syncing was paused through the API. No connection is maintained | Resume syncing |
-| `unset` | The account is not syncing: either no IMAP or OAuth2 configuration is set, or syncing was switched off, by the operator or automatically after repeated authentication failures | Finish the setup, or [re-enable the account](/docs/accounts/managing-accounts#disabling-and-enabling-accounts) |
-
-An `unset` account that EmailEngine switched off itself carries a non-null `authFailureDisabledAt` timestamp in the account object (since v2.79.4). See [Accounts switched off after authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures) for how to bring one back.
-
-### Reconnecting Accounts
-
-If an account enters an error state, you can trigger a reconnection using the [reconnect account API](/docs/api/put-v-1-account-account-reconnect):
-
-```bash
-curl -X PUT https://emailengine.example.com/v1/account/user123/reconnect \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"reconnect": true}'
-```
-
-The response is `{"reconnect": true}` when a reconnect was requested. Since v2.79.4 it is `{"reconnect": false}` for an account that EmailEngine [switched off after repeated authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures), because a reconnect cannot bring such an account back; supply working credentials or use **Resume syncing** in the admin interface instead.
-
-### Flushing Accounts
-
-The [flush API](/docs/api/put-v-1-account-account-flush) resets the internal email index for an account and re-syncs from scratch. This is useful for:
-
-- **Resetting corrupted index** - Fix sync issues by rebuilding the index
-- **Processing existing emails** - Trigger `messageNew` webhooks for existing emails (IMAP only)
-- **Changing indexer type** - Switch between full and fast indexing strategies
-
-```bash
-# Basic flush - reset index, only notify about new messages going forward
-curl -X PUT https://emailengine.example.com/v1/account/user123/flush \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "flush": true
-  }'
-
-# Flush with options - process existing emails and change indexer
-curl -X PUT https://emailengine.example.com/v1/account/user123/flush \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "flush": true,
-    "notifyFrom": "2024-01-01T00:00:00.000Z",
-    "imapIndexer": "full"
-  }'
-```
-
-**Parameters:**
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `flush` | boolean | Must be `true` to confirm the flush operation |
-| `notifyFrom` | string | Only send webhooks for messages after this date (IMAP only). Defaults to current time, so only new messages trigger webhooks. Set to a past date like `"1970-01-01T00:00:00.000Z"` to process existing emails |
-| `imapIndexer` | string | Set indexing strategy: `"full"` or `"fast"` (IMAP only) |
-
-:::warning One flush at a time
-Only one flush can run at a time across the whole instance. A second request while one is running fails with HTTP 429 and the error code `LockFail`.
-:::
-
-:::note API-Based Backends
-For Gmail API and MS Graph accounts, `notifyFrom` has no effect. These backends only notify about new emails arriving after the account was connected, not existing emails.
-:::
-
-[Learn more about IMAP indexers →](/docs/accounts/imap-indexers)
-
-### Deleting Accounts
-
-Use the [delete account API](/docs/api/delete-v-1-account-account):
-
-```bash
-curl -X DELETE https://emailengine.example.com/v1/account/user123 \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
-This removes the account from EmailEngine and closes all connections. Email data on the server remains unchanged.
+- **Adding accounts** - register through [`POST /v1/account`](/docs/api/post-v-1-account) with the credentials in the body, through a [hosted authentication form](/docs/accounts/hosted-authentication) that collects them from the user, or in the admin interface under **Accounts** > **Add account**, which opens the same hosted form. See [Adding accounts](/docs/accounts/managing-accounts#adding-accounts).
+- **Updating accounts** - [`PUT /v1/account/{account}`](/docs/api/put-v-1-account-account) changes any field. The `imap`, `smtp` and `oauth2` objects are replaced whole unless they carry `"partial": true`. See [Updating accounts](/docs/accounts/managing-accounts#updating-accounts).
+- **Account states** - what `init`, `connecting`, `syncing`, `connected`, `disconnected`, `authenticationError`, `connectError`, `paused` and `unset` mean, and what to do about each, is in [Account states](/docs/accounts/managing-accounts#account-states).
+- **Reconnecting** - [`PUT /v1/account/{account}/reconnect`](/docs/api/put-v-1-account-account-reconnect) with `{"reconnect": true}`. See [Reconnecting accounts](/docs/accounts/managing-accounts#reconnecting-accounts).
+- **Flushing** - [`PUT /v1/account/{account}/flush`](/docs/api/put-v-1-account-account-flush) rebuilds the index, optionally with a `notifyFrom` cutoff for webhooks and a different `imapIndexer`. See [Flushing accounts](/docs/accounts/managing-accounts#flushing-accounts).
+- **Deleting** - [`DELETE /v1/account/{account}`](/docs/api/delete-v-1-account-account) removes the account and closes its connections; the mailbox itself is untouched. See [Deleting accounts](/docs/accounts/managing-accounts#deleting-accounts).
 
 ## Advanced Configuration
 
-### Sub-Connections
-
-By default, EmailEngine monitors the INBOX folder in real-time but polls other folders periodically. Sub-connections allow instant notifications for additional folders.
-
-```json
-{
-  "account": "user123",
-  "subconnections": [
-    "\\Sent",
-    "Important",
-    "Projects/Active"
-  ]
-}
-```
-
-**Benefits:**
-- Instant webhooks for sent emails
-- Real-time tracking of specific folders
-- Better CRM integration (know immediately when user sends email)
-
-**Trade-offs:**
-- Opens additional IMAP connections
-- Most servers limit parallel connections (typically 10-15)
-- Use sparingly
-
-[Learn more in performance tuning →](/docs/advanced/performance-tuning#sub-connections-for-selected-folders)
-
-### Path Filtering
-
-Limit which folders EmailEngine syncs and monitors to save resources:
-
-```json
-{
-  "account": "user123",
-  "path": [
-    "INBOX",
-    "\\Sent",
-    "\\Drafts"
-  ]
-}
-```
-
-**What this does:**
-- EmailEngine syncs and monitors only the listed folders
-- Unlisted folders won't trigger webhooks
-- API access to unlisted folders still works
-
-[Learn more in performance tuning →](/docs/advanced/performance-tuning#limiting-indexed-folders)
-
-### Custom Special Folder Paths
-
-EmailEngine decides which folder is Sent, Drafts, Junk, Trash, or Archive from the paths you set, the server's SPECIAL-USE flags, and folder names, in that order. Outlook over IMAP advertises no flags at all, and a localized mailbox may name its folders in any language, so the guess is not always right.
-
-Override any of them with `sentMailPath`, `draftsMailPath`, `junkMailPath`, `trashMailPath`, and `archiveMailPath` inside the account's `imap` object. See [Custom special folder paths](/docs/accounts/imap-smtp#custom-special-folder-paths) for the field reference and what `specialUseSource` reports.
+- **Sub-connections** (`subconnections`) open a dedicated IMAP connection for each listed folder, so changes there are detected as fast as in the INBOX, at the cost of one more connection per folder against the server's limit. See [Enable sub-connections](/docs/accounts/managing-accounts#enable-sub-connections) and [Sub-connections for selected folders](/docs/advanced/performance-tuning#sub-connections-for-selected-folders).
+- **Path filtering** (`path`) limits syncing and webhooks to the listed folders; API access to the other folders still works. See [Configure path filtering](/docs/accounts/managing-accounts#configure-path-filtering) and [Limiting indexed folders](/docs/advanced/performance-tuning#limiting-indexed-folders).
+- **Custom special folder paths** (`sentMailPath`, `draftsMailPath`, `junkMailPath`, `trashMailPath` and `archiveMailPath` inside the `imap` object) override the folder EmailEngine picks for Sent, Drafts, Junk, Trash and Archive. See [Custom special folder paths](/docs/accounts/imap-smtp#custom-special-folder-paths).
 
 ## OAuth2 Token Management
 
-For OAuth2 accounts, EmailEngine automatically refreshes access tokens in the background. You never need to handle token expiration.
-
-### Using Tokens for Other APIs
-
-You can retrieve valid access tokens for use in your own Google/Microsoft API calls:
-
-```javascript
-// Get current OAuth2 access token
-const tokenResponse = await fetch(
-  'https://emailengine.example.com/v1/account/user123/oauth-token',
-  {
-    headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
-  }
-);
-
-const { account, user, accessToken, provider, expires } = await tokenResponse.json();
-
-// Use token with Google/Microsoft APIs
-const apiResponse = await fetch('https://www.googleapis.com/gmail/v1/users/me/profile', {
-  headers: { 'Authorization': `Bearer ${accessToken}` }
-});
-```
-
-:::warning Endpoint Disabled by Default
-The `/v1/account/{account}/oauth-token` endpoint is **disabled by default** for security reasons. You must explicitly enable it before use.
-
-**To enable via Web UI:**
-1. Navigate to **Configuration** > **Security**
-2. Check **Allow OAuth2 Token Access via API**
-3. Click **Save**
-
-**To enable via environment variable:**
-Set `EENGINE_ENABLE_OAUTH_TOKENS_API=true` when starting EmailEngine.
-
-This setting cannot be changed via the API - it must be configured through the web interface or environment variable.
-:::
-
-[Learn more about OAuth2 token management →](/docs/accounts/oauth2-token-management)
+EmailEngine refreshes the access token of an OAuth2 account itself, before a connection or API request that needs it. The current token can be read through [`GET /v1/account/{account}/oauth-token`](/docs/api/get-v-1-account-account-oauthtoken) for use with other Google or Microsoft APIs; the endpoint is off by default and is switched on under **Configuration** > **Security**. See [OAuth2 Token Management](/docs/accounts/oauth2-token-management) for the refresh rules, the token lifetimes per provider and the endpoint.
 
 ## Service Accounts (Google Workspace)
 
-For Google Workspace domains, you can use service accounts with domain-wide delegation to access any user's mailbox without individual OAuth2 consent.
-
-**Benefits:**
-- No per-user OAuth2 flow
-- Centralized access management
-- Ideal for enterprise deployments
-
-**Requirements:**
-- Google Workspace (not free Gmail)
-- Super admin access
-- Domain-wide delegation setup
-
-[Service Accounts Setup Guide →](/docs/accounts/gmail/google-service-accounts)
+A Google Workspace domain can grant a service account access to every mailbox through domain-wide delegation, so accounts are registered without a per-user OAuth2 consent flow. It needs Google Workspace (not consumer Gmail) and a super admin to set up the delegation. See [Google Service Accounts](/docs/accounts/gmail/google-service-accounts).
 
 ## Shared Mailboxes (Microsoft 365)
 
-Microsoft 365 shared mailboxes can be accessed through two approaches:
-
-- **Direct access** - Add shared mailbox with its own OAuth2 credentials
-- **Delegated access** - Add main account, then reference it for shared mailboxes (recommended)
-
-Delegated access allows one user to manage multiple shared mailboxes without re-authenticating.
-
-[Complete Shared Mailboxes Guide →](/docs/accounts/microsoft-365/shared-mailboxes)
+A Microsoft 365 shared mailbox is added either with its own OAuth2 authorization (direct access) or by referencing the account of a user who has access to it (delegated access, the usual choice, since a shared mailbox has no credential of its own). See [Shared Mailboxes (Microsoft 365)](/docs/accounts/microsoft-365/shared-mailboxes).
 
 ## Authentication Server (External Token Management)
 
-For advanced use cases where you already manage OAuth2 tokens in your application, you can use an external authentication server. EmailEngine will call your server to fetch access tokens instead of managing them internally.
-
-**Step 1: Configure the authentication server URL globally:**
-
-```bash
-curl -X POST https://emailengine.example.com/v1/settings \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "authServer": "https://your-auth-server.com/authenticate"
-  }'
-```
-
-**Step 2: Register accounts with `useAuthServer: true`:**
-
-For IMAP/SMTP accounts:
-
-```json
-{
-  "account": "user123",
-  "name": "John Doe",
-  "email": "john@outlook.com",
-  "imap": {
-    "useAuthServer": true,
-    "host": "outlook.office365.com",
-    "port": 993,
-    "secure": true
-  },
-  "smtp": {
-    "useAuthServer": true,
-    "host": "smtp-mail.outlook.com",
-    "port": 587,
-    "secure": false
-  }
-}
-```
-
-For Gmail API or MS Graph API accounts:
-
-```json
-{
-  "account": "user123",
-  "name": "John Doe",
-  "email": "john@gmail.com",
-  "oauth2": {
-    "useAuthServer": true,
-    "provider": "<oauth2-app-id>",
-    "auth": {
-      "user": "john@gmail.com"
-    }
-  }
-}
-```
-
-When EmailEngine needs to authenticate, it calls your server at `GET {authServer}?account={account}&proto={proto}` (where `proto` is `imap`, `smtp`, or `api`) and expects a response with `user` and either `pass` or `accessToken` fields.
-
-[Authentication Server Guide →](/docs/accounts/authentication-server)
+An application that already holds the credentials can hand them to EmailEngine on demand instead of storing them: set the `authServer` setting to your endpoint and register accounts with `useAuthServer: true` on the `imap` and `smtp` objects, or on `oauth2` for Gmail API and MS Graph accounts. EmailEngine then calls `GET {authServer}?account={account}&proto={proto}` whenever it needs a credential and expects `user` with either `pass` or `accessToken` in the answer. See [Using an Authentication Server](/docs/accounts/authentication-server) for the protocol, the failure handling and the setup.
 
 ## API Reference
 

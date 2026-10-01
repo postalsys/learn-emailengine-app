@@ -118,7 +118,7 @@ Direct the user to this URL to begin authentication. The URL is single-use and e
 | `expectedEmail` | No | Restrict the form to a single address - setup is rejected if the user authenticates as someone else |
 | `name` | No | Pre-fill display name on form |
 | `type` | No | Pre-select the account type: `"imap"` or an OAuth2 application ID (skips the selection screen) |
-| `skipServerSettings` | No | Skip the mail server settings step when the IMAP and SMTP settings can be both discovered and verified from the address and password the user enters. IMAP path only, since v2.81.0, see [Skipping the Server Settings Step](#skipping-the-server-settings-step) |
+| `skipServerSettings` | No | Defaults to `true` since v2.81.0: the mail server settings step is skipped when the IMAP and SMTP settings can be both discovered and verified from the address and password the user enters. Send `false` to always show the step. IMAP path only, see [Skipping the Server Settings Step](#skipping-the-server-settings-step) |
 | `delegated` | No | Register the account as a shared mailbox. Microsoft 365 OAuth2 only |
 | `notifyFrom` | No | Only emit webhooks for messages received after this date. Defaults to the moment the account is created. IMAP only |
 | `subconnections` | No | Folders to watch on their own connection, for immediate notifications |
@@ -158,7 +158,7 @@ Using the `type` parameter provides a smoother experience - users go directly to
 
 ### Skipping the Server Settings Step
 
-On the IMAP path the form normally asks for the email address and password, then shows a second page with the discovered IMAP and SMTP settings for the user to review. Set `skipServerSettings` to `true` to remove that second page whenever EmailEngine can both discover the settings and verify them with the password the user entered:
+On the IMAP path the form asks for the email address and password. Up to v2.80.1 it then always showed a second page with the discovered IMAP and SMTP settings for the user to review. Since v2.81.0 a link minted through this endpoint skips that page whenever EmailEngine can both discover the settings and verify them with the password the user entered: the user sees a page that checks the connection and is redirected to `redirectUrl` once the account is created. `skipServerSettings` defaults to `true`, so a link that should always show the settings page has to say so:
 
 ```bash
 curl -X POST https://emailengine.example.com/v1/authentication/form \
@@ -168,12 +168,12 @@ curl -X POST https://emailengine.example.com/v1/authentication/form \
     "account": "user123",
     "email": "john@example.com",
     "type": "imap",
-    "skipServerSettings": true,
+    "skipServerSettings": false,
     "redirectUrl": "https://myapp.com/settings"
   }'
 ```
 
-The user enters their address and password, sees a page that checks the connection, and is redirected to `redirectUrl` once the account is created. Available since v2.81.0.
+Links minted before v2.81.0, and the setup the admin interface starts from **Add account**, keep showing the settings page.
 
 **When the step is still shown:**
 
@@ -181,14 +181,14 @@ The user enters their address and password, sees a page that checks the connecti
 - Autodiscovery returned settings that are incomplete for account creation
 - The connection check failed, for example because the password was wrong or the provider requires an app password
 
-In each of those cases the user is handed the ordinary server settings form, prefilled with whatever was discovered, so the setup continues rather than failing. The parameter removes a step that would have been a formality; it never ends the setup on its own, and it never creates an account from settings that were not verified.
+In each of those cases the user is handed the ordinary server settings form, prefilled with whatever was discovered, so the setup continues rather than failing. The skip removes a step that would have been a formality; it never ends the setup on its own, and it never creates an account from settings that were not verified.
 
 :::note IMAP path only
-`skipServerSettings` has no effect on OAuth2 accounts, which never show a server settings page. Combine it with `type: "imap"` to send the user straight into the IMAP flow.
+`skipServerSettings` has no effect on OAuth2 accounts, which never show a server settings page. Combine `type: "imap"` with the default to send the user straight into the IMAP flow.
 :::
 
 :::warning Users lose the chance to correct the settings
-The review page is also where a user can change a discovered value before the account is created - for a self-hosted server reachable under a different name, for instance. Skipping it is best suited to setups where the addresses come from providers with reliable autodiscovery.
+The review page is also where a user can change a discovered value before the account is created - for a self-hosted server reachable under a different name, for instance. Send `skipServerSettings: false` when the addresses come from servers whose autodiscovery answers are not the settings you want used.
 :::
 
 ### Implementation Example
@@ -423,7 +423,7 @@ Generating a form with the `account` ID of an existing account re-authorizes it:
 
 If the account was not operational at the time (an error state, or switched off by the safety net after repeated authentication failures), completing the form also requests a full reconnect, so syncing resumes without a separate reconnect call. Since v2.79.4 this includes an account that EmailEngine switched off itself: the one that reports `unset` with a non-null `authFailureDisabledAt`. See [Accounts switched off after authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures).
 
-The admin interface offers the same flow as the **Re-authenticate** button on an OAuth2 account's page.
+The admin interface offers the same flow as the **Re-authenticate** button on an OAuth2 account's page. The button did nothing in v2.79.9, blocked by the Content Security Policy that release introduced; v2.80.0 fixed it.
 
 ## Pre-filling Information
 
@@ -566,9 +566,9 @@ https://emailengine.example.com/accounts/new?data=eyJ...&locale=fr&theme=dark
 
 **Language (`locale`):**
 
-Displays the form in a specific language instead of relying on browser negotiation. Supported values: `en`, `de`, `fr`, `nl`, `et`, `pl`, `ja`. The choice is stored in a cookie, so it persists through the multi-step setup flow. Without the argument, EmailEngine negotiates the language from the browser's `Accept-Language` header, falling back to the server-wide default locale.
+Displays the form in a specific language instead of relying on browser negotiation. Supported values: `en`, `de`, `fr`, `nl`, `et`, `pl`, `ja`, and since v2.81.0 also `es`, `it`, `sv` and `tr`. The choice is stored in a cookie, so it persists through the multi-step setup flow. Without the argument, EmailEngine negotiates the language from the browser's `Accept-Language` header, falling back to the server-wide default locale.
 
-[Learn more about translations and language selection >](/docs/advanced/translations)
+[Learn more about translations and language selection >](/docs/configuration/translations)
 
 **Theme (`theme`):**
 
@@ -630,5 +630,5 @@ Since v2.79.9 the hosted pages carry a Content-Security-Policy that allows inlin
 - [OAuth2 setup](/docs/accounts/oauth2-setup) - Registering the provider applications the form uses
 - [Managing accounts](/docs/accounts/managing-accounts) - Registering accounts directly instead
 - [Authentication server](/docs/accounts/authentication-server) - Keeping token management in your own application
-- [Translations](/docs/advanced/translations) - Languages the hosted pages are available in
+- [Translations](/docs/configuration/translations) - Languages the hosted pages are available in
 - [accountAdded webhook](/docs/webhooks/accountadded) - Knowing when a form completed

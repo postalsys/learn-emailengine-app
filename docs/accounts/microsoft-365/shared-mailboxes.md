@@ -350,7 +350,7 @@ The `provider` value is the same EmailEngine OAuth2 application ID the main acco
 ### With Direct Access
 
 :::warning Hosted Form Limitation
-The hosted authentication form (`/v1/authentication/form`) does not support UPN mismatch. Use the `/v1/account` endpoint with the `authorize` flag instead.
+The hosted authentication form (`/v1/authentication/form`) does not support UPN mismatch. Use the `/v1/account` endpoint with the `authorize` flag instead, described under [OAuth2 without tokens](/docs/accounts/managing-accounts#oauth2-without-tokens-authorization-redirect).
 :::
 
 Using the OAuth2 authorization flow:
@@ -403,7 +403,7 @@ Available with all three approaches, but only application access receives new ma
 :::warning No change notifications with delegated or direct access
 EmailEngine learns about new and changed messages on the MS Graph API backend through Microsoft Graph change notifications. Microsoft only allows a delegated token to subscribe to the signed-in user's own mailbox, and the `Mail.ReadWrite.Shared` family of scopes does not support subscriptions at all ([Microsoft Graph documentation](https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions#contact-event-and-message)). With delegated or direct access, the subscription for a shared mailbox is refused, so new mail is not synced.
 
-Since v2.80.0, EmailEngine reports this as a connection error with the code `SubscriptionSetupError` once its retries are exhausted. Until a subscription succeeds, the account's own API operations (reading or moving a message) answer with HTTP 503. Earlier versions kept reporting the account as connected.
+Since v2.80.0, EmailEngine reports this as a connection error with the code `SubscriptionSetupError` after three failed attempts, and tries again on every hourly pass. Until a subscription succeeds, the account's own API operations (reading or moving a message) answer with HTTP 503. Earlier versions kept reporting the account as connected. See [Change Notifications](./outlook-365#change-notifications) for the schedule.
 
 To sync a shared mailbox over MS Graph, use [application access](#application-access-setup-recommended). To keep delegated or direct access, use the IMAP/SMTP backend instead.
 :::
@@ -520,11 +520,13 @@ curl -X POST https://emailengine.example.com/v1/account/sales-sender/submit \
 
 **"Missing account data for delegated account"** - The referenced `delegatedAccount` does not exist. Verify the parent account ID is correct.
 
+**"Invalid account data for delegated account"** - The referenced account's stored OAuth2 data could not be parsed. Register the parent account again.
+
 **"Delegation looping detected"** - Circular reference in the delegation chain (e.g., A references B, B references C, C references A). Break the loop by ensuring one account has actual credentials.
 
 **"Too many delegation hops"** - The delegation chain exceeds 20 hops. Simplify by referencing the credential-holding account directly.
 
-**Parent account authentication errors** - If the parent account has authentication issues (expired tokens, changed password), all delegated accounts fail. Monitor the parent account's state and fix authentication promptly. A parent that EmailEngine has [switched off after repeated authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures) has to be re-authorized before its delegated accounts work again. In v2.79.3 and v2.79.4 the delegated accounts are switched off as well, and re-authorizing the parent lifts only the parent, so each delegated account then needs **Resume syncing** on its account page. v2.79.5 leave delegated accounts alone, since the failing credential is the parent's, and re-authorizing the parent brings them back with it.
+**Parent account authentication errors** - If the parent account has authentication issues (expired tokens, changed password), all delegated accounts fail. Monitor the parent account's state and fix authentication promptly. A parent that EmailEngine has [switched off after repeated authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures) has to be re-authorized before its delegated accounts work again. In v2.79.3 and v2.79.4 the delegated accounts are switched off as well, and re-authorizing the parent lifts only the parent, so each delegated account then needs **Resume syncing** on its account page. v2.79.5 leaves delegated accounts alone, since the failing credential is the parent's, and re-authorizing the parent brings them back with it.
 
 ## See Also
 

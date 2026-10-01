@@ -284,9 +284,11 @@ Now configure the user OAuth application that will authenticate Gmail accounts.
 
 **Redirect URL:** Verify this matches exactly what you entered in Google Cloud Console
 
-**Base scopes:** Select **Gmail API**
+**Base scopes:** Select **Gmail API** (labeled beta in the form)
 
 **Select service account to manage webhooks:** Select the service account app you created in Step 6. The selector only lists service accounts registered for the same Google Cloud project ID
+
+The form also offers the **Show only Google Workspace accounts on the OAuth2 login page** and **Display title** fields, described under [Configure OAuth2 Settings](./gmail-imap#configure-oauth2-settings) on the IMAP/SMTP page.
 
 :::important Link Service Account
 This selector is marked as optional in the UI. It tells EmailEngine which credentials to use for managing Pub/Sub resources. Without it, EmailEngine registers no Gmail watch and instead polls each account for changes about every 10 minutes, so webhooks still fire, with up to that much delay. Send-only accounts never need it.
@@ -294,7 +296,7 @@ This selector is marked as optional in the UI. It tells EmailEngine which creden
 
 ### Configuring Limited Scopes
 
-If Google requires you to use limited scopes during verification, you can configure EmailEngine to request only the scopes you need. The Web UI provides preset buttons (**Normal**, **Read-Only**, **Read-Only + Send**, **Send-Only**) that auto-populate the scope fields.
+If Google requires you to use limited scopes during verification, you can configure EmailEngine to request only the scopes you need. The **Scope presets** card in the form has four buttons (**Full access**, **Read-Only**, **Read-Only + Send**, **Send-Only**) that fill in the scope fields.
 
 See the [Gmail API Scopes Reference](./gmail-api-scopes) for all supported scope combinations, what each enables in EmailEngine, and detailed setup instructions for both the Web UI and API.
 
@@ -353,27 +355,9 @@ You must add `gmail.modify` to **Disabled scopes** when using custom scopes. Oth
 
 ## Production Considerations
 
-### Security Audit for Public Apps
+### Publishing the App
 
-If you need a public app for any Gmail user:
-
-**Requirements:**
-
-1. **Security audit**: OWASP compliance, penetration testing
-2. **Use case validation**: Google may reject certain use cases
-3. **Minimum scopes**: Google may require narrower scopes
-
-**Process:**
-
-- Expensive and time-consuming
-- May require custom scope configuration
-- Not all email use cases are approved
-
-**Alternatives:**
-
-- Use Internal apps (Google Workspace only)
-- Use IMAP/SMTP with app passwords
-- Consider if narrower scopes work for your use case
+An app that any Gmail user can authorize has to pass Google's app verification. The default `gmail.modify` scope is restricted, so the verification includes a security assessment; `gmail.send` alone is only sensitive and needs brand verification. An internal app (Google Workspace only) and an app in testing mode need no verification, with the limits described under [Gmail account types](/docs/accounts/oauth2-setup#gmail-account-types). The tiers and the scope combinations that fit each are on the [Gmail API Scopes Reference](./gmail-api-scopes#googles-scope-classifications).
 
 ### Managing Pub/Sub Resources
 
@@ -381,7 +365,7 @@ EmailEngine automatically:
 
 - Creates one Pub/Sub topic and subscription pair per Pub/Sub service account app, shared by all accounts that use it (created when the app is registered)
 - Registers a Gmail watch (`users.watch`) for each account, pointing at the shared topic
-- Renews each Gmail watch once it is more than a day old, checking hourly (watches expire after about 7 days)
+- Renews each Gmail watch once it is more than a day old, checking hourly (watches expire after about 7 days). A failed renewal is retried on the next hourly check, and the watch state is reported as `gmailWatch` in the account response (both since v2.80.0); see [Watch state](./gmail-pubsub#watch-state)
 - Recreates the Pub/Sub subscription automatically if Google deletes it due to inactivity (default TTL 31 days, configurable via `gmailSubscriptionTtl`)
 - Deletes the topic and subscription it created when the service account app is deleted - not when individual accounts are removed. A topic or subscription that already existed under the configured name is adopted rather than created, and is left in place
 
@@ -393,49 +377,9 @@ You can:
 
 See [Gmail Pub/Sub Integration](./gmail-pubsub) for the resource names, the TTL setting, and troubleshooting.
 
-### Granular Consent and Scope Validation
+### Consent, Tokens and Recovery
 
-Google supports **granular consent**, allowing users to selectively grant or deny individual permissions during the OAuth2 flow. EmailEngine validates that all required functional scopes were granted after the OAuth2 callback.
-
-If a user deselects a required scope (e.g., unchecks email access), EmailEngine:
-
-1. Detects the missing scope(s)
-2. Revokes the partial token (best-effort) to prevent dangling grants
-3. Shows an error page listing the missing permissions with human-readable descriptions
-4. Offers a "Try Again" button to restart the OAuth2 flow
-
-This prevents accounts from being registered with insufficient permissions, which would cause authentication errors during sync.
-
-### Token Management
-
-EmailEngine automatically:
-
-- Refreshes access tokens when they expire during API requests
-- Calls the Gmail API regularly even for idle accounts (the watch renewal and the fallback poll), which keeps the refresh token in use
-- Stores refresh tokens in Redis, encrypted when [field encryption](/docs/advanced/encryption) is enabled
-- Reports a failed refresh as an [`authenticationError`](/docs/webhooks/authenticationerror), since obtaining a new grant needs the user
-
-An account whose refresh keeps failing for longer than [`EENGINE_MAX_IMAP_AUTH_FAILURE_TIME`](/docs/configuration/environment-variables#max-imap-auth-failure-time) (three days by default) is switched off and reports the `unset` state with a non-null `authFailureDisabledAt`. Re-authorizing it through the hosted authentication form brings it back (since v2.79.4); see [Accounts switched off after authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures).
-
-You can:
-
-- Retrieve current access tokens for other Google API calls
-- Monitor token status via account state
-- Revoke access by deleting the account
-
-:::warning Refresh Token Expiration
-Google refresh tokens can expire under certain conditions:
-
-- **6 months of inactivity** - If not used to obtain new access tokens
-- **7 days** - If your OAuth app is in "Testing" mode (not published to production)
-- **User revokes access** - Via Google account settings
-- **Password change** - When Gmail scopes are present
-- **Token limit exceeded** - Google allows ~50 refresh tokens per user/client; oldest tokens are invalidated
-
-EmailEngine keeps tokens active by making regular API requests, but if an account is deleted from EmailEngine and re-added later, a new consent flow is required.
-:::
-
-[Learn more about OAuth2 token management >](../oauth2-token-management)
+What happens when a user unticks a permission on Google's consent screen is under [Granular consent](/docs/accounts/oauth2-setup#granular-consent-google). Token refresh, the conditions under which Google invalidates a refresh token, what a failed refresh does to the account and how a switched-off account comes back are on [OAuth2 Token Management](/docs/accounts/oauth2-token-management#token-refresh).
 
 ## See Also
 

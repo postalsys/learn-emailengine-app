@@ -88,7 +88,7 @@ EmailEngine can **automatically detect IMAP/SMTP server settings** for most emai
 
 ### Via Hosted Authentication Form
 
-When users add accounts through the [hosted authentication form](/docs/accounts/hosted-authentication), EmailEngine attempts to automatically detect the correct server settings based on the email address. In most cases, users only need to enter their email and password. For self-hosted servers or less common providers where auto-detection fails, manual server configuration is required. Since v2.81.0 a setup link generated with [`skipServerSettings`](/docs/accounts/hosted-authentication#skipping-the-server-settings-step) hides the settings review page entirely when the discovered settings verify against the password the user entered.
+When users add accounts through the [hosted authentication form](/docs/accounts/hosted-authentication), EmailEngine attempts to automatically detect the correct server settings based on the email address. In most cases, users only need to enter their email and password. For self-hosted servers or less common providers where auto-detection fails, manual server configuration is required. Since v2.81.0 a setup link minted through the API skips the settings review page whenever the discovered settings verify against the password the user entered; send [`skipServerSettings: false`](/docs/accounts/hosted-authentication#skipping-the-server-settings-step) to always show that page.
 
 ### Via API
 
@@ -156,9 +156,9 @@ The response is the same shape both endpoints return:
 }
 ```
 
-`_source` names the resolver that answered - `autodiscover` for Exchange, `mx` or `srv` for the other paths. An `auth` object carrying a `user` is included only when the server named the login to use, which the legacy Exchange endpoint does and the SOAP one does not; fall back to the email address when it is absent.
+`_source` names the resolver that answered: `mx` for a provider recognized from the domain's MX records, `srv` for DNS SRV records, `well-known`, `autoconfig` and `mozilla` for an autoconfig XML file found at the domain's `.well-known` path, at its `autoconfig.` subdomain or in the Mozilla ISPDB, and `autodiscover` for Exchange. An `auth` object carrying a `user` is included only when the server named the login to use, which the legacy Exchange endpoint does and the SOAP one does not; fall back to the email address when it is absent.
 
-An address whose domain describes no mail server returns an object with `imap` and `smtp` set to `false`. That is a normal answer, not an error.
+An address whose domain describes no mail server returns `{"imap": false, "smtp": false, "_source": "unknown"}`. That is a normal answer, not an error.
 
 :::info Where the password is sent
 The password is offered only to the autodiscovery host named by the address domain's own DNS records, and only after that host has refused an anonymous request with a Basic challenge over HTTPS. A server that answers some other way - a parking page returning `404`, a CDN answering `200`, or a host offering only NTLM - never receives it. The credentials are used for the autodiscovery lookup alone and are not stored.
@@ -908,5 +908,5 @@ For environments with strict outbound firewalls, see [Outbound Connection Whitel
 - [Managing accounts](/docs/accounts/managing-accounts) - Updating, pausing, and deleting an account once it exists
 - [Hosted authentication](/docs/accounts/hosted-authentication) - Letting the user enter their own server settings
 - [IMAP indexers](/docs/accounts/imap-indexers) - How EmailEngine detects change in a mailbox
-- [Proxying connections](/docs/accounts/proxying-connections) - Routing mail traffic through a proxy
+- [Proxying connections](/docs/receiving/imap-proxy-server) - Routing mail traffic through a proxy
 - [Troubleshooting accounts](/docs/accounts/troubleshooting) - When a connection or login fails

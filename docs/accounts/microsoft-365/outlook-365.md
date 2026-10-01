@@ -32,34 +32,31 @@ With delegated access, you can choose between two backend options:
 
 **Microsoft Graph API Backend:**
 
-- Native Microsoft 365 integration
-- Better performance for high-volume accounts
-- Access to Microsoft-specific features
-- Supports shared mailboxes natively
+- REST calls instead of IMAP and SMTP sessions
+- Outlook categories, exposed as `labels`
+- The backend of [application access](./outlook-client-credentials), and the only one on which a shared mailbox receives new mail without a signed-in user
 
 This guide covers both options.
 
 ## Choosing IMAP/SMTP vs MS Graph API
 
-| Feature                         | IMAP/SMTP        | MS Graph API           |
-| ------------------------------- | ---------------- | ---------------------- |
-| **Setup Complexity**            | Simple           | Moderate               |
-| **Performance**                 | Good             | Excellent              |
-| **Search Capabilities**         | Full text search | Very limited           |
-| **Shared Mailboxes**            | Limited support  | Native support         |
-| **Outlook Categories**          | Not available    | Supported via `labels` |
-| **Connection Protocol**         | IMAP/SMTP        | REST API               |
-| **Microsoft-Specific Features** | Limited          | Full access            |
-| **Works with other providers**  | Yes              | No                     |
+| Feature | IMAP/SMTP | MS Graph API |
+|---|---|---|
+| **Azure permissions** | `IMAP.AccessAsUser.All`, `SMTP.Send` | `Mail.ReadWrite`, `Mail.Send` |
+| **Change detection** | IMAP IDLE | Graph change notifications, which need a Service URL that Microsoft can reach; no polling fallback |
+| **Search** | IMAP `SEARCH` | Graph `$filter`, or `$search` with `useOutlookSearch` (see [Searching Messages](/docs/receiving/searching)) |
+| **Shared mailboxes** | Delegated and direct access | Application access; with delegated or direct access the mailbox does not receive new mail (see [Shared Mailboxes](./shared-mailboxes)) |
+| **Outlook categories** | Not available | Exposed as `labels` |
+| **Works with other providers** | Yes | No |
 
-:::warning MS Graph API Search Limitations
-MS Graph API has **significantly more limited search capabilities** compared to IMAP. IMAP supports full-text search across message headers and body content, while MS Graph API search is much more restricted. If your application requires advanced message search functionality, use IMAP/SMTP instead.
+:::info MS Graph search differs from IMAP
+The default `$filter` mode cannot search `to`, `cc`, `bcc`, body text or message size. The `$search` mode, enabled per request with `useOutlookSearch`, reaches those fields but returns at most 1,000 results, reports no total, and orders by relevance rather than date. [Searching Messages](/docs/receiving/searching) lists which search terms each backend supports.
 :::
 
 **Recommendation:**
 
-- Use **IMAP/SMTP** for simple setups, for compatibility, and when you need IMAP's search
-- Use **MS Graph API** for shared mailboxes and Microsoft 365 enterprise features (but be aware of search limitations)
+- Use **IMAP/SMTP** for compatibility with other providers, and when you need IMAP's search
+- Use **MS Graph API** for application access, for shared mailboxes that must receive mail, and for Outlook categories
 
 ## Step 1: Create Azure AD Application
 
@@ -270,6 +267,8 @@ Add these permissions:
 - `SMTP.Send` - For sending emails via SMTP
 - `offline_access` - For token refresh
 
+EmailEngine also requests the OpenID Connect scopes `openid` and `profile` with this set, to read the signed-in user's address and name from the ID token.
+
 :::important offline_access Required
 The `offline_access` scope is required in both cases. It allows EmailEngine to renew access tokens in the background without user interaction.
 :::
@@ -281,6 +280,7 @@ Add these permissions instead:
 - `Mail.ReadWrite` - For reading and managing emails
 - `Mail.Send` - For sending emails
 - `offline_access` - For token refresh
+- `User.Read` - Present on every new registration; EmailEngine requests it to read the signed-in user's profile
 
 :::info One backend per OAuth2 app
 An EmailEngine OAuth2 app requests one set of scopes, selected by its **Base scopes** setting: either the IMAP/SMTP scopes or the `Mail.*` scopes. Register two OAuth2 apps in EmailEngine if you need both backends against the same Azure application.
@@ -392,6 +392,21 @@ The base scopes you select here must match the permissions you configured in Azu
 
 Click **Register app** to save.
 
+### Limiting Scopes (MS Graph API)
+
+With **MS Graph API** as the base scope, the form shows a **Scope presets** card. Each button fills in the **Additional scopes** (API field `extraScopes`) and **Disabled scopes** (`skipScopes`) fields; scopes you added by hand are kept:
+
+| Preset | Additional scopes | Disabled scopes | Result |
+|---|---|---|---|
+| **Full access** | none | none | `Mail.ReadWrite`, `Mail.Send`, `offline_access`, `User.Read` |
+| **Read-Only** | `Mail.Read` | `Mail.ReadWrite`, `Mail.Send` | Read without sending or modifying |
+| **Read-Only + Send** | `Mail.Read` | `Mail.ReadWrite` | Read and send without modifying |
+| **Send-Only** | none | `Mail.ReadWrite` | Send without reading |
+
+EmailEngine classifies a delegated account by the scopes Microsoft granted: read access is `Mail.Read` or `Mail.ReadWrite`, send access is `Mail.Send`. An account with send access and no read access runs in send-only mode, reports `sendOnly: true`, and creates no change subscription, so no messages are synced and no message webhooks fire. The admin interface shows a **Send-only** badge on its page. Application access accounts always count as full access, because the `.default` scope does not enumerate permissions.
+
+Changing the scopes on the application affects new authorizations only. Existing accounts keep the scopes granted when they signed in until the user signs in again.
+
 ## Step 8: Test the Setup
 
 Add an Outlook account to test the OAuth2 flow.
@@ -400,8 +415,8 @@ Add an Outlook account to test the OAuth2 flow.
 
 ![Using hosted authentication form](/img/outlook/out012.gif)
 
-1. In EmailEngine, open **Accounts**, click **Add an account**, and click **Continue**
-2. On the hosted authentication form, click **Sign in with Microsoft**
+1. In EmailEngine, open **Accounts**, click **Add account**, fill in the name, and click **Continue**
+2. On the hosted authentication form, click the Microsoft sign-in button of your OAuth2 app
 3. Complete the OAuth2 consent flow
 4. EmailEngine will store the credentials and connect
 
@@ -470,6 +485,36 @@ With delegated access, EmailEngine also supports shared mailboxes through:
 
 For detailed setup instructions covering all three approaches, see the [Shared Mailboxes guide](./shared-mailboxes).
 
+## MS Graph API Backend
+
+These notes apply to every account on the MS Graph API backend, whether it was added with delegated access or with [application access](./outlook-client-credentials).
+
+### Change Notifications
+
+EmailEngine learns about new and changed messages through Microsoft Graph change notifications, which Microsoft delivers to two endpoints under the [Service URL](/docs/configuration/settings#service):
+
+- `{serviceUrl}/oauth/msg/notification` - message change notifications
+- `{serviceUrl}/oauth/msg/lifecycle` - lifecycle events (`reauthorizationRequired`, `subscriptionRemoved`, `missed`)
+
+Both must be reachable from Microsoft's servers over HTTPS. Microsoft validates the notification URL when the subscription is created, and there is no polling fallback, so an account without a subscription syncs nothing. An instance behind a firewall or on a private network needs a reverse proxy or a tunnel.
+
+A subscription is created when the account initializes, with the longest lifetime Graph allows for mail (4230 minutes, just under three days). An hourly pass renews it once less than 24 hours remain, and recreates it when it is missing or has expired. A creation or renewal that Graph refuses is retried three times, 30, 60 and 120 seconds apart. Since v2.80.0 the hourly pass then starts a new round of retries; earlier versions waited for a reconnect, so a tenant-side problem fixed an hour later went unnoticed.
+
+Once the fast retries are spent, the account reports a `connectError` with the code `SubscriptionSetupError` (since v2.80.0), and its API operations answer HTTP 503 until a subscription works again. It is a connection error rather than an authentication error because the credential is not at fault: a tenant that has disabled the Exchange Online service principal (`AADSTS500014`) still refreshes tokens, and re-authorizing cannot help. The report is lifted as soon as a subscription is created, renewed or found to be healthy. Before v2.80.0 such an account kept reporting `connected` while receiving nothing.
+
+`GET /v1/account/{account}` reports the subscription as `outlookSubscription`: its `id`, its `expirationDateTime`, and a `state` object carrying `state` (`creating`, `created`, `renewing` or `error`), `time`, `error`, `retryCount` and `createRetryCount`.
+
+### Recovering Missed Notifications
+
+When Microsoft reports a `missed` lifecycle event, EmailEngine lists the messages received over the previous four hours, which is how long Graph retries a delivery before giving up, oldest first, and announces the ones it has not announced in the last six hours. Since v2.81.2 the request is stored before the webhook is answered, so it waits for the account's worker and is retried with backoff like any other failed change; **Run sync** on the account page and [`PUT /v1/account/{account}/sync`](/docs/api/put-v-1-account-account-sync) queue the same recovery. Earlier versions (since v2.67.0) looked back only to the last notification they had processed, dropped a second request within five minutes, and lost the request when no worker held the account.
+
+A notification whose follow-up request fails with a 408, 429, 5xx or network error is deferred and retried after 1, 4, 16, 60, 60 and 60 minutes, surviving a restart (since v2.81.2). A message given up on after those attempts is reported as a `syncWarning` on the [account change stream](/docs/api/get-v-1-changes).
+
+### Sending and Uploading
+
+- A message is sent through `/sendMail` as raw MIME, which ignores the `from` address. Set `useStructuredFormat=true` on the submit request to send as structured JSON, which honors `from` but does not preserve calendar invites and other special MIME parts; see [Sending API](/docs/api-reference/sending-api).
+- Since v2.82.0, a reply or forward uploaded with `POST /v1/account/{account}/message` keeps its `In-Reply-To` and `References` headers, set through the MAPI properties Exchange builds them from. Earlier versions rejected the upload with `InvalidInternetMessageHeader`, because Graph accepts only `x-` prefixed names in `internetMessageHeaders`.
+
 ## Performance Considerations
 
 ### IMAP/SMTP Limits
@@ -496,7 +541,9 @@ This pre-approves the app for all users in the organization.
 
 ### Token Management
 
-EmailEngine renews the access token with the stored refresh token whenever a connection or an API request needs one, and stores both tokens in Redis (encrypted when `EENGINE_SECRET` is set). When Microsoft rejects the refresh token, the account enters `authenticationError` and stays there until the user signs in again; EmailEngine cannot re-authorize on the user's behalf. Deleting an account discards its tokens, so re-adding it later takes a new consent flow.
+EmailEngine renews the access token with the stored refresh token whenever a connection or an API request needs one, and stores both tokens in Redis (encrypted when `EENGINE_SECRET` is set). When Microsoft rejects the refresh token, the account enters `authenticationError` and stays there until the user signs in again; EmailEngine cannot re-authorize on the user's behalf. A token endpoint that answers 408, 429 or a 5xx is treated as unavailable rather than as a refused credential: the attempt is retried and no `authenticationError` is sent (since v2.80.0). Deleting an account discards its tokens, so re-adding it later takes a new consent flow.
+
+An account whose refresh keeps failing for longer than [`EENGINE_MAX_IMAP_AUTH_FAILURE_TIME`](/docs/configuration/environment-variables#max-imap-auth-failure-time) (three days by default) is switched off (since v2.79.3 for OAuth2 accounts) and reports the `unset` state with a non-null `authFailureDisabledAt`. Re-authorizing it through the hosted authentication form or the **Re-authenticate** button on its page in the admin interface brings it back; see [Accounts switched off after authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures). A shared mailbox added with delegated access is never switched off on its own: the failing credential is the main account's.
 
 Which events invalidate a Microsoft refresh token, and how long an idle one lives, is covered on the [OAuth2 token management](/docs/accounts/oauth2-token-management) page.
 

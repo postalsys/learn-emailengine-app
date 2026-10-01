@@ -20,7 +20,7 @@ curl https://emailengine.example.com/v1/account/user123 \
 ```
 
 Look for:
-- `state`: Current account state, one of the nine listed under [Account states](/docs/accounts/managing-accounts#account-states)
+- `state`: Current account state, one of the states listed under [Account states](/docs/accounts/managing-accounts#account-states)
 - `lastError`: The last error, with the provider's rejection in `lastError.response`
 - `syncTime`: Last successful sync (IMAP accounts)
 - `authFailureDisabledAt`: Set when EmailEngine itself switched syncing off after repeated authentication failures, `null` otherwise (since v2.79.4)
@@ -208,6 +208,15 @@ docker logs -f emailengine
    - Wait and retry later
    - EmailEngine will automatically retry
 
+5. **The server accepted the connection but could not serve the login**
+   - An IMAP server can answer `NO` to a login for a reason that is its own rather than the credential's. Since v2.80.1 EmailEngine reports such a login as `connectError`, not `authenticationError`: a `NO` carrying the RFC 5530 response code `[UNAVAILABLE]`, `[SERVERBUG]`, `[INUSE]` or `[LIMIT]`, and Exchange Online's codeless `User is authenticated but not connected.`, which is its front end failing to reach the mailbox behind an accepted token
+   - The account sends one [`connectError`](/docs/webhooks/connecterror) webhook carrying the server's text, keeps reconnecting on the normal schedule, and does not report `authenticationSuccess` when the login goes through again. A repeated identical failure is announced once rather than on every retry
+   - For Exchange Online the same text is also the permanent answer when IMAP is disabled for the mailbox, see [IMAP Not Enabled](#imap-not-enabled)
+
+   **Solution:**
+   - Check `lastError.response` for the server's text, then the provider's status page
+   - If it persists on an Exchange Online mailbox, check that IMAP is enabled for it
+
 ### State: connecting
 
 **What it means:** Connection in progress.
@@ -340,7 +349,7 @@ Gmail has completely disabled account password authentication. The "Less secure 
 
 #### IMAP Not Enabled
 
-**Error Message:** "IMAP is disabled"
+**Error Message:** `User is authenticated but not connected.` Exchange Online answers the login with that text, without a response code, when IMAP is disabled for the mailbox. Since v2.80.1 the account reports it as `connectError` rather than `authenticationError`, because the credential was accepted.
 
 **Solution:**
 1. Go to [Microsoft 365 admin center](https://admin.microsoft.com/)
@@ -423,61 +432,7 @@ iCloud requires 2FA enabled to generate app-specific passwords.
 
 ## Webhook Issues
 
-### Webhooks Not Firing
-
-**Check webhook configuration:**
-
-```bash
-curl "https://emailengine.example.com/v1/settings?webhooks=true" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  | jq '.webhooks'
-```
-
-**Common Causes:**
-
-1. **Webhook URL not set**
-   ```bash
-   curl -X POST https://emailengine.example.com/v1/settings \
-     -H "Authorization: Bearer YOUR_TOKEN" \
-     -H "Content-Type: application/json" \
-     -d '{ "webhooks": "https://myapp.com/webhooks" }'
-   ```
-
-2. **Webhook URL unreachable**
-   - Test manually:
-   ```bash
-   curl -X POST https://myapp.com/webhooks \
-     -H "Content-Type: application/json" \
-     -d '{"test": true}'
-   ```
-   - Check firewall allows EmailEngine IP
-   - Verify SSL certificate is valid
-
-3. **Webhook endpoint returning errors**
-   - Check your webhook handler logs
-   - Must return 2xx status code
-   - EmailEngine will retry on failures
-
-4. **For Gmail API and MS Graph accounts: the push subscription is not active**
-   - Microsoft Graph: the account object carries `outlookSubscription` with the subscription ID, its `expirationDateTime` and its state
-   - Gmail API: push notifications come from Cloud Pub/Sub, configured on the OAuth2 application rather than on the account. [`GET /v1/pubsub/status`](/docs/api/get-v-1-pubsub-status) lists the Pub/Sub applications and their subscription status; see [Gmail Pub/Sub](/docs/accounts/gmail/gmail-pubsub)
-
-**Debug webhooks:**
-
-Check webhook queue in Bull Board:
-- Navigate to **System** > **Queues** in the EmailEngine dashboard (`/admin/bull-board`)
-- Check the "notify" queue
-- Look for failed jobs and error messages
-
-### Webhook Delays
-
-**Cause:** Webhook queue backed up
-
-**Solution:**
-1. Check Bull Board for queue status
-2. Run more webhook workers with `EENGINE_WORKERS_WEBHOOKS` (default 1)
-3. Optimize your webhook endpoint response time
-4. Implement idempotency (handle duplicate webhooks)
+Webhooks that do not arrive, or arrive late, are a problem of the instance rather than of one account: see [Webhooks Not Delivered](/docs/troubleshooting#webhooks-not-delivered) and [Webhooks Delayed](/docs/troubleshooting#webhooks-delayed) on the general troubleshooting page. The one account-level check is the push subscription of an API account: a Microsoft Graph account carries `outlookSubscription` in its account object, and a Gmail API account reports its watch as `gmailWatch`, with the state of the Pub/Sub application itself in [`GET /v1/pubsub/status`](/docs/api/get-v-1-pubsub-status). See [Watch state](/docs/accounts/gmail/gmail-pubsub#watch-state).
 
 ## Connection Issues
 
@@ -503,7 +458,7 @@ curl -X PUT https://emailengine.example.com/v1/account/user123 \
 
 **Provider Limits:**
 - Gmail allows 15 simultaneous IMAP connections per account
-- Other providers publish their own limits; the account's sync connection, each sub-connection and every [IMAP proxy](/docs/accounts/proxying-connections) session all count against it
+- Other providers publish their own limits; the account's sync connection, each sub-connection and every [IMAP proxy](/docs/receiving/imap-proxy-server) session all count against it
 
 ### SSL/TLS Certificate Errors
 
@@ -534,6 +489,23 @@ curl -X PUT https://emailengine.example.com/v1/account/user123 \
 Only disable certificate verification for development/testing with self-signed certs. In production, use proper CA-signed certificates.
 :::
 
+### New Messages Stop Arriving While the Account Shows connected
+
+**Symptoms:**
+- The account stays `connected` and `lastError` is empty
+- Messages in other folders are picked up by the periodic resync, but new messages in the main mailbox (usually INBOX) stop producing `messageNew` webhooks
+- A reconnect brings everything through at once
+
+**Cause:** A server keeps the primary connection alive, answering IDLE, NOOP and the periodic folder checks, while its view of the selected mailbox stops moving. EmailEngine learns about new messages in the main mailbox only from that connection, and the periodic resync deliberately leaves the selected mailbox alone, so a frozen session looks healthy.
+
+**Solution:** Since v2.82.0 `EENGINE_IMAP_STALE_CHECK_INTERVAL` turns on a check for this. Set it to a duration, for example `1h`:
+
+```bash
+EENGINE_IMAP_STALE_CHECK_INTERVAL=1h
+```
+
+Once the next-UID counter the primary connection knows for the main mailbox has not moved for that long (with up to a quarter of the interval added as random jitter, so a fleet of accounts does not check at once), the periodic resync pass asks the server for the mailbox status over the command connection, and when the server's counter is ahead on two consecutive checks the primary connection is closed and reconnected. The pass runs every 15 minutes by default (`imap.resyncDelay` on the account). The check is off when the variable is unset. A reconnect it triggers costs one login and a fresh SELECT of the main mailbox; nothing is re-indexed.
+
 ### IDLE Timeout Issues
 
 **Symptoms:**
@@ -552,92 +524,16 @@ No action needed from you. If issues persist, check logs for specific errors.
 
 ## Performance Issues
 
-### Slow Initial Sync
-
-**Symptoms:**
-- Account stuck in "syncing" for long time
-- First sync takes hours
-
-**Cause:** Large mailbox with many messages
-
-**Solution:**
-
-1. **Use path filtering** to sync only needed folders:
-   ```bash
-   curl -X PUT https://emailengine.example.com/v1/account/user123 \
-     -H "Authorization: Bearer YOUR_TOKEN" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "path": ["INBOX", "\\Sent"]
-     }'
-   ```
-
-2. **Be patient** - Initial sync time grows with the message count, and with the provider's rate limits
-
-3. **Consider Gmail API** for very large Gmail accounts:
-   - Faster initial sync
-   - Better performance
-   - [Gmail API guide](./gmail/gmail-api)
-
-### High Memory/CPU Usage
-
-**Symptoms:**
-- EmailEngine using excessive resources
-- Server becomes slow
-
-**Solutions:**
-
-1. **Reduce number of accounts**
-   - Check the account count: `curl https://emailengine.example.com/v1/accounts -H "Authorization: Bearer YOUR_TOKEN" | jq '.total'`
-   - Scale vertically (increase server resources)
-
-2. **Reduce sub-connections**
-   - Remove unnecessary sub-connections
-   - Only monitor critical folders in real-time
-
-3. **Implement path filtering**
-   - Don't sync unnecessary folders
-   - Use wildcards carefully
-
-4. **Optimize webhook endpoint**
-   - Slow webhook responses cause queue backup
-   - Implement async processing
-   - Return 200 immediately, process in background
-
-5. **Increase Redis memory**
-   - EmailEngine stores data in Redis
-   - Ensure adequate Redis memory allocation
+A slow first sync and high memory or CPU use are covered under [Performance Issues](/docs/troubleshooting#performance-issues) on the general troubleshooting page, and sizing guidance is on [Performance Tuning](/docs/advanced/performance-tuning). The two levers that live on the account are `path`, which limits the folders that are indexed ([Configure path filtering](/docs/accounts/managing-accounts#configure-path-filtering)), and `subconnections`, each of which costs one more IMAP connection ([Enable sub-connections](/docs/accounts/managing-accounts#enable-sub-connections)).
 
 ## OAuth2-Specific Issues
 
 ### Token Refresh Failures
 
-**Symptoms:**
-- Account enters authenticationError periodically
-- "invalid_grant" errors in logs
+A refresh the provider rejects (`invalid_grant` in the logs) puts the account into `authenticationError`. The causes and the diagnostic steps are under [Token Refresh Fails](/docs/troubleshooting#token-refresh-fails) on the general troubleshooting page; a rotated or expired Microsoft client secret, which fails every account of that application at once, is covered on [OAuth2 Token Management](/docs/accounts/oauth2-token-management#token-lifetime). Two rules apply to every cause:
 
-**Causes:**
-
-1. **Refresh token expired (Microsoft)**
-   - Microsoft refresh tokens expire after 90 days of inactivity
-   - EmailEngine keeps them active by regular use
-   - If expired, user must re-authenticate
-
-2. **OAuth2 app credentials changed**
-   - Client secret rotated but not updated in EmailEngine
-   - **Solution:** Update OAuth2 app settings in EmailEngine with new credentials
-
-3. **User revoked access**
-   - User manually revoked app permission
-   - **Solution:** User must re-authenticate
-
-4. **OAuth2 app disabled/deleted**
-   - App deleted in Google Cloud Console / Azure AD
-   - **Solution:** Recreate app or update settings
-
-:::info Accounts stop retrying after three days
-Whatever the cause, an account that keeps failing authentication is [switched off](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures) once the failures have run for `EENGINE_MAX_IMAP_AUTH_FAILURE_TIME`, so a dead grant is not retried against the provider forever. The account then reports `unset` with `authFailureDisabledAt` set. Re-authorizing lifts it (since v2.79.4; before that only `imap.disabled: false` through the API did), and so does **Resume syncing** on the account page. Before v2.79.3 this only applied to password IMAP accounts.
-:::
+- A token endpoint that answers 408, 429 or a 5xx is treated as unavailable rather than as a refusal: the attempt is retried and no webhook is sent (since v2.80.0).
+- An account that keeps failing is [switched off](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures) once the failures have run for `EENGINE_MAX_IMAP_AUTH_FAILURE_TIME`, three days by default, so a dead grant is not retried against the provider forever. The account then reports `unset` with `authFailureDisabledAt` set. Re-authorizing lifts it (since v2.79.4; before that only `imap.disabled: false` through the API did), and so does **Resume syncing** on the account page. Before v2.79.3 this only applied to password IMAP accounts.
 
 ### "redirect_uri_mismatch" Error
 

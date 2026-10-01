@@ -86,7 +86,7 @@ Your authentication server is a single HTTP endpoint that EmailEngine calls with
 ```http
 GET /authenticate?account=user123&proto=imap HTTP/1.1
 Host: auth.example.com
-User-Agent: emailengine-app/2.79.4 (+https://emailengine.app/)
+User-Agent: emailengine-app/2.82.0 (+https://emailengine.app/)
 ```
 
 EmailEngine appends two query parameters to the configured URL, keeping any query string the URL already has:
@@ -98,7 +98,7 @@ EmailEngine appends two query parameters to the configured URL, keeping any quer
 
 If the configured URL carries a username and password (`https://ee:s3cret@auth.example.com/authenticate`), EmailEngine strips them from the URL and sends them as an HTTP Basic `Authorization` header instead, so the caller is authenticated without the secret landing in your access logs.
 
-The request times out after 90 seconds (`EENGINE_FETCH_TIMEOUT`, in milliseconds). A `429` response or a connection-level failure (DNS, connection refused, reset, timeout) is retried up to 5 times; any other non-2xx status is a failure and is not retried.
+The request times out after 90 seconds (`EENGINE_FETCH_TIMEOUT`, in milliseconds). A `429` response or a connection-level failure (DNS, connection refused, reset, timeout) is retried twice, with at most 5 seconds between attempts; up to v2.81.2 it was retried five times. Any other non-2xx status is not retried, though it is not always treated as a refusal either, see [What Happens on Failure](#what-happens-on-failure).
 
 **Response from your server (OAuth2):**
 
@@ -143,13 +143,30 @@ Any other field is discarded, so returning an expiry or a refresh token alongsid
 
 ### What Happens on Failure
 
-A failed call (unreachable server, non-2xx status, invalid response) is handled per protocol:
+Since v2.80.0 EmailEngine draws one line for every account type and all three protocols. A failed call is either a **refusal** or an **outage**:
 
-- **IMAP**: the account reports an [`authenticationError`](/docs/webhooks/authenticationerror) webhook with `serverResponseCode: "HTTPRequestError"` and the error message in `response`, enters the `authenticationError` state, and keeps retrying on the normal reconnect schedule. For an account registered with an `oauth2` block, a connection-level failure to reach the server (DNS, refused, reset, timeout) is instead logged as a warning and treated as a connection problem, so a brief outage of your server does not report an authentication error for every account on the instance
-- **SMTP**: the submission fails with the error and is logged
-- **API**: the request that needed the token fails
+| Failure | Classified as |
+|---------|---------------|
+| Any `4xx` status other than `408` and `429` | Refusal: the server answered and would not hand out a credential for this account |
+| A `2xx` answer that is not valid JSON, or that fails the [response validation](#authentication-server-protocol) | Refusal |
+| A connection-level failure (DNS, connection refused, reset, timeout) | Outage |
+| `408`, `429` or any `5xx` status | Outage |
 
-For an account registered with an `oauth2` block, the SMTP and API paths report the failure the same way the IMAP path does: an `authenticationError` webhook with `serverResponseCode: "HTTPRequestError"`, and the account enters the `authenticationError` state.
+A **refusal** is reported as a credential problem:
+
+- **IMAP**: the account reports an [`authenticationError`](/docs/webhooks/authenticationerror) webhook with `serverResponseCode: "HTTPRequestError"` and the error message in `response`, enters the `authenticationError` state, and keeps retrying on the normal reconnect schedule
+- **SMTP**: the submission fails with the error and is logged. For an account registered with an `oauth2` block the failure is also reported as an `authenticationError` webhook
+- **API**: the request that needed the token fails. For an account registered with an `oauth2` block the account reports `authenticationError`; through [`GET /v1/account/{account}/oauth-token`](/docs/api/get-v-1-account-account-oauthtoken) the answer is HTTP 403 with the code `AuthServerError`
+- **IMAP proxy**: the client's login is answered `NO [AUTHENTICATIONFAILED]`
+
+An **outage** is logged as a warning and never reported as an authentication error, so a bad minute of your server does not announce every account on the instance as broken:
+
+- **IMAP**: the connection attempt fails as a connection problem, reported as [`connectError`](/docs/webhooks/connecterror), and is retried on the reconnect schedule
+- **SMTP**: the submission fails with the error
+- **API**: the request fails; through `GET /v1/account/{account}/oauth-token` the answer is HTTP 503 with the code `AuthServerUnavailable`
+- **IMAP proxy**: the client's login is answered `NO [UNAVAILABLE]`, which mail clients treat as "try again later" rather than as a wrong password
+
+Up to v2.79.9 every failure was reported as an authentication error, except that an account registered with an `oauth2` block treated a connection-level failure as a connection problem. The authentication server's own HTTP status never becomes EmailEngine's: a `401` or `404` from your server reaches an API caller as the `403` or `503` above, not as a rejection of the caller's EmailEngine token.
 
 Because every account depends on the same endpoint, an outage of the authentication server affects all of them at once. An account that keeps failing authentication for longer than [`EENGINE_MAX_IMAP_AUTH_FAILURE_TIME`](/docs/configuration/environment-variables#max-imap-auth-failure-time) (three days by default) is switched off: it reports the `unset` state with a non-null `authFailureDisabledAt` (since v2.79.4). An authentication-server account has no credentials to re-supply, so once the server is fixed bring the account back with **Resume syncing** on its page in the admin interface, or by registering it again with `POST /v1/account` under the same account ID. See [Accounts switched off after authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures).
 
@@ -353,7 +370,7 @@ curl -X POST https://emailengine.example.com/v1/settings \
   }'
 ```
 
-The value must be an absolute `http://` or `https://` URL. Setting it to an empty string removes it. It applies to the whole instance; there is no per-account URL.
+The value must be an absolute `http://` or `https://` URL. Setting it to an empty string removes it. It applies to the whole instance; there is no per-account URL. Since v2.82.0 `GET /v1/settings` returns the URL with any credentials it carries masked as `******`; leave the field out of a later settings update rather than writing the masked value back.
 
 ### Step 4: Register Accounts
 
@@ -481,7 +498,7 @@ app.get("/authenticate", (req, res) => {
 
 ### Availability
 
-Every connection, submission and API request depends on the server answering within the timeout, so monitor it like any other production dependency. EmailEngine retries only `429` responses and connection-level failures; a `500` is reported as a credential failure straight away.
+Every connection, submission and API request depends on the server answering within the timeout, so monitor it like any other production dependency. EmailEngine retries only `429` responses and connection-level failures at the HTTP level, and treats those, `408` and every `5xx` as an [outage](#what-happens-on-failure) rather than a refusal: the connection or request fails and is retried later, and no `authenticationError` is reported.
 
 ## See Also
 

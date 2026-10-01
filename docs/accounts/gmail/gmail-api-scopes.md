@@ -63,9 +63,9 @@ EmailEngine also adds the OpenID Connect scopes `openid`, `email`, and `profile`
 
 ### Web UI Preset Buttons
 
-When the base scope is set to **Gmail API**, the OAuth2 application form shows an **Account Type Helper** card with four preset buttons that populate the Additional scopes and Disabled scopes fields:
+When the base scope is set to **Gmail API**, the OAuth2 application form shows a **Scope presets** card with four buttons that populate the Additional scopes and Disabled scopes fields:
 
-- **Normal (Full Access)** - clears both fields, so `gmail.modify` is used as-is
+- **Full access** - clears both fields, so `gmail.modify` is used as-is
 - **Read-Only** - adds `gmail.readonly` + `gmail.labels`, disables `gmail.modify`
 - **Read-Only + Send** - adds `gmail.readonly` + `gmail.send` + `gmail.labels`, disables `gmail.modify`
 - **Send-Only** - adds `gmail.send`, disables `gmail.modify`
@@ -74,7 +74,9 @@ These presets preserve any third-party scopes you may have added manually (such 
 
 ### How EmailEngine Classifies an Account
 
-After authorization, EmailEngine stores the scopes Google actually granted with the account and reads them on every initialization. An account counts as having read access when the granted scopes include any of `gmail.modify`, `gmail.readonly`, `gmail.labels` or `https://mail.google.com/`, and as having send access when they include `gmail.send`. An account with send access and no read access runs in [send-only mode](#send-only). Adding `gmail.labels` to a send-only application therefore turns it into a read account in EmailEngine's eyes, and message listing then fails at Google.
+After authorization, EmailEngine stores the scopes Google actually granted with the account and reads them on every initialization. An account counts as having read access when the granted scopes include any of `gmail.modify`, `gmail.readonly` or `https://mail.google.com/`, and as having send access when they include `gmail.send`. An account with send access and no read access runs in [send-only mode](#send-only).
+
+`gmail.labels` is not a read scope. Before v2.82.0 it was counted as one, so an application granted `gmail.send` and `gmail.labels` was treated as a full-access account: EmailEngine armed a Pub/Sub watch, Google refused it with a 403, and the account ended in `authenticationError` instead of running send-only.
 
 ---
 
@@ -107,7 +109,7 @@ In EmailEngine, this scope is used with the IMAP/SMTP backend (`baseScopes: "ima
 
 - You need permanent message deletion (not just trash)
 - You need raw SMTP features (custom envelope-from, direct SMTP control)
-- You want to use EmailEngine's [IMAP/SMTP proxy](/docs/accounts/proxying-connections), which lets legacy clients and scripts connect with password authentication while EmailEngine handles OAuth2 behind the scenes
+- You want to use EmailEngine's [IMAP/SMTP proxy](/docs/receiving/imap-proxy-server), which lets legacy clients and scripts connect with password authentication while EmailEngine handles OAuth2 behind the scenes
 - You are migrating from an existing IMAP-based integration
 - Your organization restricts Cloud Pub/Sub permissions
 - You can justify the full scope to Google during verification
@@ -194,7 +196,7 @@ This is the default scope when using the Gmail API backend. It provides full rea
 1. Go to **Integrations** > **OAuth2 Apps** > **Create OAuth2 app** and select **Gmail**
 2. Click **Load configuration from the JSON file** and select your Google credentials file, or enter the Client ID and Client Secret manually
 3. Under **Base scopes**, select **Gmail API**
-4. Click the **Normal (Full Access)** preset button, or leave Additional scopes and Disabled scopes empty
+4. Click the **Full access** preset button, or leave Additional scopes and Disabled scopes empty
 5. Click **Register app**
 
 ### Setup via API
