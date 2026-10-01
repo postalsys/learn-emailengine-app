@@ -1,26 +1,39 @@
 ---
 title: Accounts API
-description: API endpoints for managing email accounts - register, update, delete, and retrieve account details
+description: Reference for the account object, account states, the account endpoints and the account state stream
 sidebar_position: 3
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Accounts API
 
-The Accounts API allows you to programmatically manage email accounts in EmailEngine. You can register new accounts, update settings, monitor connection status, and handle OAuth2 authentication.
+This page is the reference for the account resource: the fields an account carries, the states it moves through, what each account endpoint answers, and the Server-Sent Events stream that reports state changes. The step-by-step guide to registering, updating and recovering accounts is [Managing Accounts](/docs/accounts/managing-accounts); each endpoint's full request and response schema is on its generated page, linked from the table below.
 
-## Overview
+## Endpoints
 
-Email accounts are the core resource in EmailEngine. Each account represents a connection to an email service (Gmail, Outlook, IMAP/SMTP server) and maintains:
+| Operation | Endpoint | Permission |
+| --- | --- | --- |
+| [Register account](/docs/api/post-v-1-account) | `POST /v1/account` | `write` / `provisioning` |
+| [List accounts](/docs/api/get-v-1-accounts) | `GET /v1/accounts` | `read` / `account` |
+| [Get account](/docs/api/get-v-1-account-account) | `GET /v1/account/{account}` | `read` / `account` |
+| [Update account](/docs/api/put-v-1-account-account) | `PUT /v1/account/{account}` | `write` / `provisioning` |
+| [Delete account](/docs/api/delete-v-1-account-account) | `DELETE /v1/account/{account}` | `destructive` / `account` |
+| [Request reconnect](/docs/api/put-v-1-account-account-reconnect) | `PUT /v1/account/{account}/reconnect` | `write` / `account` |
+| [Request sync](/docs/api/put-v-1-account-account-sync) | `PUT /v1/account/{account}/sync` | `write` / `account` |
+| [Request flush](/docs/api/put-v-1-account-account-flush) | `PUT /v1/account/{account}/flush` | `destructive` / `account` |
+| [Verify IMAP and SMTP settings](/docs/api/post-v-1-verifyaccount) | `POST /v1/verifyAccount` | `read` / `provisioning` |
+| [Discover email settings](/docs/api/get-v-1-autoconfig) | `GET /v1/autoconfig` | `read` / `diagnostics` |
+| [Discover email settings with credentials](/docs/api/post-v-1-autoconfig) | `POST /v1/autoconfig` | `read` / `provisioning` |
+| [Generate authentication link](/docs/api/post-v-1-authentication-form) | `POST /v1/authentication/form` | `write` / `provisioning` |
+| [Get OAuth2 access token](/docs/api/get-v-1-account-account-oauthtoken) | `GET /v1/account/{account}/oauth-token` | `read` / `admin` |
+| [List account signatures](/docs/api/get-v-1-account-account-serversignatures) | `GET /v1/account/{account}/server-signatures` | `read` / `account` |
+| [Return stored logs](/docs/api/get-v-1-logs-account) | `GET /v1/logs/{account}` | `read` / `logs` |
+| [Stream state changes](/docs/api/get-v-1-changes) | `GET /v1/changes` | `read` / `events` |
 
-- Connection credentials (OAuth2 tokens or passwords)
-- Mailbox synchronization state
-- Account-specific settings
-- Connection status and health
+The permission column is the `x-ee-action` and `x-ee-group` pair the operation publishes in the OpenAPI document. A token narrowed with a `permissions` record has to allow both; creating and reconfiguring accounts is in the `provisioning` group rather than `account`, because a change to nothing but `host` makes the next connection send the stored password to the new host. The `admin` group can never be granted. See [Access Tokens](/docs/api-reference/access-tokens#permissions).
 
-### Account Object Structure
+## The Account Object
+
+`GET /v1/account/{account}` returns the stored account with its credentials masked:
 
 ```json
 {
@@ -54,522 +67,7 @@ Email accounts are the core resource in EmailEngine. Each account represents a c
 }
 ```
 
-The `state` field reports where the connection stands. See [Account States](#account-states) for the full list and what each one means for your application. `authFailureDisabledAt` is `null` unless EmailEngine itself switched syncing off after repeated authentication failures, see [Accounts switched off automatically](#accounts-switched-off-automatically).
-
-## Common Operations
-
-### 1. Register Account
-
-Register a new email account with EmailEngine.
-
-**Endpoint:** `POST /v1/account`
-
-**Request Parameters:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `account` | string | Yes | Unique account identifier (usually email address) |
-| `name` | string | Yes | Display name for the account |
-| `email` | string | No | Email address (defaults to `account`) |
-| `imap` | object | No | IMAP connection settings |
-| `smtp` | object | No | SMTP connection settings |
-| `oauth2` | object | No | OAuth2 settings |
-| `notifyFrom` | string | No | ISO date to send webhooks from (default: account creation time) |
-
-Only `account` and `name` are required by the schema. In practice, provide either `imap` (usually together with `smtp`) or `oauth2` so the account can actually connect to a mail server.
-
-**IMAP Configuration:**
-
-```json
-{
-  "host": "imap.example.com",
-  "port": 993,
-  "secure": true,
-  "auth": {
-    "user": "username",
-    "pass": "password"
-  }
-}
-```
-
-**SMTP Configuration:**
-
-```json
-{
-  "host": "smtp.example.com",
-  "port": 465,
-  "secure": true,
-  "auth": {
-    "user": "username",
-    "pass": "password"
-  }
-}
-```
-
-**Examples:**
-
-<Tabs groupId="programming-language">
-<TabItem value="curl" label="cURL">
-
-```bash
-curl -X POST https://emailengine.example.com/v1/account \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "account": "user@example.com",
-    "name": "John Doe",
-    "imap": {
-      "host": "imap.example.com",
-      "port": 993,
-      "secure": true,
-      "auth": {
-        "user": "user@example.com",
-        "pass": "password"
-      }
-    }
-  }'
-```
-
-</TabItem>
-<TabItem value="python" label="Python">
-
-```python
-import requests
-
-response = requests.post(
-    'https://emailengine.example.com/v1/account',
-    headers={
-        'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-        'Content-Type': 'application/json'
-    },
-    json={
-        'account': 'user@example.com',
-        'name': 'John Doe',
-        'imap': {
-            'host': 'imap.example.com',
-            'port': 993,
-            'secure': True,
-            'auth': {
-                'user': 'user@example.com',
-                'pass': 'password'
-            }
-        }
-    }
-)
-
-result = response.json()
-print(f"Account registered: {result['account']}")
-```
-
-</TabItem>
-</Tabs>
-
-**Response:**
-```json
-{
-  "account": "user@example.com",
-  "state": "new"
-}
-```
-
-The `state` field in this response indicates whether the account was created (`new`) or an existing account with the same ID was updated (`existing`). Credentials are not verified while handling this request: the account connects afterwards, and a bad password surfaces as the `authenticationError` state rather than as an error here.
-
-**Use Cases:**
-- Onboarding new users to your application
-- Allowing users to connect multiple email accounts
-- Automated account provisioning in bulk
-
-[Detailed API reference →](/docs/api/post-v-1-account)
-
----
-
-### 2. List Accounts
-
-Retrieve all registered accounts.
-
-**Endpoint:** `GET /v1/accounts`
-
-**Query Parameters:**
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `page` | number | Page number (0-indexed, default 0) |
-| `pageSize` | number | Items per page (default 20) |
-| `state` | string | Filter by account state |
-| `query` | string | Filter accounts by string match |
-
-Each entry carries a subset of the account object: `account`, `name`, `email`, `type`, `app`, `state`, `webhooks`, `proxy`, `smtpEhloName`, `counters`, `syncTime`, `authFailureDisabledAt`, `lastError` and, for delegated accounts, `delegationError`.
-
-**Examples:**
-
-```bash
-curl "https://emailengine.example.com/v1/accounts?pageSize=50" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
-**Response:**
-```json
-{
-  "total": 2,
-  "page": 0,
-  "pages": 1,
-  "accounts": [
-    {
-      "account": "user1@example.com",
-      "name": "John Doe",
-      "email": "user1@example.com",
-      "state": "connected"
-    },
-    {
-      "account": "user2@example.com",
-      "name": "Jane Smith",
-      "email": "user2@example.com",
-      "state": "authenticationError"
-    }
-  ]
-}
-```
-
-**Use Cases:**
-- Dashboard displaying all connected accounts
-- Health monitoring across accounts
-- Bulk operations on multiple accounts
-
-[Detailed API reference →](/docs/api/get-v-1-accounts)
-
----
-
-### 3. Get Account Details
-
-Retrieve detailed information about a specific account.
-
-**Endpoint:** `GET /v1/account/:account`
-
-**Path Parameters:**
-
-| Parameter | Description |
-|-----------|-------------|
-| `account` | Account identifier |
-
-**Examples:**
-
-```bash
-curl "https://emailengine.example.com/v1/account/user@example.com" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
-**Response:**
-```json
-{
-  "account": "user@example.com",
-  "name": "John Doe",
-  "email": "user@example.com",
-  "state": "connected",
-  "syncTime": "2025-01-15T10:30:00.000Z",
-  "lastError": null,
-  "counters": {
-    "events": {
-      "messageNew": 30,
-      "messageDeleted": 5
-    }
-  }
-}
-```
-
-**Use Cases:**
-- Displaying account status in user interface
-- Checking connection health
-- Retrieving account statistics
-
-[Detailed API reference →](/docs/api/get-v-1-account-account)
-
----
-
-### 4. Update Account
-
-Update account settings or credentials.
-
-**Endpoint:** `PUT /v1/account/:account`
-
-**Request Body:**
-```json
-{
-  "name": "New Display Name",
-  "imap": {
-    "partial": true,
-    "port": 993
-  },
-  "smtp": {
-    "partial": true,
-    "port": 465
-  }
-}
-```
-
-:::tip Partial Updates
-Use `"partial": true` inside `imap`, `smtp`, or `oauth2` objects to update only the specified fields instead of replacing the entire configuration. Without this flag, the entire object will be replaced, potentially losing existing settings.
-
-**Note:** The `partial` flag only works for main-level objects (`imap`, `smtp`, `oauth2`), not for nested objects like `imap.auth`.
-:::
-
-**Examples:**
-
-```bash
-curl -X PUT "https://emailengine.example.com/v1/account/user@example.com" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Updated Name",
-    "imap": {
-      "partial": true,
-      "port": 993
-    }
-  }'
-```
-
-**Use Cases:**
-- Updating account credentials after password change
-- Changing display names
-- Modifying connection settings
-
-[Detailed API reference →](/docs/api/put-v-1-account-account)
-
----
-
-### 5. Delete Account
-
-Remove an account and stop synchronization.
-
-**Endpoint:** `DELETE /v1/account/:account`
-
-**Query Parameters:**
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `revoke` | boolean | If `true`, EmailEngine attempts to revoke the upstream OAuth2 grant at the provider before deleting the account. Currently supported for individual Gmail OAuth grants; for Gmail service-account integrations, Outlook, and non-OAuth2 accounts the flag is a no-op. Revoke failures are logged and do not block deletion. Default: `false` |
-
-**Examples:**
-
-```bash
-curl -X DELETE "https://emailengine.example.com/v1/account/user@example.com" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-
-# Also revoke the OAuth2 grant at the provider (Gmail OAuth accounts)
-curl -X DELETE "https://emailengine.example.com/v1/account/user@example.com?revoke=true" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
-**Response:**
-```json
-{
-  "account": "user@example.com",
-  "deleted": true
-}
-```
-
-**Use Cases:**
-- User disconnecting their email account
-- Removing inactive accounts
-- Cleanup during offboarding
-
-[Detailed API reference →](/docs/api/delete-v-1-account-account)
-
----
-
-### 6. Reconnect Account
-
-Force reconnection to mail server (useful after credential updates).
-
-**Endpoint:** `PUT /v1/account/:account/reconnect`
-
-**Examples:**
-
-```bash
-curl -X PUT "https://emailengine.example.com/v1/account/user@example.com/reconnect" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"reconnect": true}'
-```
-
-**Response:**
-```json
-{
-  "reconnect": true
-}
-```
-
-The request only schedules the reconnect and returns before it finishes. Watch the account state, or the `accountInitialized` and `authenticationError` webhooks, for the result. `reconnect` is `false` when the body did not ask for one, and also when the account has been [switched off after authentication failures](#accounts-switched-off-automatically): nothing is scheduled then, because the same credentials would fail again. Since EmailEngine 2.79.4; earlier releases answered `true` and did nothing.
-
-**Use Cases:**
-- Testing connection after credential update
-- Recovering from connection errors
-- Manual reconnection trigger
-
-[Detailed API reference →](/docs/api/put-v-1-account-account-reconnect)
-
----
-
-### 7. Account Operations: Reconnect vs Sync vs Flush
-
-EmailEngine provides three distinct operations for managing account connections, each suited for different scenarios.
-
-#### Reconnect
-
-**Endpoint:** `PUT /v1/account/:account/reconnect`
-
-Closes the existing IMAP connection entirely and opens a new one. This is a full disconnect/reconnect cycle.
-
-```bash
-curl -X PUT "https://emailengine.example.com/v1/account/user@example.com/reconnect" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"reconnect": true}'
-```
-
-**When to use:**
-- After updating account credentials (password change, OAuth2 token update)
-- To recover from persistent connection errors
-- When you need a fresh IMAP session (e.g., after server-side configuration changes)
-
-[Detailed API reference →](/docs/api/put-v-1-account-account-reconnect)
-
----
-
-#### Sync
-
-**Endpoint:** `PUT /v1/account/:account/sync`
-
-Triggers an immediate mailbox synchronization without disconnecting. Refreshes the folder list and syncs all monitored mailboxes.
-
-```bash
-curl -X PUT "https://emailengine.example.com/v1/account/user@example.com/sync" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"sync": true}'
-```
-
-The response is `{"sync": true}`. Like reconnect, the request schedules the work and returns before it finishes.
-
-**When to use:**
-- When you need the latest messages immediately without waiting for the next poll cycle
-- After bulk operations on the mail server (e.g., importing messages via another client)
-- To ensure webhooks are triggered for recently arrived messages
-
-[Detailed API reference →](/docs/api/put-v-1-account-account-sync)
-
----
-
-#### Flush
-
-**Endpoint:** `PUT /v1/account/:account/flush`
-
-Deletes all cached email data (message indexes, folder lists, bounce data) from Redis, then triggers a full re-sync from scratch. The account is paused during the operation and automatically resumed after completion.
-
-```bash
-curl -X PUT "https://emailengine.example.com/v1/account/user@example.com/flush" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"flush": true}'
-```
-
-The response is `{"flush": true}`. The body also accepts `notifyFrom`, to set the webhook cutoff for the rebuilt index, and `imapIndexer`, to switch the indexing strategy at the same time.
-
-:::warning Destructive Operation
-Flush deletes all cached data for the account. This triggers a complete re-indexing of all messages, which may take significant time for large mailboxes and will re-trigger `messageNew` webhooks unless `notifyFrom` is set appropriately. Only one flush operation can run at a time across all accounts; a second request while one is running answers `429` with `One flush operation at a time allowed, try again later`.
-:::
-
-**When to use:**
-- To fix data corruption or synchronization issues
-- After major mailbox reorganization on the server
-- When message listings show stale or incorrect data
-- As a last resort when reconnect and sync don't resolve issues
-
-[Detailed API reference →](/docs/api/put-v-1-account-account-flush)
-
----
-
-#### Comparison
-
-| Operation | Connection | Data | Duration | Impact |
-|-----------|-----------|------|----------|--------|
-| **Reconnect** | Closes and reopens | Preserved | Seconds | Brief interruption |
-| **Sync** | Stays connected | Preserved | Seconds to minutes | No interruption |
-| **Flush** | Paused temporarily | Deleted and rebuilt | Minutes to hours | Re-indexes everything |
-
-**Decision guide:**
-1. Try **sync** first - it's the least disruptive way to get fresh data
-2. Use **reconnect** if the connection itself seems broken or after credential changes
-3. Use **flush** only when cached data is corrupted or fundamentally out of sync
-
----
-
-### 8. Verify Account Credentials
-
-Pre-validate IMAP and SMTP credentials before creating an account.
-
-**Endpoint:** `POST /v1/verifyAccount`
-
-Tests IMAP and/or SMTP connections without creating or modifying any account. Both protocols are tested in parallel.
-
-```bash
-curl -X POST "https://emailengine.example.com/v1/verifyAccount" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "imap": {
-      "host": "imap.example.com",
-      "port": 993,
-      "secure": true,
-      "auth": {
-        "user": "john@example.com",
-        "pass": "password"
-      }
-    },
-    "smtp": {
-      "host": "smtp.example.com",
-      "port": 587,
-      "secure": false,
-      "auth": {
-        "user": "john@example.com",
-        "pass": "password"
-      }
-    }
-  }'
-```
-
-**Success response:**
-```json
-{
-  "imap": { "success": true },
-  "smtp": { "success": true }
-}
-```
-
-**Failure response (bad IMAP credentials):**
-```json
-{
-  "imap": {
-    "success": false,
-    "error": "Authentication failed",
-    "code": "AUTHENTICATIONFAILED",
-    "responseText": "NO [AUTHENTICATIONFAILED] Invalid credentials"
-  },
-  "smtp": { "success": true }
-}
-```
-
-**Use Cases:**
-- Validate credentials in your onboarding flow before creating the account
-- Build a "test connection" button in your UI
-- Verify server settings returned by the autoconfig endpoint
-
-[Detailed API reference →](/docs/api/post-v-1-verifyaccount)
-
----
-
-## Account Object Reference
-
-### Complete Field Reference
+### Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -578,7 +76,7 @@ curl -X POST "https://emailengine.example.com/v1/verifyAccount" \
 | `email` | string | Email address |
 | `type` | string | How the account connects: `imap`, `gmail`, `gmailService`, `outlook`, `outlookService` or `mailRu`. `oauth2` is an OAuth2 account whose application is no longer configured in EmailEngine, `delegated` a shared mailbox reached through another account's credentials, `sending` a send-only account with no IMAP access, and `invalid` a delegated account whose delegation could not be resolved |
 | `app` | string | OAuth2 application ID, for OAuth2 accounts |
-| `state` | string | Connection state (see Account States) |
+| `state` | string | Connection state, see [Account States](#account-states) |
 | `syncTime` | string | ISO 8601 date-time of the last sync (IMAP accounts only) |
 | `notifyFrom` | string | ISO date to send webhooks from |
 | `lastError` | object | Last error details, or `null` |
@@ -591,6 +89,10 @@ curl -X POST "https://emailengine.example.com/v1/verifyAccount" \
 | `smtp` | object | SMTP connection settings |
 | `oauth2` | object | OAuth2 configuration |
 | `path` | array | Mailbox folders to monitor (IMAP only), `"*"` for all |
+| `imapIndexer` | string | Per-account override of the IMAP indexing strategy, `full` or `fast`. Absent when the account follows the instance setting |
+| `expectedEmail` | string | The address the account is pinned to. A hosted authentication form that completes as another identity is rejected |
+| `copy` | boolean | Whether submitted messages are copied to the Sent folder |
+| `logs` | boolean | Whether recent logs are stored for the account, readable with `GET /v1/logs/{account}` |
 | `subconnections` | array | Folders monitored with a dedicated IMAP connection each |
 | `webhooks` | string | Account-specific webhook URL |
 | `webhooksCustomHeaders` | array | Extra headers sent with every webhook for this account |
@@ -598,10 +100,14 @@ curl -X POST "https://emailengine.example.com/v1/verifyAccount" \
 | `smtpEhloName` | string | Hostname used in SMTP EHLO |
 | `locale`, `tz` | string | Default locale and timezone for content rendered for this account |
 | `counters` | object | Cumulative event counters (`counters.events`) for the account lifetime |
-| `quota` | object | Mailbox quota, only with `?quota=true`; `false` if the server reports none |
+| `quota` | object or `false` | Mailbox quota, only with `?quota=true`. `false` when the server reports none, and for Gmail API and MS Graph accounts, which do not report one (since 2.79.6; earlier releases omitted the field for those) |
+| `baseScopes` | string | What the OAuth2 grant was requested for: `imap`, `api` or `pubsub`. OAuth2 accounts only |
+| `gmailWatch` | object | State of the Gmail Pub/Sub watch: `state`, `lastCheck` and timing. Gmail API accounts only. A watch that is not active delays new mail rather than losing it, since the client falls back to polling |
 | `outlookSubscription` | object | Microsoft Graph change subscription details (Outlook accounts only) |
 
-The [endpoint reference](/docs/api/get-v-1-account-account) documents every nested field. Stored passwords and OAuth2 tokens are masked in the response.
+The [endpoint reference](/docs/api/get-v-1-account-account) documents every nested field. Stored passwords, the credentials in a proxy or webhook URL and the values of custom webhook headers read back as `******`; a masked value written back replaces the stored one, so leave the field out of an update instead.
+
+Each entry of `GET /v1/accounts` carries a subset: `account`, `name`, `email`, `type`, `app`, `state`, `webhooks`, `proxy`, `smtpEhloName`, `counters`, `syncTime`, `authFailureDisabledAt`, `lastError` and, for delegated accounts, `delegationError`. The listing always carries `query` (the filter string, or `false`) and `state` (the filter, or `*`) next to `total`, `page`, `pages` and `accounts`.
 
 ### Account States
 
@@ -613,13 +119,11 @@ The [endpoint reference](/docs/api/get-v-1-account-account) documents every nest
 | `syncing` | Connected and performing the initial or a periodic mailbox sync |
 | `connected` | Connected and watching for changes. This is the healthy steady state |
 | `disconnected` | The connection dropped and EmailEngine is retrying with backoff |
-| `connectError` | The server could not be reached or the TLS handshake failed. Retried with backoff |
+| `connectError` | The server could not be reached, the TLS handshake failed, or a login failed for a reason other than a refused credential. Retried with backoff |
 | `authenticationError` | The credentials were rejected. Requires re-authentication before syncing resumes |
 | `paused` | Syncing was paused through the API. No connection is maintained |
 
-`connected` and `syncing` are both healthy. Treat `connecting`, `syncing`, and `disconnected` as transient and let EmailEngine recover on its own. Only `authenticationError` always needs a human or an OAuth2 re-authorization; a `connectError` that persists usually points at the network or the server rather than at the account.
-
-Watch these transitions live instead of polling with the account state stream below.
+`connected` and `syncing` are both healthy. Treat `connecting`, `syncing`, and `disconnected` as transient and let EmailEngine recover on its own. Only `authenticationError` always needs a human or an OAuth2 re-authorization; a `connectError` that persists usually points at the network or the server rather than at the account. `authenticationError` is the state worth alerting on, together with `unset` while `authFailureDisabledAt` is set. `GET /v1/accounts?state=authenticationError` lists the accounts in one state, and the [state stream](#streaming-account-state-changes) reports transitions as they happen.
 
 ### Accounts switched off automatically
 
@@ -633,7 +137,37 @@ The field, both recovery paths and the reconnect response date from EmailEngine 
 
 See [Accounts switched off after authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures) for the operator's view.
 
-### Streaming Account State Changes
+## Request and Response Conventions
+
+### Registering and updating
+
+`POST /v1/account` requires only `account` and `name`; the schema accepts an account with neither `imap` nor `oauth2`, which registers but never connects. The response is `{"account": "...", "state": "new"}`, or `"existing"` when an account with that ID was already stored and has been updated. Credentials are not checked while the request is handled: the account connects afterwards, and a bad password surfaces as the `authenticationError` state, not as an error here. `POST /v1/verifyAccount` tests IMAP and SMTP settings without storing anything and answers per protocol, `{"success": true}` or `{"success": false, "error": ..., "code": ..., "responseText": ...}` with the server's own reply.
+
+With `oauth2.authorize: true` the registration answers `{"redirect": "<consent URL>"}` instead of an account; the account is created once the user completes the provider's consent page. See [OAuth2 without tokens](/docs/accounts/managing-accounts#oauth2-without-tokens-authorization-redirect).
+
+A second account for the same OAuth2 user is refused with 400, code `AccountAlreadyExists` and `existingAccount` naming the first one.
+
+`PUT /v1/account/{account}` replaces each of `imap`, `smtp` and `oauth2` as a whole unless the object carries `"partial": true`, in which case only the fields sent are changed and the stored credential is kept. `partial` is read on those three objects only, not on nested ones such as `imap.auth`. Updating credentials reconnects the account, so a separate reconnect request is not needed.
+
+`DELETE /v1/account/{account}` answers `{"account": "...", "deleted": true}` and also removes the account's queued outbound messages and its access tokens. `?revoke=true` additionally asks the provider to revoke the OAuth2 grant; that is implemented for individual Gmail grants, is a no-op for service accounts, Outlook and password accounts, and a failed revocation is logged without blocking the deletion.
+
+### Scheduling operations
+
+Reconnect, sync and flush all return before the work runs. Watch the account state, the [`accountInitialized`](/docs/webhooks/accountinitialized) and [`authenticationError`](/docs/webhooks/authenticationerror) webhooks, or the [state stream](#streaming-account-state-changes) for the outcome.
+
+| Operation | Body | Effect | Response |
+|-----------|------|--------|----------|
+| `PUT .../reconnect` | `{"reconnect": true}` | Closes the connection and opens a new one, keeping the cached index | `{"reconnect": true}`. `false` when the body did not ask for one, and for an account [switched off automatically](#accounts-switched-off-automatically), where nothing is scheduled because the same credentials would fail again (since 2.79.4; earlier releases answered `true` and did nothing) |
+| `PUT .../sync` | `{"sync": true}` | Refreshes the folder list and syncs every monitored folder without disconnecting | `{"sync": true}` |
+| `PUT .../flush` | `{"flush": true}`, optionally `notifyFrom` and `imapIndexer` | Deletes the account's cached index from Redis and re-syncs from scratch; `messageNew` is sent again for every message after `notifyFrom` | `{"flush": true}`. Only one flush runs at a time across the instance; a second request answers 429 with the code `LockFail` |
+
+Try sync first when data looks stale, reconnect when the connection itself seems broken or credentials changed, and flush only when the cached index is wrong.
+
+### Errors
+
+An unknown account answers 404 with the message `Account record was not found for requested ID` and no `code`. Validation failures answer 400 with a `fields` list; a mail server that refused a request also answers 400, carrying the server's code and response instead. The full list is on [Error Codes](/docs/api-reference/error-codes).
+
+## Streaming Account State Changes
 
 `GET /v1/changes` is a [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) stream that pushes a message every time an account changes state. It is the same feed the admin dashboard uses to repaint its status badges, so a monitoring view can follow every account without polling `/v1/accounts` on a timer.
 
@@ -655,12 +189,31 @@ Each message carries:
 | Field | Meaning |
 |-------|---------|
 | `account` | The account that changed, or `null` for instance-wide events |
-| `type` | `state` for an account transition. `smtpServerState` and `imapProxyServerState` report the built-in servers starting or failing |
+| `type` | The kind of event, from the table below |
 | `key` | The new value, so for `type: "state"` one of the account states above |
 | `payload` | Extra context, such as `error` on a failure. `null` when there is none |
-| `stateLabel` | A pre-rendered, translated badge label, resolved server-side so the admin UI and any client agree |
+| `stateLabel` | A pre-rendered, translated badge label for `state`, `smtpServerState` and `imapProxyServerState` events, resolved server-side so the admin UI and any client agree. `null` for the other types |
 
-The connection stays open until the client closes it, so treat a disconnect as normal and reconnect. `EventSource` does this on its own.
+### Event types
+
+| `type` | `account` | `key` | `payload` |
+|--------|-----------|-------|-----------|
+| `state` | the account | The new [account state](#account-states) | `{"error": ...}` with the same object as `lastError` when the state is `authenticationError` or `connectError`, otherwise `null` |
+| `syncWarning` | the account | `null` | `{"type": ..., "message": ...}`, see below |
+| `smtpServerState` | `null` | `listening` or `failed` | `{"tls": ...}` for the certificate the [SMTP server](/docs/sending/smtp-interface) presents, or `{"error": {"message", "code"}}` |
+| `imapProxyServerState` | `null` | `listening` or `failed` | The same shape, for the [IMAP proxy server](/docs/receiving/imap-proxy-server) |
+| `tlsCertificateState` | `null` | `queued`, `ordering`, `valid`, `failed`, `renewalFailed` or `skipped` | The stored provisioning record for one hostname, see [TLS Certificates](/docs/deployment/tls-certificates). Since 2.80.0 |
+
+A `syncWarning` is sent when the sync of an API account skipped something it will not retry, and it is the only record that those messages were never announced. `payload.type` names the case:
+
+| `payload.type` | Account type | When |
+|----------------|--------------|------|
+| `historyIdExpired` | Gmail API | Gmail answered 404 for the stored history cursor, so changes made in the meantime were not seen. The cursor is reset to the current one. Since 2.61.2 |
+| `historyEntrySkipped` | Gmail API | One history entry failed repeatedly, or crashed the sync worker, and was skipped; `historyId` and `messageIds` name what it covered. Since 2.79.2 |
+| `changeSkipped` | Gmail API, MS Graph | New messages could not be fetched after the transient-error retries ran out, so no `messageNew` was sent for the ids in `messageIds`. Since 2.81.2 |
+| `missedRecoveryFailed` | MS Graph | The recovery pass for missed change notifications gave up, so new messages may not have been announced. Since 2.81.2 |
+
+The stream opens with the comment line `: EmailEngine v<version>` and writes a comment every 90 seconds while nothing happens, so intermediate proxies do not time it out. A client that stops reading is dropped once about 2 MB of unsent output has queued behind it (since 2.82.0); `EventSource` reconnects on its own, so treat a disconnect as normal.
 
 :::note This stream is a signal, not a record
 Events are only delivered to clients connected at the time. Nothing is buffered for a client that is not listening, so a state change during a reconnect is missed. Use it to drive a live view, and read `/v1/account/{account}` for the authoritative current state. For durable delivery, use [webhooks](/docs/webhooks/overview).
@@ -668,145 +221,14 @@ Events are only delivered to clients connected at the time. Nothing is buffered 
 
 Because `EventSource` cannot set request headers, this endpoint accepts the token as the `access_token` query parameter. Keep in mind that query strings are more likely to end up in proxy and server logs than an `Authorization` header.
 
-## Common Patterns
+### Polling instead
 
-### Bulk Account Registration
-
-Register accounts with bounded concurrency rather than firing every request at once. Each registration opens a connection to a mail server, so an unbounded loop over thousands of accounts will hit provider connection limits before it hits EmailEngine's:
-
-```javascript
-async function registerAccounts(accounts, concurrency = 5) {
-  const queue = [...accounts];
-  const results = [];
-
-  const worker = async () => {
-    while (queue.length) {
-      const body = queue.shift();
-      const res = await fetch('https://emailengine.example.com/v1/account', {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer YOUR_ACCESS_TOKEN',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      });
-
-      results.push(
-        res.ok
-          ? { account: body.account, ...(await res.json()) }
-          : { account: body.account, error: (await res.json()).message }
-      );
-    }
-  };
-
-  await Promise.all(Array.from({ length: concurrency }, worker));
-  return results;
-}
-```
-
-Registration returns as soon as the account is stored, so a successful response does not mean the mailbox is reachable yet. Watch for [`authenticationError`](/docs/webhooks/authenticationerror) and [`accountInitialized`](/docs/webhooks/accountinitialized) webhooks to learn the real outcome.
-
-See [Performance Tuning](/docs/advanced/performance-tuning) before onboarding accounts in the thousands.
-
-### Health Monitoring
-
-Ask EmailEngine for the accounts in a given state rather than listing everything and filtering client-side:
-
-```bash
-curl "https://emailengine.example.com/v1/accounts?state=authenticationError&pageSize=1000" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
-`authenticationError` is the state worth alerting on: it does not clear on its own and needs a credential update or a new OAuth2 authorization. So is `unset` with a non-null `authFailureDisabledAt`, which is where an account lands once those failures have gone on for days. `connectError` and `disconnected` are retried automatically, so alert on those only if an account stays there across several checks, and treat `connecting`, `syncing`, and `connected` as healthy.
-
-For a live view rather than a poll, subscribe to the [account state stream](#streaming-account-state-changes).
-
-### Credential Rotation
-
-Send only the fields that change. Setting `imap.partial` keeps the rest of the IMAP configuration intact, so you do not have to resend host, port, and TLS settings just to replace a password:
-
-```json
-{
-  "imap": {
-    "partial": true,
-    "auth": { "user": "user@example.com", "pass": "new-password" }
-  }
-}
-```
-
-Updating credentials through this endpoint triggers a reconnect, so there is no need to call reconnect separately. It also lifts the automatic switch-off described under [Account States](#accounts-switched-off-automatically).
-
-### Account Synchronization Status
-
-`GET /v1/account/{account}` reports where an account stands:
-
-```bash
-curl "https://emailengine.example.com/v1/account/user%40example.com" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
-```
-
-| Field | What it tells you |
-|-------|-------------------|
-| `state` | The current connection state, from the table above |
-| `syncTime` | When the last sync completed. A timestamp that stops advancing points at a stalled account |
-| `lastError` | Details of the most recent failure, or `null`. Present even after EmailEngine has recovered |
-| `authFailureDisabledAt` | `null`, or the time EmailEngine gave up on the account's credentials and switched syncing off |
-
-## Error Handling
-
-### Common Errors
-
-**Account Already Exists:**
-```json
-{
-  "statusCode": 400,
-  "error": "Bad Request",
-  "message": "Another account for the same OAuth2 user already exists",
-  "code": "AccountAlreadyExists",
-  "existingAccount": "user123"
-}
-```
-**Solution:** Use PUT to update existing account or choose different account ID.
-
-**Authentication Failed:**
-
-`POST /v1/account` does not validate credentials at registration time - invalid credentials surface later when the account moves to the `authenticationError` state. To check credentials up front, use `POST /v1/verifyAccount`, which reports the server response:
-```json
-{
-  "imap": {
-    "success": false,
-    "error": "Authentication failed",
-    "code": "AUTHENTICATIONFAILED",
-    "responseText": "NO [AUTHENTICATIONFAILED] Invalid credentials"
-  },
-  "smtp": { "success": true }
-}
-```
-**Solution:** Verify credentials, check if 2FA/app passwords are required.
-
-**Account Not Found:**
-```json
-{
-  "statusCode": 404,
-  "error": "Not Found",
-  "message": "Account record was not found for requested ID"
-}
-```
-**Solution:** Verify account ID is correct and account exists.
-
-### Troubleshooting
-
-For accounts stuck in error states:
-
-1. Check `lastError` field for details
-2. Verify credentials are current
-3. Test connection with manual reconnect
-4. Check mail server accessibility
-5. Review OAuth2 token expiration
+If neither the stream nor webhooks can reach your application, poll `GET /v1/account/{account}` for the state, and `GET /v1/account/{account}/messages?path=INBOX&pageSize=100` for mail: the listing is newest first, so a poller keeps the newest `uid` it has processed per folder and stops paging as soon as it reaches it. That covers new mail only, sees neither flag changes nor deletions, and costs more than webhooks on a busy account.
 
 ## See Also
 
-- [Managing accounts](/docs/accounts/managing-accounts) - The same operations as a guide
+- [Managing accounts](/docs/accounts/managing-accounts) - Registering, updating, pausing and recovering accounts step by step
 - [Account types](/docs/accounts) - Choosing a backend before registering
 - [Hosted authentication](/docs/accounts/hosted-authentication) - Letting the user supply the credentials
 - [Account troubleshooting](/docs/accounts/troubleshooting) - When an account will not connect
+- [Access Tokens](/docs/api-reference/access-tokens) - The permission groups the endpoint table refers to

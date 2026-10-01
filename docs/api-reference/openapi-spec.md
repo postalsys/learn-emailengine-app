@@ -8,7 +8,7 @@ sidebar_position: 7
 
 EmailEngine describes its entire HTTP API with an OpenAPI document. The same document powers the [full API reference](/docs/api/emailengine-api) on this site, so anything you can read there is also available as machine-readable JSON that API clients, code generators, and testing tools can consume directly.
 
-One difference: neither describes the pre-2.79.0 token paths (`POST /v1/token`, `DELETE /v1/token/{token}`, `GET /v1/tokens/account/{account}`), which still answer for existing integrations but are deliberately left out so that new ones use `/v1/tokens`.
+Two things are left out on purpose. Neither describes the pre-2.79.0 token paths (`POST /v1/token`, `DELETE /v1/token/{token}`, `GET /v1/tokens/account/{account}`), which still answer for existing integrations but are omitted so that new ones use `/v1/tokens`. And the [MCP endpoint](/docs/mcp) at `/mcp` is not a REST operation, so it does not appear in the document; its tools wrap the operations that do.
 
 ## Where to get the document
 
@@ -41,9 +41,11 @@ EmailEngine also renders the same document as a browsable reference in its own a
 | OpenAPI version  | 3.0.0                                                                    |
 | Paths            | Every operation of the REST API, all under `/v1`                         |
 | Operation IDs    | Every operation has one, derived from method and path (`postV1Account`)  |
-| Authentication   | A single `bearerAuth` scheme, applied to every operation                 |
+| Authentication   | A single `bearerAuth` scheme (`bearerFormat: opaque`), applied to every operation |
 | Tags             | One per group in the API reference sidebar                               |
-| Permissions      | Each operation carries `x-ee-action` and `x-ee-group`, the grant a [narrowed token](/docs/api-reference/access-tokens#permissions) needs for it |
+| Permissions      | Each operation carries `x-ee-action` and `x-ee-group`, the grant a [narrowed token](/docs/api-reference/access-tokens#permissions) needs for it, and `x-ee-impact`, the impact the action is derived from |
+| Behavior notes   | `x-ee-behavior` lists, per operation, the provider differences and side effects the description mentions, as separate strings |
+| Examples         | `x-codeSamples` carries hand-written request examples (`lang`, `source`, optional `label`) where the generated ones would mislead, in the form Redoc and Scalar also read |
 | Version          | The `info.version` field is the EmailEngine version that produced it     |
 
 Server URLs in the document are origins only, so generated clients combine a base URL like `https://emailengine.example.com` with paths that already include the `/v1` prefix.
@@ -109,7 +111,7 @@ Code generators want the full specification, but AI assistants usually work bett
 - [AI Agent Reference](/docs/reference/llm-context) - endpoint list, webhook events, and common integration patterns in prose
 - [capabilities.json](https://learn.emailengine.app/capabilities.json) - the same surface as structured JSON
 
-See [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt) for how these fit into an AI-assisted workflow.
+See [AI and ChatGPT Integration](/docs/receiving/ai-processing) for how these fit into an AI-assisted workflow.
 
 ## See Also
 

@@ -65,7 +65,7 @@ No field is required by the schema. In practice, provide `text` and/or `html` fo
 |-------|------|---------|-------------|
 | `sendAt` | date-time | now | Hold the message in the outbox until this time |
 | `deliveryAttempts` | integer | the `deliveryAttempts` setting, `10` if unset | How many delivery attempts to make before the message is considered failed |
-| `gateway` | string | none | ID of an [SMTP gateway](/docs/api/post-v-1-gateway) to route the message through instead of the account's own SMTP server |
+| `gateway` | string | none | ID of an [SMTP gateway](/docs/sending/smtp-gateways) to route the message through instead of the account's own SMTP server or provider API |
 | `copy` | boolean or null | account default | Whether to upload the sent message to the Sent Mail folder. SMTP deliveries only: Gmail API and MS Graph accounts file sent messages themselves |
 | `sentMailPath` | string | the account's Sent Mail folder | Folder to upload the sent copy to |
 | `trackOpens`, `trackClicks` | boolean | the `trackOpens` and `trackClicks` settings, falling back to `trackSentMessages` | Add open and click tracking to this message. `trackingEnabled`, absent from the spec but still accepted, sets both at once and is what the SMTP interface's `X-EE-Tracking-Enabled` header maps to |
@@ -551,7 +551,7 @@ Using `mailMerge` rejects the root-level `to`, `cc`, `bcc`, `envelope`, `raw`, a
 See [Mail Merge](/docs/sending/mail-merge) for personalization, batching, and how failures for one recipient are reported.
 
 :::warning Sending limits still apply
-Mail merge submits through the account's own mail server, which enforces its own rate and volume limits. Gmail and Microsoft 365 in particular will start deferring or rejecting mail well before a bulk campaign finishes. For genuine bulk mail, route the messages through an [SMTP gateway](/docs/api/post-v-1-gateway) built for it, using the `gateway` field.
+Mail merge submits through the account's own mail server, which enforces its own rate and volume limits. Gmail and Microsoft 365 in particular will start deferring or rejecting mail well before a bulk campaign finishes. For genuine bulk mail, route the messages through an [SMTP gateway](/docs/sending/smtp-gateways) built for it, using the `gateway` field.
 :::
 
 ## See Also

@@ -79,7 +79,7 @@ curl -X POST https://emailengine.example.com/v1/tokens \
   }'
 ```
 
-**Important:** A token minted over the API is always narrowed: either bind it to an `account`, or send a `permissions` record with `actions` and `groups` allowlists. The API refuses to mint an instance-wide token that could reach every account and every endpoint. Minting requires an instance-wide `*` or `api` token that is not itself narrowed.
+**Important:** A token minted over the API is always narrowed: either bind it to an `account`, or send a `permissions` record. The API refuses to mint an instance-wide token that could reach every account and every endpoint. Minting requires an instance-wide `*` or `api` token that is not itself narrowed, and the new token cannot be less restricted than the one minting it.
 
 **Via CLI (System-Wide or Account-Specific):**
 
@@ -98,7 +98,7 @@ See [Access Tokens](/docs/api-reference/access-tokens) for complete documentatio
 **System-Wide Tokens:**
 - Created via web interface or CLI, or via API with a `permissions` record
 - Access all accounts and endpoints, unless narrowed by `permissions`
-- Scopes: `"*"` (full), `"api"`, `"metrics"`, `"smtp"`, `"imap-proxy"`, `"mcp"`
+- Scopes: `"*"` (full), `"api"`, `"metrics"`, `"smtp"`, `"imap-proxy"`, `"mcp"`, `"mcp-manage"`
 
 **Account-Specific Tokens:**
 - Created via web interface, CLI, or API with the `account` field
@@ -301,7 +301,7 @@ Not every list is paginated. `GET /v1/account/{account}/mailboxes` returns the f
 | `statusCode` | The HTTP status code, repeated in the body |
 | `error` | The HTTP status text, such as `Bad Request` or `Unauthorized` |
 | `message` | The human-readable reason. **This is the field to show or log**, not `error` |
-| `code` | A machine-readable code, present when the failure has one. See [Error Codes](/docs/reference/error-codes) |
+| `code` | A machine-readable code, present when the failure has one. See [Error Codes](/docs/api-reference/error-codes) |
 | `fields` | Present on validation failures, listing each rejected input as `key` and `message` |
 
 ### Common Error Codes
@@ -317,7 +317,7 @@ Not every list is paginated. `GET /v1/account/{account}/mailboxes` returns the f
 | `SMTPUnavailable`        | 404    | The account has no usable SMTP configuration | Configure SMTP or a gateway |
 | `Timeout`                | 504    | A worker did not answer in time         | Retry, or raise `x-ee-timeout` |
 
-A missing or rejected token answers `401` with `Unauthorized` or `Bad token` as the message and no `code`. A missing account answers `404` with no `code`. A token that has exhausted its rate limit answers `429` with no `code` either, but with a `ttl` field carrying the seconds until the window resets. Validation failures do not carry a `code`. They return `400` with a `fields` array instead. See [Error Codes](/docs/reference/error-codes) for the full list.
+A missing or rejected token answers `401` with `Unauthorized` or `Bad token` as the message and no `code`. A missing account answers `404` with no `code`. A token that has exhausted its rate limit answers `429` with no `code` either, but with a `ttl` field carrying the seconds until the window resets. Validation failures do not carry a `code`. They return `400` with a `fields` array instead. See [Error Codes](/docs/api-reference/error-codes) for the full list.
 
 ### Retry Strategies
 

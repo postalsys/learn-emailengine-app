@@ -160,6 +160,8 @@ For detailed CLI usage, export/import workflows, and prepared token configuratio
 
 **Authentication:** Requires an instance-wide token with the `*` or `api` scope and no `permissions` record. Token provisioning is in the never-grantable `admin` group, so an account-bound token is refused (the route has no `{account}` parameter) and a narrowed token is refused whatever it lists. A request made while API authentication is switched off is refused too, since nothing could ever revoke a token handed to an anonymous caller.
 
+The new token can also not be less restricted than the token minting it. When the calling token carries an address allowlist, a referrer allowlist, a rate limit or an expiry, the request has to repeat each of them at least as narrowly: `restrictions.addresses` within the caller's allowlist, `restrictions.referrers` as a subset of the caller's list, a `rateLimit` no higher, and an `expires` no later. A request that would widen any of them is refused with `403` and the code `MintWidensRestrictions`. Since EmailEngine 2.82.0; earlier releases minted the token as requested.
+
 ```bash
 curl -X POST https://emailengine.example.com/v1/tokens \
   -H "Authorization: Bearer EXISTING_TOKEN" \
@@ -174,9 +176,9 @@ curl -X POST https://emailengine.example.com/v1/tokens \
 **Fields:**
 
 - `description` (string, required): Token description
-- `scopes` (array): Token scopes, default `["api"]`
+- `scopes` (array): Token scopes, default `["api"]`. One or more of `api`, `smtp`, `imap-proxy`, `mcp` and `mcp-manage`
 - `account` (string): Account ID this token is bound to
-- `permissions` (object): `actions` and `groups` allowlists, see [Permissions](#permissions)
+- `permissions` (object): `actions` and `groups` allowlists, or a `grants` pair list, see [Permissions](#permissions)
 - `restrictions` (object): IP, referrer and rate limits, see [Token Restrictions](#token-restrictions)
 - `metadata` (string): Arbitrary JSON, stored with the token and returned by `GET /v1/tokens/{token}`
 - `expires` (date-time): When the token stops working. Omit for a token that never expires. An expired token is refused and its record is removed the next time it is presented or listed
@@ -196,7 +198,7 @@ Either `account` or `permissions` has to be present.
 
 - The token value is returned once and stored hashed. The `id` is what the listings report afterwards
 - An unbound token must carry a `permissions` record; without one the request is refused
-- You need an existing full-access token to mint tokens
+- You need an existing instance-wide token that is not narrowed to mint tokens, and the new token inherits no restriction from it: every limit has to be repeated in the request
 
 :::note Deprecated paths
 EmailEngine 2.79.0 renamed the token endpoints. `POST /v1/token`, `DELETE /v1/token/{token}` and `GET /v1/tokens/account/{account}` still answer, with the same handlers as `POST /v1/tokens`, `DELETE /v1/tokens/{token}` and `GET /v1/tokens?account=user123`, so existing integrations keep working, but they are left out of the OpenAPI document and the API reference. Use the new paths.
@@ -213,14 +215,15 @@ Scopes define what a token can access:
 | `metrics`    | Metrics only    | Prometheus metrics endpoint only  | Web UI, CLI only        |
 | `smtp`       | SMTP proxy      | SMTP gateway access               | Web UI, CLI, API        |
 | `imap-proxy` | IMAP proxy      | IMAP proxy access                 | Web UI, CLI, API        |
-| `mcp`        | MCP endpoint    | AI agent tool calls at `/mcp`, and nothing on the REST API | Web UI, CLI, API |
+| `mcp`        | MCP mail tools  | The mail tools at `/mcp`, and nothing on the REST API | Web UI, CLI, API |
+| `mcp-manage` | MCP management tools | The instance management tools at `/mcp`, and nothing on the REST API. Since 2.80.1 | Web UI, API |
 
 :::info API Scope Limitations
-When creating tokens via the `POST /v1/tokens` API endpoint, only `api`, `smtp`, `imap-proxy`, and `mcp` scopes are available. The `*` (full access) and `metrics` scopes can only be assigned through the Web UI or CLI.
+When creating tokens via the `POST /v1/tokens` API endpoint, only the `api`, `smtp`, `imap-proxy`, `mcp` and `mcp-manage` scopes are available. The `*` (full access) and `metrics` scopes can only be assigned through the Web UI or CLI, and the CLI does not issue `mcp-manage`.
 :::
 
-:::note The `mcp` scope is surface-bound
-A token carrying `mcp` opens the [MCP endpoint](/docs/mcp) and is refused by `/v1` with an "Unauthorized scope" error. Inside MCP it admits only the operations the tool set wraps: reading accounts, folders, messages, the sending queue and templates, modifying and deleting messages, and sending mail. See [MCP Access Control](/docs/mcp/access-control).
+:::note The MCP scopes are surface-bound
+A token carrying `mcp` or `mcp-manage` opens the [MCP endpoint](/docs/mcp) and is refused by `/v1` with an "Unauthorized scope" error. Inside MCP each scope admits only the operations its own tools wrap. `mcp` covers the mail tools: reading accounts, folders, messages, the sending queue and templates, modifying and deleting messages, and sending mail. `mcp-manage` covers the instance management tools: accounts, settings, OAuth2 applications, gateways, tokens, the license, blocklists, templates, the queues, logs and statistics. Neither can mint a token or read a stored credential. See [MCP Access Control](/docs/mcp/access-control).
 :::
 
 **Multiple scopes:**
@@ -233,11 +236,13 @@ A token carrying `mcp` opens the [MCP endpoint](/docs/mcp) and is refused by `/v
 
 **Default scope:** `["api"]` over the API, `["*"]` from the CLI.
 
-The `smtp`, `imap-proxy` and `metrics` scopes are checked once, at login, and then hand over a session. A token that also carries a `permissions` record is admitted to them only if the record covers everything that session could do: `send` on `submit` for SMTP, `read` on `diagnostics` for metrics, and for the IMAP proxy `read`, `write` and `destructive` on `message` plus `write` and `destructive` on `mailbox`, because a proxied IMAP session can delete and expunge. The token form warns when a chosen scope would be unusable with the record.
+The `smtp`, `imap-proxy` and `metrics` scopes are checked once, at login, and then hand over a session. A token that also carries a `permissions` record is admitted to them only if the record covers everything that session could do: `send` on `submit` for SMTP, `read` on `diagnostics` for metrics, and for the IMAP proxy `read`, `write` and `destructive` on `message` plus `write` and `destructive` on `mailbox`, because a proxied IMAP session can delete and expunge. The two MCP scopes are checked per request instead: a tool call goes through when any one pair in the scope's table covers the route it dispatches, so a record that leaves a single pair allowed still yields a usable token. The token form warns when a chosen scope would be unusable with the record.
 
 ## Permissions
 
-A `permissions` record narrows a token below its scope. It has two axes, each an allowlist, and both apply together: an operation is allowed only when its action is in `actions` and its group is in `groups`. Omit an axis to leave it unrestricted. An empty array is refused, because a record that lists nothing allows nothing.
+A `permissions` record narrows a token below its scope. It only ever subtracts: no value in it grants anything the token's scope and account binding do not already allow. It is written in one of two forms.
+
+**Two axes** (since EmailEngine 2.79.0). `actions` says what the token may do and `groups` what it may touch. Both are allowlists and both apply together, so an operation is allowed only when its action is in `actions` and its group is in `groups`:
 
 ```json
 {
@@ -249,6 +254,26 @@ A `permissions` record narrows a token below its scope. It has two axes, each an
   }
 }
 ```
+
+Omit `actions` to allow every action. Omit `groups` to allow the thirteen groups that existed when this form shipped (`account`, `mailbox`, `message`, `submit`, `outbox`, `export`, `template`, `blocklist`, `webhook`, `gateway`, `events`, `diagnostics` and `logs`). The five instance groups added in 2.80.1 are not implied by an absent `groups` axis and have to be named, so a record written for 2.79 keeps exactly the reach it had.
+
+**Exact pairs** (since EmailEngine 2.80.1). `grants` lists the (action, group) pairs the token may perform, for a narrowing the two axes cannot express, such as reading one section while writing another. It stands alone: a record that sets `grants` beside `actions` or `groups` is refused.
+
+```json
+{
+  "description": "Reads mail, manages templates",
+  "scopes": ["api"],
+  "permissions": {
+    "grants": [
+      { "action": "read", "group": "mailbox" },
+      { "action": "read", "group": "message" },
+      { "action": "write", "group": "template" }
+    ]
+  }
+}
+```
+
+`POST /v1/tokens` refuses an empty record, an empty array and a value outside the vocabulary, because a record that lists nothing allows nothing. A record that reaches a token another way, such as a [prepared token](/docs/configuration/prepared-settings/tokens), and cannot be read denies every request (`malformed` in the audit log) rather than being ignored.
 
 **Actions**, one per operation:
 
@@ -263,7 +288,7 @@ A `permissions` record narrows a token below its scope. It has two axes, each an
 
 | Group | Covers |
 |-------|--------|
-| `account` | Reading accounts and operating on their connection state: list, get, delete, reconnect, sync, flush, server signatures |
+| `account` | Reading accounts and operating on their connection state: list, get, delete, reconnect, sync, flush, server signatures. Creating an account and editing its configuration are `provisioning` |
 | `mailbox` | Create, rename, delete and list mailbox folders |
 | `message` | Read, modify, move and delete messages, including bulk actions and search |
 | `submit` | Send email, including scheduled sends and the delivery test. A send may reference a stored message to forward it, so this also reads the message it names |
@@ -272,18 +297,25 @@ A `permissions` record narrows a token below its scope. It has two axes, each an
 | `template` | Manage stored email templates |
 | `blocklist` | Manage suppression lists |
 | `webhook` | Read webhook route definitions |
-| `gateway` | Read and delete SMTP gateways. Creating or editing one is an admin operation, because it can redirect where stored relay credentials are sent |
+| `gateway` | Read and delete SMTP gateways. Creating or editing one is `provisioning`, because it can redirect where stored relay credentials are sent |
 | `events` | Subscribe to the instance-wide change stream, which covers every account |
-| `diagnostics` | Read statistics and service status, including `/metrics` |
-| `logs` | Read the per-account connection log. Entries are the raw protocol trace, so they include folder names and message subjects |
+| `diagnostics` | Read statistics and service status, the delivery test result, the Pub/Sub status, credential-free autodiscovery (`GET /v1/autoconfig`) and `/metrics` |
+| `logs` | Read the per-account stored log. Entries are the protocol or API trace, so they include folder names and message subjects |
+| `settings` | Read and change instance settings and pause or resume the queues. A write reaches the global webhook target. The privileged keys below are refused. Since 2.80.1 |
+| `oauth2` | Manage OAuth2 applications. Secrets are write-only, and a change can move where the provider sends authorization codes. Since 2.80.1 |
+| `license` | Read, apply and remove the license key. Since 2.80.1 |
+| `token` | List, inspect and revoke access tokens and read their audit logs. Cannot create tokens. Since 2.80.1 |
+| `provisioning` | Add and reconfigure accounts and SMTP gateways, including where they connect (`POST /v1/account`, `PUT /v1/account/{account}`, `POST /v1/gateway`, `PUT /v1/gateway/edit/{gateway}`), mint a hosted authentication link, verify credentials, and autodiscovery with credentials (`POST /v1/autoconfig`). A stored credential is sent to whatever host the record names after the change. Since 2.80.1 |
 
 Every operation in the [API reference](/docs/api/emailengine-api) publishes the action and group it requires as `x-ee-action` and `x-ee-group`, so the reference and the enforcement cannot disagree.
 
-Some operations belong to an `admin` group that no record may name. A token with any `permissions` record, whatever it lists, can never read or change settings, manage OAuth2 applications or the license, read a stored credential or an account's live OAuth2 access token, create or edit an account or a gateway, mint a hosted authentication form, verify credentials, or create, list, inspect or revoke tokens. That is what keeps a narrowed token from widening itself.
+Two operations stay in an `admin` group that no record may name: `POST /v1/tokens`, which mints a token, and `GET /v1/account/{account}/oauth-token`, which returns the account's live provider access token. A token with any `permissions` record, whatever it lists, is refused on both. That is what keeps a narrowed token from widening itself. Before 2.80.1 the `admin` group also held the settings, OAuth2 application, license, token and provisioning operations; they are grantable since, each in its own group.
 
-A request refused by the record answers `403 Forbidden` with the message `Unauthorized permission`. The [audit log](#audit-log) records which axis refused it.
+Two payload rules sit under the groups. A narrowed token that holds `settings` is still refused on `GET` and `POST /v1/settings` when the request names a privileged key: operator scripts, the link signing secret, the authentication server, proxy trust and local addresses, proxies, the built-in listeners, TLS certificates and provisioning, the service URL, mail certificate checking, the AI key and endpoint, custom webhook headers, hosted page markup, the MCP and audit switches, and error reporting. The whole request answers `403` with a message naming the keys, rather than being applied minus them. And `proxy` in a submit, account or gateway payload is refused to any narrowed token, because it decides which host the stored credential is sent to.
 
-The admin token form offers presets (read only, mail agent, send only, everything allowed) that fill in these records, and the [MCP access levels](/docs/mcp/access-control#access-levels) are the same records with the groups the MCP surface exposes.
+A request refused by the record answers `403 Forbidden` with the message `Unauthorized permission`. The [audit log](#audit-log) records why: `action` or `group` for the two-axis form, `grant` for the pair form, `restricted` for the `admin` group.
+
+The admin token form offers presets that fill in a two-axis record: **Read only** (`read` on `account`, `mailbox`, `message`, `outbox` and `diagnostics`), **Mail agent** (`read`, `write` and `send` on `account`, `mailbox`, `message`, `submit` and `outbox`), **Send only** (`read` and `send` on `submit` and `outbox`) and **Everything allowed** (every action on every grantable group). The [MCP access levels](/docs/mcp/access-control#access-levels) are `grants` records listing the pairs of the approved levels.
 
 ## Token Management
 
@@ -349,7 +381,7 @@ Each entry names the moment, the client address, the request, and what happened 
 | `action`, `group` | The permission the operation resolved to |
 | `account` | The account the request named, when it named one |
 | `status` | `allowed` or `denied` |
-| `reason` | Why a denied request was refused: `scope`, `account`, `address`, `referrer` or `rateLimit` for a token-level refusal, `action`, `group` or `restricted` when the `permissions` record refused it, `malformed` or `unclassified` when the record or the route could not be read, and `username` or `ip` when the SMTP server or the IMAP proxy refused the login. `null` when allowed |
+| `reason` | Why a denied request was refused: `scope`, `account`, `address`, `referrer` or `rateLimit` for a token-level refusal, `action`, `group`, `grant` or `restricted` when the `permissions` record refused it, `malformed` or `unclassified` when the record or the route could not be read, and `username` or `ip` when the SMTP server or the IMAP proxy refused the login. `null` when allowed |
 
 Retention is bounded per token by [`EENGINE_TOKEN_LOG_ENTRIES`](/docs/configuration/environment-variables#security--access-control), 1000 by default, and [`EENGINE_TOKEN_LOG_AGE`](/docs/configuration/environment-variables#security--access-control), seven days by default, whichever is reached first. The log lives in Redis, so both limits cost memory across every token that has one.
 
@@ -505,7 +537,7 @@ Limit the number of API requests a token can make within a time window:
 { "maxRequests": 100, "timeWindow": 60 }
 ```
 
-When the rate limit is exceeded, requests are rejected with `429 Too Many Requests`. The body carries `ttl`, the number of seconds until the window resets, and the response sets `X-RateLimit-Limit` and `X-RateLimit-Reset`. Requests that are within the limit carry the same two headers plus `X-RateLimit-Remaining`.
+When the rate limit is exceeded, requests are rejected with `429 Too Many Requests`. The body carries `ttl`, the number of seconds until the window resets, and the response sets `X-RateLimit-Limit`, `X-RateLimit-Reset` and, since 2.79.8, `Retry-After` with the same number of seconds. Requests that are within the limit carry `X-RateLimit-Limit` and `X-RateLimit-Reset` plus `X-RateLimit-Remaining`.
 
 ```json
 {

@@ -123,7 +123,7 @@ See [Webhook Events Reference](/docs/reference/webhook-events) for complete payl
 |----------|---------|-------------|
 | `EENGINE_DISABLE_SETUP_WARNINGS` | `false` | Disable admin password warnings |
 | `EENGINE_REQUIRE_API_AUTH` | `true` | Require API authentication |
-| `EENGINE_LOG_RAW` | `false` | Log raw IMAP/SMTP traffic (includes unmasked credentials - debug only) |
+| `EENGINE_LOG_RAW` | `false` | Log the IMAP conversation byte for byte, message content included, and unmask the OAuth2 token exchange. IMAP login frames stay hidden. Debug only |
 | `EENGINE_MCP_ENABLED` | `true` | Register the [MCP endpoint](/docs/mcp) routes (the `mcpEnabled` setting is the on switch) |
 
 ### Pre-configured Settings
@@ -150,7 +150,7 @@ See [Environment Variables](/docs/configuration/environment-variables) for compl
 | `200` | Success | Request completed |
 | `400` | Bad Request | Invalid parameters (`fields` names them), or an OAuth2 user already bound to another account (`AccountAlreadyExists`) |
 | `401` | Unauthorized | Missing/invalid token |
-| `403` | Forbidden | Insufficient scope |
+| `403` | Forbidden | The token's scope, account binding, `permissions` record, address allowlist or referrer allowlist refused the request |
 | `404` | Not Found | Account, message or folder does not exist, or the account has no SMTP configuration (`SMTPUnavailable`) |
 | `422` | Unprocessable Entity | The request is valid but the account cannot satisfy it, such as a label search on a non-Gmail mailbox |
 | `429` | Too Many Requests | Rate limited. The body carries `ttl` seconds |
@@ -182,7 +182,7 @@ Webhook deliveries are BullMQ jobs and use BullMQ state names:
 | `delayed` | Scheduled for a later attempt (e.g. retry backoff) |
 | `active` | Currently sending |
 | `completed` | Successfully delivered |
-| `failed` | Delivery failed (will retry) |
+| `failed` | Every attempt failed. Kept for inspection, bounded by `EENGINE_QUEUE_KEEP_FAILED` (500 per queue) and `EENGINE_QUEUE_KEEP_FAILED_AGE` (7 days) |
 
 ## IMAP/SMTP Server Settings
 
@@ -234,6 +234,8 @@ Webhook deliveries are BullMQ jobs and use BullMQ state names:
 
 ## Special Folder Paths
 
+Folder names are the server's own and vary; the right-hand columns are the names these providers commonly use. The special-use path on the left resolves to whatever the server reports, so prefer it in requests.
+
 | Logical Path | Gmail | Outlook | Standard IMAP |
 |--------------|-------|---------|---------------|
 | `\Inbox` | `INBOX` | `Inbox` | `INBOX` |
@@ -241,7 +243,7 @@ Webhook deliveries are BullMQ jobs and use BullMQ state names:
 | `\Drafts` | `[Gmail]/Drafts` | `Drafts` | `Drafts` |
 | `\Trash` | `[Gmail]/Trash` | `Deleted Items` | `Trash` |
 | `\Junk` | `[Gmail]/Spam` | `Junk Email` | `Junk` |
-| `\Archive` | `[Gmail]/All Mail` | `Archive` | `Archive` |
+| `\Archive` | none (`[Gmail]/All Mail` is `\All`) | `Archive` | `Archive` |
 
 ## Docker Quick Commands
 
@@ -340,5 +342,5 @@ Delivery only starts once `webhooksEnabled` is `true`, and `webhookEvents` is an
 - [API Reference Overview](/docs/api-reference) - Authentication, conventions, and error handling
 - [Environment Variables](/docs/configuration/environment-variables) - The complete configuration reference
 - [Webhook Events Reference](/docs/reference/webhook-events) - Full payloads for every event
-- [Error Codes](/docs/reference/error-codes) - Every error code and how to respond to it
+- [Error Codes](/docs/api-reference/error-codes) - Every error code and how to respond to it
 - [Glossary](/docs/reference/glossary) - Terms used throughout the documentation

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "EmailEngine",
   "description": "Self-hosted email API gateway providing REST API access to email accounts via IMAP, SMTP, Gmail API, and Microsoft Graph API",
-  "version": "2.81.0",
+  "version": "2.82.0",
   "documentationUrl": "https://learn.emailengine.app/",
   "openApiSpec": "https://go.emailengine.app/swagger.json",
   "authentication": {
@@ -38,13 +38,13 @@
       "features": ["list", "search", "read", "update-flags", "move", "delete", "download-attachments"],
       "endpoints": [
         {"method": "GET", "path": "/v1/account/{account}/messages", "description": "List messages in mailbox"},
-        {"method": "GET", "path": "/v1/account/{account}/message/{message}", "description": "Get message details. Pass textType=* for bodies; webSafeHtml=true returns sanitized HTML ready to display, with inline images embedded (pass embedAttachedImages=false to keep the cid: references instead) and quoted thread history wrapped in <details class=\"ee-collapsed-thread\">"},
+        {"method": "GET", "path": "/v1/account/{account}/message/{message}", "description": "Get message details, including isBounce and relatedMessageId for a delivery failure report in the Inbox. Pass textType=* for bodies; webSafeHtml=true returns sanitized HTML ready to display, with inline images embedded (pass embedAttachedImages=false to keep the cid: references instead) and quoted thread history wrapped in <details class=\"ee-collapsed-thread\">"},
         {"method": "GET", "path": "/v1/account/{account}/message/{message}/source", "description": "Get raw RFC822 source"},
         {"method": "PUT", "path": "/v1/account/{account}/message/{message}", "description": "Update flags/labels"},
         {"method": "DELETE", "path": "/v1/account/{account}/message/{message}", "description": "Delete message"},
         {"method": "PUT", "path": "/v1/account/{account}/message/{message}/move", "description": "Move to mailbox"},
         {"method": "POST", "path": "/v1/account/{account}/message", "description": "Upload message"},
-        {"method": "POST", "path": "/v1/account/{account}/search", "description": "Search messages"},
+        {"method": "POST", "path": "/v1/account/{account}/search", "description": "Search messages in one folder (path query parameter required; \\All covers everything on Gmail and MS Graph accounts)"},
         {"method": "GET", "path": "/v1/account/{account}/text/{text}", "description": "Get text part"},
         {"method": "GET", "path": "/v1/account/{account}/attachment/{attachment}", "description": "Download attachment"}
       ]
@@ -77,16 +77,16 @@
         {"method": "DELETE", "path": "/v1/outbox/{queueId}", "description": "Cancel queued email"}
       ],
       "submitParameters": {
-        "required": ["to"],
+        "required": [],
         "optional": [
-          {"name": "to", "type": "array", "description": "Recipients [{address, name}]"},
+          {"name": "to", "type": "array", "description": "Recipients [{address, name}]. Can be omitted when derived from reference or supplied per mailMerge entry"},
           {"name": "cc", "type": "array", "description": "CC recipients"},
           {"name": "bcc", "type": "array", "description": "BCC recipients"},
           {"name": "subject", "type": "string", "description": "Email subject"},
           {"name": "text", "type": "string", "description": "Plain text body"},
           {"name": "html", "type": "string", "description": "HTML body"},
           {"name": "from", "type": "object", "description": "Override sender {address, name}"},
-          {"name": "replyTo", "type": "object", "description": "Reply-to address"},
+          {"name": "replyTo", "type": "object or array", "description": "Reply-to address, or a list of them"},
           {"name": "attachments", "type": "array", "description": "Attachments [{filename, content, contentType}]"},
           {"name": "headers", "type": "object", "description": "Custom email headers"},
           {"name": "reference", "type": "object", "description": "For replies/forwards {message, action}"},
@@ -95,7 +95,7 @@
           {"name": "sendAt", "type": "string", "description": "Schedule sending (ISO 8601)"},
           {"name": "trackOpens", "type": "boolean", "description": "Enable open tracking"},
           {"name": "trackClicks", "type": "boolean", "description": "Enable click tracking"},
-          {"name": "copy", "type": "boolean", "description": "Save to Sent folder (default: true)"},
+          {"name": "copy", "type": "boolean", "description": "Save to Sent folder; unset follows the account setting. SMTP deliveries only"},
           {"name": "dryRun", "type": "boolean", "description": "Preview without sending"},
           {"name": "gateway", "type": "string", "description": "Use specific SMTP gateway"},
           {"name": "deliveryAttempts", "type": "number", "description": "Max retry attempts"}
@@ -148,10 +148,11 @@
     "accessTokens": {
       "description": "Create and manage API access tokens",
       "endpoints": [
-        {"method": "GET", "path": "/v1/tokens", "description": "List tokens (each includes id, the SHA-256 hash identifying the token)"},
-        {"method": "POST", "path": "/v1/token", "description": "Create token"},
-        {"method": "DELETE", "path": "/v1/token/{token}", "description": "Delete token (accepts the token value or its id hash)"},
-        {"method": "GET", "path": "/v1/tokens/account/{account}", "description": "List account tokens"}
+        {"method": "GET", "path": "/v1/tokens", "description": "List tokens (each includes id, the SHA-256 hash identifying the token). Add ?account={account} to list one account's tokens"},
+        {"method": "POST", "path": "/v1/tokens", "description": "Create token. Needs an account binding or a permissions record (actions and groups allowlists, or a grants pair list), and cannot be less restricted than the calling token (403 MintWidensRestrictions)"},
+        {"method": "GET", "path": "/v1/tokens/{token}", "description": "Get one token's record (never the token value)"},
+        {"method": "GET", "path": "/v1/tokens/{token}/log", "description": "Read the token's audit log, when the tokenAuditLog setting is on"},
+        {"method": "DELETE", "path": "/v1/tokens/{token}", "description": "Delete token (accepts the token value or its id hash)"}
       ]
     },
     "blocklists": {
@@ -176,8 +177,8 @@
       "description": "Access statistics, logs, and system information",
       "endpoints": [
         {"method": "GET", "path": "/v1/stats", "description": "Get usage statistics"},
-        {"method": "GET", "path": "/v1/logs/{account}", "description": "Get account logs"},
-        {"method": "GET", "path": "/v1/changes", "description": "Get recent changes"},
+        {"method": "GET", "path": "/v1/logs/{account}", "description": "Download the stored log of an account: the IMAP protocol trace, the Gmail API or MS Graph requests, and SMTP transactions. Empty unless logging is enabled for the account or globally"},
+        {"method": "GET", "path": "/v1/changes", "description": "Server-Sent Events stream of account state changes (not a list)"},
         {"method": "GET", "path": "/v1/license", "description": "Get license info"},
         {"method": "POST", "path": "/v1/license", "description": "Register a license key"},
         {"method": "DELETE", "path": "/v1/license", "description": "Remove the registered license"},
@@ -209,7 +210,7 @@
     }
   },
   "mcp": {
-    "description": "Model Context Protocol server that lets AI agents work with the connected email accounts. Off by default; an admin enables it under Configuration > MCP",
+    "description": "Model Context Protocol server that lets AI agents work with the connected email accounts and manage the instance. Off by default; an admin enables it under Configuration > MCP",
     "documentationUrl": "https://learn.emailengine.app/docs/mcp",
     "endpoint": {"method": "POST", "path": "/mcp", "transport": "Streamable HTTP", "payload": "JSON-RPC 2.0"},
     "stateless": true,
@@ -219,33 +220,88 @@
       {"name": "mcpOAuthEnabled", "default": false, "description": "Built-in OAuth 2.1 authorization server for MCP clients that cannot use a static token. Requires mcpEnabled and serviceUrl"}
     ],
     "authentication": {
-      "scopes": ["mcp", "api", "*"],
-      "recommendedScope": "mcp",
-      "description": "Bearer access token. A token with the mcp scope opens this endpoint only and is refused by /v1. Every tool call is dispatched as the equivalent REST request with the same credential, so scopes, permissions, account binding, restrictions and the audit log all apply"
+      "scopes": ["mcp", "mcp-manage", "api", "*"],
+      "recommendedScope": "mcp for the mail tools, mcp-manage for the instance management tools, both when an agent needs both",
+      "description": "Bearer access token. A token with the mcp or mcp-manage scope opens this endpoint only and is refused by /v1. Every tool call is dispatched as the equivalent REST request with the same credential, so scopes, permissions, account binding, restrictions and the audit log all apply. Each MCP scope admits only the (action, group) grants of its own tools"
     },
-    "accessLevels": [
-      {"level": "read", "permissions": {"actions": ["read"], "groups": ["account", "mailbox", "message", "outbox", "template"]}, "description": "Default. List, search and read mail"},
-      {"level": "mail", "permissions": {"actions": ["read", "write", "send"], "groups": ["account", "mailbox", "message", "submit", "outbox", "template"]}, "description": "Read, organize, draft and send. No delete tool"},
-      {"level": "full", "permissions": null, "description": "Every MCP tool, including delete_message. The mcp scope is the bound"}
+    "accessSections": [
+      {"section": "manage", "scope": "mcp-manage", "default": "observe", "levels": [
+        {"level": "none", "description": "No management tools"},
+        {"level": "observe", "description": "Default. Read accounts, settings, queues, OAuth2 applications, gateways, tokens, logs and statistics. Cannot change anything", "grants": "read on account, settings, oauth2, license, token, gateway, webhook, blocklist, template, outbox, diagnostics, logs"},
+        {"level": "operate", "description": "Observe, plus reconnect, add and test accounts, change settings, manage OAuth2 applications, gateways and templates", "grants": "observe plus read on provisioning and write on account, settings, oauth2, license, provisioning, blocklist, template"},
+        {"level": "administer", "description": "Operate, plus delete accounts, applications, gateways and templates, revoke tokens, flush accounts and cancel queued messages", "grants": "every pair of the mcp-manage table"}
+      ]},
+      {"section": "mail", "scope": "mcp", "default": "none", "levels": [
+        {"level": "none", "description": "Default. No mail tools"},
+        {"level": "read", "description": "List, search and read mail", "grants": "read on account, mailbox, message, outbox, template"},
+        {"level": "mail", "description": "Read, organize, draft and send. No delete tool", "grants": "read plus write on message and send on submit"},
+        {"level": "full", "description": "Every mail tool, including delete_message", "grants": "every pair of the mcp table"}
+      ]}
     ],
+    "accessLevelRecord": "A minted MCP token always carries permissions.grants listing the exact (action, group) pairs of the approved levels, never an absent record, so a consent given today does not grow to include a tool shipped later. No level mints tokens, reads a stored credential or an account's live OAuth2 access token, removes the license, exports a mailbox or subscribes to the change stream",
     "methods": ["initialize", "server/discover", "ping", "tools/list", "tools/call", "resources/list", "resources/read", "resources/templates/list", "subscriptions/listen"],
-    "toolSchemas": "Narrower than the endpoints they wrap: operator-level fields are hidden, rendering options are pinned by the server, and paged listings cap pageSize at 100. A token bound to one account gets tools with no account argument - the binding is applied on dispatch",
+    "toolSchemas": "Narrower than the endpoints they wrap: operator-level fields are hidden, rendering options are pinned by the server, the settings tools leave out the privileged keys, and paged listings cap pageSize at 100. tools/list advertises only the tools the credential can call. A token bound to one account gets tools with no account argument - the binding is applied on dispatch - and loses every tool that takes none",
     "tools": [
-      {"name": "list_accounts", "behavior": "read-only", "wraps": "GET /v1/accounts", "description": "List accounts on the instance, paged"},
-      {"name": "get_account", "behavior": "read-only", "wraps": "GET /v1/account/{account}", "description": "Account details, connection state and sync status"},
-      {"name": "list_mailboxes", "behavior": "read-only", "wraps": "GET /v1/account/{account}/mailboxes", "description": "Folder tree with counters and special-use roles"},
-      {"name": "list_messages", "behavior": "read-only", "wraps": "GET /v1/account/{account}/messages", "description": "Messages in one folder, newest first, paged"},
-      {"name": "search_messages", "behavior": "read-only", "wraps": "POST /v1/account/{account}/search", "description": "Structured search inside one folder"},
-      {"name": "get_message", "behavior": "read-only", "wraps": "GET /v1/account/{account}/message/{message}", "description": "Envelope, flags, attachment list and the body inline as sanitized web-safe HTML"},
-      {"name": "get_message_text", "behavior": "read-only", "wraps": "GET /v1/account/{account}/text/{text}", "description": "The rest of a body that did not fit in get_message, as sanitized web-safe HTML"},
-      {"name": "get_attachment", "behavior": "read-only", "wraps": "GET /v1/account/{account}/attachment/{attachment}", "description": "One attachment inline as base64, up to 1 MB"},
-      {"name": "update_message", "behavior": "write", "wraps": "PUT /v1/account/{account}/message/{message}", "description": "Add or remove flags and Gmail labels"},
-      {"name": "move_message", "behavior": "write", "wraps": "PUT /v1/account/{account}/message/{message}/move", "description": "Move a message to another folder"},
-      {"name": "delete_message", "behavior": "destructive", "wraps": "DELETE /v1/account/{account}/message/{message}", "description": "Move to Trash, or delete permanently from Trash"},
-      {"name": "create_draft", "behavior": "write", "wraps": "POST /v1/account/{account}/message", "description": "Store a message in a folder without sending"},
-      {"name": "send_message", "behavior": "sends-email", "wraps": "POST /v1/account/{account}/submit", "description": "Queue an email for delivery to real recipients. Replies and forwards via the reference block (message, action reply|reply-all|forward, inline, forwardAttachments)"},
-      {"name": "get_outbox", "behavior": "read-only", "wraps": "GET /v1/outbox", "description": "Sending queue, including scheduled messages"},
-      {"name": "list_templates", "behavior": "read-only", "wraps": "GET /v1/templates", "description": "Stored email templates"}
+      {"name": "list_accounts", "scope": ["mcp", "mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/accounts", "description": "List accounts on the instance, paged"},
+      {"name": "get_account", "scope": ["mcp", "mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/account/{account}", "description": "Account details, connection state and sync status"},
+      {"name": "list_mailboxes", "scope": ["mcp"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/mailboxes", "description": "Folder tree with counters and special-use roles"},
+      {"name": "list_messages", "scope": ["mcp"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/messages", "description": "Messages in one folder, newest first, paged"},
+      {"name": "search_messages", "scope": ["mcp"], "behavior": "read-only", "wraps": "POST /v1/account/{account}/search", "description": "Structured search inside one folder"},
+      {"name": "get_message", "scope": ["mcp"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/message/{message}", "description": "Envelope, flags, attachment list and the body inline as sanitized web-safe HTML"},
+      {"name": "get_message_text", "scope": ["mcp"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/text/{text}", "description": "The rest of a body that did not fit in get_message, as sanitized web-safe HTML"},
+      {"name": "get_attachment", "scope": ["mcp"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/attachment/{attachment}", "description": "One attachment inline as base64, up to 1 MB"},
+      {"name": "update_message", "scope": ["mcp"], "behavior": "write", "wraps": "PUT /v1/account/{account}/message/{message}", "description": "Add or remove flags and Gmail labels"},
+      {"name": "move_message", "scope": ["mcp"], "behavior": "write", "wraps": "PUT /v1/account/{account}/message/{message}/move", "description": "Move a message to another folder"},
+      {"name": "delete_message", "scope": ["mcp"], "behavior": "destructive", "wraps": "DELETE /v1/account/{account}/message/{message}", "description": "Move to Trash, or delete permanently from Trash"},
+      {"name": "create_draft", "scope": ["mcp"], "behavior": "write", "wraps": "POST /v1/account/{account}/message", "description": "Store a message in a folder without sending"},
+      {"name": "send_message", "scope": ["mcp"], "behavior": "sends-email", "wraps": "POST /v1/account/{account}/submit", "description": "Queue an email for delivery to real recipients. Replies and forwards via the reference block (message, action reply|reply-all|forward, inline, forwardAttachments)"},
+      {"name": "get_outbox", "scope": ["mcp", "mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/outbox", "description": "Sending queue, including scheduled messages"},
+      {"name": "list_templates", "scope": ["mcp", "mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/templates", "description": "Stored email templates"},
+      {"name": "create_account", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/account", "description": "Register an account"},
+      {"name": "update_account", "scope": ["mcp-manage"], "behavior": "write", "wraps": "PUT /v1/account/{account}", "description": "Reconfigure an account, including where it connects"},
+      {"name": "delete_account", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/account/{account}", "description": "Remove an account"},
+      {"name": "reconnect_account", "scope": ["mcp-manage"], "behavior": "write", "wraps": "PUT /v1/account/{account}/reconnect", "description": "Request a reconnect"},
+      {"name": "sync_account", "scope": ["mcp-manage"], "behavior": "write", "wraps": "PUT /v1/account/{account}/sync", "description": "Request an immediate sync"},
+      {"name": "flush_account", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "PUT /v1/account/{account}/flush", "description": "Drop the account's index and rebuild it"},
+      {"name": "create_account_setup_link", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/authentication/form", "description": "Mint a hosted authentication link"},
+      {"name": "verify_account_settings", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "POST /v1/verifyAccount", "description": "Test IMAP and SMTP settings against the named host (Operate level and above)"},
+      {"name": "autodiscover_settings", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/autoconfig", "description": "Discover IMAP and SMTP settings for an address"},
+      {"name": "get_account_logs", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/logs/{account}", "description": "Stored log of an account"},
+      {"name": "get_settings", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/settings", "description": "Instance settings, privileged keys left out"},
+      {"name": "update_settings", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/settings", "description": "Change instance settings, privileged keys left out"},
+      {"name": "get_queue", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/settings/queue/{queue}", "description": "Queue counters and paused state"},
+      {"name": "set_queue_state", "scope": ["mcp-manage"], "behavior": "write", "wraps": "PUT /v1/settings/queue/{queue}", "description": "Pause or resume a queue"},
+      {"name": "cancel_queued_message", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/outbox/{queueId}", "description": "Remove a queued message"},
+      {"name": "list_oauth2_apps", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/oauth2", "description": "OAuth2 applications"},
+      {"name": "get_oauth2_app", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/oauth2/{app}", "description": "One OAuth2 application, secrets masked"},
+      {"name": "create_oauth2_app", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/oauth2", "description": "Register an OAuth2 application"},
+      {"name": "update_oauth2_app", "scope": ["mcp-manage"], "behavior": "write", "wraps": "PUT /v1/oauth2/{app}", "description": "Change an OAuth2 application"},
+      {"name": "delete_oauth2_app", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/oauth2/{app}", "description": "Remove an OAuth2 application"},
+      {"name": "verify_oauth2_app", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "POST /v1/oauth2/{app}/verify", "description": "Check an OAuth2 application's setup"},
+      {"name": "list_gateways", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/gateways", "description": "SMTP gateways"},
+      {"name": "get_gateway", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/gateway/{gateway}", "description": "One SMTP gateway, password masked"},
+      {"name": "create_gateway", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/gateway", "description": "Register an SMTP gateway"},
+      {"name": "update_gateway", "scope": ["mcp-manage"], "behavior": "write", "wraps": "PUT /v1/gateway/edit/{gateway}", "description": "Change an SMTP gateway, including where it connects"},
+      {"name": "delete_gateway", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/gateway/{gateway}", "description": "Remove an SMTP gateway"},
+      {"name": "list_tokens", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/tokens", "description": "Access tokens, by id"},
+      {"name": "get_token", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/tokens/{token}", "description": "One token's record"},
+      {"name": "get_token_log", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/tokens/{token}/log", "description": "A token's audit log"},
+      {"name": "revoke_token", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/tokens/{token}", "description": "Revoke a token"},
+      {"name": "get_license", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/license", "description": "License details"},
+      {"name": "set_license", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/license", "description": "Apply a license key"},
+      {"name": "create_template", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/templates/template", "description": "Store a template"},
+      {"name": "update_template", "scope": ["mcp-manage"], "behavior": "write", "wraps": "PUT /v1/templates/template/{template}", "description": "Change a template"},
+      {"name": "delete_template", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/templates/template/{template}", "description": "Remove a template"},
+      {"name": "delete_account_templates", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/templates/account/{account}", "description": "Remove every template of an account"},
+      {"name": "list_blocklists", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/blocklists", "description": "Suppression lists"},
+      {"name": "get_blocklist", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/blocklist/{listId}", "description": "Entries of one suppression list"},
+      {"name": "add_to_blocklist", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/blocklist/{listId}", "description": "Add an address to a suppression list"},
+      {"name": "remove_from_blocklist", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/blocklist/{listId}", "description": "Remove an address from a suppression list"},
+      {"name": "list_webhook_routes", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/webhookRoutes", "description": "Webhook routes"},
+      {"name": "get_webhook_route", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/webhookRoutes/webhookRoute/{webhookRoute}", "description": "One webhook route with its filter and map functions"},
+      {"name": "get_instance_stats", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/stats", "description": "Instance statistics"},
+      {"name": "get_pubsub_status", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/pubsub/status", "description": "Gmail Pub/Sub subscription status"},
+      {"name": "check_delivery_test", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/delivery-test/check/{deliveryTest}", "description": "Result of a delivery test"}
     ],
     "resources": {"uriTemplate": "emailengine://account/{account}", "description": "Each connected account the credential can see, readable as JSON", "maxListed": 500},
     "limits": {"toolResultBytes": 131072, "messageBodyCharacters": 32768, "messageTextCharacters": 65536, "listingPageSize": 100, "inlineAttachmentBytes": 1048576, "resourceSubscriptionsPerRequest": 20, "listenStreamsPerCredential": 4},
@@ -259,7 +315,7 @@
       "codeChallengeMethods": ["S256"],
       "clientAuthentication": "none",
       "refreshTokens": false,
-      "description": "Dynamic client registration (RFC 7591) plus authorization code with mandatory PKCE. Issues an ordinary access token with the mcp scope, revocable on the Access Tokens page"
+      "description": "Dynamic client registration (RFC 7591) plus authorization code with mandatory PKCE. The consent page asks the admin for a level per section and issues an ordinary access token carrying the approved scopes and a grants record, revocable on the Access Tokens page"
     }
   },
   "webhookEvents": [
@@ -312,13 +368,27 @@
     {"state": "unset", "description": "Not syncing: either no IMAP or OAuth2 configuration is set, or syncing was switched off, by the operator (imap.disabled) or automatically after repeated authentication failures (authFailureDisabledAt is set; re-authorizing or saving new IMAP settings resumes syncing)", "operational": false}
   ],
   "errorCodes": [
-    {"code": "AccountNotFound", "status": 404, "retryable": false, "description": "Account doesn't exist"},
-    {"code": "MessageNotFound", "status": 404, "retryable": false, "description": "Message doesn't exist"},
-    {"code": "InvalidRequest", "status": 400, "retryable": false, "description": "Request validation failed"},
-    {"code": "InvalidToken", "status": 401, "retryable": false, "description": "Missing or invalid API access token"},
-    {"code": "RateLimitExceeded", "status": 429, "retryable": true, "description": "Too many requests"},
-    {"code": "ConnectionError", "status": 503, "retryable": true, "description": "Mail server connection failed"},
-    {"code": "AccountAlreadyExists", "status": 400, "retryable": false, "description": "An account with the same ID (or OAuth2 user) already exists"}
+    {"code": "MessageNotFound", "status": 404, "retryable": false, "description": "Message does not exist"},
+    {"code": "FolderNotFound", "status": 404, "retryable": false, "description": "Mailbox path does not exist"},
+    {"code": "NotFound", "status": 404, "retryable": false, "description": "Template, webhook route, OAuth2 app or gateway does not exist"},
+    {"code": "SMTPUnavailable", "status": 404, "retryable": false, "description": "The account has no SMTP or OAuth2 configuration to send with"},
+    {"code": "AccountAlreadyExists", "status": 400, "retryable": false, "description": "The OAuth2 user is already bound to another account under the same OAuth2 application (re-registering an account ID is an update, not an error)"},
+    {"code": "MissingServerExtension", "status": 422, "retryable": false, "description": "The IMAP server lacks an extension the request needs, such as a label filter on a non-Gmail server"},
+    {"code": "MintWidensRestrictions", "status": 403, "retryable": false, "description": "POST /v1/tokens would create a token less restricted than the calling token"},
+    {"code": "NotYetConnected", "status": 503, "retryable": true, "description": "The account has not connected yet"},
+    {"code": "AuthenticationFails", "status": 503, "retryable": false, "description": "The account's credentials are rejected; re-authorize"},
+    {"code": "ConnectionError", "status": 503, "retryable": true, "description": "The mail server cannot be reached"},
+    {"code": "NotSyncing", "status": 503, "retryable": false, "description": "Syncing is switched off for the account (state unset)"},
+    {"code": "IMAPUnavailable", "status": 503, "retryable": true, "description": "The account's IMAP connection is not up right now"},
+    {"code": "Timeout", "status": 504, "retryable": true, "description": "A worker thread did not answer within EENGINE_TIMEOUT or the x-ee-timeout header"}
+  ],
+  "errorResponseNotes": "Bodies are {statusCode, error, message} with error carrying the HTTP status phrase and message the explanation; code is present only for the codes above. A missing account is a plain 404 with no code, validation failures are 400 with a fields array, 401 responses carry no code, and 429 carries ttl (seconds until the window resets) plus a Retry-After header",
+  "searchQueryParameters": [
+    {"name": "path", "required": true, "description": "Folder to search. \\All covers everything on Gmail and MS Graph accounts"},
+    {"name": "pageSize", "required": false, "description": "Entries per page, default 20, up to 1000"},
+    {"name": "cursor", "required": false, "description": "Paging cursor from nextPageCursor or prevPageCursor; the only way to page Gmail API and MS Graph accounts"},
+    {"name": "page", "required": false, "description": "Zero-indexed page number, IMAP accounts only"},
+    {"name": "useOutlookSearch", "required": false, "description": "MS Graph only: use $search instead of $filter"}
   ],
   "searchParameters": [
     {"name": "from", "type": "string", "description": "Sender address or name"},
@@ -335,7 +405,7 @@
     {"name": "labels", "type": "object", "description": "{has: [...], not: [...]} - filter by Gmail labels or Outlook categories; has matches messages with ALL listed labels, not excludes messages with ANY of them. Gmail and MS Graph accounts only; HTTP 422 if unsupported"}
   ],
   "environmentVariables": [
-    {"name": "EENGINE_REDIS", "required": true, "description": "Redis connection URL", "example": "redis://localhost:6379/8"},
+    {"name": "EENGINE_REDIS", "required": false, "default": "redis://127.0.0.1:6379/8", "description": "Redis connection URL", "example": "redis://localhost:6379/8"},
     {"name": "EENGINE_SECRET", "required": "production", "description": "Encryption key (32+ hex chars)", "example": "openssl rand -hex 32"},
     {"name": "EENGINE_PORT", "required": false, "default": "3000", "description": "API port"},
     {"name": "EENGINE_HOST", "required": false, "default": "127.0.0.1", "description": "Bind address"},

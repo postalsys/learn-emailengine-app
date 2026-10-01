@@ -22,7 +22,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 
 | Aspect | Details |
 |--------|---------|
-| Reference version | EmailEngine 2.81.0 (the OpenAPI spec this page is checked against) |
+| Reference version | EmailEngine 2.82.0 (the OpenAPI spec this page is checked against) |
 | API Style | RESTful JSON |
 | Authentication | Bearer token (`Authorization: Bearer TOKEN`) |
 | Base URL | `https://emailengine.example.com/v1` (a fresh local install listens on `http://127.0.0.1:3000`) |
@@ -30,7 +30,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | Data Storage | Redis (credentials encrypted with `EENGINE_SECRET`) |
 | Message Storage | None - fetched from mail server on demand |
 | Admin Auth | Password + TOTP, passkeys (WebAuthn), SSO (OpenID Connect, Okta) |
-| AI Agents | MCP server at `POST /mcp`, off by default (see [MCP](/docs/mcp)) |
+| AI Agents | MCP server at `POST /mcp`, off by default. Token scopes `mcp` (mail tools) and `mcp-manage` (instance management tools), see [MCP](/docs/mcp) |
 
 ## Core Capabilities Matrix
 
@@ -47,7 +47,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | **List messages** | `GET /v1/account/{account}/messages` | `path`, `page`, `pageSize` |
 | **Get message** | `GET /v1/account/{account}/message/{message}` | `textType`, `embedAttachedImages`, `preProcessHtml`, `webSafeHtml` (shorthand for all three; an explicit `embedAttachedImages=false` still overrides it) |
 | **Get message text** | `GET /v1/account/{account}/text/{text}` | `textType`, `maxBytes`, `webSafeHtml` (returns a single sanitized HTML rendering) |
-| **Search messages** | `POST /v1/account/{account}/search` | `search` object |
+| **Search messages** | `POST /v1/account/{account}/search` | `path` query parameter (required), `search` object in the body |
 | **Update message** | `PUT /v1/account/{account}/message/{message}` | `flags`, `labels`, `seen` |
 | **Delete message** | `DELETE /v1/account/{account}/message/{message}` | - |
 | **Move message** | `PUT /v1/account/{account}/message/{message}/move` | `path` (destination) |
@@ -209,7 +209,7 @@ Webhook routes are read-only through the API - create and edit them in the Email
 |--------|----------|-------------|
 | `GET` | `/v1/stats` | Get usage statistics |
 | `GET` | `/v1/logs/{account}` | Get account logs |
-| `GET` | `/v1/changes` | Get recent changes |
+| `GET` | `/v1/changes` | Server-Sent Events stream of account state changes, not a list |
 | `GET` | `/v1/license` | Get license info |
 | `POST` | `/v1/license` | Register a license key |
 | `DELETE` | `/v1/license` | Remove the license key |
@@ -231,7 +231,7 @@ EmailEngine also serves the Model Context Protocol, so an AI agent can call a cu
 | Endpoint | `POST /mcp` |
 | Transport | Streamable HTTP, JSON-RPC 2.0, stateless (no session id) |
 | Protocol revisions | `2026-07-28` (modern, per-request `_meta` plus mirrored headers), `2025-11-25` and `2025-06-18` (legacy `initialize` handshake) |
-| Authentication | `Authorization: Bearer <token>`. Prefer a token with the `mcp` scope, which opens this endpoint only |
+| Authentication | `Authorization: Bearer <token>`. Prefer a token with the `mcp` scope (mail tools), the `mcp-manage` scope (instance management tools) or both; either opens this endpoint only and is refused by `/v1` |
 | Methods | `initialize`, `server/discover`, `ping`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, `resources/templates/list`, `subscriptions/listen` |
 | Resources | `emailengine://account/{account}` per connected account |
 | OAuth | `mcpOAuthEnabled` plus a Service URL adds dynamic client registration and an authorization code + PKCE flow for web connectors |
@@ -241,6 +241,10 @@ Every tool call is dispatched as the equivalent REST request with the caller's o
 Tool schemas are narrower than the endpoints they wrap: operator-level fields are hidden (`send_message` has no `gateway`, `envelope`, `headers`, `raw`, tracking or `mailMerge`), rendering options are pinned, and every paged listing caps `pageSize` at 100. `get_message` returns the body inline as sanitized web-safe HTML (32768-character budget, `text.hasMore` when longer, quoted history wrapped in `<details class="ee-collapsed-thread">`); `get_message_text` returns the same rendering with a 65536-character budget. A tool result is truncated above 128 KB.
 
 ### MCP Tools
+
+Each tool wraps one REST operation and inherits its permission grant. The mail tools are admitted by the `mcp` scope, the management tools by `mcp-manage`; `list_accounts`, `get_account`, `get_outbox` and `list_templates` are in both tables.
+
+**Mail tools** (`mcp` scope)
 
 | Tool | Behavior | Wraps |
 |------|----------|-------|
@@ -260,15 +264,73 @@ Tool schemas are narrower than the endpoints they wrap: operator-level fields ar
 | `get_outbox` | read-only | `GET /v1/outbox` |
 | `list_templates` | read-only | `GET /v1/templates` |
 
+**Instance management tools** (`mcp-manage` scope, since 2.80.1)
+
+| Tool | Behavior | Wraps |
+|------|----------|-------|
+| `create_account` | write | `POST /v1/account` |
+| `update_account` | write | `PUT /v1/account/{account}` |
+| `delete_account` | destructive | `DELETE /v1/account/{account}` |
+| `reconnect_account` | write | `PUT /v1/account/{account}/reconnect` |
+| `sync_account` | write | `PUT /v1/account/{account}/sync` |
+| `flush_account` | destructive | `PUT /v1/account/{account}/flush` |
+| `create_account_setup_link` | write | `POST /v1/authentication/form` |
+| `verify_account_settings` | read-only, connects to the named host | `POST /v1/verifyAccount` |
+| `autodiscover_settings` | read-only | `GET /v1/autoconfig` |
+| `get_account_logs` | read-only | `GET /v1/logs/{account}` |
+| `get_settings` | read-only | `GET /v1/settings` (privileged keys hidden) |
+| `update_settings` | write | `POST /v1/settings` (privileged keys hidden) |
+| `get_queue` | read-only | `GET /v1/settings/queue/{queue}` |
+| `set_queue_state` | write | `PUT /v1/settings/queue/{queue}` |
+| `cancel_queued_message` | destructive | `DELETE /v1/outbox/{queueId}` |
+| `list_oauth2_apps` | read-only | `GET /v1/oauth2` |
+| `get_oauth2_app` | read-only | `GET /v1/oauth2/{app}` |
+| `create_oauth2_app` | write | `POST /v1/oauth2` |
+| `update_oauth2_app` | write | `PUT /v1/oauth2/{app}` |
+| `delete_oauth2_app` | destructive | `DELETE /v1/oauth2/{app}` |
+| `verify_oauth2_app` | read-only | `POST /v1/oauth2/{app}/verify` |
+| `list_gateways` | read-only | `GET /v1/gateways` |
+| `get_gateway` | read-only | `GET /v1/gateway/{gateway}` |
+| `create_gateway` | write | `POST /v1/gateway` |
+| `update_gateway` | write | `PUT /v1/gateway/edit/{gateway}` |
+| `delete_gateway` | destructive | `DELETE /v1/gateway/{gateway}` |
+| `list_tokens` | read-only | `GET /v1/tokens` |
+| `get_token` | read-only | `GET /v1/tokens/{token}` |
+| `get_token_log` | read-only | `GET /v1/tokens/{token}/log` |
+| `revoke_token` | destructive | `DELETE /v1/tokens/{token}` |
+| `get_license` | read-only | `GET /v1/license` |
+| `set_license` | write | `POST /v1/license` |
+| `create_template` | write | `POST /v1/templates/template` |
+| `update_template` | write | `PUT /v1/templates/template/{template}` |
+| `delete_template` | destructive | `DELETE /v1/templates/template/{template}` |
+| `delete_account_templates` | destructive | `DELETE /v1/templates/account/{account}` |
+| `list_blocklists` | read-only | `GET /v1/blocklists` |
+| `get_blocklist` | read-only | `GET /v1/blocklist/{listId}` |
+| `add_to_blocklist` | write | `POST /v1/blocklist/{listId}` |
+| `remove_from_blocklist` | destructive | `DELETE /v1/blocklist/{listId}` |
+| `list_webhook_routes` | read-only | `GET /v1/webhookRoutes` |
+| `get_webhook_route` | read-only | `GET /v1/webhookRoutes/webhookRoute/{webhookRoute}` |
+| `get_instance_stats` | read-only | `GET /v1/stats` |
+| `get_pubsub_status` | read-only | `GET /v1/pubsub/status` |
+| `check_delivery_test` | read-only | `GET /v1/delivery-test/check/{deliveryTest}` |
+
+No tool mints a token, reads an account's live OAuth2 access token, removes the license, exports a mailbox or subscribes to the change stream.
+
 ### MCP Access Levels
 
-| Level | Permissions record |
-|-------|--------------------|
-| Read-only (default) | `{"actions":["read"],"groups":["account","mailbox","message","outbox","template"]}` |
-| Mail agent | `{"actions":["read","write","send"],"groups":["account","mailbox","message","submit","outbox","template"]}` |
-| Full access | no `permissions` record; the `mcp` scope is the bound |
+A token minted for an agent is narrowed per section, and both sections can be declined. The consent page, the admin generator and the token form all mint the same records: `permissions.grants` listing the exact (action, group) pairs of the approved levels, so a consent never grows to include a tool shipped later.
 
-Bind an agent token to one account whenever possible - a bound credential loses the instance-wide tools (`list_accounts`, `get_outbox`), reaches nothing else, and its remaining tools drop the `account` argument.
+| Section | Scope | Level | Grants |
+|---------|-------|-------|--------|
+| Instance management | `mcp-manage` | Observe (default) | `read` on `account`, `settings`, `oauth2`, `license`, `token`, `gateway`, `webhook`, `blocklist`, `template`, `outbox`, `diagnostics` and `logs` |
+| | | Operate | Observe, plus `read` on `provisioning` and `write` on `account`, `settings`, `oauth2`, `license`, `provisioning`, `blocklist` and `template` |
+| | | Administer | Operate, plus `destructive` on `account`, `oauth2`, `token`, `gateway`, `blocklist`, `template` and `outbox` |
+| Email access | `mcp` | None (default) | No mail tools |
+| | | Read-only | `read` on `account`, `mailbox`, `message`, `outbox` and `template` |
+| | | Mail agent | Read-only, plus `write` on `message` and `send` on `submit` |
+| | | Full access | Mail agent, plus `destructive` on `message` |
+
+Bind an agent token to one account whenever possible - a bound credential loses every tool that takes no `account` argument (the instance-wide listings and the management tools), reaches nothing else, and its remaining tools drop the `account` argument.
 
 Replies and forwards go through the `reference` block on `send_message` and `create_draft`: `{message, action: reply|reply-all|forward, inline, forwardAttachments}`. EmailEngine derives the subject, the recipients and the threading headers from the referenced message.
 
@@ -451,7 +513,7 @@ curl -X POST "https://emailengine.example.com/v1/account/user123/submit" \
 ### Pattern 7: Search Messages
 
 ```bash
-curl -X POST "https://emailengine.example.com/v1/account/user123/search" \
+curl -X POST "https://emailengine.example.com/v1/account/user123/search?path=INBOX" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -592,7 +654,7 @@ The `type` field in an account response is derived, not stored. Besides the valu
 
 ## Account Object
 
-`GET /v1/account/{account}` returns these fields (`GET /v1/accounts` returns the same shape per entry, without `imap`, `smtp` and `oauth2` credentials):
+`GET /v1/account/{account}` returns these fields. `GET /v1/accounts` returns a subset per entry: `account`, `name`, `email`, `type`, `app`, `state`, `webhooks`, `proxy`, `smtpEhloName`, `counters`, `syncTime`, `authFailureDisabledAt`, `lastError` and, for delegated accounts, `delegationError`.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -610,7 +672,7 @@ The `type` field in an account response is derived, not stored. Besides the valu
 | `syncTime` | string | Last sync time (IMAP accounts) |
 | `connections` | integer | Open IMAP connections (IMAP accounts) |
 | `counters` | object | Event counters |
-| `quota` | object | Mailbox quota, when the server reports one |
+| `quota` | object or `false` | Mailbox quota, only with `?quota=true`. `false` when the server reports none and for Gmail API and MS Graph accounts |
 | `webhooks` | string | Account-specific webhook URL |
 | `notifyFrom` | string or null | Only send webhooks for messages received after this date |
 | `subconnections`, `path` | array | Extra folders watched in real time, and the folders synced at all |
@@ -784,7 +846,7 @@ The `POST /v1/account/{account}/submit` endpoint accepts these key parameters:
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `to` | array | Recipients `[{address, name}]` (required) |
+| `to` | array | Recipients `[{address, name}]`. Can be omitted when derived from `reference` or supplied per `mailMerge` entry |
 | `cc` | array | CC recipients |
 | `bcc` | array | BCC recipients |
 | `subject` | string | Email subject |
@@ -809,7 +871,7 @@ To send an email that already exists as a draft, use `POST /v1/account/{account}
 
 ## Search Parameters
 
-The `POST /v1/account/{account}/search` endpoint accepts these search criteria:
+The `POST /v1/account/{account}/search` endpoint searches one folder, named by the required `path` query parameter (`\All` covers everything on Gmail and MS Graph accounts), and accepts these criteria in the `search` object of the body:
 
 | Parameter | Type | Description |
 |-----------|------|-------------|

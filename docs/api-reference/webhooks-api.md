@@ -689,5 +689,5 @@ Handle events by type once the payload is on your queue. Only `event` is guarant
 - [Webhooks overview](/docs/webhooks/overview) - Setup, delivery, retries, and debugging
 - [Webhook routing](/docs/webhooks/webhook-routing) - Per-account and per-event targets
 - [Webhook events reference](/docs/reference/webhook-events) - Every event and its payload
-- [Pre-processing functions](/docs/advanced/pre-processing) - Filtering a payload before it is sent
+- [Pre-processing functions](/docs/webhooks/pre-processing) - Filtering a payload before it is sent
 - [Environment variables](/docs/configuration/environment-variables#webhook-delivery) - Delivery timeout and egress policy
