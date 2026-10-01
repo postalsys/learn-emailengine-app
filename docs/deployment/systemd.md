@@ -36,7 +36,7 @@ There are three layouts in use, and the unit file differs for each:
 
 - The binary at `/opt/emailengine`, owned by a system user named `emailengine`
 - `/etc/systemd/system/emailengine.service` with `WorkingDirectory=/opt`, `ExecStart=/opt/emailengine`, `User=emailengine`, `After=redis-server`, `Restart=always` and `SyslogIdentifier=emailengine`
-- The configuration inline in the unit as `Environment=` lines: `EENGINE_REDIS` (database 8, with the Redis password it generated), `EENGINE_PORT=3000`, `EENGINE_SECRET`, `EENGINE_API_PROXY=true`, `EENGINE_WORKERS=8`, `EENGINE_LOG_LEVEL=info` and `EENGINE_INSTALL_SCRIPT=true`, which labels the install method in the [license beacon](/docs/licensing#what-a-licensed-instance-sends-home)
+- The configuration inline in the unit as `Environment=` lines: `EENGINE_REDIS` (database 8, with the Redis password it generated), `EENGINE_PORT=3000`, `EENGINE_SECRET`, `EENGINE_API_PROXY=true`, `EENGINE_API_PROXY_ADDRESSES=127.0.0.1,::1` (since v2.79.8, so that only Caddy on the same host may set `X-Forwarded-For`), `EENGINE_WORKERS=8`, `EENGINE_LOG_LEVEL=info` and `EENGINE_INSTALL_SCRIPT=true`, which labels the install method in the [license beacon](/docs/licensing#what-a-licensed-instance-sends-home)
 - Redis configured with `requirepass` and `maxmemory-policy noeviction`
 - Caddy in front of port 3000, terminating TLS for the domain you gave it
 - The generated Redis password and `EENGINE_SECRET` in `/root/emailengine-credentials.txt`
@@ -83,7 +83,7 @@ sudo chmod 600 /etc/emailengine/emailengine.env
 Add `EENGINE_API_PROXY=true` when a reverse proxy sits in front of EmailEngine, so the client address is read from `X-Forwarded-For`, and `EENGINE_API_PROXY_ADDRESSES` naming the proxy; see [Trusted Proxy Addresses](/docs/configuration/environment-variables#trusted-proxy-addresses). The API binds to `127.0.0.1` unless `EENGINE_HOST` says otherwise, which is the right default behind a proxy.
 
 :::danger Keep EENGINE_SECRET
-`EENGINE_SECRET` encrypts the account credentials stored in Redis. Back it up with the Redis data: without it the stored credentials cannot be decrypted. See [Secret Encryption](/docs/advanced/encryption).
+`EENGINE_SECRET` encrypts the account credentials stored in Redis. Back it up with the Redis data: without it the stored credentials cannot be decrypted. See [Secret Encryption](/docs/deployment/encryption).
 :::
 
 ### 4. Create the Unit File
@@ -401,7 +401,7 @@ Replace the binary and restart. The service is down for the duration of the rest
 wget https://go.emailengine.app/emailengine.tar.gz
 
 # Or a specific release, for example
-# wget https://go.emailengine.app/download/v2.79.4/emailengine.tar.gz
+# wget https://go.emailengine.app/download/v2.82.0/emailengine.tar.gz
 
 tar xzf emailengine.tar.gz
 sudo mv emailengine /usr/local/bin/

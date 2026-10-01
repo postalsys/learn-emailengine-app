@@ -18,12 +18,10 @@ This guide covers:
 
 - Network security and firewall configuration
 - Admin password, API token requirement, and token scopes
-- Authentication and access control (passwords, passkeys, SSO)
-- Audit logging for authentication events
+- Admin interface access control by address
 - Encryption at rest and in transit
-- API security
+- API security and the security headers
 - Redis security
-- GDPR compliance
 
 ## Network Security
 
@@ -222,6 +220,18 @@ outlook.office365.com:993
 smtp.office365.com:587
 ```
 
+### Destinations EmailEngine Refuses to Reach
+
+Webhook deliveries and the IMAP/SMTP autodiscovery lookups (`GET` and `POST /v1/autoconfig`, and the hosted setup form) are the places where EmailEngine connects to an address a caller supplied. `EENGINE_WEBHOOK_EGRESS_POLICY` decides which destinations they may reach:
+
+| Value | Refused |
+|-------|---------|
+| `link-local` (default) | The link-local range, where every cloud provider serves its instance metadata |
+| `private` | Link-local, plus RFC 1918, loopback, carrier-grade NAT and IPv6 unique-local addresses |
+| `off` | Nothing |
+
+The policy is applied to the URL before the request and again to the addresses the connection is actually made to, so a hostname that resolves to a refused address is refused as well. Under any value other than `off`, a webhook delivery does not follow redirects, since a permitted host could otherwise redirect to a refused one; autodiscovery follows redirects one checked hop at a time. Behind an outbound proxy only the check on the URL applies. See [Webhook Delivery](/docs/configuration/environment-variables#webhook-delivery).
+
 ## Authentication Security
 
 ### EENGINE_SECRET
@@ -260,15 +270,11 @@ openssl rand -hex 32
 - Must be backed up securely
 - Same secret required for all EmailEngine instances sharing the same Redis database
 
-For migrating existing data, rotating secrets, and detailed encryption procedures, see the [Secret Encryption](/docs/advanced/encryption) guide.
+For migrating existing data, rotating secrets, and detailed encryption procedures, see the [Secret Encryption](/docs/deployment/encryption) guide.
 
 ### Admin Password and API Authentication
 
-A fresh instance has no admin password. Until one is set, the admin interface opens without a login for anyone who can reach the port, and it refuses to issue access tokens because there is no session to tie them to. Set the password before the instance faces a network, by one of:
-
-- **Account** > **Security** in the admin interface (the username menu in the top-right corner)
-- `emailengine password` on the host, which prints a generated password or takes one with `-p`; see [Password Management](/docs/configuration/cli#password-management)
-- `EENGINE_PREPARED_PASSWORD`, carrying a hash from `emailengine password --hash`, for provisioned deployments; see [Prepared Admin Password](/docs/configuration/environment-variables#prepared-admin-password)
+A fresh instance has no admin password: the admin interface opens without a login for anyone who can reach the port, and refuses to issue access tokens until one is set. Set it before the instance faces a network. How to set it, how to add TOTP or a passkey, and how to put the admin interface behind single sign-on is on [Admin Authentication](/docs/deployment/admin-authentication).
 
 API requests require a bearer token by default. The switch that turns this off is the `disableTokens` setting, shown as **Configuration** > **Security** in the admin interface. `EENGINE_REQUIRE_API_AUTH=false` sets it on first start only, for a development instance that has never run before; on an instance that already has the setting stored, the environment variable does nothing. While tokens are disabled, a request that presents no credential at all is accepted, and the dashboard shows a warning. See [Disabling Authentication](/docs/api-reference/access-tokens#disabling-authentication-development-only).
 
@@ -387,7 +393,7 @@ EENGINE_ADMIN_ACCESS_ADDRESSES=10.0.0.0/8,192.168.1.0/24,203.0.113.42
 **How it works:**
 
 - Only IP addresses matching the list can access admin pages
-- Non-matching visitors receive an error message
+- Non-matching visitors receive an error page, and the attempt is logged as `Blocked access from unlisted IP address` with the address it came from
 - API endpoints are not affected (protected by API tokens instead)
 - Supports both individual IPs and CIDR notation
 
@@ -465,149 +471,9 @@ EENGINE_API_PROXY_ADDRESSES=10.0.0.0/8
 Without `EENGINE_API_PROXY_ADDRESSES`, EmailEngine trusts the header from any peer, so a client that can reach the port directly can present whatever address the allowlist expects and walk straight through it. See [Trusted Proxy Addresses](/docs/configuration/environment-variables#trusted-proxy-addresses).
 :::
 
-### Passkey Authentication (WebAuthn)
+### Passkeys, TOTP and Single Sign-On
 
-EmailEngine supports passkey (WebAuthn) authentication for the admin interface. Passkeys provide passwordless login using biometric sensors, hardware security keys, or platform authenticators like Touch ID and Windows Hello.
-
-**Benefits over password authentication:**
-
-- Phishing-resistant - passkeys are bound to the specific domain
-- No passwords to remember, leak, or brute-force
-- Bypasses TOTP requirement - passkeys are inherently multi-factor
-- Works with platform authenticators (Touch ID, Face ID, Windows Hello) and roaming authenticators (YubiKey, Titan)
-
-:::info Service URL Required
-Passkey registration requires a configured Service URL (`serviceUrl`). The URL's hostname is used as the WebAuthn Relying Party ID. Without a Service URL, the "Add passkey" button is disabled.
-:::
-
-**Setting up passkeys:**
-
-1. Ensure `serviceUrl` is configured in **Configuration** > **General**
-2. Navigate to **Account** > **Security** (click your username in the top-right)
-3. In the **Passkeys** section, click **Add passkey**
-4. Enter your current password to verify your identity
-5. Enter a descriptive name (e.g., "MacBook Touch ID", "YubiKey")
-6. Follow your browser's WebAuthn prompt to register the authenticator
-
-You can register up to 20 passkeys per admin user.
-
-**Signing in with a passkey:**
-
-1. Navigate to the admin login page
-2. Click **Sign in with a passkey**
-3. Follow your browser's WebAuthn prompt
-
-Passkey authentication bypasses the TOTP requirement - if you have TOTP configured, you will not be prompted for it when signing in with a passkey.
-
-**Managing passkeys:**
-
-- View all registered passkeys on the **Account** > **Security** page
-- Each passkey shows its name and registration date
-- Remove individual passkeys using the **Remove** button
-
-:::warning Password Changes Clear Passkeys
-Changing the admin password immediately deletes all registered passkeys for that user. This is a security measure to prevent unauthorized passkey-only access if the password is compromised. Re-register your passkeys after a password change.
-:::
-
-**Security details:**
-
-- Only public keys are stored server-side - private keys never leave the authenticator device
-- Registration accepts ES256 (P-256) and RS256 keys, so a passkey works on a host whose OpenSSL runs in [FIPS mode](/docs/deployment/fips-mode)
-- Registration requires current password verification
-- Registration challenges expire after 5 minutes and are single-use
-- Maximum 20 passkeys per admin user
-- Per-IP rate limiting protects all passkey endpoints (registration and authentication)
-- All passkey events (registration, deletion, login success, and login failure) are logged with method, username, and IP address
-
-### Audit Logging
-
-EmailEngine logs all admin authentication events with structured data for security monitoring.
-
-**Logged events:**
-
-| Event | Fields |
-|---|---|
-| Successful password login | method: `password`, user, IP address |
-| Failed password login | method: `password`, error, IP address |
-| Successful TOTP verification | method: `totp`, user, IP address |
-| Failed TOTP verification | method: `totp`, error, IP address |
-| Successful passkey login | method: `passkey`, user, IP address |
-| Failed passkey login | method: `passkey`, error, IP address |
-| Passkey registered | method: `passkey`, user, passkey name, IP address |
-| Passkey deleted | method: `passkey`, user, credential ID, IP address |
-| Passkeys cleared (password change) | user |
-
-These events are written to the application log (stdout). Use these log entries to detect unauthorized access attempts and feed them into your SIEM or log aggregation system.
-
-### Single Sign-On (SSO)
-
-EmailEngine supports single sign-on for the admin interface, either through any OpenID Connect provider (Keycloak, Microsoft Entra ID, Google, Authentik, and others) or through the dedicated Okta integration. When signed in through SSO, multi-factor authentication is handled by the identity provider - EmailEngine does not prompt for TOTP - and the local password, TOTP, and passkey settings cannot be managed from that session.
-
-#### OpenID Connect
-
-**Setup:**
-
-1. Register a confidential web application (authorization code flow) at your identity provider
-2. Set the sign-in redirect URI to `{serviceUrl}/admin/login/oidc`
-3. Configure the environment variables:
-
-```bash
-OIDC_ISSUER=https://keycloak.example.com/realms/main
-OIDC_CLIENT_ID=your-client-id
-OIDC_CLIENT_SECRET=your-client-secret
-# Optional: label for the sign-in button (default "SSO")
-OIDC_PROVIDER_NAME=Keycloak
-```
-
-4. Restart EmailEngine
-
-All three of `OIDC_ISSUER`, `OIDC_CLIENT_ID`, and `OIDC_CLIENT_SECRET` must be set. When enabled, a sign-in button appears on the admin login page, labeled with the provider name from `OIDC_PROVIDER_NAME`. Password login continues to work alongside SSO unless you enable SSO-only mode (see below).
-
-At startup, EmailEngine fetches the provider's discovery document from `<issuer>/.well-known/openid-configuration`. The `issuer` value in the discovery document must exactly match `OIDC_ISSUER`. If discovery fails, for example because the identity provider is unreachable, SSO is disabled for that run and the regular password login remains available - an identity provider outage cannot lock you out of the admin interface.
-
-**Restricting who can sign in:**
-
-By default, anyone the identity provider authenticates can access the admin interface. Use the allow-list variables to narrow this down:
-
-```bash
-# Exact emails and/or @domain entries, comma-separated
-OIDC_ALLOWED_USERS=admin@example.com,@example.com
-
-# Group names, matched against the groups claim in the userinfo response
-OIDC_ALLOWED_GROUPS=emailengine-admins
-# Claim that carries group membership (default "groups"); dotted paths work too
-OIDC_GROUPS_CLAIM=realm_access.roles
-```
-
-A user is allowed if they match either list. The allow-lists are re-checked on every request, so removing a user from the lists (and restarting EmailEngine) also ends their existing session.
-
-**SSO-only mode:**
-
-Set `OIDC_FORCED=true` to make SSO the only way to sign in. The login page then redirects straight to the identity provider, and password and passkey sign-in are refused. If discovery fails at startup, the local login form is shown as a fallback.
-
-**Signing out of the identity provider:**
-
-By default, signing out of EmailEngine only ends the EmailEngine session - the identity provider session stays active, so the next sign-in may complete without a prompt. Set `OIDC_LOGOUT=true` to also end the identity provider session on logout (RP-initiated logout). Optionally set `OIDC_POST_LOGOUT_REDIRECT_URI` to `{serviceUrl}/admin/login?loggedout=1` to return to an EmailEngine signed-out screen afterwards; this URL must be registered as a post-logout redirect URI at the identity provider. Without it, the identity provider shows its own logged-out page.
-
-#### Okta
-
-**Setup:**
-
-1. Create a web application in the [Okta developer console](https://developer.okta.com/)
-2. Set the sign-in redirect URI to `{serviceUrl}/admin/login/okta`
-3. Configure the environment variables:
-
-```bash
-OKTA_OAUTH2_ISSUER=https://your-org.okta.com/oauth2/default
-OKTA_OAUTH2_CLIENT_ID=your-client-id
-OKTA_OAUTH2_CLIENT_SECRET=your-client-secret
-```
-
-4. Restart EmailEngine
-
-All three environment variables must be set to enable Okta SSO. When enabled, a "Sign in with Okta" button appears on the admin login page.
-
-For full details on the environment variables, see [SSO Configuration](/docs/configuration/environment-variables#single-sign-on-sso).
+Passkey (WebAuthn) sign-in, TOTP two-factor authentication, single sign-on through OpenID Connect or Okta, the login rate limits and the authentication audit log are documented on [Admin Authentication](/docs/deployment/admin-authentication).
 
 ## Encryption
 
@@ -615,7 +481,7 @@ For full details on the environment variables, see [SSO Configuration](/docs/con
 
 EmailEngine encrypts all sensitive credentials using the [`EENGINE_SECRET`](#eengine_secret) environment variable. All account passwords, OAuth2 tokens, and application secrets are automatically encrypted before storage in Redis using AES-256-GCM.
 
-For detailed information on enabling encryption, migrating existing data, rotating secrets, and secret management best practices, see the [Secret Encryption](/docs/advanced/encryption) guide. The key derivation and every other algorithm in use are ones a FIPS provider allows; see [FIPS Mode](/docs/deployment/fips-mode) for running on such a host.
+For detailed information on enabling encryption, migrating existing data, rotating secrets, and secret management best practices, see the [Secret Encryption](/docs/deployment/encryption) guide. The key derivation and every other algorithm in use are ones a FIPS provider allows; see [FIPS Mode](/docs/deployment/fips-mode) for running on such a host.
 
 ### Encryption in Transit
 
@@ -746,10 +612,11 @@ Since v2.79.9 EmailEngine sends the browser security headers itself, chosen per 
 
 | Surface | Headers |
 |---------|---------|
-| Admin console (`/admin`) | A nonce-based `Content-Security-Policy` (only scripts and stylesheets the server rendered with the request's nonce run), `X-Frame-Options: SAMEORIGIN`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`, `Permissions-Policy`, `Cache-Control: no-store` |
-| REST API (`/v1`, `/mcp`, `/metrics`, `/swagger.json`) | `Content-Security-Policy: default-src 'none'`, `X-Frame-Options: DENY`, `Cache-Control: no-store` |
+| Admin console (`/admin`) | A nonce-based `Content-Security-Policy` (only scripts and stylesheets the server rendered with the request's nonce run, framed by the same origin only), `X-Frame-Options: SAMEORIGIN`, `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Resource-Policy: same-origin`, `Permissions-Policy`, `Cache-Control: no-store` |
+| REST API (`/v1`, `/mcp`, `/metrics`, `/swagger.json`) | `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `X-Frame-Options: DENY`, `Permissions-Policy`, `Cache-Control: no-store` |
 | Public pages (hosted authentication form, unsubscribe, error pages) | A relaxed policy that allows inline scripts and styles and `https:` sources, so the markup you add through the branding settings keeps working; the pages stay embeddable in your own application |
-| Every response | `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Strict-Transport-Security: max-age=31536000` once the service URL setting is `https://` |
+| Static files (`/static`) | No `Content-Security-Policy`, because the webhook function editor's evaluation worker is served from there and runs operator code |
+| Every response | `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Permitted-Cross-Domain-Policies: none`, and `Strict-Transport-Security: max-age=31536000` once the service URL setting is `https://` |
 
 The policy can be switched to report-only or off with `EENGINE_CSP_MODE` (see [Advanced Settings](/docs/configuration/environment-variables#advanced-settings)): in report-only mode violations show in the browser console without blocking anything, which is the way to check a customised deployment before enforcing.
 
@@ -788,33 +655,6 @@ server {
         proxy_pass http://localhost:3000;
     }
 }
-```
-
-### API Request Examples
-
-**Using account IDs (not email addresses):**
-
-```bash
-curl https://emailengine.example.com/v1/account/account_1234 \
-  -H "Authorization: Bearer TOKEN"
-```
-
-The path segment is the account ID chosen when the account was registered, not its email address. The two can be identical if you registered it that way, but nothing maps an address to an ID for you.
-
-**Common API operations:**
-
-```bash
-# List accounts
-curl https://emailengine.example.com/v1/accounts \
-  -H "Authorization: Bearer TOKEN"
-
-# Get account info (returns account ID)
-curl https://emailengine.example.com/v1/account/account_1234 \
-  -H "Authorization: Bearer TOKEN"
-
-# Delete account
-curl -X DELETE https://emailengine.example.com/v1/account/account_1234 \
-  -H "Authorization: Bearer TOKEN"
 ```
 
 ## Redis Security
@@ -878,29 +718,6 @@ ACL SETUSER emailengine on >password ~* +@all -flushdb -flushall -keys
 ACL LIST
 ```
 
-## Compliance
-
-### GDPR Compliance
-
-**Right to deletion:**
-
-```bash
-# API endpoint to delete account and all data
-curl -X DELETE https://emailengine.example.com/v1/account/account_1234 \
-  -H "Authorization: Bearer TOKEN"
-
-# This deletes:
-# - Account credentials
-# - OAuth tokens
-# - Account sync state
-```
-
-:::info What EmailEngine Stores
-EmailEngine stores account credentials, OAuth tokens, and sync state in Redis. Email messages themselves are not stored - EmailEngine reads them from the mail server on demand.
-
-Queue job entries are the other place message-derived data can linger. Completed jobs are removed as soon as they finish unless the Job History Limit setting keeps a bounded number for debugging. Failed jobs, including webhook deliveries that were given up on after every retry, are kept by default: the last 500 per queue for 7 days, adjustable with `EENGINE_QUEUE_KEEP_FAILED` and `EENGINE_QUEUE_KEEP_FAILED_AGE`. A failed webhook entry carries the payload it tried to deliver, so on a deployment with strict retention rules, shorten that age. See [Queue Management](/docs/advanced/queue-management).
-:::
-
 ## Security Checklist
 
 ### Pre-Deployment
@@ -923,8 +740,8 @@ Queue job entries are the other place message-derived data can linger. Completed
 - [ ] Test firewall rules
 - [ ] Verify Redis is not publicly accessible
 - [ ] Check SSL certificate auto-renewal
-- [ ] Register passkeys for admin accounts (phishing-resistant login)
-- [ ] Configure log aggregation (including auth audit logs)
+- [ ] Register passkeys for admin accounts, or put the admin interface behind SSO; see [Admin Authentication](/docs/deployment/admin-authentication)
+- [ ] Configure log aggregation, including the [authentication audit log](/docs/deployment/admin-authentication#audit-logging)
 - [ ] Perform security scan
 - [ ] Document security procedures
 - [ ] Train team on security practices
@@ -943,9 +760,8 @@ Queue job entries are the other place message-derived data can linger. Completed
 
 ## See Also
 
-- [Compliance and data handling](/docs/deployment/compliance) - What is stored, and what a vendor review asks for
+- [Admin Authentication](/docs/deployment/admin-authentication) - Password, TOTP, passkeys, SSO and the login audit log
+- [Compliance and data handling](/docs/deployment/compliance) - What is stored, the GDPR endpoints, and what a vendor review asks for
 - [Access tokens](/docs/api-reference/access-tokens) - Scopes, restrictions, and the audit log
-- [Secret encryption](/docs/advanced/encryption) - Enabling and rotating `EENGINE_SECRET`
-- [Credential security FAQ](/docs/support/security-faq) - The questions this page gets asked about
+- [Secret encryption](/docs/deployment/encryption) - Enabling and rotating `EENGINE_SECRET`
 - [Nginx reverse proxy](/docs/deployment/nginx-proxy) - Terminating TLS in front of EmailEngine
-- [FIPS mode](/docs/deployment/fips-mode) - Running on a host whose OpenSSL only allows FIPS-approved algorithms

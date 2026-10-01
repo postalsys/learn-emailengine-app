@@ -18,7 +18,7 @@ The button creates the two services described in the blueprint below and generat
 
 ## What the Blueprint Provisions
 
-`render.yaml` in the EmailEngine repository declares the following. The values are the ones the file carries at v2.79.4; the file itself is the reference if the two differ.
+`render.yaml` in the EmailEngine repository declares the following. The values are the ones the file carries at v2.82.0; the file itself is the reference if the two differ.
 
 **Web service `emailengine`:**
 
@@ -97,7 +97,7 @@ The internal connection string keeps Redis traffic inside Render's network. The 
    |---------|-------|
    | Name | `emailengine`, or any name |
    | Region | Same as the Redis instance |
-   | Branch | `master`, or a release tag such as `v2.79.4` |
+   | Branch | `master`, or a release tag such as `v2.82.0` |
    | Runtime | Node |
    | Build command | `npm install --omit=dev` |
    | Start command | `npm start` |

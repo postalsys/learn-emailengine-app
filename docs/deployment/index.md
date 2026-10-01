@@ -204,7 +204,7 @@ Before deploying to production, ensure you have:
 - [ ] Redis password protected
 - [ ] Regular security updates
 
-[Complete security checklist →](./security.md)
+[Complete security checklist →](./security.md), [admin authentication](/docs/deployment/admin-authentication) and [secret encryption](/docs/deployment/encryption)
 
 ## Scaling Strategies
 
@@ -410,7 +410,7 @@ systemctl restart emailengine
 **Kubernetes:**
 ```bash
 kubectl set image deployment/emailengine \
-  emailengine=postalsys/emailengine:v2.79.4
+  emailengine=postalsys/emailengine:v2.82.0
 ```
 
 Pin a version tag here: with a floating tag such as `v2` the image reference does not change and no rollout happens.

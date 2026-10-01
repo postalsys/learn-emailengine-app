@@ -294,7 +294,7 @@ spec:
 
 Do not use `RollingUpdate` with `maxSurge` - that briefly runs two EmailEngine instances against the same Redis database, which EmailEngine does not support. The `Recreate` strategy means a short downtime during each deployment, but this is the safe trade-off for a single-instance application.
 
-Roll out a new release by changing the image tag, for example `kubectl set image deployment/emailengine emailengine=postalsys/emailengine:v2.79.4`. A floating tag such as `v2` does not change the pod template, so nothing is rolled out.
+Roll out a new release by changing the image tag, for example `kubectl set image deployment/emailengine emailengine=postalsys/emailengine:v2.82.0`. A floating tag such as `v2` does not change the pod template, so nothing is rolled out.
 
 ## Monitoring
 

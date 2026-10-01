@@ -114,8 +114,8 @@ cd /opt/emailengine
 # Download latest source distribution
 sudo wget https://go.emailengine.app/source-dist.tar.gz
 
-# Or download specific version (e.g., 2.79.4)
-sudo wget https://go.emailengine.app/download/v2.79.4/source-dist.tar.gz
+# Or download specific version (e.g., 2.82.0)
+sudo wget https://go.emailengine.app/download/v2.82.0/source-dist.tar.gz
 
 # Extract to app directory (includes node_modules)
 sudo tar xzf source-dist.tar.gz -C app --strip-components=1
@@ -370,7 +370,7 @@ pm2 stop emailengine
 
 ### Docker with Source
 
-If you want to build your own Docker image from source, the EmailEngine repository includes the `Dockerfile` the published images are built from. Clone the repository (the build copies `.git/refs/heads/master` to stamp the commit, so a source tarball without `.git` does not build) and run:
+If you want to build your own Docker image from source, the EmailEngine repository includes the `Dockerfile` the published images are built from. The build takes the commit it is building as the `EE_COMMIT_HASH` build argument and refuses to run without it, so the image can always report what it was built from (since v2.81.0; earlier Dockerfiles read `.git/refs/heads/master` out of the build context, which tied the build to a clone of that branch):
 
 ```bash
 # Clone the repository
@@ -378,7 +378,7 @@ git clone https://github.com/postalsys/emailengine.git
 cd emailengine
 
 # Build the Docker image
-docker build -t emailengine:custom .
+docker build --build-arg EE_COMMIT_HASH=$(git rev-parse HEAD) -t emailengine:custom .
 
 # Run with Redis
 docker run -d \
@@ -389,7 +389,7 @@ docker run -d \
   emailengine:custom
 ```
 
-The Dockerfile installs dependencies with `npm ci --omit=dev`, runs as a non-root user, uses `dumb-init` as the entrypoint for signal handling, and presets `EENGINE_HOST=0.0.0.0` and `EENGINE_API_PROXY=true`.
+The Dockerfile is a two-stage build: `npm ci --omit=dev` runs in the build stage, and the runtime stage copies the finished tree onto a Node.js 24 Alpine image with npm removed. The image runs as a non-root user, uses `dumb-init` as the entrypoint for signal handling, and presets `EENGINE_HOST=0.0.0.0` and `EENGINE_API_PROXY=true`.
 
 ## Upgrading
 
@@ -410,8 +410,8 @@ sudo mkdir -p app
 # Download new version (latest)
 sudo wget https://go.emailengine.app/source-dist.tar.gz
 
-# Or download specific version (e.g., 2.79.4)
-sudo wget https://go.emailengine.app/download/v2.79.4/source-dist.tar.gz
+# Or download specific version (e.g., 2.82.0)
+sudo wget https://go.emailengine.app/download/v2.82.0/source-dist.tar.gz
 
 # Extract to app directory
 sudo tar xzf source-dist.tar.gz -C app --strip-components=1
@@ -446,8 +446,8 @@ sudo mkdir -p app
 # Download new version (latest)
 sudo wget https://go.emailengine.app/source-dist.tar.gz
 
-# Or download specific version (e.g., 2.79.4)
-sudo wget https://go.emailengine.app/download/v2.79.4/source-dist.tar.gz
+# Or download specific version (e.g., 2.82.0)
+sudo wget https://go.emailengine.app/download/v2.82.0/source-dist.tar.gz
 
 # Extract to app directory
 sudo tar xzf source-dist.tar.gz -C app --strip-components=1

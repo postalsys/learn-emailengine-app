@@ -1,7 +1,7 @@
 ---
 title: FIPS Mode
 description: Run EmailEngine on a host whose OpenSSL is in FIPS mode - which installations qualify, which algorithms are used, and what to do before switching an existing instance
-sidebar_position: 9
+sidebar_position: 11
 ---
 
 # FIPS Mode
@@ -51,7 +51,7 @@ A fresh installation needs nothing beyond a FIPS-enabled host. An instance that 
 
 ### 1. Rewrite stored credentials
 
-Run the [encryption migration](/docs/advanced/encryption#rewriting-values-under-the-current-key-derivation) with the current secret while EmailEngine is stopped. It rewrites every value whose key was derived with scrypt, even though the secret does not change:
+Run the [encryption migration](/docs/deployment/encryption#rewriting-values-under-the-current-key-derivation) with the current secret while EmailEngine is stopped. It rewrites every value whose key was derived with scrypt, even though the secret does not change:
 
 ```bash
 emailengine encrypt \
@@ -59,7 +59,7 @@ emailengine encrypt \
   --service.secret="current-secret"
 ```
 
-Every rewritten record is reported, and a run that finds nothing to rewrite reports a zero in each count (`Updated 0/3 accounts`). A value the current secret cannot decrypt is reported as `Could not process`; resolve those with the [secret rotation](/docs/advanced/encryption#changing-encryption-secret) steps before going on.
+Every rewritten record is reported, and a run that finds nothing to rewrite reports a zero in each count (`Updated 0/3 accounts`). A value the current secret cannot decrypt is reported as `Could not process`; resolve those with the [secret rotation](/docs/deployment/encryption#changing-encryption-secret) steps before going on.
 
 Skipping this step leaves the affected accounts without credentials once FIPS mode is on: EmailEngine logs `Failed to decrypt value` for each one, treats the field as missing, and the account fails to authenticate until its credentials are saved again.
 
@@ -74,12 +74,12 @@ A passkey registered by an earlier release may hold an Ed25519 key, because thos
 ## Limitations
 
 - **SMTP servers that offer only CRAM-MD5.** EmailEngine authenticates with PLAIN or LOGIN whenever the server offers one of them, and falls back to CRAM-MD5 only when it offers neither. On a FIPS host that fallback fails, because MD5 is unavailable, and the account reports an authentication error. Such servers are rare; every mainstream provider offers PLAIN or LOGIN over TLS.
-- **No rollback to a release that predates PBKDF2 derivation.** A release that does not know the PBKDF2 scheme reads a value written under it as cleartext and uses the ciphertext as the credential. This applies to every instance, not only FIPS hosts, and is covered on the [encryption page](/docs/advanced/encryption#rewriting-values-under-the-current-key-derivation).
+- **No rollback to a release that predates PBKDF2 derivation.** A release that does not know the PBKDF2 scheme reads a value written under it as cleartext and uses the ciphertext as the credential. This applies to every instance, not only FIPS hosts, and is covered on the [encryption page](/docs/deployment/encryption#rewriting-values-under-the-current-key-derivation).
 - **Coverage.** The IMAP and SMTP paths, bounce detection, exports, the admin interface login, the built-in SMTP server with a self-signed certificate, webhooks and secret rotation have been exercised in FIPS mode. The OAuth2 providers, passkey sign-in and the IMAP proxy have not; they use the same algorithms and no problem is expected, but report one if you find it.
 
 ## See Also
 
-- [Secret Encryption](/docs/advanced/encryption) - How stored credentials are encrypted and how the migration tool rewrites them
+- [Secret Encryption](/docs/deployment/encryption) - How stored credentials are encrypted and how the migration tool rewrites them
 - [CLI Reference](/docs/configuration/cli#encrypt-command) - Every option of the `encrypt` command
 - [Installing from Source](/docs/installation/source) - The installation method that runs on the host's Node.js
 - [Security Best Practices](/docs/deployment/security) - What else to lock down before going live

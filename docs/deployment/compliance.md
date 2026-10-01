@@ -1,6 +1,6 @@
 ---
 title: Compliance and Data Handling
-sidebar_position: 8
+sidebar_position: 10
 description: Data storage practices, GDPR compliance, and Google OAuth verification guidance
 ---
 
@@ -24,7 +24,9 @@ EmailEngine stores the following data in [Redis](/docs/configuration/redis):
 | **Queue jobs** | Pending emails, webhook deliveries | No | Until delivered; jobs that failed every attempt are kept for 7 days, the newest 500 per queue (`EENGINE_QUEUE_KEEP_FAILED_AGE`, `EENGINE_QUEUE_KEEP_FAILED`) |
 | **Logs** | Connection events, errors | No | [Configurable](/docs/advanced/logging) (off by default; 10,000 entries per account when enabled) |
 
-\* Encryption requires [`EENGINE_SECRET`](/docs/advanced/encryption) to be configured. Without it, all data is stored in cleartext.
+\* Encryption requires [`EENGINE_SECRET`](/docs/deployment/encryption) to be configured. Without it, all data is stored in cleartext.
+
+Queue job entries are the one place message-derived data can linger. A completed job is removed as soon as it finishes unless the **Completed job history limit** setting (**Configuration** > **General**) keeps a bounded number for debugging. Failed jobs are kept by default, the newest 500 per queue for 7 days, and a failed webhook entry carries the payload it tried to deliver, so on a deployment with strict retention rules shorten `EENGINE_QUEUE_KEEP_FAILED_AGE`. See [Queue Management](/docs/advanced/queue-management).
 
 API access tokens are a special case: they are never stored in recoverable form. Only a SHA-256 hash of each token is kept, so a token cannot be read back after it is created (whether or not `EENGINE_SECRET` is set).
 
@@ -87,7 +89,7 @@ flowchart LR
 
 EmailEngine supports **AES-256-GCM** field-level encryption for all sensitive data.
 
-**Encrypted when [`EENGINE_SECRET`](/docs/advanced/encryption) is set:**
+**Encrypted when [`EENGINE_SECRET`](/docs/deployment/encryption) is set:**
 - IMAP/SMTP passwords
 - OAuth access and refresh tokens
 - OAuth2 application client secrets and service account keys
@@ -98,7 +100,7 @@ EmailEngine supports **AES-256-GCM** field-level encryption for all sensitive da
 - Message UIDs and folder names
 - Application settings (URLs, toggles, webhook routing rules)
 
-See [Secret Encryption](/docs/advanced/encryption) for setup instructions.
+See [Secret Encryption](/docs/deployment/encryption) for setup instructions.
 
 ## GDPR Compliance
 
@@ -199,10 +201,10 @@ Google requires documentation of your data handling practices. Key points for Em
 
 For restricted scopes, Google requires an independent third-party security assessment. Prepare by:
 
-1. **Enable encryption** - Set [`EENGINE_SECRET`](/docs/advanced/encryption) for all credential encryption
+1. **Enable encryption** - Set [`EENGINE_SECRET`](/docs/deployment/encryption) for all credential encryption
 2. **Secure Redis** - [Authentication, network isolation](/docs/configuration/redis), TLS if remote
 3. **Use HTTPS** - TLS for all API and webhook traffic
-4. **Implement access controls** - [API tokens](/docs/api-reference/access-tokens), admin password, [IP restrictions](/docs/deployment/security#admin-interface-access-control)
+4. **Implement access controls** - [API tokens](/docs/api-reference/access-tokens), an [admin password with a second factor](/docs/deployment/admin-authentication), [IP restrictions](/docs/deployment/security#admin-interface-access-control)
 5. **Enable logging** - For audit trail
 
 See [Security Best Practices](/docs/deployment/security) for detailed configuration.
@@ -266,7 +268,8 @@ The inventory is instance-wide rather than tied to an account, so this request n
 ## See Also
 
 - [Security Best Practices](/docs/deployment/security) - Production security configuration
-- [Secret Encryption](/docs/advanced/encryption) - Enable field-level encryption
+- [Admin Authentication](/docs/deployment/admin-authentication) - Password, second factor, passkeys and SSO for the admin interface
+- [Secret Encryption](/docs/deployment/encryption) - Enable field-level encryption
 - [FIPS Mode](/docs/deployment/fips-mode) - Running on a host whose OpenSSL only allows FIPS-approved algorithms
 - [Gmail OAuth2 Setup](/docs/accounts/gmail/gmail-imap) - Configure Gmail access
 - [Managing Accounts](/docs/accounts/managing-accounts) - Account lifecycle management

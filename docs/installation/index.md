@@ -35,6 +35,30 @@ mkdir emailengine && tar xzf source-dist.tar.gz -C emailengine && cd emailengine
 node server.js
 ```
 
+## Verifying a Download
+
+Every release carries a `hashes.txt` asset next to the binaries. It is a PGP-signed message listing the SHA-256 digest of each file, the commit the release was built from, and the Node.js version bundled into the binaries. It has no short URL; download it from the release itself:
+
+```bash
+curl -LO https://go.emailengine.app/emailengine.tar.gz
+curl -LO https://github.com/postalsys/emailengine/releases/latest/download/hashes.txt
+
+# The two digests must match (shasum -a 256 on macOS)
+sha256sum emailengine.tar.gz
+grep emailengine.tar.gz hashes.txt
+```
+
+The list is signed by the `Postalsys Releases <releases@postalsys.com>` key, fingerprint `9777 3593 92D7 9550 B4BF F1AF B6F0 7B59 064F 9CCA`, published among the maintainer's keys on GitHub. To check the signature as well:
+
+```bash
+curl -sL https://github.com/andris9.gpg | gpg --import
+gpg --verify hashes.txt
+```
+
+A good signature names that fingerprint. The warning that the key is not certified only means you have not signed it yourself; compare the fingerprint instead.
+
+For a pinned version, replace `latest/download` with `download/vX.X.X` in the `hashes.txt` URL, the same way as for the binaries.
+
 ## Installation Methods
 
 ### By Operating System
@@ -159,11 +183,12 @@ The button reads the `app.json` in the EmailEngine repository. It provisions a `
 
 [Easypanel](https://easypanel.io) is a self-hosted Docker control panel. Its EmailEngine template is maintained by Easypanel, not by Postal Systems. It creates two services, the EmailEngine container and a password-protected Redis service, and sets `EENGINE_REDIS`, a random `EENGINE_SECRET`, and an `EENGINE_SETTINGS` value that enables the built-in SMTP server with authentication. The admin interface is served on the Easypanel domain through port 3000.
 
-Review these form fields before deploying (template state checked 2026-09-23):
+Review these form fields before deploying (template state checked 2026-10-01):
 
 - **App Service Image** defaults to a pinned older release (`postalsys/emailengine:v2.63.3`). Set it to `postalsys/emailengine:v2` to run the current release.
-- **SMTP Password** defaults to `password`. Replace it, because the template publishes the SMTP submission port.
-- **Redis eviction policy** is not set by the template yet (a fix is proposed upstream in [easypanel-io/templates#1588](https://github.com/easypanel-io/templates/pull/1588)). After the first deploy, check the dashboard for the "Unsafe Redis eviction policy" banner, and if it appears, set `maxmemory-policy noeviction` on the Redis service. See [Memory Eviction Policy](/docs/configuration/redis#memory-eviction-policy-required) for why no other policy is supported.
+- **SMTP Password** defaults to `password`. Replace it, because the template publishes the SMTP submission port. It publishes the IMAP proxy port as well, which answers nothing until the proxy is enabled.
+
+The template starts its Redis service with `maxmemory-policy noeviction`, the policy EmailEngine requires. If the dashboard still shows the "Unsafe Redis eviction policy" banner after the first deploy, the Redis service was created from an earlier version of the template; set the policy on it by hand. See [Memory Eviction Policy](/docs/configuration/redis#memory-eviction-policy-required) for why no other policy is supported.
 
 #### Hostinger VPS
 
@@ -185,9 +210,9 @@ curl http://localhost:3000/health
 # {"success":true}
 ```
 
-### 2. Access Web Interface
+### 2. Set the Admin Password
 
-Open `http://localhost:3000` in your browser and create your admin account.
+Open `http://localhost:3000` in your browser. A new instance has no admin password, so the admin interface opens without a login and refuses to issue access tokens until one is set. Set it under **Account** > **Security** before the instance faces a network; see [Admin Password and API Authentication](/docs/deployment/security#admin-password-and-api-authentication) for the CLI and provisioning alternatives.
 
 ### 3. Configure OAuth2
 

@@ -11,7 +11,7 @@ EmailEngine manages the certificates for the listeners it runs itself:
 | Listener | Serves TLS when |
 |----------|-----------------|
 | [SMTP server](/docs/sending/smtp-interface) | The `smtpServerTLSEnabled` setting is on |
-| [IMAP proxy](/docs/accounts/proxying-connections) | The `imapProxyServerTLSEnabled` setting is on |
+| [IMAP proxy](/docs/receiving/imap-proxy-server) | The `imapProxyServerTLSEnabled` setting is on |
 | API and admin interface | `EENGINE_API_TLS=true` |
 
 All three are configured on one page, **Configuration > TLS Certificates** (`/admin/config/tls`), and all three ask the same resolver which certificate to serve.
@@ -217,5 +217,5 @@ Certificates for names added this way are ordered by the same background reconci
 - [Nginx Reverse Proxy](/docs/deployment/nginx-proxy) - Terminating TLS ahead of EmailEngine instead
 - [Environment variables](/docs/configuration/environment-variables#certificates-for-emailengines-own-listeners) - The full suffix table for each listener prefix
 - [SMTP Interface](/docs/sending/smtp-interface) - The submission listener and its TLS setting
-- [IMAP Proxy](/docs/accounts/proxying-connections) - The proxy listener and its TLS setting
+- [IMAP Proxy](/docs/receiving/imap-proxy-server) - The proxy listener and its TLS setting
 - [Security Best Practices](/docs/deployment/security) - Firewall rules, headers, and access restrictions around the instance

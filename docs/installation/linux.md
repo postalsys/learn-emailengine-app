@@ -22,7 +22,7 @@ The figures on the [installation overview](/docs/installation#system-requirement
 
 ### Required Software
 
-- **Redis** - a stand-alone instance with `maxmemory-policy noeviction` and persistence enabled; Redis Cluster and ElastiCache are not supported. The EmailEngine README states that any Redis version works
+- **Redis** - a stand-alone instance with `maxmemory-policy noeviction` and persistence enabled; Redis Cluster and ElastiCache are not supported. See [Redis Version](/docs/configuration/redis#redis-version) for the versions the queue library accepts
 - **Node.js 20+** (only for source installation, recommended 24+)
 - **OpenSSL** (for generating secrets)
 
@@ -49,7 +49,7 @@ A script that installs and wires up everything a single-server deployment needs.
 - EmailEngine binary at `/opt/emailengine`, running as the `emailengine` system user
 - Redis server from the distribution's package, with a generated password, `maxmemory-policy noeviction`, and RDB snapshots appended to `/etc/redis/redis.conf`
 - Caddy reverse proxy with automatic HTTPS, configured in `/etc/caddy/Caddyfile` with a redirect from port 80, a 100 MB request body limit, and a set of security response headers (HSTS among them)
-- SystemD service at `/etc/systemd/system/emailengine.service`, with `EENGINE_REDIS` (database 8, with the password), `EENGINE_SECRET`, `EENGINE_PORT=3000`, `EENGINE_API_PROXY=true`, `EENGINE_WORKERS=8`, and `EENGINE_LOG_LEVEL=info` set in the unit. It also sets `EENGINE_INSTALL_SCRIPT=true`, which makes the admin **Upgrade** page show the instructions for this layout
+- SystemD service at `/etc/systemd/system/emailengine.service`, with `EENGINE_REDIS` (database 8, with the password), `EENGINE_SECRET`, `EENGINE_PORT=3000`, `EENGINE_API_PROXY=true`, `EENGINE_API_PROXY_ADDRESSES=127.0.0.1,::1` (since v2.79.8, so that only Caddy on the same host may set `X-Forwarded-For`), `EENGINE_WORKERS=8`, and `EENGINE_LOG_LEVEL=info` set in the unit. It also sets `EENGINE_INSTALL_SCRIPT=true`, which makes the admin **Upgrade** page show the instructions for this layout
 - Upgrade helper script at `/opt/upgrade-emailengine.sh`
 
 :::note This layout differs from the manual install below
@@ -85,7 +85,7 @@ Replace `example.com` with the hostname EmailEngine will be served on. If you om
 
 **Install specific version:**
 ```bash
-sudo ./install.sh example.com 2.79.4
+sudo ./install.sh example.com 2.82.0
 ```
 
 The version is accepted with or without a leading `v`.
@@ -122,7 +122,7 @@ For servers installed with the automated installer:
 sudo /opt/upgrade-emailengine.sh
 
 # Or re-run installer for specific version
-sudo ./install.sh example.com 2.79.4
+sudo ./install.sh example.com 2.82.0
 ```
 
 `/opt/upgrade-emailengine.sh` downloads the latest release, compares its version with the installed binary, and either reports that nothing changed or swaps the binary and restarts the service. Re-running `install.sh` on an existing installation shows the current and target versions, asks for confirmation, keeps the Redis configuration and the unit file, and replaces the binary.
@@ -155,27 +155,7 @@ sudo systemctl enable redis
 
 ### Step 2: Configure Redis
 
-Edit `/etc/redis/redis.conf`:
-
-```bash
-sudo nano /etc/redis/redis.conf
-```
-
-Add or modify:
-```
-# Production settings
-maxmemory-policy noeviction
-
-# Persistence
-save 900 1
-save 300 10
-save 60 10000
-```
-
-Restart Redis:
-```bash
-sudo systemctl restart redis
-```
+Set `maxmemory-policy noeviction` in `/etc/redis/redis.conf` and keep persistence on, then restart Redis. EmailEngine stores its account data and queues in Redis, so an eviction policy that drops keys loses accounts. The settings, the reasoning and the Redis version floor are on [Redis Configuration](/docs/configuration/redis).
 
 ### Step 3: Download EmailEngine
 
@@ -183,8 +163,8 @@ sudo systemctl restart redis
 # Download latest binary
 wget https://go.emailengine.app/emailengine.tar.gz
 
-# Or download specific version (e.g., 2.79.4)
-wget https://go.emailengine.app/download/v2.79.4/emailengine.tar.gz
+# Or download specific version (e.g., 2.82.0)
+wget https://go.emailengine.app/download/v2.82.0/emailengine.tar.gz
 
 # Extract
 tar xzf emailengine.tar.gz
@@ -234,56 +214,7 @@ curl http://localhost:3000/health
 
 ### Step 6: Run as Service
 
-See [SystemD Service Guide](/docs/deployment/systemd) for production setup.
-
-**Quick SystemD setup:**
-
-```bash
-# Create service file
-sudo nano /etc/systemd/system/emailengine.service
-```
-
-```ini
-[Unit]
-Description=EmailEngine
-# Debian and Ubuntu name the unit redis-server.service; adjust both lines to match
-After=redis.service
-Requires=redis.service
-
-[Service]
-Type=simple
-User=emailengine
-Group=emailengine
-WorkingDirectory=/opt/emailengine
-
-Environment="EENGINE_REDIS=redis://127.0.0.1:6379/8"
-Environment="EENGINE_SECRET=your-secret-here"
-Environment="EENGINE_WORKERS=4"
-
-ExecStart=/usr/local/bin/emailengine
-Restart=always
-RestartSec=10
-
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=emailengine
-
-LimitNOFILE=65536
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-# Create user
-sudo useradd --system --home /opt/emailengine --shell /bin/false emailengine
-
-# Enable and start
-sudo systemctl daemon-reload
-sudo systemctl enable emailengine
-sudo systemctl start emailengine
-sudo systemctl status emailengine
-```
+Run the binary under SystemD so it starts at boot and restarts after a crash. The unit file, the service user, the environment file that carries `EENGINE_SECRET`, and the hardening directives are on [SystemD Service](/docs/deployment/systemd); the unit there expects the binary at `/usr/local/bin/emailengine`, which is where Step 3 put it.
 
 ### Upgrading Binary Installation
 
@@ -291,8 +222,8 @@ sudo systemctl status emailengine
 # Download latest
 wget https://go.emailengine.app/emailengine.tar.gz
 
-# Or download specific version (e.g., 2.79.4)
-wget https://go.emailengine.app/download/v2.79.4/emailengine.tar.gz
+# Or download specific version (e.g., 2.82.0)
+wget https://go.emailengine.app/download/v2.82.0/emailengine.tar.gz
 
 # Extract and replace
 tar xzf emailengine.tar.gz
@@ -317,7 +248,16 @@ For complete source installation instructions, including Node.js setup, SystemD 
 
 ### 1. Set Up Reverse Proxy with HTTPS
 
-For production, use Nginx or Caddy as a reverse proxy with automatic HTTPS. In the configurations below, `emailengine.example.com` is the public hostname and `localhost:3000` is EmailEngine itself, listening on the same machine.
+For production, put Nginx or Caddy in front of EmailEngine to terminate HTTPS. In both configurations `emailengine.example.com` is the public hostname and `localhost:3000` is EmailEngine itself, listening on the same machine.
+
+Whichever proxy you use, tell EmailEngine which peer may set `X-Forwarded-For`; otherwise a client that reaches port 3000 directly can pick its own source address, and the admin allowlist and per-token address restrictions cannot be relied on. Add to `/etc/emailengine/.env` from Step 4, or to the unit's environment:
+
+```bash
+EENGINE_API_PROXY=true
+EENGINE_API_PROXY_ADDRESSES=127.0.0.1,::1
+```
+
+See [Trusted Proxy Addresses](/docs/configuration/environment-variables#trusted-proxy-addresses). EmailEngine sends its own browser security headers, so the proxy adds none.
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -331,174 +271,9 @@ import TabItem from '@theme/TabItem';
 sudo apt install nginx
 ```
 
-#### Create Nginx Configuration
+#### Configure Nginx
 
-Create `/etc/nginx/sites-available/emailengine`:
-
-```nginx
-server {
-    listen 80;
-    server_name emailengine.example.com;
-
-    # Allow large email submissions with attachments
-    client_max_body_size 100M;
-    client_body_timeout 90s;
-
-    # EventSource endpoint for admin UI updates
-    location ~ ^/(admin|v1)/changes {
-        proxy_pass http://localhost:3000;
-
-        # Disable gzip for EventSource streaming
-        gzip off;
-
-        # HTTP/1.1 required for EventSource
-        proxy_http_version 1.1;
-        proxy_set_header Connection '';
-
-        # Disable buffering for real-time updates
-        proxy_buffering off;
-        proxy_cache off;
-
-        # Keep connection alive for long-polling
-        proxy_read_timeout 24h;
-
-        # Disable chunked encoding
-        chunked_transfer_encoding off;
-
-        # Standard proxy headers
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # All other requests
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # Timeouts for large uploads
-        proxy_connect_timeout 90s;
-        proxy_send_timeout 90s;
-        proxy_read_timeout 90s;
-    }
-}
-```
-
-Enable the configuration:
-
-```bash
-sudo ln -s /etc/nginx/sites-available/emailengine /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-#### Install and Configure acme.sh
-
-```bash
-# Install acme.sh
-curl https://get.acme.sh | sh -s email=admin@example.com
-
-# Reload shell to enable acme.sh
-source ~/.bashrc
-
-# Set Let's Encrypt as the default CA (instead of ZeroSSL)
-~/.acme.sh/acme.sh --set-default-ca --server letsencrypt
-
-# Create SSL directory
-sudo mkdir -p /etc/nginx/ssl
-
-# Issue certificate (Nginx mode)
-sudo ~/.acme.sh/acme.sh --issue -d emailengine.example.com --nginx
-
-# Install certificate to Nginx
-sudo ~/.acme.sh/acme.sh --install-cert -d emailengine.example.com \
-  --key-file /etc/nginx/ssl/emailengine.key \
-  --fullchain-file /etc/nginx/ssl/emailengine.crt \
-  --reloadcmd "systemctl reload nginx"
-```
-
-#### Update Nginx for HTTPS
-
-Edit `/etc/nginx/sites-available/emailengine` to add SSL configuration:
-
-```nginx
-server {
-    listen 80;
-    server_name emailengine.example.com;
-    return 301 https://$server_name$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name emailengine.example.com;
-
-    # SSL certificates
-    ssl_certificate /etc/nginx/ssl/emailengine.crt;
-    ssl_certificate_key /etc/nginx/ssl/emailengine.key;
-
-    # SSL security settings
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-    ssl_prefer_server_ciphers on;
-
-    # Allow large email submissions with attachments
-    client_max_body_size 100M;
-    client_body_timeout 90s;
-
-    # EventSource endpoint for admin UI updates
-    location ~ ^/(admin|v1)/changes {
-        proxy_pass http://localhost:3000;
-
-        # Disable gzip for EventSource streaming
-        gzip off;
-
-        # HTTP/1.1 required for EventSource
-        proxy_http_version 1.1;
-        proxy_set_header Connection '';
-
-        # Disable buffering for real-time updates
-        proxy_buffering off;
-        proxy_cache off;
-
-        # Keep connection alive for long-polling
-        proxy_read_timeout 24h;
-
-        # Disable chunked encoding
-        chunked_transfer_encoding off;
-
-        # Standard proxy headers
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # All other requests
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # Timeouts for large uploads
-        proxy_connect_timeout 90s;
-        proxy_send_timeout 90s;
-        proxy_read_timeout 90s;
-    }
-}
-```
-
-Reload Nginx:
-
-```bash
-sudo nginx -t
-sudo systemctl reload nginx
-```
+[Nginx Reverse Proxy](/docs/deployment/nginx-proxy) is the reference for the server block. Use its configuration as written: it carries the unbuffered locations that the `/v1/changes` event stream and the `/mcp` endpoint need, the body size limit for message uploads, the proxy headers, and the acme.sh steps that replace the bootstrap certificate with one from Let's Encrypt.
 
 </TabItem>
 <TabItem value="caddy" label="Caddy (Automatic HTTPS)">
@@ -527,27 +302,25 @@ emailengine.example.com {
         max_size 100MB
     }
 
-    # EventSource endpoints: the admin dashboard feed and the API change stream
-    @eventsource path /admin/changes /v1/changes
-    handle @eventsource {
+    # Streaming endpoints: the admin dashboard feed, the API change stream,
+    # and the MCP endpoint, which streams notifications to a subscribed agent
+    @streaming path /admin/changes /v1/changes /mcp
+    handle @streaming {
         reverse_proxy localhost:3000 {
-            # Disable buffering for EventSource streaming
+            # Disable buffering for event streams
             flush_interval -1
 
-            # Long timeout for EventSource
+            # Long timeout for open streams
             transport http {
                 read_timeout 24h
             }
         }
     }
 
-    # All other requests
+    # All other requests. Caddy sets X-Forwarded-For, X-Forwarded-Proto and
+    # X-Forwarded-Host itself and passes the Host header through
     reverse_proxy localhost:3000 {
-        # Standard headers
-        header_up Host {host}
-        header_up X-Real-IP {remote}
-        header_up X-Forwarded-For {remote}
-        header_up X-Forwarded-Proto {scheme}
+        header_up X-Real-IP {remote_host}
 
         # Timeouts for large uploads
         transport http {
@@ -567,7 +340,7 @@ sudo systemctl start caddy
 sudo systemctl status caddy
 ```
 
-Caddy will automatically obtain and renew SSL certificates from Let's Encrypt.
+Caddy obtains the certificate from Let's Encrypt on the first request for the hostname and renews it on its own.
 
 </TabItem>
 </Tabs>
@@ -604,53 +377,11 @@ redis-cli ping
 
 ## Performance Tuning
 
-### Optimize Redis
+Three pages cover tuning an installation, and nothing here differs from them:
 
-```bash
-sudo nano /etc/redis/redis.conf
-```
-
-```
-# Memory
-maxmemory-policy noeviction
-
-# Persistence
-save 900 1
-save 300 10
-save 60 10000
-
-# Performance
-tcp-backlog 511
-timeout 300
-tcp-keepalive 300
-
-# Limits
-maxclients 10000
-```
-
-### Optimize EmailEngine
-
-```bash
-# IMAP worker threads (default 4); see the performance tuning page for sizing
-EENGINE_WORKERS=8
-
-# Increase file descriptor limit
-# In service file:
-LimitNOFILE=65536
-```
-
-### Monitor Performance
-
-```bash
-# System resources
-sudo systemctl status emailengine | grep -E 'CPU|Memory'
-
-# Redis stats
-redis-cli INFO stats
-
-# Prometheus metrics (available on API port with metrics token)
-curl http://localhost:3000/metrics -H "Authorization: Bearer YOUR_METRICS_TOKEN"
-```
+- [Redis Configuration](/docs/configuration/redis) - memory policy, persistence, connection limits and keepalive settings for the Redis instance
+- [Performance Tuning](/docs/advanced/performance-tuning) - sizing `EENGINE_WORKERS` and the other worker counts, sub-connections, and the file descriptor limit in the service unit
+- [Monitoring](/docs/advanced/monitoring) - the Prometheus metrics on `/metrics`, which need a token with the `metrics` scope
 
 ## See Also
 
