@@ -61,7 +61,11 @@ emailengine encrypt --service.secret="your-secret" --dbs.redis="redis://localhos
 
 ## What encryption algorithm is used?
 
-EmailEngine uses **AES-256-GCM** (Advanced Encryption Standard with 256-bit keys in Galois/Counter Mode). The key is derived from `EENGINE_SECRET` with scrypt, using a 16-byte salt generated per value; each value also carries its own 12-byte IV and a 16-byte authentication tag. Tampering with a stored value is therefore detected on decryption rather than silently accepted.
+EmailEngine uses **AES-256-GCM** (Advanced Encryption Standard with 256-bit keys in Galois/Counter Mode). The key is derived from `EENGINE_SECRET` with PBKDF2-HMAC-SHA256 (600,000 iterations) and a random 16-byte salt; each value also carries its own 12-byte IV and a 16-byte authentication tag. Tampering with a stored value is therefore detected on decryption rather than silently accepted. Values written by earlier releases derived the key with scrypt and are still read; the [encryption page](/docs/advanced/encryption#rewriting-values-under-the-current-key-derivation) describes how to move them.
+
+## Does EmailEngine run on a FIPS-enabled host?
+
+Yes, when it runs on a Node.js that uses the host's OpenSSL with its FIPS provider, which is the case for npm and source installations on RHEL and its derivatives. EmailEngine uses only algorithms a FIPS provider allows (PBKDF2, AES-256-GCM, SHA-256, ES256 and RS256 passkeys) and has no FIPS mode of its own. The standalone binary and the Docker image bundle their own OpenSSL without a FIPS provider. An existing instance needs its stored values rewritten before the switch. See [FIPS Mode](/docs/deployment/fips-mode).
 
 ## What happens if Redis is compromised?
 

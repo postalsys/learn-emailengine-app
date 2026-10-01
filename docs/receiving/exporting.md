@@ -263,7 +263,7 @@ When `EENGINE_SECRET` is configured, export files are automatically encrypted us
 - Unencrypted files have `.ndjson.gz` extension
 - Downloads are automatically decrypted by EmailEngine
 
-This ensures exported data is protected at rest without requiring separate encryption handling.
+This ensures exported data is protected at rest without requiring separate encryption handling. The key is derived from `EENGINE_SECRET` with PBKDF2-HMAC-SHA256; a file created by an earlier release derived it with scrypt and still downloads wherever scrypt is available, which excludes a host in [FIPS mode](/docs/deployment/fips-mode).
 
 ## Webhooks
 

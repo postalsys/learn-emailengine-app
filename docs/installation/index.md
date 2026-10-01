@@ -105,7 +105,7 @@ Run in containers with Docker or Docker Compose.
 
 #### [Source Installation](/docs/installation/source)
 
-Run from source code (Node.js 20+ required, 24+ recommended).
+Run from source code (Node.js 20+ required, 24+ recommended). This is also the installation that runs in [FIPS mode](/docs/deployment/fips-mode) on a FIPS-enabled host.
 
 [View source guide →](/docs/installation/source)
 

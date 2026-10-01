@@ -481,5 +481,6 @@ journalctl -u emailengine -f
 - [Security](/docs/deployment/security) - What to lock down before going live
 - [TLS Certificates](/docs/deployment/tls-certificates) - Certificates for the listeners EmailEngine runs itself
 - [Compliance and data handling](/docs/deployment/compliance) - What EmailEngine stores and what it sends out
+- [FIPS mode](/docs/deployment/fips-mode) - Running on a host whose OpenSSL only allows FIPS-approved algorithms
 - [Monitoring](/docs/advanced/monitoring) - Health checks and metrics for a deployed instance
 - [Installation](/docs/installation) - Getting the software onto the host in the first place

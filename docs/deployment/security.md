@@ -512,6 +512,7 @@ Changing the admin password immediately deletes all registered passkeys for that
 **Security details:**
 
 - Only public keys are stored server-side - private keys never leave the authenticator device
+- Registration accepts ES256 (P-256) and RS256 keys, so a passkey works on a host whose OpenSSL runs in [FIPS mode](/docs/deployment/fips-mode)
 - Registration requires current password verification
 - Registration challenges expire after 5 minutes and are single-use
 - Maximum 20 passkeys per admin user
@@ -614,7 +615,7 @@ For full details on the environment variables, see [SSO Configuration](/docs/con
 
 EmailEngine encrypts all sensitive credentials using the [`EENGINE_SECRET`](#eengine_secret) environment variable. All account passwords, OAuth2 tokens, and application secrets are automatically encrypted before storage in Redis using AES-256-GCM.
 
-For detailed information on enabling encryption, migrating existing data, rotating secrets, and secret management best practices, see the [Secret Encryption](/docs/advanced/encryption) guide.
+For detailed information on enabling encryption, migrating existing data, rotating secrets, and secret management best practices, see the [Secret Encryption](/docs/advanced/encryption) guide. The key derivation and every other algorithm in use are ones a FIPS provider allows; see [FIPS Mode](/docs/deployment/fips-mode) for running on such a host.
 
 ### Encryption in Transit
 
@@ -947,3 +948,4 @@ Queue job entries are the other place message-derived data can linger. Completed
 - [Secret encryption](/docs/advanced/encryption) - Enabling and rotating `EENGINE_SECRET`
 - [Credential security FAQ](/docs/support/security-faq) - The questions this page gets asked about
 - [Nginx reverse proxy](/docs/deployment/nginx-proxy) - Terminating TLS in front of EmailEngine
+- [FIPS mode](/docs/deployment/fips-mode) - Running on a host whose OpenSSL only allows FIPS-approved algorithms

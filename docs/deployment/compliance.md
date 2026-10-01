@@ -232,6 +232,7 @@ Since EmailEngine is self-hosted software, compliance certifications (SOC 2, ISO
 |-------------|----------------------|
 | Encryption at rest | AES-256-GCM field encryption |
 | Encryption in transit | TLS support for all connections |
+| FIPS 140 | Only FIPS-approved algorithms, through the host's validated OpenSSL module on npm and source installations; see [FIPS Mode](/docs/deployment/fips-mode) |
 | Access control | API tokens, admin authentication, IP restrictions |
 | Audit logging | Structured JSON logs, configurable retention |
 | Data deletion | API endpoints for complete account removal |
@@ -266,5 +267,6 @@ The inventory is instance-wide rather than tied to an account, so this request n
 
 - [Security Best Practices](/docs/deployment/security) - Production security configuration
 - [Secret Encryption](/docs/advanced/encryption) - Enable field-level encryption
+- [FIPS Mode](/docs/deployment/fips-mode) - Running on a host whose OpenSSL only allows FIPS-approved algorithms
 - [Gmail OAuth2 Setup](/docs/accounts/gmail/gmail-imap) - Configure Gmail access
 - [Managing Accounts](/docs/accounts/managing-accounts) - Account lifecycle management

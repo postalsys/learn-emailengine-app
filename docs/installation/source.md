@@ -33,6 +33,8 @@ The figures on the [installation overview](/docs/installation#system-requirement
 - **Redis** - a stand-alone instance with `maxmemory-policy noeviction` and persistence enabled
 - **wget/curl** (for downloading release tarballs)
 
+A source or npm installation on the distribution's own Node.js is also the way to run EmailEngine on a host whose OpenSSL is in FIPS mode; see [FIPS Mode](/docs/deployment/fips-mode).
+
 ### Privileges
 
 EmailEngine does not require root or administrator privileges to run. You can run it as any unprivileged user (e.g., a dedicated `emailengine` user) on any unprivileged port (e.g., 3000).

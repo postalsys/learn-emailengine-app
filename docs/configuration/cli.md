@@ -711,6 +711,7 @@ Running it with neither option prints the usage text and changes nothing.
 2. **Disable encryption** (encrypted to plain text)
 3. **Re-encrypt** (change encryption key)
 4. **Migrate from multiple old keys**
+5. **Rewrite values under the current key derivation** (same key, values written by an earlier release)
 
 **Examples:**
 
@@ -749,6 +750,16 @@ emailengine encrypt \
   --decrypt="current-key" \
   --dbs.redis="redis://127.0.0.1:6379/8"
 ```
+
+**Rewrite values under the current key derivation:**
+
+```bash
+emailengine encrypt \
+  --service.secret="current-key" \
+  --dbs.redis="redis://127.0.0.1:6379/8"
+```
+
+A value whose key was derived with scrypt by an earlier release is rewritten with PBKDF2 even though the key is unchanged; a value already under the current derivation and key is left as it is. This is required before moving an instance to a host in [FIPS mode](/docs/deployment/fips-mode).
 
 The command reports each updated account, gateway, and OAuth2 app, and a value it cannot decrypt with any of the given secrets as `Check decryption secrets`.
 

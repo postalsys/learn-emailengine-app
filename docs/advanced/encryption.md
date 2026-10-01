@@ -303,6 +303,22 @@ emailengine encrypt \
 
 The tool will try each old secret until one works for each account.
 
+### Rewriting Values Under the Current Key Derivation
+
+Each stored value records how its key was derived, and EmailEngine reads every scheme it has ever written: PBKDF2-HMAC-SHA256 today, scrypt in earlier releases. A value stays under the scheme it was written with until something rewrites it. Saving an account's credentials or an OAuth2 token refresh does that for the record concerned; the `encrypt` command does it for everything at once, and it does so even when the secret stays the same:
+
+```bash
+emailengine encrypt \
+  --dbs.redis="redis://localhost:6379/8" \
+  --service.secret="current-secret"
+```
+
+Every rewritten record is reported the same way as during a rotation, and a value already under the current scheme and secret is left as it is. This is the step to take before moving an instance to a host whose OpenSSL runs in [FIPS mode](/docs/deployment/fips-mode), where scrypt is unavailable and a value still under it cannot be read.
+
+:::warning No rollback to a release that predates PBKDF2 derivation
+A release that does not know the PBKDF2 scheme reads a value written under it as cleartext, so an account would be handed its ciphertext as the password. Once a newer release has written values, downgrading breaks every credential it touched; restore the Redis backup taken before the upgrade instead.
+:::
+
 ## Disabling Encryption
 
 ### When to Disable
@@ -355,7 +371,9 @@ openssl rand -base64 32
 pwgen -s 64 1
 ```
 
-EmailEngine derives the AES-256 key from the secret with scrypt (Node.js defaults: N=16384, r=8, p=1) and a random 16-byte salt per stored value, and does not enforce a minimum length. Treat a 32-byte random value as the floor, and do not reuse the secret anywhere else.
+EmailEngine derives the AES-256 key from the secret with PBKDF2-HMAC-SHA256 over 600,000 iterations and a random 16-byte salt (drawn once per EmailEngine process and shared by the values that process writes; a value written earlier carries the salt it was written with), and does not enforce a minimum length. Treat a 32-byte random value as the floor, and do not reuse the secret anywhere else.
+
+Values encrypted by earlier releases derived the key with scrypt instead. They still decrypt, and are moved to PBKDF2 the next time they are saved or when the `encrypt` command rewrites them, see [Rewriting Values Under the Current Key Derivation](#rewriting-values-under-the-current-key-derivation).
 
 ### 2. Secret Rotation
 
@@ -539,4 +557,5 @@ If migration fails:
 - [CLI Reference](/docs/configuration/cli) - Full options for the `encrypt` command
 - [Security Hardening](/docs/deployment/security) - The other half of protecting an instance
 - [Compliance](/docs/deployment/compliance) - What EmailEngine stores, encrypted and not
+- [FIPS Mode](/docs/deployment/fips-mode) - Running on a host whose OpenSSL only allows FIPS-approved algorithms
 - [Redis Configuration](/docs/configuration/redis) - Persistence and access control for the store holding this data
