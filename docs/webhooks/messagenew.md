@@ -190,7 +190,7 @@ If `notifyCalendarEvents` is enabled and the message contains `text/calendar` or
 
 ### AI Fields
 
-`summary` is the JSON object the AI model returned for the message, and its contents depend on the configured instructions. See [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt#webhook-enhancement) for the properties the built-in instructions ask for. Before v2.82.0 the risk assessment was lifted out of it into a separate `riskAssessment` field and the request id, token count and model name were merged into it; since v2.82.0 the object is delivered as the model returned it, with `riskAssessment` inside. Releases before v2.82.0 could also add `embeddings`, vector embeddings of the message text, when `openAiGenerateEmbeddings` was on; that setting is still accepted but has no effect.
+`summary` is the JSON object the AI model returned for the message, and its contents depend on the configured instructions. Its `riskAssessment.risk` is held at the floor set by EmailEngine's own checks on the message, and `riskAssessment.signals` lists what they found. See [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt#webhook-enhancement) for the properties the built-in instructions ask for. Before v2.82.0 the risk assessment was lifted out of it into a separate `riskAssessment` field and the request id, token count and model name were merged into it; since v2.82.0 the object is delivered as the model returned it, with `riskAssessment` inside. Releases before v2.82.0 could also add `embeddings`, vector embeddings of the message text, when `openAiGenerateEmbeddings` was on; that setting is still accepted but has no effect.
 
 ## Example Payload
 

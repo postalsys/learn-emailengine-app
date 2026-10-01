@@ -44,7 +44,7 @@ _The AI Configuration section with the enable checkbox, API key field and model 
 
 ### Model Selection
 
-The dropdown is populated from your own API key: **Refresh Models** calls the model listing endpoint of the configured API, keeps the chat models of what came back, and stores them, so the choices are whatever that key can use. Until the first refresh, the dropdown offers a small built-in list; in EmailEngine 2.82.0 (October 2026) that list is GPT-6 Luna (`gpt-6-luna`), GPT-6 Sol, GPT-6 Astra, GPT-5.6 Luna, GPT-5.6 Terra, GPT-5.4 Mini, GPT-5.4 Nano and GPT-5 Mini. The form starts on **Default**, which follows the built-in default model across upgrades (`gpt-6-luna` in 2.82.0); pick a named entry to pin one.
+The model field is a search box: type any part of a name or an id and pick from the list, which shows a one-line note on each model and lists the recommended ones, the models that suit reading mail at the price of running on every message, first. **Refresh Models** calls the model listing endpoint of the configured API, keeps the chat models of what came back, and stores them, so the choices are whatever that key can use. Until the first refresh, the list is a small built-in one; in EmailEngine 2.82.0 (October 2026) that list is GPT-6 Luna (`gpt-6-luna`), GPT-6 Sol, GPT-6 Astra, GPT-5.6 Luna, GPT-5.6 Terra, GPT-5.4 Mini, GPT-5.4 Nano and GPT-5 Mini. The form starts on **Default**, which follows the built-in default model across upgrades (`gpt-6-luna` in 2.82.0); pick a named entry to pin one.
 
 A configuration that leaves `openAiModel` unset, through the Settings API or by keeping the form on Default, gets `gpt-6-luna`. Email processing is short-context classification and summarization rather than deep reasoning, so the smallest model in the list is the reasonable starting point; move up only if the summaries or the extracted fields are visibly worse than you need, and compare on your own mail.
 
@@ -196,9 +196,42 @@ Risk score from 1 to 5 (5 being highest risk), with the factors that raised it w
 }
 ```
 
-The score draws on the `authentication-results` header the receiving server added, which EmailEngine fetches for the summary whatever the `notifyHeaders` setting asks for. A message without one is scored as "authentication unknown", not as failed. The instructions also tell the model that the email is untrusted data, so a message that asks the model to change its analysis counts as a risk factor rather than as an instruction.
+The score is not left to the model alone. See [What the model sees, and what is checked first](#what-the-model-sees-and-what-is-checked-first) below: the risk cannot go below the floor set by EmailEngine's own checks, and `riskAssessment.signals` lists what they found, for example:
+
+```json
+{
+  "summary": {
+    "riskAssessment": {
+      "risk": 4,
+      "assessment": "Checks run on the message found: executableAttachment: \"invoice.pdf.exe\".",
+      "signals": ["executableAttachment", "replyToMismatch"]
+    }
+  }
+}
+```
 
 **Note**: AI is good at detecting scams but less effective with spam.
+
+### What the Model Sees, and What Is Checked First
+
+Incoming mail is untrusted input, and a sender can write text meant for the model rather than for the reader. Three things happen before and after the model's turn:
+
+- **Hidden text is removed.** Elements a mail client does not render (`display:none`, `visibility:hidden`, fonts below a pixel, near-zero opacity, the `hidden` attribute, scripts, styles, comments) are dropped before the HTML is converted, and zero-width and bidirectional control characters are removed. The model reads what the recipient sees. Content clients do show, such as Outlook's conditional comments, stays.
+- **Signals are collected in code**, on the full message, and passed to the model as facts it must not argue with. They are also applied as a floor on the risk score after the answer, so a message that talks the model into "risk 1" still scores a 4 when it carries an executable:
+
+| Signal | Floor | What it means |
+|--------|-------|---------------|
+| `executableAttachment` | 4 | An attachment that runs when opened, by extension (including double extensions such as `invoice.pdf.exe`) or by content type |
+| `lookalikeDomain` | 4 | A link to a domain that mixes scripts to imitate another, such as a Cyrillic letter inside `paypal.com`, in unicode or punycode |
+| `linkTargetMismatch` | 3 | Link text that names one host while the link goes to another, image alt text included |
+| `scriptableAttachment` | 3 | An HTML or SVG attachment, which a browser runs code from |
+| `displayNameAddressMismatch` | 3 | A display name that reads as an address on another domain than the sender's |
+| `authenticationFailed` | 3 | A verified SPF, DKIM or DMARC failure |
+| `replyToMismatch` | 2 | A Reply-To address on another domain than the sender's |
+
+- **Authentication results are verified before they count.** The topmost `Authentication-Results` header is parsed into an `authentication` block the model reads instead of the header text, with a `verified` flag. It is verified when the server that wrote it is known to be the one that received the message: Google's for Gmail mailboxes, Microsoft's for Microsoft 365 mailboxes (whose header carries no name, so it counts only when the topmost `Received` line is Microsoft's), and for any other mailbox a server listed in `openAiTrustedAuthservIds` (**Trusted authentication servers** on the AI page, each name covering the hosts under it). Nothing is trusted there by default: a message does not say whether its topmost header was written by the receiving server or arrived with it, so list a server only if it removes such headers sent by others before adding its own, as RFC 8601 asks. A header written by anyone else reaches the model as unverified, and the instructions say an unverified or missing verdict means unknown, not failed. EmailEngine fetches these headers for the summary whatever the `notifyHeaders` setting asks for.
+
+Hidden content that was removed is logged with the summary's usage, not shown to the model: marketing mail hides its preview text, and that is not a risk factor.
 
 ### Request Usage
 
@@ -219,7 +252,7 @@ Customize the AI analysis by editing the instructions, which EmailEngine sends a
 ![AI Instructions prompt editor](/img/screenshots/ai-prompt-editor.png)
 _The AI Instructions section holds the editable instructions_
 
-Whatever the instructions ask for is what `summary` carries. The properties of the built-in instructions are still normalized when they appear, so an instruction set that keeps `riskAssessment` but scores it on another scale sees the score clamped to 1 to 5; give such a property a new name instead.
+Whatever the instructions ask for is what `summary` carries. The properties of the built-in instructions are still normalized when they appear, so an instruction set that keeps `riskAssessment` but scores it on another scale sees the score clamped to 1 to 5; give such a property a new name instead. The signal floor applies whatever the instructions say.
 
 #### Example: Add Language Detection
 
@@ -275,6 +308,7 @@ Everything on the **Configuration > AI Processing** page is also settable throug
 | `openAiReasoningEffort` | Reasoning effort for reasoning models: `none`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`, of which each model family supports a subset. Unset sends `low` to a reasoning model and nothing to any other |
 | `openAiMaxTokens` | Token budget for the prompt, the instructions and the email together. The email text is cut to fit. Defaults to 30000 |
 | `openAiPreProcessingFn` | JavaScript filter deciding which messages are worth processing, see [below](#ai-pre-processing-filter-openaipreprocessingfn). Unset means every Inbox message is processed |
+| `openAiTrustedAuthservIds` | Mail servers whose `Authentication-Results` header the risk assessment may believe, for mailboxes on servers other than Gmail or Microsoft 365. See [What the model sees](#what-the-model-sees-and-what-is-checked-first) |
 
 Lowering `openAiMaxTokens` truncates long messages before they reach the model, which is the most direct lever on cost. `openAiPreProcessingFn` is the more selective one, since a message it rejects costs nothing at all.
 
