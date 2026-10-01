@@ -1,6 +1,6 @@
 ---
 title: Translations
-sidebar_position: 14
+sidebar_position: 7
 description: Configure language settings for public-facing pages and contribute translations
 ---
 
@@ -25,6 +25,12 @@ EmailEngine includes translations for the following languages:
 | Polish   | `pl`        |
 | Japanese | `ja`        |
 | Dutch    | `nl`        |
+| Swedish  | `sv`        |
+| Spanish  | `es`        |
+| Italian  | `it`        |
+| Turkish  | `tr`        |
+
+Swedish, Spanish, Italian and Turkish were added in EmailEngine v2.81.0.
 
 ## Language Selection
 
@@ -195,6 +201,6 @@ Validation error messages come from a separate package. Their translations are m
 ## See Also
 
 - [Hosted Authentication](/docs/accounts/hosted-authentication) - The public forms that translations apply to
-- [Virtual Mailing Lists](/docs/advanced/virtual-lists) - The hosted unsubscribe page, another localized public page
+- [Virtual Mailing Lists](/docs/sending/deliverability/suppression-lists) - The hosted unsubscribe page, another localized public page
 - [API Reference Overview](/docs/api-reference/#error-handling) - The shape of the validation errors that are translated
-- [Configuration Options](/docs/reference/configuration-options) - The `locale` setting among all the others
+- [Configuration Options](/docs/configuration/settings) - The `locale` setting among all the others

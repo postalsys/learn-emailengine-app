@@ -1,10 +1,10 @@
 ---
-title: Proxying IMAP Connections
-sidebar_position: 12
+title: IMAP Proxy Server
+sidebar_position: 13
 description: Use EmailEngine's IMAP proxy to access OAuth2 accounts without native OAuth2 support in your IMAP client
 ---
 
-# Proxying IMAP Connections
+# IMAP Proxy Server
 
 EmailEngine provides a built-in IMAP proxy interface that allows you to connect to OAuth2-protected accounts using standard IMAP clients that don't support OAuth2. This is particularly useful for scripts, legacy applications, and standard email clients.
 
@@ -170,10 +170,10 @@ telnet localhost 2143
 First, ensure you have an OAuth2 account configured in EmailEngine.
 
 **For Gmail:**
-[Follow Gmail OAuth2 setup guide](./gmail/gmail-imap)
+[Follow Gmail OAuth2 setup guide](/docs/accounts/gmail/gmail-imap)
 
 **For Outlook:**
-[Follow Outlook OAuth2 setup guide](./microsoft-365/outlook-365)
+[Follow Outlook OAuth2 setup guide](/docs/accounts/microsoft-365/outlook-365)
 
 :::important Must Use IMAP Backend
 The account must be configured to use **IMAP/SMTP**, not Gmail API or MS Graph API. The proxy only works with IMAP-based accounts.
@@ -496,6 +496,21 @@ A LOGIN user123 6cad01dae08f0d5e51fe0a4e0eda06e1be5b8d6cc2c66b95dc0fbe458576a026
 A NO [AUTHENTICATIONFAILED] Access denied, traffic not accepted from this IP
 ```
 
+### Login Refusals
+
+Every refusal is a tagged `NO` with a response code and one of these texts:
+
+| Response | Cause |
+|----------|-------|
+| `NO [AUTHENTICATIONFAILED] Failed to authenticate user` | The password matched neither the global password nor an access token. The same text is used whether the token is unknown or the account is, so a guess learns nothing from the difference |
+| `NO [AUTHENTICATIONFAILED] Access denied, invalid username` | The token is bound to a different account than the one given as the username |
+| `NO [AUTHENTICATIONFAILED] Access denied, invalid scope` | The token does not carry the `imap-proxy` scope |
+| `NO [AUTHENTICATIONFAILED] Access denied, traffic not accepted from this IP` | The token's address restriction does not include the client's address |
+| `NO [AUTHENTICATIONFAILED] Access denied, token permissions do not allow this` | The token carries a `permissions` record that withholds one of the grants an IMAP session needs: read, write and delete on messages, write and delete on mailboxes. The session is checked once at login, so a token narrowed below that is refused outright |
+| `NO [AUTHENTICATIONFAILED] Too many failed authentication attempts, try again later` | The [login budget](#connection-and-login-limits) for this client address is spent |
+| `NO [ACCOUNTDISABLED] IMAP is not supported for API-based accounts` | The account syncs through the Gmail API or Microsoft Graph, so there is no IMAP session to relay |
+| `NO [UNAVAILABLE] Invalid response: 503 Service Unavailable` | The text names the failure. The account's credentials come from an [authentication server](/docs/accounts/authentication-server) that is unreachable or answering `408`, `429` or `5xx`. Since v2.80.0 this is answered as a temporary failure rather than as a wrong password, so a mail client retries instead of asking the user to retype the token |
+
 ## Use Cases
 
 ### Legacy Application Integration
@@ -650,6 +665,19 @@ The arithmetic follows from that:
 - Every proxy session counts against the provider's per-account connection limit (15 simultaneous IMAP connections for Gmail)
 - The account's own sync connection counts too, and so does each configured sub-connection
 - A client that reconnects aggressively will hit the limit faster than one that keeps a session open
+
+### Connection and Login Limits
+
+| Limit | Value | Past the limit |
+|-------|-------|----------------|
+| Concurrent client connections | 1000 per instance, set with `EENGINE_IMAPPROXY_MAX_CLIENTS` or `[imap] maxClients` | A new connection is answered `* BYE Too many connections, try again later` and closed |
+| Failed logins | 20 per client address and username within 5 minutes, plus 100 per client address for passwords that are not 64-character hex tokens | The login is answered `NO [AUTHENTICATIONFAILED] Too many failed authentication attempts, try again later` for the rest of the window |
+| Literals per command | 32 | The command is refused. A command the connection's state does not allow is refused before any literal it announces is accepted, so an unauthenticated client cannot make the proxy buffer APPEND data |
+| PROXY protocol header | 10 seconds | With **Enable PROXY Protocol** on, a connection that has not sent the header by then is closed |
+
+Connections are counted from the moment they are accepted, before any login. The login budget is what makes the global password safe to offer: it is operator-chosen with no entropy requirement, and before the budget existed it could be guessed at the speed of a Redis lookup. A 64-character access token is not guessable at any rate the budget allows, which is why only non-token passwords count against the per-address budget.
+
+Version notes: the login budget arrived in v2.79.9; the connection cap, the literal cap and the PROXY header timeout in v2.82.0.
 
 ### Large-Scale Deployments
 

@@ -13,10 +13,10 @@ This repository contains the **unified Docusaurus documentation site** for Email
 
 **✅ Production Ready** - All documentation has been unified and cleaned up. The site is ready for deployment.
 
-- **137 authored documentation files** covering all EmailEngine features
-- **81 auto-generated API docs** from OpenAPI spec, plus an overview page
-- **~67,000 lines** of authored documentation
-- **Build status:** ✅ Passing (with minor non-critical anchor warnings)
+- **139 authored documentation files** covering all EmailEngine features
+- **82 auto-generated API docs** from OpenAPI spec, plus an overview page
+- **~58,000 lines** of authored documentation
+- **Build status:** ✅ Passing (zero warnings after the 2026-10-01 review)
 
 ## Editorial Model: MDN
 
@@ -441,22 +441,22 @@ docs/
 ├── index.md                 # Landing page
 ├── getting-started/         # 2 files - Introduction, quick start
 ├── installation/            # 6 files - Platform-specific install guides
-├── accounts/                # 19 files - Gmail, Outlook, OAuth2, service accounts
-├── sending/                 # 13 files - Basic sending, mail merge, threading, templates
-├── receiving/               # 10 files - Messages, searching, attachments, web safe HTML
-├── webhooks/                # 26 files - Overview, routing, per-event payload docs
+├── accounts/                # 18 files - Gmail, Outlook, OAuth2, service accounts, hosted auth
+├── sending/                 # 17 files - Basic sending, mail merge, threading, templates, SMTP server, gateways, deliverability/
+├── receiving/               # 13 files - Messages, searching, attachments, web safe HTML, IDs, AI processing, IMAP proxy
+├── webhooks/                # 27 files - Overview, routing, pre-processing, per-event payload docs
 ├── mcp/                     # 5 files  - MCP endpoint for AI agents: overview, connecting, tools, access control, protocol
-├── configuration/           # 10 files - Environment variables, Redis, settings
-├── api-reference/           # 7 files - Overview, tokens, accounts, messages, sending, webhooks, OpenAPI
-├── integrations/            # 5 files - PHP, CRM, AI/ChatGPT, low-code
-├── advanced/                # 14 files - Performance, monitoring, encryption, IDs
-├── deployment/              # 7 files - Docker, SystemD, Render, Nginx, security
-├── reference/               # 6 files - Webhook events, error codes, config options, llm-context.md
+├── configuration/           # 11 files - Environment variables, settings reference, CLI, Redis, prepared settings
+├── api-reference/           # 8 files - Overview, tokens, accounts, messages, sending, webhooks, OpenAPI, error codes
+├── integrations/            # 4 files - PHP, CRM, low-code
+├── advanced/                # 4 files  - Operations: performance, logging, monitoring, queues (sidebar label "Operations")
+├── deployment/              # 11 files - Kubernetes, SystemD, Render, Nginx, TLS, security, admin auth, encryption, compliance, FIPS
+├── reference/               # 4 files - Webhook events, glossary, quick reference, llm-context.md
 ├── troubleshooting/         # 1 file  - Common problems and fixes
 ├── licensing/               # 1 file  - License and privacy
 ├── comparison/              # 2 files - EmailEngine vs Nylas, vs Unipile
 ├── support/                 # 2 files - Support channels, security FAQ
-└── api/                     # 80 auto-generated OpenAPI docs (DO NOT EDIT)
+└── api/                     # 82 auto-generated OpenAPI docs (DO NOT EDIT)
 
 static/
 ├── capabilities.json        # Machine-readable API capabilities (for AI agents)
@@ -494,11 +494,11 @@ EmailEngine provides shortened download URLs that redirect to the latest GitHub 
 
 | File                          | Short URL (Latest)                             | Versioned URL Format                                            | Full GitHub URL                                                                       |
 | ----------------------------- | ---------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **macOS PKG (Intel)**         | https://go.emailengine.app/emailengine.pkg     | https://go.emailengine.app/download/v2.79.5/emailengine.pkg     | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.pkg     |
-| **macOS PKG (Apple Silicon)** | https://go.emailengine.app/emailengine-arm.pkg | https://go.emailengine.app/download/v2.79.5/emailengine-arm.pkg | https://github.com/postalsys/emailengine/releases/latest/download/emailengine-arm.pkg |
-| **Linux Binary (tar.gz)**     | https://go.emailengine.app/emailengine.tar.gz  | https://go.emailengine.app/download/v2.79.5/emailengine.tar.gz  | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz  |
-| **Source Distribution**       | https://go.emailengine.app/source-dist.tar.gz  | https://go.emailengine.app/download/v2.79.5/source-dist.tar.gz  | https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz  |
-| **Windows Executable**        | https://go.emailengine.app/emailengine.exe     | https://go.emailengine.app/download/v2.79.5/emailengine.exe     | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.exe     |
+| **macOS PKG (Intel)**         | https://go.emailengine.app/emailengine.pkg     | https://go.emailengine.app/download/v2.82.0/emailengine.pkg     | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.pkg     |
+| **macOS PKG (Apple Silicon)** | https://go.emailengine.app/emailengine-arm.pkg | https://go.emailengine.app/download/v2.82.0/emailengine-arm.pkg | https://github.com/postalsys/emailengine/releases/latest/download/emailengine-arm.pkg |
+| **Linux Binary (tar.gz)**     | https://go.emailengine.app/emailengine.tar.gz  | https://go.emailengine.app/download/v2.82.0/emailengine.tar.gz  | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.tar.gz  |
+| **Source Distribution**       | https://go.emailengine.app/source-dist.tar.gz  | https://go.emailengine.app/download/v2.82.0/source-dist.tar.gz  | https://github.com/postalsys/emailengine/releases/latest/download/source-dist.tar.gz  |
+| **Windows Executable**        | https://go.emailengine.app/emailengine.exe     | https://go.emailengine.app/download/v2.82.0/emailengine.exe     | https://github.com/postalsys/emailengine/releases/latest/download/emailengine.exe     |
 
 **Download URL Formats:**
 
@@ -510,7 +510,7 @@ EmailEngine provides shortened download URLs that redirect to the latest GitHub 
 
 2. **Specific version (when version pinning is needed):**
    - Format: `https://go.emailengine.app/download/vX.X.X/<filename>`
-   - Example: `https://go.emailengine.app/download/v2.79.5/emailengine.exe`
+   - Example: `https://go.emailengine.app/download/v2.82.0/emailengine.exe`
    - Downloads a specific release version
 
 **Important Notes:**
@@ -554,7 +554,7 @@ The `sources/` directory contains original reference materials used to create th
 
 - **`sources/swagger.json`** - EmailEngine OpenAPI 3.0.0 specification (auto-updated on build)
 
-  - Published spec: 60 paths, 83 operations, all under `/v1`. After `update-swagger` strips the excluded Document Store tag, the local copy has 58 paths and 81 operations
+  - Published spec (2.82.0): 58 paths, 82 operations, all under `/v1`. The Document Store endpoints left the spec in 2.82.0, so `update-swagger` no longer strips anything; its tag filter stays as a guard
   - Auto-downloaded from https://go.emailengine.app/swagger.json during build
   - Used to generate `docs/api/` content (81 endpoint files)
   - Documented for end users in `docs/api-reference/openapi-spec.md`
@@ -602,7 +602,7 @@ The EmailEngine application source code is located at `/Users/andris/Projects/em
 ```
 /Users/andris/Projects/emailengine/
 ├── server.js                 # Main server entry point (110KB - core application)
-├── package.json              # Application metadata (v2.79.5)
+├── package.json              # Application metadata (v2.82.0)
 ├── lib/                      # Core library modules
 │   ├── account.js           # Account management logic (106KB)
 │   ├── schemas.js           # API validation schemas (78KB)
@@ -614,10 +614,8 @@ The EmailEngine application source code is located at `/Users/andris/Projects/em
 │   ├── autodetect-imap-settings.js  # IMAP autodiscovery (23KB)
 │   ├── bounce-detect.js     # Bounce detection (25KB)
 │   ├── arf-detect.js        # ARF (Abuse Report Format) detection
-│   ├── es.js                # Elasticsearch integration (19KB)
 │   ├── gateway.js           # SMTP gateway functionality
 │   ├── templates.js         # Email template management
-│   ├── threads.js           # Email threading logic
 │   ├── tokens.js            # API token management (10KB)
 │   ├── settings.js          # Application settings (9KB)
 │   ├── metrics-collector.js # Metrics and monitoring (7KB)
@@ -708,7 +706,7 @@ When documenting EmailEngine features:
 
 ### Important Notes
 
-- The source code is actively developed - check version in `package.json` (currently v2.79.5)
+- The source code is actively developed - check version in `package.json` (currently v2.82.0)
 - OpenAPI spec is generated from this codebase - available at https://go.emailengine.app/swagger.json
 - Web UI templates in `views/` use Handlebars templating
 - Background workers use Bull queues (BullMQ) for job processing
@@ -1001,7 +999,7 @@ This documentation was created by:
 
 ---
 
-**Last Updated:** August 26, 2026
+**Last Updated:** October 1, 2026
 **Docusaurus Version:** 3.9.2
-**EmailEngine API Version:** 2.79.5
+**EmailEngine API Version:** 2.82.0
 **Status:** Production Ready

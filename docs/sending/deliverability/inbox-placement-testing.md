@@ -1,6 +1,6 @@
 ---
 title: Inbox Placement Testing
-sidebar_position: 10
+sidebar_position: 3
 description: Track whether emails land in inbox or spam folder by monitoring seed mailboxes with EmailEngine's sub-connections feature
 keywords:
   - inbox placement
@@ -16,7 +16,7 @@ keywords:
 Measure deliverability by registering seed mailboxes with EmailEngine, sending to them, and reading back where each message landed: the inbox, the spam folder, and for Gmail which category tab.
 
 :::info Placement is not authentication
-This page is about where a message ends up. EmailEngine's delivery test (`POST /v1/delivery-test/account/{account}` and `GET /v1/delivery-test/check/{deliveryTest}`) checks SPF, DKIM and DMARC on a message you send to a test address. That is covered on [Email Authentication Testing](/docs/advanced/email-authentication-testing).
+This page is about where a message ends up. EmailEngine's delivery test (`POST /v1/delivery-test/account/{account}` and `GET /v1/delivery-test/check/{deliveryTest}`) checks SPF, DKIM and DMARC on a message you send to a test address. That is covered on [Email Authentication Testing](/docs/sending/deliverability/email-authentication-testing).
 :::
 
 ## Overview
@@ -438,7 +438,7 @@ function generateDeliveryReport(stats) {
 ## See Also
 
 - [Performance tuning](/docs/advanced/performance-tuning#sub-connections-for-selected-folders) - Which sub-connection paths EmailEngine accepts and what a disabled entry means
-- [Email authentication testing](/docs/advanced/email-authentication-testing) - The delivery test endpoints for SPF, DKIM and DMARC
+- [Email authentication testing](/docs/sending/deliverability/email-authentication-testing) - The delivery test endpoints for SPF, DKIM and DMARC
 - [messageNew webhook](/docs/webhooks/messagenew) - The payload the test reads `path` and `category` from
 - [Gmail via IMAP](/docs/accounts/gmail/gmail-imap) - Connecting a Gmail seed account over IMAP
 - [Managing accounts](/docs/accounts/managing-accounts#enable-sub-connections) - Changing `subconnections` on an existing account

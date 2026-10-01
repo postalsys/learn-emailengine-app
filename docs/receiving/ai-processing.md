@@ -1,16 +1,16 @@
 ---
-title: AI and ChatGPT Integration
-sidebar_position: 8
-description: Complete guide to integrating AI and ChatGPT with EmailEngine for email processing, summarization, and conversational search
+title: AI Processing
+sidebar_position: 12
+description: How EmailEngine sends incoming mail to an OpenAI-compatible model for summaries, sentiment, events, actions and a risk score, and what the messageNew payload then carries
 ---
 
-# AI and ChatGPT Integration
+# AI Processing
 
-Learn how to enhance your email workflows with artificial intelligence using EmailEngine's OpenAI/ChatGPT integration capabilities.
+EmailEngine can send each new Inbox message to an OpenAI-compatible model and attach what the model returns to the `messageNew` webhook. This page documents the feature, the settings behind it, and the checks that run before and after the model's turn.
 
 ## Overview
 
-EmailEngine integrates with OpenAI's API to provide AI-powered email processing capabilities:
+With AI processing on, every new Inbox message is summarized by the configured model:
 
 - **Email Summarization**: Generate concise summaries of incoming emails
 - **Sentiment Analysis**: Detect positive, neutral, or negative sentiment
@@ -23,11 +23,11 @@ EmailEngine integrates with OpenAI's API to provide AI-powered email processing 
 This page is about EmailEngine calling a model to process incoming mail. If you want the opposite - an AI assistant calling EmailEngine to search, read and send mail on demand - see [MCP for AI Agents](/docs/mcp).
 :::
 
-### OpenAI API Access
+### Requirements
 
-- An OpenAI API key, or a key for an OpenAI-compatible endpoint. The **API Endpoint** field (`openAiAPIUrl`) points EmailEngine at Azure OpenAI or a compatible gateway instead of `https://api.openai.com`
+An OpenAI API key, or a key for an OpenAI-compatible endpoint. The **API Endpoint** field (`openAiAPIUrl`) points EmailEngine at Azure OpenAI or a compatible gateway instead of `https://api.openai.com`. Both the key and the endpoint are among the settings refused to a narrowed access token, so only a full `api` credential or the admin interface can change where the key is sent.
 
-## Feature 1: Email Processing and Summarization
+## Email Processing and Summarization
 
 ### Enable AI Processing
 
@@ -231,11 +231,11 @@ Incoming mail is untrusted input, and a sender can write text meant for the mode
 
 - **Authentication results are verified before they count.** The topmost `Authentication-Results` header is parsed into an `authentication` block the model reads instead of the header text, with a `verified` flag. It is verified when the server that wrote it is known to be the one that received the message: Google's for Gmail mailboxes, and Microsoft's for Microsoft 365 mailboxes (whose header carries no name, so it counts only when the topmost `Received` line is Microsoft's). For a mailbox on any other server the header reaches the model as unverified, because a message does not say whether its topmost header was written by the receiving server or arrived with it, and the instructions say an unverified or missing verdict means unknown, not failed. EmailEngine fetches these headers for the summary whatever the `notifyHeaders` setting asks for.
 
-Hidden content that was removed is logged with the summary's usage, not shown to the model: marketing mail hides its preview text, and that is not a risk factor.
+Hidden content that was removed is not shown to the model and does not raise the score: marketing mail hides its preview text, and that is not a risk factor. It is reported as a `hiddenContent` signal in the log entry described below, so an operator can see when it happened.
 
 ### Request Usage
 
-What each request cost is not part of the webhook payload. EmailEngine logs it at the `info` level for every summary it generated, as the `usage` object of a `Generated email summary` entry: the request id, the model requested and the one the API reports it served, the total, prompt and completion token counts, the request time in milliseconds and how many characters were cut from the text to fit the token budget. The same counts feed two Prometheus counters on `/metrics`: `ai_requests` by `model` and `status` (`success` or `failure`), and `ai_tokens` by `model` and `type` (`prompt` or `completion`).
+What each request cost is not part of the webhook payload. EmailEngine logs it at the `info` level for every summary it generated, as the `usage` object of a `Generated email summary` entry: the request id, the model requested and the one the API reports it served, the total, prompt and completion token counts, the request time in milliseconds and how many characters were cut from the text to fit the token budget. The same entry carries `signals`, every check that fired on the message with its floor, including the ones that carry no floor and never reach the model. The counts feed two Prometheus counters on `/metrics`: `ai_requests` by `model` and `status` (`success` or `failure`), and `ai_tokens` by `model` and `type` (`prompt` or `completion`). Test runs from the AI Processing page are not counted.
 
 Before v2.82.0 the request id, token count and model name were merged into the `summary` object itself as `id`, `tokens` and `model`. A handler that read them from there reads the log or the metrics instead.
 
@@ -308,6 +308,7 @@ Everything on the **Configuration > AI Processing** page is also settable throug
 | `openAiReasoningEffort` | Reasoning effort for reasoning models: `none`, `minimal`, `low`, `medium`, `high`, `xhigh` or `max`, of which each model family supports a subset. Unset sends `low` to a reasoning model and nothing to any other |
 | `openAiMaxTokens` | Token budget for the prompt, the instructions and the email together. The email text is cut to fit. Defaults to 30000 |
 | `openAiPreProcessingFn` | JavaScript filter deciding which messages are worth processing, see [below](#ai-pre-processing-filter-openaipreprocessingfn). Unset means every Inbox message is processed |
+| `openAiGenerateEmbeddings` | Deprecated. Embeddings generation was removed in v2.82.0; the key is still accepted and dropped so an older client keeps working |
 
 Lowering `openAiMaxTokens` truncates long messages before they reach the model, which is the most direct lever on cost. `openAiPreProcessingFn` is the more selective one, since a message it rejects costs nothing at all.
 
@@ -376,9 +377,9 @@ Which field drives which workflow:
 
 The model does not always populate every field. Treat each one as optional and fall back to your existing routing when it is missing, since an OpenAI outage or a rate limit leaves the message delivered but unenriched. See [Handling Failures](#handling-failures).
 
-### 6. Smart Email Search Assistant
+### Conversational search (removed)
 
-Removed. The `POST /v1/chat/{account}` endpoint and the Document Store it drew its answers from were removed in EmailEngine v2.82.0; the last release that includes them is v2.81.2. For conversational access to a mailbox, connect an assistant through [MCP for AI Agents](/docs/mcp), which searches and reads the live mailbox instead of an index.
+The `POST /v1/chat/{account}` endpoint and the Document Store it drew its answers from were removed in EmailEngine v2.82.0; the last release that includes them is v2.81.2. For conversational access to a mailbox, connect an assistant through [MCP for AI Agents](/docs/mcp), which searches and reads the live mailbox instead of an index.
 
 ## Privacy and Compliance
 
@@ -441,7 +442,7 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
 
 ### Filter Function Structure
 
-The filter function receives the message itself as `payload`, not a webhook envelope: the message fields sit at the top level next to `payload.account`, so it is `payload.from` and `payload.subject` here, where a [webhook filter](/docs/advanced/pre-processing) would read `payload.data.from`. Return a truthy value to allow AI processing:
+The filter function receives the message itself as `payload`, not a webhook envelope: the message fields sit at the top level next to `payload.account`, so it is `payload.from` and `payload.subject` here, where a [webhook filter](/docs/webhooks/pre-processing) would read `payload.data.from`. Return a truthy value to allow AI processing:
 
 ```javascript
 // payload is the new message, with the account ID added
@@ -585,7 +586,7 @@ The filter function runs in the same execution context as other pre-processing f
 - Filesystem or system helpers are not provided
 
 :::warning Not a security sandbox
-Filter and pre-processing functions run on Node's `vm` module, which is an isolation convenience, **not** a hardened security boundary - code executed here can reach the host process and runs with full server privileges. Only enable and author functions you fully trust; never expose function authoring to untrusted users. See [Execution Environment](/docs/advanced/pre-processing#execution-environment).
+Filter and pre-processing functions run on Node's `vm` module, which is an isolation convenience, **not** a hardened security boundary - code executed here can reach the host process and runs with full server privileges. Only enable and author functions you fully trust; never expose function authoring to untrusted users. See [Execution Environment](/docs/webhooks/pre-processing#execution-environment).
 :::
 
 ### Debugging Filters
@@ -645,6 +646,6 @@ Per account, the log entry `Generated email summary` carries the account, the me
 ## See Also
 
 - [MCP for AI agents](/docs/mcp) - The opposite direction: an agent calling EmailEngine
-- [Pre-processing functions](/docs/advanced/pre-processing) - Filtering which messages reach a model
+- [Pre-processing functions](/docs/webhooks/pre-processing) - Filtering which messages reach a model
 - [Webhooks overview](/docs/webhooks/overview) - Where the enriched payload arrives
 - [Compliance and data handling](/docs/deployment/compliance) - What leaves the instance when AI processing is on

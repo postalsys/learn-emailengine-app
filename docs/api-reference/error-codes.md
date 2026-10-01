@@ -1,7 +1,7 @@
 ---
 title: Error Codes Reference
 description: Complete reference of API error codes and troubleshooting guidance
-sidebar_position: 2
+sidebar_position: 8
 ---
 
 # Error Codes Reference
@@ -27,11 +27,13 @@ Every API error is a JSON body in this shape:
 | `error` | string | HTTP status phrase, such as `Not Found` |
 | `message` | string | Human-readable reason for the failure |
 | `code` | string | Machine-readable error code. Present only for the failures listed under [EmailEngine Error Codes](#emailengine-error-codes) and [Provider-Mapped Codes](#provider-mapped-codes) |
-| `fields` | array | Validation failures only: one `{message, key}` entry per rejected input |
+| `fields` | array | Validation failures only: one `{message, key, path}` entry per rejected input. `path` is the dotted path of a nested field, such as `to.0.address`, and the same as `key` for a top-level one (since v2.79.8) |
 | `state` | string | Account-state failures (`503`) only: the account's current state |
 | `ttl` | number | Rate limit responses (`429`) only: seconds until the window resets |
 | `requestedScope` | string | Scope refusals (`403`) only: the scope the route required |
-| `details`, `info` | object or array | Extra context a few routes attach, such as delivery test results or the IMAP server's response to a mailbox operation |
+| `info` | object | Extra context a few failures attach, most often `info.response` with the mail server's own answer when it refused a mailbox operation |
+| `details` | object or array | Extra context a few routes attach, such as delivery test results |
+| `existingAccount` | string | `AccountAlreadyExists` only: the account the OAuth2 user is already bound to |
 
 :::warning `error` is the status text, not the reason
 Show and log `message`. The `error` field only repeats the HTTP status phrase, so a handler that reports `error` tells the operator "Bad Request" instead of what was actually wrong.
@@ -63,12 +65,41 @@ The request itself is wrong: a missing or malformed field, invalid JSON, or an o
   "error": "Bad Request",
   "message": "Invalid input",
   "fields": [
-    { "message": "\"account\" is required", "key": "account" }
+    { "message": "\"account\" is required", "key": "account", "path": "account" }
   ]
 }
 ```
 
 Input validation failures carry a `fields` array naming each rejected input, and no `code`. Read `fields` to report the specific problem back to the caller. An invalid recipient list or a submit call with no recipients is rejected this way, not with a dedicated code.
+
+**Mail server refused the operation:**
+
+When an IMAP server answers `NO` to a mailbox operation (creating, renaming or deleting a folder, reading the quota), the request was well formed and the server refused it, and the answer is a `400` with no `fields`. `code` is the IMAP response code the server sent, such as `ALREADYEXISTS`, `NONEXISTENT`, `CANNOT` or `LIMIT`, or `DeleteFailed` / `RenameFailed` when the server sent none, and `info.response` carries the server's text:
+
+```json
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Delete failed",
+  "code": "CANNOT",
+  "info": {
+    "response": "Mailbox has inferior hierarchical names"
+  }
+}
+```
+
+**Other 400 codes:**
+
+| Code | When |
+|------|------|
+| `InvalidId` | A message, attachment or text identifier that cannot be decoded. Since v2.79.8; before that such an identifier answered `500` |
+| `InvalidCursorType`, `InvalidCursorValue` | A paging cursor issued for a different account type, or one that cannot be parsed |
+| `UnsupportedSearchTerm` | Gmail API and MS Graph accounts: a search field the provider cannot filter on |
+| `UnsupportedOperation` | An operation this account type has no equivalent for, such as replacing the whole label set on a Gmail API account, or submitting a stored draft on an account type that cannot |
+| `MessageNotDraft` | `POST /v1/account/{account}/message/{message}/submit` on a message that is not a draft |
+| `ReferenceNotSupported` | A reply or forward `reference` on a send-only account |
+| `InvalidInput` | Gmail API accounts: a `page` number instead of a cursor |
+| `ForceRequired` | `DELETE /v1/templates/account/{account}` without `force=true` |
 
 **OAuth2 user already bound:**
 
@@ -132,6 +163,9 @@ The token is valid but is not allowed to do this. A 403 carries a descriptive `m
 | `Unauthorized account` | The token is bound to a different account |
 | `Unauthorized address` | The caller's IP is not in the token's address restrictions |
 | `Unauthorized referrer` | The `Referer` header is not in the token's referrer restrictions |
+| `A token with restricted permissions can not change ...` (or `read ...`) | `GET` or `POST /v1/settings` named a [privileged setting](/docs/configuration/settings#settings-a-narrowed-token-cannot-touch) with a token that has a `permissions` record. The message lists the keys. Since v2.80.1 |
+| `The new token would be less restricted than the token creating it: ...` | `POST /v1/tokens` asked for an address or referrer allowlist, a rate limit or an expiry wider than the calling token's own. Carries the code `MintWidensRestrictions`. Since v2.82.0 |
+| `OAuth2 request failed` | Gmail API and MS Graph accounts: the provider answered `401` to a request made with a freshly renewed access token. Carries the code `OAuthTokenRejected` |
 
 ```json
 {
@@ -142,7 +176,7 @@ The token is valid but is not allowed to do this. A 403 carries a descriptive `m
 }
 ```
 
-The license endpoints also answer 403 when the operation fails: `GET /v1/license` when license information cannot be loaded, `POST /v1/license` when the key is invalid or expired, and `DELETE /v1/license` when the key cannot be removed.
+The license endpoints also answer 403 when the operation fails: `GET /v1/license` when license information cannot be loaded, `POST /v1/license` when the key is invalid or expired, and `DELETE /v1/license` when the key cannot be removed. The exact message of a 403 is the only thing to match on apart from the two codes above; the table shows the messages as the source produces them.
 
 ---
 
@@ -158,7 +192,7 @@ The addressed entity does not exist. A missing account is a plain 404 with no `c
 }
 ```
 
-A missing message, folder, template, webhook route, OAuth2 application or gateway carries a `code`:
+So is a missing SMTP gateway (`Gateway "x" was not found`). A missing message, folder, template, webhook route or OAuth2 application carries a `code`:
 
 ```json
 {
@@ -169,7 +203,7 @@ A missing message, folder, template, webhook route, OAuth2 application or gatewa
 }
 ```
 
-`SMTPUnavailable` is also a 404: the account has no SMTP or OAuth2 configuration to send with.
+Two more 404 codes come from a submission rather than from the path: `ReferenceNotFound` when the message a reply or forward refers to no longer exists, and `TemplateNotFound` when `template` names a template that does not exist or belongs to another account. `SMTPUnavailable` is also a 404: the account has no SMTP or OAuth2 configuration to send with. On MS Graph accounts, a delete that cannot find the Deleted Items folder answers `TrashNotFound`.
 
 ---
 
@@ -255,7 +289,13 @@ An error the handler did not classify. The body is the generic Boom message; a `
 }
 ```
 
-Retry after a delay, then check the EmailEngine log for the request.
+Retry after a delay, then check the EmailEngine log for the request. Three configuration faults surface this way with a `code` and no better status: `AppNotFound` (the OAuth2 application the account references was deleted or disabled), `InvalidBaseScopes` (that application is registered for the API rather than for IMAP) and `MissingServiceURLSetup` (`POST /v1/authentication/form` while `serviceUrl` is unset).
+
+---
+
+#### 502 Bad Gateway
+
+The IMAP server rejected an `APPEND` while `POST /v1/account/{account}/message` was uploading a message, after the target folder was confirmed to exist. The body carries the code `UploadFail` and the IMAP client's message for the failed command. A folder that does not exist is a `404` instead.
 
 ---
 
@@ -281,6 +321,7 @@ The account is not in a state that can serve the request. The body carries the a
 | `NotSyncing` | `unset` | Syncing is switched off, by the operator or by the [authentication-failure safety net](/docs/configuration/environment-variables#max-imap-auth-failure-time). Check `authFailureDisabledAt` on the account |
 | `NoAvailable` | other | The account is disconnected or paused |
 | `IMAPUnavailable` | any | The account's IMAP connection is not up right now. Retry shortly |
+| `WorkerNotAvailable` | any | No worker thread holds the account (`No active handler for requested account`), or the one that did terminated mid-request. No `state` field. Retry |
 
 ---
 
@@ -303,41 +344,51 @@ A slow IMAP server on a large mailbox is the usual cause. Raise `EENGINE_TIMEOUT
 
 ## EmailEngine Error Codes
 
-Every `code` the API itself puts in an error body:
+Every `code` the API itself puts in an error body, by status:
 
 | Code | Status | When |
 |------|--------|------|
 | `AccountAlreadyExists` | 400 | The OAuth2 user is already bound to another account under the same OAuth2 application; the body names it in `existingAccount` |
+| `InvalidId` | 400 | A message, attachment or text identifier that cannot be decoded (since v2.79.8) |
+| `InvalidCursorType`, `InvalidCursorValue` | 400 | A paging cursor from another account type, or one that cannot be parsed |
+| `UnsupportedSearchTerm` | 400 | Gmail API or MS Graph cannot filter on a field the search named |
+| `UnsupportedOperation` | 400 | The account type has no such operation |
+| `MessageNotDraft` | 400 | The message submitted from the mailbox is not a draft |
+| `ReferenceNotSupported` | 400 | A reply or forward reference on a send-only account |
+| `InvalidInput` | 400 | Gmail API accounts: a `page` number instead of a cursor |
+| `ForceRequired` | 400 | Flushing an account's templates without `force=true` |
+| `ALREADYEXISTS`, `NONEXISTENT`, `CANNOT`, `LIMIT` and other IMAP response codes, `DeleteFailed`, `RenameFailed` | 400 | The IMAP server refused a mailbox operation; `info.response` carries its text |
+| `MintWidensRestrictions` | 403 | `POST /v1/tokens` asked for restrictions wider than the calling token's (since v2.82.0) |
+| `OAuthTokenRejected` | 403 | The provider rejected a freshly renewed access token |
 | `AccountNotFound` | 404 | Export endpoints only: the account does not exist |
 | `MessageNotFound` | 404 | The message ID does not exist in the mailbox |
 | `FolderNotFound` | 404 | The mailbox path does not exist |
-| `NotFound` | 404 | The template, webhook route, OAuth2 application or gateway does not exist |
+| `ReferenceNotFound` | 404 | The message a reply or forward refers to does not exist |
+| `TemplateNotFound` | 404 | A submission names a template that does not exist or belongs to another account |
+| `TrashNotFound` | 404 | MS Graph accounts: the Deleted Items folder cannot be resolved |
+| `NotFound` | 404 | The template, webhook route or OAuth2 application does not exist |
 | `SMTPUnavailable` | 404 | The account has no SMTP or OAuth2 configuration to send with |
 | `MissingServerExtension` | 422 | The IMAP server lacks an extension the operation needs |
+| `AppNotFound`, `InvalidBaseScopes`, `MissingServiceURLSetup` | 500 | A configuration fault: a missing or disabled OAuth2 application, one registered for the wrong connection type, or no `serviceUrl` for a hosted form |
+| `UploadFail` | 502 | The IMAP server rejected the `APPEND` of an uploaded message |
 | `NotYetConnected` | 503 | The account has not connected yet |
 | `AuthenticationFails` | 503 | The account's credentials are rejected |
 | `ConnectionError` | 503 | The mail server cannot be reached |
 | `NotSyncing` | 503 | Syncing is switched off for the account |
 | `NoAvailable` | 503 | The account is disconnected or paused |
 | `IMAPUnavailable` | 503 | The IMAP connection is not available at the moment |
+| `WorkerNotAvailable` | 503 | No worker thread holds the account, or it terminated mid-request |
 | `Timeout` | 504 | A worker thread did not answer within `EENGINE_TIMEOUT` |
+
+A missing account or SMTP gateway is a plain 404 without a code, and a 401 never carries one.
 
 ## Provider-Mapped Codes
 
-For Gmail API and Microsoft Graph accounts, a provider error that the operation cannot recover from is translated to an EmailEngine code and status and returned from the API call that triggered it.
+For Microsoft Graph accounts, a provider error that the operation cannot recover from is translated to an EmailEngine code and status and returned from the API call that triggered it. Gmail API errors pass through with their own status.
 
 **Gmail API:**
 
-| Gmail status | Code | HTTP status |
-|--------------|------|-------------|
-| `INVALID_ARGUMENT` | `InvalidArgument` | 400 |
-| `FAILED_PRECONDITION` | `FailedPrecondition` | 400 |
-| `NOT_FOUND` | `NotFound` | 404 |
-| `PERMISSION_DENIED` | `PermissionDenied` | 403 |
-| `RESOURCE_EXHAUSTED` | `RateLimitExceeded` | 429 |
-| `UNAUTHENTICATED` | `Unauthenticated` | 401 |
-| `INTERNAL` | `InternalError` | 500 |
-| `UNAVAILABLE` | `ServiceUnavailable` | 503 |
+Gmail API errors are not translated to EmailEngine codes. The HTTP status Google answered with becomes the API status, and the body carries EmailEngine's `OAuth2 request failed` message and, unless the failure matched a known OAuth2 condition, no `code`: a `400` for a request Gmail rejected, a `403` for a scope or policy refusal, a `500` or `503` from Google's side. Two cases are recognized: a `404` from Gmail answers `MessageNotFound`, and a `401` that survives a token renewal answers `403` with the code `OAuthTokenRejected`. Rate limits (`429`, or a `403` carrying the `rateLimitExceeded` or `userRateLimitExceeded` reason) are retried first, honoring `Retry-After`, so a `429` from the API means the retries were exhausted.
 
 **Microsoft Graph:**
 
@@ -353,7 +404,7 @@ For Gmail API and Microsoft Graph accounts, a provider error that the operation 
 | `ErrorMessageSizeExceeded` | `MessageTooLarge` | 413 |
 | `ErrorSendAsDenied` | `SendAsDenied` | 403 |
 
-Rate-limited Gmail and Graph requests are retried by EmailEngine before the error is reported, so a `429` from either provider means the retries were exhausted.
+Rate-limited Graph requests are retried by EmailEngine before the error is reported, like the Gmail ones, so a `429` from either provider means the retries were exhausted.
 
 ## Provider-Specific Errors
 

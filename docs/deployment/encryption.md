@@ -1,6 +1,6 @@
 ---
 title: Secret Encryption
-sidebar_position: 3
+sidebar_position: 9
 description: Enable field-level encryption for sensitive data like passwords and OAuth tokens
 ---
 
@@ -52,15 +52,24 @@ EmailEngine offers **field-level encryption** that encrypts all sensitive fields
 - The `serviceSecret` used for signing, the admin session cookie password and the admin TOTP seed
 - The OpenAI API key
 
+**Values that can carry a credential** (since v2.82.0):
+
+- The `webhooks`, `proxyUrl`, `httpProxyUrl`, `sentryDsn` and `authServer` settings, which are URLs that may embed `user:pass@` credentials, and the `webhooksCustomHeaders` setting, whose values are typically an authorization header
+- The per-account `webhooks`, `webhooksCustomHeaders` and `proxy` fields
+- The `targetUrl` and `customHeaders` of every webhook route
+
+These are encrypted whole, but the API reads them back with only the credential part masked rather than as a boolean. A value stored before the upgrade stays in cleartext, which EmailEngine reads as before, until it is saved again or the `encrypt` command rewrites it.
+
 **TLS private keys**:
 
 - The ACME account key and the private key of every certificate EmailEngine provisions for its own listeners
+- The private key of a certificate uploaded through the admin UI, and of the self-signed certificate a listener falls back to (since v2.80.0, when both were introduced)
 
 **Not encrypted**:
 
 - Email content (not stored by default)
 - Metadata (subject lines, senders, etc.)
-- Account IDs, and the rest of the account record: the IMAP and SMTP host names, the account's webhook URL and its custom headers, including an authorization header set there
+- Account IDs, and the rest of the account record: the IMAP and SMTP host names, folder settings, state
 - Every other setting
 - Access tokens, which are not stored at all: only their SHA-256 hashes are, so the stored value cannot be used as a token
 
@@ -257,9 +266,9 @@ This will:
 - Re-encrypt using new secret
 - Store updated values
 
-The command reports what it rotated, and it covers every store that holds an encrypted value. Settings holding secrets come first, one line per setting that changed, then one line per account, gateway, app and certificate entry that was rewritten, each store closing with a count:
+The command reports what it rotated, and it covers every store that holds an encrypted value. Settings holding secrets come first, one line per setting that changed, then one line per account, gateway, app, webhook route, Let's Encrypt certificate entry and stored TLS certificate that was rewritten, each store closing with a count:
 
-```
+```text
 smtpServerPassword: Updated setting value
 user123: updated
 user456: updated
@@ -268,11 +277,15 @@ Gateway sendgrid: updated
 Updated 1/1 SMTP gateways
 OAuth2 App AAABhaBPHscAAAAI: updated
 Updated 1/1 OAuth2 apps
+Webhook route AAABkxEnOGIAAAAB: updated
+Updated 1/1 webhook routes
 Certificate entry domain:emailengine.example.com:privateKey: updated
 Updated 1 TLS private keys
+TLS entry manual: updated
+Updated 1 stored TLS certificates
 ```
 
-The first number in each count is how many records were rewritten, the second how many exist. A record that held nothing to change, because it stores no secret or was already encrypted with the new secret, is not counted, so a lower first number is not an error on its own.
+The first number in each count is how many records were rewritten, the second how many exist. A record that held nothing to change, because it stores no secret or was already encrypted with the new secret, is not counted, so a lower first number is not an error on its own. The last two stores carry no second number: `TLS private keys` are the entries of the Let's Encrypt store, and `stored TLS certificates` the uploaded (`manual`) and self-signed (`selfSigned`) records, covered since v2.80.0.
 
 :::warning Check for "Could not process" lines before starting EmailEngine again
 A value that none of the supplied secrets could decrypt is reported on stderr as `Could not process "imap.auth.pass" for user123. Check decryption secrets.` (the field and record vary) and is left untouched, so it remains readable only with the **old** secret. Whatever owns it breaks on next use, with no self-healing path. Keep the old secret until a run completes without such lines.
@@ -491,7 +504,7 @@ The `_FILE` suffix tells EmailEngine to read the secret from the specified file 
 3. **Schedule maintenance**
 
    - Choose low-traffic period
-   - The tool rewrites one Redis hash per account, gateway and app, so the run is short even for large instances, but EmailEngine is stopped for its duration
+   - The tool rewrites one Redis hash per account, gateway, app and webhook route, plus the certificate entries, so the run is short even for large instances, but EmailEngine is stopped for its duration
    - Have team on standby
 
 4. **Execute migration**

@@ -46,10 +46,10 @@ function IntroSection() {
           />
           <p className={styles.introText}>
             <strong>EmailEngine</strong> is a self-hosted email gateway that connects your application
-            to any email account using a simple REST API. Instead of dealing with IMAP, SMTP, OAuth2,
-            and provider-specific quirks, you make HTTP requests and receive webhooks.
-            EmailEngine handles the complexity of maintaining persistent connections, syncing messages,
-            and authenticating with Gmail, Outlook, or any IMAP server.
+            to any email account through a REST API. Instead of implementing IMAP, SMTP, OAuth2
+            and provider-specific behavior, you make HTTP requests and receive webhooks.
+            EmailEngine keeps the connections open, syncs messages and authenticates with Gmail,
+            Microsoft 365 or any IMAP server.
           </p>
         </div>
       </div>
@@ -67,7 +67,7 @@ const useCaseCategories: UseCaseCategory[] = [
     title: 'Get Started',
     items: [
       {label: 'Install EmailEngine', link: '/docs/installation', description: 'Docker, npm, or binary'},
-      {label: 'Quick Start Guide', link: '/docs/getting-started/quick-start', description: '10-minute setup'},
+      {label: 'Quick Start Guide', link: '/docs/getting-started/quick-start', description: 'First account and first message'},
       {label: 'Introduction', link: '/docs/getting-started/introduction', description: 'Core concepts'},
     ],
   },
@@ -85,7 +85,7 @@ const useCaseCategories: UseCaseCategory[] = [
     items: [
       {label: 'Send Emails', link: '/docs/sending/basic-sending', description: 'REST API basics'},
       {label: 'Mail Merge', link: '/docs/sending/mail-merge', description: 'Bulk personalized emails'},
-      {label: 'Reply to Emails', link: '/docs/sending/threading', description: 'Conversation threading'},
+      {label: 'Reply to Emails', link: '/docs/sending/replies-forwards', description: 'Replies, forwards, threading'},
       {label: 'Email Templates', link: '/docs/sending/templates', description: 'Reusable templates'},
     ],
   },
@@ -95,7 +95,7 @@ const useCaseCategories: UseCaseCategory[] = [
       {label: 'Set Up Webhooks', link: '/docs/webhooks/overview', description: 'Real-time notifications'},
       {label: 'Search Messages', link: '/docs/receiving/searching', description: 'Find emails by criteria'},
       {label: 'Download Attachments', link: '/docs/receiving/attachments', description: 'Retrieve files'},
-      {label: 'Handle Bounces', link: '/docs/advanced/bounces', description: 'Delivery failures'},
+      {label: 'Handle Bounces', link: '/docs/sending/deliverability/bounces', description: 'Delivery failures'},
     ],
   },
   {
@@ -103,8 +103,8 @@ const useCaseCategories: UseCaseCategory[] = [
     items: [
       {label: 'Docker', link: '/docs/installation/docker', description: 'Container deployment'},
       {label: 'SystemD Service', link: '/docs/deployment/systemd', description: 'Linux service'},
-      {label: 'Security', link: '/docs/deployment/security', description: 'Hardening guide'},
-      {label: 'Performance', link: '/docs/advanced/performance-tuning', description: 'Optimization'},
+      {label: 'Security', link: '/docs/deployment/security', description: 'Hardening an instance'},
+      {label: 'Performance', link: '/docs/advanced/performance-tuning', description: 'Workers and connections'},
     ],
   },
   {
@@ -112,7 +112,7 @@ const useCaseCategories: UseCaseCategory[] = [
     items: [
       {label: 'PHP SDK', link: '/docs/integrations/php', description: 'Official PHP library'},
       {label: 'CRM Integration', link: '/docs/integrations/crm', description: 'Connect your CRM'},
-      {label: 'AI / ChatGPT', link: '/docs/integrations/ai-chatgpt', description: 'AI-powered features'},
+      {label: 'AI Processing', link: '/docs/receiving/ai-processing', description: 'Summaries and checks on new mail'},
       {label: 'Low-Code', link: '/docs/integrations/low-code', description: 'n8n, Make, Zapier'},
     ],
   },
@@ -154,7 +154,7 @@ export default function Home(): ReactNode {
   return (
     <Layout
       title="Self-hosted Email Gateway"
-      description="Streamline email integration for your app or service with a unified REST API that seamlessly connects with IMAP, SMTP, Gmail API, and Microsoft Graph API">
+      description="A REST API and webhooks for IMAP, SMTP, Gmail API and Microsoft Graph accounts, running on your own infrastructure">
       <HomepageHeader />
       <main>
         <IntroSection />

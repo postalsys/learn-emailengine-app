@@ -1,10 +1,10 @@
 ---
-title: Configuration Options Reference
-description: Complete reference of all configuration options and settings
+title: Settings Reference
+description: Reference of the runtime settings EmailEngine stores in Redis, how they are read and written through the API, and how they relate to startup configuration
 sidebar_position: 3
 ---
 
-# Configuration Reference
+# Settings Reference
 
 EmailEngine is configured in two places. Startup configuration is read from the environment, the command line or a TOML file when the process starts, and changing it needs a restart. Runtime settings live in Redis, are written through `POST /v1/settings` or the admin interface, and take effect without one.
 
@@ -82,7 +82,7 @@ curl "https://emailengine.example.com/v1/settings?webhooks=true&webhooksEnabled=
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-A read does not return credentials. The user information in a proxy or webhook URL and the values of custom webhook headers come back as `******`, and the encrypted keys come back as booleans saying whether a value is stored. That matters for a read-modify-write round trip: `POST /v1/settings` skips a masked value when it matches the stored one and refuses it otherwise, so send the real credential or leave the key out.
+A read does not return credentials. The user information in a proxy, webhook or authentication server URL (the last since v2.82.0) and the values of custom webhook headers come back as `******`, and the encrypted keys come back as booleans saying whether a value is stored. That matters for a read-modify-write round trip: `POST /v1/settings` skips a masked value when it matches the stored one and refuses it otherwise, so send the real credential or leave the key out.
 
 The same values are edited under **Configuration** in the admin interface, and can be provisioned before the first start with the `EENGINE_SETTINGS` environment variable:
 
@@ -91,6 +91,31 @@ EENGINE_SETTINGS='{"serviceUrl":"https://emailengine.example.com","webhooks":"ht
 ```
 
 `EENGINE_SETTINGS` is validated against the settings schema at startup. A value that fails validation stops EmailEngine from starting, and an unknown key is dropped and logged as an error, so a typo does not pass unnoticed. See [Prepared Settings](/docs/configuration/prepared-settings) for the full provisioning workflow.
+
+### Settings a Narrowed Token Cannot Touch
+
+Since v2.80.1 the settings endpoints are grantable to a token with a `permissions` record (the `settings` group, see [Access Tokens](/docs/api-reference/access-tokens#permissions)), but such a token cannot read or write the keys that would make a settings editor more than that. A request that names one of them, on `GET /v1/settings` or `POST /v1/settings`, is refused whole with `403` and the message `A token with restricted permissions can not change <keys>` (or `read <keys>`), rather than answered minus the privileged keys. The MCP settings tools leave the same keys out of their schemas.
+
+The privileged keys, by the reason they are on the list:
+
+| Reason | Keys |
+|--------|------|
+| Operator code run inside the instance | `openAiPreProcessingFn`, `scriptEnv` |
+| The link signing secret | `serviceSecret` |
+| The authentication server | `authServer` |
+| Proxy trust and local addresses | `enableApiProxy`, `localAddresses` |
+| Proxies every connection goes through | `proxyEnabled`, `proxyUrl`, `httpProxyEnabled`, `httpProxyUrl` |
+| The built-in listeners | `smtpServerEnabled`, `smtpServerHost`, `smtpServerPort`, `smtpServerAuthEnabled`, `smtpServerPassword`, `smtpServerProxy`, `smtpServerTLSEnabled`, `imapProxyServerEnabled`, `imapProxyServerHost`, `imapProxyServerPort`, `imapProxyServerPassword`, `imapProxyServerProxy`, `imapProxyServerTLSEnabled` |
+| TLS certificates and provisioning | `apiTLSCertificate`, `smtpServerTLSCertificate`, `imapProxyServerTLSCertificate`, `tlsProvisioning`, `tlsHostnames` |
+| The service URL | `serviceUrl` |
+| Mail certificate checking | `ignoreMailCertErrors` |
+| The AI key and endpoint | `openAiAPIKey`, `openAiAPIUrl` |
+| Custom webhook headers | `webhooksCustomHeaders` |
+| Hosted page markup | `templateHeader`, `templateHtmlHead` |
+| The MCP and audit switches | `mcpEnabled`, `mcpOAuthEnabled`, `tokenAuditLog` |
+| Error reporting | `sentryEnabled`, `sentryDsn` |
+
+A token with no `permissions` record is not affected.
 
 ## Runtime Settings Reference
 
@@ -139,7 +164,7 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
 | `authServer` | string | unset | External authentication server that returns account credentials on demand |
 | `tokenAuditLog` | boolean | off | Record every request each access token makes |
 | `enableApiProxy` | boolean | on, unless `EENGINE_API_PROXY` says otherwise | Trust `X-Forwarded-*` headers from a reverse proxy |
-| `locale` | `en`, `et`, `fr`, `de`, `pl`, `ja`, `nl` | `en` | Default UI language |
+| `locale` | `en`, `et`, `fr`, `de`, `pl`, `ja`, `nl`, `sv`, `es`, `it`, `tr` | `en` | Default language of the hosted pages. `sv`, `es`, `it` and `tr` since v2.81.0 |
 | `timezone` | string | unset | Default timezone for date display, as an IANA identifier |
 | `pageBrandName` | string | unset | Brand name in page titles |
 | `templateHeader` | string | unset | HTML injected at the top of hosted pages |
@@ -289,7 +314,9 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
 | `openAiPreProcessingFn` | string | unset | JavaScript filter deciding which messages are processed. Unset means every Inbox message |
 | `openAiGenerateEmbeddings` | boolean | off | Removed in v2.82.0. Still accepted, has no effect |
 
-`openAiAPIUrl` points these calls at an OpenAI-compatible service other than OpenAI itself, and it has to include whatever path prefix that service mounts its API under. For Azure OpenAI that means `https://<your-resource>.openai.azure.com/openai/v1`, not the bare host. See [AI and ChatGPT integration](/docs/integrations/ai-chatgpt) for what the generated fields contain and where they appear.
+`openAiAPIUrl` points these calls at an OpenAI-compatible service other than OpenAI itself, and it has to include whatever path prefix that service mounts its API under. For Azure OpenAI that means `https://<your-resource>.openai.azure.com/openai/v1`, not the bare host. See [AI and ChatGPT integration](/docs/receiving/ai-processing) for what the generated fields contain and where they appear.
+
+The Document Store settings (`documentStoreUrl`, `documentStoreIndex`, `documentStoreAuthEnabled`, `documentStoreUsername`, `documentStorePassword`, `documentStoreGenerateEmbeddings`, `documentStorePreProcessingEnabled` and the chat model) were removed with the feature in v2.82.0. A request that still names one of them is refused as an unknown key with `400`. The one exception is `documentStoreEnabled`, which is accepted so that an upgraded instance can clear the notice the stored value keeps showing on the admin pages: send `{"documentStoreEnabled": false}`.
 
 ### Built-in SMTP Server and IMAP Proxy
 
@@ -311,7 +338,7 @@ Seeded from the matching `EENGINE_SMTP_*` and `EENGINE_IMAP_PROXY_*` variables a
 | `imapProxyServerPassword` | string | `null` | Shared password; `null` accepts access tokens with the `imap-proxy` scope |
 | `imapProxyServerTLSEnabled` | boolean | off | Serve implicit TLS rather than plaintext |
 
-The maximum message size the SMTP server accepts is a startup variable rather than a setting, `EENGINE_MAX_SMTP_MESSAGE_SIZE`, 25 MB by default. The two settings above only decide whether each listener speaks TLS; which certificate it presents is decided by the settings in the next section. See [SMTP Interface](/docs/sending/smtp-interface) and [Proxying Connections](/docs/accounts/proxying-connections).
+The maximum message size the SMTP server accepts is a startup variable rather than a setting, `EENGINE_MAX_SMTP_MESSAGE_SIZE`, 25 MB by default. The two settings above only decide whether each listener speaks TLS; which certificate it presents is decided by the settings in the next section. See [SMTP Interface](/docs/sending/smtp-interface) and [Proxying Connections](/docs/receiving/imap-proxy-server).
 
 ### TLS Certificates
 
@@ -400,55 +427,11 @@ curl -X POST https://emailengine.example.com/v1/oauth2 \
 
 The rest of the resource is in the generated reference: [list](/docs/api/get-v-1-oauth-2), [register](/docs/api/post-v-1-oauth-2), [get](/docs/api/get-v-1-oauth-2-app), [update](/docs/api/put-v-1-oauth-2-app) and [delete](/docs/api/delete-v-1-oauth-2-app). For the provider-side setup, see [Gmail OAuth2 Setup](/docs/accounts/gmail/gmail-imap) and [Outlook OAuth2 Setup](/docs/accounts/microsoft-365/outlook-365).
 
-## Configuration File Example
+## Configuration Files and Precedence
 
-TOML is the native configuration format. The file is not picked up by name or location: point EmailEngine at it with `--config=/path/to/config.toml` or the `NODE_CONFIG_PATH` environment variable, or it is not read. Every key is the command-line argument without the leading `--`, so `--api.port=3000` is `port = 3000` under `[api]`.
+Startup configuration can also come from a TOML file given with `--config` or `NODE_CONFIG_PATH`; the file format and every key it accepts are on the [CLI reference](/docs/configuration/cli#configuration-files). When the same startup key is set in more than one place, [Configuration Precedence](/docs/configuration#configuration-precedence) says which one wins.
 
-```toml
-# EmailEngine Configuration File
-
-[service]
-# Encryption secret, required for production
-# Generate with: openssl rand -hex 32
-secret = "your-64-character-hex-secret-here"
-
-# Maximum time for an IMAP command
-commandTimeout = 10000
-
-# Messages per sync batch
-fetchBatchSize = 1000
-
-[api]
-port = 3000
-host = "127.0.0.1"
-
-[dbs]
-redis = "redis://localhost:6379/8"
-
-[workers]
-imap = 4
-webhooks = 1
-submit = 1
-
-[log]
-level = "info"
-```
-
-The [CLI reference](/docs/configuration/cli#all-server-arguments) lists every key the file accepts, including those `emailengine --help` does not show.
-
-## Priority Order
-
-When the same startup key is set in more than one place, the environment variable wins, then the command line, then the configuration file. [Configuration Precedence](/docs/configuration#configuration-precedence) lists all five layers in order.
-
-```bash
-# Config file: api.port = 3000
-# Command line: --api.port=4000
-# Environment: EENGINE_PORT=5000
-
-# Result: port 5000, because the environment wins
-```
-
-Runtime settings are not part of this order. They are stored in Redis and read from there, so a variable that seeds one has an effect only on the first start, before a stored value exists.
+Runtime settings are not part of that order. They are stored in Redis and read from there, so a variable that seeds one has an effect only on the first start, before a stored value exists.
 
 ## See Also
 

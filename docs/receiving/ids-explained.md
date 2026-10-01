@@ -60,6 +60,8 @@ const newId = moveResponse.id;
 
 The move response carries the new `id`; use it for any follow-up call. For cross-folder tracking that does not depend on the move response, use `emailId` or `messageId`.
 
+On an IMAP account, an `id` that cannot be decoded at all, because it is truncated or was never issued by EmailEngine, is answered with 400 and the message `Invalid identifier` by every endpoint that takes one. Before v2.79.8 a truncated `id` produced a 500 instead.
+
 ## The `uid` Property
 
 ### What It Is

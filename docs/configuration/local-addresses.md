@@ -1,6 +1,6 @@
 ---
 title: Local IP Address Binding
-sidebar_position: 11
+sidebar_position: 6
 description: Configure EmailEngine to use multiple local IP addresses for outbound IMAP and SMTP connections
 keywords:
   - local addresses
@@ -189,7 +189,7 @@ Changing any of the three settings affects connections opened after the change. 
 ## See Also
 
 - [Performance tuning](/docs/advanced/performance-tuning) - Spreading connections across addresses at scale
-- [Inbox placement testing](/docs/advanced/inbox-placement-testing) - Checking how a sending address is received
-- [Email authentication testing](/docs/advanced/email-authentication-testing) - SPF, DKIM, and DMARC for the addresses you send from
-- [Proxying connections](/docs/accounts/proxying-connections) - Routing through a proxy instead of a local address
+- [Inbox placement testing](/docs/sending/deliverability/inbox-placement-testing) - Checking how a sending address is received
+- [Email authentication testing](/docs/sending/deliverability/email-authentication-testing) - SPF, DKIM, and DMARC for the addresses you send from
+- [Proxying connections](/docs/receiving/imap-proxy-server) - Routing through a proxy instead of a local address
 - [Settings API](/docs/api/post-v-1-settings) - Reading and writing `localAddresses` and the strategies

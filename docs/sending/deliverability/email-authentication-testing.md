@@ -1,6 +1,6 @@
 ---
 title: Email Authentication Testing
-sidebar_position: 8
+sidebar_position: 2
 description: Verify DKIM, SPF, DMARC, BIMI, and ARC configuration by testing your email setup with EmailEngine's delivery test API
 keywords:
   - dkim
@@ -396,8 +396,8 @@ For complete request/response schemas, see the API documentation:
 
 ## See Also
 
-- [Inbox Placement Testing](/docs/advanced/inbox-placement-testing) - Test whether emails land in inbox or spam
+- [Inbox Placement Testing](/docs/sending/deliverability/inbox-placement-testing) - Test whether emails land in inbox or spam
 - [SMTP Gateways](/docs/sending/transactional-service) - Registering the relay a test can be routed through
-- [Bounce Detection](/docs/advanced/bounces) - The `auth_failure` bounces that a failing SPF or DKIM setup produces in real traffic
+- [Bounce Detection](/docs/sending/deliverability/bounces) - The `auth_failure` bounces that a failing SPF or DKIM setup produces in real traffic
 - [SMTP Server](/docs/sending/smtp-interface) - Send emails via SMTP protocol
 - [Webhooks](/docs/webhooks/overview) - The `messageSent` and `messageFailed` events the test message raises like any other

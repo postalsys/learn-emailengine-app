@@ -1,6 +1,6 @@
 ---
 title: Bounce Detection and Handling
-sidebar_position: 7
+sidebar_position: 1
 description: Automatically detect and track email bounces with EmailEngine's bounce detection system
 keywords:
   - bounces
@@ -17,7 +17,7 @@ import TabItem from '@theme/TabItem';
 
 # Bounce Detection and Handling
 
-EmailEngine automatically detects and tracks email bounces, providing detailed bounce information through webhooks and message listings. Learn how to handle bounce notifications and maintain email list hygiene.
+EmailEngine recognizes the bounce messages that arrive in a monitored mailbox, ties each one to the message that bounced, and reports it through the `messageBounce` webhook. This page describes which messages are checked, what the webhook carries, how a bounce is marked in the message API, and how to act on the classification EmailEngine adds.
 
 ## Overview
 
@@ -49,7 +49,7 @@ When a bounce is detected, EmailEngine:
 1. **Parse Bounce Email** - Extract bounce information from the human-readable bounce message
 2. **Match Original Message** - Link bounce to sent message via Message-ID (when available)
 3. **Send Webhook** - Deliver `messageBounce` webhook to your application
-4. **Add to Message** - Attach bounce data to sent message in listings
+4. **Mark the Bounce Message** - The `messageNew` event for the bounce message, and its message details, carry `isBounce: true` and the `relatedMessageId` of the message that bounced
 
 ### Bounce Detection Flow
 
@@ -68,7 +68,7 @@ flowchart TD
     K --> L{Can identify original message?}
     L -->|Yes| M[messageBounce webhook triggered]
     L -->|No| N[Bounce detected but not linked]
-    M --> O[Add bounces array to message listing]
+    M --> O[Bounce message carries isBounce and relatedMessageId]
 ```
 
 ## Bounce Types
@@ -108,11 +108,15 @@ Temporary delivery failures that might succeed on retry:
 
 The `action` value comes from the `Action:` field of an RFC 3464 delivery status report, or is set to `failed` when a bounce is recognized from the message text alone:
 
-- `failed` - Permanent failure (hard bounce)
+- `failed` - Permanent failure (hard bounce). The only action that produces a `messageBounce` webhook
 - `delayed` - Temporary failure (soft bounce)
 - `delivered`, `relayed`, `expanded` - reports that are not failures
 
-A `multipart/report; report-type=delivery-status` message that arrives in the inbox and reports `delivered` or `delayed` is attached to the message as a `deliveryReport` instead of being processed as a bounce, so no `messageBounce` webhook is sent for it.
+A `multipart/report; report-type=delivery-status` message that arrives in the inbox and reports `delivered` or `delayed` is attached to the `messageNew` event of the report as a `deliveryReport` instead of being processed as a bounce, so no `messageBounce` webhook is sent for it. A report with any action other than `failed` that reaches the bounce parser by another route is logged and dropped: since EmailEngine v2.82.0 the webhook requires `action` to be `failed`, where earlier releases accepted any action value as long as a recipient and a Message-ID were found.
+
+### Which Messages Are Checked
+
+EmailEngine does not download every new message to look for a bounce. A message is parsed only when it arrives in the Inbox, or in the Junk folder, and has the shape of a bounce: a sender named like a mail delivery system (`Mail Delivery System`, `Mailer-Daemon`, `postmaster@` and similar), an Exchange `Undeliverable:` subject with an `Auto-Submitted` header, a `message/delivery-status` part, a `message/rfc822` part next to a failure subject, or one of the common notification subjects such as `Mail delivery failed` or `Delivery Status Notification`. The same checks run for IMAP, Gmail API and MS Graph accounts; before v2.81.2 the IMAP client kept its own copy of them, which lacked the Exchange rule.
 
 ## Sending Email and Tracking Bounces
 
@@ -187,7 +191,7 @@ When the email bounces, EmailEngine sends a `messageBounce` webhook:
 |-------|-------------|
 | `bounceMessage` | EmailEngine ID of the bounce notification message |
 | `recipient` | Email address that bounced |
-| `action` | Bounce action, one of the codes above; `failed` for a rejected delivery |
+| `action` | Always `failed`. A report with another action does not produce this webhook |
 | `response.message` | Error message from receiving server |
 | `response.status` | Enhanced status code (e.g., `5.1.1`) |
 | `response.source` | The diagnostic type from the report's `Diagnostic-Code:` field, usually `smtp`. Absent when the bounce was parsed from message text |
@@ -200,74 +204,43 @@ When the email bounces, EmailEngine sends a `messageBounce` webhook:
 | `messageId` | Message-ID of the original sent email |
 | `messageHeaders` | Headers of the original message when the report quoted them back, otherwise `null` |
 
-The webhook is sent only when the report yields all three of `action`, `recipient` and `messageId`; a bounce EmailEngine cannot tie to a sent message is logged but not reported. The `category`, `recommendedAction`, `blocklist` and `retryAfter` fields are added by the classifier described below and are absent when classification fails. The [messageBounce webhook reference](/docs/webhooks/messagebounce) is the complete field list.
+The webhook is sent only when the report yields a `failed` action together with both `recipient` and `messageId`; a bounce EmailEngine cannot tie to a sent message is logged but not reported. The `category`, `recommendedAction`, `blocklist` and `retryAfter` fields are added by the classifier described below and are absent when classification fails. The [messageBounce webhook reference](/docs/webhooks/messagebounce) is the complete field list.
 
-## Checking Bounce Information
+## Recognizing a Bounce Message in the API
 
-### Via Message Listing
-
-Bounce information is also attached to sent messages in folder listings.
-
-List sent messages:
+The bounce itself is an ordinary message in the mailbox. When EmailEngine processes it, the `messageNew` event for it carries `isBounce: true` and `relatedMessageId`, the Message-ID of the message that bounced. Since EmailEngine v2.81.2 the message details endpoint reports the same two fields:
 
 ```bash
-curl "https://emailengine.example.com/v1/account/john@example.com/messages?path=Sent" \
+curl "https://emailengine.example.com/v1/account/john@example.com/message/AAAADAAAByc" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
-
-Messages with bounces include a `bounces` array:
 
 ```json
 {
-  "total": 472,
-  "page": 0,
-  "pages": 24,
-  "messages": [
+  "id": "AAAADAAAByc",
+  "uid": 1831,
+  "date": "2024-10-13T12:10:40.000Z",
+  "subject": "Undelivered Mail Returned to Sender",
+  "from": {
+    "name": "Mail Delivery System",
+    "address": "MAILER-DAEMON@mx.example.com"
+  },
+  "to": [
     {
-      "id": "AAAABgAAAdk",
-      "uid": 473,
-      "date": "2024-10-13T12:10:34.000Z",
-      "subject": "Test message",
-      "from": {
-        "name": "John Doe",
-        "address": "john@example.com"
-      },
-      "to": [
-        {
-          "address": "unknown@ethereal.email"
-        }
-      ],
-      "bounces": [
-        {
-          "message": "AAAADAAAByc",
-          "recipient": "unknown@ethereal.email",
-          "action": "failed",
-          "response": {
-            "message": "550 No such user here",
-            "status": "5.0.0"
-          },
-          "date": "2024-10-13T12:10:40.003Z"
-        }
-      ]
+      "address": "john@example.com"
     }
-  ]
+  ],
+  "messageId": "<20241013121040.B7D3F8220C@mx.example.com>",
+  "isBounce": true,
+  "relatedMessageId": "<3e013ba5-3bd2-a5f6-b102-5997c7d4d843@example.com>"
 }
 ```
 
-**Why an array?** Each email can have multiple recipients, and each can bounce with different errors.
+The fields are decided when the message is fetched, from its content, with the same parser the webhook uses. Nothing is stored for them, so they apply to any bounce in the mailbox, including ones that arrived before the account was added. They are set only for a message in the Inbox that has the shape of a bounce and whose report says the delivery failed; a delivery or delay report is not a bounce. Message listings do not carry them, and the classifier fields are only in the webhook.
 
-The `bounces` array is attached for IMAP accounts only, and carries the bounce's `message` ID, `recipient`, `action`, `response.message`, `response.status` and the `date` the bounce was detected. The classifier fields are only in the webhook.
-
-### Via API Query
-
-Get bounce information for a specific message:
-
-```bash
-curl "https://emailengine.example.com/v1/account/john@example.com/message/AAAABgAAAdk" \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
-Response includes full bounce details in the `bounces` array.
+:::note The `bounces` array was removed in v2.81.2
+Up to EmailEngine v2.81.1, a sent message on an IMAP account carried a `bounces` array in listings, in message details and in its `messageNew` payload, listing the bounces recorded against its Message-ID. The store behind it was never trimmed, so v2.81.2 removed the field and sweeps the stored records on first start. The `messageBounce` webhook is the record of a bounce; keep it in your own storage keyed by `messageId`.
+:::
 
 ## Handling Bounces in Your Application
 
@@ -404,7 +377,7 @@ When a bounce indicates a blocklist issue, the `response.blocklist` object provi
 }
 ```
 
-The `blocklist.type` indicates whether the issue is with your IP address (`ip`), your domain (`domain`), or a URI mentioned in the message content (`uri`). If the bounce message references multiple blocklists, the response contains a `lists` array instead, where each entry has `name` and `type` fields: `{"lists": [{"name": "...", "type": "..."}, ...]}`.
+The `blocklist.type` indicates whether the issue is with your IP address (`ip`), your domain (`domain`), or a URI mentioned in the message content (`uri`), and `blocklist.host` is `true` when the blocklist's own lookup hostname appeared in the error text rather than only its name. If the bounce message references multiple blocklists, the response contains a `lists` array instead, where each entry has `name` and `type` fields: `{"lists": [{"name": "...", "type": "..."}, ...], "host": true}`.
 
 ### Retry Timing
 
@@ -501,6 +474,6 @@ def record_bounce(recipient, response=None):
 
 - [messageBounce webhook](/docs/webhooks/messagebounce) - Full payload reference for the bounce event
 - [messageDeliveryError](/docs/webhooks/messagedeliveryerror) and [messageFailed](/docs/webhooks/messagefailed) - Failures EmailEngine sees while submitting, before a message ever reaches the recipient's server
-- [Suppression Lists](/docs/advanced/blocklists) - Stop sending to addresses that have already bounced
-- [Email Authentication Testing](/docs/advanced/email-authentication-testing) - Diagnose the SPF, DKIM, and DMARC problems behind `fix_configuration` bounces
+- [Suppression Lists](/docs/sending/deliverability/suppression-lists) - Stop sending to addresses that have already bounced
+- [Email Authentication Testing](/docs/sending/deliverability/email-authentication-testing) - Diagnose the SPF, DKIM, and DMARC problems behind `fix_configuration` bounces
 - [Webhook Overview](/docs/webhooks/overview) - Delivery, retries, and routing

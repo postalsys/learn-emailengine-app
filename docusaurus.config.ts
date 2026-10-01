@@ -175,7 +175,7 @@ const config: Config = {
           },
           {
             from: '/docs/advanced/delivery-testing',
-            to: '/docs/advanced/inbox-placement-testing',
+            to: '/docs/sending/deliverability/inbox-placement-testing',
           },
           {
             from: '/docs/sending/smtp-gateway',
@@ -245,6 +245,66 @@ const config: Config = {
             from: '/docs/configuration/oauth2-configuration',
             to: '/docs/accounts/oauth2-setup',
           },
+          {
+            from: '/docs/reference/configuration-options',
+            to: '/docs/configuration/settings',
+          },
+          {
+            from: '/docs/reference/error-codes',
+            to: '/docs/api-reference/error-codes',
+          },
+          {
+            from: '/docs/integrations/ai-chatgpt',
+            to: '/docs/receiving/ai-processing',
+          },
+          {
+            from: '/docs/accounts/proxying-connections',
+            to: '/docs/receiving/imap-proxy-server',
+          },
+          {
+            from: '/docs/advanced/pre-processing',
+            to: '/docs/webhooks/pre-processing',
+          },
+          {
+            from: '/docs/advanced/bounces',
+            to: '/docs/sending/deliverability/bounces',
+          },
+          {
+            from: '/docs/advanced/inbox-placement-testing',
+            to: '/docs/sending/deliverability/inbox-placement-testing',
+          },
+          {
+            from: '/docs/advanced/email-authentication-testing',
+            to: '/docs/sending/deliverability/email-authentication-testing',
+          },
+          {
+            from: '/docs/advanced/virtual-lists',
+            to: '/docs/sending/deliverability/suppression-lists',
+          },
+          {
+            from: '/docs/advanced/blocklists',
+            to: '/docs/sending/deliverability/suppression-lists',
+          },
+          {
+            from: '/docs/advanced/encryption',
+            to: '/docs/deployment/encryption',
+          },
+          {
+            from: '/docs/advanced/local-addresses',
+            to: '/docs/configuration/local-addresses',
+          },
+          {
+            from: '/docs/advanced/translations',
+            to: '/docs/configuration/translations',
+          },
+          {
+            from: '/docs/advanced/ids-explained',
+            to: '/docs/receiving/ids-explained',
+          },
+          {
+            from: '/docs/sending/threading/overview',
+            to: '/docs/sending/threading',
+          },
         ],
       },
     ],
@@ -285,7 +345,7 @@ const config: Config = {
             {type: 'doc', docId: 'mcp/index', label: 'MCP for AI Agents'},
             {type: 'doc', docId: 'configuration/index', label: 'Configuration'},
             {type: 'doc', docId: 'deployment/index', label: 'Deployment'},
-            {type: 'doc', docId: 'reference/configuration-options', label: 'Reference'},
+            {type: 'doc', docId: 'reference/webhook-events', label: 'Reference'},
           ],
         },
         {

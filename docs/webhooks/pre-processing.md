@@ -22,7 +22,7 @@ The same runtime serves two features:
 | Feature | Filter function | Map function | Configured at |
 | ------- | --------------- | ------------ | ------------- |
 | [Webhook routes](/docs/webhooks/webhook-routing) | Decides whether the route gets the event | Rewrites the body sent to the route's URL | **Integrations** > **Webhook Routes**, per route |
-| [AI pre-processing filter](/docs/integrations/ai-chatgpt#ai-pre-processing-filter-openaipreprocessingfn) | Decides which messages are sent to the LLM | none | `openAiPreProcessingFn` setting |
+| [AI pre-processing filter](/docs/receiving/ai-processing#ai-pre-processing-filter-openaipreprocessingfn) | Decides which messages are sent to the LLM | none | `openAiPreProcessingFn` setting |
 
 The rest of this page is written for webhook routes. The AI filter uses the same globals, timeout and error handling. Releases before v2.82.0 ran a third script, the Document Store pre-processing filter and map, which was removed with that feature.
 
@@ -80,8 +80,10 @@ A map function runs only when the filter matched, and shapes what is delivered.
 **Return value:**
 
 - An object - Becomes the webhook body, replacing the original payload entirely. Anything you leave out is not sent
-- `undefined` or nothing - The original payload is sent unchanged
-- An exception - The error is recorded in the route's **Error log** tab and the original payload is sent unchanged, as if the map had returned nothing
+- `undefined`, `null`, `false` or nothing - The route receives nothing for this event
+- An exception - The error is recorded in the route's **Error log** tab and the route receives nothing for this event, as if the map had returned nothing
+
+A route with a map function therefore sends the mapped body or nothing. This changed in EmailEngine v2.82.0: earlier releases delivered the original, unmapped payload when the map returned nothing or threw, which defeated a map written to strip fields from the body. To pass the payload through unchanged, return `payload`.
 
 Each function receives its own copy of the payload, so a map function can change fields in place and return `payload`. Because the map decides the whole body, it can also return something that is not the payload at all, which is how a route posts to a service with a fixed input format, for example a Slack message.
 
@@ -466,5 +468,5 @@ Not to be confused with the functions above. EmailEngine can also pre-process me
 - [Webhook routing](/docs/webhooks/webhook-routing) - Creating routes and the examples that use these functions
 - [Webhooks overview](/docs/webhooks/overview) - The events and payloads the functions receive
 - [Webhooks API](/docs/api-reference/webhooks-api) - Managing routes and their functions programmatically
-- [AI processing](/docs/integrations/ai-chatgpt#ai-pre-processing-filter-openaipreprocessingfn) - The filter that selects messages for LLM processing
+- [AI processing](/docs/receiving/ai-processing#ai-pre-processing-filter-openaipreprocessingfn) - The filter that selects messages for LLM processing
 - [Web-safe HTML](/docs/receiving/web-safe-html) - The other kind of pre-processing
