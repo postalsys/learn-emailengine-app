@@ -87,7 +87,9 @@ emailengine help license
 emailengine help check-bounce
 ```
 
-The `--help` flag is only recognized on its own. `emailengine tokens --help` runs the `tokens` command without a subcommand, so use the `help <command>` form. Help is printed on stderr.
+The `--help` flag is only recognized on its own. `emailengine tokens --help` runs the `tokens` command without a subcommand, so use the `help <command>` form. Help is printed on stderr. An unknown command is refused with `Unknown command` and exit status 1 rather than starting the server.
+
+One command is not listed by the help output: `emailengine webhooks` prints the webhook event table that the EmailEngine README carries, and exits with status 1. It is a maintenance helper and needs no Redis connection.
 
 ### Version Information
 
@@ -100,7 +102,7 @@ emailengine version
 **Output:**
 
 ```text
-EmailEngine v2.79.4 (LICENSE_EMAILENGINE)
+EmailEngine v2.82.0 (LICENSE_EMAILENGINE)
 ```
 
 ## Configuration Arguments
@@ -187,7 +189,7 @@ emailengine \
 
 ### All Server Arguments
 
-These are the options `emailengine --help` lists:
+`emailengine --help` lists the options below, in the groups the help output uses. The worker, queue, API body and TLS options joined the listing in v2.79.8; before that `--help` showed a subset of what the code reads.
 
 **General**
 
@@ -202,6 +204,9 @@ These are the options `emailengine --help` lists:
 | `--log.level` | Logging level | `trace` |
 | `--log.raw` | Log raw IMAP traffic. Includes unmasked credentials | `false` |
 | `--workers.webhooks` | Webhook worker threads | `1` |
+| `--workers.submit` | Submission worker threads | `1` |
+| `--workers.export` | Export worker threads. The one worker count with no environment variable | `1` |
+| `--workers.api` | API worker threads. Anything above 1 needs `SO_REUSEPORT`, so it falls back to 1 off Linux. `cpus` is accepted | `1` |
 
 **API server**
 
@@ -210,6 +215,11 @@ These are the options `emailengine --help` lists:
 | `--api.host` | Bind address | `127.0.0.1` |
 | `--api.port` | Port | `3000` |
 | `--api.maxSize` | Maximum attachment size when submitting or uploading | `5M` |
+| `--api.maxBodySize` | Maximum request body for message uploads | `50M` |
+| `--api.maxPayloadTimeout` | Time allowed to receive a request body | `10s` |
+| `--api.proxy` | Trust `X-Forwarded-For` from the reverse proxy in front of the API. Seeds the Behind Reverse Proxy setting on first start; when the argument, the config key and `EENGINE_API_PROXY` are all absent, the setting starts out enabled | Unset |
+| `--api.tls.certPath` | Path to the TLS certificate. Setting it serves the API and admin interface over HTTPS | None |
+| `--api.tls.keyPath` | Path to the TLS private key | None |
 
 **Background tasks**
 
@@ -217,6 +227,7 @@ These are the options `emailengine --help` lists:
 |--------|-------------|---------|
 | `--queues.notify` | Concurrent webhook deliveries | `1` |
 | `--queues.submit` | Concurrent email submissions | `1` |
+| `--queues.export` | Concurrent exports per export worker | `1` |
 
 **SMTP server**
 
@@ -239,21 +250,18 @@ Every configuration key follows the same `--section.key=value` form, including k
 
 | Option | Environment Variable | Description | Default |
 |--------|----------------------|-------------|---------|
-| `--workers.api` | `EENGINE_WORKERS_API` | API worker threads. Anything above 1 needs `SO_REUSEPORT`, so it falls back to 1 off Linux | `1` |
-| `--workers.submit` | `EENGINE_WORKERS_SUBMIT` | Submission worker threads | `1` |
-| `--workers.export` | none | Export worker threads. This one has no environment variable | `1` |
-| `--workers.imapProxy` | none | IMAP proxy worker threads | `1` |
-| `--queues.export` | `EENGINE_EXPORT_QC` | Concurrent exports per export worker | `1` |
 | `--submitDelay` | `EENGINE_SUBMIT_DELAY` | Pause between submissions | None |
-| `--api.proxy` | `EENGINE_API_PROXY` | Seed for the Behind Reverse Proxy setting on first start | Unset |
+| `--service.fetchBatchSize` | `EENGINE_FETCH_BATCH_SIZE` | Messages per fetch batch during sync | `1000` |
 | `--licensePath` | none | Path to a license key file to load and verify at startup. A file that fails verification stops EmailEngine with exit status 13 | None |
 | `--preparedLicense`, `--preparedToken`, `--preparedPassword` | `EENGINE_PREPARED_LICENSE`, `EENGINE_PREPARED_TOKEN`, `EENGINE_PREPARED_PASSWORD` | The [prepared settings](/docs/configuration/prepared-settings) in argument form | None |
-| `--api.maxBodySize` | `EENGINE_MAX_BODY_SIZE` | Maximum request body for message uploads | `50M` |
-| `--api.maxPayloadTimeout` | `EENGINE_MAX_PAYLOAD_TIMEOUT` | Time allowed to receive a request body | `10s` |
+| `--api.cspMode` | `EENGINE_CSP_MODE` | How the Content-Security-Policy is delivered: `enforce`, `report-only` or `off`. Since v2.79.9 | `enforce` |
 | `--cors.origin` | `EENGINE_CORS_ORIGIN` | Allowed CORS origins | None |
 | `--cors.maxAge` | `EENGINE_CORS_MAX_AGE` | CORS preflight cache time | `60s` |
-| `--service.fetchBatchSize` | `EENGINE_FETCH_BATCH_SIZE` | Messages per fetch batch during sync | `1000` |
-| `--imap-proxy.enabled`, `--imap-proxy.host`, `--imap-proxy.port`, `--imap-proxy.secret`, `--imap-proxy.proxy` | `EENGINE_IMAP_PROXY_ENABLED`, `EENGINE_IMAP_PROXY_HOST`, `EENGINE_IMAP_PROXY_PORT`, `EENGINE_IMAP_PROXY_SECRET`, `EENGINE_IMAP_PROXY_PROXY` | The [IMAP proxy](/docs/accounts/proxying-connections) listener, with the same meaning as the SMTP server options | `false`, `127.0.0.1`, `2993`, none, `false` |
+| `--smtp.maxClients` | `EENGINE_SMTP_MAX_CLIENTS` | Concurrent connections the SMTP server accepts. Since v2.79.9 | `100` |
+| `--imap.maxClients` | `EENGINE_IMAPPROXY_MAX_CLIENTS` | Concurrent connections the IMAP proxy accepts. The section is `imap`, not `imap-proxy`. Since v2.79.9 | `1000` |
+| `--imap-proxy.enabled`, `--imap-proxy.host`, `--imap-proxy.port`, `--imap-proxy.secret`, `--imap-proxy.proxy` | `EENGINE_IMAP_PROXY_ENABLED`, `EENGINE_IMAP_PROXY_HOST`, `EENGINE_IMAP_PROXY_PORT`, `EENGINE_IMAP_PROXY_SECRET`, `EENGINE_IMAP_PROXY_PROXY` | The [IMAP proxy](/docs/receiving/imap-proxy-server) listener, with the same meaning as the SMTP server options | `false`, `127.0.0.1`, `2993`, none, `false` |
+
+The IMAP proxy runs as a single worker started by the `imapProxyServerEnabled` setting; there is no worker count for it.
 
 :::tip Environment Variables
 The [Environment Variables reference](/docs/configuration/environment-variables) lists every variable with its default and the config-file equivalent, including the ones that have no CLI form.
@@ -428,7 +436,7 @@ emailengine tokens issue \
 - `"imap-proxy"` - IMAP proxy access
 - `"mcp"` - [MCP endpoint](/docs/mcp) access for AI agents, and nothing on the REST API
 
-The CLI does not set a permissions record, so an `mcp` token issued here reaches every tool the scope allows. Pair it with `-a` to bind it to one account, or mint a narrowed one in the web interface or over the API. See [MCP Access Control](/docs/mcp/access-control).
+The CLI does not set a permissions record, so an `mcp` token issued here reaches every tool the scope allows. Pair it with `-a` to bind it to one account, or mint a narrowed one in the web interface or over the API. The `mcp-manage` scope that the instance management tools need (since v2.80.1) cannot be issued here at all; it is minted through the admin interface or `POST /v1/tokens`. See [MCP Access Control](/docs/mcp/access-control).
 
 **Output:**
 
@@ -685,7 +693,7 @@ Passing `--service.secret` is what lets the command read the stored values, and 
 
 ## Encryption Management
 
-Manage field-level encryption for stored secrets: account credentials, SMTP gateway passwords, OAuth2 application secrets, and the encrypted settings values.
+Manage field-level encryption for stored secrets. One run rewrites every encrypted value the instance holds: the encrypted settings values, account credentials, SMTP gateway passwords, OAuth2 application secrets, the target URL and custom headers of webhook routes, the Let's Encrypt account and domain keys, and the private keys of an uploaded or self-signed TLS certificate.
 
 ### Encrypt Command
 
@@ -761,7 +769,7 @@ emailengine encrypt \
 
 A value whose key was derived with scrypt by an earlier release is rewritten with PBKDF2 even though the key is unchanged; a value already under the current derivation and key is left as it is. This is required before moving an instance to a host in [FIPS mode](/docs/deployment/fips-mode).
 
-The command reports each updated account, gateway, and OAuth2 app, and a value it cannot decrypt with any of the given secrets as `Check decryption secrets`.
+The command reports each updated record as it goes (`<account>: updated`, `Gateway <id>: updated`, and so on) and finishes each pass with a count, such as `Updated 2/3 accounts`, `Updated 0/1 SMTP gateways`, `Updated 1/1 OAuth2 apps` and `Updated 0/0 webhook routes`. A value it cannot decrypt with any of the given secrets is reported as `Could not process ... Check decryption secrets.` on stderr and left as it is.
 
 **Important:**
 
@@ -769,7 +777,7 @@ The command reports each updated account, gateway, and OAuth2 app, and a value i
 - All EmailEngine instances must use the same secret
 - Changing keys requires access to the old key or keys
 
-See [Field Encryption](/docs/advanced/encryption) for details.
+See [Field Encryption](/docs/deployment/encryption) for details.
 
 ---
 

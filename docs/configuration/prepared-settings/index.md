@@ -19,7 +19,7 @@ EmailEngine supports four types of prepared configuration:
 
 Each of these is read from the environment variable, from the matching `_FILE` variable (`EENGINE_SETTINGS_FILE` and so on, see [Loading values from files](/docs/configuration/environment-variables#loading-values-from-files)), or from the command line and configuration file under the keys `settings`, `preparedToken`, `preparedLicense` and `preparedPassword`.
 
-Prepared configuration is processed on every startup, after the Redis connection is up and before the workers start. Settings, the license and the password are written each time, so a value changed through the API or the admin interface reverts to the prepared value at the next restart. A prepared token is imported only if its hash is not already stored; an existing token is left untouched.
+Prepared configuration is processed on every startup, after the Redis connection is up and before the workers start. Settings and the license are written each time, so a value changed through the API or the admin interface reverts to the prepared value at the next restart. The password hash is written only when it differs from the stored one, so an unchanged `EENGINE_PREPARED_PASSWORD` does not end the admin sessions at a restart (since v2.79.8; earlier releases rewrote it every time). A prepared token is imported only if its hash is not already stored; an existing token is left untouched.
 
 ## Use Cases
 
@@ -188,6 +188,8 @@ Prepared settings are applied on every startup, overwriting existing values. To 
 2. Or use the Settings API for runtime changes (will be overwritten on next restart if also defined in `EENGINE_SETTINGS`)
 
 Only the keys present in `EENGINE_SETTINGS` are written. Removing a key from the variable does not clear the stored value; clear it through the API or the admin interface.
+
+Since v2.79.8 EmailEngine records the key list at startup (as the internal `preparedSettingsKeys` setting), and every settings page under **Configuration** marks the fields those keys control as managed by `EENGINE_SETTINGS`, so an operator sees why a saved change does not survive a restart. The list is cleared when the variable is removed.
 
 **Update settings via API:**
 ```bash

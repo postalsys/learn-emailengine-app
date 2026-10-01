@@ -46,6 +46,8 @@ EmailEngine uses two distinct types of configuration:
 - [Settings API endpoint](/docs/api/post-v-1-settings)
 - [Prepared settings](/docs/configuration/prepared-settings) (environment variable)
 
+Every runtime setting, with its type and default, is listed on the [Settings Reference](/docs/configuration/settings).
+
 ## Configuration Methods
 
 import Tabs from '@theme/Tabs';
@@ -181,7 +183,7 @@ When multiple configuration methods are used, they follow this precedence (highe
 
 The configuration file and the command line can set any key; environment variables cover the keys listed in the [mapping table](/docs/configuration/environment-variables#environment-variable-to-cli-mapping) and the other `EENGINE_*` variables on the environment variables page. A key with no environment variable, such as `smtp.maxMessageSize`, is set on the command line or in the file.
 
-Runtime settings are not part of this order. They live in Redis and are read from there, so an environment variable that seeds one has an effect only on the first start, before a stored value exists. See [Configuration Options Reference](/docs/reference/configuration-options) for those.
+Runtime settings are not part of this order. They live in Redis and are read from there, so an environment variable that seeds one has an effect only on the first start, before a stored value exists. See [Configuration Options Reference](/docs/configuration/settings) for those.
 
 **Example:**
 

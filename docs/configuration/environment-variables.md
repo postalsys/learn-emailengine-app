@@ -8,7 +8,7 @@ sidebar_position: 2
 
 Complete reference for all EmailEngine environment variables, with the command-line argument and configuration-file key each one corresponds to. These settings are loaded at application startup and require a restart to take effect.
 
-Startup configuration is only half of the picture. Webhook URLs, sending limits, proxies, branding and the rest live in Redis and are changed at runtime without a restart; a few of the variables below seed one of them at first start and then stop mattering. Those keys are documented in the [Configuration Options Reference](/docs/reference/configuration-options#runtime-settings-reference).
+Startup configuration is only half of the picture. Webhook URLs, sending limits, proxies, branding and the rest live in Redis and are changed at runtime without a restart; a few of the variables below seed one of them at first start and then stop mattering. Those keys are documented in the [Configuration Options Reference](/docs/configuration/settings#runtime-settings-reference).
 
 :::info .env File Support
 EmailEngine automatically loads environment variables from a `.env` file located in the current working directory. This is the recommended way to configure EmailEngine as it ensures variables persist across restarts.
@@ -62,7 +62,7 @@ EENGINE_REDIS_FILE=/run/secrets/redis_url
 - Boolean variables work the same way, with the file containing `true` or `false`
 - A file that cannot be read is logged as an error and resolves to an empty value. EmailEngine still starts, so check the logs if a setting seems to be missing.
 
-A few non-secret variables are read straight from the environment and have no `_FILE` counterpart: `EENGINE_LOG_LEVEL`, `EENGINE_REDIS_PREFIX`, `EENGINE_FETCH_TIMEOUT`, `EENGINE_GMAIL_FALLBACK_POLL_INTERVAL`, `EENGINE_EXPORT_PATH`, `EENGINE_EXPORT_MAX_AGE`, `EENGINE_HTTP_PROXY_ENABLED`, `EENGINE_HTTP_PROXY_URL`, `EENGINE_QUEUE_KEEP_FAILED`, `EENGINE_QUEUE_KEEP_FAILED_AGE`, `EENGINE_TOKEN_LOG_ENTRIES`, `EENGINE_TOKEN_LOG_AGE`, `EENGINE_TLS_MIN_VERSION`, `EENGINE_TLS_MIN_DH_SIZE`, and `EENGINE_TLS_CIPHERS`.
+A few non-secret variables are read straight from the environment and have no `_FILE` counterpart: `EENGINE_LOG_LEVEL`, `EENGINE_REDIS_PREFIX`, `EENGINE_FETCH_TIMEOUT`, `EENGINE_GMAIL_FALLBACK_POLL_INTERVAL`, `EENGINE_EXPORT_PATH`, `EENGINE_EXPORT_MAX_AGE`, `EENGINE_QUEUE_KEEP_FAILED`, `EENGINE_QUEUE_KEEP_FAILED_AGE`, `EENGINE_TOKEN_LOG_ENTRIES`, `EENGINE_TOKEN_LOG_AGE`, `EENGINE_ACME_DIRECTORY_URL`, `EENGINE_ACME_ENVIRONMENT`, `EENGINE_TLS_MIN_VERSION`, `EENGINE_TLS_MIN_DH_SIZE`, and `EENGINE_TLS_CIPHERS`. `EENGINE_HTTP_PROXY_ENABLED` and `EENGINE_HTTP_PROXY_URL` accept the `_FILE` form since v2.79.9.
 
 Two value formats recur in the tables below. A **duration** is a number of milliseconds or a string with a unit, such as `30s`, `12h`, or `7d`. A **byte size** is a number of bytes or a string with a unit, such as `20M` or `1G`.
 
@@ -198,6 +198,7 @@ Email protocol timeouts and limits.
 | `EENGINE_CHUNK_SIZE` | byte size | `1000000` | Download chunk size for streaming attachments (1 MB) | `5000000` |
 | `EENGINE_GMAIL_FALLBACK_POLL_INTERVAL` | ms | `600000` | How often a Gmail API account is polled for changes when no Pub/Sub notification has arrived (10 minutes) | `300000` |
 | `EENGINE_MAX_IMAP_AUTH_FAILURE_TIME` | duration | `259200000` | How long an account may keep failing authentication (3 days) before EmailEngine switches its syncing off. See [Max IMAP Auth Failure Time](#max-imap-auth-failure-time) | `24h` |
+| `EENGINE_IMAP_STALE_CHECK_INTERVAL` | duration | unset (check disabled) | How long the main mailbox of an IMAP account may stay quiet before a resync pass checks it over a second connection and reconnects the primary connection if the server is ahead of it. See [Stale main mailbox check](#stale-main-mailbox-check). Since v2.82.0 | `1h` |
 
 **Examples:**
 
@@ -231,6 +232,19 @@ EENGINE_MAX_IMAP_AUTH_FAILURE_TIME=1d
 The threshold covers every account type. Gmail API and Microsoft Graph accounts have no IMAP configuration of their own, so EmailEngine writes the flag for them, and both clients check it before attempting a token refresh. Before v2.79.3 the check was gated on stored IMAP settings, which OAuth2 accounts do not have, so their revoked grants were retried indefinitely. Upgrading an instance that has collected such accounts switches off every one already past the threshold on its next failed refresh, so expect a burst of `authenticationError` webhooks. Raise this value before upgrading to stage that.
 
 `authFailureDisabledAt` is what tells an automatic switch-off from the operator's own send-only switch, since both set `imap.disabled`. [Accounts switched off after authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures) covers what the account looks like in each state, what turns syncing back on, and how the behavior changed across versions.
+
+### Stale Main Mailbox Check {#stale-main-mailbox-check}
+
+**Environment:** `EENGINE_IMAP_STALE_CHECK_INTERVAL`
+**Default:** unset (the check is off)
+
+An IMAP account learns about new messages in its main mailbox from the primary connection only; the periodic resync pass skips the folder that connection has selected. A server can keep that session alive, answering IDLE and NOOP, while its view of the mailbox stops moving, and then no new message is ever reported. With this variable set, the resync pass checks the main mailbox over the command connection once the `UIDNEXT` value the primary connection knows has not moved for that long, and closes the primary connection when the server reports a higher `UIDNEXT` on two consecutive checks. The close handler reconnects it, and the new session picks up what was missed. Since v2.82.0.
+
+```bash
+EENGINE_IMAP_STALE_CHECK_INTERVAL=1h
+```
+
+Leave it unset on servers that behave: every check is an extra round trip on the command connection, and a message that was delivered and expunged before the primary connection fetched it costs one needless reconnect.
 
 ## Worker Threads
 
@@ -351,8 +365,9 @@ Enable and configure the built-in IMAP proxy server feature.
 | `EENGINE_IMAP_PROXY_PORT` | number | `2993` | IMAP proxy server port | `993` |
 | `EENGINE_IMAP_PROXY_SECRET` | string | none | Shared password accepted for every account. A password that does not match is checked as an access token with the `imap-proxy` scope instead, so tokens work whether or not this is set | `your-secret-key` |
 | `EENGINE_IMAP_PROXY_PROXY` | boolean | `false` | Enable PROXY protocol for IMAP proxy server | `true` |
+| `EENGINE_IMAPPROXY_MAX_CLIENTS` | number | `1000` | Concurrent connections the IMAP proxy accepts, counted from `accept`. A connection over the cap is answered `* BYE Too many connections` and closed. Config file `[imap] maxClients`. Since v2.79.9 | `5000` |
 
-These five variables seed the `imapProxyServerEnabled`, `imapProxyServerHost`, `imapProxyServerPort`, `imapProxyServerPassword`, and `imapProxyServerProxy` settings on first start only. Once the settings exist in Redis, the values under **Configuration** > **IMAP Proxy** are what count, and a changed variable has no effect.
+The first five variables seed the `imapProxyServerEnabled`, `imapProxyServerHost`, `imapProxyServerPort`, `imapProxyServerPassword`, and `imapProxyServerProxy` settings on first start only. Once the settings exist in Redis, the values under **Configuration** > **IMAP Proxy** are what count, and a changed variable has no effect.
 
 Turn the PROXY protocol on only when something in front of the listener actually speaks it. A plain IMAP client connecting to a listener that expects a PROXY header is rejected.
 
@@ -373,7 +388,7 @@ EENGINE_IMAP_PROXY_HOST=0.0.0.0
 EENGINE_IMAP_PROXY_PORT=2993
 ```
 
-## SMTP Proxy Server
+## SMTP Server {#smtp-proxy-server}
 
 Enable and configure the built-in [SMTP submission server](/docs/sending/smtp-interface).
 
@@ -385,8 +400,9 @@ Enable and configure the built-in [SMTP submission server](/docs/sending/smtp-in
 | `EENGINE_SMTP_SECRET` | string | none | Shared password accepted for every account. A password that does not match is checked as an access token with the `smtp` scope instead, so tokens work whether or not this is set | `your-secret-key` |
 | `EENGINE_SMTP_PROXY` | boolean | `false` | Accept the HAProxy PROXY protocol, so the client address EmailEngine sees is the original caller rather than the load balancer | `true` |
 | `EENGINE_MAX_SMTP_MESSAGE_SIZE` | byte size | `26214400` | Max message size the SMTP server accepts (25 MB) | `50M` |
+| `EENGINE_SMTP_MAX_CLIENTS` | number | `100` | Concurrent connections the SMTP server accepts. Each connection buffers its message in memory up to `EENGINE_MAX_SMTP_MESSAGE_SIZE`, so this bounds the worker's memory; a connection over the cap is refused with a `421`, which SMTP clients retry. Config file `[smtp] maxClients`. Since v2.79.9 | `500` |
 
-The first five seed the `smtpServerEnabled`, `smtpServerHost`, `smtpServerPort`, `smtpServerPassword`, and `smtpServerProxy` settings on first start only. Once the settings exist in Redis, the values under **Configuration** > **SMTP Server** are what count, and a changed variable has no effect. `EENGINE_MAX_SMTP_MESSAGE_SIZE` is read on every start.
+The first five seed the `smtpServerEnabled`, `smtpServerHost`, `smtpServerPort`, `smtpServerPassword`, and `smtpServerProxy` settings on first start only. Once the settings exist in Redis, the values under **Configuration** > **SMTP Server** are what count, and a changed variable has no effect. `EENGINE_MAX_SMTP_MESSAGE_SIZE` and `EENGINE_SMTP_MAX_CLIENTS` are read on every start.
 
 As with the IMAP proxy, turn the PROXY protocol on only when something in front of the listener speaks it: a plain SMTP client connecting to a listener that expects a PROXY header is rejected.
 
@@ -416,7 +432,7 @@ Configure TLS/SSL settings for secure connections.
 | `EENGINE_TLS_MIN_VERSION` | string | `TLSv1` | Minimum TLS version | `TLSv1.2` |
 | `EENGINE_TLS_MIN_DH_SIZE` | number | `1024` | Minimum Diffie-Hellman key size | `2048` |
 | `EENGINE_TLS_CIPHERS` | string | `DEFAULT@SECLEVEL=0` | TLS cipher suite list | `TLS_AES_256_GCM_SHA384` |
-| `EENGINE_API_TLS` | boolean | `false` | Enable TLS for the API server | `true` |
+| `EENGINE_API_TLS` | boolean | `false` | Serve the API and admin interface over HTTPS. An `[api.tls]` section in the configuration file, or `--api.tls.certPath` on the command line, turns it on as well | `true` |
 
 **Examples:**
 
@@ -445,7 +461,7 @@ Each server that can terminate TLS reads its certificate material from its own p
 |--------|--------|------------|
 | API and admin interface | `EENGINE_API_TLS_` | `EENGINE_API_TLS=true` |
 | [SMTP server](/docs/sending/smtp-interface) | `EENGINE_SMTP_TLS_` | The `smtpServerTLSEnabled` setting |
-| [IMAP proxy](/docs/accounts/proxying-connections) | `EENGINE_IMAPPROXY_TLS_` | The `imapProxyServerTLSEnabled` setting |
+| [IMAP proxy](/docs/receiving/imap-proxy-server) | `EENGINE_IMAPPROXY_TLS_` | The `imapProxyServerTLSEnabled` setting |
 
 All three accept the same suffixes:
 
@@ -557,9 +573,9 @@ EENGINE_SECRET=generated-value-here
 If you lose `EENGINE_SECRET`, encrypted credentials cannot be recovered. Back up this secret securely and separately from your Redis data.
 :::
 
-Changing the secret does not re-encrypt what is already stored. The `emailengine encrypt` command does that, taking the new secret and one or more `--decrypt` values for the old ones. See [Changing Encryption Secret](/docs/advanced/encryption#changing-encryption-secret) for the procedure and what a partially rotated database looks like.
+Changing the secret does not re-encrypt what is already stored. The `emailengine encrypt` command does that, taking the new secret and one or more `--decrypt` values for the old ones. See [Changing Encryption Secret](/docs/deployment/encryption#changing-encryption-secret) for the procedure and what a partially rotated database looks like.
 
-[Credential Security FAQ](/docs/support/security-faq) | [Encryption Guide](/docs/advanced/encryption)
+[Credential Security FAQ](/docs/support/security-faq) | [Encryption Guide](/docs/deployment/encryption)
 
 **Restrict admin access to specific IPs:**
 ```bash
@@ -583,7 +599,7 @@ EENGINE_TOKEN_LOG_AGE=2592000
 
 ## Single Sign-On (SSO)
 
-Enable single sign-on for the EmailEngine admin interface, either through a generic OpenID Connect provider or through the dedicated Okta integration. See [Single Sign-On](/docs/deployment/security#single-sign-on-sso) in the security guide for the setup procedure.
+Enable single sign-on for the EmailEngine admin interface, either through a generic OpenID Connect provider or through the dedicated Okta integration. See [Single Sign-On](/docs/deployment/admin-authentication#single-sign-on-sso) in the security guide for the setup procedure.
 
 ### OpenID Connect (OIDC)
 
@@ -655,7 +671,7 @@ Advanced configuration options for debugging and performance tuning.
 | `EENGINE_CORS_ORIGIN` | string | none | CORS allowed origins (whitespace separated) | `https://app.example.com` |
 | `EENGINE_CORS_MAX_AGE` | duration | `60` seconds | How long a browser may cache a CORS preflight response. A bare number is milliseconds, so use a unit | `1h` |
 | `EENGINE_MCP_ENABLED` | boolean | `true` | Register the [MCP endpoint](/docs/mcp) routes. Registration alone serves nothing: the `mcpEnabled` setting is the runtime switch | `false` |
-| `EENGINE_CSP_MODE` | string | `enforce` | How the Content-Security-Policy is delivered: `enforce`, `report-only` (violations are only reported to the browser console) or `off`. The other security headers are unaffected | `report-only` |
+| `EENGINE_CSP_MODE` | string | `enforce` | How the Content-Security-Policy is delivered: `enforce`, `report-only` (violations are only reported to the browser console) or `off`. The other security headers are unaffected. Since v2.79.9 | `report-only` |
 | `EENGINE_DISABLE_THREAD_COLLAPSE` | boolean | `false` | Stop web-safe HTML from folding quoted thread history into a collapsible block | `true` |
 | `EENGINE_BEACON_DISABLED` | boolean | `false` | Disable the anonymized feature beacon that rides on the license validation request | `true` |
 | `EENGINE_UPDATE_CHECK_DISABLED` | boolean | `false` | Disable the update check against the GitHub releases API | `true` |
@@ -704,7 +720,7 @@ The Document Store (Elasticsearch) feature was removed in EmailEngine v2.82.0. T
 
 Since EmailEngine v2.76.0, `EENGINE_UPDATE_CHECK_DISABLED=true` disables the check against `api.github.com` that powers the "update available" notice in the admin dashboard. The check runs once at startup, sends nothing beyond a standard User-Agent header, and fails silently without network access, but it is the only background network call that is not tied to a subscription license. Subscription licenses additionally validate daily against `postalsys.com`, carrying an [anonymized feature beacon](/docs/deployment/compliance#no-developer-access) that `EENGINE_BEACON_DISABLED=true` disables; perpetual licenses are verified offline and never contact the license server at all. With the update check disabled, a perpetual-license instance makes no background network calls whatsoever.
 
-Two further variables exist but are set by installers rather than by you: `EENGINE_INSTALL_SCRIPT=true` is written into the systemd unit by the [installation script](/docs/installation/linux), and `EENGINE_DOCEAN=true` by the DigitalOcean Marketplace image. They only record the installation channel, which the **Upgrade** page in the admin interface uses to show the matching upgrade instructions and the feature beacon reports.
+Two further variables exist but are set by installers rather than by you: `EENGINE_INSTALL_SCRIPT=true` is written into the systemd unit by the [installation script](/docs/installation/linux), and `EENGINE_DOCEAN=true` by the DigitalOcean Marketplace image. They only record the installation channel, which the **Upgrade** page in the admin interface uses to show the matching upgrade instructions and the feature beacon reports. `RENDER_SERVICE_SLUG`, which [Render](/docs/deployment/render) sets on its own, is read for the same purpose.
 
 ### Cross-Origin Requests {#cors-configuration}
 
@@ -817,7 +833,7 @@ Pre-configured settings for automated deployments.
 |----------|--------------|-----------------|-------------|
 | `EENGINE_SETTINGS` | `--settings` | `settings` | JSON object of runtime settings to apply at startup |
 | `EENGINE_PREPARED_TOKEN` | `--preparedToken` | `preparedToken` | Exported token hash (from `emailengine tokens export`) |
-| `EENGINE_PREPARED_PASSWORD` | `--preparedPassword` | `preparedPassword` | Admin password hash (from `emailengine password --hash`) |
+| `EENGINE_PREPARED_PASSWORD` | `--preparedPassword` | `preparedPassword` | Admin password hash (from `emailengine password --hash`). Written at startup when it differs from the stored hash |
 | `EENGINE_PREPARED_LICENSE` | `--preparedLicense` | `preparedLicense` | License key |
 
 **Examples:**
@@ -831,7 +847,7 @@ EENGINE_SETTINGS='{
 }'
 ```
 
-The value is validated against the settings schema at startup. A value that fails validation stops EmailEngine from starting; an unknown key is dropped and logged as an error, so a typo does not go unnoticed.
+The value is validated against the settings schema at startup. A value that fails validation stops EmailEngine from starting; an unknown key is dropped and logged as an error, so a typo does not go unnoticed. The keys are re-applied on every start, so a value changed in the admin interface reverts at the next restart; since v2.79.8 the settings pages mark such fields as managed by `EENGINE_SETTINGS`. See [Prepared Settings](/docs/configuration/prepared-settings).
 
 **Docker Compose (multiline):**
 ```yaml
@@ -1058,8 +1074,12 @@ Environment variables and their command-line equivalents:
 | `EENGINE_CORS_MAX_AGE` | `--cors.maxAge` | CORS preflight cache time |
 | `EENGINE_SMTP_ENABLED`, `_HOST`, `_PORT`, `_SECRET`, `_PROXY` | `--smtp.enabled`, `--smtp.host`, `--smtp.port`, `--smtp.secret`, `--smtp.proxy` | Built-in SMTP submission server |
 | `EENGINE_MAX_SMTP_MESSAGE_SIZE` | `--smtp.maxMessageSize` | Max message size the SMTP server accepts |
+| `EENGINE_SMTP_MAX_CLIENTS` | `--smtp.maxClients` | Concurrent SMTP server connections |
 | `EENGINE_IMAP_PROXY_ENABLED`, `_HOST`, `_PORT`, `_SECRET`, `_PROXY` | `--imap-proxy.enabled`, `--imap-proxy.host`, `--imap-proxy.port`, `--imap-proxy.secret`, `--imap-proxy.proxy` | Built-in IMAP proxy |
+| `EENGINE_IMAPPROXY_MAX_CLIENTS` | `--imap.maxClients` | Concurrent IMAP proxy connections |
 | `EENGINE_MCP_ENABLED` | `--mcp.enabled` | Register the MCP endpoint routes |
+| `EENGINE_CSP_MODE` | `--api.cspMode` | Content-Security-Policy delivery mode |
+| `EENGINE_API_TLS` | `--api.tls.certPath`, `--api.tls.keyPath` | Serve the API over HTTPS; the variable switches it on, the arguments name the files |
 | `EENGINE_SETTINGS` | `--settings` | Prepared runtime settings |
 | `EENGINE_PREPARED_TOKEN` | `--preparedToken` | Exported token hash |
 | `EENGINE_PREPARED_PASSWORD` | `--preparedPassword` | Admin password hash |
@@ -1067,11 +1087,11 @@ Environment variables and their command-line equivalents:
 
 **Config file form:** the configuration file key is the CLI argument without the leading `--`, so `--api.port=3000` is `port = 3000` under `[api]`, and `--imap-proxy.port=2993` is `port = 2993` under `[imap-proxy]`. The TLS prefixes are the exception: they are read from the environment only, apart from the `keyPath`, `certPath`, `caPath` and `dhparamPath` keys described under [TLS Configuration](#tls-configuration).
 
-A few keys have no environment variable at all, among them `--workers.export`, `--workers.imapProxy` and `--licensePath`. The [CLI reference](/docs/configuration/cli#all-server-arguments) lists every argument, including the ones `--help` does not show.
+A few keys have no environment variable at all, among them `--workers.export` and `--licensePath`. The [CLI reference](/docs/configuration/cli#all-server-arguments) lists every argument, including the ones `--help` does not show.
 
 ## See Also
 
-- [Configuration Options Reference](/docs/reference/configuration-options) - The runtime settings `POST /v1/settings` accepts, which these variables do not cover
+- [Configuration Options Reference](/docs/configuration/settings) - The runtime settings `POST /v1/settings` accepts, which these variables do not cover
 - [CLI Reference](/docs/configuration/cli) - Command-line arguments as an alternative to environment variables
 - [Redis Configuration](/docs/configuration/redis) - Connection URLs, the `family` parameter, persistence and memory
 - [Prepared Settings](/docs/configuration/prepared-settings) - Provisioning settings, tokens, a password and a license at first start

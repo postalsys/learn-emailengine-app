@@ -1,7 +1,7 @@
 ---
 title: Redis Configuration
 description: Redis configuration requirements, connection settings, and performance tuning
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 import Tabs from '@theme/Tabs';
@@ -49,7 +49,7 @@ The URL is parsed by EmailEngine itself before it reaches the Redis client: the 
 services:
   redis:
     image: redis:7-alpine
-    command: redis-server --save 60 1000 --save 300 10 --save 900 1 --maxmemory-policy noeviction
+    command: redis-server --save 900 1 --save 300 10 --save 60 10000 --maxmemory-policy noeviction --tcp-keepalive 300
     volumes:
       - redis-data:/data
     ports:
@@ -331,8 +331,8 @@ EmailEngine uses JSON logging (pino). Log levels: `60`=FATAL, `50`=ERROR, `40`=W
 
 **Successful connection:**
 ```text
-{"level":30,"time":1762176419767,"pid":93728,"msg":"EmailEngine starting up","version":"2.79.4"}
-{"level":30,"time":1762176421071,"pid":93728,"msg":"Started API server thread","port":3000,"host":"127.0.0.1","maxSize":5242880,"maxBodySize":52428800,"version":"2.79.4"}
+{"level":30,"time":1762176419767,"pid":93728,"msg":"EmailEngine starting up","version":"2.82.0"}
+{"level":30,"time":1762176421071,"pid":93728,"msg":"Started API server thread","port":3000,"host":"127.0.0.1","maxSize":5242880,"maxBodySize":52428800,"version":"2.82.0"}
 ```
 
 There is no "Redis connected" message. If "Started API server thread" appears (at info level), the API worker has its Redis connection.

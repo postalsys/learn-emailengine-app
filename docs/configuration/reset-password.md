@@ -36,7 +36,7 @@ With `--hash` the output looks like this (it decodes to a string starting with `
 JHBia2RmMi1zaGEyNTYkaT02MDAwMDAkdEFDUkVCaUJjT1lHTUJQdGpVaUZMUSRNRG1PS01LZHU2VzRqWDI3RkVSTGZ1d0s5U2VOSVJhMWd6Nm1xa1ozL3FN
 ```
 
-Set it as `EENGINE_PREPARED_PASSWORD` and EmailEngine writes it to the admin account on every startup, so the password stays what the deployment says it is even after someone changes it in the interface. A value that does not decode to a `$pbkdf2` hash is fatal at startup (`Invalid password hash provided`, exit status 1).
+Set it as `EENGINE_PREPARED_PASSWORD` and EmailEngine compares it with the stored hash at every startup and writes it whenever the two differ, so the password stays what the deployment says it is even after someone changes it in the interface. A hash that already matches is left alone: since v2.79.8 a restart with an unchanged `EENGINE_PREPARED_PASSWORD` keeps every admin session, where earlier releases rewrote the hash on every boot and logged every admin out. A value that does not decode to a `$pbkdf2` hash is fatal at startup (`Invalid password hash provided`, exit status 1).
 
 :::info Run it from anywhere with Redis access
 The `emailengine` binary only needs to reach the Redis server, so you can run this from the EmailEngine host or from your own machine. Point `--dbs.redis` at the Redis database that instance uses.
