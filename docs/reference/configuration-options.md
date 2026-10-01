@@ -287,7 +287,6 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
 | `openAiMaxTokens` | number | 30000 | Token budget for the prompt, the instructions and the email together |
 | `openAiPrompt` | string | unset | Instructions for the AI, sent as the system message. Unset means the built-in instructions |
 | `openAiPreProcessingFn` | string | unset | JavaScript filter deciding which messages are processed. Unset means every Inbox message |
-| `openAiTrustedAuthservIds` | array | unset | Mail servers whose `Authentication-Results` header the risk assessment may believe, for mailboxes on servers other than Gmail or Microsoft 365. Each name matches itself and the hosts under it |
 | `openAiGenerateEmbeddings` | boolean | off | Removed in v2.82.0. Still accepted, has no effect |
 
 `openAiAPIUrl` points these calls at an OpenAI-compatible service other than OpenAI itself, and it has to include whatever path prefix that service mounts its API under. For Azure OpenAI that means `https://<your-resource>.openai.azure.com/openai/v1`, not the bare host. See [AI and ChatGPT integration](/docs/integrations/ai-chatgpt) for what the generated fields contain and where they appear.
