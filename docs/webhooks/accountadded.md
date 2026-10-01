@@ -22,15 +22,6 @@ Re-registering an account ID that already exists does not fire it again. A `POST
 
 Like every event, it is delivered only if `accountAdded` or `*` is in `webhookEvents`. See [Webhooks Overview](/docs/webhooks/overview) for the allowlist.
 
-## Common Use Cases
-
-- **Account registration tracking** - Log when new accounts are added to your system
-- **Onboarding workflows** - Create the local record that later lifecycle events update
-- **Billing integration** - Start billing cycles when accounts are registered
-- **User notifications** - Inform users their account is being set up
-- **Audit logging** - Track all account additions for compliance purposes
-- **Dashboard updates** - Show newly added accounts in a pending or connecting state
-
 ## Payload Schema
 
 ### Top-Level Fields
@@ -83,30 +74,15 @@ When no service URL is configured:
 
 ## Handling the Event
 
-### Basic Handler
+The payload carries nothing but the account ID. Create the local record here, in a pending state, and let the events that follow move it on. Query [Get Account](/docs/api/get-v-1-account-account) if you need the name, address or account type.
 
 ```javascript
 async function handleAccountAdded(event, headers) {
   const { account, date } = event;
   const eventId = headers['x-ee-wh-event-id'];
 
-  console.log(`New account registered: ${account}`);
-  console.log(`  Time: ${date}`);
-  console.log(`  Event ID: ${eventId}`);
-
-  // Record the new account in your system
-  await createAccountRecord(account);
-}
-```
-
-### Creating Account Records in Database
-
-```javascript
-async function handleAccountAdded(event, headers) {
-  const { account, date } = event;
-  const eventId = headers['x-ee-wh-event-id'];
-
-  // Create initial account record
+  // Record the new account in a pending state. authenticationSuccess,
+  // authenticationError or connectError will report the outcome
   await db.accounts.create({
     data: {
       emailEngineId: account,
@@ -115,75 +91,6 @@ async function handleAccountAdded(event, headers) {
       lastEventId: eventId
     }
   });
-
-  // Log the account addition
-  await auditLog.create({
-    event: 'account_added',
-    account,
-    timestamp: date,
-    eventId
-  });
-}
-```
-
-### Triggering Onboarding Workflows
-
-```javascript
-async function handleAccountAdded(event) {
-  const { account, date } = event;
-
-  // Create account record with pending status
-  await db.accounts.create({
-    data: {
-      emailEngineId: account,
-      status: 'pending_authentication',
-      createdAt: new Date(date)
-    }
-  });
-
-  // Send a notification to the user who owns the account
-  const user = await getUserByAccount(account);
-  if (user) {
-    await sendNotification({
-      userId: user.id,
-      type: 'account_connecting',
-      message: 'Your email account is being connected'
-    });
-  }
-
-  // Check back if neither authenticationSuccess nor an error event has arrived
-  await scheduleJob('check_account_connection', {
-    account,
-    checkAfterMinutes: 5
-  });
-}
-```
-
-### Billing Integration
-
-```javascript
-async function handleAccountAdded(event) {
-  const { account, date } = event;
-
-  // Get user associated with this account
-  const user = await getUserByAccount(account);
-
-  if (user) {
-    // Update billing records
-    await billing.addAccount({
-      userId: user.id,
-      accountId: account,
-      startDate: new Date(date)
-    });
-
-    // Check account limits
-    const accountCount = await getAccountCount(user.id);
-    const plan = await getUserPlan(user.id);
-
-    if (accountCount > plan.maxAccounts) {
-      await billing.upgradeRequired(user.id, 'account_limit_exceeded');
-    }
-  }
 }
 ```
 
@@ -195,7 +102,7 @@ When a new account is added and connects, you receive:
 2. **`authenticationSuccess`** - The mail server or provider accepted the credentials
 3. **`accountInitialized`** - The account reached the `connected` state for the first time
 
-For an IMAP account the last two arrive in that order: `authenticationSuccess` is sent as soon as the login succeeds, and `accountInitialized` after the first pass over the folders. For a Gmail API or Microsoft Graph account both are sent during initialization and `accountInitialized` comes first. Do not depend on the order between them.
+For an IMAP account `authenticationSuccess` is sent as soon as the login succeeds and `accountInitialized` after the first pass over the folders. For a Gmail API or Microsoft Graph account both are sent during initialization, in the same order. Before EmailEngine 2.80.0 the API-based accounts sent `accountInitialized` first; do not depend on the order between the two if you support older releases.
 
 If authentication fails:
 

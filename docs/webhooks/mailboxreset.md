@@ -25,14 +25,6 @@ Rebuilding the baseline deliberately does not emit `messageNew` for the messages
 Folder events are produced by the IMAP client. Gmail API and Microsoft Graph accounts do not send `mailboxNew`, `mailboxDeleted` or `mailboxReset`.
 :::
 
-## Common Use Cases
-
-- **Full resync trigger** - Initiate a complete resynchronization of your local message cache
-- **Database cleanup** - Clear cached message data for the affected folder since UIDs are invalid
-- **Search index rebuild** - Mark the folder's search index for rebuild
-- **Audit logging** - Track mailbox reset events for operational monitoring
-- **Alert systems** - Notify administrators about unusual mailbox resets that may indicate server issues
-
 ## Payload Schema
 
 ### Top-Level Fields
@@ -135,146 +127,26 @@ When the stored index was missing, there is no previous UIDVALIDITY to report an
 
 ## Handling the Event
 
-### Basic Handler
+Every EmailEngine message ID you hold for the folder is invalid after a reset, so either discard the cached messages or mark them for revalidation and list the folder again through the API:
 
 ```javascript
 async function handleMailboxReset(event) {
   const { account, path, data } = event;
 
-  console.log(`Mailbox reset detected for ${account}:`);
-  console.log(`  Folder: ${path}`);
-  console.log(`  Reason: ${data.reason}`);
-  console.log(`  New UIDVALIDITY: ${data.uidValidity}`);
-  console.log(`  Previous UIDVALIDITY: ${data.prevUidValidity || 'unknown'}`);
-
-  // Trigger full resync for this folder
-  await triggerFolderResync(account, path);
-}
-```
-
-### Database Cleanup
-
-```javascript
-async function handleMailboxReset(event) {
-  const { account, path, data } = event;
-
-  try {
-    // Clear all cached messages for this folder
-    // UIDs are no longer valid after UIDVALIDITY change
-    const deletedCount = await db.messages.deleteMany({
-      where: {
-        accountId: account,
-        folder: path
-      }
-    });
-
-    console.log(`Cleared ${deletedCount} cached messages for ${account}/${path}`);
-
-    // Update folder metadata with new UIDVALIDITY
-    await db.folders.upsert({
-      where: {
-        accountId_path: { accountId: account, path }
-      },
-      update: {
-        uidValidity: data.uidValidity,
-        lastReset: new Date(event.date),
-        syncStatus: 'pending'
-      },
-      create: {
-        accountId: account,
-        path,
-        name: data.name,
-        uidValidity: data.uidValidity,
-        syncStatus: 'pending'
-      }
-    });
-
-    // Trigger resync
-    await resyncQueue.add('folder-resync', {
-      account,
-      path,
-      reason: data.reason
-    });
-
-  } catch (err) {
-    console.error('Failed to handle mailbox reset:', err);
-    throw err; // Respond with an error status so EmailEngine retries the delivery
-  }
-}
-```
-
-### Alert on Reset
-
-```javascript
-async function handleMailboxReset(event) {
-  const { account, path, date, data } = event;
-
-  // Log the reset event
-  await auditLog.create({
-    timestamp: new Date(date),
-    account,
-    action: 'mailbox_reset',
-    folder: path,
-    metadata: {
-      reason: data.reason,
-      newUidValidity: data.uidValidity,
-      prevUidValidity: data.prevUidValidity,
-      folderName: data.name,
-      specialUse: data.specialUse
-    }
+  // Cached IDs no longer refer to these messages
+  await db.messages.updateMany({
+    where: { accountId: account, folder: path },
+    data: { needsRevalidation: true }
   });
 
-  // Alert if this is a critical folder
-  const criticalFolders = ['INBOX', 'Sent', 'Drafts'];
-  if (criticalFolders.some(f =>
-    path.toUpperCase().includes(f.toUpperCase())
-  )) {
-    await alertService.send({
-      severity: 'warning',
-      title: 'Critical Mailbox Reset Detected',
-      message: `Folder ${path} on account ${account} was reset (${data.reason})`,
-      details: {
-        account,
-        folder: path,
-        previousUidValidity: data.prevUidValidity,
-        newUidValidity: data.uidValidity,
-        timestamp: date
-      }
-    });
-  }
-}
-```
-
-### Search Index Rebuild
-
-```javascript
-async function handleMailboxReset(event) {
-  const { account, path, data } = event;
-
-  // Delete all indexed documents for this folder
-  await searchIndex.deleteByQuery({
-    query: {
-      bool: {
-        must: [
-          { term: { accountId: account } },
-          { term: { folder: path } }
-        ]
-      }
-    }
+  await db.folders.upsert({
+    where: { accountId_path: { accountId: account, path } },
+    update: { uidValidity: data.uidValidity, lastReset: new Date(event.date) },
+    create: { accountId: account, path, name: data.name, uidValidity: data.uidValidity }
   });
 
-  console.log(`Cleared search index for ${account}/${path}`);
-
-  // Mark folder for reindexing
-  await searchIndex.update({
-    id: `folder:${account}:${path}`,
-    doc: {
-      uidValidity: data.uidValidity,
-      needsReindex: true,
-      resetAt: event.date
-    },
-    doc_as_upsert: true
-  });
+  // Then list the folder through the API and match on the Message-ID header
+  await resyncQueue.add('folder-resync', { account, path, reason: data.reason });
 }
 ```
 
@@ -302,27 +174,7 @@ Messages that arrive after the reset are reported with `messageNew` as usual. No
 
 ### EmailEngine Message IDs Change Too
 
-EmailEngine's message IDs (the `id` field on messages and in message events) are derived from the folder and the UID, so a reset invalidates them along with the UIDs. Match on the `Message-ID` header if you need to relate messages across a reset:
-
-```javascript
-async function handleMailboxReset(event) {
-  const { account, path } = event;
-
-  // Instead of deleting, mark records as needing revalidation
-  await db.messages.updateMany({
-    where: {
-      accountId: account,
-      folder: path
-    },
-    data: {
-      uidValid: false,
-      needsRevalidation: true
-    }
-  });
-
-  // Then list the folder through the API and match on the Message-ID header
-}
-```
+EmailEngine's message IDs (the `id` field on messages and in message events) are derived from the folder and the UID, so a reset invalidates them along with the UIDs. Match on the `Message-ID` header if you need to relate messages across a reset.
 
 ### Rare But Important
 
@@ -348,4 +200,4 @@ Frequent resets on one account point at a server that reassigns UIDVALIDITY on e
 - [Webhooks Overview](/docs/webhooks/overview) - Configuring the webhook URL and the `webhookEvents` allowlist
 - [Mailbox Operations](/docs/receiving/mailbox-operations) - Listing folders and their current UIDVALIDITY
 - [List Messages API](/docs/api/get-v-1-account-account-messages) - Reconciling the folder's contents after a reset
-- [IDs Explained](/docs/advanced/ids-explained) - How EmailEngine message IDs are built from the folder and UID
+- [IDs Explained](/docs/receiving/ids-explained) - How EmailEngine message IDs are built from the folder and UID

@@ -6,7 +6,7 @@ description: "Webhook event triggered when an email account completes its initia
 
 # accountInitialized
 
-The `accountInitialized` webhook event is triggered when an email account reaches the `connected` state for the first time. For an IMAP account that is after the first pass over its folders; for a Gmail API or Microsoft Graph account it is after the provider profile check succeeds. From this point the account is operational.
+The `accountInitialized` webhook event is triggered when an email account reaches the `connected` state for the first time. For an IMAP account that is after the first pass over its folders; for a Gmail API or Microsoft Graph account it is after the provider accepted the access token and returned the account profile. From this point the account is operational.
 
 ## When This Event is Triggered
 
@@ -20,15 +20,6 @@ It fires once per initialization cycle. Routine reconnections, restarts and reco
 ### Technical Details
 
 EmailEngine keeps a per-account counter of how many times the account has entered the `connected` state. The counter is created at `0` when the account is registered, and reset to `0` by a flush. When the state becomes `connected` and the counter moves from `0` to `1`, the event is sent.
-
-## Common Use Cases
-
-- **Account activation confirmation** - Know when accounts are ready to use
-- **Onboarding completion** - Mark user onboarding as complete when their email is connected
-- **Initial data sync** - Trigger processes that need mailbox data to be available
-- **User notifications** - Inform users their email account is now active
-- **Dashboard updates** - Update account status to "active" or "ready"
-- **Start message processing** - Begin automated email processing workflows
 
 ## Payload Schema
 
@@ -82,111 +73,36 @@ When no service URL is configured:
 
 ## Handling the Event
 
-### Basic Handler
-
-```javascript
-async function handleAccountInitialized(event, headers) {
-  const { account, date } = event;
-  const eventId = headers['x-ee-wh-event-id'];
-
-  console.log(`Account initialized: ${account}`);
-  console.log(`  Time: ${date}`);
-  console.log(`  Event ID: ${eventId}`);
-
-  // Mark account as ready in your system
-  await markAccountReady(account);
-}
-```
-
-### Updating Account Status
-
-```javascript
-async function handleAccountInitialized(event, headers) {
-  const { account, date } = event;
-  const eventId = headers['x-ee-wh-event-id'];
-
-  // Update account status to active
-  await db.accounts.update({
-    where: { emailEngineId: account },
-    data: {
-      status: 'active',
-      initializedAt: new Date(date),
-      lastEventId: eventId
-    }
-  });
-
-  // Log the initialization
-  await auditLog.create({
-    event: 'account_initialized',
-    account,
-    timestamp: date,
-    eventId
-  });
-}
-```
-
-### Completing User Onboarding
+This is the point at which the account's folders and messages can be listed through the API, so it is where work that needs mailbox data belongs:
 
 ```javascript
 async function handleAccountInitialized(event) {
   const { account, date } = event;
 
-  // Update account status
   await db.accounts.update({
     where: { emailEngineId: account },
-    data: {
-      status: 'active',
-      initializedAt: new Date(date)
-    }
+    data: { status: 'active', initializedAt: new Date(date) }
   });
 
-  // Notify user that setup is complete
-  const user = await getUserByAccount(account);
-  if (user) {
-    await sendNotification({
-      userId: user.id,
-      type: 'account_ready',
-      message: 'Your email account is now connected and ready to use'
-    });
-
-    // Complete onboarding if this was their first account
-    if (!user.onboardingComplete) {
-      await completeOnboarding(user.id);
-    }
-  }
-}
-```
-
-### Starting Automated Processing
-
-```javascript
-async function handleAccountInitialized(event) {
-  const { account } = event;
-
-  // Mark account as ready
-  await db.accounts.update({
-    where: { emailEngineId: account },
-    data: { status: 'active' }
-  });
-
-  // Start any automated email processing for this account
-  await startEmailProcessor(account);
-
-  // Fetch initial mailbox statistics
-  const mailboxes = await emailEngine.getMailboxes(account);
-  await cacheMailboxStats(account, mailboxes);
+  // The folder listing is available from here on
+  const response = await fetch(
+    `https://emailengine.example.com/v1/account/${account}/mailboxes`,
+    { headers: { Authorization: `Bearer ${process.env.EE_TOKEN}` } }
+  );
+  const { mailboxes } = await response.json();
+  await cacheFolders(account, mailboxes);
 }
 ```
 
 ## Event Sequence
 
-When a new IMAP account is added, webhooks arrive in this order:
+When a new account is added, webhooks arrive in this order:
 
 1. **`accountAdded`** - Account configuration is stored
-2. **`authenticationSuccess`** - The mail server accepted the login
-3. **`accountInitialized`** - The first pass over the folders is complete (this event)
+2. **`authenticationSuccess`** - The mail server or provider accepted the credentials
+3. **`accountInitialized`** - The account reached `connected` (this event)
 
-For a Gmail API or Microsoft Graph account, `accountInitialized` is sent before `authenticationSuccess`, because the state becomes `connected` as soon as the provider profile check succeeds and the success notification follows it. Do not depend on the order between the two.
+For an IMAP account the first pass over the folders separates the last two. For a Gmail API or Microsoft Graph account both are sent during initialization, in the same order. Before EmailEngine 2.80.0 the API-based accounts sent `accountInitialized` first; do not depend on the order between the two if you support older releases.
 
 ### Re-initialization After Flush
 

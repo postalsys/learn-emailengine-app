@@ -22,15 +22,6 @@ This event indicates a successful handoff. It does not guarantee delivery to the
 
 Messages queued through the [Submit API](/docs/api/post-v-1-account-account-submit) and through the [SMTP interface](/docs/sending/smtp-interface) both produce this event.
 
-## Common Use Cases
-
-- **Delivery confirmation** - Update your application when emails are successfully queued for delivery
-- **Tracking correlation** - Associate the EmailEngine queue ID with the MTA's message ID
-- **Audit logging** - Maintain a log of all successfully sent emails
-- **Workflow triggers** - Initiate follow-up actions after email is sent
-- **Analytics** - Track send volumes and success rates per account
-- **CRM integration** - Update contact records with communication history
-
 ## Payload Schema
 
 ### Top-Level Fields
@@ -65,7 +56,7 @@ The event carries no `path` or `specialUse`. The unique event identifier is sent
 
 ### Network Routing Object Structure
 
-Sent as `null` unless a [local address](/docs/advanced/local-addresses) or a proxy was used:
+Sent as `null` unless a [local address](/docs/configuration/local-addresses) or a proxy was used:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -226,74 +217,22 @@ The `queueId` is EmailEngine's identifier for the submission job. Use it to:
 
 ## Handling the Event
 
-### Basic Handler
+Record the acceptance against the submission, keyed on the `queueId` the Submit API returned. `originalMessageId` is present only when the provider rewrote the Message-ID (see [messageId vs originalMessageId](#messageid-vs-originalmessageid)); store the rewritten `messageId`, because that is the value a later bounce report names:
 
 ```javascript
 async function handleMessageSent(event) {
-  const { account, data } = event;
+  const { data, date } = event;
 
-  console.log(`Email sent successfully for account ${account}`);
-  console.log(`  Queue ID: ${data.queueId}`);
-  console.log(`  Message ID: ${data.messageId}`);
-  console.log(`  Recipients: ${data.envelope.to.join(', ')}`);
-
-  if (data.response) {
-    console.log(`  Server Response: ${data.response}`);
-  }
-
-  await db.emailLogs.update({
-    queueId: data.queueId,
-    status: 'sent',
-    messageId: data.messageId,
-    sentAt: event.date
-  });
-}
-```
-
-### Tracking with Original Message-ID
-
-```javascript
-async function handleMessageSent(event) {
-  const { data } = event;
-
-  const trackingId = data.originalMessageId || data.messageId;
-
-  await db.emails.update(
-    { messageId: trackingId },
-    {
-      finalMessageId: data.messageId,
-      status: 'delivered_to_mta',
-      mtaResponse: data.response
+  await db.submissions.update({
+    where: { queueId: data.queueId },
+    data: {
+      status: 'accepted',
+      acceptedAt: new Date(date),
+      messageId: data.messageId,
+      originalMessageId: data.originalMessageId || null,
+      response: data.response || null
     }
-  );
-}
-```
-
-### With Error Handling
-
-```javascript
-async function handleMessageSent(event) {
-  try {
-    const { account, data, date } = event;
-
-    await auditLog.create({
-      type: 'email_sent',
-      account,
-      queueId: data.queueId,
-      messageId: data.messageId,
-      recipients: data.envelope.to,
-      timestamp: new Date(date)
-    });
-
-    await notifyWebhookSubscribers('email.sent', {
-      messageId: data.messageId,
-      recipients: data.envelope.to
-    });
-
-  } catch (error) {
-    console.error('Failed to process messageSent webhook:', error);
-    throw error;
-  }
+  });
 }
 ```
 
@@ -320,15 +259,6 @@ Monitor `messageBounce`, `messageDeliveryError`, and `messageFailed` events for 
 - **v2.52.4**: `envelope` is included for Gmail API and MS Graph submissions
 - **v2.40.2**: `networkRouting` added
 
-## Best Practices
-
-1. **Store the queue ID** - Save `queueId` when calling the Submit API to correlate with this webhook
-2. **Handle Message-ID changes** - Check for `originalMessageId` to maintain tracking when providers rewrite IDs
-3. **Don't assume delivery** - This event confirms acceptance by the provider, not inbox delivery
-4. **Process quickly** - Return 2xx before the 30 second delivery timeout, then do the work asynchronously
-5. **Use for audit trails** - Log all sent emails for compliance and debugging
-6. **Correlate with bounces** - Match `messageId` with bounce notifications for delivery verification
-
 ## Related Events
 
 - [messageDeliveryError](/docs/webhooks/messagedeliveryerror) - A delivery attempt failed and may be retried
@@ -341,4 +271,4 @@ Monitor `messageBounce`, `messageDeliveryError`, and `messageFailed` events for 
 - [Submit API](/docs/api/post-v-1-account-account-submit) - Send emails via EmailEngine
 - [Outbox queue](/docs/sending/outbox-queue) - What happens to a message between submission and this event
 - [Outbox API](/docs/api/get-v-1-outbox) - Check queued message status
-- [Local addresses](/docs/advanced/local-addresses) - Where `networkRouting` comes from
+- [Local addresses](/docs/configuration/local-addresses) - Where `networkRouting` comes from

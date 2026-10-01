@@ -6,27 +6,20 @@ description: "Webhook event triggered when an email account successfully authent
 
 # authenticationSuccess
 
-The `authenticationSuccess` webhook event is triggered when an email account authenticates with the mail server or the provider API after either never having done so or having been in an error state. It confirms a new account works and tells you when a failing account has recovered.
+The `authenticationSuccess` webhook event is triggered when an email account authenticates with the mail server or the provider API after either never having done so or having had its credentials refused. It confirms a new account works and tells you when an account that was failing authentication has recovered.
 
 ## When This Event is Triggered
 
 The `authenticationSuccess` event fires when an account logs in successfully and one of these is true:
 
 1. The account has never reached the `connected` state before (initial connection, or the first connection after a [flush](/docs/api/put-v-1-account-account-flush))
-2. The account carries a stored error from a previous [`authenticationError`](/docs/webhooks/authenticationerror) or [`connectError`](/docs/webhooks/connecterror), and has now recovered
+2. The account carries a stored error from a previous [`authenticationError`](/docs/webhooks/authenticationerror), and has now recovered
 
 It is **not** sent on every successful login. A routine reconnection after a dropped connection, a restart or a token renewal on an account that was not in an error state produces no webhook. The stored error is cleared once the account is connected again, so the next failure and recovery are reported as a fresh pair.
 
-For an IMAP account the event is sent as soon as the IMAP login succeeds, before folders are synced. For a Gmail API or Microsoft Graph account it is sent once the provider accepted the access token and returned the account profile.
+Recovery from a [`connectError`](/docs/webhooks/connecterror) does not send it either. Since EmailEngine 2.80.0 a login that follows a connection failure clears the stored error silently, because a server that was briefly unreachable says nothing about the credentials; before 2.80.0 it was reported as `authenticationSuccess`. Watch the account `state` through [Get Account](/docs/api/get-v-1-account-account) or the [`/v1/changes`](/docs/api/get-v-1-changes) stream to see a connection failure end.
 
-## Common Use Cases
-
-- **Account activation tracking** - Confirm that newly added accounts are working
-- **Error recovery monitoring** - Know when previously failing accounts recover
-- **Dashboard updates** - Update account status from "error" to "connected" in your UI
-- **Workflow triggers** - Start processing emails only after successful authentication
-- **Compliance logging** - Track account connectivity history for auditing
-- **User notifications** - Inform users that their email connection has been restored
+For an IMAP account the event is sent as soon as the IMAP login succeeds, before folders are synced. For a Gmail API or Microsoft Graph account it is sent once the provider accepted the access token and returned the account profile, or, for an account in the `authenticationError` state, as soon as a token refresh succeeds.
 
 ## Payload Schema
 
@@ -96,117 +89,49 @@ For accounts using the Microsoft Graph API or Outlook IMAP with OAuth2:
 
 ## Handling the Event
 
-### Basic Handler
+The event arrives both for a first login and for a recovery, and the payload does not say which. Your own record of the account tells them apart:
 
 ```javascript
 async function handleAuthenticationSuccess(event) {
   const { account, data, date } = event;
 
-  console.log(`Account ${account} authenticated successfully`);
-  console.log(`  User: ${data.user}`);
-  console.log(`  Time: ${date}`);
+  const accountRecord = await db.accounts.findUnique({
+    where: { emailEngineId: account }
+  });
 
-  // Update account status in your system
-  await updateAccountStatus(account, 'connected');
-}
-```
+  if (accountRecord?.status === 'authentication_error') {
+    await sendNotification({
+      type: 'account_recovered',
+      account,
+      message: `Email account ${data.user} is connected again`
+    });
+  }
 
-### Updating Account Status in Database
-
-```javascript
-async function handleAuthenticationSuccess(event) {
-  const { account, date } = event;
-
-  // Update account status in your database
   await db.accounts.update({
     where: { emailEngineId: account },
     data: {
       status: 'connected',
       lastConnectedAt: new Date(date),
       lastError: null,
-      lastErrorCode: null,
-      lastErrorAt: null
+      lastErrorCode: null
     }
-  });
-
-  // Clear any pending error notifications
-  await clearAccountAlerts(account);
-}
-```
-
-### Handling Recovery from Errors
-
-```javascript
-async function handleAuthenticationSuccess(event) {
-  const { account, data, date } = event;
-
-  // Check if this account was previously in error state
-  const accountRecord = await db.accounts.findUnique({
-    where: { emailEngineId: account }
-  });
-
-  if (accountRecord?.status === 'authentication_error') {
-    // Account has recovered - notify relevant parties
-    console.log(`Account ${account} recovered from authentication error`);
-
-    await sendNotification({
-      type: 'account_recovered',
-      account,
-      message: `Email account ${data.user} is now connected`,
-      previousStatus: accountRecord.status,
-      recoveredAt: date
-    });
-  }
-
-  // Update status regardless
-  await db.accounts.update({
-    where: { emailEngineId: account },
-    data: {
-      status: 'connected',
-      lastConnectedAt: new Date(date)
-    }
-  });
-}
-```
-
-### Triggering Post-Authentication Workflows
-
-```javascript
-async function handleAuthenticationSuccess(event) {
-  const { account, data, date } = event;
-
-  // Check if this is the initial connection
-  const isNewAccount = await checkIfNewAccount(account);
-
-  if (isNewAccount) {
-    // Trigger initial setup workflows
-    await setupAccountFilters(account);
-    await notifyUser(account, 'Your email account is now connected');
-  }
-
-  // Log successful authentication
-  await auditLog.create({
-    event: 'authentication_success',
-    account,
-    user: data.user,
-    timestamp: date
   });
 }
 ```
 
 ## Event Sequence
 
-When a new IMAP account is added, you receive webhooks in this order:
+When a new account is added, you receive webhooks in this order:
 
 1. `accountAdded` - Account is registered with EmailEngine
-2. `authenticationSuccess` - The mail server accepted the login
-3. `accountInitialized` - The first pass over the folders is complete
+2. `authenticationSuccess` - The mail server or provider accepted the credentials
+3. `accountInitialized` - The account reached `connected`
 
-For a Gmail API or Microsoft Graph account the last two are swapped: `accountInitialized` is sent as soon as the state becomes `connected`, and `authenticationSuccess` follows it. Do not depend on the order between them.
+For an IMAP account the first pass over the folders separates the last two. For a Gmail API or Microsoft Graph account both are sent during initialization, in the same order. Before EmailEngine 2.80.0 the API-based accounts sent `accountInitialized` first; do not depend on the order between the two if you support older releases.
 
-When an account recovers from an error:
+When an account recovers from an authentication error:
 
-1. (Earlier) `authenticationError` or `connectError` - The login or the connection failed
+1. (Earlier) `authenticationError` - The credential was refused
 2. (Later) `authenticationSuccess` - The login succeeded after the cause was fixed
 
 An account that was [switched off after repeated authentication failures](/docs/webhooks/authenticationerror#parked-after-repeated-failures) sends this event once it has been re-authorized or resumed and logs in again.
@@ -214,7 +139,7 @@ An account that was [switched off after repeated authentication failures](/docs/
 ## Related Events
 
 - [authenticationError](/docs/webhooks/authenticationerror) - Triggered when authentication fails
-- [connectError](/docs/webhooks/connecterror) - Triggered when the connection fails before authentication
+- [connectError](/docs/webhooks/connecterror) - Triggered when the connection fails, which this event does not report recovery from
 - [accountAdded](/docs/webhooks/accountadded) - Triggered when a new account is registered
 - [accountInitialized](/docs/webhooks/accountinitialized) - Triggered when the first sync completes
 

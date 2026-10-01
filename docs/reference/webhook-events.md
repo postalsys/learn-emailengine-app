@@ -33,9 +33,8 @@ All webhook events share this envelope:
 | `data` | object | Event-specific payload |
 | `path` | string, optional | Mailbox path, on message and mailbox events |
 | `specialUse` | string, optional | Special-use flag of that mailbox, such as `\Inbox` or `\Sent`, when the server reports one |
-| `_route` | object, optional | Present when the event is delivered through a [webhook route](/docs/webhooks/webhook-routing); carries `_route.id` |
 
-The event ID is **not** in the body. It is sent as the `X-EE-Wh-Event-Id` header, and every retry of the same event carries the same ID, so deduplicate on the header. The full header set, including the `X-EE-Wh-Signature` HMAC and how to verify it, is documented under [Webhook HTTP headers](/docs/webhooks/overview#webhook-http-headers) and [Verify webhook authenticity](/docs/webhooks/overview#verify-webhook-authenticity).
+The event ID is **not** in the body. It is sent as the `X-EE-Wh-Event-Id` header, and every retry of the same event carries the same ID, so deduplicate on the header. The full header set, including the `X-EE-Wh-Signature` HMAC and how to verify it, is documented under [Webhook HTTP headers](/docs/webhooks/overview#webhook-http-headers) and [Verify webhook authenticity](/docs/webhooks/overview#verify-webhook-authenticity). The filter and map functions of a [webhook route](/docs/webhooks/webhook-routing) see two more fields on the payload they are given, `eventId` and `_route`; neither is in a delivered body.
 
 ## Account Events
 
@@ -110,7 +109,7 @@ EmailEngine failed to authenticate the account, against the mail server or the O
 }
 ```
 
-Key fields: `data.response` (the server's text), `data.serverResponseCode` (optional, for example `AUTHENTICATIONFAILED`, or `OauthRenewError` for OAuth2 accounts), `data.tokenRequest` (optional, details of a failed OAuth2 token refresh). Sent again, with the same event name, when repeated failures make the [authentication-failure safety net](/docs/configuration/environment-variables#max-imap-auth-failure-time) switch syncing off for the account. Full schema: [authenticationError](/docs/webhooks/authenticationerror).
+Key fields: `data.response` (the server's text), `data.serverResponseCode` (optional, for example `AUTHENTICATIONFAILED`, or `OauthRenewError` and `TokenGenerationError` for OAuth2 accounts), `data.tokenRequest` (optional, details of a failed OAuth2 token refresh). Sent again, with the same event name, when repeated failures make the [authentication-failure safety net](/docs/configuration/environment-variables#max-imap-auth-failure-time) switch syncing off for the account. Full schema: [authenticationError](/docs/webhooks/authenticationerror).
 
 ### authenticationSuccess
 
@@ -128,11 +127,11 @@ The account authenticated successfully.
 }
 ```
 
-`data.user` is the login that succeeded. Full schema: [authenticationSuccess](/docs/webhooks/authenticationsuccess).
+`data.user` is the login that succeeded. Sent after a successful login that follows an `authenticationError`, or on the first login of a new account. Since EmailEngine 2.80.0 a recovery from `connectError` does not send it; watch the account state or `GET /v1/changes` for that. Full schema: [authenticationSuccess](/docs/webhooks/authenticationsuccess).
 
 ### connectError
 
-EmailEngine could not establish a connection to the mail server.
+EmailEngine could not establish a connection to the mail server, or could not complete a login for a reason other than a refused credential. Since 2.80.1 an IMAP `NO` carrying an RFC 5530 `UNAVAILABLE`, `SERVERBUG`, `INUSE` or `LIMIT` code, and Exchange Online's "User is authenticated but not connected.", take this path rather than `authenticationError`. Since 2.80.0 MS Graph accounts send it with `serverResponseCode: "SubscriptionSetupError"` when the change subscription cannot be created or renewed.
 
 ```json
 {
@@ -147,7 +146,7 @@ EmailEngine could not establish a connection to the mail server.
 }
 ```
 
-Key fields: `data.response`, `data.serverResponseCode` (optional, for example `ECONNREFUSED`, `ETIMEDOUT`, `ENOTFOUND`). Full schema: [connectError](/docs/webhooks/connecterror).
+Key fields: `data.response`, `data.serverResponseCode` (optional, for example `ECONNREFUSED`, `ETIMEDOUT`, `ENOTFOUND`, an RFC 5530 code such as `UNAVAILABLE`, `ETokenRefresh` or `HTTPRequestError` for an unreachable token endpoint or authentication server, or `SubscriptionSetupError`). Full schema: [connectError](/docs/webhooks/connecterror).
 
 ## Message Events
 
@@ -212,7 +211,7 @@ A message was found in a folder that was not there before. IMAP does not disting
 }
 ```
 
-Key fields: `data.id` (the message ID for API calls), `data.uid`, `data.emailId` and `data.threadId` (when the server provides them), `data.date`, `data.flags`, `data.unseen`, `data.subject`, the address fields `from`, `sender`, `replyTo`, `to`, `cc`, `bcc`, `data.messageId`, `data.inReplyTo`, `data.text` (with `notifyText`), `data.attachments` (with `notifyAttachments`), `data.headers` (with `notifyHeaders`), `data.labels` and `data.category` (Gmail), `data.messageSpecialUse`, `data.seemsLikeNew`, `data.isAutoReply`, `data.isBounce`, `data.isComplaint`, `data.summary` (AI processing). The conditions are summarized under [Conditional fields](#conditional-fields). Full schema: [messageNew](/docs/webhooks/messagenew).
+Key fields: `data.id` (the message ID for API calls), `data.uid`, `data.emailId` and `data.threadId` (when the server provides them), `data.date`, `data.flags`, `data.unseen`, `data.subject`, the address fields `from`, `sender`, `replyTo`, `to`, `cc`, `bcc`, `data.messageId`, `data.inReplyTo`, `data.text` (with `notifyText`), `data.attachments` (with `notifyAttachments`), `data.headers` (with `notifyHeaders`), `data.labels` and `data.category` (Gmail), `data.messageSpecialUse`, `data.seemsLikeNew`, `data.isAutoReply`, `data.isBounce`, `data.isComplaint` and `data.relatedMessageId`, `data.deliveryReport` (a DSN reporting a delivery or a delay), `data.summary` (AI processing). The conditions are summarized under [Conditional fields](#conditional-fields). Full schema: [messageNew](/docs/webhooks/messagenew).
 
 ### messageDeleted
 
@@ -430,7 +429,7 @@ Every delivery attempt failed and the message was abandoned.
 }
 ```
 
-Key fields: `data.messageId`, `data.queueId`, `data.error` (first line of the final error), `data.networkRouting` (optional). Full schema: [messageFailed](/docs/webhooks/messagefailed).
+Key fields: `data.messageId`, `data.queueId`, `data.error` (first line of the error of the first failed attempt), `data.networkRouting` (SMTP submissions). Full schema: [messageFailed](/docs/webhooks/messagefailed).
 
 ### messageBounce
 
@@ -493,7 +492,7 @@ Key fields: `data.complaintMessage`, `data.arf` (`source`, `feedbackType`, `orig
 
 ## Tracking Events
 
-Require `trackOpens` or `trackClicks` to be enabled, instance-wide or per submission. Both are prone to false positives from clients and security scanners that prefetch images and links.
+Require `trackOpens` or `trackClicks` to be enabled, instance-wide or per submission. Both are prone to false positives from clients and security scanners that prefetch images and links. Requests from Google's published crawler address ranges and from hosts whose reverse DNS is under `barracuda.com` or `spfbl.net` are recognized as automated and produce no event.
 
 ### trackOpen
 
@@ -632,7 +631,7 @@ An export stopped with an error. There is no resume; start a new export.
 }
 ```
 
-Key fields: `data.exportId`, `data.error`, `data.errorCode` (optional), `data.phase` (`indexing` or `exporting`), `data.messagesExported`, `data.messagesQueued`. Full schema: [exportFailed](/docs/webhooks/exportfailed).
+Key fields: `data.exportId`, `data.error`, `data.errorCode` (optional), `data.phase` (`pending` before indexing started, `indexing`, `exporting`, or `unknown` when the export record could not be read), `data.messagesExported`, `data.messagesQueued`. Full schema: [exportFailed](/docs/webhooks/exportfailed).
 
 ## Complete Event List
 
@@ -649,7 +648,7 @@ Key fields: `data.exportId`, `data.error`, `data.errorCode` (optional), `data.ph
 | `messageUpdated` | Message | Flags or labels changed |
 | `messageMissing` | Message | Expected message could not be fetched |
 | `messageSent` | Sending | Queued message accepted by the mail server |
-| `messageDeliveryError` | Sending | One delivery attempt failed, will be retried |
+| `messageDeliveryError` | Sending | One SMTP delivery attempt failed, retried or not |
 | `messageFailed` | Sending | All delivery attempts failed |
 | `messageBounce` | Sending | Bounce received |
 | `messageComplaint` | Sending | Abuse report received |
@@ -690,18 +689,20 @@ Fields that appear only under a condition. The setting names are `POST /v1/setti
 | `data.category` | Gmail accounts with `resolveGmailCategories` on |
 | `data.emailId`, `data.threadId` | The server provides them: Gmail, MS Graph and IMAP servers with OBJECTID support |
 | `data.cc`, `data.bcc`, `data.replyTo`, `data.sender`, `data.inReplyTo` | The message carries the header, and for `sender` and `replyTo`, only when they differ from `from` |
-| `data.isAutoReply`, `data.isBounce`, `data.isComplaint` | Detected on the message |
+| `data.isAutoReply`, `data.isBounce`, `data.isComplaint` | Detected on the message. Bounces are checked in the Inbox and Junk folders, complaints in the Inbox |
+| `data.relatedMessageId` | With `isBounce` or `isComplaint`, when the report names the original message |
+| `data.deliveryReport` | The message is a delivery status notification reporting a delivery or a delay, in the Inbox |
 | `data.seemsLikeNew` | `messageNew` only |
 | `path`, `specialUse` (top level) | Message and mailbox events |
 
 ## Delivery and Retries
 
-Webhooks are queued and delivered by the `notify` queue. A delivery counts as successful on any `2xx` response. A failed or timed-out attempt is retried up to 10 attempts in total, with exponential backoff starting at 5 seconds and 20% jitter; each attempt is capped at 30 seconds (`EENGINE_WEBHOOK_TIMEOUT`). After the last attempt the job stays in the queue's failed set, visible under System > Queues in the admin interface. Details, the two failures that are not retried, and the handler pattern this calls for are under [Delivery and retries](/docs/webhooks/overview#delivery-and-retries).
+Webhooks are queued and delivered by the `notify` queue. A delivery counts as successful on any `2xx` response. Every other outcome, a `4xx` or `5xx` answer included, is retried up to 10 attempts in total, with exponential backoff starting at 5 seconds and 20% jitter; each attempt is capped at 30 seconds (`EENGINE_WEBHOOK_TIMEOUT`). After the last attempt the job stays in the queue's failed set, visible under System > Queues in the admin interface. Details, the two failures that are not retried, and the handler pattern this calls for are under [Delivery and retries](/docs/webhooks/overview#delivery-and-retries).
 
 ## See Also
 
 - [Webhooks overview](/docs/webhooks/overview) - Setup, headers, signatures, retries and debugging
 - [Webhook routing](/docs/webhooks/webhook-routing) - Different events to different endpoints, with their own filters
-- [Pre-processing functions](/docs/advanced/pre-processing) - Filtering and reshaping payloads before delivery
+- [Pre-processing functions](/docs/webhooks/pre-processing) - Filtering and reshaping payloads before delivery
 - [Webhooks API](/docs/api-reference/webhooks-api) - Reading routes programmatically
 - [Quick reference](/docs/reference/quick-reference) - The same events in one table with the API and settings summaries

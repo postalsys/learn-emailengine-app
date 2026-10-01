@@ -73,7 +73,7 @@ The allowlist applies to the default webhook target above. [Webhook routes](/doc
 :::tip Advanced: Webhook Routes
 For more advanced scenarios, you can configure multiple webhook routes to send different events to different endpoints based on account, event type, or custom filtering logic. Webhook routes also support pre-processing functions to filter or transform payloads before delivery.
 
-See [Webhooks API](/docs/api-reference/webhooks-api) for route management and [Pre-Processing Functions](/docs/advanced/pre-processing) for custom filters.
+Routes are created and edited in the admin interface under **Webhooks**; the API only lists them. See [Webhook Routes](/docs/webhooks/webhook-routing) for the filter and map functions a route can carry.
 :::
 
 ### 2. Create Webhook Handler
@@ -215,6 +215,7 @@ Each event becomes a job in the notify queue, and the queue worker posts it.
 | Behavior | Value |
 |----------|-------|
 | Success | Any `2xx` response |
+| Retried | Every other outcome: a `4xx` or `5xx` response, a refused or dropped connection, a TLS failure, a timeout. A `4xx` is retried on purpose, so that an endpoint whose path or credentials are being fixed still receives the event once it is |
 | Attempts | 10, counting the first |
 | Backoff | Exponential, starting at 5 seconds, with 20% jitter |
 | Per-attempt timeout | 30 seconds, configurable with `EENGINE_WEBHOOK_TIMEOUT` |
@@ -228,175 +229,16 @@ Because a timed-out or failed attempt is retried, your endpoint will sometimes r
 
 ## Webhook Events
 
-EmailEngine sends different types of events organized into categories:
-
-### Message Events
-
-Events related to emails in monitored mailbox folders. These webhooks notify you when messages arrive, are modified, or are removed from the mailbox.
-
-#### messageNew
-
-Triggered when a new message is detected in a mailbox folder. This is one of the most commonly used webhook events, enabling real-time processing of incoming emails.
-
-[See full messageNew reference](/docs/webhooks/messagenew)
-
-#### messageDeleted
-
-Triggered when a previously tracked email has been removed from a mailbox folder. Helps keep external systems synchronized with mailbox state changes.
-
-[See full messageDeleted reference](/docs/webhooks/messagedeleted)
-
-#### messageUpdated
-
-Triggered when EmailEngine detects that the flags or labels on a message have changed, enabling real-time synchronization of message state changes with external systems.
-
-[See full messageUpdated reference](/docs/webhooks/messageupdated)
-
-#### messageMissing
-
-Triggered when EmailEngine detects that a message it expected to find on the mail server is not available. This event indicates a potential synchronization issue and helps handle edge cases in message processing.
-
-[See full messageMissing reference](/docs/webhooks/messagemissing)
-
-### Delivery Events
-
-Events related to outgoing email delivery. These webhooks track the lifecycle of messages sent through EmailEngine, from successful delivery to failures, bounces, and spam complaints.
-
-#### messageSent
-
-Triggered when a queued message is successfully accepted by the SMTP server or email API (Gmail API, Microsoft Graph API). This event confirms that the message has been handed off to the mail transfer agent for delivery.
-
-[See full messageSent reference](/docs/webhooks/messagesent)
-
-#### messageDeliveryError
-
-Triggered for every failed SMTP delivery attempt, whether or not the message will be retried. Only SMTP submissions produce it.
-
-[See full messageDeliveryError reference](/docs/webhooks/messagedeliveryerror)
-
-#### messageFailed
-
-Triggered when EmailEngine gives up on a queued email, either because the attempts ran out or because a failure was permanent. Sent for SMTP, Gmail API and Microsoft Graph submissions alike.
-
-[See full messageFailed reference](/docs/webhooks/messagefailed)
-
-#### messageBounce
-
-Triggered when a bounce notification (Delivery Status Notification) is received in a monitored mailbox. EmailEngine parses the bounce message to extract delivery failure information including the failed recipient, SMTP error codes, and details about the original message.
-
-[See full messageBounce reference](/docs/webhooks/messagebounce)
-
-#### messageComplaint
-
-Triggered when a feedback loop (FBL) complaint is detected. EmailEngine parses ARF (Abuse Reporting Format) complaint messages to extract information about the complainant and the original message that was reported as spam.
-
-[See full messageComplaint reference](/docs/webhooks/messagecomplaint)
-
-### Mailbox Events
-
-Events related to mailbox folder changes. These webhooks notify you when folders are created, deleted, or reset on the mail server.
-
-#### mailboxNew
-
-Triggered when a new folder is discovered on the mail server during synchronization.
-
-[See full mailboxNew reference](/docs/webhooks/mailboxnew)
-
-#### mailboxDeleted
-
-Triggered when a previously tracked folder is no longer found on the mail server.
-
-[See full mailboxDeleted reference](/docs/webhooks/mailboxdeleted)
-
-#### mailboxReset
-
-Triggered when a folder's UIDVALIDITY changes, indicating a mailbox reset. This is a rare but significant event that invalidates all previously tracked message UIDs in the folder.
-
-[See full mailboxReset reference](/docs/webhooks/mailboxreset)
-
-### Account Events
-
-Events related to email account lifecycle and connection status. These webhooks track account registration, initialization, authentication, and connection health.
-
-#### accountAdded
-
-Triggered when a new email account is registered with EmailEngine. This is the first webhook in the account lifecycle, fired before authentication is attempted.
-
-[See full accountAdded reference](/docs/webhooks/accountadded)
-
-#### accountInitialized
-
-Triggered when an email account completes its initial mailbox synchronization. This marks the point at which the account is fully operational and ready for use.
-
-[See full accountInitialized reference](/docs/webhooks/accountinitialized)
-
-#### accountDeleted
-
-Triggered when an email account is removed from EmailEngine. This is the final webhook event in the account lifecycle.
-
-[See full accountDeleted reference](/docs/webhooks/accountdeleted)
-
-#### authenticationSuccess
-
-Triggered when EmailEngine successfully authenticates an email account for the first time or after recovering from an error state.
-
-[See full authenticationSuccess reference](/docs/webhooks/authenticationsuccess)
-
-#### authenticationError
-
-Triggered when EmailEngine fails to authenticate an email account due to invalid credentials, expired OAuth2 tokens, or API authentication errors.
-
-[See full authenticationError reference](/docs/webhooks/authenticationerror)
-
-#### connectError
-
-Triggered when EmailEngine fails to establish a connection to an email server due to network issues, server unavailability, or TLS/SSL problems. This is distinct from authentication errors which occur after connection is established.
-
-[See full connectError reference](/docs/webhooks/connecterror)
-
-### Tracking Events
-
-Events related to email engagement tracking. These webhooks notify you when recipients open emails, click links, or manage their subscription preferences.
-
-#### trackOpen
-
-Triggered when a recipient opens an email that has open tracking enabled. The tracking works by embedding a 1x1 pixel image in the email's HTML body that is loaded when the email is viewed.
-
-[See full trackOpen reference](/docs/webhooks/trackopen)
-
-#### trackClick
-
-Triggered when a recipient clicks a tracked link in an email that has click tracking enabled. EmailEngine rewrites links in outgoing HTML emails to redirect through a tracking endpoint, capturing click events before redirecting recipients to the original destination.
-
-[See full trackClick reference](/docs/webhooks/trackclick)
-
-#### listUnsubscribe
-
-Triggered when a recipient uses the one-click unsubscribe mechanism to remove themselves from a mailing list. EmailEngine adds the recipient to the suppression list and fires this webhook.
-
-[See full listUnsubscribe reference](/docs/webhooks/listunsubscribe)
-
-#### listSubscribe
-
-Triggered when a recipient re-subscribes to a mailing list after previously unsubscribing. This event enables you to restore subscriptions and keep your mailing lists synchronized.
-
-[See full listSubscribe reference](/docs/webhooks/listsubscribe)
-
-### Export Events
-
-Events related to bulk email export jobs. These webhooks notify you when export jobs complete or fail.
-
-#### exportCompleted
-
-Triggered when a bulk email export job finishes successfully. The export file is ready for download.
-
-[See full exportCompleted reference](/docs/webhooks/exportcompleted)
-
-#### exportFailed
-
-Triggered when a bulk email export job fails. The payload names the phase it failed in and how many messages had been written. An export cannot be resumed; start a new one.
-
-[See full exportFailed reference](/docs/webhooks/exportfailed)
+Every event name EmailEngine can send is listed, with its payload, on the [Webhook Events Reference](/docs/reference/webhook-events). The events fall into six groups, and each has its own page:
+
+| Group | Events | Sent when |
+| --- | --- | --- |
+| Message | [messageNew](/docs/webhooks/messagenew), [messageDeleted](/docs/webhooks/messagedeleted), [messageUpdated](/docs/webhooks/messageupdated), [messageMissing](/docs/webhooks/messagemissing) | A message in a synced folder arrives, is removed, changes flags or labels, or cannot be fetched |
+| Delivery | [messageSent](/docs/webhooks/messagesent), [messageDeliveryError](/docs/webhooks/messagedeliveryerror), [messageFailed](/docs/webhooks/messagefailed), [messageBounce](/docs/webhooks/messagebounce), [messageComplaint](/docs/webhooks/messagecomplaint) | A queued message is accepted, an SMTP attempt fails, EmailEngine gives up on a message, or a bounce or feedback-loop report arrives |
+| Mailbox | [mailboxNew](/docs/webhooks/mailboxnew), [mailboxDeleted](/docs/webhooks/mailboxdeleted), [mailboxReset](/docs/webhooks/mailboxreset) | A folder appears, disappears, or has to be re-indexed |
+| Account | [accountAdded](/docs/webhooks/accountadded), [accountInitialized](/docs/webhooks/accountinitialized), [accountDeleted](/docs/webhooks/accountdeleted), [authenticationSuccess](/docs/webhooks/authenticationsuccess), [authenticationError](/docs/webhooks/authenticationerror), [connectError](/docs/webhooks/connecterror) | An account is registered, finishes its first sync, is removed, or its login or connection succeeds or fails |
+| Tracking | [trackOpen](/docs/webhooks/trackopen), [trackClick](/docs/webhooks/trackclick), [listUnsubscribe](/docs/webhooks/listunsubscribe), [listSubscribe](/docs/webhooks/listsubscribe) | A recipient opens a tracked message, clicks a tracked link, or unsubscribes from or re-subscribes to a list |
+| Export | [exportCompleted](/docs/webhooks/exportcompleted), [exportFailed](/docs/webhooks/exportfailed) | A bulk export finishes or fails |
 
 ## Testing Webhooks
 
@@ -516,7 +358,7 @@ EmailEngine uses BullMQ to manage webhook delivery. To inspect webhook jobs:
    - **Failed**: Every attempt is spent, or the failure was final
    - **Completed**: The endpoint answered `2xx`, or the event was dropped before delivery because no target was set or the event is not in `webhookEvents`
 
-Failed webhooks are retained with full error details by default, so there is nothing to enable before inspecting them. To also keep successful deliveries, go to **Configuration > General** and set **Job History Limit** to, for example, 100. See [Queue Management](/docs/advanced/queue-management#enable-job-retention).
+Failed webhooks are retained with full error details by default, so there is nothing to enable before inspecting them. To also keep successful deliveries, go to **Configuration > General** and set **Completed job history limit** to, for example, 100. See [Queue Management](/docs/advanced/queue-management#enable-job-retention).
 
 ### 3. Inspect Failed Jobs
 
@@ -571,7 +413,7 @@ If using Gmail API (not IMAP):
 4. Verify all show **Created** (in green):
    - Topic
    - Subscription
-   - Gmail bindings
+   - Gmail publishing bindings
 
 If not created:
 - Google Cloud service account missing IAM roles
@@ -694,14 +536,16 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
 
 In the admin interface the same list is **Custom Headers** on **Configuration > Webhooks**, written one `Key: Value` pair per line.
 
-Headers come from two places, applied in this order, so the second overwrites a header of the same name from the first:
+For the default target, headers come from two lists, applied in this order, so the second overwrites a header of the same name from the first:
 
-1. `webhooksCustomHeaders`, or the route's own header list when the delivery belongs to a [webhook route](/docs/webhooks/webhook-routing). A route replaces the global list for its own deliveries rather than adding to it
+1. `webhooksCustomHeaders`
 2. The account's own `webhooksCustomHeaders`, set through the [Update Account API](/docs/api/put-v-1-account-account)
+
+A delivery that belongs to a [webhook route](/docs/webhooks/webhook-routing) carries the route's own header list and nothing else. Since v2.82.0 neither the global nor the account list is added to it, so an account's credentials never reach a route's endpoint and an account header cannot override the route's `Authorization`. Earlier releases applied the account's headers on top of the route's.
 
 ### Webhook Error Tracking (webhookErrorFlag)
 
-EmailEngine automatically tracks webhook delivery errors. When a webhook delivery fails, the error details are stored and displayed in the admin panel on the account details page. When a subsequent webhook delivery succeeds, the error flag is automatically cleared.
+EmailEngine automatically tracks webhook delivery errors. When a webhook delivery fails, the error details are stored and displayed in the admin panel: on **Configuration > Webhooks** for the default target, on the account details page for an account-specific target, and on the route's page for a [webhook route](/docs/webhooks/webhook-routing). When a subsequent delivery to the same target succeeds, the error flag is automatically cleared.
 
 The error flag includes:
 - Event type that failed
@@ -724,10 +568,10 @@ EmailEngine includes the following HTTP headers with each webhook request:
 | `X-EE-Wh-Attempts-Made` | How many attempts have already been made for this delivery. `0` on the first attempt. |
 | `X-EE-Wh-Queued-Time` | How long the event waited in the queue before this attempt, in seconds (for example `3s`). |
 | `X-EE-Wh-Custom-Route` | ID of the [custom route](/docs/webhooks/webhook-routing) that produced this delivery. Only sent for route deliveries. |
-| `User-Agent` | `emailengine-app/<version> (+https://emailengine.app/)`, for example `emailengine-app/2.79.4 (+https://emailengine.app/)` |
+| `User-Agent` | `emailengine-app/<version> (+https://emailengine.app/)`, for example `emailengine-app/2.82.0 (+https://emailengine.app/)` |
 | `Content-Type` | Always `application/json` |
 | `Content-Length` | Size of the request body in bytes |
-| `Authorization` | `Basic` credentials, only when the webhook URL itself embeds a user name or password. They are taken out of the URL and moved into this header |
+| `Authorization` | `Basic` credentials, only when the webhook URL itself embeds a user name or password. They are taken out of the URL and moved into this header. Percent-encoded characters in the user name or password are decoded first (v2.79.8; earlier releases sent them encoded) |
 
 Custom headers are added on top of this set, see [Custom Request Headers](#custom-request-headers-webhookscustomheaders).
 
@@ -755,6 +599,6 @@ app.post('/webhooks/emailengine', (req, res) => {
 
 - [Webhook events reference](/docs/reference/webhook-events) - The list of events, each linking to its payload reference
 - [Webhook routing](/docs/webhooks/webhook-routing) - Sending different events to different endpoints
-- [Pre-processing functions](/docs/advanced/pre-processing) - Filtering or reshaping a payload before delivery
+- [Pre-processing functions](/docs/webhooks/pre-processing) - Filtering or reshaping a payload before delivery
 - [Queue management](/docs/advanced/queue-management) - Watching and draining the notify queue
-- [Webhooks API](/docs/api-reference/webhooks-api) - Managing routes programmatically
+- [Webhooks API](/docs/api-reference/webhooks-api) - The settings and listing endpoints behind the admin pages

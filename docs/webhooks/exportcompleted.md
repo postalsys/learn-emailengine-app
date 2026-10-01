@@ -18,14 +18,6 @@ The `exportCompleted` event fires when:
 
 The event confirms that the file is available through the [Download Export API](/docs/api/get-v-1-account-account-export-exportid-download). An export that was cut short by the message or size limit still completes and sends this event; the [export status](/docs/receiving/exporting#progress-fields) then reports `truncated: true`.
 
-## Common Use Cases
-
-- **Download automation** - Trigger automatic download of completed exports
-- **Notification systems** - Alert users when their export is ready
-- **Workflow triggers** - Initiate downstream processing pipelines
-- **Audit logging** - Track export completion for compliance purposes
-- **Cleanup scheduling** - Delete the export once it has been downloaded
-
 ## Payload Schema
 
 ### Top-Level Fields
@@ -188,41 +180,6 @@ async function handleExportCompleted(event) {
 
 The download is encrypted when EmailEngine runs with a service secret. See [Encryption](/docs/receiving/exporting#encryption) for the file format.
 
-### With Error Handling
-
-```javascript
-async function handleExportCompleted(event) {
-  try {
-    const { account, data, date } = event;
-
-    // Log the completion
-    await auditLog.create({
-      type: 'export_completed',
-      account,
-      exportId: data.exportId,
-      messagesExported: data.messagesExported,
-      messagesSkipped: data.messagesSkipped,
-      bytesWritten: data.bytesWritten,
-      timestamp: new Date(date)
-    });
-
-    // Check for high skip rate
-    const total = data.messagesExported + data.messagesSkipped;
-    const skipRate = total ? data.messagesSkipped / total : 0;
-    if (skipRate > 0.1) {
-      console.warn(`High skip rate (${(skipRate * 100).toFixed(1)}%) for export ${data.exportId}`);
-    }
-
-    // Trigger downstream processing
-    await processExportFile(account, data.exportId);
-
-  } catch (error) {
-    console.error('Failed to process exportCompleted webhook:', error);
-    throw error; // Respond with an error status so EmailEngine retries the delivery
-  }
-}
-```
-
 ## Relationship to Other Events
 
 The `exportCompleted` event is part of the export lifecycle:
@@ -236,14 +193,6 @@ After receiving `exportCompleted`:
 
 - The export file is available for download until `expiresAt`
 - Download it, then delete the export to free disk space
-
-## Best Practices
-
-1. **Download promptly** - The file is deleted at `expiresAt`
-2. **Verify message counts** - Compare `messagesExported` with the count you expected
-3. **Monitor skip rates** - A high skip rate points at a mailbox that changed while the export ran
-4. **Process asynchronously** - Respond to the webhook first, download afterwards
-5. **Clean up after download** - Delete exports to free disk space
 
 ## Related Events
 

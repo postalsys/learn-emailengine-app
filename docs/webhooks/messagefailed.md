@@ -14,18 +14,9 @@ The `messageFailed` event fires when the delivery job for a queued message ends 
 
 - All delivery attempts were used up: the `deliveryAttempts` of the submission, or the `deliveryAttempts` setting, or 10 by default
 - An attempt failed permanently, so the remaining attempts were not spent. For SMTP submissions that is a `5xx` server reply other than `503`, or, without a server reply, an `EAUTH`, `ENOAUTH`, `EOAUTH2`, `ETLS`, `EENVELOPE`, `EMESSAGE` or `EPROTOCOL` error
+- The [gateway](/docs/sending/transactional-service) the submission named no longer exists (`GatewayNotFound`). This is decided before any connection is made, so no `messageDeliveryError` precedes it
 
 The event is sent for every submission type: SMTP, Gmail API and Microsoft Graph API. For SMTP submissions each failed attempt has already produced a [`messageDeliveryError`](/docs/webhooks/messagedeliveryerror) event with the details of the error; for API submissions this event is the only report of the failure.
-
-## Common Use Cases
-
-- **Sender notification** - Notify the original sender that their email could not be delivered
-- **Queue cleanup** - Remove the message from any pending send tracking
-- **Audit logging** - Maintain a record of all permanently failed deliveries
-- **Analytics** - Track failure rates and identify problematic patterns
-- **Retry via alternative method** - Attempt delivery through a backup SMTP server or different channel
-- **CRM updates** - Mark contacts as unreachable or flag delivery issues
-- **Alerting** - Trigger alerts for high failure rates or critical email failures
 
 ## Payload Schema
 
@@ -116,7 +107,7 @@ There is no `envelope` on this event. Correlate by `queueId` or `messageId` with
 
 ### With Network Routing Information
 
-Every SMTP submission carries the field. It is `null` unless a [local address](/docs/advanced/local-addresses) or a proxy was used:
+Every SMTP submission carries the field. It is `null` unless a [local address](/docs/configuration/local-addresses) or a proxy was used:
 
 ```json
 {
@@ -173,121 +164,31 @@ Common patterns:
 
 ## Handling the Event
 
-### Basic Handler
-
-```javascript
-async function handleMessageFailed(event) {
-  const { account, data } = event;
-
-  console.log(`Permanent delivery failure for account ${account}`);
-  console.log(`  Queue ID: ${data.queueId}`);
-  console.log(`  Message ID: ${data.messageId}`);
-  console.log(`  Error: ${data.error}`);
-
-  await db.emailLogs.update({
-    queueId: data.queueId,
-    status: 'failed',
-    error: data.error,
-    failedAt: event.date
-  });
-}
-```
-
-### Notify the Sender
+This is the terminal event for the submission, so the handler closes the record the Submit API's `queueId` opened and tells whoever submitted the message. For an SMTP submission the preceding [`messageDeliveryError`](/docs/webhooks/messagedeliveryerror) events carry the error code and server reply; here `error` is a single line, so keep it as the reason rather than parsing it:
 
 ```javascript
 async function handleMessageFailed(event) {
   const { account, data, date } = event;
 
-  const emailRecord = await db.emails.findOne({
-    queueId: data.queueId
+  const submission = await db.submissions.findUnique({
+    where: { queueId: data.queueId }
   });
 
-  if (emailRecord && emailRecord.senderEmail) {
-    await notificationService.sendEmail({
-      to: emailRecord.senderEmail,
-      subject: 'Email delivery failed',
-      body: `Your email to ${emailRecord.recipientEmail} could not be delivered.\n\n` +
-            `Error: ${data.error}\n\n` +
-            `Message ID: ${data.messageId}`
-    });
+  if (!submission) {
+    // Queued outside this application
+    return;
   }
 
-  await auditLog.create({
-    type: 'email_delivery_failed',
+  await db.submissions.update({
+    where: { queueId: data.queueId },
+    data: { status: 'failed', failedAt: new Date(date), error: data.error }
+  });
+
+  await notifySubmitter(submission, {
     account,
-    queueId: data.queueId,
-    error: data.error,
-    timestamp: new Date(date)
+    messageId: data.messageId,
+    error: data.error
   });
-}
-```
-
-### Track Failure Patterns
-
-```javascript
-async function handleMessageFailed(event) {
-  const { account, data } = event;
-
-  let errorType = 'unknown';
-  if (data.error.includes('authentication')) {
-    errorType = 'auth_failure';
-  } else if (data.error.includes('timeout')) {
-    errorType = 'timeout';
-  } else if (data.error.includes('5.1.1')) {
-    errorType = 'invalid_recipient';
-  } else if (data.error.includes('5.7.')) {
-    errorType = 'policy_rejection';
-  }
-
-  await analytics.track({
-    event: 'email_failed',
-    properties: {
-      account,
-      errorType,
-      queueId: data.queueId
-    }
-  });
-
-  if (errorType === 'auth_failure') {
-    await alerting.send({
-      severity: 'high',
-      title: 'SMTP Authentication Failure',
-      message: `Account ${account} has authentication issues`,
-      details: { error: data.error }
-    });
-  }
-}
-```
-
-### Retry via Alternative Method
-
-```javascript
-async function handleMessageFailed(event) {
-  const { data } = event;
-
-  const originalMessage = await db.outbox.findOne({
-    queueId: data.queueId
-  });
-
-  if (originalMessage && originalMessage.retryCount < 1) {
-    try {
-      await emailService.sendViaBackup({
-        to: originalMessage.to,
-        subject: originalMessage.subject,
-        body: originalMessage.body,
-        originalQueueId: data.queueId
-      });
-
-      await db.outbox.update({
-        queueId: data.queueId,
-        retryCount: originalMessage.retryCount + 1,
-        lastRetryMethod: 'backup_smtp'
-      });
-    } catch (backupError) {
-      console.error('Backup delivery also failed:', backupError);
-    }
-  }
 }
 ```
 
@@ -317,17 +218,6 @@ The `messageFailed` event is the terminal failure state in the email delivery li
 | Retries remaining | Usually | None |
 | Action required | Monitor, may self-resolve | Intervention needed |
 | Payload detail | Error code, server response, envelope, retry info | Message and queue IDs, one error line, network routing |
-
-## Best Practices
-
-1. **Always handle this event** - These are permanent failures that require attention
-2. **Notify senders** - Let users know their emails failed to deliver
-3. **Track error patterns** - Identify systemic issues (bad credentials, blocked IPs)
-4. **Clean up references** - Remove failed messages from pending queues
-5. **Alert on spikes** - Monitor for unusual increases in failure rates
-6. **Log for compliance** - Maintain records of delivery failures for audit purposes
-7. **Consider alternatives** - Implement fallback delivery methods for critical emails
-8. **Process quickly** - Return 2xx before the 30 second delivery timeout, then do the work asynchronously
 
 ## Related Events
 

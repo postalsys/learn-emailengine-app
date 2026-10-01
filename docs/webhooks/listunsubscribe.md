@@ -19,15 +19,6 @@ In both cases the request has to carry a valid signature, the account has to exi
 
 Adding an address through the [Blocklists API](/docs/api/post-v-1-blocklist-listid) or the admin interface does not fire it; the event reports recipient actions.
 
-## Common Use Cases
-
-- **Mailing list management** - Automatically remove recipients from your mailing lists
-- **Subscription database updates** - Keep your subscriber database synchronized with unsubscribe requests
-- **Compliance tracking** - Maintain records of unsubscribe requests for regulatory compliance (CAN-SPAM, GDPR)
-- **Preference center updates** - Update user preferences in your application
-- **Email deliverability** - Honor unsubscribe requests to maintain sender reputation
-- **Analytics** - Track unsubscribe rates across different campaigns or list segments
-
 ## Payload Schema
 
 ### Top-Level Fields
@@ -47,7 +38,7 @@ Adding an address through the [Blocklists API](/docs/api/post-v-1-blocklist-list
 | `recipient` | string | Yes | Email address that was unsubscribed |
 | `messageId` | string | No | Message-ID of the message whose unsubscribe link was used. Absent when the link was generated from the admin interface rather than embedded in a message |
 | `listId` | string | Yes | The list the recipient was removed from |
-| `remoteAddress` | string | Yes | IP address the request came from. For a one-click unsubscribe this is the mail provider's server, not the recipient |
+| `remoteAddress` | string | Yes | IP address the request came from, resolved as described under [`trackOpen`](/docs/webhooks/trackopen#client-address). For a one-click unsubscribe this is the mail provider's server, not the recipient |
 | `userAgent` | string | No | `User-Agent` header of the request, when one was sent |
 
 There is no event ID in the body. EmailEngine sends it in the `X-EE-Wh-Event-Id` request header. See [Delivery and Retries](/docs/webhooks/overview#delivery-and-retries).
@@ -64,7 +55,7 @@ There is no event ID in the body. EmailEngine sends it in the `X-EE-Wh-Event-Id`
     "recipient": "customer@company.com",
     "messageId": "<newsletter-2025-10-001@marketing.example.com>",
     "listId": "weekly-newsletter",
-    "remoteAddress": "192.168.1.100",
+    "remoteAddress": "203.0.113.42",
     "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36"
   }
 }
@@ -84,7 +75,7 @@ A one-click request from a mail provider that sends no `User-Agent` header:
     "recipient": "user@example.org",
     "messageId": "<alert-12345@notifications.example.com>",
     "listId": "product-alerts",
-    "remoteAddress": "10.0.0.50"
+    "remoteAddress": "198.51.100.7"
   }
 }
 ```
@@ -119,58 +110,27 @@ Three conditions apply, and if any of them is not met the message is sent withou
 - `listId` must be in hostname format, such as `weekly-newsletter`
 - The message must have exactly one `to` recipient. Use [mail merge](/docs/sending/mail-merge) to send a campaign, which submits one message per recipient
 
-A recipient who is already on the suppression list for that `listId` is not sent to at all; the submit response reports the message as skipped. [Virtual Lists](/docs/advanced/virtual-lists) covers the whole flow, and [Blocklists](/docs/advanced/blocklists) covers managing the suppression list.
+A recipient who is already on the suppression list for that `listId` is not sent to at all; the submit response reports the message as skipped. [Suppression Lists](/docs/sending/deliverability/suppression-lists) covers the whole flow and how to manage the list.
 
 ## Handling the Event
 
-### Basic Handler
-
-```javascript
-async function handleListUnsubscribe(event) {
-  const { account, date, data } = event;
-
-  console.log(`Unsubscribe request for account ${account}`);
-  console.log(`  Recipient: ${data.recipient}`);
-  console.log(`  List ID: ${data.listId}`);
-  console.log(`  Message-ID: ${data.messageId || 'none'}`);
-  console.log(`  Unsubscribed at: ${date}`);
-
-  // Update your mailing list database
-  await removeFromMailingList({
-    email: data.recipient,
-    listId: data.listId,
-    unsubscribedAt: new Date(date),
-    source: 'emailengine'
-  });
-}
-```
-
-### Updating Subscription Database
+EmailEngine has already stopped sending to the address when this arrives, so the handler's job is to keep your own records and any external list service in step:
 
 ```javascript
 async function handleListUnsubscribe(event) {
   const { data, date } = event;
 
-  // Update the subscriber's status in your database
   await db.subscribers.updateOne(
     { email: data.recipient.toLowerCase() },
     {
       $set: {
         [`lists.${data.listId}.subscribed`]: false,
         [`lists.${data.listId}.unsubscribedAt`]: new Date(date)
-      },
-      $push: {
-        unsubscribeHistory: {
-          listId: data.listId,
-          messageId: data.messageId,
-          timestamp: new Date(date),
-          ipAddress: data.remoteAddress
-        }
       }
     }
   );
 
-  // Log for compliance purposes
+  // Keep a record for compliance: who, which list, from where, and the message it came from
   await db.unsubscribeLogs.insertOne({
     email: data.recipient,
     listId: data.listId,
@@ -182,76 +142,13 @@ async function handleListUnsubscribe(event) {
 }
 ```
 
-### Syncing with External Mailing List Services
-
-```javascript
-async function handleListUnsubscribe(event) {
-  const { data } = event;
-
-  // Update your CRM or mailing list service
-  switch (data.listId) {
-    case 'weekly-newsletter':
-      await mailchimpClient.updateMember(data.recipient, {
-        status: 'unsubscribed'
-      });
-      break;
-
-    case 'product-updates':
-      await sendgridClient.removeFromList(
-        'product-updates-list-id',
-        data.recipient
-      );
-      break;
-
-    default:
-      // Generic unsubscribe handling
-      await internalMailingService.unsubscribe(
-        data.recipient,
-        data.listId
-      );
-  }
-}
-```
-
-### Tracking Unsubscribe Analytics
-
-```javascript
-async function handleListUnsubscribe(event) {
-  const { data, date, account } = event;
-
-  // Track unsubscribe metrics
-  await analytics.track('email_unsubscribe', {
-    account,
-    listId: data.listId,
-    email: data.recipient,
-    messageId: data.messageId,
-    timestamp: date
-  });
-
-  // Find which campaign triggered the unsubscribe
-  if (data.messageId) {
-    const originalMessage = await db.sentMessages.findOne({
-      messageId: data.messageId
-    });
-
-    if (originalMessage) {
-      // Increment unsubscribe count for the campaign
-      await db.campaigns.updateOne(
-        { _id: originalMessage.campaignId },
-        { $inc: { unsubscribeCount: 1 } }
-      );
-    }
-  }
-}
-```
-
 ## Technical Details
 
 ### The Unsubscribe Flow
 
 1. **Sending**: a message submitted with `listId` to a single recipient gets `List-ID`, `List-Unsubscribe` and `List-Unsubscribe-Post` headers. The unsubscribe URL carries the account, list, recipient and Message-ID in a signed blob, so it cannot be forged or edited
 2. **Recipient action**: the mail client sends a one-click `POST` to the URL, or the recipient opens it and confirms on the page
-3. **Validation**: EmailEngine verifies the signature and that the account exists. A request that fails either check is answered with a plain acknowledgement rather than an error, as RFC 8058 asks, and nothing is recorded
+3. **Validation**: EmailEngine verifies the signature and that the account exists. A one-click request that fails either check is answered with a plain acknowledgement rather than an error, as RFC 8058 asks, and nothing is recorded; the page shows its invalid-link state instead
 4. **Suppression**: the recipient is added to the suppression list for that `listId`
 5. **Webhook**: this event is sent if the address was not already on the list
 
@@ -262,21 +159,12 @@ The signed link carries no expiry. It stays valid for as long as the service sec
 EmailEngine keeps one suppression list per `listId`. After an unsubscribe:
 
 - Future submissions with the same `listId` to that recipient are skipped rather than sent, and the submit response says so
-- Other lists are unaffected
+- Other lists are unaffected, so a recipient on several lists leaves only the one the message named; give each list its own `listId`
 - The entry stays until it is removed through the [Blocklists API](/docs/api/delete-v-1-blocklist-listid), the admin interface, or the recipient's own re-subscription, which sends [`listSubscribe`](/docs/webhooks/listsubscribe)
 
 ### Duplicate Detection
 
-Only the request that adds the address to the suppression list fires the event. A second unsubscribe for the same address and list, from the same or another mail client, is acknowledged without a webhook.
-
-## Best Practices
-
-1. **Act on every unsubscribe** - Honor unsubscribe requests immediately to maintain compliance and sender reputation
-2. **Update all systems** - Sync unsubscribe status across your CRM, mailing list service, and internal databases
-3. **Log for compliance** - Maintain records of unsubscribe requests with timestamps and source information
-4. **Use one list ID per list** - Distinct list IDs let a recipient leave one list without leaving the others
-5. **Monitor unsubscribe rates** - Track unsubscribe rates per campaign to identify content or frequency issues
-6. **Handle gracefully** - Even if your webhook processing fails, EmailEngine's suppression list already holds the entry and stops the sending
+The suppression entry is written before the event is queued, so a handler that fails leaves the address suppressed. Only the request that adds the address to the suppression list fires the event. A second unsubscribe for the same address and list, from the same or another mail client, is acknowledged without a webhook.
 
 ## Related Events
 
@@ -287,6 +175,6 @@ Only the request that adds the address to the suppression list fires the event. 
 ## See Also
 
 - [Webhooks Overview](/docs/webhooks/overview) - Configuring the webhook URL and the `webhookEvents` allowlist
-- [Virtual Lists](/docs/advanced/virtual-lists) - Sending list mail with `listId` so that this event can fire
-- [Blocklists](/docs/advanced/blocklists) - Reading and editing the suppression lists this event updates
+- [Virtual Lists](/docs/sending/deliverability/suppression-lists) - Sending list mail with `listId` so that this event can fire
+- [Suppression Lists](/docs/sending/deliverability/suppression-lists) - Reading and editing the suppression lists this event updates
 - [Mail Merge](/docs/sending/mail-merge) - Sending one message per recipient

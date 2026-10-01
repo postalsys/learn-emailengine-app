@@ -20,16 +20,7 @@ The `messageDeliveryError` event fires when an attempt to hand a queued message 
 
 This event covers SMTP submissions only, including messages routed through an [SMTP gateway](/docs/sending/transactional-service). A Gmail API or MS Graph account that submits through a gateway takes the SMTP path too, so it produces this event.
 
-A submission handed to the Gmail API or the Microsoft Graph API does not produce it. Such a failure is retried by the queue in the same way, but only the final outcome is reported, as [`messageFailed`](/docs/webhooks/messagefailed).
-
-## Common Use Cases
-
-- **Delivery monitoring** - Track SMTP failures in real-time to identify connectivity issues
-- **Alerting** - Trigger alerts when delivery errors exceed a threshold
-- **Retry tracking** - Monitor how many attempts have been made for problematic messages
-- **Diagnostics** - Log detailed error information for troubleshooting SMTP configuration
-- **Failover logic** - Switch to backup SMTP servers when primary server errors occur
-- **Rate limiting detection** - Identify when SMTP servers are rejecting messages due to sending limits
+A submission handed to the Gmail API or the Microsoft Graph API does not produce it. Such a failure is retried by the queue in the same way, but only the final outcome is reported, as [`messageFailed`](/docs/webhooks/messagefailed). A submission that names a gateway which no longer exists does not produce it either: the lookup fails before any connection is made, and the job ends with `messageFailed` at once.
 
 ## Payload Schema
 
@@ -71,7 +62,7 @@ Fields whose value is not known (`errorCode`, `smtpResponse`, `smtpResponseCode`
 
 ### Network Routing Object Structure
 
-Sent as `null` unless a [local address](/docs/advanced/local-addresses) or a proxy was used:
+Sent as `null` unless a [local address](/docs/configuration/local-addresses) or a proxy was used:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -273,76 +264,36 @@ When EmailEngine uses a local address and a proxy for the SMTP connection:
 
 ## Handling the Event
 
-### Basic Handler
+Record every attempt under the `queueId`, and branch on `errorCode` rather than on how many events have arrived: `EAUTH`, `ENOAUTH` and `EOAUTH2` are permanent and mean the account's SMTP credentials need attention, while a timeout or a `4xx` reply is retried by EmailEngine on its own. `data.job.nextAttempt` is `false` when no further attempt is scheduled, in which case [`messageFailed`](/docs/webhooks/messagefailed) follows:
 
 ```javascript
 async function handleMessageDeliveryError(event) {
   const { account, data } = event;
 
-  console.log(`Delivery error for account ${account}`);
-  console.log(`  Queue ID: ${data.queueId}`);
-  console.log(`  Error: ${data.error}`);
-  console.log(`  Error Code: ${data.errorCode}`);
-  console.log(`  Attempt: ${data.job.attemptsMade + 1}/${data.job.attempts}`);
-
-  if (data.job.nextAttempt) {
-    console.log(`  Next retry: ${data.job.nextAttempt}`);
-  } else {
-    console.log(`  No more retries scheduled`);
-  }
-
-  await monitoring.logDeliveryError({
-    account,
-    queueId: data.queueId,
-    error: data.error,
-    errorCode: data.errorCode,
-    attempt: data.job.attemptsMade + 1,
-    timestamp: event.date
+  await db.deliveryAttempts.create({
+    data: {
+      account,
+      queueId: data.queueId,
+      attempt: data.job.attemptsMade + 1,
+      errorCode: data.errorCode || null,
+      smtpResponseCode: data.smtpResponseCode || null,
+      error: data.error,
+      nextAttempt: data.job.nextAttempt || null
+    }
   });
-}
-```
 
-### Alert on Repeated Failures
-
-```javascript
-async function handleMessageDeliveryError(event) {
-  const { account, data } = event;
-
-  if (data.job.attemptsMade >= 5) {
-    await alerting.send({
-      severity: 'warning',
-      title: 'Email delivery struggling',
-      message: `Message ${data.queueId} has failed ${data.job.attemptsMade + 1} times`,
-      details: {
-        account,
-        error: data.error,
-        errorCode: data.errorCode,
-        recipients: data.envelope.to
-      }
-    });
-  }
-
-  await analytics.trackError({
-    type: 'smtp_delivery_error',
-    account,
-    errorCode: data.errorCode,
-    smtpCode: data.smtpResponseCode
-  });
-}
-```
-
-### Detect Authentication Issues
-
-```javascript
-async function handleMessageDeliveryError(event) {
-  const { account, data } = event;
-
-  if (data.errorCode === 'EAUTH') {
-    await notifyAdmin({
-      title: 'SMTP Authentication Failed',
-      message: `Account ${account} failed to authenticate with SMTP server`,
-      action: 'Check SMTP credentials in account configuration'
-    });
+  switch (data.errorCode) {
+    case 'EAUTH':
+    case 'ENOAUTH':
+    case 'EOAUTH2':
+      await notifyAdmin(account, {
+        message: 'SMTP authentication failed, check the account credentials',
+        error: data.error
+      });
+      break;
+    default:
+      // Transient. EmailEngine retries; messageFailed reports the final outcome
+      break;
   }
 }
 ```
@@ -385,15 +336,6 @@ messageSent    messageDeliveryError
          next attempt  messageFailed
 ```
 
-## Best Practices
-
-1. **Monitor error patterns** - Track error codes to identify systemic issues (DNS, TLS, auth)
-2. **Set up alerts** - Notify operators when error rates spike or specific errors occur
-3. **Log for debugging** - Store full webhook payloads to diagnose delivery problems
-4. **Handle auth errors specially** - Authentication failures are permanent and usually mean a configuration problem
-5. **Track retry counts** - Know which messages are struggling to deliver
-6. **Process quickly** - Return 2xx before the 30 second delivery timeout, then do the work asynchronously
-
 ## Related Events
 
 - [messageSent](/docs/webhooks/messagesent) - Successful delivery to the SMTP server
@@ -406,4 +348,4 @@ messageSent    messageDeliveryError
 - [Outbox queue](/docs/sending/outbox-queue) - Retry schedule, permanent versus transient failures, and what the queue keeps
 - [Submit API](/docs/api/post-v-1-account-account-submit) - Send emails via EmailEngine
 - [Outbox API](/docs/api/get-v-1-outbox-queueid) - Check the state of a queued message by `queueId`
-- [Local addresses](/docs/advanced/local-addresses) - Where `networkRouting` comes from
+- [Local addresses](/docs/configuration/local-addresses) - Where `networkRouting` comes from

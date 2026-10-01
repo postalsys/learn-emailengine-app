@@ -13,19 +13,10 @@ The `messageMissing` webhook event is triggered when EmailEngine learns about a 
 The `messageMissing` event fires when:
 
 - **IMAP**: a new UID appeared in the folder listing, but the server returned nothing when EmailEngine fetched the message, and three retries did not change that. Servers with replication lag between the listing and the fetch, and messages deleted or moved by a filter right after arrival, are the usual causes
-- **Gmail API**: the history reported a new message, but fetching it by ID returned nothing
-- **MS Graph**: a change notification reported a new message, but fetching it by ID returned nothing
+- **Gmail API**: the history reported a new message, but the Gmail API answers `404` for it, because the message was deleted before the history entry was processed
+- **MS Graph**: a change notification reported a new message, but the Graph API answers `404` for it
 
-On IMAP accounts the retries are spaced 1.7<sup>n</sup> seconds apart: 1000 ms, then 1700 ms, then 2890 ms, so the event is sent about 5.6 seconds after the first failed fetch. Gmail API and MS Graph accounts do not retry.
-
-## Common Use Cases
-
-- **Sync error monitoring** - Track and alert on message retrieval failures
-- **Debugging mail server issues** - Identify replication lag or server problems
-- **Retry scheduling** - Implement custom retry logic for critical accounts
-- **Analytics** - Monitor synchronization health across accounts
-- **Audit logging** - Track cases where expected messages could not be retrieved
-- **Alert systems** - Notify administrators of persistent sync issues
+On IMAP accounts the retries are spaced 1.7<sup>n</sup> seconds apart: 1000 ms, then 1700 ms, then 2890 ms, so the event is sent about 5.6 seconds after the first failed fetch. Gmail API and MS Graph accounts send the event only for a message the provider reports as gone. Since v2.81.2 a fetch that fails for any other reason, such as a `5xx` answer or a timeout, defers the message and retries it later, so it is reported by [`messageNew`](/docs/webhooks/messagenew) once the fetch succeeds rather than by this event.
 
 ## Payload Schema
 
@@ -123,43 +114,18 @@ A message that the server did return on one of the retries produces a normal `me
 
 ## Handling the Event
 
-### Basic Handler
+The `id` stays valid for as long as the message exists in that folder, so a handler can record the gap and try the API again after a delay; a `404` then means the message is gone for good. The event identifier is in the `X-EE-Wh-Event-Id` request header, not the body:
 
 ```javascript
-async function handleMessageMissing(event) {
-  const { account, path, data } = event;
-
-  console.log(`Missing message detected for ${account}:`);
-  console.log(`  Message ID: ${data.id}`);
-  console.log(`  Folder: ${path}`);
-  if (data.uid) {
-    console.log(`  UID: ${data.uid}`);
-  }
-  if (data.missingRetries) {
-    console.log(`  Retry attempts: ${data.missingRetries}`);
-    console.log(`  Total delay: ${data.missingDelay}ms`);
-  }
-
-  await logSyncIssue(account, data.id, 'message_missing');
-}
-```
-
-### Monitoring and Alerting
-
-The event identifier is in the `X-EE-Wh-Event-Id` request header, so a record that keeps it needs both the header and the body:
-
-```javascript
-async function handleMessageMissing(req) {
-  const eventId = req.headers['x-ee-wh-event-id'];
-  const { account, path, date, data } = req.body;
+async function handleMessageMissing(event, headers) {
+  const { account, path, date, data } = event;
 
   await db.syncIssues.create({
     data: {
-      eventId,
+      eventId: headers['x-ee-wh-event-id'],
       timestamp: new Date(date),
       account,
       folder: path,
-      issueType: 'message_missing',
       messageId: data.id,
       uid: data.uid || null,
       retryAttempts: data.missingRetries || 0,
@@ -167,46 +133,7 @@ async function handleMessageMissing(req) {
     }
   });
 
-  const recentIssues = await db.syncIssues.count({
-    where: {
-      account,
-      issueType: 'message_missing',
-      timestamp: {
-        gte: new Date(Date.now() - 3600000)
-      }
-    }
-  });
-
-  if (recentIssues >= 5) {
-    await alerting.send({
-      level: 'warning',
-      title: 'Multiple missing messages detected',
-      message: `Account ${account} has ${recentIssues} missing messages in the last hour`,
-      metadata: { account, recentIssues }
-    });
-  }
-}
-```
-
-### Fetching the Message Later
-
-The `id` stays valid for as long as the message exists in that folder, so a handler can try again through the API after a delay:
-
-```javascript
-async function handleMessageMissing(event) {
-  const { account, data } = event;
-
-  await jobQueue.add(
-    'retry-fetch-message',
-    {
-      account,
-      messageId: data.id,
-      attempt: 1
-    },
-    {
-      delay: 300000
-    }
-  );
+  await jobQueue.add('retry-fetch-message', { account, messageId: data.id }, { delay: 300000 });
 }
 
 async function retryFetchMessage(job) {
@@ -214,20 +141,15 @@ async function retryFetchMessage(job) {
 
   const response = await fetch(
     `https://emailengine.example.com/v1/account/${account}/message/${messageId}`,
-    {
-      headers: {
-        'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-      }
-    }
+    { headers: { Authorization: 'Bearer YOUR_ACCESS_TOKEN' } }
   );
 
   if (response.status === 404) {
-    console.log(`Message ${messageId} is gone for good`);
+    // Deleted or moved before it could be fetched
     return;
   }
 
-  const message = await response.json();
-  await processNewEmail(account, message);
+  await processNewEmail(account, await response.json());
 }
 ```
 

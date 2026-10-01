@@ -17,19 +17,13 @@ The `mailboxDeleted` event fires when:
 
 A rename is a deletion followed by a creation as far as the folder listing is concerned, so it produces `mailboxDeleted` for the old path and [`mailboxNew`](/docs/webhooks/mailboxnew) for the new one.
 
-The event covers only folders EmailEngine knew about. A folder created and deleted between two listings is never seen. Nothing is sent when an account is deleted, paused or reconfigured, even though EmailEngine drops its folder state then.
+The event covers only folders EmailEngine knew about. A folder created and deleted between two listings is never seen. Nothing is sent when an account is deleted or flushed, even though EmailEngine drops its folder state then.
+
+Exactly one event is sent per disappearance. Before EmailEngine 2.80.0 a folder deleted through the API could be announced twice, once by the deletion and again by the next listing pass, and a folder EmailEngine tracked without a stored listing entry was torn down with no event at all.
 
 :::note IMAP accounts only
 Folder events are produced by the IMAP client. Gmail API and Microsoft Graph accounts do not send `mailboxNew`, `mailboxDeleted` or `mailboxReset`.
 :::
-
-## Common Use Cases
-
-- **Database cleanup** - Remove cached messages and folder metadata for the deleted folder
-- **Search index updates** - Delete indexed documents associated with the folder
-- **UI synchronization** - Update folder trees and navigation menus in your application
-- **Audit logging** - Track folder deletions for compliance or security monitoring
-- **Sync state cleanup** - Clear sync markers and state data tied to the deleted folder
 
 ## Payload Schema
 
@@ -113,183 +107,19 @@ A folder with a special-use flag carries it at both levels:
 
 ## Handling the Event
 
-### Basic Handler
-
-```javascript
-async function handleMailboxDeleted(event) {
-  const { account, path, data } = event;
-
-  console.log(`Folder deleted for ${account}:`);
-  console.log(`  Path: ${path}`);
-  console.log(`  Name: ${data.name}`);
-  console.log(`  Special Use: ${data.specialUse || 'none'}`);
-
-  // Clean up any resources associated with this folder
-  await cleanupFolder(account, path);
-}
-```
-
-### Database Cleanup
-
-```javascript
-async function handleMailboxDeleted(event, headers) {
-  const { account, path, date } = event;
-  const eventId = headers['x-ee-wh-event-id'];
-
-  try {
-    // Delete all cached messages for this folder
-    const deletedMessages = await db.messages.deleteMany({
-      where: {
-        accountId: account,
-        folder: path
-      }
-    });
-
-    // Delete the folder record
-    await db.folders.delete({
-      where: {
-        accountId_path: { accountId: account, path }
-      }
-    });
-
-    console.log(`Cleaned up folder ${path}: ${deletedMessages.count} messages removed`);
-
-    // Log the deletion
-    await auditLog.create({
-      eventId,
-      timestamp: new Date(date),
-      account,
-      action: 'folder_deleted',
-      folder: path,
-      deletedMessageCount: deletedMessages.count
-    });
-
-  } catch (err) {
-    console.error('Failed to cleanup deleted folder:', err);
-    throw err; // Respond with an error status so EmailEngine retries the delivery
-  }
-}
-```
-
-### UI Synchronization
-
-```javascript
-async function handleMailboxDeleted(event) {
-  const { account, path, data } = event;
-
-  // Broadcast to connected clients
-  await websocketServer.broadcast({
-    type: 'folder:deleted',
-    account,
-    folder: {
-      path,
-      name: data.name,
-      specialUse: data.specialUse
-    }
-  });
-
-  // Remove from folder cache
-  await folderCache.delete(`${account}:${path}`);
-
-  // If any users have this folder selected, redirect them
-  const affectedSessions = await sessionStore.findByActiveFolder(account, path);
-  for (const session of affectedSessions) {
-    await websocketServer.sendToSession(session.id, {
-      type: 'folder:redirect',
-      message: 'The folder you were viewing has been deleted',
-      redirectTo: 'INBOX'
-    });
-  }
-}
-```
-
-### Search Index Cleanup
+Drop the folder and everything cached under it. Each subfolder that disappears gets an event of its own, so cleaning up by exact path is enough; cleaning up by prefix as well only guards against a child event that is delayed:
 
 ```javascript
 async function handleMailboxDeleted(event) {
   const { account, path } = event;
 
-  // Delete all indexed documents for this folder
-  const result = await searchIndex.deleteByQuery({
-    query: {
-      bool: {
-        must: [
-          { term: { accountId: account } },
-          { term: { folder: path } }
-        ]
-      }
-    }
+  await db.messages.deleteMany({
+    where: { accountId: account, folder: path }
   });
 
-  console.log(`Removed ${result.deleted} documents from search index for ${account}/${path}`);
-
-  // Also delete the folder metadata document
-  await searchIndex.delete({
-    id: `folder:${account}:${path}`,
-    ignore: [404] // Don't error if not found
+  await db.folders.delete({
+    where: { accountId_path: { accountId: account, path } }
   });
-}
-```
-
-### Alert on Special-Use Folder Deletion
-
-```javascript
-async function handleMailboxDeleted(event, headers) {
-  const { account, path, date, data } = event;
-  const eventId = headers['x-ee-wh-event-id'];
-
-  // Servers normally refuse to delete these; one disappearing is worth a look
-  if (data.specialUse) {
-    await alertService.send({
-      severity: 'warning',
-      title: 'Special-use folder deleted',
-      message: `Folder "${path}" (${data.specialUse}) was deleted on account ${account}`,
-      details: {
-        account,
-        folder: path,
-        folderName: data.name,
-        specialUse: data.specialUse,
-        timestamp: date,
-        eventId
-      }
-    });
-  }
-
-  // Proceed with normal cleanup
-  await cleanupFolder(account, path);
-}
-```
-
-### Cleanup with Child Folder Handling
-
-```javascript
-async function handleMailboxDeleted(event) {
-  const { account, path } = event;
-
-  // Each child folder gets its own event, but cleaning them up here as well
-  // keeps the local state consistent if a child event is delayed or lost
-  const deletedFolders = await db.folders.deleteMany({
-    where: {
-      accountId: account,
-      OR: [
-        { path: path },
-        { path: { startsWith: `${path}/` } }
-      ]
-    }
-  });
-
-  // Delete messages in this folder and child folders
-  const deletedMessages = await db.messages.deleteMany({
-    where: {
-      accountId: account,
-      OR: [
-        { folder: path },
-        { folder: { startsWith: `${path}/` } }
-      ]
-    }
-  });
-
-  console.log(`Deleted ${deletedFolders.count} folders and ${deletedMessages.count} messages`);
 }
 ```
 
@@ -320,36 +150,6 @@ The event is sent when EmailEngine notices the folder is missing, which is on th
 - The `date` field is when the webhook was generated, not when the folder was deleted
 - When a folder with subfolders is deleted, each subfolder that disappears from the listing gets its own event
 - Events for several folders are queued together and can be delivered in any order
-
-### Data Retention
-
-Before deleting cached data, consider whether you need to retain any information for audit compliance, recovery, analytics or legal holds:
-
-```javascript
-async function handleMailboxDeleted(event) {
-  const { account, path, date } = event;
-
-  // Archive before deleting
-  const messages = await db.messages.findMany({
-    where: { accountId: account, folder: path }
-  });
-
-  if (messages.length > 0) {
-    await archiveService.archiveFolderContents({
-      account,
-      folder: path,
-      messages,
-      deletedAt: date,
-      reason: 'folder_deleted'
-    });
-  }
-
-  // Then proceed with cleanup
-  await db.messages.deleteMany({
-    where: { accountId: account, folder: path }
-  });
-}
-```
 
 ## Related Events
 

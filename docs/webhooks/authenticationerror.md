@@ -10,22 +10,16 @@ The `authenticationError` webhook event is triggered when EmailEngine fails to a
 
 ## When This Event is Triggered
 
-The `authenticationError` event fires when:
+The `authenticationError` event fires when a credential is refused:
 
-- An IMAP server rejects the login
-- An OAuth2 access token cannot be renewed from the stored refresh token (IMAP accounts that authenticate with OAuth2)
+- An IMAP server refuses the login
+- The provider refuses to renew an OAuth2 access token from the stored refresh token (IMAP accounts that authenticate with OAuth2)
 - The Gmail API or Microsoft Graph rejects the access token, or refuses to issue one
-- An [external authentication server](/docs/accounts/authentication-server) fails to return credentials for the account
+- An [external authentication server](/docs/accounts/authentication-server) refuses to return credentials for the account
+
+A failure that is the service's rather than the credential's is not an authentication error. Since EmailEngine 2.80.0 a token endpoint or authentication server that cannot be reached, or that answers 408, 429 or a 5xx status, is retried instead: an IMAP account reports it as [`connectError`](/docs/webhooks/connecterror), a Gmail API or Microsoft Graph account retries without a webhook. Since 2.80.1 the same applies to an IMAP server that could not serve the login, a `NO` carrying one of the RFC 5530 codes `UNAVAILABLE`, `SERVERBUG`, `INUSE` or `LIMIT`, or Exchange Online's `User is authenticated but not connected.`; those are reported as `connectError` too. Before those releases every one of them produced this event, followed by [`authenticationSuccess`](/docs/webhooks/authenticationsuccess) once the service recovered.
 
 EmailEngine reports the **first occurrence** of a failure and suppresses repeats. A run of identical failures produces one webhook, followed by a second one only if the account is still failing when it is [switched off](#parked-after-repeated-failures). See [Webhook Deduplication](#webhook-deduplication) for the exact rule.
-
-## Common Use Cases
-
-- **Account monitoring** - Alert administrators when user accounts fail authentication
-- **Credential rotation** - Trigger workflows to refresh or request new credentials
-- **User notification** - Inform users that their email connection needs attention
-- **Dashboard updates** - Update account status in your application's UI
-- **Compliance logging** - Track authentication failures for security audits
 
 ## Payload Schema
 
@@ -73,10 +67,10 @@ When an OAuth2 token renewal for an IMAP account fails, the request that failed 
 
 | Code | Account type | Description |
 |------|--------------|-------------|
-| `OauthRenewError` | IMAP with OAuth2 | The provider refused to renew the access token from the stored refresh token. `tokenRequest` carries the details |
+| `OauthRenewError` | IMAP with OAuth2 | The provider refused to renew the access token from the stored refresh token, with a 4xx status other than 408 or 429. `tokenRequest` carries the details |
 | `ApiRequestError` | Gmail API, Microsoft Graph | The provider rejected the access token when EmailEngine fetched the account profile |
 | `TokenGenerationError` | Gmail API, Microsoft Graph | The provider refused to issue an access token |
-| `HTTPRequestError` | Any, with an authentication server | The [authentication server](/docs/accounts/authentication-server) did not return credentials for the account |
+| `HTTPRequestError` | Any, with an authentication server | The [authentication server](/docs/accounts/authentication-server) refused to return credentials for the account: a 4xx status other than 408 or 429, or a response that could not be used |
 
 For an IMAP login failure the code is whatever the server sent in its response, if it sent one. The values are defined by RFC 5530 and the server, not by EmailEngine. Ones you will see:
 
@@ -84,7 +78,10 @@ For an IMAP login failure the code is whatever the server sent in its response, 
 |------|-------------|
 | `AUTHENTICATIONFAILED` | The server rejected the credentials |
 | `AUTHORIZATIONFAILED` | The credentials were accepted but the user is not allowed to use them for this mailbox |
+| `EXPIRED` | The password has expired and must be changed |
 | `WEBALERT` | Gmail: a web login is required before IMAP access is allowed |
+
+`UNAVAILABLE`, `SERVERBUG`, `INUSE` and `LIMIT` never appear here: a login refused with one of those is the server's problem, and since 2.80.1 it is reported as [`connectError`](/docs/webhooks/connecterror).
 
 A server that sends a bare `NO` without a response code produces a payload with `response` but no `serverResponseCode`.
 
@@ -154,15 +151,11 @@ For Gmail API or Microsoft Graph API accounts:
 
 ## Handling the Event
 
-### Basic Handler
+Branch on `serverResponseCode`. EmailEngine's own codes mean an OAuth2 grant or an external credential source is gone, which only the user or the operator can fix; an IMAP code means a password problem:
 
 ```javascript
 async function handleAuthenticationError(event) {
   const { account, data } = event;
-
-  console.error(`Authentication failed for account ${account}:`);
-  console.error(`  Error: ${data.response || 'no response text'}`);
-  console.error(`  Code: ${data.serverResponseCode || 'none'}`);
 
   switch (data.serverResponseCode) {
     case 'OauthRenewError':
@@ -171,59 +164,18 @@ async function handleAuthenticationError(event) {
       // The OAuth2 grant is gone. Only the user can grant a new one
       await sendUserNotification(account, 'Please reconnect your email account');
       break;
+    case 'HTTPRequestError':
+      // The authentication server refused the account
+      await notifyAdmin(account, data);
+      break;
     case 'AUTHENTICATIONFAILED':
-      // Password accounts: the password changed or was revoked
+    case 'EXPIRED':
+      // Password accounts: the password changed, was revoked or expired
       await sendUserNotification(account, 'Please update your email password');
       break;
     default:
       await notifyAdmin(account, data);
   }
-}
-```
-
-### Alerting Administrators
-
-```javascript
-async function handleAuthenticationError(event) {
-  const { account, data, date } = event;
-
-  // Send alert to monitoring system
-  await sendAlert({
-    severity: 'warning',
-    title: 'Email Authentication Failed',
-    message: `Account ${account} failed to authenticate`,
-    details: {
-      account,
-      error: data.response,
-      code: data.serverResponseCode,
-      timestamp: date
-    }
-  });
-}
-```
-
-### Updating Account Status in Database
-
-```javascript
-async function handleAuthenticationError(event) {
-  const { account, data, date } = event;
-
-  // Update account status in your database
-  await db.accounts.update({
-    where: { emailEngineId: account },
-    data: {
-      status: 'authentication_error',
-      lastError: data.response,
-      lastErrorCode: data.serverResponseCode,
-      lastErrorAt: new Date(date)
-    }
-  });
-
-  // Trigger UI notification if user is online
-  await notifyConnectedUser(account, {
-    type: 'account_error',
-    message: 'Email connection lost, please reconnect'
-  });
 }
 ```
 
@@ -237,7 +189,7 @@ This covers every account type, including Gmail API and Microsoft Graph accounts
 
 EmailEngine sends a webhook for the switch-off even though the error itself has not changed, so a second `authenticationError` arriving for an account that has been failing for days is the account going offline. The payload is the same error as before, with nothing in it to mark the difference. The account is what changed. Since 2.79.4, [Get Account](/docs/api/get-v-1-account-account) reports it:
 
-- `authFailureDisabledAt` is the time syncing was switched off, and `null` for every other account. It is read-only. `imap.disabled` is also the operator's own [send-only switch](/docs/accounts/managing-accounts#disabling-and-enabling-accounts), so this field is what tells an automatic disable from a deliberate one
+- `authFailureDisabledAt` is the time syncing was switched off, and absent for every other account. It is read-only. `imap.disabled` is also the operator's own [send-only switch](/docs/accounts/managing-accounts#disabling-and-enabling-accounts), so this field is what tells an automatic disable from a deliberate one
 - `state` is `unset`, the same state as an account with no IMAP or OAuth2 configuration at all
 - `lastError.description` reads "IMAP was disabled for the account due to exceeding the authentication error threshold"
 
@@ -256,16 +208,16 @@ async function handleAuthenticationError(event) {
 }
 ```
 
-Accounts that 2.79.3 switched off before `authFailureDisabledAt` existed carry no marker, so 2.79.4 cannot tell them from a deliberate disable and re-authorizing them lifts nothing. 2.79.5 run a one-time backfill at startup that marks the OAuth2 accounts in that situation, after which they recover through the same paths as any other parked account. The recorded `authFailureDisabledAt` is then the time of that startup, not the time the account stopped syncing. Password accounts are not backfilled: their IMAP settings card still has the "Disable IMAP" checkbox, which clears the flag directly.
+Accounts that 2.79.3 switched off before `authFailureDisabledAt` existed carry no marker, so 2.79.4 cannot tell them from a deliberate disable and re-authorizing them lifts nothing. 2.79.5 runs a one-time backfill at startup that marks the OAuth2 accounts in that situation, after which they recover through the same paths as any other parked account. The recorded `authFailureDisabledAt` is then the time of that startup, not the time the account stopped syncing. Password accounts are not backfilled: their IMAP settings card still has the "Disable IMAP" checkbox, which clears the flag directly.
 
-Delegated accounts, the shared mailboxes that borrow another account's OAuth2 grant, are switched off together with that account in 2.79.3 and 2.79.4, and re-authorizing the owner lifts only the owner. 2.79.5 no longer park a delegated account at all: the failures are the owner's, so the owner is what gets switched off, and re-authorizing it brings the shared mailboxes back with it.
+Delegated accounts, the shared mailboxes that borrow another account's OAuth2 grant, are switched off together with that account in 2.79.3 and 2.79.4, and re-authorizing the owner lifts only the owner. Since 2.79.5 a delegated account is not parked at all: the failures are the owner's, so the owner is what gets switched off, and re-authorizing it brings the shared mailboxes back with it.
 
 ### Re-authenticating an Account
 
 Supplying working credentials lifts the switch-off and reconnects the account. Since 2.79.4 this happens on every path that carries new credentials, without a separate step to clear `imap.disabled`:
 
-- **Re-authorizing an OAuth2 account** through the [hosted authentication form](/docs/accounts/hosted-authentication), or through a [`POST /v1/account`](/docs/api/post-v-1-account) with a fresh `oauth2` block for the existing account ID
-- **Saving new IMAP settings** for a password account with [`PUT /v1/account/{account}`](/docs/api/put-v-1-account-account). The `imap` object you send replaces the stored one, so it carries no `disabled` flag unless you add one. In 2.79.5 a partial update that changes `imap.auth` lifts the switch-off as well; in 2.79.4 itself a partial update needs `"disabled": false` next to the new password:
+- **Re-authorizing an OAuth2 account** through the [hosted authentication form](/docs/accounts/hosted-authentication), the "Re-authenticate" button on its admin page, or a [`POST /v1/account`](/docs/api/post-v-1-account) with a fresh `oauth2` block for the existing account ID. The admin page button did nothing in 2.79.9, which is the release that introduced the Content-Security-Policy headers; 2.80.0 fixed it
+- **Saving new IMAP settings** for a password account with [`PUT /v1/account/{account}`](/docs/api/put-v-1-account-account). The `imap` object you send replaces the stored one, so it carries no `disabled` flag unless you add one. Since 2.79.5 a partial update that changes `imap.auth` lifts the switch-off as well; in 2.79.4 itself a partial update needs `"disabled": false` next to the new password:
 
 ```bash
 curl -X PUT "https://emailengine.example.com/v1/account/user123" \
@@ -306,7 +258,7 @@ So a run of failures produces one webhook, and a second one only if the account 
 ## Related Events
 
 - [authenticationSuccess](/docs/webhooks/authenticationsuccess) - Triggered when authentication succeeds
-- [connectError](/docs/webhooks/connecterror) - Triggered when the connection fails before authentication
+- [connectError](/docs/webhooks/connecterror) - Triggered when the connection fails, or the credential service could not be reached
 - [accountAdded](/docs/webhooks/accountadded) - Triggered when a new account is registered
 - [accountDeleted](/docs/webhooks/accountdeleted) - Triggered when an account is removed
 

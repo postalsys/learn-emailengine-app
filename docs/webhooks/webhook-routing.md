@@ -175,7 +175,7 @@ The mapping function transforms the webhook payload before delivery. This is use
 - Return the object to send. It becomes the entire request body, replacing the standard payload
 - The payload is available as the `payload` variable
 - Leave the map function empty to send the standard payload unchanged
-- A function that throws sends the standard payload instead. The error and the payload are written to the route's **Error log** tab
+- A function that throws, or that returns `null`, `undefined` or `false`, cancels the delivery for this route: nothing is sent for that event, and a thrown error is written with the payload to the route's **Error log** tab. Before v2.82.0 the standard payload was sent in place of a failed mapping, which delivered everything a stripping map was there to remove
 - A mapped body carries no event ID unless the function puts one there, so the `X-EE-Wh-Event-Id` header is absent for such a delivery and deduplication has to use something the mapped body carries
 - A map function with a syntax error takes the whole route down, filter included, until it is fixed
 
@@ -275,7 +275,7 @@ The **Enable Webhooks** toggle must remain enabled for webhook routing to work. 
 
 ### Via API
 
-Use the [settings API](/docs/api/post-v-1-settings) to clear the default webhook URL:
+Use the [settings API](/docs/api/post-v-1-settings) to clear the default webhook URL. The response is `{"updated": [...]}`, listing the keys that were written:
 
 <Tabs groupId="code-examples">
 <TabItem value="curl" label="cURL">
@@ -307,7 +307,7 @@ const response = await fetch('https://emailengine.example.com/v1/settings', {
 });
 
 const result = await response.json();
-console.log('Settings updated:', result.success);
+console.log('Settings updated:', result.updated);
 ```
 
 </TabItem>
@@ -329,7 +329,7 @@ response = requests.post(
 )
 
 result = response.json()
-print(f"Settings updated: {result['success']}")
+print(f"Settings updated: {result['updated']}")
 ```
 
 </TabItem>
@@ -354,7 +354,7 @@ curl_setopt_array($ch, [
 
 $response = curl_exec($ch);
 $result = json_decode($response, true);
-echo "Settings updated: " . ($result['success'] ? 'true' : 'false');
+echo "Settings updated: " . implode(', ', $result['updated']);
 ?>
 ```
 
@@ -468,7 +468,7 @@ curl -X PUT "https://emailengine.example.com/v1/account/my-account-id" \
 
    The mapping function replaces the request body with whatever it returns. Leave it empty to send the standard payload unchanged.
 
-6. Click **Create routing** to save the route
+6. Click **Create webhook route** to save the route
 
 ### Viewing Route Details
 
@@ -477,15 +477,15 @@ After creating a route, you can view its details including:
 - Trigger count (how many times the route has been activated)
 - Current status (Enabled/Disabled)
 - Filter and mapping function code
-- Error log (if any errors occurred during function execution)
+- Error log: the 20 most recent filter and map failures, each with the payload it ran against
 
 ![Webhook Route Detail](/img/screenshots/webhooks/webhook-route-detail.png)
 
 ### Editing a Route
 
 1. Click on a route in the list to view its details
-2. Click **Edit** to modify the route configuration
-3. Make your changes and click **Update webhook**
+2. Click **Edit route** to modify the route configuration
+3. Make your changes and click **Save changes**
 
 ![Webhook Route Edit](/img/screenshots/webhooks/webhook-route-edit.png)
 
@@ -501,13 +501,13 @@ You can add custom HTTP headers to webhook requests for authentication or identi
    X-Custom-Header: custom-value
    ```
 
-   A route's header list replaces the global `webhooksCustomHeaders` for its own deliveries rather than adding to it. Headers set on the account are applied on top of either, so an account header of the same name wins.
+   A route's deliveries carry the route's header list and nothing else: neither the global `webhooksCustomHeaders` nor the account's own headers are added to it (v2.82.0; earlier releases applied the account's headers on top). Both of those lists belong to the default target, see [Custom request headers](/docs/webhooks/overview#custom-request-headers-webhookscustomheaders).
 
 ### Deleting a Route
 
 1. Navigate to the route detail page
-2. Click **Delete**
-3. Confirm the deletion in the modal dialog
+2. Open the route's actions menu and choose **Delete route**
+3. Confirm the deletion in the dialog
 
 :::warning
 Deleting a route is permanent and cannot be undone. Any webhooks that would have matched this route will no longer be delivered to its target URL.
@@ -744,6 +744,10 @@ Filter and mapping functions have access to:
 Filters and maps run inside the notify worker, which processes one delivery at a time by default, so every millisecond spent here is a millisecond no webhook is being posted. Synchronous execution is cut off at 30 seconds; awaiting is not bounded by that limit, so a `fetch` against an unresponsive service can hold the queue for as long as its own timeout allows.
 :::
 
+:::warning Scripts run with the server's privileges
+The functions run in a Node.js `vm` context, which is not a security boundary: a script can reach the process, the host modules and the configured secrets. Only operators you would trust with the EmailEngine configuration itself should write them.
+:::
+
 ## Troubleshooting
 
 ### Route Not Triggering
@@ -811,14 +815,14 @@ Filters and maps run inside the notify worker, which processes one delivery at a
 
 **Common issues:**
 
-- Returning nothing: a code path that falls off the end sends the standard payload instead of the mapped one, which reads as the map being ignored
-- Throwing: the standard payload is sent and the error lands in the **Error log** tab
+- Returning nothing: a code path that falls off the end returns `undefined`, so the route sends nothing for that event. Before v2.82.0 the standard payload was sent instead, which read as the map being ignored
+- Throwing: nothing is sent for that event, and the error lands in the **Error log** tab
 - Values JSON cannot represent, such as a `Date` or a `Map`, do not survive serialization
 
 ## See Also
 
 - [Webhooks Overview](/docs/webhooks/overview) - Delivery, retries, headers and signing for every webhook
 - [Webhook events reference](/docs/reference/webhook-events) - Which events exist and what each one reports
-- [Pre-processing functions](/docs/advanced/pre-processing) - The same scripting environment applied to other parts of EmailEngine
+- [Pre-processing functions](/docs/webhooks/pre-processing) - The same scripting environment applied to other parts of EmailEngine
 - [List webhook routes API](/docs/api/get-v-1-webhookroutes) - Reading the configured routes programmatically
 - [Webhooks API](/docs/api-reference/webhooks-api) - Managing the webhook configuration over the API

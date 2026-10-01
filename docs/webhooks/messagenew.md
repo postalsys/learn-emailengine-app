@@ -28,15 +28,6 @@ By default the event is sent for every monitored folder. Set [`inboxNewOnly`](/d
 
 When the new message is itself a bounce or an ARF complaint, this event is sent first, with `isBounce` or `isComplaint` set, and a [`messageBounce`](/docs/webhooks/messagebounce) or [`messageComplaint`](/docs/webhooks/messagecomplaint) event follows it.
 
-## Common Use Cases
-
-- **Support ticket creation** - Create tickets from incoming support emails
-- **Lead capture** - Process inquiry emails and add contacts to your CRM
-- **Order processing** - Parse order confirmation emails
-- **AI analysis** - Feed incoming emails to language models for classification or summarization
-- **Email archival** - Store emails in external databases or document management systems
-- **Notification forwarding** - Send alerts via Slack, SMS, or other channels
-
 ## Payload Schema
 
 ### Top-Level Fields
@@ -64,7 +55,7 @@ The unique event identifier is sent as the HTTP header `X-EE-Wh-Event-Id`, not i
 | `threadId` | string | No | Thread identifier, when the server or provider supplies one |
 | `date` | string | Yes | Message date from headers (ISO 8601) |
 | `flags` | array | No | IMAP flags (for example `["\\Seen", "\\Flagged"]`). `\Recent` is never included |
-| `labels` | array | No | Gmail labels, on Gmail API accounts and on Gmail over IMAP. System labels use their IMAP special-use names (`\Inbox`, `\Sent`, `\Trash`, `\Drafts`, `\Junk`); other labels are reported by Gmail label ID on API accounts and by name over IMAP |
+| `labels` | array | No | Gmail labels, on Gmail API accounts and on Gmail over IMAP. System labels use their IMAP special-use names (`\Inbox`, `\Sent`, `\Trash`, `\Drafts`, `\Junk`); other labels are reported by Gmail label ID on API accounts and by name over IMAP. On MS Graph accounts the array carries the message's Outlook categories, and is absent when it has none |
 | `unseen` | boolean | No | `true` if the message has not been read. Absent when read |
 | `flagged` | boolean | No | `true` if the message is flagged or starred. Absent otherwise |
 | `answered` | boolean | No | `true` if the message has been replied to. Absent otherwise |
@@ -83,7 +74,6 @@ The unique event identifier is sent as the HTTP header `X-EE-Wh-Event-Id`, not i
 | `headers` | object | No | Selected email headers. Only present when `notifyHeaders` is configured (see below) |
 | `text` | object | No | Text content object (see below) |
 | `preview` | string | No | Short body preview supplied by the provider. Gmail API and MS Graph accounts only |
-| `bounces` | array | No | Bounces previously recorded against this message's Message-ID. IMAP accounts only (see below) |
 | `deliveryReport` | object | No | Parsed delivery status notification, set when the message is a "delivered" or "delayed" DSN (see below) |
 | `isAutoReply` | boolean | No | `true` when the message looks like an automatic reply. The subject decides it when it begins with `Auto reply`, `Automatic reply`, `Automatic response`, `Out of Office`, `Out of the Office`, `OOF:` or `OOO:`, or with `Auto:` on a message that also has an `In-Reply-To` header. Otherwise an `Auto-Submitted: auto-replied`, a `Precedence: auto-reply`, or any `X-Auto-Response-Suppress`, `X-Autoresponder`, `X-Autorespond` or `X-Autoreply` header decides it |
 | `isBounce` | boolean | No | `true` when the message was recognized as a bounce. A [`messageBounce`](/docs/webhooks/messagebounce) event follows this one |
@@ -118,17 +108,9 @@ Every field of the report is passed through with its name camelCased, so the exa
 
 A notification that reports on several recipients is described one recipient at a time, so `action`, `status`, and `diagnosticCode` always belong together rather than being mixed across recipients. This shape was introduced in v2.78.0; earlier versions reported only a fixed subset of the fields.
 
-### Bounce List Structure
+### Bounce List (removed)
 
-On IMAP accounts, when EmailEngine has previously processed a bounce that referred to this message's Message-ID, `data.bounces` lists what it recorded. Gmail API and MS Graph accounts do not carry this field. Each entry contains:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `message` | string | EmailEngine message ID of the bounce notification |
-| `recipient` | string | Address that bounced |
-| `action` | string | Bounce action, typically `failed` |
-| `response` | object | `message` and `status` from the bounce, when known |
-| `date` | string | When the bounce was recorded (ISO 8601) |
+Releases before v2.81.2 added a `bounces` array on IMAP accounts, listing the bounces EmailEngine had recorded against the message's Message-ID, each with the bounce's `message` ID, `recipient`, `action`, `response` and `date`. The record behind it was removed in v2.81.2 and the field with it. The bounce notification's own [`messageNew`](#message-data-fields-data-object) event carries `isBounce` and `relatedMessageId`, and the [`messageBounce`](/docs/webhooks/messagebounce) event the details, so correlate bounces with your own record of the sent message by Message-ID.
 
 ### Address Object Structure
 
@@ -190,7 +172,7 @@ If `notifyCalendarEvents` is enabled and the message contains `text/calendar` or
 
 ### AI Fields
 
-`summary` is the JSON object the AI model returned for the message, and its contents depend on the configured instructions. Its `riskAssessment.risk` is held at the floor set by EmailEngine's own checks on the message, and `riskAssessment.signals` lists what they found. See [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt#webhook-enhancement) for the properties the built-in instructions ask for. Before v2.82.0 the risk assessment was lifted out of it into a separate `riskAssessment` field and the request id, token count and model name were merged into it; since v2.82.0 the object is delivered as the model returned it, with `riskAssessment` inside. Releases before v2.82.0 could also add `embeddings`, vector embeddings of the message text, when `openAiGenerateEmbeddings` was on; that setting is still accepted but has no effect.
+`summary` is the JSON object the AI model returned for the message, and its contents depend on the configured instructions. Its `riskAssessment.risk` is held at the floor set by EmailEngine's own checks on the message, and `riskAssessment.signals` lists what they found. See [AI and ChatGPT Integration](/docs/receiving/ai-processing#webhook-enhancement) for the properties the built-in instructions ask for. Before v2.82.0 the risk assessment was lifted out of it into a separate `riskAssessment` field and the request id, token count and model name were merged into it; since v2.82.0 the object is delivered as the model returned it, with `riskAssessment` inside. Releases before v2.82.0 could also add `embeddings`, vector embeddings of the message text, when `openAiGenerateEmbeddings` was on; that setting is still accepted but has no effect.
 
 ## Example Payload
 
@@ -357,114 +339,37 @@ Regardless of this setting, EmailEngine always fetches the headers it needs for 
 |---------|-------------|
 | `generateEmailSummary` | Add `summary` to Inbox messages |
 
-It needs `openAiAPIKey` to be set as well, and it applies only to messages in the Inbox. See [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt) for what the generated fields contain.
+It needs `openAiAPIKey` to be set as well, and it applies only to messages in the Inbox. See [AI and ChatGPT Integration](/docs/receiving/ai-processing) for what the generated fields contain.
 
 ## Handling the Event
 
-### Basic Handler
+A message moved or copied in from another folder, an automatic reply, and a message outside the Inbox all arrive as `messageNew` too, so a handler for incoming mail filters on the payload before it does any work. `seemsLikeNew` is `false` for a message EmailEngine has already seen on the account, and `messageSpecialUse` names the folder's role for every account type, including Gmail API accounts where `path` is always `\All`. When `notifyText` is off, or `text.hasMore` says the body was cut at `notifyTextSize`, the full message is one API call away by `data.id`:
 
 ```javascript
 async function handleMessageNew(event) {
   const { account, data } = event;
 
-  console.log(`New email for ${account}:`);
-  console.log(`  From: ${data.from?.name} <${data.from?.address}>`);
-  console.log(`  Subject: ${data.subject}`);
-  console.log(`  Message ID: ${data.id}`);
-
-  if (data.attachments?.length > 0) {
-    console.log(`  Attachments: ${data.attachments.length}`);
-  }
-}
-```
-
-### Fetching Full Message Content
-
-If text content is not included in the webhook, fetch it via the API:
-
-```javascript
-async function getMessageContent(account, messageId) {
-  const response = await fetch(
-    `https://emailengine.example.com/v1/account/${account}/message/${messageId}`,
-    {
-      headers: {
-        'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-      }
-    }
-  );
-  return response.json();
-}
-```
-
-### Downloading Attachments
-
-```javascript
-async function downloadAttachment(account, attachmentId) {
-  const response = await fetch(
-    `https://emailengine.example.com/v1/account/${account}/attachment/${attachmentId}`,
-    {
-      headers: {
-        'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-      }
-    }
-  );
-  return response.arrayBuffer();
-}
-```
-
-## Filtering New Messages
-
-### Using `seemsLikeNew`
-
-The `seemsLikeNew` field helps distinguish genuinely new messages from moved or copied ones:
-
-```javascript
-async function handleMessageNew(event) {
-  if (!event.data.seemsLikeNew) {
-    console.log('Skipping moved or copied message');
+  if (!data.seemsLikeNew || data.isAutoReply) {
+    // Moved or copied from another folder, or an automatic reply
     return;
   }
 
-  await processNewEmail(event.data);
-}
-```
-
-### Filtering by Folder
-
-`messageSpecialUse` works for every account type, including Gmail API accounts where `path` is always `\All`:
-
-```javascript
-async function handleMessageNew(event) {
-  if (event.data.messageSpecialUse !== '\\Inbox') {
+  if (data.messageSpecialUse !== '\\Inbox') {
     return;
   }
 
-  await processInboxEmail(event.data);
-}
-```
-
-### Filtering Auto-Replies
-
-```javascript
-async function handleMessageNew(event) {
-  if (event.data.isAutoReply) {
-    console.log('Skipping auto-reply');
-    return;
+  let text = data.text;
+  if (!text?.plain && !text?.html || text.hasMore) {
+    const response = await fetch(
+      `https://emailengine.example.com/v1/account/${account}/message/${data.id}?textType=*`,
+      { headers: { Authorization: 'Bearer YOUR_ACCESS_TOKEN' } }
+    );
+    ({ text } = await response.json());
   }
 
-  await processEmail(event.data);
+  await processInboxEmail(account, data, text);
 }
 ```
-
-## Best Practices
-
-1. **Respond quickly** - Return a 2xx status before the delivery times out (30 seconds by default) to prevent retries
-2. **Process asynchronously** - Queue events for processing after acknowledging receipt
-3. **Handle duplicates** - Deduplicate on the `X-EE-Wh-Event-Id` request header, which is stable across retries of the same delivery
-4. **Check `seemsLikeNew`** - Filter out moved and copied messages when appropriate
-5. **Use message IDs** - Fetch additional data via the API using `data.id` when needed
-6. **Switch `notifyText` off if you do not need bodies** - Body content makes payloads large, and `notifyTextSize` bounds them
-7. **Limit header exposure** - Only request the headers you need via `notifyHeaders`
 
 ## Related Events
 

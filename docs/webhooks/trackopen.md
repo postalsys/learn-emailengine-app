@@ -16,7 +16,7 @@ Open tracking works only when all of these hold:
 
 1. The message had an HTML part. A plain text message gets no pixel
 2. Open tracking was on for that message, either per submission or through the `trackOpens` setting (see [Enabling Open Tracking](#enabling-open-tracking))
-3. A [`serviceUrl`](/docs/reference/configuration-options) was configured when the message was sent, since the pixel needs an absolute URL
+3. A [`serviceUrl`](/docs/configuration/settings) was configured when the message was sent, since the pixel needs an absolute URL
 4. The recipient's mail client loads remote images
 
 ## Limitations
@@ -28,16 +28,9 @@ Open tracking is an approximation, not a measurement:
 - **Text-only viewing** - A reader who views the plain text alternative never loads the pixel
 - **Caching** - A client that caches the image reports only the first open
 - **Prefetching** - Security scanners and link-protection services fetch the pixel without a human involved
+- **Repeat opens** - Nothing is deduplicated on EmailEngine's side: a client that does not cache the image loads it on every view, so one message can produce several events
 
 EmailEngine drops the requests it can recognize as automated, see [Automated request filtering](#automated-request-filtering). It cannot recognize all of them.
-
-## Common Use Cases
-
-- **Email engagement analytics** - Track open rates for marketing campaigns
-- **Sales follow-up** - Know when a prospect has viewed your email
-- **Support ticket monitoring** - Confirm when customers have seen your response
-- **Delivery confirmation** - Verify that important messages were viewed
-- **A/B testing** - Compare open rates across different subject lines or send times
 
 ## Payload Schema
 
@@ -58,10 +51,17 @@ The event carries no `path` or `specialUse`. The unique event identifier is sent
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `messageId` | string | Yes | Message-ID header of the tracked email, as EmailEngine wrote it when the message was queued. It is the same value the Submit API returned and the [`messageSent`](/docs/webhooks/messagesent) event reports as `originalMessageId` |
-| `remoteAddress` | string | Yes | IP address that requested the tracking pixel. Behind a reverse proxy this is the client address taken from `X-Forwarded-For`, and only when the request came from an address listed in `EENGINE_API_PROXY_ADDRESSES` |
+| `remoteAddress` | string | Yes | IP address that requested the tracking pixel, see [Client address](#client-address) |
 | `userAgent` | string | No | `User-Agent` header of that request. Absent when the client sent none |
 
 The event carries no folder, message or recipient reference beyond `messageId`. Record the Message-ID when you submit the message if you need to correlate an open with a recipient.
+
+### Client address
+
+`remoteAddress` is the address of the socket the request came in on, unless the `enableApiProxy` setting is on, which it is by default. With it on, EmailEngine reads the address from the `X-Forwarded-For` header the reverse proxy adds:
+
+- When [`EENGINE_API_PROXY_ADDRESSES`](/docs/configuration/environment-variables#trusted-proxy-addresses) lists your proxies, the header is honored only on a request that arrived from one of them, and the address reported is the first hop in the chain that is not one of your proxies
+- When it is not set, the first address in the header is trusted from any peer. A client that can reach EmailEngine directly can then name its own address, so set the variable whenever the port is reachable without going through the proxy
 
 ## Example Payload
 
@@ -152,83 +152,24 @@ EmailEngine resolves open tracking for each message in this order, taking the fi
 
 ## Handling the Event
 
-### Basic Handler
+The same message produces an event every time the pixel is loaded: a second read, another device, or a client that does not cache images. Count opens per Message-ID rather than treating each event as a new reader:
 
 ```javascript
 async function handleTrackOpen(event) {
-  const { account, date, data } = event;
+  const { date, data } = event;
 
-  console.log(`Email opened for account ${account}`);
-  console.log(`  Message-ID: ${data.messageId}`);
-  console.log(`  Opened at: ${date}`);
-  console.log(`  From IP: ${data.remoteAddress}`);
-
-  // Update your database or analytics system
-  await recordEmailOpen({
-    messageId: data.messageId,
-    openedAt: new Date(date),
-    ipAddress: data.remoteAddress,
-    userAgent: data.userAgent
-  });
-}
-```
-
-### Tracking Multiple Opens
-
-Since the same email may be opened multiple times by the same recipient (or the tracking pixel may be cached), consider deduplication:
-
-```javascript
-const recentOpens = new Map();
-
-async function handleTrackOpen(event) {
-  const { data, date } = event;
-  const cacheKey = `${data.messageId}:${data.remoteAddress}`;
-
-  // Check if we've seen this open recently (within 1 hour)
-  const lastOpen = recentOpens.get(cacheKey);
-  if (lastOpen && (Date.now() - lastOpen) < 3600000) {
-    console.log('Duplicate open detected, skipping');
+  const sentMessage = await db.sentMessages.findOne({ messageId: data.messageId });
+  if (!sentMessage) {
     return;
   }
 
-  recentOpens.set(cacheKey, Date.now());
-
-  // Process the open event
-  await recordEmailOpen(event);
-}
-```
-
-### Correlating Opens with Sent Messages
-
-Use the `messageId` to link opens back to your original sent messages:
-
-```javascript
-async function handleTrackOpen(event) {
-  const { data } = event;
-
-  // Find the original message in your database
-  const sentMessage = await db.sentMessages.findOne({
-    messageId: data.messageId
-  });
-
-  if (sentMessage) {
-    // Update open status
-    await db.sentMessages.updateOne(
-      { messageId: data.messageId },
-      {
-        $set: {
-          opened: true,
-          openedAt: new Date(event.date)
-        },
-        $inc: { openCount: 1 }
-      }
-    );
-
-    // Notify sales team if this is a prospect email
-    if (sentMessage.type === 'prospect') {
-      await notifySalesTeam(sentMessage, event);
+  await db.sentMessages.updateOne(
+    { messageId: data.messageId },
+    {
+      $set: { opened: true, lastOpenedAt: new Date(date) },
+      $inc: { openCount: 1 }
     }
-  }
+  );
 }
 ```
 
@@ -236,10 +177,10 @@ async function handleTrackOpen(event) {
 
 ### How the Tracking Pixel Works
 
-When open tracking applies to a message, EmailEngine, in each HTML part of the outgoing message:
+When open tracking applies to a message, EmailEngine:
 
 1. Builds a payload naming the account and the Message-ID, base64url encodes it as the `data` parameter, and signs it with the instance's `serviceSecret` as the `sig` parameter
-2. Inserts a 1x1 pixel image tag just before the closing `</body>` tag, or appends it when the part has no `</body>`
+2. Inserts a 1x1 pixel image tag into the first HTML part of the outgoing message, just before its closing `</body>` tag, or appends it when the part has no `</body>`. A message with several HTML parts gets one pixel
 
 The pixel it inserts:
 
@@ -259,15 +200,6 @@ Before sending the webhook, EmailEngine checks the requesting address against:
 - A reverse DNS lookup, treating a hostname under `barracuda.com` or `spfbl.net` as a scanner
 
 A request that matches is written to the log at debug level and no webhook is sent. Everything else is reported, including privacy relays and link-protection scanners that do not identify themselves.
-
-## Best Practices
-
-1. **Do not rely on opens alone** - Image blocking and privacy relays make the count a floor, not a measurement
-2. **Combine with click tracking** - Use both open and click tracking for better engagement insights
-3. **Handle duplicates** - The same email may trigger multiple open events
-4. **Respect privacy** - Be transparent with recipients about tracking and comply with privacy regulations
-5. **Use for trends, not absolutes** - Open rates are best used for comparing relative performance, not absolute engagement
-6. **Consider time zones** - Analyze open times to optimize send times for your audience
 
 ## Related Events
 

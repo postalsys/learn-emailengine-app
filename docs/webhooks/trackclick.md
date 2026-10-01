@@ -16,7 +16,7 @@ Click tracking works only when all of these hold:
 
 1. The message had an HTML part with `http:` or `https:` links. Links in the plain text alternative are never rewritten
 2. Click tracking was on for that message, either per submission or through the `trackClicks` setting (see [Enabling Click Tracking](#enabling-click-tracking))
-3. A [`serviceUrl`](/docs/reference/configuration-options) was configured when the message was sent, since the rewritten link needs an absolute URL
+3. A [`serviceUrl`](/docs/configuration/settings) was configured when the message was sent, since the rewritten link needs an absolute URL
 
 ## Limitations
 
@@ -24,17 +24,9 @@ Click tracking works only when all of these hold:
 - **Non-HTTP schemes** - `mailto:`, `tel:` and other schemes are left alone
 - **Link prefetching** - Security scanners and link-protection services follow links without a human involved
 - **Visible rewriting** - The recipient sees an EmailEngine URL in the status bar rather than the destination, and some corporate mail filters rewrite it again on top
+- **Repeat clicks** - Nothing is deduplicated on EmailEngine's side: every follow of the link that is not recognized as automated produces an event, so decide how to count a link clicked several times
 
 EmailEngine drops the requests it can recognize as automated, see [Automated request filtering](#automated-request-filtering). It cannot recognize all of them.
-
-## Common Use Cases
-
-- **Email engagement analytics** - Track click-through rates for marketing campaigns
-- **Link performance analysis** - Identify which links in your emails get the most engagement
-- **Sales follow-up** - Know when a prospect clicks on a proposal link
-- **Content optimization** - Determine which call-to-action buttons perform best
-- **A/B testing** - Compare click rates across different email variations
-- **User journey tracking** - Understand recipient behavior by tracking link interactions
 
 ## Payload Schema
 
@@ -56,7 +48,7 @@ The event carries no `path` or `specialUse`. The unique event identifier is sent
 |-------|------|----------|-------------|
 | `messageId` | string | Yes | Message-ID header of the tracked email, as EmailEngine wrote it when the message was queued. It is the same value the Submit API returned and the [`messageSent`](/docs/webhooks/messagesent) event reports as `originalMessageId` |
 | `url` | string | Yes | The destination URL, exactly as it appeared in the message before rewriting |
-| `remoteAddress` | string | Yes | IP address that followed the link. Behind a reverse proxy this is the client address taken from `X-Forwarded-For`, and only when the request came from an address listed in `EENGINE_API_PROXY_ADDRESSES` |
+| `remoteAddress` | string | Yes | IP address that followed the link. Resolved the same way as for [`trackOpen`](/docs/webhooks/trackopen#client-address): the socket address, or the `X-Forwarded-For` client when the `enableApiProxy` setting is on |
 | `userAgent` | string | No | `User-Agent` header of that request. Absent when the client sent none |
 
 The event carries no recipient reference. Record the Message-ID when you submit the message if you need to correlate a click with a recipient.
@@ -152,94 +144,26 @@ EmailEngine resolves click tracking for each message in this order, taking the f
 
 ## Handling the Event
 
-### Basic Handler
+`url` is the original destination, so the handler can tell which link was followed without a lookup table:
 
 ```javascript
 async function handleTrackClick(event) {
-  const { account, date, data } = event;
+  const { date, data } = event;
 
-  console.log(`Link clicked for account ${account}`);
-  console.log(`  Message-ID: ${data.messageId}`);
-  console.log(`  URL: ${data.url}`);
-  console.log(`  Clicked at: ${date}`);
-  console.log(`  From IP: ${data.remoteAddress}`);
-
-  // Update your database or analytics system
-  await recordLinkClick({
-    messageId: data.messageId,
-    clickedUrl: data.url,
-    clickedAt: new Date(date),
-    ipAddress: data.remoteAddress,
-    userAgent: data.userAgent
-  });
-}
-```
-
-### Tracking Click Patterns
-
-Analyze which links perform best across your campaigns:
-
-```javascript
-async function handleTrackClick(event) {
-  const { data, date } = event;
-
-  // Parse the URL to categorize the click
-  const clickedUrl = new URL(data.url);
-
-  // Track clicks by domain and path
-  await analytics.trackEvent('email_link_click', {
-    messageId: data.messageId,
-    url: data.url,
-    domain: clickedUrl.hostname,
-    path: clickedUrl.pathname,
-    timestamp: date
-  });
-
-  // Track specific call-to-action buttons
-  if (clickedUrl.pathname.includes('/buy') || clickedUrl.pathname.includes('/purchase')) {
-    await analytics.trackConversion('purchase_click', {
-      messageId: data.messageId,
-      timestamp: date
-    });
+  const sentMessage = await db.sentMessages.findOne({ messageId: data.messageId });
+  if (!sentMessage) {
+    return;
   }
-}
-```
 
-### Correlating Clicks with Sent Messages
-
-Use the `messageId` to link clicks back to your original sent messages:
-
-```javascript
-async function handleTrackClick(event) {
-  const { data } = event;
-
-  // Find the original message in your database
-  const sentMessage = await db.sentMessages.findOne({
-    messageId: data.messageId
-  });
-
-  if (sentMessage) {
-    // Update click stats
-    await db.sentMessages.updateOne(
-      { messageId: data.messageId },
-      {
-        $set: { hasClicks: true },
-        $inc: { clickCount: 1 },
-        $push: {
-          clicks: {
-            url: data.url,
-            clickedAt: new Date(event.date),
-            ipAddress: data.remoteAddress
-          }
-        }
+  await db.sentMessages.updateOne(
+    { messageId: data.messageId },
+    {
+      $inc: { clickCount: 1 },
+      $push: {
+        clicks: { url: data.url, clickedAt: new Date(date), ipAddress: data.remoteAddress }
       }
-    );
-
-    // Notify sales team if this is a high-value link
-    if (data.url.includes('/pricing') || data.url.includes('/demo')) {
-      await notifySalesTeam(sentMessage, event);
     }
-  }
+  );
 }
 ```
 
@@ -288,15 +212,6 @@ Before queuing the webhook, EmailEngine checks the requesting address against:
 - A reverse DNS lookup, treating a hostname under `barracuda.com` or `spfbl.net` as a scanner
 
 A request that matches is written to the log at debug level and no webhook is sent, but the redirect still happens. Everything else is reported, including link-protection scanners that do not identify themselves.
-
-## Best Practices
-
-1. **Use with open tracking** - Opens and clicks answer different questions; enable both to tell a read from an act
-2. **Handle multiple clicks** - The same link may be clicked multiple times; decide how to count them
-3. **Respect privacy** - Be transparent with recipients about tracking and comply with privacy regulations (GDPR, CAN-SPAM)
-4. **Set your own service secret** - EmailEngine mints one if you do not, but a value you set is one you can rotate and keep across restores
-5. **Monitor for anomalies** - Watch for unusual click patterns that might indicate security scanner activity
-6. **Test tracked links** - Verify that tracked links redirect correctly to the intended destinations
 
 ## Related Events
 

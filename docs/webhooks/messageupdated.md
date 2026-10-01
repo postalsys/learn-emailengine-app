@@ -25,16 +25,6 @@ How the change is detected depends on the account type:
 - **Gmail API**: the Gmail history reports labels added to or removed from a message. `UNREAD`, `STARRED` and `DRAFT` are reported as flag changes, the other labels as label changes
 - **MS Graph**: a change notification reports the message as updated. Graph does not say what changed, so EmailEngine fetches the current state and reports only the full flag list. Repeated notifications with the same flags within a short window are reported once
 
-## Common Use Cases
-
-- **Read status synchronization** - Track when users read emails across devices
-- **Priority tracking** - Monitor flagged/starred message changes
-- **CRM integration** - Update ticket status when emails are marked as handled
-- **Analytics** - Track user engagement patterns and response times
-- **Label-based workflow** - Trigger actions based on Gmail label changes
-- **Archival systems** - Update message metadata when flags change
-- **Notification systems** - Alert when important messages are flagged
-
 ## Payload Schema
 
 ### Top-Level Fields
@@ -250,112 +240,33 @@ Only the full flag list is reported:
 
 ## Handling the Event
 
-### Basic Handler
+The `changes` object carries only what changed, and MS Graph accounts send `value` without `added` or `deleted`, so derive state from `value` and treat the deltas as optional. In JavaScript source the backslash in a flag name has to be escaped:
 
 ```javascript
 async function handleMessageUpdated(event) {
   const { account, data } = event;
-  const { changes } = data;
+  const { flags, labels } = data.changes;
 
-  console.log(`Message ${data.id} updated in ${account}:`);
+  if (flags) {
+    await db.messages.update({
+      where: { accountId: account, messageId: data.id },
+      data: {
+        isRead: flags.value.includes('\\Seen'),
+        isFlagged: flags.value.includes('\\Flagged')
+      }
+    });
+  }
 
-  if (changes.flags) {
-    if (changes.flags.added?.length) {
-      console.log(`  Flags added: ${changes.flags.added.join(', ')}`);
+  if (labels) {
+    // Gmail only. A removed \Inbox label means the message was archived
+    if (labels.deleted?.includes('\\Inbox')) {
+      await markAsArchived(account, data.id);
     }
-    if (changes.flags.deleted?.length) {
-      console.log(`  Flags removed: ${changes.flags.deleted.join(', ')}`);
-    }
-    console.log(`  Current flags: ${changes.flags.value.join(', ')}`);
-  }
 
-  if (changes.labels) {
-    if (changes.labels.added?.length) {
-      console.log(`  Labels added: ${changes.labels.added.join(', ')}`);
-    }
-    if (changes.labels.deleted?.length) {
-      console.log(`  Labels removed: ${changes.labels.deleted.join(', ')}`);
-    }
-    console.log(`  Current labels: ${changes.labels.value.join(', ')}`);
-  }
-}
-```
-
-### Track Read Status
-
-Compare against `value` rather than `added` and `deleted`, so that the handler works for MS Graph accounts as well. In JavaScript source the backslash in a flag name has to be escaped:
-
-```javascript
-async function handleMessageUpdated(event) {
-  const { account, data } = event;
-  const { changes } = data;
-
-  if (!changes.flags) {
-    return;
-  }
-
-  const isRead = changes.flags.value.includes('\\Seen');
-
-  await db.messages.update({
-    where: {
-      accountId: account,
-      messageId: data.id
-    },
-    data: {
-      isRead,
-      readAt: isRead ? new Date() : null
-    }
-  });
-
-  console.log(`Message ${data.id} marked as ${isRead ? 'read' : 'unread'}`);
-}
-```
-
-### Track Flagged Messages
-
-```javascript
-async function handleMessageUpdated(event) {
-  const { account, data } = event;
-  const { changes } = data;
-
-  if (!changes.flags) {
-    return;
-  }
-
-  const isFlagged = changes.flags.value.includes('\\Flagged');
-
-  if (changes.flags.added?.includes('\\Flagged')) {
-    await notifyPriorityMessage(account, data.id);
-  }
-
-  await db.messages.update({
-    where: { accountId: account, messageId: data.id },
-    data: { isFlagged, flaggedAt: isFlagged ? new Date() : null }
-  });
-}
-```
-
-### Gmail Label-Based Workflow
-
-```javascript
-async function handleMessageUpdated(event) {
-  const { account, data } = event;
-  const { changes } = data;
-
-  if (!changes.labels) {
-    return;
-  }
-
-  if (changes.labels.added?.includes('Work/Urgent')) {
-    await triggerUrgentWorkflow(account, data.id);
-  }
-
-  if (changes.labels.deleted?.includes('\\Inbox')) {
-    await markAsArchived(account, data.id);
-  }
-
-  if (changes.labels.added?.includes('Customers')) {
-    await syncToCRM(account, data.id);
+    await db.messages.update({
+      where: { accountId: account, messageId: data.id },
+      data: { labels: labels.value }
+    });
   }
 }
 ```

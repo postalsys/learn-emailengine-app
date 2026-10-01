@@ -19,18 +19,11 @@ The `mailboxNew` event fires when a folder appears in the server's folder listin
 
 The event is sent after the folder's first sync, so by the time it arrives the folder can be listed and its messages fetched. Messages that were already in the folder are indexed as the baseline and do not produce [`messageNew`](/docs/webhooks/messagenew).
 
+Before EmailEngine 2.80.0 two cases lost the event: a folder that first appeared while the account's primary connection was down, and one found by a listing EmailEngine only read without registering it. Both were registered by a later pass with no `mailboxNew` sent. Since 2.80.0 the folder is announced once the primary connection is back.
+
 :::note IMAP accounts only
 Folder events are produced by the IMAP client. Gmail API and Microsoft Graph accounts do not send `mailboxNew`, `mailboxDeleted` or `mailboxReset`.
 :::
-
-## Common Use Cases
-
-- **Folder tree synchronization** - Update folder lists and navigation menus in your application
-- **Database initialization** - Create folder metadata records for the new folder
-- **Search index setup** - Initialize search index structures for the new folder
-- **Subscription management** - Start watching folders that match a pattern
-- **Audit logging** - Track folder creation for compliance or security monitoring
-- **User notifications** - Alert users when new folders appear in their accounts
 
 ## Payload Schema
 
@@ -118,228 +111,44 @@ A folder with a special-use flag carries it at both levels:
 
 ## Handling the Event
 
-### Basic Handler
+The same folder can be announced more than once: a redelivery after a failed response, or a flush that re-announces every folder. Treat a known path as an update rather than an error:
 
 ```javascript
 async function handleMailboxNew(event) {
   const { account, path, data } = event;
-
-  console.log(`New folder for ${account}:`);
-  console.log(`  Path: ${path}`);
-  console.log(`  Name: ${data.name}`);
-  console.log(`  Special Use: ${data.specialUse || 'none'}`);
-  console.log(`  UIDVALIDITY: ${data.uidValidity}`);
-
-  // Initialize resources for this folder
-  await initializeFolder(account, path, data);
-}
-```
-
-### Database Initialization
-
-```javascript
-async function handleMailboxNew(event, headers) {
-  const { account, path, date, data } = event;
-  const eventId = headers['x-ee-wh-event-id'];
-
-  try {
-    // Create folder record
-    await db.folders.create({
-      data: {
-        accountId: account,
-        path: path,
-        name: data.name,
-        specialUse: data.specialUse || null,
-        uidValidity: data.uidValidity,
-        createdAt: new Date(date),
-        eventId: eventId
-      }
-    });
-
-    console.log(`Initialized folder ${path} for account ${account}`);
-
-    // Log the creation
-    await auditLog.create({
-      eventId,
-      timestamp: new Date(date),
-      account,
-      action: 'folder_created',
-      folder: path,
-      folderName: data.name,
-      specialUse: data.specialUse
-    });
-
-  } catch (err) {
-    if (err.code === 'P2002') {
-      // Folder already exists - a redelivered webhook, or a flush that re-announced the folder
-      console.log(`Folder ${path} already exists, skipping`);
-      return;
-    }
-    console.error('Failed to initialize folder:', err);
-    throw err; // Respond with an error status so EmailEngine retries the delivery
-  }
-}
-```
-
-### UI Synchronization
-
-```javascript
-async function handleMailboxNew(event) {
-  const { account, path, data } = event;
-
-  // Broadcast to connected clients
-  await websocketServer.broadcast({
-    type: 'folder:created',
-    account,
-    folder: {
-      path,
-      name: data.name,
-      specialUse: data.specialUse,
-      uidValidity: data.uidValidity
-    }
-  });
-
-  // Add to folder cache
-  await folderCache.set(`${account}:${path}`, {
-    path,
-    name: data.name,
-    specialUse: data.specialUse,
-    uidValidity: data.uidValidity
-  });
-
-  // Invalidate folder list cache
-  await folderCache.delete(`${account}:folder-list`);
-}
-```
-
-### Watching Folders that Match a Pattern
-
-```javascript
-async function handleMailboxNew(event) {
-  const { account, path, data } = event;
-
-  // Define patterns for folders your application processes
-  const watchPatterns = [
-    /^Projects\//,
-    /^Clients\//,
-    /^Archive\/\d{4}/
-  ];
-
-  const shouldWatch = watchPatterns.some(pattern => pattern.test(path));
-
-  if (shouldWatch) {
-    await watchList.add({
-      account,
-      folder: path,
-      events: ['messageNew', 'messageDeleted', 'messageUpdated']
-    });
-
-    console.log(`Watching folder ${path} for account ${account}`);
-  }
-
-  // Always track the folder
-  await folderStore.add(account, {
-    path,
-    name: data.name,
-    specialUse: data.specialUse,
-    watched: shouldWatch
-  });
-}
-```
-
-### Search Index Initialization
-
-```javascript
-async function handleMailboxNew(event) {
-  const { account, path, date, data } = event;
-
-  // Create folder metadata document in search index
-  await searchIndex.create({
-    id: `folder:${account}:${path}`,
-    body: {
-      type: 'folder',
-      accountId: account,
-      path: path,
-      name: data.name,
-      specialUse: data.specialUse || null,
-      uidValidity: data.uidValidity,
-      createdAt: date
-    }
-  });
-
-  console.log(`Search index initialized for folder ${account}/${path}`);
-}
-```
-
-### Hierarchical Folder Setup
-
-```javascript
-async function handleMailboxNew(event) {
-  const { account, path, data } = event;
-
-  // Parse folder hierarchy
-  const pathParts = path.split('/');
-  const depth = pathParts.length;
-  const parentPath = pathParts.slice(0, -1).join('/') || null;
-
-  // Create folder record with hierarchy info
-  await db.folders.create({
-    data: {
-      accountId: account,
-      path: path,
-      name: data.name,
-      specialUse: data.specialUse || null,
-      uidValidity: data.uidValidity,
-      depth: depth,
-      parentPath: parentPath
-    }
-  });
-
-  // Update parent folder if exists
-  if (parentPath) {
-    await db.folders.updateMany({
-      where: {
-        accountId: account,
-        path: parentPath
-      },
-      data: {
-        hasChildren: true
-      }
-    });
-  }
-
-  console.log(`Folder ${path} added at depth ${depth}`);
-}
-```
-
-The path separator is whatever the server uses. `/` is common, but Microsoft Exchange and some other servers use `.` or `\`. The [List Mailboxes API](/docs/api/get-v-1-account-account-mailboxes) returns each folder's `delimiter`.
-
-## Important Considerations
-
-### Initial Account Sync
-
-When an account is added, or after a flush, every folder is new to EmailEngine, so it sends one `mailboxNew` per folder as each finishes its first sync. Expect a burst for a newly added account, and treat a `mailboxNew` for a folder you already know about as a re-announcement rather than an error:
-
-```javascript
-async function handleMailboxNew(event) {
-  const { account, path } = event;
 
   const known = await db.folders.findFirst({
     where: { accountId: account, path }
   });
 
   if (known) {
-    // Re-announced after a flush, or a redelivery. Refresh what changed
+    // Re-announced after a flush, or a redelivery. Refresh what can change
     await db.folders.update({
       where: { id: known.id },
-      data: { uidValidity: event.data.uidValidity, specialUse: event.data.specialUse || null }
+      data: { uidValidity: data.uidValidity, specialUse: data.specialUse || null }
     });
     return;
   }
 
-  await processNewFolder(account, path, event.data);
+  await db.folders.create({
+    data: {
+      accountId: account,
+      path,
+      name: data.name,
+      specialUse: data.specialUse || null,
+      uidValidity: data.uidValidity
+    }
+  });
 }
 ```
+
+The path separator is whatever the server uses. `/` is common, but Microsoft Exchange and some other servers use `.` or `\`. The [List Mailboxes API](/docs/api/get-v-1-account-account-mailboxes) returns each folder's `delimiter`, so derive a parent path from that rather than from a fixed separator.
+
+## Important Considerations
+
+### Initial Account Sync
+
+When an account is added, or after a flush, every folder is new to EmailEngine, so it sends one `mailboxNew` per folder as each finishes its first sync. Expect a burst for a newly added account.
 
 ### Rename Operations
 
@@ -352,19 +161,7 @@ If you need to follow renames, match on folder contents rather than assuming pat
 
 ### UIDVALIDITY
 
-`uidValidity` identifies the folder's current numbering of messages. If the server assigns the folder a new UIDVALIDITY later, every UID EmailEngine stored for it becomes invalid; EmailEngine then rebuilds its index and sends [`mailboxReset`](/docs/webhooks/mailboxreset) with the old and new values. Store the value from this event if you want to compare:
-
-```javascript
-async function handleMailboxNew(event) {
-  const { account, path, data } = event;
-
-  // Store UIDVALIDITY for future comparison
-  await folderState.set(account, path, {
-    uidValidity: data.uidValidity,
-    lastSync: new Date()
-  });
-}
-```
+`uidValidity` identifies the folder's current numbering of messages. If the server assigns the folder a new UIDVALIDITY later, every UID EmailEngine stored for it becomes invalid; EmailEngine then rebuilds its index and sends [`mailboxReset`](/docs/webhooks/mailboxreset) with the old and new values. Store the value from this event if you want to compare.
 
 ### Special Use Folders
 
@@ -381,51 +178,6 @@ The `specialUse` field carries the IMAP special-use attribute defined in RFC 615
 | `\Trash` | Deleted messages |
 
 `\Inbox` is used for the INBOX folder, which the server does not flag but which has a fixed role.
-
-```javascript
-async function handleMailboxNew(event) {
-  const { account, path, data } = event;
-
-  // Map special use folders for the application
-  if (data.specialUse) {
-    await accountSettings.update(account, {
-      [`${data.specialUse.replace('\\', '').toLowerCase()}Folder`]: path
-    });
-
-    console.log(`Mapped ${data.specialUse} to ${path} for account ${account}`);
-  }
-
-  // Regular folder initialization
-  await initializeFolder(account, path, data);
-}
-```
-
-### Idempotency
-
-A failed or timed-out delivery is retried, so the same event can arrive more than once. Deduplicate on the event ID header:
-
-```javascript
-async function handleMailboxNew(event, headers) {
-  const { account, path } = event;
-  const eventId = headers['x-ee-wh-event-id'];
-
-  // Check if we've already processed this event
-  const processed = await eventLog.exists(eventId);
-  if (processed) {
-    console.log(`Event ${eventId} already processed, skipping`);
-    return;
-  }
-
-  // Process the event
-  await processNewFolder(account, path, event.data);
-
-  // Mark as processed
-  await eventLog.create({
-    eventId,
-    processedAt: new Date()
-  });
-}
-```
 
 ## Related Events
 

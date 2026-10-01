@@ -20,15 +20,6 @@ How a deletion is detected depends on the account type:
 On IMAP accounts, deletions are detected only under the full [indexer](/docs/accounts/imap-indexers), which is the default. The fast indexer tracks the highest UID it has seen and nothing else, so it never notices a message going away.
 :::
 
-## Common Use Cases
-
-- **Database synchronization** - Remove or archive records when emails are deleted
-- **Search index updates** - Remove deleted messages from your search indexes
-- **CRM integration** - Update ticket or contact records when associated emails are deleted
-- **Audit logging** - Track message deletions for compliance purposes
-- **Storage cleanup** - Remove cached attachments or processed data for deleted messages
-- **Analytics** - Track deletion patterns and user behavior
-
 ## Payload Schema
 
 ### Top-Level Fields
@@ -129,57 +120,25 @@ The `messageDeleted` event includes minimal data since the message content is no
 
 ## Handling the Event
 
-### Basic Handler
+The message content is gone by the time the event arrives, so the handler works on the identifiers alone. The event identifier is in the `X-EE-Wh-Event-Id` request header, not the body, and a retried delivery carries the same one, so make the removal tolerate a record that is already gone:
 
 ```javascript
-async function handleMessageDeleted(event) {
-  const { account, path, data } = event;
+async function handleMessageDeleted(event, headers) {
+  const { account, path, date, data } = event;
+  const eventId = headers['x-ee-wh-event-id'];
 
-  console.log(`Message deleted from ${account}:`);
-  console.log(`  Message ID: ${data.id}`);
-  console.log(`  Folder: ${path}`);
-  if (data.uid) {
-    console.log(`  UID: ${data.uid}`);
+  const stored = await db.messages.findUnique({
+    where: { accountId: account, messageId: data.id }
+  });
+
+  if (!stored) {
+    // Never recorded, or already removed by an earlier delivery of this event
+    return;
   }
 
-  await removeMessageFromDatabase(account, data.id);
-}
-```
-
-### Database Synchronization
-
-```javascript
-async function handleMessageDeleted(event) {
-  const { account, data } = event;
-
-  try {
-    await db.messages.delete({
-      where: {
-        accountId: account,
-        messageId: data.id
-      }
-    });
-
-    await searchIndex.delete(`${account}:${data.id}`);
-
-    await cache.deletePattern(`attachments:${account}:${data.id}:*`);
-
-    console.log(`Cleaned up message ${data.id} for account ${account}`);
-  } catch (err) {
-    console.error('Failed to clean up deleted message:', err);
-    throw err;
-  }
-}
-```
-
-### Audit Logging
-
-The event identifier is in the `X-EE-Wh-Event-Id` request header, so an audit record needs both the header and the body:
-
-```javascript
-async function handleMessageDeleted(req) {
-  const eventId = req.headers['x-ee-wh-event-id'];
-  const { account, path, date, data } = req.body;
+  await db.messages.delete({
+    where: { accountId: account, messageId: data.id }
+  });
 
   await auditLog.create({
     eventId,
@@ -188,12 +147,7 @@ async function handleMessageDeleted(req) {
     action: 'message_deleted',
     folder: path,
     messageId: data.id,
-    uid: data.uid || null,
-    metadata: {
-      threadId: data.threadId,
-      labels: data.labels,
-      lastFlags: data.flags
-    }
+    uid: data.uid || null
   });
 }
 ```
@@ -218,32 +172,7 @@ The two events carry different `id` values, because the ID encodes the folder. T
 
 ### Idempotency
 
-Handle deletion events idempotently since webhooks may be retried:
-
-```javascript
-async function handleMessageDeleted(event) {
-  const { account, data } = event;
-
-  const exists = await db.messages.findUnique({
-    where: {
-      accountId: account,
-      messageId: data.id
-    }
-  });
-
-  if (!exists) {
-    console.log(`Message ${data.id} already deleted, skipping`);
-    return;
-  }
-
-  await db.messages.delete({
-    where: {
-      accountId: account,
-      messageId: data.id
-    }
-  });
-}
-```
+A delivery that failed or timed out is retried with the same `X-EE-Wh-Event-Id`, so the same deletion can arrive more than once. The handler above returns early when the record is already gone.
 
 ## Related Events
 

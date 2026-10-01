@@ -10,7 +10,7 @@ The `messageComplaint` webhook event is triggered when EmailEngine detects a fee
 
 ## When This Event is Triggered
 
-The `messageComplaint` event fires when a message arriving in the Inbox is recognized as an abuse report and the report names at least one complaining recipient (`Original-Rcpt-To`, or the Hotmail `X-HmXmrOriginalRecipient` header). A report without a recipient produces no event.
+The `messageComplaint` event fires when a message arriving in the Inbox is recognized as an abuse report and the report names at least one complaining recipient (`Original-Rcpt-To`, or the Hotmail `X-HmXmrOriginalRecipient` header). A report without a recipient produces no event. The check runs on every account type: IMAP, Gmail API and MS Graph.
 
 A message is checked for complaint content when one of these holds:
 
@@ -20,15 +20,6 @@ A message is checked for complaint content when one of these holds:
 Messages in other folders are not checked.
 
 The complaint message itself also produces a [`messageNew`](/docs/webhooks/messagenew) event, sent before this one, with `isComplaint: true` and `relatedMessageId` set to the Message-ID of the reported message when the report included it. On IMAP accounts neither event is sent for messages dated before the account's `notifyFrom`.
-
-## Common Use Cases
-
-- **List hygiene** - Automatically unsubscribe users who report spam
-- **Reputation management** - Track complaint rates to maintain good sender reputation
-- **Deliverability monitoring** - Identify content or sending patterns causing complaints
-- **Compliance** - Fulfill legal requirements to honor unsubscribe requests
-- **Analytics** - Build dashboards showing complaint trends by campaign or domain
-- **Blocklist prevention** - Address issues before reaching ISP complaint thresholds
 
 ## Payload Schema
 
@@ -135,7 +126,7 @@ EmailEngine examines message attachments for these content types:
 | `text/rfc822-headers` | Original message headers (alternate type) |
 | `text/rfc822-header` | Original message headers (singular form) |
 
-Only the first three are downloaded for parsing. A report that puts the original headers in a `text/rfc822-headers` or `text/rfc822-header` part is recognized but contributes nothing, so its `headers` object is absent and the event is sent only if the feedback report itself named a recipient.
+Every one of these parts is downloaded and read. Before v2.81.2 only the first three were, so a report that put the original headers in a `text/rfc822-headers` or `text/rfc822-header` part had no `headers` object and produced the event only when the feedback report itself named a recipient.
 
 ### Extracted Original Message Headers
 
@@ -276,24 +267,7 @@ EmailEngine recognizes the `staff@hotmail.com` sender and reports:
 
 ### Handling Incomplete ARF Data
 
-Not all complaint messages contain complete ARF data. EmailEngine extracts whatever is available, so check for the presence of fields before using them:
-
-```javascript
-async function handleComplaint(event) {
-  const { arf, headers } = event.data;
-
-  const complainants = arf?.originalRcptTo || [];
-  const originalMessageId = headers?.messageId;
-  const source = arf?.source || 'unknown';
-
-  if (complainants.length === 0) {
-    console.warn('Complaint received but no recipient identified');
-    return;
-  }
-
-  await processComplaint(event.data);
-}
-```
+Not every report carries the full ARF field set. EmailEngine extracts whatever is present, so `arf.source`, `arf.feedbackType`, `arf.originalMailFrom` and the `headers` object can each be absent; only a complaining recipient is guaranteed, because a report without one produces no event.
 
 ## Understanding FBL Complaints
 
@@ -309,152 +283,29 @@ Mailbox providers deliver these reports through feedback loop programs that a se
 
 ## Handling the Event
 
-### Basic Handler
+The complaining recipients are in `arf.originalRcptTo`, and `headers.messageId` names the reported message when the report included its headers. Suppress every complainant at once, and keep the Message-ID so the complaint can be tied back to the sent message:
 
 ```javascript
 async function handleMessageComplaint(event) {
-  const { account, data } = event;
+  const { account, data, date } = event;
+  const { arf, headers } = data;
 
-  console.log(`Complaint detected for account ${account}:`);
-  console.log(`  Complaint Message ID: ${data.complaintMessage}`);
-
-  if (data.arf) {
-    console.log(`  Source: ${data.arf.source}`);
-    console.log(`  Feedback Type: ${data.arf.feedbackType}`);
-    console.log(`  Complainants: ${data.arf.originalRcptTo?.join(', ')}`);
-  }
-
-  if (data.headers) {
-    console.log(`  Original Message-ID: ${data.headers.messageId}`);
-    console.log(`  Original Subject: ${data.headers.subject}`);
-  }
-
-  await processComplaint(data);
-}
-```
-
-### Automatic Unsubscribe
-
-```javascript
-async function processComplaint(complaintData) {
-  const { arf, headers } = complaintData;
-
-  const complainants = arf?.originalRcptTo || [];
-
-  for (const email of complainants) {
-    await db.subscriptions.updateMany(
-      { email: email.toLowerCase() },
-      {
-        $set: {
-          subscribed: false,
-          unsubscribeReason: 'spam_complaint',
-          unsubscribedAt: new Date(),
-          complaintSource: arf?.source
-        }
-      }
-    );
-
+  for (const email of arf.originalRcptTo) {
     await db.suppressionList.upsert({
-      email: email.toLowerCase(),
-      reason: 'complaint',
-      source: arf?.source,
-      originalMessageId: headers?.messageId,
-      createdAt: new Date()
+      where: { email: email.toLowerCase() },
+      create: {
+        email: email.toLowerCase(),
+        reason: 'complaint',
+        source: arf.source || null,
+        account,
+        originalMessageId: headers?.messageId || null,
+        createdAt: new Date(date)
+      },
+      update: {}
     });
-
-    console.log(`Unsubscribed ${email} due to spam complaint`);
   }
 }
 ```
-
-### Tracking Complaint Metrics
-
-```javascript
-async function trackComplaintMetrics(event) {
-  const { account, data } = event;
-
-  const campaignId = extractCampaignId(data.headers?.messageId);
-
-  await metrics.increment('email.complaints', {
-    account,
-    source: data.arf?.source || 'unknown',
-    feedbackType: data.arf?.feedbackType || 'unknown',
-    campaign: campaignId
-  });
-
-  const stats = await getRecentStats(account);
-  const complaintRate = stats.complaints / stats.totalSent;
-
-  if (complaintRate > 0.001) {
-    await sendAlert({
-      type: 'high_complaint_rate',
-      account,
-      rate: complaintRate,
-      threshold: 0.001
-    });
-  }
-}
-
-function extractCampaignId(messageId) {
-  const match = messageId?.match(/campaign-([a-z0-9]+)/i);
-  return match ? match[1] : null;
-}
-```
-
-### Correlating with Original Message
-
-```javascript
-async function correlateComplaint(complaintData) {
-  const { headers, arf } = complaintData;
-
-  let originalMessage = null;
-
-  if (headers?.messageId) {
-    originalMessage = await db.sentMessages.findOne({
-      messageId: headers.messageId
-    });
-  }
-
-  if (!originalMessage && arf?.originalMailFrom && arf?.arrivalDate) {
-    originalMessage = await db.sentMessages.findOne({
-      from: arf.originalMailFrom,
-      sentAt: {
-        $gte: new Date(Date.parse(arf.arrivalDate) - 86400000),
-        $lte: new Date(arf.arrivalDate)
-      }
-    });
-  }
-
-  if (originalMessage) {
-    await db.sentMessages.updateOne(
-      { _id: originalMessage._id },
-      {
-        $set: { complained: true },
-        $push: {
-          complaints: {
-            date: new Date(),
-            recipients: arf?.originalRcptTo,
-            source: arf?.source
-          }
-        }
-      }
-    );
-  }
-
-  return originalMessage;
-}
-```
-
-## Best Practices
-
-1. **Immediately unsubscribe complainants** - Honor complaints instantly to maintain sender reputation
-2. **Add to suppression list** - Prevent sending to complainants across all campaigns
-3. **Monitor complaint rates** - Track rates per campaign and overall; investigate spikes
-4. **Review complained content** - Analyze what content generates complaints
-5. **Improve list acquisition** - Ensure clear opt-in and set expectations
-6. **Make unsubscribe easy** - Prominent, one-click unsubscribe reduces complaints
-7. **Respect frequency preferences** - Allow users to control email frequency
-8. **Clean inactive subscribers** - Remove users who have not engaged for a long time
 
 ## Related Events
 

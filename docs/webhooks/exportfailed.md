@@ -17,17 +17,12 @@ The `exportFailed` event fires when the export worker gives up on a job:
 - The account was not connected when the export started, so messages could not be listed
 - A command to the account's worker timed out
 
-Two endings do **not** send it: an export cancelled through the [Delete Export API](/docs/api/delete-v-1-account-account-export-exportid) while it was running, and an export whose account was deleted while it ran. Both are stops the caller already knows about. A deleted account also has nothing left to deliver a webhook for.
+Three endings do **not** send it:
+
+- An export cancelled through the [Delete Export API](/docs/api/delete-v-1-account-account-export-exportid) while it was running, and an export whose account was deleted while it ran. Both are stops the caller already knows about, and a deleted account has nothing left to deliver a webhook for
+- An export interrupted by an EmailEngine restart. The next startup marks every export that was still running as `failed` with the error `Export interrupted by application restart` and deletes its file, without a webhook. Poll the [export status](/docs/receiving/exporting#progress-fields) if an `exportCompleted` you were waiting for never arrives
 
 This event is terminal. The export has stopped, will not retry on its own, and cannot be continued from where it failed.
-
-## Common Use Cases
-
-- **Error alerting** - Notify administrators of failed exports
-- **Retry automation** - Start a fresh export, optionally with a narrower scope
-- **User notification** - Inform users their export failed
-- **Audit logging** - Track export failures for troubleshooting
-- **Cleanup** - Remove the failed export record once it has been reported
 
 ## Payload Schema
 
@@ -110,15 +105,16 @@ Where the job was when it failed, which tells you what to fix:
 
 | Phase | Meaning | Usual cause |
 |-------|---------|-------------|
-| `pending` | Queued, not yet started | The export record was missing or unreadable when the worker picked the job up |
+| `pending` | Queued, not yet started | The worker failed before indexing began, for example Redis was unavailable when it picked the job up |
 | `indexing` | Listing folders and queuing messages | The account was not connected, or the listing failed |
 | `exporting` | Fetching messages and writing the file | The connection dropped, the provider rate-limited or timed out, or retries ran out |
+| `unknown` | The export record could not be read | The record had expired or been deleted by the time the worker reported the failure |
 
 A failure during `indexing` leaves nothing written at all. A failure during `exporting` means a partial file existed, but it is deleted rather than kept.
 
 ### Common Error Codes
 
-The account-state codes below are the ones EmailEngine raises when it cannot list messages for an account that is not connected; they are the same codes the [Error Codes](/docs/reference/error-codes) reference lists for API requests against such an account.
+Decide from `errorCode`, not from `error`: the message is human-facing text that can change between releases, while the codes are stable. The account-state codes below are the ones EmailEngine raises when it cannot list messages for an account that is not connected; they are the same codes the [Error Codes](/docs/api-reference/error-codes) reference lists for API requests against such an account.
 
 | Code | Meaning | Worth starting a new export? |
 |------|---------|------------------------------|
@@ -172,16 +168,8 @@ The `exportFailed` event is part of the export lifecycle:
 After receiving `exportFailed`:
 
 - Read `phase` and `errorCode` to decide whether a new export can succeed
-- Fix the underlying cause, then create a new export. There is nothing to resume
+- Fix the underlying cause, then create a new export. There is nothing to resume, and each new export is a new job with a new `exportId`, so EmailEngine keeps no count of attempts; cap your own retries and wait between them, so a persistent failure does not become a loop
 - Delete the failed export record so it does not linger in listings
-
-## Best Practices
-
-1. **Decide from `errorCode`, not from the message** - `error` is human-facing text that can change between releases
-2. **Implement backoff** - Wait before creating a replacement export, so a persistent failure does not become a retry loop
-3. **Cap your own retries** - Each attempt is a new job with a new `exportId`, so EmailEngine cannot count them for you
-4. **Alert on account-state codes** - `AuthenticationFails` and `NotSyncing` need a person to fix the account first
-5. **Narrow the scope on repeat failures** - A shorter date range or fewer folders makes a large export far more likely to finish
 
 ## Related Events
 
@@ -192,4 +180,4 @@ After receiving `exportFailed`:
 - [Webhooks Overview](/docs/webhooks/overview) - Configuring the webhook URL and the `webhookEvents` allowlist
 - [Exporting Messages](/docs/receiving/exporting) - Creating exports, status fields, limits and retention
 - [Create Export API](/docs/api/post-v-1-account-account-export) - Starting the replacement export
-- [Error Codes](/docs/reference/error-codes) - The account-state codes that `errorCode` can carry
+- [Error Codes](/docs/api-reference/error-codes) - The account-state codes that `errorCode` can carry

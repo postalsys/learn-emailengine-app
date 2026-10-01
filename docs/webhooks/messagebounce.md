@@ -10,7 +10,7 @@ The `messageBounce` webhook event is triggered when EmailEngine detects a bounce
 
 ## When This Event is Triggered
 
-The `messageBounce` event fires when a message arriving in the Inbox or the Junk folder looks like a bounce, and EmailEngine can extract all three of the failed recipient, the bounce action and the Message-ID of the original message from it. A bounce that is missing any of these produces no event.
+The `messageBounce` event fires when a message arriving in the Inbox or the Junk folder looks like a bounce, and EmailEngine can extract all three of the failed recipient, the bounce action and the Message-ID of the original message from it. A bounce that is missing any of these produces no event. The check runs on every account type: IMAP, Gmail API and MS Graph.
 
 A message is checked for bounce content when one of these holds:
 
@@ -36,15 +36,6 @@ A delivery status notification that reports a successful delivery or a delay is 
 
 The bounce message itself also produces a `messageNew` event, sent before this one, with `isBounce: true` and `relatedMessageId` set to the Message-ID of the bounced message. On IMAP accounts neither event is sent for messages dated before the account's `notifyFrom`.
 
-## Common Use Cases
-
-- **Deliverability monitoring** - Track bounce rates across your email campaigns
-- **List hygiene** - Automatically remove or flag invalid email addresses
-- **Reputation management** - Identify and address delivery issues before they impact sender reputation
-- **Customer notification** - Alert users when their messages fail to deliver
-- **Analytics** - Build dashboards showing delivery success rates
-- **Retry logic** - Implement custom retry strategies for soft bounces
-
 ## Payload Schema
 
 ### Top-Level Fields
@@ -65,7 +56,7 @@ The event carries no `path` or `specialUse`. The unique event identifier is sent
 |-------|------|----------|-------------|
 | `bounceMessage` | string | Yes | EmailEngine message ID of the bounce notification email itself. Fetch it through the [message API](/docs/api/get-v-1-account-account-message-message) to read the full bounce |
 | `recipient` | string | Yes | Email address that bounced |
-| `action` | string | Yes | Bounce action. `failed` for a rejected delivery; a non-standard bounce that only reports a delay can carry `delayed` |
+| `action` | string | Yes | Always `failed`. Since EmailEngine 2.82.0 the event is sent only for a report whose action is `failed`; earlier releases also sent it for a non-standard report carrying `delayed` |
 | `messageId` | string | Yes | Message-ID header of the original message that bounced |
 | `response` | object | No | Details of the rejection, with classification (see below). Absent when the bounce carried no diagnostic text |
 | `mta` | string | No | Hostname of the server that reported the failure (`Remote-MTA`, or `Reporting-MTA` when there is no remote one), lowercased |
@@ -142,9 +133,9 @@ The set of headers depends on what the bouncing server included. A `text/rfc822-
 }
 ```
 
-## Bounces on Later Events
+## No Bounce Record is Kept
 
-On IMAP accounts EmailEngine records every reported bounce against the Message-ID of the original message. A later [`messageNew`](/docs/webhooks/messagenew#bounce-list-structure) event for a message with that Message-ID, for example the copy in the Sent folder being re-indexed, carries the recorded bounces in `data.bounces`. Gmail API and MS Graph accounts keep no such record. The stored record holds `recipient`, `action`, `response.message`, `response.status`, the bounce message ID and the time it was recorded.
+EmailEngine does not store reported bounces. Releases before v2.81.2 recorded each bounce against the Message-ID of the original message on IMAP accounts and listed them in a `bounces` array on later `messageNew` events and in message API responses; that store and the field were removed in v2.81.2. Keep your own record of sent messages and correlate this event with it by `messageId`.
 
 ## Understanding Bounce Types
 
@@ -243,34 +234,21 @@ When the rejection states a delay (for example "try again in 5 minutes"), `retry
 
 ## Handling the Event
 
-### Basic Handler
+`response` and the classifier fields inside it are absent when the bounce carried no diagnostic text, so fall back to `action` when there is no `recommendedAction`. `retryAfter` is only present when the rejection stated a delay:
 
 ```javascript
 async function handleMessageBounce(event) {
-  const { account, data } = event;
-
-  console.log(`Bounce detected for ${account}:`);
-  console.log(`  Recipient: ${data.recipient}`);
-  console.log(`  Action: ${data.action}`);
-  console.log(`  Original Message ID: ${data.messageId}`);
-
-  if (data.response) {
-    console.log(`  Status: ${data.response.status}`);
-    console.log(`  Message: ${data.response.message}`);
-    console.log(`  Category: ${data.response.category}`);
-    console.log(`  Recommended Action: ${data.response.recommendedAction}`);
-
-    if (data.response.blocklist) {
-      console.log(`  Blocklist: ${data.response.blocklist.name} (${data.response.blocklist.type})`);
-    }
-  }
+  const { data } = event;
 
   const action = data.response?.recommendedAction ||
-    (data.action === 'failed' ? 'remove' : 'retry');
+    (data.action === 'failed' ? 'remove' : 'review');
 
   switch (action) {
     case 'remove':
-      await removeFromMailingList(data.recipient);
+      await removeFromMailingList(data.recipient, {
+        reason: data.response?.category || 'bounce',
+        messageId: data.messageId
+      });
       break;
     case 'retry': {
       const delay = data.response?.retryAfter || 3600;
@@ -285,57 +263,6 @@ async function handleMessageBounce(event) {
       break;
     default:
       await flagForReview(data);
-  }
-}
-```
-
-### Updating Email Lists
-
-```javascript
-async function handleHardBounce(bounceData) {
-  const { recipient, response } = bounceData;
-
-  await db.contacts.update(
-    { email: recipient },
-    {
-      $set: {
-        emailValid: false,
-        bounceReason: response?.message,
-        bounceCode: response?.status,
-        bounceCategory: response?.category,
-        recommendedAction: response?.recommendedAction,
-        bouncedAt: new Date()
-      }
-    }
-  );
-}
-```
-
-### Tracking Bounce Metrics
-
-```javascript
-async function trackBounceMetrics(event) {
-  const { account, data } = event;
-
-  const category = data.response?.category || 'unknown';
-  const recommendedAction = data.response?.recommendedAction || 'review';
-  const isHardBounce = ['remove', 'remove_content'].includes(recommendedAction);
-
-  await metrics.increment('email.bounces', {
-    account,
-    type: isHardBounce ? 'hard' : 'soft',
-    category,
-    recommendedAction,
-    mta: data.mta || 'unknown',
-    blocklisted: data.response?.blocklist ? 'yes' : 'no'
-  });
-
-  if (data.response?.blocklist) {
-    await metrics.increment('email.blocklist_bounces', {
-      account,
-      blocklistName: data.response.blocklist.name,
-      blocklistType: data.response.blocklist.type
-    });
   }
 }
 ```
@@ -361,16 +288,6 @@ Use `messageFailed` when you need to:
 - Get immediate feedback on delivery attempts
 - Handle failures before bounce notifications arrive
 
-## Best Practices
-
-1. **Track both events** - Use both `messageBounce` and `messageFailed` for complete deliverability monitoring
-2. **Deduplicate bounces** - The same delivery failure may trigger both events; use `messageId` to correlate
-3. **Handle missing fields** - Not all bounces include complete information; validate `response` and its fields before use
-4. **Distinguish bounce types** - Hard bounces require different handling than soft bounces
-5. **Update promptly** - Remove hard-bounced addresses from mailing lists immediately
-6. **Log for analysis** - Store bounce data for deliverability trend analysis
-7. **Monitor the MTA field** - Track which receiving servers generate the most bounces
-
 ## Related Events
 
 - [messageFailed](/docs/webhooks/messagefailed) - Triggered when EmailEngine gives up on a queued email
@@ -381,7 +298,7 @@ Use `messageFailed` when you need to:
 ## See Also
 
 - [Webhooks Overview](/docs/webhooks/overview) - Delivery, retries, headers and signing
-- [Bounce handling](/docs/advanced/bounces) - Detecting and acting on bounces end to end
+- [Bounce handling](/docs/sending/deliverability/bounces) - Detecting and acting on bounces end to end
 - [Sending Emails](/docs/sending/basic-sending) - How to send emails through EmailEngine
 - [Message API](/docs/api/get-v-1-account-account-message-message) - Fetching the bounce message by `bounceMessage`
 - [Settings API](/docs/api/post-v-1-settings) - Configure webhook settings
