@@ -96,16 +96,16 @@ curl -X POST "https://emailengine.example.com/mcp" \
     "protocolVersion": "2025-06-18",
     "capabilities": { "tools": {}, "resources": { "subscribe": false, "listChanged": false } },
     "serverInfo": { "name": "EmailEngine", "version": "x.y.z" },
-    "instructions": "EmailEngine gives access to the email accounts registered on this instance. ..."
+    "instructions": "EmailEngine is a self-hosted email sync service. This credential gives access to the email accounts registered on this instance. Call list_accounts first and use the returned account id as the `account` argument of the mail tools. ..."
   }
 }
 ```
 
 No `Mcp-Session-Id` is returned, and none is expected on later requests. Notifications such as `notifications/initialized` are accepted and answered `202`.
 
-The `instructions` string is orientation for the model: message ids come from the listings, bodies arrive as sanitized HTML with quoted history wrapped in a `<details class="ee-collapsed-thread">` element, and `send_message` reaches real recipients.
+The `instructions` string is orientation for the model, written for the credential that is asking. It is built from the tool sets the advertised catalog exercises: a credential holding mail tools is told that message ids come from the listings, that bodies arrive as sanitized HTML with quoted history wrapped in a `<details class="ee-collapsed-thread">` element, and that `send_message` reaches real recipients; one holding management tools is told to start with `get_instance_stats` and `list_accounts`, that settings changes take effect immediately, to confirm with the user before moving where webhooks or notifications are delivered, before changing where an account or gateway connects, and before anything destructive, and to prefer `create_account_setup_link` when adding a mailbox so no password passes through the conversation. A credential holding both hears both, management first.
 
-The opening sentence depends on the credential. An unbound one is told to call `list_accounts` and pass the id it returns. An [account-bound](/docs/mcp/access-control#account-binding) one is told which account it holds and that its tools take no `account` argument, because for that credential the argument is not in the schema at all.
+The opening sentence depends on the binding. An unbound credential is told to call `list_accounts` and pass the id it returns. An [account-bound](/docs/mcp/access-control#account-binding) one is told which account it holds and that its tools take no `account` argument, because for that credential the argument is not in the schema at all. A credential whose record leaves it only the tools both sets share, or no tools at all, is told so and asked to have the operator widen it.
 
 ## Methods
 
@@ -196,6 +196,7 @@ Details worth knowing:
 - **Authorization is per URI.** Each subscribed account is checked with the caller's own credential, and one it cannot read is dropped from the acknowledged set rather than failing the request. Compare the acknowledgment with what you asked for.
 - **Only `resourceSubscriptions` is honored.** Other filter fields are omitted from the acknowledgment, which per the specification means "not supported": the tool list is static, and prompts do not exist here.
 - **Limits.** Only the first 20 URIs of a request are considered, and one credential may hold at most 4 open streams per API worker.
+- **Authorization is re-checked while the stream is open.** Once a minute each stream asks again, with its own credential, whether it may still read what it subscribed to. A URI the credential can no longer read, or whose account is gone, is dropped from the stream; a revoked credential, or a stream left with nothing it may read, is closed. A transient failure of the check changes nothing.
 - **This is not a message-level feed.** A notification says an account's state changed; it does not carry mail. For "a message arrived" and everything like it, use [webhooks](/docs/webhooks/overview), which is the mature, filterable, retrying delivery path.
 
 ## Request headers
@@ -225,7 +226,7 @@ This is the DNS rebinding protection the Streamable HTTP transport asks for: wit
 
 ## OAuth 2.1 authorization server
 
-When `mcpOAuthEnabled` is on and a Service URL is set, EmailEngine also runs the minimal authorization server that MCP clients discover on their own. Every endpoint below answers `404` while the flow is unavailable, and all of them allow cross-origin requests, because browser-based clients call them directly.
+When `mcpOAuthEnabled` is on and a Service URL is set, EmailEngine also runs the minimal authorization server that MCP clients discover on their own. It issues ordinary access tokens carrying the MCP scopes the operator approved: `mcp-manage` for the instance, `mcp` for mail, or both. Every endpoint below answers `404` while the flow is unavailable, and all of them allow cross-origin requests, because browser-based clients call them directly.
 
 What is implemented: dynamic client registration (RFC 7591, public clients only), authorization code with mandatory PKCE `S256`, single-use codes, exact-match redirect URIs, resource indicators (RFC 8707) and the `iss` authorization response parameter (RFC 9207). There are no client secrets and no refresh tokens.
 
@@ -245,7 +246,7 @@ curl "https://emailengine.example.com/.well-known/oauth-protected-resource/mcp"
 {
   "resource": "https://emailengine.example.com/mcp",
   "authorization_servers": ["https://emailengine.example.com"],
-  "scopes_supported": ["mcp"],
+  "scopes_supported": ["mcp-manage", "mcp"],
   "bearer_methods_supported": ["header"],
   "resource_name": "EmailEngine MCP"
 }
@@ -265,7 +266,7 @@ curl "https://emailengine.example.com/.well-known/oauth-authorization-server"
   "grant_types_supported": ["authorization_code"],
   "code_challenge_methods_supported": ["S256"],
   "token_endpoint_auth_methods_supported": ["none"],
-  "scopes_supported": ["mcp"],
+  "scopes_supported": ["mcp-manage", "mcp"],
   "authorization_response_iss_parameter_supported": true
 }
 ```
@@ -300,7 +301,8 @@ Rules:
 - Registration is open and unauthenticated. It mints a client id and nothing else - only an admin's approval turns one into a credential.
 - Redirect URIs must be `https`, `http` on a loopback address, or a private-use scheme such as `com.example.app:/callback`. `javascript:`, `data:`, `file:`, `blob:` and `vbscript:` are refused, as is any URI carrying a fragment.
 - One to 10 URIs per registration. If any of them is unacceptable the whole registration fails, naming the offending value.
-- Registrations expire after 30 days of disuse, refreshed whenever the client starts an authorization. Re-registering is one unauthenticated call.
+- A new registration lives for 10 minutes. Reaching the consent page extends it to 30 days, refreshed whenever the client starts an authorization, so a registration nobody consents to disappears on its own. Re-registering is one unauthenticated call.
+- At most 1000 registrations may be waiting for consent at once, instance-wide. Past that, registration answers `503` with `temporarily_unavailable` until some of them expire.
 
 ### Authorization request
 
@@ -315,11 +317,12 @@ https://emailengine.example.com/admin/mcp/authorize
   &code_challenge_method=S256
   &state=<opaque>
   &resource=https%3A%2F%2Femailengine.example.com%2Fmcp
+  &scope=mcp
 ```
 
-`code_challenge` is required, `S256` is the only accepted method, and `redirect_uri` must be one the client registered. `resource` is optional; if present it has to name this instance.
+`code_challenge` is required, `S256` is the only accepted method, and `redirect_uri` must be one the client registered. `resource` is optional; if present it has to name this instance. `scope` is optional too, and it is a hint rather than a request: it only moves the starting position of the consent form (a client naming `mcp` starts with mail access at read-only and management declined), and anything other than the two MCP scopes is ignored.
 
-The page is on the admin surface, and approving requires an authenticated admin session. The operator picks the access level and an optional account limit, then approves or denies.
+The page is on the admin surface, and approving requires an authenticated admin session. The operator picks a level for instance management and one for email access, plus an optional account limit, then approves or denies.
 
 **Nothing redirects off the origin before a human decides.** Because registration is open, a validated `redirect_uri` is not enough to make an automatic error redirect safe - anyone could register their own address and aim a link at it. So a malformed or unsupported authorization request renders an error page instead of bouncing back to the client. Only two outcomes redirect:
 
@@ -347,17 +350,17 @@ curl -X POST "https://emailengine.example.com/mcp/oauth/token" \
 {
   "access_token": "8a2c...",
   "token_type": "Bearer",
-  "scope": "mcp"
+  "scope": "mcp-manage mcp"
 }
 ```
 
-Codes are single-use and valid for 10 minutes. The endpoint accepts form encoding or JSON. Failures use the standard OAuth error shape:
+`scope` lists what was granted, space separated, management first. Codes are single-use and valid for 10 minutes. The endpoint accepts form encoding or JSON. Failures use the standard OAuth error shape:
 
 ```json
 { "error": "invalid_grant", "error_description": "PKCE verification failed" }
 ```
 
-The issued credential is an ordinary EmailEngine access token with the `mcp` scope, carrying whatever access level and account binding was approved. It does not expire on its own and there is no refresh token: revoking it on the Access Tokens page is the whole lifecycle.
+The issued credential is an ordinary EmailEngine access token carrying the approved scopes, an explicit `permissions.grants` record for the levels chosen, and the account binding if one was set. It does not expire on its own and there is no refresh token: revoking it on the Access Tokens page is the whole lifecycle.
 
 ### Rate limits
 

@@ -7,17 +7,17 @@ description: Let AI agents read, search, organize and send email through EmailEn
 
 # Model Context Protocol (MCP)
 
-EmailEngine ships an MCP server. Point an AI agent at `POST /mcp`, hand it an access token, and the agent can list mailboxes, search and read messages, file them, draft replies and send mail through the email accounts you have already connected.
+EmailEngine ships an MCP server. Point an AI agent at `POST /mcp`, hand it an access token, and the agent can list mailboxes, search and read messages, file them, draft replies and send mail through the email accounts you have already connected. With a management credential it can also operate the instance itself: add and reconnect accounts, change settings, manage OAuth2 applications, gateways and templates, and inspect tokens, logs and the license.
 
 [MCP](https://modelcontextprotocol.io/) is the protocol AI clients use to discover and call external tools. EmailEngine implements the server half of it, so any MCP-capable client - a desktop assistant, a coding agent, a web connector, your own application built on an agent framework - can work with email without you writing an integration for each one.
 
 :::info Beta
-MCP support shipped in EmailEngine v2.79.2 (2026-08-22) as a labeled beta. The endpoint is off by default, and the tool set may still change between releases. Everything below is stable enough to build on, but pin a version if you need the tool list to be frozen.
+MCP support shipped in EmailEngine v2.79.2 (2026-08-22) as a labeled beta, and the management tools with their own `mcp-manage` scope followed in v2.80.1 (2026-09-10). The endpoint is off by default, and the tool set may still change between releases. Everything below is stable enough to build on, but pin a version if you need the tool list to be frozen.
 :::
 
 ## What an agent can do
 
-The endpoint exposes a curated tool set over the accounts registered on the instance:
+The endpoint exposes two curated tool sets, each behind its own token scope. The **mail tools** work with the contents of the accounts registered on the instance:
 
 | Area | Tools |
 |------|-------|
@@ -27,6 +27,19 @@ The endpoint exposes a curated tool set over the accounts registered on the inst
 | Organizing | `update_message`, `move_message`, `delete_message` |
 | Writing | `create_draft`, `send_message` |
 | Sending queue and templates | `get_outbox`, `list_templates` |
+
+The **management tools** operate the instance, and a token needs the `mcp-manage` scope to be offered any of them:
+
+| Area | Tools |
+|------|-------|
+| Accounts | `create_account`, `update_account`, `delete_account`, `reconnect_account`, `sync_account`, `flush_account`, `get_account_logs`, `create_account_setup_link`, `verify_account_settings`, `autodiscover_settings` |
+| Settings and queues | `get_settings`, `update_settings`, `get_queue`, `set_queue_state`, `cancel_queued_message` |
+| OAuth2 applications | `list_oauth2_apps`, `get_oauth2_app`, `create_oauth2_app`, `update_oauth2_app`, `delete_oauth2_app`, `verify_oauth2_app`, `get_pubsub_status` |
+| SMTP gateways | `list_gateways`, `get_gateway`, `create_gateway`, `update_gateway`, `delete_gateway` |
+| Templates, suppression lists, webhook routes | `create_template`, `update_template`, `delete_template`, `delete_account_templates`, `list_blocklists`, `get_blocklist`, `add_to_blocklist`, `remove_from_blocklist`, `list_webhook_routes`, `get_webhook_route` |
+| Access tokens, license, diagnostics | `list_tokens`, `get_token`, `get_token_log`, `revoke_token`, `get_license`, `set_license`, `get_instance_stats`, `check_delivery_test` |
+
+Nothing in either set mints a token or reads a stored credential; see [What an MCP credential can never do](/docs/mcp/access-control#what-an-mcp-credential-can-never-do).
 
 Each connected account is also published as an MCP resource (`emailengine://account/{account}`), so clients that browse resources can see what the credential reaches without calling a tool.
 
@@ -39,7 +52,7 @@ An MCP tool call is an EmailEngine API request. The endpoint parses JSON-RPC, re
 ```mermaid
 graph LR
     Agent[AI agent<br/>MCP client] -->|JSON-RPC over HTTPS| MCP[POST /mcp]
-    MCP -->|same token, same checks| REST[REST route<br/>e.g. GET /v1/account/id/messages]
+    MCP -->|same token, same checks| REST["REST route<br/>for example GET /v1/account/{account}/messages"]
     REST --> Mail[IMAP / Gmail API / MS Graph]
 
     style Agent fill:#e1f5ff
@@ -51,7 +64,7 @@ Four consequences worth knowing up front:
 
 - **Nothing bypasses REST enforcement.** Scopes, permission narrowing, account binding, IP and referrer restrictions, rate limits and the token audit log all apply to a tool call exactly as they apply to the equivalent REST call.
 - **The agent never receives mail credentials.** IMAP passwords and OAuth2 refresh tokens stay in EmailEngine. The agent holds an EmailEngine access token, which you can narrow and revoke at any time.
-- **The tool list is per credential.** `tools/list` only advertises tools the calling token can actually use, so an agent does not plan around a call that would come back as a 403. A token bound to one account gets simpler tools too: they stop asking which account to act on.
+- **The tool list is per credential.** `tools/list` only advertises tools the calling token can actually use: a token holding one MCP scope is not offered the other scope's tools, a narrowed token loses the tools its record refuses, and an agent does not plan around a call that would come back as a 403. A token bound to one account gets simpler tools too: they stop asking which account to act on.
 - **Bodies arrive ready to read.** Message text comes back as sanitized HTML with quoted reply history wrapped in a marked element, so a model can tell what the sender wrote this time from the thread quoted under it. See [Message bodies](/docs/mcp/tools#message-bodies).
 
 ## MCP or the REST API?
@@ -61,7 +74,7 @@ Both surfaces reach the same mailboxes, through the same enforcement. They answe
 | | MCP | [REST API](/docs/api-reference) |
 |---|---|---|
 | Caller | An AI agent deciding what to call | Code you wrote, calling what you decided |
-| Surface | 15 curated tools | Every endpoint |
+| Surface | Two curated tool sets, one for mail and one for the instance | Every endpoint |
 | Discovery | The client fetches the tool list and schemas | You read the docs and write the calls |
 | Best for | Assistants, inbox triage, drafting, ad-hoc questions about a mailbox | Applications, sync pipelines, transactional sending |
 
@@ -104,6 +117,8 @@ EENGINE_SETTINGS='{"mcpEnabled":true}'
 ```
 
 The second checkbox, **Enable OAuth sign-in for MCP clients**, is only needed for clients that cannot be configured with a token you paste in. See [Connecting Agents](/docs/mcp/connect-clients#web-connectors-oauth-sign-in).
+
+Both switches are among the settings a narrowed token may never read or write, so an agent connected over MCP cannot turn the endpoint or OAuth sign-in on for itself, whatever its management level.
 
 While the endpoint is off, every request to it answers `404` with a message naming the switch:
 
@@ -160,5 +175,5 @@ If the response lists fewer tools than you expect, that is the per-credential fi
 
 - [Access Tokens](/docs/api-reference/access-tokens) - how EmailEngine credentials work in general
 - [Adding Email Accounts](/docs/accounts) - connecting the mailboxes an agent will work with
-- [AI and ChatGPT Integration](/docs/integrations/ai-chatgpt) - EmailEngine's built-in AI processing of incoming mail, which is a different feature
+- [AI and ChatGPT Integration](/docs/receiving/ai-processing) - EmailEngine's built-in AI processing of incoming mail, which is a different feature
 - [API Reference](/docs/api-reference) - the REST surface each tool dispatches to

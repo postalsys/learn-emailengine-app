@@ -17,7 +17,7 @@ There are two ways for a client to authenticate against the MCP endpoint. Which 
 | Extra setup | None | `mcpOAuthEnabled` plus a Service URL |
 | Revoke | Access Tokens page | Access Tokens page |
 
-Both produce the same thing: an ordinary EmailEngine access token carrying the `mcp` scope. Whatever created it, you review and revoke it in the same place.
+Both produce the same thing: an ordinary EmailEngine access token carrying one or both MCP scopes, `mcp-manage` for the instance and `mcp` for mail, with an explicit permissions record for the levels chosen. Whatever created it, you review and revoke it in the same place.
 
 :::note Before you start
 The endpoint has to be enabled - see [Enable the endpoint](/docs/mcp#enable-the-endpoint). Remote clients also need HTTPS and a reachable address.
@@ -30,15 +30,16 @@ The endpoint has to be enabled - see [Enable the endpoint](/docs/mcp#enable-the-
 Open **Configuration** > **MCP** > **Connect an agent**. The generator mints the token and writes the client configuration around it in one step:
 
 ![Connect an agent, token method](/img/screenshots/mcp-connect-token.png)
-_The generator: a description to tell agents apart later, an optional account limit, and the access level_
+_The generator: a description to tell agents apart later, the two access sections, and an optional account limit_
 
-Fill in three things:
+Fill in four things:
 
-1. **What is this token for?** Becomes the token description on the Access Tokens page, prefixed with `MCP:`. Name the agent and the machine, for example "Claude Code on my laptop" - a token is easier to revoke when you can tell which one it is.
-2. **Limit to one account.** Recommended. Search by name, address or account id and pick from the suggestions - the field is a picker, not a box to type an id into. A bound token reaches that account and nothing else, and the tools get simpler with it: the instance-wide listings (`list_accounts`, `get_outbox`) are not offered, and the remaining tools stop asking which account to act on.
-3. **Access level.** Read-only by default. See [Access levels](/docs/mcp/access-control#access-levels) for exactly what each one grants.
+1. **What is this token for?** Becomes the token description on the Access Tokens page, prefixed with `MCP:` (a blank field becomes `MCP: MCP agent`). Name the agent and the machine, for example "Claude Code on my laptop" - a token is easier to revoke when you can tell which one it is.
+2. **Instance management.** Starts at **Observe**, which reads accounts, settings, queues, OAuth2 applications, gateways, tokens and logs and changes nothing. **Operate** and **Administer** widen it; **No management access** declines the section.
+3. **Email access.** Starts at **No mail access**. Pick **Read-only**, **Mail agent** or **Full access** when the agent should work with mailbox contents. See [Access levels](/docs/mcp/access-control#access-levels) for exactly what each level grants.
+4. **Limit to one account.** Recommended for a mail agent. Search by name, address or account id and pick from the suggestions - the field is a picker, not a box to type an id into. A bound token reaches that account and nothing else, and the tools get simpler with it: every tool that takes no account, which is the instance-wide listings and most of the management tools, is not offered, and the remaining tools stop asking which account to act on.
 
-The line under the radios counts the tools the resulting credential would actually receive, so you can see the effect of a choice before making it.
+The line under the radios counts the tools the resulting credential would actually receive, so you can see the effect of a choice before making it. Declining both sections is refused, since the token could call nothing.
 
 Press **Generate connection command**:
 
@@ -78,7 +79,7 @@ claude mcp add --transport http emailengine https://emailengine.example.com/mcp 
 
 ### 3. Minting the token outside the admin interface
 
-The generator is a convenience. Any access token with the `mcp` scope works, so a provisioning script can create one over the API:
+The generator is a convenience. Any access token with an MCP scope works, so a provisioning script can create one over the API. This is the read-only mail level, written the way the generator writes it:
 
 ```bash
 curl -X POST "https://emailengine.example.com/v1/tokens" \
@@ -89,8 +90,13 @@ curl -X POST "https://emailengine.example.com/v1/tokens" \
     "scopes": ["mcp"],
     "account": "user123",
     "permissions": {
-      "actions": ["read"],
-      "groups": ["account", "mailbox", "message", "outbox", "template"]
+      "grants": [
+        { "action": "read", "group": "account" },
+        { "action": "read", "group": "mailbox" },
+        { "action": "read", "group": "message" },
+        { "action": "read", "group": "outbox" },
+        { "action": "read", "group": "template" }
+      ]
     }
   }'
 ```
@@ -102,7 +108,7 @@ curl -X POST "https://emailengine.example.com/v1/tokens" \
 }
 ```
 
-The API refuses to mint an instance-wide token that carries no narrowing, so either bind it to an `account` or send a `permissions` record. The record above is the read-only access level; [Access Control](/docs/mcp/access-control#access-levels) lists the other two.
+The API refuses to mint an instance-wide token that carries no narrowing, so either bind it to an `account` or send a `permissions` record. A management credential is minted the same way with `"scopes": ["mcp-manage"]` and the grants of the level you want; [Access Control](/docs/mcp/access-control#custom-permissions) has the vocabulary and the rule that a management grant has to name its sections.
 
 Or from the [CLI](/docs/configuration/cli#issue-token), which is the path for headless deployments:
 
@@ -114,7 +120,7 @@ emailengine tokens issue \
   --dbs.redis="redis://127.0.0.1:6379/8"
 ```
 
-The CLI does not take a permissions record, so a token minted this way reaches every tool the `mcp` scope allows. Bind it to an account, or mint it through the admin interface or the API when you want a narrower one.
+The CLI takes neither a permissions record nor the `mcp-manage` scope, so a token minted this way reaches every mail tool the `mcp` scope allows and no management tool. Bind it to an account, or mint it through the admin interface or the API when you want a narrower or a management credential.
 
 ### 4. Endpoint address
 
@@ -155,9 +161,9 @@ When the client connects, it opens EmailEngine's authorization prompt in your br
 ![MCP authorization prompt](/img/screenshots/mcp-oauth-consent.png)
 _The consent prompt names the client, the address the browser returns to, and what approving grants_
 
-On the prompt you choose the same two things the token generator offers - the access level and an optional account limit, picked by searching for the account - and the text under them spells out what the client will be able to do. **Approve** sends the client back with an authorization code it exchanges for its token; **Deny** sends it back with `error=access_denied` and creates nothing.
+On the prompt you choose the same things the token generator offers - the instance management level, the email access level and an optional account limit, picked by searching for the account - and the sentence under each section spells out what the chosen level lets the client do. **Approve** sends the client back with an authorization code it exchanges for its token; **Deny** sends it back with `error=access_denied` and creates nothing.
 
-Read-only is preselected. It is the right default here: this flow issues credentials to the least controllable clients, running on machines you do not administer.
+Management starts at **Observe** and mail at **No mail access**. A client that asked for a scope in its authorization request moves the starting position: one asking for `mcp` starts with mail at Read-only and management declined, one asking for `mcp-manage` the other way round. That is a hint, never a grant; what the client gets is what you leave selected. Narrow defaults are right here: this flow issues credentials to the least controllable clients, running on machines you do not administer. The token is named `MCP: <client name>` on the Access Tokens page, with the account in parentheses when you limited it to one.
 
 :::note An admin password is required to approve
 Approving mints a lasting credential, so it needs an authenticated admin session on that request. On an instance with no admin password the prompt hides **Approve** and says so, leaving **Deny** as the only working button. [Set an admin password](/docs/configuration/reset-password) first.
@@ -165,10 +171,10 @@ Approving mints a lasting credential, so it needs an authenticated admin session
 
 ### 4. Review what was issued
 
-The connector's token is an ordinary access token. Find it, and everything else that reached the endpoint this way, under **Integrations** > **Access Tokens**, filtered to the `mcp` scope at `/admin/tokens?scope=mcp`:
+The connector's token is an ordinary access token. Find it, and everything else that reached the endpoint this way, under **Integrations** > **Access Tokens**, filtered to the two MCP scopes at `/admin/tokens?scope=mcp-manage&scope=mcp`:
 
 ![MCP tokens on the Access Tokens page](/img/screenshots/mcp-tokens-list.png)
-_Tokens with the mcp scope, showing what each one is bound to and what it is allowed to do_
+_Tokens with an MCP scope, showing what each one is bound to and what it is allowed to do_
 
 Revoking a row cuts the client off immediately. There is nothing else to clean up: EmailEngine issues no refresh tokens for this flow, so revocation is the whole lifecycle.
 
@@ -198,9 +204,9 @@ The tools in that response are the tools the agent has. If one is missing, the c
 |---------|-------|-----|
 | `404` with "MCP support is not enabled on this instance" | The `mcpEnabled` setting is off, or `EENGINE_MCP_ENABLED=false` | Turn the endpoint on under **Configuration** > **MCP**. If the page warns that the deployment gate is off, restart without `EENGINE_MCP_ENABLED=false` |
 | `401 Unauthorized` | Missing, mistyped or revoked token | Check the `Authorization` header. Session tokens from the admin UI are refused here on purpose |
-| `403` with `"Unauthorized scope"` | The token has no scope that opens this endpoint | Use a token with the `mcp` scope, or an `api`/`*` token |
-| A tool call comes back with `"Unauthorized permission"` | The token's permission record does not allow that operation | Raise the access level, or mint a new token. `requiredPermission` in the error names the missing grant |
-| The agent only sees a few tools | Per-credential filtering: an account-bound or narrowed token is only offered what it can call | Expected. Widen the token if the agent genuinely needs more |
+| `403` with `"Unauthorized scope"` | The token has no scope that opens this endpoint | Use a token with the `mcp` or `mcp-manage` scope, or an `api`/`*` token |
+| A tool call comes back with `"Unauthorized permission"` | The token's permission record does not allow that operation | Raise the level of that section, or mint a new token. `requiredPermission` in the error names the missing grant |
+| The agent only sees a few tools, or none from one tool set | Per-credential filtering: a token holding one MCP scope is only offered that scope's tools, and an account-bound or narrowed token only what it can call | Expected. Widen the token if the agent genuinely needs more |
 | `403` with `"Origin not allowed"` | A browser-based client sent an `Origin` header that is neither this instance nor a configured CORS origin | Add the origin to `EENGINE_CORS_ORIGIN`, or set the Service URL to the address clients use |
 | `405` on `GET /mcp` | Expected. The endpoint is POST-only and stateless | Nothing to fix - conforming clients fall back to POST |
 | The OAuth connector reports the server does not support OAuth | `mcpOAuthEnabled` is off, or no Service URL is set | Enable both. The discovery endpoints answer `404` until then |
