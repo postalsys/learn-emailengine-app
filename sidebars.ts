@@ -320,6 +320,7 @@ const sidebars: SidebarsConfig = {
       collapsed: true,
       items: [
         'api/get-v-1-autoconfig',
+        'api/post-v-1-autoconfig',
         'api/get-v-1-settings',
         'api/post-v-1-settings',
         'api/get-v-1-settings-queue-queue',

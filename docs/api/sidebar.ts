@@ -310,6 +310,12 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "api/post-v-1-autoconfig",
+          label: "Discover Email settings with credentials",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
           id: "api/get-v-1-settings",
           label: "List specific settings",
           className: "api-method get",
@@ -387,7 +393,7 @@ const sidebar: SidebarsConfig = {
         {
           type: "doc",
           id: "api/get-v-1-logs-account",
-          label: "Return IMAP logs for an account",
+          label: "Return stored logs for an account",
           className: "api-method get",
         },
       ],

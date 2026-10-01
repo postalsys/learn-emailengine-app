@@ -1,12 +1,12 @@
 ---
-id: get-v-1-autoconfig
-title: "Discover Email settings"
-description: "Try to discover IMAP and SMTP settings for an email account"
-sidebar_label: "Discover Email settings"
+id: post-v-1-autoconfig
+title: "Discover Email settings with credentials"
+description: "Try to discover IMAP and SMTP settings for an email account, optionally authenticating against an autodiscovery server that refuses to answer anonymously<br/><br/>Hosted Exchange answers autodiscovery only for an authenticated request, which is why this endpoint exists alongside `GET /v1/autoconfig`. The password is sent to the autodiscovery host named by the address domain's own DNS records, and only after that host has asked for it with a Basic challenge over HTTPS."
+sidebar_label: "Discover Email settings with credentials"
 hide_title: true
 hide_table_of_contents: true
-api: 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
-sidebar_class_name: "get api-method"
+api: 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
+sidebar_class_name: "post api-method"
 info_path: docs/api/emailengine-api
 custom_edit_url: null
 hide_send_button: true
@@ -23,12 +23,12 @@ import Heading from "@theme/Heading";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"Discover Email settings"}
+  children={"Discover Email settings with credentials"}
 >
 </Heading>
 
 <MethodEndpoint
-  method={"get"}
+  method={"post"}
   path={"/v1/autoconfig"}
   context={"endpoint"}
 >
@@ -37,7 +37,7 @@ import Heading from "@theme/Heading";
 
 
 
-Try to discover IMAP and SMTP settings for an email account
+Try to discover IMAP and SMTP settings for an email account, optionally authenticating against an autodiscovery server that refuses to answer anonymously<br/><br/>Hosted Exchange answers autodiscovery only for an authenticated request, which is why this endpoint exists alongside `GET /v1/autoconfig`. The password is sent to the autodiscovery host named by the address domain's own DNS records, and only after that host has asked for it with a Basic challenge over HTTPS.
 
 <Heading
   id={"request"}
@@ -48,14 +48,14 @@ Try to discover IMAP and SMTP settings for an email account
 </Heading>
 
 <ParamsDetails
-  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds. Raises the command timeout above the EENGINE_TIMEOUT default for a long-running request; a value below the default has no effect","example":30000,"minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds. Raises the command timeout above the EENGINE_TIMEOUT default for a long-running request; a value below the default has no effect"},{"name":"email","in":"query","schema":{"type":"string","description":"Email address to discover email settings for","example":"sender@example.com","x-format":{"email":true}},"description":"Email address to discover email settings for","required":true}]}
+  parameters={[{"name":"x-ee-timeout","in":"header","schema":{"type":"integer","description":"Request timeout in milliseconds. Raises the command timeout above the EENGINE_TIMEOUT default for a long-running request; a value below the default has no effect","example":30000,"minimum":0,"maximum":7200000},"description":"Request timeout in milliseconds. Raises the command timeout above the EENGINE_TIMEOUT default for a long-running request; a value below the default has no effect"}]}
 >
   
 </ParamsDetails>
 
 <RequestSchema
   title={"Body"}
-  body={undefined}
+  body={{"content":{"application/json":{"schema":{"type":"object","properties":{"email":{"type":"string","description":"Email address to discover email settings for","example":"sender@example.com","x-format":{"email":true}},"auth":{"type":"object","description":"Credentials to offer if the autodiscovery server refuses to answer anonymously","properties":{"user":{"type":"string","description":"Username for the autodiscovery request. Defaults to the email address.","example":"myuser@gmail.com","maxLength":1024,"x-convert":{"trim":true}},"pass":{"type":"string","description":"Password for the mailbox","example":"verysecret","maxLength":1024}},"required":["pass"],"title":"AutodiscoverCredentials"}},"required":["email"],"title":"AutodiscoverRequest"}}}}}
 >
   
 </RequestSchema>
