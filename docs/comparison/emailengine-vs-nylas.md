@@ -20,7 +20,7 @@ This comparison covers features, pricing models, and deployment options for two 
 A shorter, decision-focused version, covering architecture, pricing arithmetic, and where each product wins, is on the main site: [EmailEngine vs Nylas](https://emailengine.app/nylas-alternative).
 
 :::info About the Nylas figures on this page
-Statements about Nylas describe its public [product page](https://www.nylas.com/products/email-api/) and [pricing page](https://www.nylas.com/pricing/) as read on 26 August 2026. Nylas revises both, and this page is not updated when it does. Statements about EmailEngine describe version 2.79.4.
+Statements about Nylas describe its public [product page](https://www.nylas.com/products/email-api/) and [pricing page](https://www.nylas.com/pricing/) as read on 26 August 2026. Nylas revises both, and this page is not updated when it does. Statements about EmailEngine describe version 2.82.0.
 :::
 
 :::info Summary
@@ -42,7 +42,7 @@ Choose based on your priorities: operational overhead vs control and cost.
 | **Data Residency**       | Your infrastructure         | Nylas cloud                        |
 | **Read Performance**     | On demand from the mail server | Served from the synced copy     |
 | **Parallelism**          | One IMAP connection per mailbox, requests queued | Parallel at the API layer |
-| **AI features**          | MCP endpoint for AI agents (beta); no built-in classification | AI message cleaning, threading, bounce detection |
+| **AI features**          | MCP endpoint for AI agents (beta); summary and sentiment of incoming messages through your own OpenAI API key | AI message cleaning, threading, bounce detection |
 | **Compliance**           | Your controls, your audits  | SOC 2 Type II, ISO 27001, HIPAA, GDPR and CCPA listed |
 | **Support**              | Direct from the developers  | Tiered, enterprise plans with SLAs |
 

@@ -112,7 +112,7 @@ Getting started takes five steps:
 ## System Requirements
 
 - **Node.js** 20 or newer, and only when running from source. The packaged builds carry their own runtime
-- **Redis** 6.0 or newer, or a Redis-compatible service such as Upstash
+- **Redis** 6.2 or newer, or a Redis-compatible service such as Upstash; see [Redis version](/docs/configuration/redis#redis-version)
 - **Memory** 2 GB to evaluate, 4 to 8 GB for production
 - **OS** Linux, macOS, or Windows
 

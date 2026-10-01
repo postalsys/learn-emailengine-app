@@ -1,6 +1,6 @@
 ---
 title: Queue Management
-sidebar_position: 13
+sidebar_position: 4
 description: Understanding EmailEngine's BullMQ queues, job types, lifecycle, and monitoring with Bull Board
 keywords:
   - queue management
@@ -110,90 +110,19 @@ Bull Board provides a web interface for:
 
 **Failure Outcome**: Job retries or fails, webhook not delivered
 
-## Job Lifecycle
+## Job States
 
-Every job moves through different states during its lifecycle.
+Every queue uses the same BullMQ states. What each one means for a submit job, including the retry schedule and the rules that make a failure permanent, is described once on the [Outbox Queue](/docs/sending/outbox-queue#job-lifecycle) page; the notify and export queues move through the same states.
 
-### Job States
+| State | Jobs in it | Leaves it when |
+|-------|------------|----------------|
+| Waiting | Ready to run: new jobs with no future `sendAt`, delayed jobs whose time has come, and every job while the queue is paused | A worker picks it up and moves it to Active |
+| Active | Being processed by a worker: the SMTP transaction, the webhook POST, or the export run | Success moves it to Completed, a retriable failure to Delayed, a permanent failure or the last allowed attempt to Failed |
+| Delayed | Scheduled for a later time: a `sendAt` in the future, or a failed attempt waiting for its retry (5 seconds doubling per attempt, reduced by up to 20 percent of jitter) | Its time comes and it returns to Waiting |
+| Completed | Finished successfully. Removed at once unless a history limit is set, see [Enable Job Retention](#enable-job-retention); retained entries are dropped after 24 hours | Retention expires |
+| Failed | Given up on, after the last attempt or on a permanent error. Kept by default, at least the last 500 per queue for 7 days (`EENGINE_QUEUE_KEEP_FAILED`, `EENGINE_QUEUE_KEEP_FAILED_AGE`), because a failure is the only record that a delivery was abandoned. Before EmailEngine 2.75.0 the history limit applied to failed jobs too, so a limit of 0 discarded them | Retention expires, or the job is retried or deleted from Bull Board |
 
-#### 1. Waiting
-
-**Description**: Jobs ready to be processed immediately.
-
-**How Jobs Enter**:
-- Newly created without `sendAt` date
-- Moved from Delayed when scheduled time reached
-- Held here while the queue is paused, and picked up once it is resumed
-
-**What Happens**: Workers pick jobs from here one by one and move them to Active.
-
-**Example**: Email submitted via API for immediate delivery.
-
-#### 2. Active
-
-**Description**: Jobs currently being processed by a worker.
-
-**How Jobs Enter**: Picked from Waiting queue by available worker.
-
-**What Happens**:
-- Email sending: SMTP connection established, message transmitted
-- Webhook delivery: HTTP POST request sent to your endpoint
-
-**Exit Paths**:
-- **Success**: Move to Completed
-- **Retriable Failure**: Move to Delayed (will retry)
-- **Permanent Failure**: Move to Failed (no more retries)
-
-**Example**: EmailEngine currently sending email to SMTP server.
-
-#### 3. Delayed
-
-**Description**: Jobs scheduled for future processing.
-
-**How Jobs Enter**:
-- Created with `sendAt` in future
-- Failed in Active but within retry limit
-
-**What Happens**: Jobs wait until delay time expires, then move to Waiting.
-
-**Delay Reasons**:
-- **Scheduled Send**: User specified `sendAt` timestamp
-- **Retry After Failure**: Failed delivery, scheduled for retry using exponential backoff with a 5-second base delay (5s, 10s, 20s, 40s, and so on), with 20% random jitter so that many jobs failing at once do not retry at the same moment
-
-**Example**: Email scheduled for tomorrow 9am or failed email waiting 20 seconds before its third attempt.
-
-#### 4. Completed
-
-**Description**: Successfully processed jobs.
-
-**How Jobs Enter**: Job completed successfully in Active state.
-
-**What Happens**: Job stored for reference (if retention enabled), otherwise discarded.
-
-**Retention**: By default, Completed jobs are immediately removed. Enable retention in **Configuration > General > Queue Management > Job History Limit**. With a limit set, the newest entries up to that number are kept, for at most 24 hours.
-
-**Example**: Email successfully delivered to SMTP server.
-
-#### 5. Failed
-
-**Description**: Jobs that permanently failed after exhausting all retries.
-
-**How Jobs Enter**: Job failed in Active state and retry limit reached.
-
-**What Happens**: Job stored for debugging. No further processing.
-
-**Retention**: Failed jobs are kept by default, unlike Completed jobs. A failure is the only record that a delivery was given up on, so it is retained even when the Job History Limit is 0. The defaults are the last 500 entries per queue for 7 days, adjustable with `EENGINE_QUEUE_KEEP_FAILED` and `EENGINE_QUEUE_KEEP_FAILED_AGE`. Before EmailEngine 2.75.0 the Job History Limit applied to failed jobs as well, so a limit of 0 discarded them immediately.
-
-**Common Failures**:
-- SMTP authentication failed
-- Recipient address invalid
-- Webhook endpoint unreachable
-
-**Example**: Email rejected by SMTP server with "550 5.1.1 User unknown". A permanent SMTP rejection (a 5xx reply other than 503, or a failure such as `EAUTH` that carries no reply) ends the job on the first attempt, because retrying could not change the outcome.
-
-#### 6. Paused queues
-
-A queue can be paused from Bull Board. Workers then stop taking new jobs, while a job that is already Active runs to completion. Since the move to BullMQ 6 in EmailEngine 2.79.0 there is no separate Paused job state: the jobs of a paused queue stay in Waiting, and are picked up in order once the queue is resumed.
+A paused queue has no job state of its own. Since the move to BullMQ 6 in EmailEngine 2.79.0, pausing stops the workers from taking new jobs, an Active job runs to completion, and the rest stay in Waiting until the queue is resumed.
 
 ## Job Lifecycle Diagram
 
@@ -289,7 +218,7 @@ Failed:    50   ← High failure rate
 
 **Steps**:
 1. Go to **System > Queues**
-2. Select queue (Submission, Webhooks, or the deprecated Document queue)
+2. Select queue (Submission or Webhooks)
 3. Select job state tab (Waiting, Active, Failed, etc.)
 4. Click on a job to view details
 
@@ -479,9 +408,6 @@ Webhooks are emitted at specific queue state transitions:
 
 **Notify Queue**:
 - No webhooks (webhooks don't trigger webhooks)
-
-**Documents Queue** (deprecated):
-- No webhooks (internal indexing)
 
 ### Webhook Delivery Flow
 

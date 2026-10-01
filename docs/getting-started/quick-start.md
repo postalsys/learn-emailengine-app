@@ -91,8 +91,8 @@ The CLI writes the token straight into Redis, so `--dbs.redis` must name the sam
 1. Open **Integrations** > **Access Tokens** in the sidebar
 2. Click **Create access token**
 3. Provide a description (for example, "Development")
-4. Select the scope (`*` for full access)
-5. Click **Generate a token**
+4. Tick **All scopes**
+5. Click **Create access token**
 6. Copy the token immediately: it is shown only once
 
 :::info What the API can mint
@@ -136,7 +136,7 @@ The easiest way to add accounts is using EmailEngine's built-in hosted authentic
    _Account type selection page showing OAuth2 provider buttons and standard IMAP option_
 
    - **OAuth2 Provider** (Gmail/Outlook): Clicks provider button, follows OAuth2 flow
-   - **IMAP/SMTP**: Enters email/password, EmailEngine auto-detects server settings
+   - **IMAP/SMTP**: Enters the address and password. EmailEngine discovers and verifies the server settings and, since v2.81.0, asks for them only when discovery fails (send `skipServerSettings: false` in the form request to always show that step)
 
 4. After authentication, user is redirected back to your `redirectUrl`
 
@@ -351,7 +351,7 @@ Key fields to check:
 
 - `state`: `"connected"` is the healthy steady state. `"init"`, `"connecting"` and `"syncing"` mean it is still on its way there; `"authenticationError"` and `"connectError"` mean it is not going to get there without your help. [Account States](/docs/accounts/managing-accounts#account-states) describes all nine
 - `lastError`: `null` when the last connection attempt succeeded
-- `authFailureDisabledAt` (since v2.79.4): normally absent. When set, EmailEngine switched syncing off after repeated authentication failures, and the state reads `"unset"` until working credentials are supplied
+- `authFailureDisabledAt` (since v2.79.4): normally `null`. When it carries a timestamp, EmailEngine switched syncing off after repeated authentication failures, and the state reads `"unset"` until working credentials are supplied
 
 ### Initial Sync Duration
 
@@ -463,7 +463,8 @@ After the test email from Step 6, a [messageSent](/docs/webhooks/messagesent) ev
     "envelope": {
       "from": "you@example.com",
       "to": ["recipient@example.com"]
-    }
+    },
+    "networkRouting": null
   }
 }
 ```
@@ -496,8 +497,7 @@ curl "http://localhost:3000/v1/account/my-account/messages?path=INBOX&pageSize=1
         "address": "john@example.com"
       },
       "date": "2025-01-15T10:30:00.000Z",
-      "flags": ["\\Seen"],
-      "labels": []
+      "flags": ["\\Seen"]
     }
   ]
 }
@@ -546,7 +546,7 @@ curl -XPOST "http://localhost:3000/v1/account/my-account/search?path=INBOX" \
 ### Integration Examples
 
 - **[CRM Integration](/docs/integrations/crm)** - Complete architecture guide
-- **[AI/ChatGPT Integration](/docs/integrations/ai-chatgpt)** - Email summaries and analysis
+- **[AI/ChatGPT Integration](/docs/receiving/ai-processing)** - Email summaries and analysis
 - **[PHP Integration](/docs/integrations/php)** - Using the PHP library
 
 ## See Also

@@ -100,7 +100,7 @@ Redirect the user's browser to this URL to initiate authentication.
 The user will see:
 
 1. **Account Type Selection**: Choose between IMAP, OAuth2 (Gmail, Outlook), etc.
-2. **Credentials Entry**: Enter server details or complete OAuth2 authorization
+2. **Credentials Entry**: Enter the address and password, or complete the OAuth2 authorization. Server settings are discovered from the address and asked for only when discovery fails (since v2.81.0)
 3. **Confirmation**: See connection status
 4. **Redirect**: Automatically redirected back to your CRM
 
@@ -239,7 +239,7 @@ Every email added to a folder appears as "new," even if moved between folders. T
 2. **`data.messageId`**: Unique identifier from Message-ID header
    - Use for deduplication
    - Remains constant across folders
-   - Empty messageId usually indicates spam
+   - Absent when the message carries no `Message-ID` header; such a message cannot be deduplicated this way
 
 ### Identifying Email Direction
 
@@ -315,7 +315,7 @@ function processWebhook($payload) {
     $userId = $payload['account'];
     $messageId = $payload['data']['messageId'];
 
-    // Skip if no messageId (spam indicator)
+    // Skip a message without a Message-ID header; it cannot be deduplicated
     if (empty($messageId)) {
         return;
     }
@@ -534,7 +534,7 @@ When going to production, review performance settings:
 Review what data is stored and your compliance obligations:
 
 - **Password Storage**: EmailEngine encrypts credentials
-- **Email Content**: Not stored by default (only metadata)
+- **Email Content**: Read from the mailbox on demand; queued outbound messages and pending webhook payloads pass through Redis until delivered
 - **GDPR**: Implement data deletion workflows
 
 **Read more**: [Data and Security Compliance](/docs/deployment/compliance)

@@ -1,6 +1,6 @@
 ---
 title: Monitoring and Observability
-sidebar_position: 5
+sidebar_position: 3
 description: Monitor EmailEngine with health checks, Prometheus metrics, Grafana dashboards, and alerting for production deployments
 keywords:
   - monitoring
@@ -55,7 +55,7 @@ curl "https://emailengine.example.com/v1/stats" \
 
 ```json
 {
-  "version": "2.79.4",
+  "version": "2.82.0",
   "license": "LICENSE_EMAILENGINE",
   "accounts": 15,
   "node": "24.5.0",
@@ -64,8 +64,8 @@ curl "https://emailengine.example.com/v1/stats" \
   "redisCluster": false,
   "redisWarnings": [],
   "redisPing": 0.4,
-  "imapflow": "1.7.6",
-  "bullmq": "6.2.0",
+  "imapflow": "2.2.1",
+  "bullmq": "6.3.11",
   "arch": "x64",
   "connections": {
     "init": 0,
@@ -95,14 +95,6 @@ curl "https://emailengine.example.com/v1/stats" \
       "paused": 0,
       "isPaused": false,
       "total": 6
-    },
-    "documents": {
-      "active": 0,
-      "delayed": 0,
-      "waiting": 0,
-      "paused": 0,
-      "isPaused": false,
-      "total": 0
     }
   },
   "counters": {
@@ -116,7 +108,7 @@ curl "https://emailengine.example.com/v1/stats" \
 }
 ```
 
-`counters` covers the last hour by default; the `seconds` query parameter widens or narrows the window. The keys are `events:<event>`, `webhooks:success|fail`, `apiCall:success|fail` and `<queue>:success|fail`. See the [stats endpoint reference](/docs/api/get-v-1-stats) for every field.
+`counters` covers the last hour by default; the `seconds` query parameter widens or narrows the window. The keys are `events:<event>`, `webhooks:success|fail`, `apiCall:success|fail` and `<queue>:success|fail`. `queues` reports the `notify` and `submit` queues; releases before v2.82.0 also listed `documents`, the indexing queue of the removed Document Store. See the [stats endpoint reference](/docs/api/get-v-1-stats) for every field.
 
 ## Prometheus Metrics
 
@@ -197,7 +189,7 @@ The tables below list every metric EmailEngine registers, from `server.js`. The 
 | `threads` | Gauge | `type`, `recent` | Running worker threads by type. `recent` is `yes` for threads started within the last 10 minutes, `no` otherwise |
 | `unresponsive_workers` | Gauge | none | Worker threads that did not answer the last resource-usage poll |
 
-`type` is one of `main`, `api`, `imap`, `webhooks`, `submit`, `export`, `documents`, `smtp` and `imapProxy`; a type only appears once such a worker has run.
+`type` is one of `main`, `api`, `imap`, `webhooks`, `submit`, `export`, `smtp` and `imapProxy`; a type only appears once such a worker has run. Releases before v2.82.0 also had a `documents` type, the Document Store indexing worker.
 
 #### Connection Metrics
 
@@ -226,6 +218,15 @@ The OAuth2 and subscription metrics, along with the Grafana dashboard, were adde
 | `events` | Counter | `event` | Events raised, whether or not a webhook was sent for them |
 | `webhook_req` | Histogram | none | Duration of the HTTP request to the webhook endpoint, in milliseconds. Buckets: 100, 250, 500, 750, 1000, 2500, 5000, 7500, 10000, 60000 |
 
+#### AI Processing Metrics
+
+| Metric | Type | Labels | Description |
+|--------|------|--------|-------------|
+| `ai_requests` | Counter | `model`, `status` | Requests made to the model for [AI summaries](/docs/receiving/ai-processing). `status` is `success` or `failure` |
+| `ai_tokens` | Counter | `model`, `type` | Tokens billed for those requests, as reported by the model's usage figures. `type` is `prompt` or `completion` |
+
+Both were added in EmailEngine v2.82.0 and stay at zero until AI processing is enabled.
+
 #### Queue Metrics
 
 | Metric | Type | Labels | Description |
@@ -246,7 +247,7 @@ Since v2.79.1 the gauges are read from BullMQ's own counters. A paused queue hol
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
 | `license_days_remaining` | Gauge | none | Days until the license expires. `-1` for a license without an expiry, `0` when no license is registered |
-| `emailengine_config` | Gauge | `version`, `config` | Always `1` for the `version` series (`version="v2.79.4"`). The `config` series carry the values of `uvThreadpoolSize`, `workersImap`, `workersWebhooks` and `workersSubmission` |
+| `emailengine_config` | Gauge | `version`, `config` | Always `1` for the `version` series (`version="v2.82.0"`). The `config` series carry the values of `uvThreadpoolSize`, `workersImap`, `workersWebhooks` and `workersSubmission` |
 
 #### Redis Metrics
 
@@ -551,6 +552,19 @@ Language-level APM agents instrument an application you build and run yourself. 
 The webhook, submission and export queues are BullMQ queues, and EmailEngine bundles Bull Board for looking inside them. It is always available at `/admin/bull-board`, reachable from the admin menu under **System** > **Queues**, and requires an admin login like the rest of `/admin`.
 
 Use it to inspect a stuck job's payload, retry failed deliveries, or pause a queue. [Queue management](/docs/advanced/queue-management) explains what each queue holds, and [Debugging webhooks](/docs/webhooks/overview#debugging-webhooks) walks through a failed delivery.
+
+## Workers Page
+
+The admin interface lists every thread the process runs under **System** > **Workers** (`/admin/internals`): the main thread, the API, IMAP, webhook, submit, export, SMTP server and IMAP proxy workers, grouped by kind with a sentence on what each kind does. Each row shows the thread ID, its uptime, its memory use and, for IMAP workers, the accounts assigned to it; opening a row lists those accounts.
+
+A worker that came online more than three minutes after the main thread is marked **Recently restarted** for thirty minutes, since a normal boot brings every worker up within seconds and a late start means the main thread respawned it after a crash. A worker that keeps the marker is crash-looping; its exit reason is in the log stream.
+
+Two actions are available per row:
+
+- **Restart worker** terminates the thread. The main thread respawns it, with a growing delay for a slot that keeps exiting, so a stuck worker can be replaced without restarting the process. Operations in flight on that thread are interrupted.
+- **Download memory snapshot** produces a V8 heap snapshot of that thread (`.heapsnapshot`, opened in the Chrome DevTools Memory tab) for diagnosing memory growth. Taking one pauses the thread while the heap is walked.
+
+The page also explains why only one API worker is running when `EENGINE_WORKERS_API` asked for more; see [Performance Tuning](/docs/advanced/performance-tuning#api-workers).
 
 ## Log-Based Monitoring
 

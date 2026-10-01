@@ -106,6 +106,10 @@ The default is `["*"]`, every folder. A support desk that only needs INBOX and S
 
 For a large mailbox where you do need every folder, the [`imapIndexer`](/docs/accounts/imap-indexers) setting is the other lever: the `fast` indexer skips tracking of flag changes and deletions and is much cheaper than `full`.
 
+### Stale Primary Connections
+
+New messages in the watched folder are only ever learned from the primary connection, which the periodic resync skips. A server can keep that session alive while its view of the folder stops moving, and nothing in the default configuration notices. Since v2.82.0, `EENGINE_IMAP_STALE_CHECK_INTERVAL` (a duration such as `1h`, off when unset) makes the resync pass check the folder's `UIDNEXT` over the command connection once the primary's own has not moved for that long, and reconnect the primary when the server is ahead on two checks in a row. Set it on an instance where accounts stop reporting new mail until they are reconnected by hand.
+
 ## API Workers
 
 The API worker runs the REST API and the admin UI. One worker is enough for most deployments; a very high HTTP request volume can be spread across several.
@@ -206,7 +210,7 @@ Bulk exports run on their own worker threads:
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `--workers.export` | `1` | Number of export worker threads. Set on the command line or as `export` under `[workers]` in the configuration file. The Workers page lists this value under the name `EENGINE_WORKERS_EXPORT`, but as of v2.79.4 that environment variable is not read; use the command-line flag or the configuration file |
+| `--workers.export` | `1` | Number of export worker threads. Set on the command line or as `export` under `[workers]` in the configuration file. The Workers page lists this value under the name `EENGINE_WORKERS_EXPORT`, but as of v2.82.0 that environment variable is not read; use the command-line flag or the configuration file |
 | `EENGINE_EXPORT_QC` | `1` | Export jobs each worker runs concurrently |
 
 ```text

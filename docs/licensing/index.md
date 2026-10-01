@@ -228,8 +228,8 @@ _A fresh, unlicensed installation shows the "Start a 14-day trial" button at the
 
 1. Access web interface: `http://localhost:3000`
 2. Navigate to **License** page: `http://localhost:3000/admin/config/license`
-3. Paste the license key into the text field (or use **Upload License File**)
-4. Click **Activate License**
+3. Paste the license key into the text field (or use **Upload license file**)
+4. Click **Activate license**
 
 ![License configuration page](/img/screenshots/license-config-page.png)
 _The License page accepts an uploaded license file or a pasted license key_
@@ -288,7 +288,7 @@ The response is the same object `GET /v1/license` returns:
 }
 ```
 
-`details` is `false` on an unlicensed instance, `details.expires` is present only for time-limited keys such as a trial, `lt` marks a lifetime license, and `suspended: true` appears while the workers are stopped for want of a license. `DELETE /v1/license` removes the key and the instance drops back to the unlicensed state described above. All three endpoints need a token that is not narrowed with a `permissions` record, because license management is in the never-grantable group. See the [License API](/docs/api/get-v-1-license).
+`details` is `false` on an unlicensed instance, `details.expires` is present only for time-limited keys such as a trial, `lt` marks a lifetime license, and `suspended: true` appears while the workers are stopped for want of a license. `DELETE /v1/license` removes the key and the instance drops back to the unlicensed state described above. All three endpoints need an instance-wide token, not one bound to an account. A token narrowed with a `permissions` record reaches them only when the record names the `license` group; before v2.80.1 license management sat in the never-grantable `admin` group, out of reach of every narrowed token. See the [License API](/docs/api/get-v-1-license).
 
 ## Managing Your Subscription
 

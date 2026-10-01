@@ -94,7 +94,8 @@ return {
 
 **The function should return**:
 - The value to deliver. An object or array is sent as the JSON body; a string is sent JSON-encoded as well
-- If the function returns nothing, `null`, or any other falsy value, or is not defined at all, the original EmailEngine payload is delivered unchanged. Returning a value never cancels a delivery; that decision belongs to the filter function. A mapping function that throws is the one exception: the error is logged and that delivery is dropped
+- A route with no mapping function delivers the standard EmailEngine payload
+- A mapping function that returns `null`, `undefined` or `false`, or that throws, cancels the delivery for this route: nothing is sent for that event, and a thrown error is written to the route's error log. Before v2.82.0 the standard payload was delivered in place of a failed or empty mapping
 
 ### 3. Target URL
 
@@ -563,5 +564,5 @@ EmailEngine logs to stdout using the pino logger. There is no log file - logs ar
 
 - [Webhooks overview](/docs/webhooks/overview) - The payloads these platforms receive
 - [Webhook routing](/docs/webhooks/webhook-routing) - Sending different events to different automations
-- [Pre-processing functions](/docs/advanced/pre-processing) - Filtering before the platform is invoked
+- [Pre-processing functions](/docs/webhooks/pre-processing) - Filtering before the platform is invoked
 - [API Reference](/docs/api-reference) - The calls an automation makes back into EmailEngine

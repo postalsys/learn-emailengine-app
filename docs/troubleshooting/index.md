@@ -80,7 +80,7 @@ emailengine version
 
    # Verify the URL EmailEngine uses
    echo $EENGINE_REDIS
-   # Should be: redis://localhost:6379
+   # For example redis://127.0.0.1:6379/8, which is the default when unset
    ```
 
 2. **Port already in use**
@@ -204,7 +204,7 @@ journalctl -u emailengine | grep -i "ECONNREFUSED\|ETIMEDOUT\|ENOTFOUND"
    }
    ```
 
-   See [Proxying connections](/docs/accounts/proxying-connections).
+   See [Proxying connections](/docs/receiving/imap-proxy-server).
 
 4. **Too many accounts for the worker count**
 
@@ -215,6 +215,10 @@ journalctl -u emailengine | grep -i "ECONNREFUSED\|ETIMEDOUT\|ENOTFOUND"
    # Check resource usage
    top -p $(pgrep -f emailengine | head -1)
    ```
+
+5. **The server accepted the login but could not serve the mailbox**
+
+   Since v2.80.1 a login the server could not complete for a reason of its own is reported as `connectError`, not `authenticationError`: an RFC 5530 `[UNAVAILABLE]`, `[SERVERBUG]`, `[INUSE]` or `[LIMIT]` response, or Exchange Online's `User is authenticated but not connected.`, which it also answers permanently when IMAP is disabled for the mailbox. One `connectError` webhook carries the server's text, `lastError.response` on the account holds it, and the reconnect loop keeps retrying. For the Exchange Online case, enable IMAP for the mailbox or move the account to the Graph API backend.
 
 #### Account Switched Off After Authentication Failures
 
@@ -368,7 +372,7 @@ journalctl -u emailengine | grep -i "refresh\|invalid_grant"
 
 3. **Encryption secret changed:**
    - Tokens encrypted with the previous `EENGINE_SECRET` cannot be decrypted with the new one
-   - Restore the previous secret, or re-encrypt the data with `emailengine encrypt` as described in [Secret encryption](/docs/advanced/encryption#changing-encryption-secret), before re-authorizing every account
+   - Restore the previous secret, or re-encrypt the data with `emailengine encrypt` as described in [Secret encryption](/docs/deployment/encryption#changing-encryption-secret), before re-authorizing every account
 
 ### Webhook Delivery Issues
 
@@ -462,7 +466,7 @@ journalctl -u emailengine | grep -i webhook
 curl https://emailengine.example.com/v1/settings/queue/notify \
   -H "Authorization: Bearer TOKEN" | jq
 
-# Check backlog
+# Check backlog (the key prefix is empty unless EENGINE_REDIS_PREFIX is set)
 redis-cli LLEN "bull:notify:wait"
 
 # Monitor webhook processing
@@ -597,6 +601,16 @@ time curl https://emailengine.example.com/v1/accounts \
    # Read the ten most recent entries back
    redis-cli SLOWLOG GET 10
    ```
+
+### Admin Interface Issues
+
+#### Admin Pages Load Without Their Scripts
+
+**Symptom:** Behind a CDN or proxy, admin pages render but buttons, forms and the account picker do nothing, and the browser console reports Content-Security-Policy violations
+
+**Cause:** Since v2.79.9 the admin pages carry a nonce-based Content-Security-Policy, and a CDN feature that rewrites the HTML (Cloudflare Rocket Loader, for example) re-creates the script elements without the nonce, so the browser refuses them.
+
+**Solution:** turn the rewriting feature off for the hostname EmailEngine is served from. `EENGINE_CSP_MODE=report-only` shows what the policy would block without blocking it, and `EENGINE_CSP_MODE=off` restores the pre-v2.79.9 behavior at the cost of the protection. See [CDNs that rewrite the page](/docs/deployment/security#csp-and-html-rewriting).
 
 ### Email Sync Issues
 
@@ -836,7 +850,7 @@ When requesting support, provide:
 ## See Also
 
 - [Account troubleshooting](/docs/accounts/troubleshooting) - Connection, authentication, and sync failures
-- [Error codes](/docs/reference/error-codes) - What a given code means and whether to retry
+- [Error codes](/docs/api-reference/error-codes) - What a given code means and whether to retry
 - [Logging](/docs/advanced/logging) - Turning up detail on the server or one account
 - [Monitoring](/docs/advanced/monitoring) - Health checks and metrics
 - [Support](/docs/support) - What to include when you ask for help

@@ -12,6 +12,7 @@ keywords:
   - receive email API
   - email webhook API
   - email API for developers
+displayed_sidebar: docsSidebar
 ---
 
 import Price from '@site/src/components/Price';
@@ -253,7 +254,7 @@ Build email into your help desk. Manage support inboxes, track threads, and send
 
 ### AI Email Processing
 Connect email to AI systems for summarization, classification, and automated responses.
-[AI integration guide →](/docs/integrations/ai-chatgpt)
+[AI integration guide →](/docs/receiving/ai-processing)
 
 ## See Also
 

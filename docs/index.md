@@ -165,7 +165,7 @@ Analyze email communications:
 - Track email delivery and opens
 - Generate AI-powered email summaries
 - Monitor email activity across accounts
-- [See AI integration →](/docs/integrations/ai-chatgpt)
+- [See AI integration →](/docs/receiving/ai-processing)
 
 ## Architecture Overview
 
@@ -184,7 +184,7 @@ EmailEngine works as a middleware between your application and email providers:
 
 - **API requests**: Your app calls EmailEngine REST API → EmailEngine connects to email providers or retrieves from Redis
 - **Webhooks**: Email providers send updates → EmailEngine processes → Your app receives webhook notifications
-- **Data storage**: EmailEngine stores metadata and queues in Redis (email content is not stored, only fetched on demand)
+- **Data storage**: EmailEngine keeps the message index, account data and job queues in Redis. Message content is read from the mailbox on demand; only queued outbound messages and pending webhook payloads pass through Redis, until they are delivered
 
 ## API Reference
 
@@ -233,7 +233,7 @@ EmailEngine requires a license key for production use. Get a license:
 **Need inspiration?**
 
 - [See the CRM integration guide](/docs/integrations/crm) for a complete architecture example
-- [Explore AI integration](/docs/integrations/ai-chatgpt) for email summarization and automation
+- [Explore AI integration](/docs/receiving/ai-processing) for email summarization and automation
 - [Compare EmailEngine vs Nylas](/docs/comparison/emailengine-vs-nylas) to understand the differences
 
 ---
@@ -266,7 +266,7 @@ Yes. EmailEngine includes an [MCP server](/docs/mcp), so any Model Context Proto
 
 ### Where is my email data stored?
 
-EmailEngine stores only metadata (message IDs, flags, folder structure) in Redis. Email content is fetched on-demand from the original mailbox and is not copied to third-party servers. Your data stays on your infrastructure.
+EmailEngine keeps the message index (UIDs, flags, folder structure), account configuration and job queues in Redis, on your infrastructure. Message content is read from the mailbox on demand and is not copied to third-party servers. A queued outbound message and a pending webhook payload sit in Redis until they are delivered; the [security FAQ](/docs/support/security-faq#is-email-content-stored) has the details.
 
 ## See Also
 

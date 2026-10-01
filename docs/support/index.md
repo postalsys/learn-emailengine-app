@@ -33,7 +33,7 @@ Before contacting support, check:
 
 - **[Troubleshooting](/docs/troubleshooting)** - Startup, webhook, performance, and sync problems
 - **[Account troubleshooting](/docs/accounts/troubleshooting)** - Connection, authentication, and sync failures for one account
-- **[Error codes](/docs/reference/error-codes)** - What an error in an API response means
+- **[Error codes](/docs/api-reference/error-codes)** - What an error in an API response means
 - **[GitHub Issues](https://github.com/postalsys/emailengine/issues)** - Whether the problem is already known
 
 ## See Also

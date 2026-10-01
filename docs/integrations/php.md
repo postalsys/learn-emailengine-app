@@ -8,7 +8,7 @@ description: Using the official EmailEngine PHP SDK from Composer to register ac
 
 How to call EmailEngine from PHP with the official SDK, [postalsys/emailengine-php](https://packagist.org/packages/postalsys/emailengine-php). The SDK is a thin client over the REST API: every call maps to one endpoint documented in the [API reference](/docs/api-reference), and the request and response bodies are the ones the [OpenAPI specification](/docs/api-reference/openapi-spec) describes.
 
-This page matches SDK version 1.3.0 (checked 2026-08-26). It requires PHP 8.1 or newer and uses Guzzle 7 for HTTP.
+This page matches SDK version 1.3.0 (checked 2026-10-01). It requires PHP 8.1 or newer and uses Guzzle 7 for HTTP.
 
 ## Installation
 
@@ -298,7 +298,7 @@ foreach ($message['attachments'] as $attachment) {
 
 ### Searching Messages
 
-[`POST /v1/account/{account}/search`](/docs/api/post-v-1-account-account-search) takes the criteria in the body and the folder as a query parameter. The `search()` resource method sends only a body, so use `request()` when you need `path`:
+[`POST /v1/account/{account}/search`](/docs/api/post-v-1-account-account-search) takes the criteria in the body and the folder in the `path` query parameter, which EmailEngine v2.82.0 made required. The `search()` resource method sends only a body (the SDK README puts `path` inside it, where the API does not read it), so call `request()` instead:
 
 ```php
 <?php
@@ -351,7 +351,7 @@ Every method throws on a non-2xx response. The SDK maps the status code to a typ
 | `ServerException` | 500 and above |
 | `EmailEngineException` | Anything else, including 413, 422 and transport failures |
 
-`getMessage()` carries the `error` field of the API's error body, which is the HTTP status phrase (`Bad Request`, `Not Found`), not the human-readable `message` field; SDK 1.3.0 does not expose that one. `getErrorCode()` returns the body's `code` and `getDetails()` its `details`, which for a validation error names the offending fields. See the [error reference](/docs/reference/error-codes) for the error body itself.
+`getMessage()` carries the `error` field of the API's error body, which is the HTTP status phrase (`Bad Request`, `Not Found`), not the human-readable `message` field; SDK 1.3.0 does not expose that one. `getErrorCode()` returns the body's `code` and `getDetails()` its `details`, which for a validation error names the offending fields. See the [error reference](/docs/api-reference/error-codes) for the error body itself.
 
 ```php
 <?php

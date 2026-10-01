@@ -1,6 +1,6 @@
 ---
 title: Logging
-sidebar_position: 4
+sidebar_position: 2
 description: Configure EmailEngine logging with Pino, log levels, rotation, and integration with ELK Stack, Grafana Loki, and other log aggregation platforms
 keywords:
   - logging
@@ -80,7 +80,7 @@ The same value can be given on the command line as `--log.level=info` or in the 
 
 ### Redaction
 
-Before a line is written, Pino replaces the values of `req.headers.authorization`, `req.headers.cookie` and `req.query.access_token` with `[Redacted]`, along with the fields of an error that can carry submitted values: `err.rawPacket`, `err._original` and the `context.value` of each validation error detail. Account passwords and OAuth2 tokens are not logged in the first place. `EENGINE_LOG_RAW` records the IMAP conversation byte for byte, including message content, but withholds the client frames of the authentication exchange: those entries carry `hidden: true` and a placeholder in place of the data. It does lift the masking on the OAuth2 token exchange, where `refresh_token`, `client_secret` and `code` in the request and `access_token`, `refresh_token` and `id_token` in the response are otherwise shortened to a fingerprint. Keep it off outside a debugging session, and treat a log captured with it as a credential.
+Before a line is written, Pino replaces the values of `req.headers.authorization`, `req.headers.cookie` and `req.query.access_token` with `[Redacted]`, along with the fields of an error that can carry submitted values: `err.rawPacket`, `err._original`, the `context.value` of each validation error detail and, since v2.79.9, `err.input`, the string the URL parser attaches to a rejected URL, which for a stored proxy or webhook URL carries its credentials inline. Account passwords and OAuth2 tokens are not logged in the first place. `EENGINE_LOG_RAW` records the IMAP conversation byte for byte, including message content, but withholds the client frames of the authentication exchange: those entries carry `hidden: true` and a placeholder in place of the data. It does lift the masking on the OAuth2 token exchange, where `refresh_token`, `client_secret` and `code` in the request and `access_token`, `refresh_token` and `id_token` in the response are otherwise shortened to a fingerprint. Keep it off outside a debugging session, and treat a log captured with it as a credential.
 
 ### Pretty Printing
 
@@ -135,7 +135,7 @@ curl -X PUT "https://emailengine.example.com/v1/account/user123" \
   -d '{"logs": true}'
 ```
 
-Retrieve the log with `GET /v1/logs/{account}`. The response is a `text/plain` download named `logs.<account>.txt`, one JSON object per line:
+Retrieve the log with `GET /v1/logs/{account}`. The response is a `text/plain` download named `logs.<account>.txt`, one JSON object per line; an account ID that does not exist answers 404:
 
 ```bash
 curl "https://emailengine.example.com/v1/logs/user123" \
@@ -150,7 +150,9 @@ curl "https://emailengine.example.com/v1/logs/user123" \
 
 An account with nothing recorded returns the single line `No logs found for user123`.
 
-What the log contains is every line the account's connection client wrote to the main log, whichever backend the account uses: for IMAP accounts that includes the IMAP conversation as ImapFlow logs it, for Gmail API and MS Graph accounts the API calls and their outcomes. The `level` is the level name rather than Pino's number, `t` is the timestamp and `cid` the connection ID; lines from the IMAP conversation also carry `src` (`c` for the client, `s` for the server) and `lo`, a per-connection sequence number.
+What the log contains is every line the account's connection client wrote to the main log, whichever backend the account uses: for IMAP accounts that includes the IMAP conversation as ImapFlow logs it, for Gmail API and MS Graph accounts the API calls and their outcomes, and for any account that sends over SMTP the SMTP transactions of its submissions. The `level` is the level name rather than Pino's number, `t` is the timestamp and `cid` the connection ID; lines from the IMAP conversation also carry `src` (`c` for the client, `s` for the server) and `lo`, a per-connection sequence number.
+
+The account's page in the admin UI offers the same download, and a control to clear the stored log. Since v2.79.7 both are offered only while the account has entries; before that, downloading an empty log produced the single-line notice above.
 
 :::warning These logs live in Redis
 Every retained entry consumes RAM on the Redis instance, and `logs.all` multiplies that by your account count. Switch logging on for the one account you are investigating and turn it back off afterwards. The record is kept as a Redis list under the account's key, so deleting the account deletes its log.

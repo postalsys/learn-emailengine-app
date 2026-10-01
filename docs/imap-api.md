@@ -11,6 +11,7 @@ keywords:
   - IMAP to REST
   - IMAP HTTP API
   - IMAP integration
+displayed_sidebar: docsSidebar
 ---
 
 # IMAP API - REST Interface for IMAP Mailboxes
@@ -260,14 +261,15 @@ EmailEngine works with any IMAP server:
 
 EmailEngine fetches message content on-demand from the IMAP server:
 
-- **Metadata** (subject, from, date, flags) - Cached in Redis
+- **Message index** (UIDs, flags, folder listing) - Kept in Redis, so changes can be detected and reported
+- **Listings and headers** - Fetched from the IMAP server when a page of messages is requested
 - **Body content** - Fetched from IMAP when requested
-- **Attachments** - Streamed from IMAP server
+- **Attachments** - Streamed from the IMAP server
 
 This means:
-- First fetch may be slower than cached solutions
-- No email content stored on your servers
-- Always up-to-date with mailbox state
+- A read costs a round trip to the mail server, so it is slower than a service that answers from a synced copy
+- No message content is stored on your servers beyond queued outbound mail and pending webhook payloads
+- Every answer reflects the current state of the mailbox
 
 ### Connection Handling
 

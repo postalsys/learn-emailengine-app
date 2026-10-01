@@ -42,26 +42,11 @@ For production deployments, always configure `EENGINE_SECRET`.
 
 ## How do I enable encryption?
 
-Set the `EENGINE_SECRET` environment variable before starting EmailEngine. Generate the secret once and store it permanently - if a different or missing secret is used after a restart, the stored credentials cannot be decrypted:
-
-```bash
-# Generate the secret once and persist it in an .env file
-echo "EENGINE_SECRET=$(openssl rand -hex 32)" >> .env
-```
-
-Alternatively, generate the value with `openssl rand -hex 32` and store it in a secrets manager, then provide it to EmailEngine on every start.
-
-For existing installations with unencrypted data, run the encryption migration:
-
-```bash
-emailengine encrypt --service.secret="your-secret" --dbs.redis="redis://localhost:6379"
-```
-
-[Complete encryption guide](/docs/advanced/encryption)
+Set `EENGINE_SECRET` before the first start and keep the same value on every start afterwards; a different or missing secret leaves the stored credentials undecryptable. An instance that already holds cleartext credentials encrypts them with `emailengine encrypt`. [Secret Encryption](/docs/deployment/encryption) has the generation, storage and migration steps.
 
 ## What encryption algorithm is used?
 
-EmailEngine uses **AES-256-GCM** (Advanced Encryption Standard with 256-bit keys in Galois/Counter Mode). The key is derived from `EENGINE_SECRET` with PBKDF2-HMAC-SHA256 (600,000 iterations) and a random 16-byte salt; each value also carries its own 12-byte IV and a 16-byte authentication tag. Tampering with a stored value is therefore detected on decryption rather than silently accepted. Values written by earlier releases derived the key with scrypt and are still read; the [encryption page](/docs/advanced/encryption#rewriting-values-under-the-current-key-derivation) describes how to move them.
+AES-256-GCM, with a key derived from `EENGINE_SECRET` by PBKDF2-HMAC-SHA256 and a per-value IV and authentication tag, so a tampered value is detected on decryption rather than silently accepted. Values written by earlier releases derived the key with scrypt and are still read; [Secret Encryption](/docs/deployment/encryption#rewriting-values-under-the-current-key-derivation) describes how to move them.
 
 ## Does EmailEngine run on a FIPS-enabled host?
 
@@ -88,56 +73,11 @@ Guard against it by backing the secret up somewhere other than the Redis backups
 
 ## How do I rotate the encryption secret?
 
-EmailEngine supports secret rotation:
-
-```bash
-# Re-encrypt with a new secret
-emailengine encrypt \
-  --service.secret="new-secret" \
-  --decrypt="old-secret" \
-  --dbs.redis="redis://localhost:6379"
-```
-
-The `--decrypt` argument can be repeated if data was encrypted with multiple old secrets.
-
-The migration will:
-1. Decrypt data with the old secret(s) provided via `--decrypt`
-2. Re-encrypt with the new secret
-3. Update all stored credentials
-
-[Secret rotation guide](/docs/advanced/encryption#2-secret-rotation)
+Run `emailengine encrypt` with the new secret in `--service.secret` and each old one in a `--decrypt` argument, which can be repeated. It decrypts every stored value with the old secrets and writes it back under the new one. See [Secret rotation](/docs/deployment/encryption#2-secret-rotation).
 
 ## Can I use external secret managers?
 
-`EENGINE_SECRET` is read from the environment like any other variable, so any secret manager that can populate the environment before the process starts works. Four common ones:
-
-**HashiCorp Vault:**
-```bash
-export EENGINE_SECRET=$(vault kv get -field=secret secret/emailengine)
-```
-
-**AWS Secrets Manager:**
-```bash
-export EENGINE_SECRET=$(aws secretsmanager get-secret-value \
-  --secret-id emailengine/secret --query SecretString --output text)
-```
-
-**Kubernetes Secrets:**
-```yaml
-env:
-  - name: EENGINE_SECRET
-    valueFrom:
-      secretKeyRef:
-        name: emailengine-secrets
-        key: encryption-secret
-```
-
-**Docker Secrets:**
-```bash
-export EENGINE_SECRET=$(cat /run/secrets/emailengine_secret)
-```
-
-[Secret management examples](/docs/advanced/encryption#using-secret-management-systems)
+Yes. `EENGINE_SECRET` is read from the environment like any other variable, so any secret manager that can populate the environment before the process starts works, and `EENGINE_SECRET_FILE` reads it from a mounted file. [Using secret management systems](/docs/deployment/encryption#using-secret-management-systems) has examples for Vault, AWS Secrets Manager, Kubernetes and Docker secrets.
 
 ## How are API tokens stored?
 
@@ -155,7 +95,7 @@ The exception is raw protocol logging: `EENGINE_LOG_RAW=true` writes the IMAP co
 
 ## What does EmailEngine send out?
 
-An instance with a subscription license validates the key against `postalsys.com` once a day. That request carries the license key, the EmailEngine version, an instance ID, and an anonymized feature beacon; `EENGINE_BEACON_DISABLED=true` removes the beacon. The beacon itself holds enable flags, provider type names, coarse magnitude tiers rather than counts, usage booleans, and runtime context such as the Node.js version and CPU architecture. No email content, addresses, URLs, or credentials leave the server. A trial key and any other time-limited key are verified offline and make no request at all. [Licensing](/docs/licensing#what-a-licensed-instance-sends-home) and [Compliance](/docs/deployment/compliance#no-developer-access) describe the request in full.
+An instance with a subscription license validates the key against `postalsys.com` at startup after an upgrade and then on the schedule the validation response sets: at most 30 days apart, and never closer together than 24 hours. That request carries the license key, the EmailEngine version, an instance ID, and an anonymized feature beacon; `EENGINE_BEACON_DISABLED=true` removes the beacon. The beacon itself holds enable flags, provider type names, coarse magnitude tiers rather than counts, usage booleans, and runtime context such as the Node.js version and CPU architecture. No email content, addresses, URLs, or credentials leave the server. A trial key and any other time-limited key are verified offline and make no request at all. [Licensing](/docs/licensing#what-a-licensed-instance-sends-home) and [Compliance](/docs/deployment/compliance#no-developer-access) describe the request in full.
 
 ## Is there a software bill of materials?
 
@@ -168,49 +108,16 @@ See [Compliance](/docs/deployment/compliance#audit-support) for the request.
 
 ## How do I secure Redis itself?
 
-Beyond encrypting credentials, secure your Redis instance:
+Require a password or an ACL user, bind Redis to localhost or a private interface, connect over TLS with a `rediss://` URL when Redis is on another host, and keep port 6379 closed at the firewall. [Redis Configuration](/docs/configuration/redis) covers the Redis side and [Redis Security](/docs/deployment/security#redis-security) the EmailEngine side, including the commands EmailEngine never needs.
 
-### Enable Redis Authentication
+## Is there a production checklist?
 
-```bash
-# redis.conf
-requirepass your-redis-password
-
-# Connection URL
-EENGINE_REDIS="redis://:your-redis-password@localhost:6379"
-```
-
-### Use TLS Encryption
-
-```bash
-# Connect via TLS
-EENGINE_REDIS="rediss://localhost:6379"
-```
-
-### Network Isolation
-
-- Bind Redis to localhost or private network only
-- Use firewall rules to restrict access
-- Consider Redis ACLs for fine-grained permissions
-
-[Redis security guide](/docs/configuration/redis)
-
-## Security Checklist for Production
-
-Before deploying EmailEngine to production:
-
-- [ ] `EENGINE_SECRET` is configured with a strong random value
-- [ ] Secret is stored securely (not in code repository)
-- [ ] Secret is backed up separately from Redis data
-- [ ] Redis authentication is enabled
-- [ ] Redis is not exposed to public network
-- [ ] TLS is enabled for Redis connections (if over network)
-- [ ] Admin interface is reachable only from known addresses (`EENGINE_ADMIN_ACCESS_ADDRESSES`, or a VPN in front)
-- [ ] API tokens are scoped, and bound to an account or a permissions record where they do not need instance-wide access
+[Security Best Practices](/docs/deployment/security#security-checklist) carries the pre-deployment, post-deployment and maintenance checklists. The four items specific to credentials: `EENGINE_SECRET` set to a strong random value, backed up separately from the Redis data and kept out of the code repository; Redis authenticated and unreachable from the public network; the admin interface reachable only from known addresses or through a VPN; API tokens bound to an account or a `permissions` record wherever they do not need instance-wide access.
 
 ## See Also
 
-- [Encryption Guide](/docs/advanced/encryption) - Detailed encryption configuration
+- [Encryption Guide](/docs/deployment/encryption) - Detailed encryption configuration
 - [Security Best Practices](/docs/deployment/security) - Production security hardening
+- [Admin Authentication](/docs/deployment/admin-authentication) - How admin sessions are opened, and the login audit log
 - [Redis Configuration](/docs/configuration/redis) - Redis setup and security
 - [Environment Variables](/docs/configuration/environment-variables) - All configuration options
