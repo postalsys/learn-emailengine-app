@@ -37,11 +37,11 @@ node server.js
 
 ## Verifying a Download
 
-Every release carries a `hashes.txt` asset next to the binaries. It is a PGP-signed message listing the SHA-256 digest of each file, the commit the release was built from, and the Node.js version bundled into the binaries. It has no short URL; download it from the release itself:
+Every release carries a `hashes.txt` asset next to the binaries. It is a PGP-signed message listing the SHA-256 digest of each file, the commit the release was built from, and the Node.js version bundled into the binaries:
 
 ```bash
 curl -LO https://go.emailengine.app/emailengine.tar.gz
-curl -LO https://github.com/postalsys/emailengine/releases/latest/download/hashes.txt
+curl -LO https://go.emailengine.app/hashes.txt
 
 # The two digests must match (shasum -a 256 on macOS)
 sha256sum emailengine.tar.gz
@@ -57,7 +57,7 @@ gpg --verify hashes.txt
 
 A good signature names that fingerprint. The warning that the key is not certified only means you have not signed it yourself; compare the fingerprint instead.
 
-For a pinned version, replace `latest/download` with `download/vX.X.X` in the `hashes.txt` URL, the same way as for the binaries.
+For a pinned version, use `https://go.emailengine.app/download/vX.X.X/hashes.txt`, the same way as for the binaries.
 
 ## Installation Methods
 
