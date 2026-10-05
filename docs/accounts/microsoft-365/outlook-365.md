@@ -43,7 +43,7 @@ This guide covers both options.
 | Feature | IMAP/SMTP | MS Graph API |
 |---|---|---|
 | **Azure permissions** | `IMAP.AccessAsUser.All`, `SMTP.Send` | `Mail.ReadWrite`, `Mail.Send` |
-| **Change detection** | IMAP IDLE | Graph change notifications, which need a Service URL that Microsoft can reach; no polling fallback |
+| **Change detection** | IMAP IDLE | Graph change notifications, which need a Service URL that Microsoft can reach, plus a periodic pass for notifications Graph dropped (since v2.82.1) |
 | **Search** | IMAP `SEARCH` | Graph `$filter`, or `$search` with `useOutlookSearch` (see [Searching Messages](/docs/receiving/searching)) |
 | **Shared mailboxes** | Delegated and direct access | Application access; with delegated or direct access the mailbox does not receive new mail (see [Shared Mailboxes](./shared-mailboxes)) |
 | **Outlook categories** | Not available | Exposed as `labels` |
@@ -496,7 +496,7 @@ EmailEngine learns about new and changed messages through Microsoft Graph change
 - `{serviceUrl}/oauth/msg/notification` - message change notifications
 - `{serviceUrl}/oauth/msg/lifecycle` - lifecycle events (`reauthorizationRequired`, `subscriptionRemoved`, `missed`)
 
-Both must be reachable from Microsoft's servers over HTTPS. Microsoft validates the notification URL when the subscription is created, and there is no polling fallback, so an account without a subscription syncs nothing. An instance behind a firewall or on a private network needs a reverse proxy or a tunnel.
+Both must be reachable from Microsoft's servers over HTTPS. Microsoft validates the notification URL when the subscription is created. Notifications are the only way EmailEngine learns about changed and deleted messages, and an account whose subscription cannot be created reports `connectError` and syncs nothing, as described below; the periodic recovery pass for new messages does not run for it either. An instance behind a firewall or on a private network needs a reverse proxy or a tunnel.
 
 A subscription is created when the account initializes, with the longest lifetime Graph allows for mail (4230 minutes, just under three days). An hourly pass renews it once less than 24 hours remain, and recreates it when it is missing or has expired. A creation or renewal that Graph refuses is retried three times, 30, 60 and 120 seconds apart. Since v2.80.0 the hourly pass then starts a new round of retries; earlier versions waited for a reconnect, so a tenant-side problem fixed an hour later went unnoticed.
 
@@ -507,6 +507,10 @@ Once the fast retries are spent, the account reports a `connectError` with the c
 ### Recovering Missed Notifications
 
 When Microsoft reports a `missed` lifecycle event, EmailEngine lists the messages received over the previous four hours, which is how long Graph retries a delivery before giving up, oldest first, and announces the ones it has not announced in the last six hours. Since v2.81.2 the request is stored before the webhook is answered, so it waits for the account's worker and is retried with backoff like any other failed change; **Run sync** on the account page and [`PUT /v1/account/{account}/sync`](/docs/api/put-v-1-account-account-sync) queue the same recovery. Earlier versions (since v2.67.0) looked back only to the last notification they had processed, dropped a second request within five minutes, and lost the request when no worker held the account.
+
+Graph can also drop a notification without sending a `missed` event, while other notifications for the same mailbox keep arriving. Since v2.82.1 every connected account with read access runs the same recovery on a timer, every 10 minutes by default, starting where the previous pass finished, so a pass that finds nothing is a single listing request. [`EENGINE_OUTLOOK_FALLBACK_POLL_INTERVAL`](/docs/configuration/environment-variables#outlook-missed-notification-recovery) sets the interval, and `0` turns the pass off. Before v2.82.1, a message whose notification Graph dropped was announced only if someone ran a sync within four hours of its arrival.
+
+To look further back than the usual window, send `since` with [`PUT /v1/account/{account}/sync`](/docs/api/put-v-1-account-account-sync) (since v2.82.1, Graph accounts only, at most 30 days back). Messages announced more than about six hours earlier are no longer remembered, so they are announced again with a new `messageNew` webhook.
 
 A notification whose follow-up request fails with a 408, 429, 5xx or network error is deferred and retried after 1, 4, 16, 60, 60 and 60 minutes, surviving a restart (since v2.81.2). A message given up on after those attempts is reported as a `syncWarning` on the [account change stream](/docs/api/get-v-1-changes).
 

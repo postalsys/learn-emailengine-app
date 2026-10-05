@@ -727,6 +727,8 @@ Set a field to `null` to revert to auto-detection:
 }
 ```
 
+The account edit form in the admin interface offers all five fields since v2.82.1, and the account page lists the ones that are set. Earlier versions offered only the Sent folder, and saving the form for an account whose IMAP section was hidden, for example after a rename, cleared a Sent folder override set over the API.
+
 ### Resync Delay
 
 EmailEngine performs a full mailbox resynchronization at regular intervals to ensure no messages are missed due to connection issues or IMAP protocol quirks. Between resyncs, real-time updates are handled via IMAP IDLE or periodic polling.

@@ -65,7 +65,7 @@ curl -X POST "https://emailengine.example.com/v1/account/user123/export" \
 | `maxBytes` | number | 5242880 | Maximum bytes for text content per message (0 = unlimited) |
 | `includeAttachments` | boolean | false | Include attachment content as base64 in each message's `attachments` array |
 
-With `includeAttachments`, a message larger than 50 MB is skipped entirely and counted in `messagesSkipped`, and a single attachment larger than 50 MB is written with a `contentError` field instead of `content`. That limit is not configurable.
+With `includeAttachments`, a message larger than 50 MB is skipped entirely and counted in `messagesSkipped`, and a single attachment larger than 50 MB is written with a `contentError` field instead of `content`. The limit is the `exportMaxMessageSize` setting, which can be changed since v2.82.1; see [Export Limits](#export-limits).
 
 ### Response
 
@@ -134,7 +134,7 @@ The response includes the request parameters, progress counters and the file's e
 | `foldersTotal` | Total folders to index |
 | `messagesQueued` | Messages found and queued for export |
 | `messagesExported` | Messages successfully written to file |
-| `messagesSkipped` | Messages skipped (deleted or inaccessible) |
+| `messagesSkipped` | Messages skipped: deleted or inaccessible, or larger than `exportMaxMessageSize` in an export with `includeAttachments` |
 | `bytesWritten` | Total bytes written to export file |
 
 `bytesWritten` counts uncompressed NDJSON bytes, not the size of the file on disk. A top-level `truncated: true` appears when the export was cut short by `exportMaxMessages` or `exportMaxSize` (see [Export Limits](#export-limits)); it is absent otherwise. The export still completes, but the file does not contain every matching message. `error` carries the failure reason for a `failed` export and is `null` otherwise.
@@ -226,6 +226,8 @@ Additional settings control maximum export sizes:
 | `exportMaxSize` | 10 GB | Maximum uncompressed NDJSON bytes per export. Writing stops here and the export is marked `truncated` |
 | `exportMaxConcurrent` | 2 | Max concurrent exports per account. A request over this is refused with `429` |
 | `exportMaxGlobalConcurrent` | 8 | Max concurrent exports system-wide. A request over this is refused with `429` |
+| `exportMaxMessageSize` | 50 MB | With `includeAttachments`, the largest message and the largest single attachment the export takes in. A larger message is skipped and counted in `messagesSkipped`; a larger attachment is left out and carries a `contentError`. Settable since v2.82.1 |
+| `exportMaxAge` | 24 hours | How long a finished export file is kept, in milliseconds. Overrides `EENGINE_EXPORT_MAX_AGE`. Settable since v2.82.1 |
 
 ### Tuning Considerations
 

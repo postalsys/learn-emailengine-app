@@ -364,8 +364,12 @@ An uploaded certificate is installed through the admin interface rather than a s
 | `outlookExportBatchSize` | integer | `20` (max 20) | Messages per MS Graph batch request |
 | `exportMaxMessages` | integer | `500000` | Messages per export |
 | `exportMaxSize` | integer | `10737418240` | Export file size limit, in bytes |
+| `exportMaxMessageSize` | integer | `52428800` | Largest message, and largest single attachment, an export with `includeAttachments` takes in, in bytes. A larger message is skipped and a larger attachment is left out with an error. Settable since v2.82.1 |
+| `exportMaxAge` | integer | `86400000` | How long a finished export file is kept, in milliseconds, at least `60000`. Takes precedence over `EENGINE_EXPORT_MAX_AGE`. Settable since v2.82.1 |
 
-Where export files are written, how long they are kept and how long a single job may run are startup variables: `EENGINE_EXPORT_PATH`, `EENGINE_EXPORT_MAX_AGE` and `EENGINE_EXPORT_TIMEOUT`. See [Exporting Messages](/docs/receiving/exporting).
+Before v2.82.1, `exportMaxMessageSize` and `exportMaxAge` were read but not declared, so neither `POST /v1/settings` nor the admin interface could set them and the defaults always applied.
+
+Where export files are written and how long a single job may run are startup variables: `EENGINE_EXPORT_PATH` and `EENGINE_EXPORT_TIMEOUT`. `EENGINE_EXPORT_MAX_AGE` sets the retention when the `exportMaxAge` setting is empty. See [Exporting Messages](/docs/receiving/exporting).
 
 ## OAuth2 Applications
 

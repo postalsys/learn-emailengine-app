@@ -38,7 +38,7 @@ Three read-only fields record how the gateway has been used:
 |-----------|------------|-------------|
 | [`GET /v1/gateways`](/docs/api/get-v-1-gateways) | `read` on `gateway` | Lists gateways, paged with `page` (zero-based) and `pageSize` (default 20, maximum 1000). Each entry carries `gateway`, `name`, `deliveries`, `lastUse` and `lastError`; the connection settings are not listed |
 | [`GET /v1/gateway/{gateway}`](/docs/api/get-v-1-gateway-gateway) | `read` on `gateway` | Returns the full record. `pass` reads back as `******` when a password is stored |
-| [`POST /v1/gateway`](/docs/api/post-v-1-gateway) | `write` on `provisioning` | Registers a gateway. The response carries `gateway` and `state`: `new`, or `existing` when the ID was already registered, in which case the connection settings are overwritten and the usage fields kept |
+| [`POST /v1/gateway`](/docs/api/post-v-1-gateway) | `write` on `provisioning` | Registers a gateway. Send `gateway: null` to have a unique ID generated (since v2.82.1); the field cannot be left out. The response carries `gateway` and `state`: `new`, or `existing` when the ID was already registered, in which case the connection settings are overwritten and the usage fields kept |
 | [`PUT /v1/gateway/edit/{gateway}`](/docs/api/put-v-1-gateway-edit-gateway) | `write` on `provisioning` | Updates the fields in the payload and keeps the rest. `user: null` and `pass: null` remove the stored credentials |
 | [`DELETE /v1/gateway/{gateway}`](/docs/api/delete-v-1-gateway-gateway) | `destructive` on `gateway` | Removes the gateway. Messages already queued for it fail when their delivery runs, see [below](#a-gateway-that-no-longer-exists) |
 

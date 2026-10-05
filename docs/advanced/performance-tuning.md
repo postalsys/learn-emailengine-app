@@ -210,7 +210,7 @@ Bulk exports run on their own worker threads:
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `--workers.export` | `1` | Number of export worker threads. Set on the command line or as `export` under `[workers]` in the configuration file. The Workers page lists this value under the name `EENGINE_WORKERS_EXPORT`, but as of v2.82.0 that environment variable is not read; use the command-line flag or the configuration file |
+| `EENGINE_WORKERS_EXPORT` | `1` | Number of export worker threads. Also `--workers.export` on the command line or `export` under `[workers]` in the configuration file. The environment variable is read since v2.82.1; before that only the flag and the configuration file worked |
 | `EENGINE_EXPORT_QC` | `1` | Export jobs each worker runs concurrently |
 
 ```text

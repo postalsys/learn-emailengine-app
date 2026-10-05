@@ -299,7 +299,7 @@ Now that you have your Google Cloud project configured, let's set up EmailEngine
 
 **Base scopes:** Select **IMAP and SMTP**
 
-**Show only Google Workspace accounts on the OAuth2 login page:** Optional (API field `googleWorkspaceAccounts`, since v2.48.2). When checked, EmailEngine adds `hd=*` to Google's authorization URL, so Google's account chooser lists only Google Workspace accounts. It is a hint to the chooser: EmailEngine does not check the domain of the account that signs in.
+**Show only Google Workspace accounts on the OAuth2 login page:** Optional (API field `googleWorkspaceAccounts`, since v2.48.2). When checked, EmailEngine adds `hd=*` to Google's authorization URL, so Google's account chooser lists only Google Workspace accounts. Since v2.82.1, EmailEngine also checks the hosted domain (`hd`) claim of the ID token Google returns, and refuses an account that has none, which is every personal Gmail account. The refused grant is revoked, and the user sees a page saying a work account is required, with a retry that opens the account chooser again. Before v2.82.1 the option only filtered the chooser, so a user who picked a different account, or a link built without it, could connect a personal account.
 
 **Display title:** Optional (API field `title`). Shown above the app's button on the hosted authentication form, so that several apps of the same provider can be told apart.
 

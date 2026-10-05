@@ -392,7 +392,7 @@ emailengine tokens issue [options]
 | Option          | Short | Description           | Default  |
 | --------------- | ----- | --------------------- | -------- |
 | `--description` | `-d`  | Token description | `Generated at <timestamp>` |
-| `--scope`       | `-s`  | One of `*`, `api`, `metrics`, `smtp`, `imap-proxy`, `mcp`. Repeat the flag for several | `*` |
+| `--scope`       | `-s`  | One of `*`, `api`, `metrics`, `smtp`, `imap-proxy`, `mcp-manage:<level>`, `mcp:<level>`. Repeat the flag for several | `*` |
 | `--account`     | `-a`  | Bind the token to one account | None |
 | `--dbs.redis`   |       | Redis connection      | `redis://127.0.0.1:6379/8` |
 
@@ -425,6 +425,13 @@ emailengine tokens issue \
   -d "Prometheus metrics" \
   -s "metrics" \
   --dbs.redis="redis://127.0.0.1:6379/8"
+
+# MCP token that can observe the instance and read mail
+emailengine tokens issue \
+  -d "MCP client" \
+  -s "mcp-manage:observe" \
+  -s "mcp:read" \
+  --dbs.redis="redis://127.0.0.1:6379/8"
 ```
 
 **Available scopes:**
@@ -434,9 +441,12 @@ emailengine tokens issue \
 - `"metrics"` - Prometheus metrics endpoint only
 - `"smtp"` - SMTP gateway access
 - `"imap-proxy"` - IMAP proxy access
-- `"mcp"` - [MCP endpoint](/docs/mcp) access for AI agents, and nothing on the REST API
+- `"mcp-manage:<level>"` - [MCP](/docs/mcp) instance management tools, at the level `observe`, `operate`, or `administer`
+- `"mcp:<level>"` - [MCP](/docs/mcp) email access tools, at the level `read`, `mail`, or `full`
 
-The CLI does not set a permissions record, so an `mcp` token issued here reaches every tool the scope allows. Pair it with `-a` to bind it to one account, or mint a narrowed one in the web interface or over the API. The `mcp-manage` scope that the instance management tools need (since v2.80.1) cannot be issued here at all; it is minted through the admin interface or `POST /v1/tokens`. See [MCP Access Control](/docs/mcp/access-control).
+The two MCP scopes give no access to the REST API. Each one requires an access level after a colon, and the token carries the explicit list of grants that level stands for, the same list the admin interface and the MCP consent page mint, so it does not widen when a later release adds tools. Both MCP scopes can be issued in one token, but neither can be combined with a non-MCP scope, because one permissions record covers the whole token; issue separate tokens, or use `POST /v1/tokens` with an explicit permissions record. Pair an `mcp` token with `-a` to bind it to one account. See [MCP Access Control](/docs/mcp/access-control) for what each level allows.
+
+Before v2.82.1, `mcp-manage` could not be issued here, and `-s mcp` issued a token with no permissions record that reached every tool the scope allowed. Since v2.82.1, a scope given without a level, such as `-s mcp`, is refused, so scripts that issued `mcp` tokens need a level added.
 
 **Output:**
 

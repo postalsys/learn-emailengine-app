@@ -36,9 +36,7 @@ Service accounts with domain-wide delegation can access any mailbox in your Goog
 - Requires `https://mail.google.com/` scope in domain-wide delegation
 - Service account impersonates users to access their mailboxes
 
-:::info IMAP/SMTP Only
-When using service accounts for email access, EmailEngine connects via IMAP and SMTP with `XOAUTH2`. The OAuth2 application form offers a Gmail Service Accounts application only the **IMAP and SMTP** and **Cloud Pub/Sub** base scopes; the Gmail REST API backend is not offered for accounts that authenticate through a service account.
-:::
+The impersonated mailboxes can also be reached through the Gmail REST API instead of IMAP and SMTP: select **Gmail API** as the base scope (`baseScopes: "api"`), delegate `https://www.googleapis.com/auth/gmail.modify` instead, enable the Gmail API in the project, and pick the Cloud Pub/Sub application that delivers change notifications, as for a [Gmail API](/docs/accounts/gmail/gmail-api) application. The admin form offers this choice since v2.82.1; earlier versions accepted it only through [`POST /v1/oauth2`](/docs/api/post-v-1-oauth-2). The rest of this guide covers the IMAP and SMTP setup.
 
 **2. Push Notifications for Standard Gmail Accounts (Cloud Pub/Sub)**
 
@@ -358,6 +356,7 @@ The **Base scopes** selection determines how EmailEngine uses this service accou
 | Option | Purpose | Required Scope/Role |
 |--------|---------|---------------------|
 | **IMAP and SMTP** | Direct email access via IMAP/SMTP protocols | `https://mail.google.com/` (domain-wide delegation) |
+| **Gmail API** | Direct email access via the Gmail REST API (in the admin form since v2.82.1) | `https://www.googleapis.com/auth/gmail.modify` (domain-wide delegation) |
 | **Cloud Pub/Sub** (labeled beta) | Webhook management for Gmail API accounts | `Pub/Sub Admin` role in Google Cloud |
 
 **For direct email access** (the primary use case in this guide), select **IMAP and SMTP**. This allows the service account to access any mailbox in your Google Workspace organization via IMAP and SMTP protocols.

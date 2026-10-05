@@ -57,12 +57,12 @@ EENGINE_SECRET_FILE=/run/secrets/ee_encryption_key
 EENGINE_REDIS_FILE=/run/secrets/redis_url
 ```
 
-- A trailing newline is stripped, so a file written with `echo "value" > secret.txt` works as expected. Avoid other whitespace around the value.
+- Whitespace around the value, including the trailing newline that `echo "value" > secret.txt` writes, is trimmed. Before v2.82.1, `EENGINE_SECRET_FILE`, `EENGINE_REDIS_FILE`, and `REDIS_URL_FILE` stripped only a single trailing newline and kept any other surrounding whitespace. If one of these files carries such whitespace, the value now resolves differently and EmailEngine logs a warning naming the variable and the file. This matters most for `EENGINE_SECRET`, which encrypts every stored credential: to keep the old value, set the variable itself, since a value given in the environment is used verbatim.
 - If both `KEY` and `KEY_FILE` are set, `KEY` is used and the file is ignored
 - Boolean variables work the same way, with the file containing `true` or `false`
 - A file that cannot be read is logged as an error and resolves to an empty value. EmailEngine still starts, so check the logs if a setting seems to be missing.
 
-A few non-secret variables are read straight from the environment and have no `_FILE` counterpart: `EENGINE_LOG_LEVEL`, `EENGINE_REDIS_PREFIX`, `EENGINE_FETCH_TIMEOUT`, `EENGINE_GMAIL_FALLBACK_POLL_INTERVAL`, `EENGINE_EXPORT_PATH`, `EENGINE_EXPORT_MAX_AGE`, `EENGINE_QUEUE_KEEP_FAILED`, `EENGINE_QUEUE_KEEP_FAILED_AGE`, `EENGINE_TOKEN_LOG_ENTRIES`, `EENGINE_TOKEN_LOG_AGE`, `EENGINE_ACME_DIRECTORY_URL`, `EENGINE_ACME_ENVIRONMENT`, `EENGINE_TLS_MIN_VERSION`, `EENGINE_TLS_MIN_DH_SIZE`, and `EENGINE_TLS_CIPHERS`. `EENGINE_HTTP_PROXY_ENABLED` and `EENGINE_HTTP_PROXY_URL` accept the `_FILE` form since v2.79.9.
+A few non-secret variables are read straight from the environment and have no `_FILE` counterpart: `EENGINE_LOG_LEVEL`, `EENGINE_REDIS_PREFIX`, `EENGINE_FETCH_TIMEOUT`, `EENGINE_ACME_DIRECTORY_URL`, `EENGINE_ACME_ENVIRONMENT`, `EENGINE_TLS_MIN_VERSION`, `EENGINE_TLS_MIN_DH_SIZE`, and `EENGINE_TLS_CIPHERS`. `EENGINE_HTTP_PROXY_ENABLED` and `EENGINE_HTTP_PROXY_URL` accept the `_FILE` form since v2.79.9.
 
 Two value formats recur in the tables below. A **duration** is a number of milliseconds or a string with a unit, such as `30s`, `12h`, or `7d`. A **byte size** is a number of bytes or a string with a unit, such as `20M` or `1G`.
 
@@ -197,6 +197,7 @@ Email protocol timeouts and limits.
 | `EENGINE_CONNECTION_SETUP_DELAY` | duration | `0` | Delay between assigning account connections to workers at startup | `5000` |
 | `EENGINE_CHUNK_SIZE` | byte size | `1000000` | Download chunk size for streaming attachments (1 MB) | `5000000` |
 | `EENGINE_GMAIL_FALLBACK_POLL_INTERVAL` | ms | `600000` | How often a Gmail API account is polled for changes when no Pub/Sub notification has arrived (10 minutes) | `300000` |
+| `EENGINE_OUTLOOK_FALLBACK_POLL_INTERVAL` | duration | `10m` | How often each connected Outlook (Microsoft Graph) account with read access checks for new messages whose change notification never arrived. `0` turns the check off. See [Outlook missed notification recovery](#outlook-missed-notification-recovery). Since v2.82.1 | `5m` |
 | `EENGINE_MAX_IMAP_AUTH_FAILURE_TIME` | duration | `259200000` | How long an account may keep failing authentication (3 days) before EmailEngine switches its syncing off. See [Max IMAP Auth Failure Time](#max-imap-auth-failure-time) | `24h` |
 | `EENGINE_IMAP_STALE_CHECK_INTERVAL` | duration | unset (check disabled) | How long the main mailbox of an IMAP account may stay quiet before a resync pass checks it over a second connection and reconnects the primary connection if the server is ahead of it. See [Stale main mailbox check](#stale-main-mailbox-check). Since v2.82.0 | `1h` |
 
@@ -246,6 +247,21 @@ EENGINE_IMAP_STALE_CHECK_INTERVAL=1h
 
 Leave it unset on servers that behave: every check is an extra round trip on the command connection, and a message that was delivered and expunged before the primary connection fetched it costs one needless reconnect.
 
+### Outlook Missed Notification Recovery {#outlook-missed-notification-recovery}
+
+**Environment:** `EENGINE_OUTLOOK_FALLBACK_POLL_INTERVAL`
+**Default:** `10m`
+
+An Outlook account learns about new messages from Microsoft Graph change notifications. Graph can drop a notification without sending the `missed` lifecycle event that would tell EmailEngine to look for it, and it can do so while other notifications for the same mailbox still arrive, so a quiet period is not a reliable sign that something was lost. Since v2.82.1, every connected Outlook account with read access runs a recovery pass on this interval: it lists the messages received since the previous pass finished and sends a [`messageNew`](/docs/webhooks/messagenew) webhook for each one that was not announced yet. A pass that finds nothing is a single Graph listing request.
+
+```bash
+EENGINE_OUTLOOK_FALLBACK_POLL_INTERVAL=5m
+```
+
+The value is a duration. `0` turns the periodic pass off, a value shorter than ten seconds is raised to ten seconds, and a value that cannot be read falls back to the default. The first pass after an account connects runs at a random point within the interval, so a restart does not send every account's pass to Graph at once. An account that is not connected skips the pass, and an account whose change subscription could not be created (state `connectError`) does not run it either. A failed pass is not retried on its own; the next one covers its window.
+
+The pass looks back no further than the point where the previous pass finished. To look further back for a single account, [run a sync](/docs/api/put-v-1-account-account-sync) with a `since` time.
+
 ## Worker Threads
 
 Control worker thread configuration for processing workload.
@@ -256,10 +272,11 @@ Control worker thread configuration for processing workload.
 | `EENGINE_WORKERS_API` | number | `1` | API/HTTP worker threads. Values above `1` require `SO_REUSEPORT`, which needs Linux and a Node.js with the `reusePort` listen option (22.12 or 23.1 and later); other platforms fall back to a single worker. Accepts `cpus` | `4` |
 | `EENGINE_WORKERS_SUBMIT` | number | `1` | Worker threads for email submission | `2` |
 | `EENGINE_WORKERS_WEBHOOKS` | number | `1` | Worker threads for webhook delivery | `2` |
+| `EENGINE_WORKERS_EXPORT` | number | `1` | Worker threads for mailbox exports. Read since v2.82.1 | `2` |
 
 `EENGINE_WORKERS` also accepts `cpus`, meaning one worker per CPU core, so `EENGINE_WORKERS=cpus` is the equivalent of `EENGINE_WORKERS=$(nproc)` on Linux. `EENGINE_WORKERS_API` accepts it too.
 
-The export worker count has no environment variable: set `--workers.export` on the command line or `export` under `[workers]` in the config file (default `1`). The Workers page at `/admin/internals` labels that row `EENGINE_WORKERS_EXPORT`, but nothing reads a variable by that name.
+The export worker count can also be set with `--workers.export` on the command line or `export` under `[workers]` in the config file. Before v2.82.1, `EENGINE_WORKERS_EXPORT` was not read, although the Workers page at `/admin/internals` already labelled the export worker row with that name.
 
 When `EENGINE_WORKERS_API` is above `1`, EmailEngine probes at startup whether two sockets can share the listen port. If they cannot, it starts a single API worker instead and reports the fallback and its cause on the Workers page.
 

@@ -115,12 +115,12 @@ Or from the [CLI](/docs/configuration/cli#issue-token), which is the path for he
 ```bash
 emailengine tokens issue \
   -d "MCP: inbox triage agent" \
-  -s "mcp" \
+  -s "mcp:mail" \
   -a "user123" \
   --dbs.redis="redis://127.0.0.1:6379/8"
 ```
 
-The CLI takes neither a permissions record nor the `mcp-manage` scope, so a token minted this way reaches every mail tool the `mcp` scope allows and no management tool. Bind it to an account, or mint it through the admin interface or the API when you want a narrower or a management credential.
+Each MCP scope on the command line takes an access level after a colon (`mcp:read`, `mcp:mail`, `mcp:full`, and `mcp-manage:observe`, `mcp-manage:operate`, `mcp-manage:administer`), and the token carries that level's grants as an explicit list, the same as the admin interface mints. Both MCP scopes can go in one token by repeating `-s`. The CLI takes no custom permissions record, so use the admin interface or the API for anything narrower than a level. Before v2.82.1 the CLI could not issue `mcp-manage`, and `-s "mcp"` without a level issued a token that reached every mail tool; that form is now refused.
 
 ### 4. Endpoint address
 
