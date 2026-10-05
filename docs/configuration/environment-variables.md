@@ -258,7 +258,7 @@ An Outlook account learns about new messages from Microsoft Graph change notific
 EENGINE_OUTLOOK_FALLBACK_POLL_INTERVAL=5m
 ```
 
-The value is a duration. `0` turns the periodic pass off, a value shorter than ten seconds is raised to ten seconds, and a value that cannot be read falls back to the default. The first pass after an account connects runs at a random point within the interval, so a restart does not send every account's pass to Graph at once. An account that is not connected skips the pass, and an account whose change subscription could not be created (state `connectError`) does not run it either. A failed pass is not retried on its own; the next one covers its window.
+The value is a duration. `0` turns the periodic pass off, a value shorter than ten seconds is raised to ten seconds, and a value that cannot be read falls back to the default. The first pass after an account connects runs at a random point within the interval, so a restart does not send every account's pass to Graph at once. An account that is not connected skips the pass, which includes an account reported with `connectError` because its change subscription failed and its mailbox could not be read. Since v2.82.2, an account whose subscription fails while its mailbox can still be read stays connected and keeps running the pass; see [Subscription failures](/docs/accounts/microsoft-365/outlook-365#subscription-failures). A failed pass is not retried on its own; the next one covers its window.
 
 The pass looks back no further than the point where the previous pass finished. To look further back for a single account, [run a sync](/docs/api/put-v-1-account-account-sync) with a `since` time.
 
