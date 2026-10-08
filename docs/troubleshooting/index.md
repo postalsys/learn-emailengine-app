@@ -331,7 +331,7 @@ curl -I https://oauth2.googleapis.com/token
 
 3. **OAuth2 scopes insufficient**
 
-   The scopes EmailEngine requests depend on the application's base scopes. The provider console has to allow them:
+   The scopes EmailEngine requests depend on the application's base scope. The provider console has to allow them:
 
    **Gmail:**
 

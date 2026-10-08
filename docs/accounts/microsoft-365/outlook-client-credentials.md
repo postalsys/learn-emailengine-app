@@ -190,11 +190,13 @@ Now configure EmailEngine to use the Azure application for mailbox access.
 
 **Application name:** Give it a descriptive name (e.g., "Outlook Application Access")
 
-**Azure Application Id:** Paste the Application (client) ID from Azure
+**Base scope:** Fixed to **MS Graph API**, the only mode application access supports. The card also lists the two endpoints Microsoft Graph posts change notifications to
 
-**Client Secret:** Paste the secret value you copied earlier
+**Application (client) ID:** Paste the Application (client) ID from Azure
 
-**Azure cloud environment:** Select your Microsoft cloud environment (default: **Azure Global**)
+**Client secret:** Paste the secret value you copied earlier
+
+**Azure cloud environment:** Select your Microsoft cloud environment (default: **Azure global service**)
 
 **Directory (tenant) ID:** Paste the Directory (tenant) ID from Azure. This must be the specific tenant UUID; the API field is `authority`.
 
@@ -336,7 +338,7 @@ EmailEngine supports multiple Microsoft cloud environments. Select the appropria
 
 | Cloud | Value | Use Case |
 |---|---|---|
-| **Azure Global** | `global` | Standard Microsoft 365 (default) |
+| **Azure global service** | `global` | Standard Microsoft 365 (default) |
 | **GCC High** | `gcc-high` | US Government L4 |
 | **DoD** | `dod` | US Department of Defense L5 |
 | **Azure China** | `china` | China (operated by 21Vianet) |

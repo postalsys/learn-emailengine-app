@@ -68,7 +68,7 @@ curl -X POST https://emailengine.example.com/v1/oauth2 \
   }'
 ```
 
-`serviceClient`, `serviceClientEmail` and `serviceKey` are not used. In the admin interface, select **Cloud Pub/Sub** under base scopes, then the **Attached service account (Google Cloud)** tab. **Detect from this host** reads the service account and project from the metadata server and fills in the project ID.
+`serviceClient`, `serviceClientEmail` and `serviceKey` are not used. In the admin interface, select the **Cloud Pub/Sub** tab in the **Base scope** card, then the **Attached service account** authentication method in the **Credentials** card. Outside Cloud Pub/Sub that tab carries a **Pub/Sub only** badge, and choosing it switches the base scope to Cloud Pub/Sub. **Detect from this host** reads the service account and project from the metadata server and fills in the project ID.
 
 Requirements:
 

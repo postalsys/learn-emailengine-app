@@ -115,13 +115,13 @@ The **Create OAuth2 app** menu offers one entry per provider type. The `provider
 
 | Menu entry | `provider` | Flow |
 | --- | --- | --- |
-| Gmail | `gmail` | User consent; IMAP/SMTP or the Gmail API, chosen under **Base scopes** |
+| Gmail | `gmail` | User consent; IMAP/SMTP or the Gmail API, chosen under **Base scope** |
 | Gmail Service Accounts | `gmailService` | Domain-wide delegation, no per-user consent |
-| Outlook (delegated) | `outlook` | User consent; IMAP/SMTP or MS Graph API, chosen under **Base scopes** |
+| Outlook (delegated) | `outlook` | User consent; IMAP/SMTP or MS Graph API, chosen under **Base scope** |
 | Outlook (application) | `outlookService` | Client credentials, MS Graph API only, no user login |
 | Mail.ru | `mailRu` | User consent; IMAP/SMTP |
 
-Whether a Gmail or Outlook app uses IMAP/SMTP or the provider API is not a separate application type: it is the **Base scopes** choice on the app's form (`baseScopes` in the API: `imap` or `api`). A Gmail app can also have Cloud Pub/Sub as its base scope (`pubsub`); such an app carries the push-notification subscription for Gmail API accounts rather than mailbox access, see [Gmail Pub/Sub](/docs/accounts/gmail/gmail-pubsub).
+Whether a Gmail or Outlook app uses IMAP/SMTP or the provider API is not a separate application type: it is the **Base scope** choice on the app's form (`baseScopes` in the API: `imap` or `api`). A Gmail app can also have Cloud Pub/Sub as its base scope (`pubsub`); such an app carries the push-notification subscription for Gmail API accounts rather than mailbox access, see [Gmail Pub/Sub](/docs/accounts/gmail/gmail-pubsub).
 
 ### Required Information
 
@@ -130,14 +130,14 @@ When configuring OAuth2 in EmailEngine, you'll need:
 **From Provider (Google/Microsoft):**
 
 - **Client ID** - Identifies your application
-- **Client Secret** - Authenticates your application
+- **Client secret** - Authenticates your application
 - **Redirect URI** - Where users return after consent
 
 **For EmailEngine:**
 
-- **Application name** - The name shown in the app list and on the hosted authentication form
-- **Base scopes** - Protocol to use (IMAP/SMTP or the provider API)
-- **Enable this app** - Whether the app is offered on authentication forms
+- **Application name** - The name shown in the OAuth2 app list. The hosted authentication form shows the optional **Display title** instead
+- **Enable this app** - Whether the app is offered on the hosted authentication form
+- **Base scope** - Protocol to use (IMAP/SMTP or the provider API)
 
 ### Configuration in EmailEngine
 
@@ -155,14 +155,16 @@ Navigate to **Integrations** > **OAuth2 Apps** in EmailEngine dashboard.
 
 ![Outlook OAuth2 form](/img/oauth2-setup/03-oauth2-outlook-form-empty.png)
 
-- **Application name**: For example "Production Outlook"
-- **Enable this app**: Check to offer the app on authentication forms
-- **Client ID** (Gmail, Mail.ru) or **Application (client) ID** (Outlook): From the provider console
-- **Client Secret**: From the provider console
-- **Redirect URL**: Your Service URL + `/oauth`. The form pre-fills this from the `serviceUrl` setting
-- **Base scopes**: IMAP/SMTP, or the provider API (MS Graph API or Gmail API)
-- **Supported account types** (Outlook): `common`, `organizations`, `consumers`, or a specific **Directory (tenant) ID**. Stored as `authority` in the API
+The form is split into cards, top to bottom: **Application**, **Base scope**, **Credentials**, and a collapsible **Custom scopes** section.
+
+- **Application name** (Application card): For example "Production Outlook"
+- **Enable this app** (Application card): Offers the app on the hosted authentication form. Checked by default for a new app
+- **Base scope**: A tab strip, "What the app connects with": **IMAP and SMTP**, or the provider API (**Gmail API** or **MS Graph API**). Gmail Service Accounts also offer **Cloud Pub/Sub**. Mail.ru has no base scope card, and Outlook (application) always uses MS Graph API. Fixed once the app is created
+- **Client ID** (Gmail, Mail.ru) or **Application (client) ID** (Outlook) (Credentials card): From the provider console
+- **Client secret** (Credentials card): From the provider console. The field is masked, with buttons to show and copy the value
 - **Azure cloud environment** (Outlook): the worldwide cloud unless the tenant lives in a US Government or China cloud. Stored as `cloud`
+- **Supported account types** (Outlook delegated): a dropdown with **Work, school and personal Microsoft accounts** (`common`), **Work and school accounts from any organization** (`organizations`), **Personal Microsoft accounts only** (`consumers`), and **Work and school accounts from one organization**, which reveals a **Directory (tenant) ID** field. Stored as `authority` in the API
+- **Redirect URL**: Your Service URL + `/oauth`. The form pre-fills this from the `serviceUrl` setting
 
 ![Filled OAuth2 form](/img/oauth2-setup/04-oauth2-outlook-form-filled.png)
 
@@ -195,7 +197,7 @@ Google lets you download the client credentials as a JSON file; Microsoft creden
 - Application (client) ID
 - Client secret value
 
-The **Load configuration from the JSON file** button on the Gmail app form fills in the client ID, the client secret and the Google Cloud project ID from this file. It reads the `web` key only, so the file has to come from a **Web application** client rather than a desktop one, and it warns when the redirect URL on the form is not among the file's `redirect_uris`.
+The **Load from the client JSON file...** button on the Gmail app form fills in the client ID, the client secret and the Google Cloud project ID from this file. It reads the `web` key only, so the file has to come from a **Web application** client rather than a desktop one, and it warns when the redirect URL on the form is not among the file's `redirect_uris`.
 
 ### Verifying the App Setup
 
@@ -257,7 +259,7 @@ Google's consent screen lets a user untick individual permissions. After the cal
 | `offline_access`        | Allow token refresh (required)            |
 | `openid`, `profile`     | Read the signed-in user's identity        |
 
-If your application doesn't need sending capabilities, you can disable `SMTP.Send` via the **List of disabled OAuth2 scopes** field in EmailEngine's OAuth2 app settings.
+If your application doesn't need sending capabilities, you can disable `SMTP.Send` via the **Disabled scopes** field in the **Custom scopes** section of EmailEngine's OAuth2 app form.
 
 **For MS Graph API:**
 
@@ -285,10 +287,10 @@ You can add extra scopes if you want to use OAuth2 tokens for other APIs:
 https://www.googleapis.com/auth/calendar
 ```
 
-Enter them in the **List of OAuth2 scopes** field on the app's form, one scope per line. The API field is `extraScopes`.
+Enter them in the **Additional scopes** field of the collapsible **Custom scopes** section at the bottom of the app's form, one scope per line. The API field is `extraScopes`.
 
 :::warning Microsoft Additional Scopes
-A Microsoft access token is issued for one resource, so an app cannot mix the two resource endpoints. With **IMAP/SMTP** as the base scope, every additional scope must come from `https://outlook.office.com/`; with **MS Graph API** as the base scope, every additional scope must come from `https://graph.microsoft.com/`. The form states this rule but does not validate the list; a mixed list is rejected by Microsoft when the user is sent to authorize. So a token that is meant to reach other Graph APIs (calendars, files) needs an app with the MS Graph API base scope.
+A Microsoft access token is issued for one resource, so an app cannot mix the two resource endpoints. With **IMAP and SMTP** as the base scope, every additional scope must come from `https://outlook.office.com/`; with **MS Graph API** as the base scope, every additional scope must come from `https://graph.microsoft.com/`. The form states this rule but does not validate the list; a mixed list is rejected by Microsoft when the user is sent to authorize. So a token that is meant to reach other Graph APIs (calendars, files) needs an app with the MS Graph API base scope.
 :::
 
 [Learn more about using tokens for other APIs](./oauth2-token-management)
@@ -297,7 +299,7 @@ A Microsoft access token is issued for one resource, so an app cannot mix the tw
 
 If Google/Microsoft requires narrower scopes, you can disable the default wide scope:
 
-**List of disabled OAuth2 scopes** field, one scope per line (the API field is `skipScopes`):
+Use the **Disabled scopes** field of the **Custom scopes** section, one scope per line (the API field is `skipScopes`):
 
 ```
 https://mail.google.com/
@@ -329,12 +331,12 @@ This removes the wide scope from consent requests.
 
 ### Outlook Account Types
 
-Configure via **Supported account types** field:
+Configure via the **Supported account types** dropdown of an Outlook (delegated) app. Each option stores a value in the `authority` field:
 
-- `common` - Organizations + personal accounts (most flexible)
-- `consumers` - Personal accounts only (@outlook.com, @hotmail.com)
-- `organizations` - Microsoft 365 organizations only
-- `<directory-id>` - Specific organization only (use Directory/Tenant ID)
+- **Work, school and personal Microsoft accounts** - `common`: organizations and personal accounts (most flexible)
+- **Work and school accounts from any organization** - `organizations`: Microsoft 365 organizations only
+- **Personal Microsoft accounts only** - `consumers`: personal accounts only (@outlook.com, @hotmail.com)
+- **Work and school accounts from one organization** - the directory ID entered in the **Directory (tenant) ID** field that this option reveals
 
 **Mapping to Azure:**
 

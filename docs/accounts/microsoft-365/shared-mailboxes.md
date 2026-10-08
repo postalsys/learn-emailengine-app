@@ -157,14 +157,14 @@ Application access does not need them.
 **Step 2: Add scopes in EmailEngine**
 
 1. In EmailEngine, open the OAuth2 app under **Integrations** > **OAuth2 Apps** and click **Edit app**
-2. Expand the **Additional scopes** section
-3. Add the same scopes:
+2. Expand the **Custom scopes** section at the bottom of the form
+3. Add the same scopes to the **Additional scopes** field:
    ```
    User.ReadBasic.All
    Mail.ReadWrite.Shared
    Mail.Send.Shared
    ```
-4. Save the changes
+4. Click **Update app** to save the changes
 
 **Step 3: Refresh OAuth2 grant**
 

@@ -12,11 +12,7 @@ keywords:
 
 # Exporting Messages
 
-EmailEngine can export the messages of an account, in bulk, to a gzip-compressed NDJSON file. Exports run in the background on a dedicated worker, and the five endpoints of the [Export (Beta)](/docs/api/post-v-1-account-account-export) tag create, monitor, download, list and delete them.
-
-:::info Beta
-Export is labeled beta in the API. The endpoints and the file format described here are what ships today; check the changelog before relying on them across an upgrade.
-:::
+EmailEngine can export the messages of an account, in bulk, to a gzip-compressed NDJSON file. Exports run in the background on a dedicated worker, and the five endpoints of the [Export](/docs/api/post-v-1-account-account-export) tag create, monitor, download, list and delete them.
 
 ## Overview
 

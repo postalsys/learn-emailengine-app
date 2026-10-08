@@ -198,7 +198,7 @@
       "notes": "Passkey (WebAuthn) authentication requires serviceUrl to be configured. Passkeys bypass TOTP requirement. Audit logging covers all authentication methods."
     },
     "exportOperations": {
-      "description": "Bulk export email messages from accounts (Beta)",
+      "description": "Bulk export email messages from accounts",
       "features": ["create", "list", "status", "download", "delete", "encryption"],
       "endpoints": [
         {"method": "POST", "path": "/v1/account/{account}/export", "description": "Create bulk message export"},

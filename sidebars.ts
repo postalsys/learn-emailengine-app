@@ -424,7 +424,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Export (Beta)',
+      label: 'Export',
       collapsed: true,
       items: [
         'api/post-v-1-account-account-export',

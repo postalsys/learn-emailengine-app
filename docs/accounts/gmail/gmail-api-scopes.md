@@ -25,7 +25,7 @@ This page assumes you have already created a Google Cloud project and OAuth2 cre
 | [Read-Only](#read-only) | `gmail.readonly` + `gmail.labels` | Yes | No | No | Yes | Yes | Restricted |
 | [Send-Only](#send-only) | `gmail.send` | No | Yes | No | No | No | Sensitive |
 
-**Manage Labels** refers to creating, renaming, and deleting labels (folders). The `gmail.labels` scope is part of the Read-Only and Read + Send presets so that label listing and modification work consistently - listing labels also works with `gmail.readonly` alone.
+**Manage Labels** refers to creating, renaming, and deleting labels (folders). The `gmail.labels` scope is part of the **Read-only** and **Read-only + send** presets so that label listing and modification work consistently - listing labels also works with `gmail.readonly` alone.
 
 ## Google's Scope Classifications
 
@@ -49,9 +49,9 @@ EmailEngine uses three fields to determine which scopes are requested during OAu
 
 | Field | Purpose | API Parameter | Web UI Field |
 |---|---|---|---|
-| **Base scopes** | Selects the default scope set | `baseScopes` | "Base scopes" radio buttons |
-| **Additional scopes** | Adds scopes on top of the defaults | `extraScopes` | "Additional scopes" textarea |
-| **Disabled scopes** | Removes scopes from the defaults | `skipScopes` | "Disabled scopes" textarea |
+| **Base scope** | Selects the default scope set | `baseScopes` | Tabs in the "Base scope" card |
+| **Additional scopes** | Adds scopes on top of the defaults | `extraScopes` | "Additional scopes" textarea in the "Custom scopes" section |
+| **Disabled scopes** | Removes scopes from the defaults | `skipScopes` | "Disabled scopes" textarea in the "Custom scopes" section |
 
 **How they combine:**
 
@@ -63,12 +63,12 @@ EmailEngine also adds the OpenID Connect scopes `openid`, `email`, and `profile`
 
 ### Web UI Preset Buttons
 
-When the base scope is set to **Gmail API**, the OAuth2 application form shows a **Scope presets** card with four buttons that populate the Additional scopes and Disabled scopes fields:
+When the base scope is **Gmail API**, the **Gmail API** panel of the **Base scope** card shows four **Scope preset** buttons that populate the Additional scopes and Disabled scopes fields in the **Custom scopes** section at the bottom of the form:
 
 - **Full access** - clears both fields, so `gmail.modify` is used as-is
-- **Read-Only** - adds `gmail.readonly` + `gmail.labels`, disables `gmail.modify`
-- **Read-Only + Send** - adds `gmail.readonly` + `gmail.send` + `gmail.labels`, disables `gmail.modify`
-- **Send-Only** - adds `gmail.send`, disables `gmail.modify`
+- **Read-only** - adds `gmail.readonly` + `gmail.labels`, disables `gmail.modify`
+- **Read-only + send** - adds `gmail.readonly` + `gmail.send` + `gmail.labels`, disables `gmail.modify`
+- **Send-only** - adds `gmail.send`, disables `gmail.modify`
 
 These presets preserve any third-party scopes you may have added manually (such as Google Calendar or Drive scopes).
 
@@ -121,8 +121,8 @@ In EmailEngine, this scope is used with the IMAP/SMTP backend (`baseScopes: "ima
 ### Setup via Web UI
 
 1. Go to **Integrations** > **OAuth2 Apps** > **Create OAuth2 app** and select **Gmail**
-2. Click **Load configuration from the JSON file** and select your Google credentials file, or enter the Client ID and Client Secret manually
-3. Under **Base scopes**, select **IMAP and SMTP**
+2. Under **Base scope**, select the **IMAP and SMTP** tab
+3. Under **Credentials**, click **Load from the client JSON file...** and select your Google credentials file, or enter the Client ID and Client secret manually
 4. Leave Additional scopes and Disabled scopes empty
 5. Click **Register app**
 
@@ -194,9 +194,9 @@ This is the default scope when using the Gmail API backend. It provides full rea
 ### Setup via Web UI
 
 1. Go to **Integrations** > **OAuth2 Apps** > **Create OAuth2 app** and select **Gmail**
-2. Click **Load configuration from the JSON file** and select your Google credentials file, or enter the Client ID and Client Secret manually
-3. Under **Base scopes**, select **Gmail API**
-4. Click the **Full access** preset button, or leave Additional scopes and Disabled scopes empty
+2. Under **Base scope**, select the **Gmail API** tab
+3. Click the **Full access** preset button, or leave Additional scopes and Disabled scopes empty
+4. Under **Credentials**, click **Load from the client JSON file...** and select your Google credentials file, or enter the Client ID and Client secret manually
 5. Click **Register app**
 
 ### Setup via API
@@ -278,8 +278,8 @@ With this scope combination, EmailEngine API calls that attempt to modify, move,
 ### Setup via Web UI
 
 1. Go to **Integrations** > **OAuth2 Apps** > **Create OAuth2 app** and select **Gmail** (or edit an existing Gmail application)
-2. Under **Base scopes**, select **Gmail API**
-3. Click the **Read-Only + Send** preset button
+2. Under **Base scope**, select the **Gmail API** tab (an existing application shows its base scope as a fixed value)
+3. Click the **Read-only + send** preset button
 
    This sets:
    - **Additional scopes:**
@@ -371,8 +371,8 @@ The `gmail.labels` scope is included in this preset so that label listing and la
 ### Setup via Web UI
 
 1. Go to **Integrations** > **OAuth2 Apps** > **Create OAuth2 app** and select **Gmail** (or edit an existing Gmail application)
-2. Under **Base scopes**, select **Gmail API**
-3. Click the **Read-Only** preset button
+2. Under **Base scope**, select the **Gmail API** tab (an existing application shows its base scope as a fixed value)
+3. Click the **Read-only** preset button
 
    This sets:
    - **Additional scopes:**
@@ -465,8 +465,8 @@ EmailEngine runs an account in **send-only mode** when its granted scopes includ
 ### Setup via Web UI
 
 1. Go to **Integrations** > **OAuth2 Apps** > **Create OAuth2 app** and select **Gmail** (or edit an existing Gmail application)
-2. Under **Base scopes**, select **Gmail API**
-3. Click the **Send-Only** preset button
+2. Under **Base scope**, select the **Gmail API** tab (an existing application shows its base scope as a fixed value)
+3. Click the **Send-only** preset button
 
    This sets:
    - **Additional scopes:**

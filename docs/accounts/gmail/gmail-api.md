@@ -247,9 +247,9 @@ Now configure EmailEngine to use the service account for managing webhooks.
 
 **Application name:** Give it a descriptive name (e.g., "Gmail Pub/Sub Manager")
 
-**Load configuration from the service key file:** Select the **service account** JSON file (not the user OAuth credentials)
+**Base scope:** Select the **Cloud Pub/Sub** tab
 
-**Base scopes:** Select **Cloud Pub/Sub**
+**Credentials:** Keep the **Service account key** authentication method, click **Load from the key file...** and select the **service account** JSON file (not the user OAuth credentials)
 
 :::warning Use Correct Credentials File
 Make sure you're uploading the **service account** credentials file, not the user OAuth credentials file. You can tell them apart:
@@ -278,17 +278,17 @@ Now configure the user OAuth application that will authenticate Gmail accounts.
 
 **Application name:** Give it a descriptive name (e.g., "Gmail API OAuth2")
 
-**Enable this app:** Check this box
+**Enable this app:** Leave this box checked (it is checked by default for a new app)
 
-**Load configuration from the JSON file:** Select the **user OAuth credentials** file (the one whose name starts with `client_secret_`)
+**Base scope:** Select the **Gmail API** tab
+
+**Pub/Sub app for real-time notifications:** In the **Gmail API** panel, select the service account app you created in Step 6. Once the **Google Cloud project ID** is known (loading the client JSON file below fills it in), only Pub/Sub apps from that project can be selected
+
+**Credentials:** Click **Load from the client JSON file...** and select the **user OAuth credentials** file (the one whose name starts with `client_secret_`)
 
 **Redirect URL:** Verify this matches exactly what you entered in Google Cloud Console
 
-**Base scopes:** Select **Gmail API** (labeled beta in the form)
-
-**Select service account to manage webhooks:** Select the service account app you created in Step 6. The selector only lists service accounts registered for the same Google Cloud project ID
-
-The form also offers the **Show only Google Workspace accounts on the OAuth2 login page** and **Display title** fields, described under [Configure OAuth2 Settings](./gmail-imap#configure-oauth2-settings) on the IMAP/SMTP page.
+The form also offers the **Accept only Google Workspace accounts** and **Display title** fields, described under [Configure OAuth2 Settings](./gmail-imap#configure-oauth2-settings) on the IMAP/SMTP page.
 
 :::important Link Service Account
 This selector is marked as optional in the UI. It tells EmailEngine which credentials to use for managing Pub/Sub resources. Without it, EmailEngine registers no Gmail watch and instead polls each account for changes about every 10 minutes, so webhooks still fire, with up to that much delay. Send-only accounts never need it.
@@ -296,7 +296,7 @@ This selector is marked as optional in the UI. It tells EmailEngine which creden
 
 ### Configuring Limited Scopes
 
-If Google requires you to use limited scopes during verification, you can configure EmailEngine to request only the scopes you need. The **Scope presets** card in the form has four buttons (**Full access**, **Read-Only**, **Read-Only + Send**, **Send-Only**) that fill in the scope fields.
+If Google requires you to use limited scopes during verification, you can configure EmailEngine to request only the scopes you need. The **Scope preset** buttons in the **Gmail API** panel of the **Base scope** card (**Full access**, **Read-only**, **Read-only + send**, **Send-only**) fill in the **Additional scopes** and **Disabled scopes** lists in the **Custom scopes** section at the bottom of the form.
 
 See the [Gmail API Scopes Reference](./gmail-api-scopes) for all supported scope combinations, what each enables in EmailEngine, and detailed setup instructions for both the Web UI and API.
 
@@ -345,7 +345,7 @@ Check the account status in EmailEngine:
 
 ## Using Custom Scopes
 
-If you have a public OAuth2 application and Google requires narrower scopes than `gmail.modify`, you can configure custom scopes using the **Additional scopes** and **Disabled scopes** fields in the OAuth2 application configuration.
+If you have a public OAuth2 application and Google requires narrower scopes than `gmail.modify`, you can configure custom scopes using the **Additional scopes** and **Disabled scopes** fields in the **Custom scopes** section of the OAuth2 application form.
 
 See the [Gmail API Scopes Reference](./gmail-api-scopes) for all supported scope combinations with setup instructions for both the Web UI and API, EmailEngine feature availability for each configuration, and Google verification requirements.
 

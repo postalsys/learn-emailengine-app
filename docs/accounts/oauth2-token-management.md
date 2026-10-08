@@ -109,13 +109,13 @@ Additional OAuth2 scopes with Microsoft accounts are only supported when using t
 
 ### Step 2: Configure Additional Scopes in EmailEngine
 
-When setting up the OAuth2 application in EmailEngine, add extra scopes to the **List of OAuth2 scopes** field.
+When setting up the OAuth2 application in EmailEngine, add extra scopes to the **Additional scopes** field in the collapsible **Custom scopes** section at the bottom of the form.
 
 **Google Example:**
 
 Navigate to **Integrations** > **OAuth2 Apps**, open your Gmail app and click **Edit app**.
 
-**List of OAuth2 scopes** field:
+**Additional scopes** field:
 
 ```
 https://www.googleapis.com/auth/calendar

@@ -13,9 +13,9 @@ A service account lets a Google Workspace admin grant EmailEngine access to any 
 EmailEngine supports two ways to authenticate a service account:
 
 - **Service account key** - the classic flow with a JSON key file containing a private RSA key. Covered in Steps 1-8 below.
-- **Workload Identity Federation (keyless)** - your runtime (GKE, EKS, AKS, or any OIDC source) provides a short-lived token that Google trusts; no long-lived key is stored. See [Alternative: Workload Identity Federation](#alternative-workload-identity-federation-keyless).
+- **Workload Identity Federation** - a keyless flow: your runtime (GKE, EKS, AKS, or any OIDC source) provides a short-lived token that Google trusts; no long-lived key is stored. See [Alternative: Workload Identity Federation](#alternative-workload-identity-federation-keyless).
 
-Both methods use the same domain-wide delegation setup. Only the signing step differs.
+Both methods use the same domain-wide delegation setup. Only the signing step differs. The form offers a third method, **Attached service account**, which works only for Cloud Pub/Sub applications and cannot be used for mailbox access; see [Attached Service Account](/docs/accounts/gmail/gmail-pubsub#attached-service-account-google-cloud).
 :::
 
 ## Overview
@@ -26,7 +26,7 @@ Service accounts are a special type of Google account intended for applications 
 
 ### How EmailEngine Uses Service Accounts
 
-EmailEngine supports service accounts for two distinct purposes, selected via the **Base scopes** option when configuring the service account:
+EmailEngine supports service accounts for two distinct purposes, selected in the **Base scope** card when configuring the service account:
 
 **1. Direct Email Access (IMAP and SMTP)**
 
@@ -36,7 +36,7 @@ Service accounts with domain-wide delegation can access any mailbox in your Goog
 - Requires `https://mail.google.com/` scope in domain-wide delegation
 - Service account impersonates users to access their mailboxes
 
-The impersonated mailboxes can also be reached through the Gmail REST API instead of IMAP and SMTP: select **Gmail API** as the base scope (`baseScopes: "api"`), delegate `https://www.googleapis.com/auth/gmail.modify` instead, enable the Gmail API in the project, and pick the Cloud Pub/Sub application that delivers change notifications, as for a [Gmail API](/docs/accounts/gmail/gmail-api) application. The admin form offers this choice since v2.82.1; earlier versions accepted it only through [`POST /v1/oauth2`](/docs/api/post-v-1-oauth-2). The rest of this guide covers the IMAP and SMTP setup.
+The impersonated mailboxes can also be reached through the Gmail REST API instead of IMAP and SMTP: select **Gmail API** as the base scope (`baseScopes: "api"`), delegate `https://www.googleapis.com/auth/gmail.modify` instead, enable the Gmail API in the project, and pick the Cloud Pub/Sub application that delivers change notifications under **Pub/Sub app for real-time notifications**, as for a [Gmail API](/docs/accounts/gmail/gmail-api) application. The admin form offers this choice since v2.82.1; earlier versions accepted it only through [`POST /v1/oauth2`](/docs/api/post-v-1-oauth-2). The rest of this guide covers the IMAP and SMTP setup.
 
 **2. Push Notifications for Standard Gmail Accounts (Cloud Pub/Sub)**
 
@@ -313,7 +313,7 @@ The important fields for EmailEngine are:
 - `client_id`: Maps to **Service account client ID** in EmailEngine (API field `serviceClient`)
 - `client_email`: Maps to **Service account email** in EmailEngine (`serviceClientEmail`)
 - `private_key`: Maps to **Private key** in EmailEngine (`serviceKey`)
-- `project_id`: Maps to **Google Cloud Project ID** in EmailEngine (`googleProjectId`, used for Gmail push notifications)
+- `project_id`: Maps to **Google Cloud project ID** in EmailEngine (`googleProjectId`, used for Gmail push notifications)
 
 ## Step 6: Enable Gmail API (Optional)
 
@@ -336,34 +336,34 @@ Now configure EmailEngine to use the service account.
 3. Click the **Create OAuth2 app** dropdown
 4. Select **Gmail Service Accounts**
 
-### Upload Credentials File
+Give the app a name in the **Application** card, then pick the base scope and load the credentials as described below. The form lists the cards in that order: **Application**, **Base scope**, **Credentials**.
 
-Click **Load configuration from the service key file** and select the service account key JSON file.
+### Select Base Scope
+
+The **Base scope** card offers one tab per mode ("What the app connects with"), and the selection determines how EmailEngine uses this service account. It cannot be changed once the app is created:
+
+| Tab | Purpose | Required Scope/Role |
+|--------|---------|---------------------|
+| **IMAP and SMTP** | Direct email access via IMAP/SMTP protocols | `https://mail.google.com/` (domain-wide delegation) |
+| **Gmail API** | Direct email access via the Gmail REST API (in the admin form since v2.82.1) | `https://www.googleapis.com/auth/gmail.modify` (domain-wide delegation) |
+| **Cloud Pub/Sub** | Webhook management for Gmail API accounts | `Pub/Sub Admin` role in Google Cloud |
+
+**For direct email access** (the primary use case in this guide), select **IMAP and SMTP**. This allows the service account to access any mailbox in your Google Workspace organization via IMAP and SMTP protocols.
+
+**For push notification management**, select **Cloud Pub/Sub**. This is used when you have regular Gmail OAuth2 accounts (where users authenticate individually) but want a single service account to manage Pub/Sub topic subscriptions for receiving email change notifications. See [Setting Up Gmail API](/docs/accounts/gmail/gmail-api) for this use case.
+
+### Load the Credentials File
+
+In the **Credentials** card, keep the **Service account key** authentication method, click **Load from the key file...** and select the service account key JSON file.
 
 EmailEngine extracts and fills in:
 
 - Service account client ID (from `client_id`)
 - Service account email (from `client_email`)
 - Private key (from `private_key`)
-- Google Cloud Project ID (from `project_id`)
+- Google Cloud project ID (from `project_id`)
 
-The **Authentication method** select stays on **Service account key** for this flow.
-
-### Select Base Scopes
-
-The **Base scopes** selection determines how EmailEngine uses this service account:
-
-| Option | Purpose | Required Scope/Role |
-|--------|---------|---------------------|
-| **IMAP and SMTP** | Direct email access via IMAP/SMTP protocols | `https://mail.google.com/` (domain-wide delegation) |
-| **Gmail API** | Direct email access via the Gmail REST API (in the admin form since v2.82.1) | `https://www.googleapis.com/auth/gmail.modify` (domain-wide delegation) |
-| **Cloud Pub/Sub** (labeled beta) | Webhook management for Gmail API accounts | `Pub/Sub Admin` role in Google Cloud |
-
-**For direct email access** (the primary use case in this guide), select **IMAP and SMTP**. This allows the service account to access any mailbox in your Google Workspace organization via IMAP and SMTP protocols.
-
-**For push notification management**, select **Cloud Pub/Sub**. This is used when you have regular Gmail OAuth2 accounts (where users authenticate individually) but want a single service account to manage Pub/Sub topic subscriptions for receiving email change notifications. See [Setting Up Gmail API](/docs/accounts/gmail/gmail-api) for this use case.
-
-Click **Register app** to save. Service account applications never appear in the hosted authentication form, so the **Enable this app** checkbox has no effect on that; the app is listed as always enabled.
+Click **Register app** to save. Service account applications never appear in the hosted authentication form, so the form has no **Enable this app** checkbox for them; the app is listed as always enabled.
 
 :::info JSON Key File After Setup
 Once EmailEngine has been configured with the service account credentials, the JSON key file is no longer needed. EmailEngine stores the credentials in its database. You can delete the JSON file from your local system to reduce security risk.
@@ -565,9 +565,9 @@ The Kubernetes kubelet rotates this token automatically before expiry; EmailEngi
 In the EmailEngine OAuth2 app form:
 
 1. Select **Gmail Service Accounts** as the provider.
-2. Choose **Workload Identity Federation (keyless)** as the authentication method.
-3. Fill in the **Google Cloud Project ID**, **Service account email**, and **Service account client ID** fields with the same values you would use for the key-based flow. The **Load configuration from the external-account JSON file** button auto-fills the service account email from the impersonation URL.
-4. Paste the contents of `external-account.json` into the **External account configuration** textarea, or use the file upload button.
+2. Choose the **Workload Identity Federation** tab as the authentication method in the **Credentials** card.
+3. Fill in the **Google Cloud project ID**, **Service account email**, and **Service account client ID** fields with the same values you would use for the key-based flow. The **Load from the configuration file...** button auto-fills the service account email from the impersonation URL.
+4. Paste the contents of `external-account.json` into the **External account configuration** textarea, or load it with **Load from the configuration file...**.
 5. Click **Register app**.
 
 EmailEngine validates the configuration on save: it must be JSON with `"type": "external_account"`, carry `audience`, `subject_token_type`, `token_url` and `service_account_impersonation_url`, and `token_url` must point at Google's STS endpoint. A credential source it cannot read is reported when the token is first requested, as `ESubjectTokenRead`.

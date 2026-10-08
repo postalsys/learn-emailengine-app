@@ -50,11 +50,14 @@ Never commit your Client ID and Client Secret to version control. Store them sec
 2. Navigate to **Integrations** > **OAuth2 Apps**
 3. Click **Create OAuth2 app**
 4. Select **Mail.ru** as the provider
-5. Enter your credentials:
+5. In the **Application** card, enter an **Application name** and leave **Enable this app** checked (it is checked by default for a new app)
+6. In the **Credentials** card, enter your credentials:
    - **Client ID**: Your Mail.ru application ID
-   - **Client Secret**: Your Mail.ru client secret
+   - **Client secret**: Your Mail.ru client secret
    - **Redirect URL**: Must match what you configured in Mail.ru
-6. Check **Enable this app** and click **Register app**
+7. Click **Register app**
+
+Mail.ru apps connect over IMAP and SMTP only, so the form has no **Base scope** card.
 
 ### Option B: Via API
 

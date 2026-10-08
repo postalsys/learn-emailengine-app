@@ -112,14 +112,14 @@ EmailEngine supports multiple Microsoft cloud environments for government and re
 
 | Cloud | Value | Use Case |
 |-------|-------|----------|
-| **Azure Global** | `global` | Standard Microsoft 365 (default) |
+| **Azure global service** | `global` | Standard Microsoft 365 (default) |
 | **GCC High** | `gcc-high` | US Government L4 |
 | **DoD** | `dod` | US Department of Defense L5 |
 | **Azure China** | `china` | China (operated by 21Vianet) |
 
 #### Cloud Environment Details
 
-**Azure Global (default)**
+**Azure global service (default)**
 
 The standard commercial Microsoft 365 environment used by most organizations:
 
@@ -283,7 +283,7 @@ Add these permissions instead:
 - `User.Read` - Present on every new registration; EmailEngine requests it to read the signed-in user's profile
 
 :::info One backend per OAuth2 app
-An EmailEngine OAuth2 app requests one set of scopes, selected by its **Base scopes** setting: either the IMAP/SMTP scopes or the `Mail.*` scopes. Register two OAuth2 apps in EmailEngine if you need both backends against the same Azure application.
+An EmailEngine OAuth2 app requests one set of scopes, selected by its **Base scope** setting: either the IMAP/SMTP scopes or the `Mail.*` scopes. Register two OAuth2 apps in EmailEngine if you need both backends against the same Azure application.
 :::
 
 Verify all required permissions are listed, then continue to the next step.
@@ -360,48 +360,48 @@ Now configure EmailEngine with your Azure application credentials.
 
 **Application name:** Give it a descriptive name (e.g., "Outlook OAuth2")
 
-**Enable this app:** Check this box (otherwise it won't appear in authentication forms)
+**Enable this app:** Leave this box checked (it is checked by default for a new app). An app that is not enabled is not offered in the hosted authentication form
 
-**Azure Application Id:** Paste the Application (client) ID from Azure
+**Base scope:** Select the tab that matches your Azure permissions:
 
-**Client Secret:** Paste the secret value you copied earlier
+- **IMAP and SMTP** (`baseScopes: "imap"`) - If you added `IMAP.AccessAsUser.All` and `SMTP.Send`
+- **MS Graph API** (`baseScopes: "api"`) - If you added `Mail.ReadWrite` and `Mail.Send`. The **MS Graph API** panel also lists the two endpoints Microsoft Graph posts change notifications to
 
-**Azure cloud environment:** Azure Global unless the tenant lives in a [government or regional cloud](#microsoft-cloud-environments)
+:::important Base scope must match the Azure permissions
+The base scope you select here must match the permissions you configured in Azure. Mismatches will cause authentication failures. The base scope cannot be changed once the app is created.
+:::
 
-**Redirect URL:** Must match exactly what you entered in Azure:
+**Application (client) ID:** Paste the Application (client) ID from Azure
 
-- Example: `https://emailengine.example.com/oauth`
+**Client secret:** Paste the secret value you copied earlier
+
+**Azure cloud environment:** **Azure global service** unless the tenant lives in a [government or regional cloud](#microsoft-cloud-environments)
 
 **Supported account types:** Choose the option that matches your Azure registration. The API field is `authority`, and each option maps to one value:
 
 | Option in EmailEngine | Azure registration | `authority` value |
 |---|---|---|
-| Accounts in any organizational directory (Multitenant) | Accounts in any organizational directory | `organizations` |
-| Accounts in any organizational directory and personal Microsoft accounts | Accounts in any organizational directory and personal Microsoft accounts | `common` |
+| Work and school accounts from any organization | Accounts in any organizational directory | `organizations` |
+| Work, school and personal Microsoft accounts | Accounts in any organizational directory and personal Microsoft accounts | `common` |
 | Personal Microsoft accounts only | Personal Microsoft accounts only | `consumers` |
-| Accounts in the specified organizational directory only (Single tenant) | Accounts in this organizational directory only | The Directory (tenant) ID, a UUID like `f8cdef31-a31e-4b4a-93e4-5f571e91255a`, entered in the **Directory (tenant) ID** field |
+| Work and school accounts from one organization | Accounts in this organizational directory only | The Directory (tenant) ID, a UUID like `f8cdef31-a31e-4b4a-93e4-5f571e91255a`, entered in the **Directory (tenant) ID** field that this option reveals |
 
-**Base scopes:** Select based on your Azure permissions:
+**Redirect URL:** Must match exactly what you entered in Azure:
 
-- **IMAP and SMTP** (`baseScopes: "imap"`) - If you added `IMAP.AccessAsUser.All` and `SMTP.Send`
-- **MS Graph API** (`baseScopes: "api"`) - If you added `Mail.ReadWrite` and `Mail.Send`
-
-:::important Base scopes must match the Azure permissions
-The base scopes you select here must match the permissions you configured in Azure. Mismatches will cause authentication failures.
-:::
+- Example: `https://emailengine.example.com/oauth`
 
 Click **Register app** to save.
 
 ### Limiting Scopes (MS Graph API)
 
-With **MS Graph API** as the base scope, the form shows a **Scope presets** card. Each button fills in the **Additional scopes** (API field `extraScopes`) and **Disabled scopes** (`skipScopes`) fields; scopes you added by hand are kept:
+With **MS Graph API** as the base scope, the **MS Graph API** panel of the **Base scope** card shows four **Scope preset** buttons. Each button fills in the **Additional scopes** (API field `extraScopes`) and **Disabled scopes** (`skipScopes`) fields in the **Custom scopes** section at the bottom of the form; scopes you added by hand are kept:
 
 | Preset | Additional scopes | Disabled scopes | Result |
 |---|---|---|---|
 | **Full access** | none | none | `Mail.ReadWrite`, `Mail.Send`, `offline_access`, `User.Read` |
-| **Read-Only** | `Mail.Read` | `Mail.ReadWrite`, `Mail.Send` | Read without sending or modifying |
-| **Read-Only + Send** | `Mail.Read` | `Mail.ReadWrite` | Read and send without modifying |
-| **Send-Only** | none | `Mail.ReadWrite` | Send without reading |
+| **Read-only** | `Mail.Read` | `Mail.ReadWrite`, `Mail.Send` | Read without sending or modifying |
+| **Read-only + send** | `Mail.Read` | `Mail.ReadWrite` | Read and send without modifying |
+| **Send-only** | none | `Mail.ReadWrite` | Send without reading |
 
 EmailEngine classifies a delegated account by the scopes Microsoft granted: read access is `Mail.Read` or `Mail.ReadWrite`, send access is `Mail.Send`. An account with send access and no read access runs in send-only mode, reports `sendOnly: true`, and creates no change subscription, so no messages are synced and no message webhooks fire. The admin interface shows a **Send-only** badge on its page. Application access accounts always count as full access, because the `.default` scope does not enumerate permissions.
 

@@ -105,7 +105,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | `PUT` | `/v1/account/{account}/messages/move` | Move multiple messages |
 | `PUT` | `/v1/account/{account}/messages/delete` | Delete multiple messages |
 
-### Export Operations (Beta)
+### Export Operations
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
