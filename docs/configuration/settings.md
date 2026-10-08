@@ -251,8 +251,8 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
 | `smtpEhloName` | string | system hostname | Hostname for SMTP EHLO/HELO |
 | `deliveryAttempts` | integer | `10` | Delivery attempts before a queued message is marked failed |
 | `queueKeep` | integer | `0`, or `EENGINE_QUEUE_REMOVE_AFTER` | Completed queue entries to keep; failed entries have their own floor |
-| `imapStrategy` | `default`, `dedicated`, `random` | `default` | How outbound IMAP connections, and the API and OAuth2 token requests of an account, pick a local address |
-| `smtpStrategy` | `default`, `dedicated`, `random` | `default` | How outbound SMTP connections pick a local address |
+| `imapStrategy` | `default`, `dedicated`, `random` | `default` | How mailbox access picks a local address: IMAP sessions, Gmail API and Microsoft Graph requests, and OAuth2 token requests. Labelled **Mailbox access** in the admin UI |
+| `smtpStrategy` | `default`, `dedicated`, `random` | `default` | How sending over SMTP picks a local address. Labelled **Sending over SMTP** in the admin UI |
 | `localAddresses` | array of IP strings | unset | Local addresses available to the strategies above |
 | `proxyEnabled` | boolean | off | Route every outbound connection through a proxy: IMAP and SMTP sessions, and, since v2.79.9, HTTP requests too |
 | `proxyUrl` | string | unset | Proxy URL, for example `socks5://proxy.example.com:1080` |

@@ -22,8 +22,10 @@ Three settings control the behaviour. All three are runtime settings stored in R
 | Setting | Type | Default | Purpose |
 | ------- | ---- | ------- | ------- |
 | `localAddresses` | array of IP addresses | `[]` | The pool of local addresses EmailEngine may bind to |
-| `imapStrategy` | `default`, `dedicated` or `random` | `default` | How an address is picked for IMAP connections, and for an account's API and OAuth2 token requests |
-| `smtpStrategy` | `default`, `dedicated` or `random` | `default` | How an address is picked for SMTP connections |
+| `imapStrategy` | `default`, `dedicated` or `random` | `default` | How an address is picked for mailbox access: IMAP sessions, Gmail API and Microsoft Graph requests, and OAuth2 token requests |
+| `smtpStrategy` | `default`, `dedicated` or `random` | `default` | How an address is picked for sending over SMTP |
+
+The admin UI calls the two strategies **Mailbox access** and **Sending over SMTP**. The setting keys keep their original names, so `imapStrategy` also covers accounts that do not use IMAP at all.
 
 The strategies:
 
@@ -86,7 +88,7 @@ If a firewall filters outbound traffic by source address, allow ports 993 and 46
 
 Open **Configuration** > **Network**:
 
-- The **IP Address Strategy** card has a row for each protocol, **IMAP** and **SMTP**, with a **Selection Method** dropdown offering **Dedicated**, **Random** and **Default** (the card's description calls the last one the server default)
+- The **IP Address Strategy** card has two rows, **Mailbox access** (`imapStrategy`) and **Sending over SMTP** (`smtpStrategy`), each with a **Selection Method** dropdown offering **Dedicated**, **Random** and **Default** (the card's description calls the last one the server default)
 - The **Available IP Addresses** card lists the IPv4 addresses found by the last scan. **Scan for IPs** probes each interface on the host, records the public address it reaches the internet from, and stores the result in Redis; tick the addresses EmailEngine may use. Ticked addresses that later disappear from the host are skipped and the server default applies
 
 The scan is the only thing that builds the interface list: EmailEngine does not scan at startup, and neither the Settings API nor `EENGINE_SETTINGS` does it for you. After adding an address to the host, open this page and click **Scan for IPs** once; the list survives restarts.
@@ -128,7 +130,7 @@ See [Prepared settings](/docs/configuration/prepared-settings) for how `EENGINE_
 
 ### Spreading Accounts Across Addresses
 
-Providers that limit concurrent IMAP connections count them per source address as well as per account. With `imapStrategy: "dedicated"` and five addresses, one hundred accounts settle at roughly twenty per address, and each account keeps its address across reconnects:
+Providers that limit concurrent IMAP connections count them per source address as well as per account. With `imapStrategy: "dedicated"` and five addresses, one hundred accounts settle at roughly twenty per address, and each account keeps its address across reconnects. The same holds for Gmail API and Microsoft Graph accounts, which spreads their API traffic across the pool too:
 
 ```bash
 curl -X POST "https://emailengine.example.com/v1/settings" \
