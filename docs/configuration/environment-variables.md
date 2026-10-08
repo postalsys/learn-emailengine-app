@@ -62,7 +62,7 @@ EENGINE_REDIS_FILE=/run/secrets/redis_url
 - Boolean variables work the same way, with the file containing `true` or `false`
 - A file that cannot be read is logged as an error and resolves to an empty value. EmailEngine still starts, so check the logs if a setting seems to be missing.
 
-A few non-secret variables are read straight from the environment and have no `_FILE` counterpart: `EENGINE_LOG_LEVEL`, `EENGINE_REDIS_PREFIX`, `EENGINE_FETCH_TIMEOUT`, `EENGINE_ACME_DIRECTORY_URL`, `EENGINE_ACME_ENVIRONMENT`, `EENGINE_TLS_MIN_VERSION`, `EENGINE_TLS_MIN_DH_SIZE`, and `EENGINE_TLS_CIPHERS`. `EENGINE_HTTP_PROXY_ENABLED` and `EENGINE_HTTP_PROXY_URL` accept the `_FILE` form since v2.79.9.
+A few non-secret variables are read straight from the environment and have no `_FILE` counterpart: `EENGINE_LOG_LEVEL`, `EENGINE_REDIS_PREFIX`, `EENGINE_FETCH_TIMEOUT`, `EENGINE_ACME_DIRECTORY_URL`, `EENGINE_ACME_ENVIRONMENT`, `EENGINE_TLS_MIN_VERSION`, `EENGINE_TLS_MIN_DH_SIZE`, `EENGINE_TLS_CIPHERS`, and `EENGINE_GCP_METADATA_HOST`. `EENGINE_HTTP_PROXY_ENABLED` and `EENGINE_HTTP_PROXY_URL` accept the `_FILE` form since v2.79.9.
 
 Two value formats recur in the tables below. A **duration** is a number of milliseconds or a string with a unit, such as `30s`, `12h`, or `7d`. A **byte size** is a number of bytes or a string with a unit, such as `20M` or `1G`.
 
@@ -793,6 +793,20 @@ An explicit `false` disables HTTP proxying entirely, so IMAP and SMTP keep using
 :::note Standard proxy variables are ignored
 EmailEngine does not read `HTTP_PROXY`, `HTTPS_PROXY` or `NO_PROXY`. Use the variables above, or the proxy settings in the admin interface.
 :::
+
+## Google Cloud Metadata Server
+
+A Cloud Pub/Sub application that uses the [attached service account](/docs/accounts/gmail/gmail-pubsub#attached-service-account-google-cloud) gets its access tokens from the Google Cloud metadata server. EmailEngine reaches it at `metadata.google.internal`, the address Google documents for every Compute Engine VM, GKE pod and Cloud Run service.
+
+| Variable | Type | Default | Description | Example |
+|----------|------|---------|-------------|---------|
+| `EENGINE_GCP_METADATA_HOST` | string | `metadata.google.internal` | Where to reach the metadata server: `host`, `host:port` or `http://host[:port]`. When unset, Google's own `GCE_METADATA_HOST` is read. Since v2.83.0 | `127.0.0.1:8080` |
+
+Only the host can be changed. The request path, the `Metadata-Flavor: Google` header and the plain-HTTP scheme stay fixed, and EmailEngine refuses an answer that does not carry `Metadata-Flavor: Google` back. A value with a path, a query, credentials or `https` is an error, reported by the application's **Verify setup** check, rather than a silent fallback to the default.
+
+The host is deliberately an environment value and not an application field or setting. The request goes to the metadata server directly, not through the HTTP proxy or the webhook egress policy, so an address that an API token could choose would let it probe the instance's own network.
+
+The usual reason to set it is a metadata server emulator for testing.
 
 ## Logging & Monitoring
 

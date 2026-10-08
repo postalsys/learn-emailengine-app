@@ -40,9 +40,53 @@ When creating a Gmail Service Account application in EmailEngine for Pub/Sub, th
 | `serviceClient` | Service account unique ID (`client_id` in the key file) |
 | `serviceClientEmail` | Service account email address (`client_email` in the key file) |
 | `serviceKey` | Service account private key in PEM format (the `private_key` field of the JSON key file) |
+| `authMethod` | `serviceKey` (default), `externalAccount`, or `metadataServer` for the [attached service account](#attached-service-account-google-cloud) |
 | `googleTopicName`, `googleSubscriptionName` | Optional overrides for the generated resource names, see below |
 
 A service account can also authenticate without a stored key through Workload Identity Federation (`authMethod: "externalAccount"` with `externalAccount`); see [Google Service Accounts](./google-service-accounts#alternative-workload-identity-federation-keyless).
+
+### Attached Service Account (Google Cloud)
+
+When EmailEngine runs on Google Cloud, a Pub/Sub application can authenticate as the service account attached to the machine it runs on, with nothing stored in EmailEngine. EmailEngine asks the Google Cloud metadata server for an access token, the same way Google's own client libraries do. This works on:
+
+- **Compute Engine**: the service account attached to the VM.
+- **GKE**: the Google service account bound to the pod's Kubernetes service account through Workload Identity.
+- **Cloud Run**: the service's service account. See the note on Cloud Run below.
+
+Create the application with `authMethod: "metadataServer"`:
+
+```bash
+curl -X POST https://emailengine.example.com/v1/oauth2 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "gmailService",
+    "name": "Gmail Pub/Sub",
+    "baseScopes": "pubsub",
+    "authMethod": "metadataServer",
+    "googleProjectId": "my-project-123456"
+  }'
+```
+
+`serviceClient`, `serviceClientEmail` and `serviceKey` are not used. In the admin interface, select **Cloud Pub/Sub** under base scopes, then the **Attached service account (Google Cloud)** tab. **Detect from this host** reads the service account and project from the metadata server and fills in the project ID.
+
+Requirements:
+
+- Grant the attached service account the [Pub/Sub permissions](#required-google-cloud-permissions) in the project.
+- On Compute Engine, the VM's access scopes cap every token the metadata server issues, whatever roles the service account holds. Give the VM the `cloud-platform` access scope (**Allow full access to all Cloud APIs**).
+- EmailEngine has to reach `metadata.google.internal` directly. The request never goes through the configured proxy. [`EENGINE_GCP_METADATA_HOST`](/docs/configuration/environment-variables#google-cloud-metadata-server) points it elsewhere, for example at an emulator.
+
+Limitations:
+
+- **Pub/Sub applications only.** The metadata server's token belongs to the service account itself and cannot act as a Workspace user, so it cannot be used for domain-wide delegation to IMAP or the Gmail API. Mailbox access still needs a service account key or Workload Identity Federation.
+- **Not available to a token with restricted permissions.** Such an application acts as the deployment's own cloud identity, so only the admin interface or an unrestricted API token can create one.
+- **Fixed after creation**, like the other authentication methods.
+
+**Verify setup** on the application page reports the metadata server it asked, the service account the token was issued for, and whether that token can read the application's Pub/Sub topic. Each failure comes with a hint: EmailEngine not running on Google Cloud, no service account attached, a missing access scope, or a missing role.
+
+:::warning Cloud Run
+EmailEngine is a long-running process that keeps IMAP connections open and pulls Pub/Sub in the background, and it must run as a single instance: two instances on the same Redis both sync every account. Cloud Run runs a new revision alongside the old one during a deploy and can replace an instance at any time, so a second copy is possible however `max-instances` is set. If you run it there anyway, use instance-based billing (CPU always allocated) with `min-instances` and `max-instances` both set to 1. A Compute Engine VM, or GKE with a single replica and the `Recreate` deployment strategy, avoids these problems.
+:::
 
 ### OAuth2 Application Settings
 
