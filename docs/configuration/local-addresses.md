@@ -1,7 +1,7 @@
 ---
 title: Local IP Address Binding
 sidebar_position: 6
-description: Configure EmailEngine to use multiple local IP addresses for outbound IMAP and SMTP connections
+description: Configure EmailEngine to use multiple local IP addresses for outbound IMAP, SMTP and API connections
 keywords:
   - local addresses
   - IP binding
@@ -13,7 +13,7 @@ keywords:
 
 # Local IP Address Binding
 
-If the server EmailEngine runs on has more than one IP address, EmailEngine can bind its outbound IMAP and SMTP connections to specific addresses instead of leaving the choice to the operating system. This spreads connections across addresses, which matters when a provider counts connections per source IP, and lets an account keep a stable source address.
+If the server EmailEngine runs on has more than one IP address, EmailEngine can bind the outbound connections it makes for an account (IMAP and SMTP sessions, and the Gmail API, Microsoft Graph and OAuth2 token requests) to specific addresses instead of leaving the choice to the operating system. This spreads connections across addresses, which matters when a provider counts connections per source IP, and lets an account keep a stable source address.
 
 ## Overview
 
@@ -22,7 +22,7 @@ Three settings control the behaviour. All three are runtime settings stored in R
 | Setting | Type | Default | Purpose |
 | ------- | ---- | ------- | ------- |
 | `localAddresses` | array of IP addresses | `[]` | The pool of local addresses EmailEngine may bind to |
-| `imapStrategy` | `default`, `dedicated` or `random` | `default` | How an address is picked for IMAP connections |
+| `imapStrategy` | `default`, `dedicated` or `random` | `default` | How an address is picked for IMAP connections, and for an account's API and OAuth2 token requests |
 | `smtpStrategy` | `default`, `dedicated` or `random` | `default` | How an address is picked for SMTP connections |
 
 The strategies:
@@ -36,8 +36,21 @@ The pool is applied to:
 - IMAP connections opened by account workers, including sub-connections
 - SMTP connections made when [sending a message](/docs/sending/basic-sending) through an account
 - The upstream IMAP connections opened by the [IMAP proxy](/docs/configuration/environment-variables#imap-proxy-server)
+- Gmail API and Microsoft Graph requests of API accounts
+- OAuth2 token requests of every OAuth2 account: the authorization code exchange, token refreshes, and revoking the grant
 
-Gmail API and MS Graph accounts talk HTTPS to the provider and are not affected.
+### API Accounts and OAuth2 Token Requests
+
+A Gmail API or Microsoft Graph account has no IMAP session, so its API connection takes that role: its requests use the address that `imapStrategy` picks for the account. With `dedicated`, each API account keeps one source address, the same one an IMAP account with that ID would get. OAuth2 token requests follow the same rule, so an OAuth2 account that connects over IMAP refreshes its token from the address its IMAP session uses.
+
+Two things take precedence over the local address:
+
+- The account's own [`proxy`](/docs/accounts/imap-smtp#what-the-per-account-proxy-covers). An account with a proxy sends everything through it
+- An instance-wide proxy for HTTP requests (`proxyEnabled` or `httpProxyEnabled`, see [Proxy Configuration](/docs/accounts/imap-smtp#proxy-configuration)). The proxy makes the connection then, so there is no local address to bind. This matches how IMAP and SMTP connections behave behind the global proxy
+
+Requests made for the OAuth2 application rather than for one account, such as setting up the Gmail Pub/Sub topic, are not bound to an address from the pool.
+
+An account's address is picked when its API client connects, so as with IMAP, a change to the pool reaches it on the next reconnect. API requests are not listed in the `Selected local address` log entry described below; that entry covers IMAP and SMTP connections.
 
 ### How an Address Is Chosen
 
@@ -184,7 +197,7 @@ ss -tn state established '( dport = :993 or dport = :465 )' | awk 'NR > 1 {split
 
 ## Updating the Pool
 
-Changing any of the three settings affects connections opened after the change. Existing IMAP sessions keep their address until they reconnect; to move an account immediately, request a reconnect with [`PUT /v1/account/{account}/reconnect`](/docs/api/put-v-1-account-account-reconnect).
+Changing any of the three settings affects connections opened after the change. Existing IMAP sessions and API clients keep their address until they reconnect; to move an account immediately, request a reconnect with [`PUT /v1/account/{account}/reconnect`](/docs/api/put-v-1-account-account-reconnect).
 
 ## See Also
 

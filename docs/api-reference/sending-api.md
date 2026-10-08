@@ -100,6 +100,8 @@ Or without a display name:
 { "address": "john@example.com" }
 ```
 
+An address is checked for valid syntax, and the whole address can be up to 254 characters long. The local part (before the `@`) has no length limit of its own. RFC 5321 suggests at most 64 octets there, but some services issue longer addresses and accept mail for them, task-creation addresses of project management tools among them. The same rule applies to the SMTP `envelope` addresses, the DSN `recipient`, and the addresses accepted by the [blocklist endpoints](/docs/sending/deliverability/suppression-lists).
+
 ### Examples
 
 <Tabs groupId="language">

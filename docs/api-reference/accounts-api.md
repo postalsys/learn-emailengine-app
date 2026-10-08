@@ -96,7 +96,7 @@ The permission column is the `x-ee-action` and `x-ee-group` pair the operation p
 | `subconnections` | array | Folders monitored with a dedicated IMAP connection each |
 | `webhooks` | string | Account-specific webhook URL |
 | `webhooksCustomHeaders` | array | Extra headers sent with every webhook for this account |
-| `proxy` | string | Proxy URL for outbound connections |
+| `proxy` | string | Proxy URL for this account's outbound connections, used instead of the instance-wide proxy: IMAP and SMTP sessions and, for an OAuth2 account, its token requests and Gmail API or Microsoft Graph requests. See [What the per-account proxy covers](/docs/accounts/imap-smtp#what-the-per-account-proxy-covers) |
 | `smtpEhloName` | string | Hostname used in SMTP EHLO |
 | `locale`, `tz` | string | Default locale and timezone for content rendered for this account |
 | `counters` | object | Cumulative event counters (`counters.events`) for the account lifetime |

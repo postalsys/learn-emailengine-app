@@ -251,7 +251,7 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
 | `smtpEhloName` | string | system hostname | Hostname for SMTP EHLO/HELO |
 | `deliveryAttempts` | integer | `10` | Delivery attempts before a queued message is marked failed |
 | `queueKeep` | integer | `0`, or `EENGINE_QUEUE_REMOVE_AFTER` | Completed queue entries to keep; failed entries have their own floor |
-| `imapStrategy` | `default`, `dedicated`, `random` | `default` | How outbound IMAP connections pick a local address |
+| `imapStrategy` | `default`, `dedicated`, `random` | `default` | How outbound IMAP connections, and the API and OAuth2 token requests of an account, pick a local address |
 | `smtpStrategy` | `default`, `dedicated`, `random` | `default` | How outbound SMTP connections pick a local address |
 | `localAddresses` | array of IP strings | unset | Local addresses available to the strategies above |
 | `proxyEnabled` | boolean | off | Route every outbound connection through a proxy: IMAP and SMTP sessions, and, since v2.79.9, HTTP requests too |

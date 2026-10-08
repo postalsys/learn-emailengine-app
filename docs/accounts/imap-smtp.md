@@ -895,9 +895,31 @@ Note that the environment variables override the dedicated HTTP proxy settings, 
 
 Setting `EENGINE_HTTP_PROXY_ENABLED=false` is how you keep mail traffic on the global proxy while HTTP requests go out directly.
 
-:::note Per-account proxies are IMAP and SMTP only
-The account-level `proxy` field applies to that account's IMAP and SMTP sockets. It does not affect HTTP requests, so a Gmail API or Microsoft Graph account follows the global or HTTP proxy setting rather than its own `proxy` value.
-:::
+#### What the per-account proxy covers
+
+The account-level `proxy` field carries every outbound connection EmailEngine makes for that account, and replaces the global and HTTP proxy settings for it:
+
+- IMAP and SMTP sessions with the mail server
+- Gmail API and Microsoft Graph API requests
+- The account's OAuth2 token requests: the authorization code exchange when the account is added, token refreshes, client credentials tokens for Microsoft 365 application access, and revoking the grant when the account is deleted. This includes OAuth2 accounts that connect over IMAP and SMTP
+
+This lets you spread API accounts across several egress addresses the same way as IMAP accounts, with each account sticking to its proxy. Set the field when creating the account, or later with `PUT /v1/account/{account}`:
+
+```json
+{
+  "proxy": "socks5://proxy-2.example.com:1080"
+}
+```
+
+A changed proxy is used from the next connection. Request a reconnect with [`PUT /v1/account/{account}/reconnect`](/docs/api/put-v-1-account-account-reconnect) to apply it right away. For an account added through OAuth2 authorization, a `proxy` given in the `POST /v1/account` request also carries the code exchange and profile lookups that complete the setup.
+
+A Microsoft 365 mailbox that is accessed through another account's token (a delegated or shared mailbox) uses the proxy of the account that owns the token, so its API requests and token refreshes leave the same way.
+
+Requests made for the OAuth2 application rather than for one account, such as setting up the Gmail Pub/Sub topic and subscription, keep using the global or HTTP proxy setting.
+
+Without a proxy of its own, an account's connections can still be bound to a specific local IP address of the server. See [Local IP Address Binding](/docs/configuration/local-addresses).
+
+A token with restricted permissions cannot set `proxy`, because the proxy receives the connections that carry the account's credentials.
 
 :::note Standard proxy variables are ignored
 EmailEngine does not read the conventional `HTTP_PROXY`, `HTTPS_PROXY` or `NO_PROXY` environment variables. Configure the settings above instead.

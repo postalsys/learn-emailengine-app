@@ -425,6 +425,8 @@ Useful for multi-interface systems or IP-based routing.
 
 `proxy` decides where a connection carrying the account's credentials goes, so a token with a restricted permission set cannot set it; the request is refused with 403.
 
+Both options apply to delivery over SMTP. A Gmail API or Microsoft Graph account sends through the provider's API, along the account's own route: its account-level [proxy](/docs/accounts/imap-smtp#what-the-per-account-proxy-covers), or the [local address](/docs/configuration/local-addresses) picked for it.
+
 ### Delivery Control
 
 #### Custom Retry Attempts
