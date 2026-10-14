@@ -815,6 +815,7 @@ flowchart TD
 |---------|------|---------|-------------|
 | `disabled` | boolean | `false` | Disable IMAP (send-only mode). Also set automatically by the authentication-failure safety net; `authFailureDisabledAt` tells the two apart |
 | `resyncDelay` | number | `900` | Seconds between full mailbox resyncs |
+| `maxIdleTime` | number | unset | Milliseconds after which IDLE is restarted (10000 to 1800000), for servers that drop idle connections. Since v2.84.0 |
 | `sentMailPath` | string | auto | Custom Sent folder path |
 | `draftsMailPath` | string | auto | Custom Drafts folder path |
 | `junkMailPath` | string | auto | Custom Junk folder path |

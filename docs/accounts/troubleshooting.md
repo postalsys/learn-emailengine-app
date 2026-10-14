@@ -509,18 +509,25 @@ Once the next-UID counter the primary connection knows for the main mailbox has 
 ### IDLE Timeout Issues
 
 **Symptoms:**
-- Connection drops after period of inactivity
-- Frequent reconnections
+- The account reconnects every few minutes, at roughly the same interval each time
+- The logs show the connection closing while IDLE was running, with no `BYE` from the server
 
-**Cause:** Server doesn't support IMAP IDLE or closes IDLE after timeout
+**Cause:** The server, or a proxy, load balancer or firewall in front of it, closes connections that have been idle for longer than its timeout. Some do this after a few minutes, well below the 30 minutes the IMAP standard asks for.
 
-**Solution:**
-EmailEngine handles this automatically by:
-- Detecting IDLE timeout
-- Reconnecting automatically
-- Falling back to polling if IDLE not supported
+**Solution:** EmailEngine reconnects on its own and falls back to polling on servers without IDLE, so no messages are lost. To stop the reconnects, set the account's [IDLE restart interval](./imap-smtp.md#idle-restart-interval) below the server's timeout. For a connection that drops after about four and a half minutes:
 
-No action needed from you. If issues persist, check logs for specific errors.
+```json
+{
+  "imap": {
+    "partial": true,
+    "maxIdleTime": 120000
+  }
+}
+```
+
+EmailEngine then restarts IDLE every two minutes, so the connection never looks idle. You can confirm the timeout first with a manual session (`openssl s_client -connect imap.example.com:993 -quiet`, then `LOGIN`, `SELECT INBOX` and `IDLE`) and note when the server closes it.
+
+If the connection closes within seconds of logging in, before IDLE has had time to run, the problem is on the server side and a restart interval will not help; contact the provider.
 
 ## Performance Issues
 

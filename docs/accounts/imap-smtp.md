@@ -750,6 +750,42 @@ The default resync interval is 15 minutes (900 seconds). You can adjust this per
 
 For most use cases, the default 15-minute interval provides a good balance.
 
+### IDLE Restart Interval {#idle-restart-interval}
+
+EmailEngine keeps one connection per account in IMAP IDLE so new messages arrive in real time. Some servers, or a proxy, load balancer or firewall in front of them, close a connection that has been idle for a few minutes, usually without sending `BYE` first. The account then reconnects every few minutes, and each drop shows up as a disconnect in the logs.
+
+Set `imap.maxIdleTime` (in milliseconds) to a value below that limit. EmailEngine then ends IDLE and starts it again that often, so the connection never looks idle:
+
+```json
+{
+  "imap": {
+    "maxIdleTime": 120000
+  }
+}
+```
+
+For example, if the server drops IDLE connections after about four and a half minutes, 120000 (two minutes) keeps the connection open. On servers that do not support IDLE, the same value caps how often EmailEngine polls the mailbox instead.
+
+| Value | Behavior |
+|-------|----------|
+| Unset (default) | IDLE runs until the server or EmailEngine needs to end it |
+| 10000 to 1800000 | IDLE is restarted after this many milliseconds |
+
+To change it on an existing account, send a partial update. Changing the value reconnects the account:
+
+```bash
+curl -X PUT "https://emailengine.example.com/v1/account/example" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"imap": {"partial": true, "maxIdleTime": 120000}}'
+```
+
+Send `"maxIdleTime": null` to go back to the default. In the admin interface the same option is the "IDLE restart interval (seconds)" field on the account edit page, which takes seconds rather than milliseconds.
+
+A few providers (Yahoo, Rambler, 163.com) already get a built-in restart interval; a value set on the account takes precedence over it. The option also applies to accounts that authenticate with OAuth2.
+
+Available since EmailEngine v2.84.0.
+
 ### Disabling IMAP4rev2 {#disabling-imap4rev2}
 
 EmailEngine uses IMAP4rev2 when the server advertises it. A few servers advertise the capability but break when it is actually used - this has been seen on Exchange, where connection setup fails. Set `imap.disableIMAP4rev2` to keep the account on IMAP4rev1 without giving up the other extensions EmailEngine negotiates:
