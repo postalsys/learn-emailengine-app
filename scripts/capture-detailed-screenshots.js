@@ -231,28 +231,28 @@ async function captureDetailedScreenshots() {
       console.log('   ⚠️  Could not capture template editor');
     }
 
-    // 19. Bull Board with jobs
-    console.log('\n📸 Capturing Bull Board with job data...');
-    await page.goto(`${EMAILENGINE_URL}/admin/arena`, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(2000);
+    // 19. Queue browser overview (replaced the bundled Bull Board page in v2.84.0)
+    console.log('\n📸 Capturing the queue browser overview...');
+    await page.goto(`${EMAILENGINE_URL}/admin/queues`, { waitUntil: 'load' });
+    await page.waitForTimeout(1000);
     await page.screenshot({
-      path: path.join(OUTPUT_DIR, '17-bull-board-with-jobs.png'),
+      path: path.join(OUTPUT_DIR, '17-queue-browser-overview.png'),
       fullPage: true
     });
-    console.log('   ✅ Saved: 17-bull-board-with-jobs.png');
+    console.log('   ✅ Saved: 17-queue-browser-overview.png');
 
-    // 20. Bull Board - Submit queue details
-    console.log('\n📸 Capturing Submit queue...');
+    // 20. Queue browser - failed outgoing messages
+    console.log('\n📸 Capturing the failed outgoing messages...');
     try {
-      await page.goto(`${EMAILENGINE_URL}/admin/arena/submit`, { waitUntil: 'networkidle' });
+      await page.goto(`${EMAILENGINE_URL}/admin/queues/submit?state=failed`, { waitUntil: 'load' });
       await page.waitForTimeout(1000);
       await page.screenshot({
-        path: path.join(OUTPUT_DIR, '18-bull-board-submit-queue.png'),
+        path: path.join(OUTPUT_DIR, '18-queue-browser-failed-messages.png'),
         fullPage: false
       });
-      console.log('   ✅ Saved: 18-bull-board-submit-queue.png');
+      console.log('   ✅ Saved: 18-queue-browser-failed-messages.png');
     } catch (e) {
-      console.log('   ⚠️  Could not capture submit queue');
+      console.log('   ⚠️  Could not capture the failed messages');
     }
 
     // 21. Logs with actual entries

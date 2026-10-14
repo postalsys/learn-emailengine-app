@@ -216,7 +216,7 @@ async function stageDemoData(context, ethereal) {
     console.log('Staged: submitted a demo message');
     await sleep(8000); // allow delivery so the queue shows a completed job
 
-    // a scheduled message, so the Bull Board shots actually contain a job.
+    // a scheduled message, so the queue browser shots actually contain a job.
     // A delivered message leaves nothing behind (BullMQ drops completed jobs),
     // which is why those two screenshots used to show empty queues.
     await api(context, 'POST', `/v1/account/${DEMO_ACCOUNT}/submit`, {
@@ -231,27 +231,10 @@ async function stageDemoData(context, ethereal) {
     await sleep(2000);
 }
 
-// Bull Board addresses a queue by its DISPLAY name, which includes the prefix
-// EmailEngine registers it with ("Submission Queue - submit"), not the bare
-// BullMQ name. Resolve it from the sidebar link so a prefix change does not
-// silently produce a "Queue Not found" screenshot again.
-async function bullBoardQueueUrl(page, needle) {
-    await page.goto(`${EE_URL}/admin/bull-board`, { waitUntil: 'load' });
-    await page.waitForSelector('a[href*="/admin/bull-board/queue/"]', { timeout: 30000 });
-
-    const href = await page.$$eval(
-        'a[href*="/admin/bull-board/queue/"]',
-        (links, want) => {
-            const match = links.find(link => decodeURIComponent(link.getAttribute('href')).includes(want));
-            return match ? match.getAttribute('href') : null;
-        },
-        needle
-    );
-
-    if (!href) {
-        throw new Error(`No Bull Board queue link matching "${needle}"`);
-    }
-    return href;
+// The queue browser (System > Queues, which replaced the bundled third-party board in v2.84.0)
+// addresses a queue by its BullMQ name: /admin/queues/submit, with ?state= selecting the tab
+function queueBrowserUrl(queue, state) {
+    return `/admin/queues/${queue}${state ? `?state=${state}` : ''}`;
 }
 
 // Generate a hosted authentication form URL and rebase it onto EE_URL (the
@@ -323,9 +306,8 @@ async function captureScreenshots() {
             console.log('Skipped 16-template-editor.png (demo template not found)');
         }
 
-        await shot(page, '/admin/bull-board', '17-bull-board-with-jobs.png', { settle: 2000 });
-        const submitQueueUrl = await bullBoardQueueUrl(page, 'submit');
-        await shot(page, submitQueueUrl, '18-bull-board-submit-queue.png', { settle: 2000 });
+        await shot(page, '/admin/queues', '17-queue-browser-overview.png', { settle: 1500 });
+        await shot(page, queueBrowserUrl('submit', 'failed'), '18-queue-browser-failed-messages.png', { settle: 1500 });
 
         // access tokens: the list (holds this run's own token) and the create
         // form with description and scope selection filled in

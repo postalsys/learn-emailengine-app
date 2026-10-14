@@ -133,7 +133,7 @@ The `nextAttempt` value in the outbox API and in the `messageDeliveryError` payl
 
 BullMQ 6 (EmailEngine v2.79.0 and later) has no separate "paused" job state. Pausing the queue stops workers from taking new jobs; the jobs that are already waiting stay in *Waiting*, an active job finishes, and new submissions join *Waiting* too. Resuming lets the workers continue.
 
-Pause and resume from Bull Board, or through the [queue settings API](/docs/api/put-v-1-settings-queue-queue):
+Pause and resume from the queue browser, or through the [queue settings API](/docs/api/put-v-1-settings-queue-queue):
 
 ```bash
 # Pause queue
@@ -153,23 +153,21 @@ Use it for maintenance windows, for debugging, or to hold outgoing mail while a 
 
 ## Monitoring the Queue
 
-### Bull Board UI
+### Queue browser
 
-EmailEngine includes [Bull Board](https://github.com/felixmosh/bull-board), a web UI for BullMQ queues.
+The admin interface has a browser for the queues under **System > Queues** (`/admin/queues`). Releases before v2.84.0 bundled the third-party Bull Board page at `/admin/bull-board`; that address now redirects to the queue browser.
 
-**Access**: **System > Queues** in the admin menu, or `/admin/bull-board` directly.
+**Outgoing messages** lists the submit queue one state at a time, each entry shown as a message: subject, sender and recipients, account, when it is due or when it failed, the attempt count, and the outcome. Opening an entry shows the envelope, the timing, what went wrong in plain terms with the server's reason under it, and the raw job record for support cases. The search box looks through the newest entries of the selected state by subject, address, message ID, queue ID or account.
 
-**Features**:
-- View job counts by state
-- Inspect individual jobs
-- Retry failed jobs
-- Delete jobs
-- Pause and resume queues
-- View job logs
+From there you can:
+- **Send now** a message that is waiting for its scheduled time or for the backoff before its next attempt
+- **Retry** a failed message whose content is still kept (see [Retrying failed messages](#retrying-failed-messages))
+- **Remove** a message that is not being delivered right now - its content goes with it
+- **Pause** and **resume** the queue, and remove every completed or failed entry
 
 ### Outbox API
 
-The [outbox API](/docs/api/get-v-1-outbox) lists the jobs in the delayed, waiting, active, and failed states, in that order. Completed jobs never appear here, even when the Job History Limit retains them; they are visible in Bull Board only.
+The [outbox API](/docs/api/get-v-1-outbox) lists the jobs in the delayed, waiting, active, and failed states, in that order, and each entry carries its `state`. Completed jobs never appear here, even when the Job History Limit retains them; they are visible in the queue browser only.
 
 #### List queued messages
 
@@ -277,8 +275,51 @@ Useful for:
 - Clearing a retained failed job
 
 :::info Retrying Failed Jobs
-The outbox API has no retry call. To send a failed message again, resubmit it through the submit API, or use the **Retry** button in Bull Board, which puts the same job back into *Waiting*.
+A failed message can be retried while its content is still kept: `POST /v1/outbox/{queueId}/retry` over the API, or **Retry** on the message's page in the queue browser. See [Retrying failed messages](#retrying-failed-messages) below.
 :::
+
+#### Retry a failed message
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/outbox/1812477e7ed5330eda4/retry" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "retried": true,
+  "queueId": "1812477e7ed5330eda4",
+  "messageId": "<uuid@example.com>"
+}
+```
+
+The message goes back to *Waiting* with a fresh set of delivery attempts. A `409` answer names why it cannot be retried in its `code`: `NotFailed` when the message is not in the failed state, `ContentGone` when its content is no longer kept - resubmit it through the submit API in that case.
+
+#### Send a scheduled message now
+
+```bash
+curl -X POST "https://emailengine.example.com/v1/outbox/1812477e7ed5330eda4/promote" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "promoted": true,
+  "queueId": "1812477e7ed5330eda4",
+  "messageId": "<uuid@example.com>"
+}
+```
+
+Moves a message out of *Delayed* so it is delivered at the next opportunity, whether it was waiting for its `sendAt` or for the backoff before its next attempt. Any other state answers `409` with `code` `NotDelayed`.
+
+### Retrying failed messages
+
+When the last delivery attempt fails, the message record stays in the failed set and, since v2.84.0, so does the message content, so the message can be retried as it was. The content is bounded separately from the job record, because a message can be as large as `EENGINE_MAX_SMTP_MESSAGE_SIZE`:
+
+- `EENGINE_QUEUE_KEEP_FAILED_CONTENT` - how many of the most recent failed messages keep their content (default `100`)
+- `EENGINE_QUEUE_KEEP_FAILED_CONTENT_SIZE` - how much that content may add up to in total (default `100MB`)
+
+Past either bound the oldest content is dropped first, and content is dropped with its job record after `EENGINE_QUEUE_KEEP_FAILED_AGE`, when the failed set is cleaned, and when the account is deleted. Setting either variable to `0` keeps no content, which is how releases before v2.84.0 behaved. A failed message whose content was dropped is still listed, marked **Content discarded**, and can only be sent again by resubmitting it. The overview of the queue browser shows how many messages currently keep their content and how much space they take.
 
 ## Configuration
 
@@ -315,7 +356,7 @@ Completed jobs are removed as soon as they finish, to save Redis memory. To keep
 Retained completed jobs are also dropped after 24 hours, whichever limit is reached first. Failed jobs have their own floor, described under [Failed](#4-failed): at least 500 entries for 7 days, or the Job History Limit when that is higher.
 
 :::warning
-The retention policy is attached to a job when it is created, so a change applies to jobs queued after the change. Retained jobs are visible in Bull Board, and retained failed jobs also in `GET /v1/outbox`; `GET /v1/outbox/{queueId}` returns 404 for a finished job either way, because the message content is removed on completion or failure.
+The retention policy is attached to a job when it is created, so a change applies to jobs queued after the change. Retained jobs are visible in the queue browser, and retained failed jobs also in `GET /v1/outbox`. `GET /v1/outbox/{queueId}` returns 404 for a completed job, because the message content is removed on completion; a failed job answers while its content is kept (see [Retrying failed messages](#retrying-failed-messages)).
 :::
 
 ### SMTP Timeout
@@ -398,7 +439,7 @@ Emitted when a job is finished for good, after the last attempt or on a permanen
 
 ## See Also
 
-- [Queue Management](/docs/advanced/queue-management) - Every queue, Bull Board, worker concurrency, and Redis tuning
+- [Queue Management](/docs/advanced/queue-management) - Every queue, the queue browser, worker concurrency, and Redis tuning
 - [Basic Sending](/docs/sending/basic-sending) - How a message enters the queue
 - [messageDeliveryError](/docs/webhooks/messagedeliveryerror) and [messageFailed](/docs/webhooks/messagefailed) - The full payloads of the failure events
 - [Sending API](/docs/api-reference/sending-api) - The outbox endpoints in the API reference

@@ -1,14 +1,14 @@
 ---
 title: Queue Management
 sidebar_position: 4
-description: Understanding EmailEngine's BullMQ queues, job types, lifecycle, and monitoring with Bull Board
+description: Understanding EmailEngine's BullMQ queues, job types, lifecycle, and the queue browser in the admin interface
 keywords:
   - queue management
   - BullMQ
   - job lifecycle
   - queue monitoring
+  - queue browser
   - Bull Board
-  - Arena
   - job types
 ---
 
@@ -23,28 +23,33 @@ EmailEngine manages two primary queues for different operations:
 - **Submit Queue** (`submit`): Email sending jobs
 - **Notify Queue** (`notify`): Webhook delivery jobs
 
-One more exists: `export`, which runs [bulk exports](/docs/receiving/exporting) and is not shown in Bull Board. Releases before v2.82.0 also had `documents`, the indexing queue of the Document Store, which was removed with that feature.
+One more exists: `export`, which runs [bulk exports](/docs/receiving/exporting). Releases before v2.82.0 also had `documents`, the indexing queue of the Document Store, which was removed with that feature.
 
-All queues are backed by Redis and monitored through Bull Board (previously Arena), accessible via **System > Queues** in the EmailEngine interface. Bull Board lists each queue under a descriptive name followed by the queue name: **Webhooks Queue - notify** and **Submission Queue - submit**.
+All queues are backed by Redis and browsed through **System > Queues** in the EmailEngine interface, which lists them as **Webhooks** (`notify`), **Outgoing messages** (`submit`) and **Exports** (`export`). Releases before v2.84.0 bundled the third-party Bull Board page (and before that, Arena) at `/admin/bull-board`; that address redirects to the queue browser now.
 
 EmailEngine 2.79.0 moved from BullMQ 5 to BullMQ 6. The observable differences are noted where they apply below.
 
-## Accessing Bull Board
+## The Queue Browser
 
-**Navigation**: System > Queues, which opens `/admin/bull-board`. Bull Board is part of the admin interface and needs an admin session.
+**Navigation**: System > Queues, which opens `/admin/queues`. It is part of the admin interface and needs an admin session.
 
-Bull Board provides a web interface for:
-- Viewing queue statistics
-- Inspecting job details
-- Managing jobs (retry, delete)
-- Monitoring queue health
-- Debugging failures
+![Queue browser overview](/img/screenshots/17-queue-browser-overview.png)
+*The overview: every queue with its counts by state*
 
-![Bull Board Queue Dashboard](/img/screenshots/17-bull-board-with-jobs.png)
-*Bull Board main dashboard showing all queues and their statistics*
+The overview shows every queue with the number of entries in each state, how many entries it can run at once (worker threads times the per-worker concurrency), whether it is paused, and for the submit queue how much failed-message content is kept for retries. The counts refresh every few seconds. Each count links to that state's tab on the queue's own page.
 
-![Submit Queue Details](/img/screenshots/18-bull-board-submit-queue.png)
-*Submit queue showing email sending jobs and their status*
+A queue's page lists its entries one state at a time, as what they are rather than as raw jobs: a webhook delivery is shown with its event, account and route, an outgoing message with its subject, sender, recipients and account, an export with its account. The search box looks through the newest entries of the selected state - the 500 most recent, which the page says when a busy queue holds more. An entry's page explains a failure in the worker's own terms, with the error text under it, and keeps the raw BullMQ record (data, options, progress, stack traces) at the bottom for support cases.
+
+![Failed outgoing messages](/img/screenshots/18-queue-browser-failed-messages.png)
+*Failed outgoing messages, each with what went wrong and the server's reason*
+
+Actions, where they apply:
+- **Send now** runs a delayed entry at the next opportunity: a scheduled message, or an attempt waiting out its backoff
+- **Retry** puts a failed entry back with a fresh set of attempts. A failed message can only be retried while its content is still kept; see [Retrying failed messages](/docs/sending/outbox-queue#retrying-failed-messages)
+- **Remove** takes an entry out of the queue, together with a message's content. An entry a worker is processing right now is left alone
+- **Pause** and **Resume** on a queue, and removing every completed or failed entry of it
+
+The exports queue is read-only here: an export is managed from its account page, where cancelling it also removes its file. The same actions are available over the API for outgoing messages: [`POST /v1/outbox/{queueId}/retry`](/docs/api/post-v-1-outbox-queue-id-retry), [`POST /v1/outbox/{queueId}/promote`](/docs/api/post-v-1-outbox-queue-id-promote) and [`DELETE /v1/outbox/{queueId}`](/docs/api/delete-v-1-outbox-queue-id), and pausing through [`PUT /v1/settings/queue/{queue}`](/docs/api/put-v-1-settings-queue-queue).
 
 ## Queue Types
 
@@ -120,7 +125,7 @@ Every queue uses the same BullMQ states. What each one means for a submit job, i
 | Active | Being processed by a worker: the SMTP transaction, the webhook POST, or the export run | Success moves it to Completed, a retriable failure to Delayed, a permanent failure or the last allowed attempt to Failed |
 | Delayed | Scheduled for a later time: a `sendAt` in the future, or a failed attempt waiting for its retry (5 seconds doubling per attempt, reduced by up to 20 percent of jitter) | Its time comes and it returns to Waiting |
 | Completed | Finished successfully. Removed at once unless a history limit is set, see [Enable Job Retention](#enable-job-retention); retained entries are dropped after 24 hours | Retention expires |
-| Failed | Given up on, after the last attempt or on a permanent error. Kept by default, at least the last 500 per queue for 7 days (`EENGINE_QUEUE_KEEP_FAILED`, `EENGINE_QUEUE_KEEP_FAILED_AGE`), because a failure is the only record that a delivery was abandoned. Before EmailEngine 2.75.0 the history limit applied to failed jobs too, so a limit of 0 discarded them | Retention expires, or the job is retried or deleted from Bull Board |
+| Failed | Given up on, after the last attempt or on a permanent error. Kept by default, at least the last 500 per queue for 7 days (`EENGINE_QUEUE_KEEP_FAILED`, `EENGINE_QUEUE_KEEP_FAILED_AGE`), because a failure is the only record that a delivery was abandoned. Before EmailEngine 2.75.0 the history limit applied to failed jobs too, so a limit of 0 discarded them | Retention expires, or the job is retried or removed from the queue browser |
 
 A paused queue has no job state of its own. Since the move to BullMQ 6 in EmailEngine 2.79.0, pausing stops the workers from taking new jobs, an Active job runs to completion, and the rest stay in Waiting until the queue is resumed.
 
@@ -198,19 +203,17 @@ Delayed:   200  ← Many retries
 Failed:    50   ← High failure rate
 ```
 
-### Bull Board Monitoring
+### Monitoring in the Queue Browser
 
-**Dashboard View**:
+**Overview**:
 1. Navigate to **System > Queues**
-2. View all queues at a glance
-3. Check counts for each state
-4. Identify queues with issues
+2. View all queues at a glance, with the counts of each state
+3. A count that is not zero is a link to the entries behind it
 
 **Per-Queue View**:
-1. Click on queue name (e.g., "Submission Queue - submit")
-2. View detailed statistics
-3. Browse jobs by state
-4. Inspect individual jobs
+1. Open a queue (**Webhooks**, **Outgoing messages** or **Exports**)
+2. Switch between the state tabs; the counts on them refresh on their own
+3. Search the state, or follow the link from an account page or a webhook route page, which opens the list filtered to that account or route
 
 ## Job Inspection
 
@@ -218,22 +221,20 @@ Failed:    50   ← High failure rate
 
 **Steps**:
 1. Go to **System > Queues**
-2. Select queue (Submission or Webhooks)
-3. Select job state tab (Waiting, Active, Failed, etc.)
-4. Click on a job to view details
+2. Select the queue
+3. Select a state tab (Waiting, Active, Delayed, Failed, Completed)
+4. Open an entry
 
-**Job Information**:
-- Job ID
-- Creation timestamp
-- Processing attempts
-- Data payload
-- Error messages (if failed)
-- Processing duration
-- Next retry time (if delayed)
+**What the page shows**:
+- What the entry is: the message's envelope and subject, or the webhook's event, account and route
+- When it was queued, started and finished, the attempt count, and the next attempt time while it is delayed
+- What went wrong, as the worker classifies it (a permanent rejection by the receiving server, an unreachable server, an endpoint that answered 500, a timeout), with the server's reason under it
+- For a failed message, whether its content is still kept for a retry
+- The raw queue record: data, options, progress, return value and the stack trace of every failed attempt
 
 ### Failed Job Analysis
 
-**Example Failed Submit Job**:
+**Example Failed Submit Job** (the raw queue record):
 
 ```json
 {
@@ -482,7 +483,7 @@ To follow what the queues are doing, use the paths that are supported:
 
 | What you want | How to get it |
 |---------------|---------------|
-| Inspect individual jobs, including failures with full error details | **System > Queues** (Bull Board) in the admin interface |
+| Inspect individual jobs, including failures with full error details | **System > Queues** in the admin interface |
 | React to delivery outcomes in your own code | [Webhooks](/docs/webhooks/overview), in particular [`messageSent`](/docs/webhooks/messagesent), [`messageDeliveryError`](/docs/webhooks/messagedeliveryerror), and [`messageFailed`](/docs/webhooks/messagefailed) |
 | Check where a specific queued message stands | [`GET /v1/outbox/{queueId}`](/docs/api/get-v-1-outbox-queueid), which reports `progress.status`, `attemptsMade`, and `nextAttempt` |
 | Cancel a message that has not been sent yet | [`DELETE /v1/outbox/{queueId}`](/docs/api/delete-v-1-outbox-queueid) |

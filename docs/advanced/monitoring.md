@@ -23,7 +23,7 @@ EmailEngine exposes a health check endpoint, a stats endpoint, a Prometheus metr
 | Health check | `GET /health` | None |
 | Instance stats | `GET /v1/stats` | Access token |
 | Prometheus metrics | `GET /metrics` | Access token with the `metrics` scope |
-| Queue dashboard (Bull Board) | `/admin/bull-board` | Admin login |
+| Queue browser | `/admin/queues` | Admin login |
 | Structured logs | stdout | See [Logging](/docs/advanced/logging) |
 
 ## Health Check Endpoints
@@ -547,11 +547,11 @@ New Relic, Elastic, Honeycomb, and similar tools all accept Prometheus metrics t
 Language-level APM agents instrument an application you build and run yourself. EmailEngine is a packaged service, so there is no place to load one, and the metrics endpoint already reports what an agent would have collected.
 :::
 
-## Bull Board Dashboard
+## Queue Browser
 
-The webhook, submission and export queues are BullMQ queues, and EmailEngine bundles Bull Board for looking inside them. It is always available at `/admin/bull-board`, reachable from the admin menu under **System** > **Queues**, and requires an admin login like the rest of `/admin`.
+The webhook, submission and export queues are BullMQ queues, and the admin interface has a browser for them at `/admin/queues`, reachable from the admin menu under **System** > **Queues**. It requires an admin login like the rest of `/admin`. Releases before v2.84.0 bundled the third-party Bull Board page at `/admin/bull-board`; that address now redirects to the queue browser.
 
-Use it to inspect a stuck job's payload, retry failed deliveries, or pause a queue. [Queue management](/docs/advanced/queue-management) explains what each queue holds, and [Debugging webhooks](/docs/webhooks/overview#debugging-webhooks) walks through a failed delivery.
+The overview shows every queue with the number of entries in each state, refreshed every few seconds. A queue's own page lists its entries one state at a time - as webhook deliveries, outgoing messages or exports rather than raw jobs - and an entry's page explains a failure in the worker's own terms, with the raw job record underneath for support cases. From there a failed delivery can be retried, a scheduled message sent now, an entry removed, and a queue paused or cleaned. [Queue management](/docs/advanced/queue-management) explains what each queue holds, and [Debugging webhooks](/docs/webhooks/overview#debugging-webhooks) walks through a failed delivery.
 
 ## Workers Page
 

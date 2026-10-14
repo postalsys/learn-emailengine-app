@@ -450,7 +450,7 @@ Submissions are BullMQ jobs in the `submit` queue. [Outbox queue](/docs/sending/
 
 ### Queue Monitoring
 
-Open **System > Queues** in the admin interface for the Bull Board dashboard and select the **submit** queue. A job is in one of:
+Open **System > Queues** in the admin interface and select **Outgoing messages**. A message is in one of:
 
 - **Waiting**: ready to send
 - **Delayed**: scheduled for later, or waiting out a retry delay
@@ -464,7 +464,7 @@ A temporary failure is retried with exponential backoff: 5 seconds after the fir
 
 ### Manual Queue Management
 
-From Bull Board, a failed job can be retried and a job in any state can be removed. Pausing the queue holds every waiting job until it is resumed; the same is available as `PUT /v1/settings/queue/submit` with `{"paused": true}` or `{"paused": false}`. A queued message can also be removed with `DELETE /v1/outbox/{queueId}`.
+From the queue browser, a failed message can be retried while its content is still kept (see [Retrying failed messages](/docs/sending/outbox-queue#retrying-failed-messages)), a scheduled message can be sent now, and a message that is not being delivered right now can be removed. Pausing the queue holds every waiting job until it is resumed; the same is available as `PUT /v1/settings/queue/submit` with `{"paused": true}` or `{"paused": false}`. Over the API, a message is retried with `POST /v1/outbox/{queueId}/retry`, sent now with `POST /v1/outbox/{queueId}/promote`, and removed with `DELETE /v1/outbox/{queueId}`.
 
 ### Queue Performance
 

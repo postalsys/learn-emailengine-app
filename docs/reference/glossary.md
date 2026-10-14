@@ -185,7 +185,7 @@ A process that consumes jobs from a queue and executes them. EmailEngine runs mu
 
 ### Failed Jobs Set
 
-Where failed jobs go after exhausting retry attempts. BullMQ does not have a separate dead letter queue - failed jobs remain in the queue's failed set, accessible via Bull Board for debugging.
+Where failed jobs go after exhausting retry attempts. BullMQ does not have a separate dead letter queue - failed jobs remain in the queue's failed set, listed under the **Failed** tab of the queue browser (**System > Queues**) for debugging and retrying.
 
 ## Gmail-Specific Terms
 

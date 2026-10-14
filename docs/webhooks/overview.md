@@ -351,7 +351,7 @@ See [Webhook Delivery settings](/docs/configuration/environment-variables#webhoo
 EmailEngine uses BullMQ to manage webhook delivery. To inspect webhook jobs:
 
 1. Go to **System > Queues**
-2. Select **Webhooks Queue**
+2. Open **Webhooks**
 3. Check these tabs:
    - **Active**: Currently being posted
    - **Delayed**: An attempt failed and the next one is waiting out the backoff
@@ -362,10 +362,13 @@ Failed webhooks are retained with full error details by default, so there is not
 
 ### 3. Inspect Failed Jobs
 
-Click on a failed job in Bull Board to see:
-- The payload that was being delivered
-- The failure reason and the stack trace of each attempt
-- How many attempts were made
+Open a failed delivery in the queue browser to see:
+- What failed, in plain terms (the endpoint answered 500, the endpoint did not answer in time, the destination is blocked by the egress policy) with the error text under it
+- Which webhook route or default target it was for, and which account and event
+- How many attempts were made and when
+- The payload that was being delivered, the failure reason and the stack trace of each attempt, under **Raw queue record**
+
+A failed delivery can be retried from the same page, with a fresh set of attempts. The webhook route page links straight to the route's failed and waiting deliveries.
 
 The response body from your endpoint is read and discarded rather than stored, so a failure is described by its status code and error code alone.
 

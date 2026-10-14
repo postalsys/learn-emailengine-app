@@ -149,7 +149,7 @@ EmailEngine's queue identifier for this submission. Use this to:
 
 ### error
 
-The first line of the stack trace of the first failed attempt, so it starts with the error class name. A message whose attempts failed for different reasons therefore reports the earliest one here; the [`messageDeliveryError`](/docs/webhooks/messagedeliveryerror) events carry each attempt's own error, and the job's full stack traces are in Bull Board.
+The first line of the stack trace of the first failed attempt, so it starts with the error class name. A message whose attempts failed for different reasons therefore reports the earliest one here; the [`messageDeliveryError`](/docs/webhooks/messagedeliveryerror) events carry each attempt's own error, and the job's full stack traces are on the message's page in the queue browser (**System > Queues > Outgoing messages > Failed**).
 
 Common patterns:
 
@@ -230,5 +230,5 @@ The `messageFailed` event is the terminal failure state in the email delivery li
 - [Webhooks Overview](/docs/webhooks/overview) - Delivery, retries, headers and signing
 - [Outbox queue](/docs/sending/outbox-queue) - Retry schedule, permanent versus transient failures, and what the queue keeps
 - [Submit API](/docs/api/post-v-1-account-account-submit) - Send emails via EmailEngine
-- [Queue management](/docs/advanced/queue-management) - Inspecting failed jobs in Bull Board
+- [Queue management](/docs/advanced/queue-management) - Inspecting failed jobs in the queue browser
 - [Sending Emails](/docs/sending) - Email sending guide

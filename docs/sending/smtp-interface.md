@@ -373,7 +373,7 @@ Messages sent via the SMTP interface are treated the same as messages sent via t
 - Queued in the outbox queue, with `source` set to `smtp` in the outbox entry
 - Automatic retry logic
 - Webhook notifications (`messageSent`, `messageDeliveryError`, `messageFailed`)
-- Visible in Bull Board under **System > Queues**
+- Visible in the queue browser under **System > Queues > Outgoing messages**
 
 Query queue status (the outbox is a single global queue, not scoped per account):
 
