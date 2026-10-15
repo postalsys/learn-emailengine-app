@@ -332,7 +332,7 @@ Failed jobs are not covered by this setting. They are retained by default, becau
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `EENGINE_QUEUE_KEEP_FAILED` | `500` | Failed entries retained per queue |
+| `EENGINE_QUEUE_KEEP_FAILED` | `500` | Failed entries retained per queue, at least; a higher completed job history limit raises it |
 | `EENGINE_QUEUE_KEEP_FAILED_AGE` | `604800` | How long failed entries are retained, in seconds (7 days) |
 
 Raising the Job History Limit above 500 raises the failed-entry floor with it. Lower these if Redis memory is tight: a `messageNew` webhook payload can carry up to `notifyTextSize` of message text, and a receiver that is down turns every event into a retained entry.
