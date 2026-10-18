@@ -489,6 +489,32 @@ curl -X PUT https://emailengine.example.com/v1/account/user123 \
 Only disable certificate verification for development/testing with self-signed certs. In production, use proper CA-signed certificates.
 :::
 
+### STARTTLS Not Available
+
+**Error Message:** `Server does not support STARTTLS` (IMAP, the account is in the `connectError` state) or an `ETLS` delivery error such as `Error upgrading connection with STARTTLS` (SMTP)
+
+**What it means:** The account connects with `secure: false`, and the server did not offer STARTTLS or the upgrade failed. Since v2.84.2 EmailEngine requires the upgrade on such connections and does not continue in cleartext. An account that connected to a server without TLS before the upgrade fails after it.
+
+**Solution:**
+
+1. Check whether the server offers TLS on another port. Most servers do: IMAP on port 993 and SMTP on port 465 with `secure: true`, which avoids STARTTLS altogether
+2. Check that nothing between EmailEngine and the server removes STARTTLS from the server's greeting. Some firewalls and antivirus proxies do; that is the attack the requirement exists to stop
+3. If the server is on a trusted network and has no TLS at all, opt the account out:
+
+```bash
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "imap": {
+      "partial": true,
+      "requireTLS": false
+    }
+  }'
+```
+
+Use `smtp` in place of `imap` for the SMTP connection. See [STARTTLS](./imap-smtp#starttls) for what the setting does.
+
 ### New Messages Stop Arriving While the Account Shows connected
 
 **Symptoms:**

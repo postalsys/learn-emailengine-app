@@ -22,7 +22,8 @@ A gateway is identified by a `gateway` ID and holds one set of SMTP connection s
 | `port` | integer, 1 to 65536 | Yes | SMTP port |
 | `user` | string, up to 1024 characters | No | Login name. Leave unset or `null` for a relay that takes no authentication |
 | `pass` | string, up to 1024 characters | No | Password. Encrypted at rest with the [secret](/docs/deployment/encryption) and never returned |
-| `secure` | boolean, default `false` | No | `true` opens a TLS connection from the start, the usual choice for port 465. `false` opens a plaintext connection and upgrades it with STARTTLS when the server offers it, the usual choice for ports 587 and 25 |
+| `secure` | boolean, default `false` | No | `true` opens a TLS connection from the start, the usual choice for port 465. `false` opens a plaintext connection and upgrades it with STARTTLS, the usual choice for ports 587 and 25 |
+| `requireTLS` | boolean | No | Applies when `secure` is `false`. Unset or `true`, the delivery fails if the relay does not offer STARTTLS or the upgrade fails, instead of continuing in cleartext. `false` upgrades when the relay offers STARTTLS and otherwise continues in cleartext, credentials included; use it only for a relay on a trusted network that has no TLS at all. See [STARTTLS](/docs/accounts/imap-smtp#starttls). Since v2.84.2; earlier versions always continued in cleartext when the relay offered no STARTTLS |
 
 Three read-only fields record how the gateway has been used:
 
@@ -104,7 +105,7 @@ Do not write a masked `pass` back: `******` is not the stored password, and the 
 
 ## Managing Gateways in the Admin Interface
 
-Gateways are listed under **Gateways** in the **Email** section of the side menu, with their ID, status, the number of emails sent and the last activity. **Add gateway** opens a form with **Gateway ID** (optional, generated when left empty), **Display Name**, **Server Address**, **Port**, **Username**, **Password** and **Use direct TLS**, which is the `secure` field. **Test connection** opens an SMTP connection with the settings in the form and logs in before anything is saved, and reports the failure in plain words (an unknown hostname, a refused login, a TLS error, a timeout). The gateway page shows the stored settings with the password masked, the delivery count and the last error, with **Edit gateway** and the delete action in the actions menu.
+Gateways are listed under **Gateways** in the **Email** section of the side menu, with their ID, status, the number of emails sent and the last activity. **Add gateway** opens a form with **Gateway ID** (optional, generated when left empty), **Display Name**, **Server Address**, **Port**, **Username**, **Password**, **Use direct TLS**, which is the `secure` field, and **Require STARTTLS**, which is the `requireTLS` field. **Test connection** opens an SMTP connection with the settings in the form and logs in before anything is saved, and reports the failure in plain words (an unknown hostname, a refused login, a TLS error, a timeout). The gateway page shows the stored settings with the password masked, the delivery count and the last error, with **Edit gateway** and the delete action in the actions menu.
 
 ## Routing a Message through a Gateway
 

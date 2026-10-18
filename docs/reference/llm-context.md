@@ -423,6 +423,8 @@ curl -X POST "https://emailengine.example.com/v1/account" \
   }'
 ```
 
+With `secure: false` (ports 143 and 587) the connection must upgrade with STARTTLS or it fails. `imap.requireTLS: false` and `smtp.requireTLS: false` allow cleartext for a server that has no TLS at all; see [STARTTLS](/docs/accounts/imap-smtp#starttls).
+
 ### Pattern 2: Register OAuth2 Account (Gmail/Outlook/Mail.ru)
 
 ```bash

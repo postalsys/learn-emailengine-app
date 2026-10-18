@@ -174,9 +174,9 @@ Microsoft has **disabled regular password authentication** for consumer accounts
 The `secure` setting controls how TLS is established:
 
 - **`secure: true`** (ports 993/465) - TLS is used from the start of the connection (implicit TLS)
-- **`secure: false`** (ports 143/587) - Connection starts unencrypted, then EmailEngine automatically upgrades to TLS using STARTTLS if the server supports it
+- **`secure: false`** (ports 143/587) - The connection starts unencrypted and EmailEngine upgrades it with STARTTLS before logging in. If the server does not offer STARTTLS, the connection fails rather than continuing unencrypted
 
-Setting `secure: false` does **not** mean the connection is unencrypted. EmailEngine will use TLS in both cases - the difference is only in how TLS is negotiated.
+Setting `secure: false` does **not** mean the connection is unencrypted. Both settings use TLS by default - the difference is only in how TLS is negotiated. See [STARTTLS](#starttls) for the `requireTLS` opt-out.
 :::
 
 ## Authentication Methods
@@ -314,6 +314,43 @@ Some providers use different credentials for IMAP and SMTP:
   }
 }
 ```
+
+### STARTTLS {#starttls}
+
+A connection with `secure: false` starts in cleartext and has to be upgraded with STARTTLS before anything sensitive is sent. EmailEngine requires that upgrade by default: if the server does not offer STARTTLS, or the upgrade fails, the connection fails. It never falls back to cleartext, so the login and message content are not sent unencrypted. Without this, an attacker on the network path could remove the STARTTLS offer from the server's greeting and receive the password in cleartext.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `imap.requireTLS` | boolean | `true` | Require STARTTLS on an IMAP connection with `secure: false`. Set to `false` to continue in cleartext when the server does not offer STARTTLS |
+| `smtp.requireTLS` | boolean | `true` | The same for the SMTP connection |
+
+An account with no stored `requireTLS` value has STARTTLS required. The field has no effect when `secure` is `true`, because that connection is encrypted from the start. The same rule applies to the [verify account](/docs/api/post-v-1-verifyaccount) check and to [SMTP gateways](/docs/sending/smtp-gateways#the-gateway-record).
+
+`requireTLS: false` is for a server on a trusted network that has no TLS at all. With it, the connection still upgrades when the server offers STARTTLS, and continues in cleartext, login included, when it does not:
+
+```bash
+curl -X PUT https://emailengine.example.com/v1/account/user123 \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "imap": {
+      "partial": true,
+      "requireTLS": false
+    },
+    "smtp": {
+      "partial": true,
+      "requireTLS": false
+    }
+  }'
+```
+
+In the admin interface, the same switch is the **Require STARTTLS** checkbox in the IMAP and SMTP sections of the account's edit page.
+
+When STARTTLS is required and the server does not offer it, an IMAP connection fails with `Server does not support STARTTLS` and the account moves to the `connectError` state. An SMTP delivery fails with an `ETLS` error, for example `Error upgrading connection with STARTTLS`. See [STARTTLS Not Available](./troubleshooting#starttls-not-available).
+
+:::note Changed in v2.84.2
+Before v2.84.2, STARTTLS was opportunistic: EmailEngine upgraded when the server offered it and otherwise continued in cleartext. An account connecting to a server without TLS on a `secure: false` port worked before the upgrade and fails after it, until `requireTLS: false` is set for it.
+:::
 
 ### Self-Signed Certificates
 

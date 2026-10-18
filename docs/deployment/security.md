@@ -518,7 +518,7 @@ Leave those variables unset and EmailEngine supplies the certificate itself, ord
 
 **IMAP and SMTP connections to mail servers:**
 
-Whether a connection to a mail server is encrypted is decided per account: `secure: true` on the IMAP or SMTP settings opens a TLS connection, and the [SSL/TLS settings](/docs/accounts/imap-smtp#ssltls-configuration) on the same page cover STARTTLS and certificate checking. The floor for outbound IMAP TLS is set instance-wide with `EENGINE_TLS_MIN_VERSION` (default `TLSv1`), `EENGINE_TLS_MIN_DH_SIZE` (default `1024`) and `EENGINE_TLS_CIPHERS` (default `DEFAULT@SECLEVEL=0`). The defaults are permissive so that old mail servers still connect; raise them where every server you connect to supports TLS 1.2:
+Whether a connection to a mail server is encrypted is decided per account: `secure: true` on the IMAP or SMTP settings opens a TLS connection, and the [SSL/TLS settings](/docs/accounts/imap-smtp#ssltls-configuration) on the same page cover STARTTLS and certificate checking. A connection with `secure: false` must upgrade with STARTTLS before it logs in, unless the account opts out with `requireTLS: false` (since v2.84.2; see [STARTTLS](/docs/accounts/imap-smtp#starttls)). The floor for outbound IMAP TLS is set instance-wide with `EENGINE_TLS_MIN_VERSION` (default `TLSv1`), `EENGINE_TLS_MIN_DH_SIZE` (default `1024`) and `EENGINE_TLS_CIPHERS` (default `DEFAULT@SECLEVEL=0`). The defaults are permissive so that old mail servers still connect; raise them where every server you connect to supports TLS 1.2:
 
 ```bash
 EENGINE_TLS_MIN_VERSION=TLSv1.2

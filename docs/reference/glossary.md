@@ -249,7 +249,7 @@ Encryption protocol for secure communication. EmailEngine uses TLS for IMAP/SMTP
 
 ### STARTTLS
 
-A method to upgrade a plain-text connection to TLS. Used by some IMAP/SMTP servers on standard ports.
+A method to upgrade a plain-text connection to TLS. Used by IMAP on port 143 and SMTP on ports 587 and 25. Since v2.84.2 EmailEngine requires the upgrade on a connection with `secure: false` unless the account sets `requireTLS: false`. See [STARTTLS](/docs/accounts/imap-smtp#starttls).
 
 ### Encryption Secret
 
