@@ -35,6 +35,16 @@ const config: Config = {
 
   // Site verification and SEO meta tags
   headTags: [
+    // trailingSlash is false, so every page is a flat .html file and a slash-ending URL
+    // (/docs/mcp/tools/) is served by GitHub Pages as the 404 page. GitHub Pages cannot
+    // redirect, so this sends a browser on to the canonical address before the app boots,
+    // keeping the query and the #anchor. Clients that run no JavaScript still see the 404.
+    {
+      tagName: 'script',
+      attributes: {},
+      innerHTML:
+        "(function(){var p=location.pathname;if(p.length>1&&p.charAt(p.length-1)==='/'){location.replace(p.replace(/\\/+$/,'')+location.search+location.hash);}})();",
+    },
     {
       tagName: 'meta',
       attributes: {
