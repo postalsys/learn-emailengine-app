@@ -17,7 +17,7 @@ Email HTML is not web page HTML. It arrives with unclosed tags, global styleshee
 
 EmailEngine can hand you a version that is safe to inject directly. Ask for it with a single query parameter, and you get sanitized markup with inline images already embedded and quoted reply history folded behind one control.
 
-:::tip Quick Example
+:::tip[Quick Example]
 
 ```bash
 curl "https://emailengine.example.com/v1/account/example/message/AAAAAQAACnA?webSafeHtml=true" \
@@ -83,7 +83,7 @@ No `plain` field comes back with it: when a message carries no HTML part, the pl
 
 ## What the Processing Does
 
-:::info Version
+:::info[Version]
 The two-wrapper output, `rel="noopener noreferrer"` on links and the removal of SVG and MathML arrived in EmailEngine v2.84.2. Earlier versions return one wrapper that also carries the body's styles, set only `target="_blank"` on `a` elements, and keep inline SVG and MathML.
 :::
 
@@ -99,13 +99,13 @@ The two-wrapper output, `rel="noopener noreferrer"` on links and the removal of 
 
 **Plain text messages.** A message with no HTML part is converted from its plain text body, with quoted lines rendered as nested blockquotes in graduated shades of blue.
 
-:::warning Sanitized is not trusted
+:::warning[Sanitized is not trusted]
 Web-safe HTML is safe to render. It is not a guarantee about intent. The markup still comes from whoever sent the message, and anything DOMPurify permits, including class names, survives. See [Relabel, do not trust](#relabel-do-not-trust) for a concrete case.
 :::
 
 ## Quoted Thread History
 
-:::info Version
+:::info[Version]
 Folding quoted thread history requires EmailEngine v2.75.0 or later. Earlier versions return web-safe HTML without the collapse marker.
 :::
 

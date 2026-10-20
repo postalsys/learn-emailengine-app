@@ -10,7 +10,7 @@ import Price from '@site/src/components/Price';
 
 Complete information about EmailEngine subscription-based licensing, free trial, activation, and management.
 
-:::info Quick Summary
+:::info[Quick Summary]
 
 - **Free Trial:** 14 days, full functionality, no limitations
 - **Production:** Annual subscription with unlimited license keys
@@ -73,7 +73,7 @@ A trial also switches on error reporting to the Sentry instance run by the Email
 - Proof of concept
 - Development and prototyping
 
-:::tip No Credit Card Needed
+:::tip[No Credit Card Needed]
 Start using EmailEngine immediately. No sign-up, no credit card, no limitations during trial period.
 :::
 

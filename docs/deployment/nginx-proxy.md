@@ -8,7 +8,7 @@ sidebar_position: 5
 
 Configure Nginx as a reverse proxy in front of EmailEngine to terminate HTTPS, restrict who reaches the admin interface, and rate-limit abusive clients.
 
-:::info Why Use a Reverse Proxy
+:::info[Why Use a Reverse Proxy]
 - **SSL/TLS termination** - EmailEngine itself listens on plain HTTP by default
 - **Failover** - Route to a cold standby instance when the primary is down
 - **Access control** - Restrict `/admin` and `/metrics` by network before EmailEngine sees the request
@@ -58,7 +58,7 @@ sudo mv privkey.pem /etc/ssl/private/emailengine-privkey.pem
 sudo mv fullchain.pem /etc/ssl/certs/emailengine-fullchain.pem
 ```
 
-:::tip Why Dummy Certificates?
+:::tip[Why Dummy Certificates?]
 Nginx refuses to start a `ssl` listener without a certificate. The self-signed pair lets it start now; Step 4 replaces it with a Let's Encrypt certificate.
 :::
 
@@ -370,7 +370,7 @@ server {
 
 ### High Availability with Failover
 
-:::warning No Horizontal Scaling
+:::warning[No Horizontal Scaling]
 EmailEngine does NOT support horizontal scaling with load balancing. Multiple instances connecting to the same Redis will cause conflicts. The configuration below is for failover/high availability only.
 :::
 

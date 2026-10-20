@@ -510,7 +510,7 @@ A working CRM integration is four moving parts. Each is covered in its own secti
 
 The order matters in one place only: register the account before you subscribe its webhooks to a CRM user, otherwise the first `messageNew` events arrive for an account your registry does not know yet. Buffer unknown accounts rather than dropping them - an account can start syncing before your onboarding transaction commits.
 
-:::tip Build the webhook receiver first
+:::tip[Build the webhook receiver first]
 Point it at a request bin, connect one real mailbox, and read the actual payloads before writing any classification logic. The shape of `messageNew` for a Gmail account with labels differs from a plain IMAP account, and seeing both early saves reworking the registry later.
 :::
 

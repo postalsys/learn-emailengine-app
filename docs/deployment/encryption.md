@@ -201,7 +201,7 @@ export EENGINE_REDIS="redis://localhost:6379/8"
 emailengine encrypt
 ```
 
-:::tip Run From Anywhere
+:::tip[Run From Anywhere]
 The `encrypt` command only needs Redis connectivity. You can run it from your local machine, a CI/CD pipeline, or any server with access to the Redis database.
 :::
 
@@ -287,7 +287,7 @@ Updated 1 stored TLS certificates
 
 The first number in each count is how many records were rewritten, the second how many exist. A record that held nothing to change, because it stores no secret or was already encrypted with the new secret, is not counted, so a lower first number is not an error on its own. The last two stores carry no second number: `TLS private keys` are the entries of the Let's Encrypt store, and `stored TLS certificates` the uploaded (`manual`) and self-signed (`selfSigned`) records, covered since v2.80.0.
 
-:::warning Check for "Could not process" lines before starting EmailEngine again
+:::warning[Check for "Could not process" lines before starting EmailEngine again]
 A value that none of the supplied secrets could decrypt is reported on stderr as `Could not process "imap.auth.pass" for user123. Check decryption secrets.` (the field and record vary) and is left untouched, so it remains readable only with the **old** secret. Whatever owns it breaks on next use, with no self-healing path. Keep the old secret until a run completes without such lines.
 
 Rotating everything requires EmailEngine v2.77.0 or newer. Earlier versions reported `Updated 0/0 SMTP gateways` because they read the wrong index and never visited a gateway, left the `externalAccount` field of OAuth2 apps using workload identity federation under the old secret, and never touched the TLS private keys, while exiting successfully.
@@ -328,7 +328,7 @@ emailengine encrypt \
 
 Every rewritten record is reported the same way as during a rotation, and a value already under the current scheme and secret is left as it is. This is the step to take before moving an instance to a host whose OpenSSL runs in [FIPS mode](/docs/deployment/fips-mode), where scrypt is unavailable and a value still under it cannot be read.
 
-:::warning No rollback to a release that predates PBKDF2 derivation
+:::warning[No rollback to a release that predates PBKDF2 derivation]
 A release that does not know the PBKDF2 scheme reads a value written under it as cleartext, so an account would be handed its ciphertext as the password. Once a newer release has written values, downgrading breaks every credential it touched; restore the Redis backup taken before the upgrade instead.
 :::
 

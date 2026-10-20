@@ -19,7 +19,7 @@ With AI processing on, every new Inbox message is summarized by the configured m
 - **Fraud Detection**: Assess risk of scam or phishing emails
 - **Reply Detection**: Identify if sender expects a response
 
-:::tip Looking for agent access instead?
+:::tip[Looking for agent access instead?]
 This page is about EmailEngine calling a model to process incoming mail. If you want the opposite - an AI assistant calling EmailEngine to search, read and send mail on demand - see [MCP for AI Agents](/docs/mcp).
 :::
 
@@ -361,7 +361,7 @@ app.post('/webhook', async (req, res) => {
 });
 ```
 
-:::note `riskAssessment` moved inside `summary` in v2.82.0
+:::note[`riskAssessment` moved inside `summary` in v2.82.0]
 Earlier releases lifted the risk assessment out of the summary object into `data.riskAssessment`. Since v2.82.0 the summary is delivered as the model returned it, so read `data.summary.riskAssessment`.
 :::
 
@@ -585,7 +585,7 @@ The filter function runs in the same execution context as other pre-processing f
 - `require()` - modules are not provided
 - Filesystem or system helpers are not provided
 
-:::warning Not a security sandbox
+:::warning[Not a security sandbox]
 Filter and pre-processing functions run on Node's `vm` module, which is an isolation convenience, **not** a hardened security boundary - code executed here can reach the host process and runs with full server privileges. Only enable and author functions you fully trust; never expose function authoring to untrusted users. See [Execution Environment](/docs/webhooks/pre-processing#execution-environment).
 :::
 

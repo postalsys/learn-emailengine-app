@@ -238,7 +238,7 @@ curl "https://emailengine.example.com/v1/account/john@example.com/message/AAAADA
 
 The fields are decided when the message is fetched, from its content, with the same parser the webhook uses. Nothing is stored for them, so they apply to any bounce in the mailbox, including ones that arrived before the account was added. They are set only for a message in the Inbox that has the shape of a bounce and whose report says the delivery failed; a delivery or delay report is not a bounce. Message listings do not carry them, and the classifier fields are only in the webhook.
 
-:::note The `bounces` array was removed in v2.81.2
+:::note[The `bounces` array was removed in v2.81.2]
 Up to EmailEngine v2.81.1, a sent message on an IMAP account carried a `bounces` array in listings, in message details and in its `messageNew` payload, listing the bounces recorded against its Message-ID. The store behind it was never trimmed, so v2.81.2 removed the field and sweeps the stored records on first start. The `messageBounce` webhook is the record of a bounce; keep it in your own storage keyed by `messageId`.
 :::
 
@@ -466,7 +466,7 @@ def record_bounce(recipient, response=None):
 </TabItem>
 </Tabs>
 
-:::caution Classification is advisory
+:::caution[Classification is advisory]
 `category` and `recommendedAction` come from a machine learning model reading the server's error text, and they are absent entirely if classification fails. Always default to a review path, and never delete a contact on a single `remove` without also checking `response.status` for a `5.x.x` code if the record matters.
 :::
 

@@ -10,7 +10,7 @@ Complete reference for all EmailEngine environment variables, with the command-l
 
 Startup configuration is only half of the picture. Webhook URLs, sending limits, proxies, branding and the rest live in Redis and are changed at runtime without a restart; a few of the variables below seed one of them at first start and then stop mattering. Those keys are documented in the [Configuration Options Reference](/docs/configuration/settings#runtime-settings-reference).
 
-:::info .env File Support
+:::info[.env File Support]
 EmailEngine automatically loads environment variables from a `.env` file located in the current working directory. This is the recommended way to configure EmailEngine as it ensures variables persist across restarts.
 
 ```bash
@@ -23,7 +23,7 @@ emailengine
 ```
 :::
 
-:::tip Command-Line Alternative
+:::tip[Command-Line Alternative]
 Most environment variables can also be set via command-line arguments using the format `--section.key=value`. For example, `EENGINE_HOST=0.0.0.0` can be set as `--api.host=0.0.0.0`. The tables below name the ones that have no CLI or config-file form. [See CLI reference →](/docs/configuration/cli)
 :::
 
@@ -120,7 +120,7 @@ EENGINE_API_PROXY=true
 EENGINE_API_PROXY_ADDRESSES=10.0.0.0/8,192.168.1.10
 ```
 
-:::warning Security
+:::warning[Security]
 `X-Forwarded-For` is a list that each proxy appends to, so the left-most entry is whatever the original caller sent. With reverse proxy mode on and no proxy addresses declared, EmailEngine keeps that left-most entry, which means any client able to reach the port directly chooses the address EmailEngine records.
 
 That is fine for logging, but not for the two controls that match on the client address: the [admin interface allowlist](/docs/deployment/security#admin-interface-access-control) (`EENGINE_ADMIN_ACCESS_ADDRESSES`) and per-token `restrictions.addresses`. If you rely on either, set `EENGINE_API_PROXY_ADDRESSES` as well, or leave reverse proxy mode off so the socket address is used.
@@ -516,7 +516,7 @@ EENGINE_API_TLS_CERT_FILE=/etc/emailengine/tls/api.crt
 
 The configuration file has a third form: `keyPath`, `certPath`, `caPath`, and `dhparamPath` under `[api.tls]` name files to read, and any other key from the table above is given as a plain value. A variable set in the environment overrides the same key from the file.
 
-:::note These variables are the listener's automatic default
+:::note[These variables are the listener's automatic default]
 Material supplied here is listed on the TLS Certificates page as a certificate of its own (`env:api`, `env:smtp`, `env:imapProxy`) and is what the listener presents by default: to a client that names no host, and for each hostname it covers, ahead of an uploaded certificate, a Let's Encrypt one and the self-signed fallback, whatever the `tlsProvisioning` setting is. Names it does not cover fall through to the other sources, so a second configured hostname is still served the certificate that matches it. Since v2.80.1 the default is a choice: the `apiTLSCertificate`, `smtpServerTLSCertificate` and `imapProxyServerTLSCertificate` settings can point a listener at any other certificate the instance holds, including another listener's environment material. See [Default certificate per listener](/docs/deployment/tls-certificates#default-certificate-per-listener).
 
 Before v2.80.0 this was the other way round: the SMTP server and the IMAP proxy read these variables and then overwrote the result with whatever had been provisioned for the `serviceUrl` hostname, so a pinned certificate was silently replaced.
@@ -535,7 +535,7 @@ When no certificate is supplied for a listener, EmailEngine can order one from L
 | `EENGINE_ACME_DIRECTORY_URL` | string | `https://acme-v02.api.letsencrypt.org/directory` | ACME directory of the certificate authority to order from |
 | `EENGINE_ACME_ENVIRONMENT` | string | `emailengine` | Name of the stored ACME account record |
 
-:::warning Override both or neither
+:::warning[Override both or neither]
 The environment names the account record and the directory names the certificate authority that issued it. Moving one alone presents an account key the other authority has never seen, and every request is rejected.
 :::
 
@@ -566,7 +566,7 @@ Security settings and access restrictions.
 
 ### Credential Encryption (EENGINE_SECRET)
 
-:::danger Critical for Production
+:::danger[Critical for Production]
 Without `EENGINE_SECRET`, all account passwords, OAuth2 tokens, and application secrets are stored **unencrypted** in Redis. Always configure this for production deployments.
 :::
 
@@ -586,7 +586,7 @@ openssl rand -hex 32
 EENGINE_SECRET=generated-value-here
 ```
 
-:::warning Secret Recovery
+:::warning[Secret Recovery]
 If you lose `EENGINE_SECRET`, encrypted credentials cannot be recovered. Back up this secret securely and separately from your Redis data.
 :::
 
@@ -763,7 +763,7 @@ Route outbound HTTP and HTTPS requests (webhooks, OAuth2 token requests, Gmail A
 | `EENGINE_HTTP_PROXY_ENABLED` | boolean | `false` | Enable a dedicated proxy for outbound HTTP requests | `true` |
 | `EENGINE_HTTP_PROXY_URL` | string | none | Proxy server URL (HTTP, HTTPS, or SOCKS) | `socks5://proxy.example.com:1080` |
 
-:::info Settings Override
+:::info[Settings Override]
 These environment variables override the equivalent API settings (`httpProxyEnabled` and `httpProxyUrl` via `POST /v1/settings`). When both are set, environment variables take precedence.
 :::
 
@@ -790,7 +790,7 @@ EENGINE_HTTP_PROXY_ENABLED=false
 
 An explicit `false` disables HTTP proxying entirely, so IMAP and SMTP keep using `proxyUrl` while HTTP requests go out directly. This restores the behavior of releases up to v2.79.8.
 
-:::note Standard proxy variables are ignored
+:::note[Standard proxy variables are ignored]
 EmailEngine does not read `HTTP_PROXY`, `HTTPS_PROXY` or `NO_PROXY`. Use the variables above, or the proxy settings in the admin interface.
 :::
 
@@ -850,7 +850,7 @@ Error reporting uses [Sentry](https://sentry.io/) (Bugsnag was removed in EmailE
 
 Reports carry stack traces, account IDs, and error details. They never include credentials or message content.
 
-:::info Trial licenses report errors by default
+:::info[Trial licenses report errors by default]
 Activating a trial license turns error reporting on, so that problems with evaluation instances reach the EmailEngine developers through their shared Sentry instance. This only happens while you have never set `sentryEnabled` yourself. Activating a full license or removing the license turns it back off, and any explicit write to `sentryEnabled` - through the Configuration > Logging form, `POST /v1/settings`, or `EENGINE_SETTINGS` - makes your choice permanent. The Configuration > Logging page tells you when reporting is in this trial-managed state.
 :::
 

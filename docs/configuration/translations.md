@@ -8,7 +8,7 @@ description: Configure language settings for public-facing pages and contribute 
 
 EmailEngine supports multiple languages for public-facing pages. This includes hosted authentication forms, error pages, unsubscribe pages, and other user-facing content.
 
-:::note Admin Interface Not Translated
+:::note[Admin Interface Not Translated]
 The admin dashboard and configuration interface are only available in English. Translations apply only to public pages that end users interact with.
 :::
 
@@ -180,7 +180,7 @@ Response with German error messages:
 }
 ```
 
-:::note Cookie Persistence
+:::note[Cookie Persistence]
 For API requests (paths starting with `/v1/`) and for `/health`, locale selection via query parameter or header does **not** set a session cookie. Each API request must explicitly specify the desired locale. Cookies are only set for UI page requests, and only from the query parameter or the `X-EE-Locale` header, never from `Accept-Language`.
 :::
 

@@ -263,7 +263,7 @@ Every configuration key follows the same `--section.key=value` form, including k
 
 The IMAP proxy runs as a single worker started by the `imapProxyServerEnabled` setting; there is no worker count for it.
 
-:::tip Environment Variables
+:::tip[Environment Variables]
 The [Environment Variables reference](/docs/configuration/environment-variables) lists every variable with its default and the config-file equivalent, including the ones that have no CLI form.
 :::
 
@@ -695,7 +695,7 @@ emailengine export \
 - Disaster recovery
 - Account auditing
 
-:::danger The export is decrypted
+:::danger[The export is decrypted]
 Passing `--service.secret` is what lets the command read the stored values, and what it writes is the decrypted result: the IMAP password or the OAuth2 refresh token in cleartext. Redirect it to a file only where that file is protected the way a credential store would be, and delete it when the migration is done.
 :::
 

@@ -8,7 +8,7 @@ description: Understanding full and fast indexing strategies for IMAP accounts
 
 EmailEngine uses an indexing strategy to track email changes in IMAP accounts. The indexer determines how EmailEngine detects new, updated, and deleted messages, affecting both webhook notifications and Redis storage usage.
 
-:::note IMAP Only
+:::note[IMAP Only]
 Indexers apply to accounts that sync over IMAP: password accounts and OAuth2 accounts whose application uses the **IMAP and SMTP** base scope. Gmail API and MS Graph accounts use the change detection mechanisms of those APIs and have no indexer setting.
 :::
 
@@ -102,7 +102,7 @@ curl -X POST https://emailengine.example.com/v1/settings \
 
 Or in the admin interface: **Configuration** > **Email Processing**, card **IMAP Processing**, field **Indexing Method**.
 
-:::info New Accounts Only
+:::info[New Accounts Only]
 The indexer is copied onto the account when the account is created: an account registered without `imapIndexer` gets the global value at that moment, and keeps it. Changing the global default afterwards affects only accounts created later. To move an existing account to a different indexer, use the [flush API](/docs/api/put-v-1-account-account-flush) described below.
 :::
 
@@ -145,7 +145,7 @@ curl -X PUT https://emailengine.example.com/v1/account/user123/flush \
 
 The response is `{"flush": true}`. The account is paused, its folder listing and per-folder index are deleted from Redis, the new indexer is stored, and the account resumes and rebuilds the index with the new strategy.
 
-:::warning Index Reset
+:::warning[Index Reset]
 A flush rebuilds the index from scratch. During re-indexing:
 - The account shows as `syncing` until the rebuild completes, then emits [`accountInitialized`](/docs/webhooks/accountinitialized) again
 - `notifyFrom` is reset to the time of the flush unless the request carries its own value, so messages that were already in the mailbox do not produce `messageNew` webhooks by default

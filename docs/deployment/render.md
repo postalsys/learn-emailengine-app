@@ -8,7 +8,7 @@ sidebar_position: 4
 
 [Render](https://render.com/) runs EmailEngine as a Node.js web service with a managed Redis instance next to it. The EmailEngine repository ships a Render blueprint, `render.yaml`, that provisions both, so the whole deployment can be done from the Render dashboard without a shell.
 
-:::tip Blueprint Deploy
+:::tip[Blueprint Deploy]
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/postalsys/emailengine)
 
 The button creates the two services described in the blueprint below and generates `EENGINE_SECRET` for you.
@@ -176,7 +176,7 @@ services:
 
 Move to a larger instance type under **Settings** > **Instance Type**; the service redeploys. EmailEngine keeps one IMAP connection open per account, so memory grows with the account count. Watch the **Metrics** tab and upgrade when memory stays high.
 
-:::warning No Horizontal Scaling
+:::warning[No Horizontal Scaling]
 Keep the instance count at one. Two EmailEngine instances on the same Redis database each sync every account and compete for the same state. The blueprint pins `numInstances: 1` for this reason. See [Performance Tuning](/docs/advanced/performance-tuning#scaling-emailengine).
 :::
 

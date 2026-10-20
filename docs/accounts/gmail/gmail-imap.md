@@ -13,7 +13,7 @@ This guide shows you how to set up a Gmail OAuth2 application for IMAP and SMTP 
 This post covers setting up Gmail OAuth2 for IMAP and SMTP. If you would like to use Gmail API instead, see the [Gmail API setup guide](./gmail-api).
 :::
 
-:::caution Screenshots may be outdated
+:::caution[Screenshots may be outdated]
 There are many screenshots in this guide. While the general process has remained stable for years, Google may update their interface, so some screenshots might not exactly match what you see.
 :::
 
@@ -45,7 +45,7 @@ Both IMAP and Gmail API provide the same functionality (both can access labels, 
   - `gmail.modify` - Read, send, and modify emails (can move to trash but not permanently delete)
   - `gmail.send` - Send emails only
 
-:::warning The mail.google.com Scope is Restricted
+:::warning[The mail.google.com Scope is Restricted]
 The `https://mail.google.com/` scope is classified as **restricted** by Google. This affects when you can use it:
 
 | App Type | mail.google.com Scope | Notes |
@@ -72,7 +72,7 @@ Before we dive into OAuth2 setup, it's worth understanding all Gmail authenticat
 
 ### Account Password
 
-:::danger No Longer Available
+:::danger[No Longer Available]
 Gmail has completely disabled account password authentication for all accounts. This authentication method can no longer be used. You must use app passwords or OAuth2 instead.
 :::
 
@@ -158,13 +158,13 @@ Find and enable **Gmail API** for your project.
 
 ![Enabling Gmail API](/img/external/vz7Is1SAWe.gif)
 
-:::info Why Enable Gmail API for IMAP?
+:::info[Why Enable Gmail API for IMAP?]
 Enabling the Gmail API in the project is what makes the Gmail scopes, including `https://mail.google.com/`, selectable on the consent screen. EmailEngine uses IMAP and SMTP for the email operations of this kind of account; it reads the signed-in user's address from the OpenID Connect ID token it receives with the OAuth2 tokens, and only calls the Gmail profile endpoint when that ID token carries no address.
 
 If you want to use Gmail REST API instead of IMAP/SMTP, see the [Gmail API setup guide](./gmail-api).
 :::
 
-:::tip IMAP vs Gmail API
+:::tip[IMAP vs Gmail API]
 
 - **IMAP/SMTP** (this guide): Standard email protocols, easier setup, works like any other email account
 - **Gmail API** (alternate): Narrower scopes, Gmail category handling, no IMAP connection limits; Cloud Pub/Sub setup for push notifications
@@ -219,7 +219,7 @@ Click **Add or remove scopes** and find `https://mail.google.com/` from the list
 
 ![Adding required scope](/img/external/BONjtoR9p6.gif)
 
-:::important Required Scope for IMAP/SMTP
+:::important[Required Scope for IMAP/SMTP]
 The `https://mail.google.com/` scope is **required for IMAP and SMTP access**.
 
 If you were using [Gmail REST API](./gmail-api) instead, the scope would be `https://www.googleapis.com/auth/gmail.modify`.
@@ -255,7 +255,7 @@ Add your EmailEngine URL with the `/oauth` path:
 
 You can add multiple redirect URIs if you want to use the same OAuth2 app with multiple EmailEngine instances (e.g., development, staging, and production environments).
 
-:::warning Redirect URL Must Match Exactly
+:::warning[Redirect URL Must Match Exactly]
 The redirect URL configured in EmailEngine must **exactly match** one of the URLs listed here. Mismatches will cause OAuth flow failures.
 :::
 
@@ -305,7 +305,7 @@ Now that you have your Google Cloud project configured, let's set up EmailEngine
 
 Click **Register app** to save.
 
-:::tip Base Scope Selection
+:::tip[Base Scope Selection]
 
 - **IMAP and SMTP**: EmailEngine uses IMAP for reading and SMTP for sending (this guide)
 - **Gmail API**: EmailEngine uses the Gmail REST API for all operations. Push notifications need Cloud Pub/Sub; without it the account is polled about every 10 minutes
@@ -386,7 +386,7 @@ curl -X POST https://emailengine.example.com/v1/account \
   }'
 ```
 
-:::info Provider ID
+:::info[Provider ID]
 The `provider` field should be the **OAuth2 application ID** from EmailEngine, which is a base64url encoded string like `AAABlf_0iLgAAAAQ`. You can find this ID in **Integrations > OAuth2 Apps** in the EmailEngine interface. This is NOT the Client ID from Google Cloud Console.
 :::
 

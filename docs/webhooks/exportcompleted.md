@@ -46,7 +46,7 @@ The event confirms that the file is available through the [Download Export API](
 
 There is no event ID in the body. EmailEngine sends it in the `X-EE-Wh-Event-Id` request header. See [Delivery and Retries](/docs/webhooks/overview#delivery-and-retries).
 
-:::warning Download before `expiresAt`
+:::warning[Download before `expiresAt`]
 The export file is deleted when it expires, and cannot be recovered afterwards. Treat this event as the start of a deadline, not only as a completion notice. The retention window is the `exportMaxAge` setting, or the `EENGINE_EXPORT_MAX_AGE` environment variable when the setting is empty, and 24 hours by default. It is counted from completion, so a long-running export gets the full window.
 :::
 

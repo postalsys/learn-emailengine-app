@@ -21,7 +21,7 @@ The event is sent after the folder's first sync, so by the time it arrives the f
 
 Before EmailEngine 2.80.0 two cases lost the event: a folder that first appeared while the account's primary connection was down, and one found by a listing EmailEngine only read without registering it. Both were registered by a later pass with no `mailboxNew` sent. Since 2.80.0 the folder is announced once the primary connection is back.
 
-:::note IMAP accounts only
+:::note[IMAP accounts only]
 Folder events are produced by the IMAP client. Gmail API and Microsoft Graph accounts do not send `mailboxNew`, `mailboxDeleted` or `mailboxReset`.
 :::
 

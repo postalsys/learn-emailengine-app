@@ -86,7 +86,7 @@ Manage all accounts in EmailEngine:
 
 ## Important Limitation
 
-:::warning IMAP-backed accounts only
+:::warning[IMAP-backed accounts only]
 The IMAP proxy works for any account that EmailEngine itself reaches over IMAP: password accounts as well as OAuth2 accounts whose app uses the IMAP/SMTP base scope.
 
 Accounts registered through a Gmail API or Microsoft Graph API app cannot be proxied because there is no IMAP session to relay. A login for such an account is refused with `NO [ACCOUNTDISABLED] IMAP is not supported for API-based accounts`.
@@ -118,7 +118,7 @@ After saving, EmailEngine starts the proxy on the given host and port. The plain
 
 This page configures the listener your clients connect to. Routing EmailEngine's own outbound connections through a SOCKS or HTTP proxy is a different setting, `proxyUrl`, described under [Proxy Configuration](/docs/accounts/imap-smtp#proxy-configuration).
 
-:::note Which certificate the proxy serves
+:::note[Which certificate the proxy serves]
 The checkbox only decides whether the listener speaks TLS. Which certificate it presents is decided on the **TLS Certificates** page (`/admin/config/tls`), which is also where a certificate is uploaded or ordered from Let's Encrypt. The listener always has something to serve - a self-signed certificate if nothing better exists - so enabling TLS never leaves it unable to start.
 
 Add the name your mail clients connect to under **Additional hostnames** there if it differs from the Service URL hostname. Each name gets its own certificate, selected by SNI.
@@ -158,7 +158,7 @@ telnet localhost 2143
 * OK EmailEngine IMAP Proxy ready for requests from 127.0.0.1 hkdq2ls1a8y9zk3x
 ```
 
-:::tip Port Selection
+:::tip[Port Selection]
 
 - **2993**: Common choice for TLS-enabled IMAP proxy (993 + 2000)
 - **2143**: Common choice for non-TLS proxy (143 + 2000)
@@ -175,7 +175,7 @@ First, ensure you have an OAuth2 account configured in EmailEngine.
 **For Outlook:**
 [Follow Outlook OAuth2 setup guide](/docs/accounts/microsoft-365/outlook-365)
 
-:::important Must Use IMAP Backend
+:::important[Must Use IMAP Backend]
 The account must be configured to use **IMAP/SMTP**, not Gmail API or MS Graph API. The proxy only works with IMAP-based accounts.
 :::
 
@@ -215,7 +215,7 @@ curl -X POST https://emailengine.example.com/v1/tokens \
 
 Save the `token` value - you'll use it as the IMAP password, and it is never shown again. The `id` is what the token listing reports for it.
 
-:::tip Token Scopes
+:::tip[Token Scopes]
 If you also want to use the same token for SMTP proxy, include both scopes:
 
 ```json
@@ -397,7 +397,7 @@ curl "https://emailengine.example.com/v1/tokens?account=user123" \
 }
 ```
 
-:::info Token IDs
+:::info[Token IDs]
 The `id` value is the SHA-256 hash that identifies the token; the raw token value is shown only once at creation and cannot be retrieved later. The `DELETE /v1/tokens/{token}` endpoint accepts either the raw token or this id.
 :::
 

@@ -117,7 +117,7 @@ _The token form takes a description, an optional account binding and the allowed
 
 The EmailEngine CLI provides commands to generate, export, import, and manage tokens programmatically. This is particularly useful for automated deployments and prepared token configuration.
 
-:::tip CLI Documentation
+:::tip[CLI Documentation]
 For complete CLI usage, installation, and configuration options, see the [Command Line Interface (CLI)](/docs/configuration/cli) documentation.
 :::
 
@@ -200,7 +200,7 @@ Either `account` or `permissions` has to be present.
 - An unbound token must carry a `permissions` record; without one the request is refused
 - You need an existing instance-wide token that is not narrowed to mint tokens, and the new token inherits no restriction from it: every limit has to be repeated in the request
 
-:::note Deprecated paths
+:::note[Deprecated paths]
 EmailEngine 2.79.0 renamed the token endpoints. `POST /v1/token`, `DELETE /v1/token/{token}` and `GET /v1/tokens/account/{account}` still answer, with the same handlers as `POST /v1/tokens`, `DELETE /v1/tokens/{token}` and `GET /v1/tokens?account=user123`, so existing integrations keep working, but they are left out of the OpenAPI document and the API reference. Use the new paths.
 :::
 
@@ -218,11 +218,11 @@ Scopes define what a token can access:
 | `mcp`        | MCP mail tools  | The mail tools at `/mcp`, and nothing on the REST API | Web UI, CLI, API |
 | `mcp-manage` | MCP management tools | The instance management tools at `/mcp`, and nothing on the REST API. Since 2.80.1 | Web UI, API |
 
-:::info API Scope Limitations
+:::info[API Scope Limitations]
 When creating tokens via the `POST /v1/tokens` API endpoint, only the `api`, `smtp`, `imap-proxy`, `mcp` and `mcp-manage` scopes are available. The `*` (full access) and `metrics` scopes can only be assigned through the Web UI or CLI, and the CLI does not issue `mcp-manage`.
 :::
 
-:::note The MCP scopes are surface-bound
+:::note[The MCP scopes are surface-bound]
 A token carrying `mcp` or `mcp-manage` opens the [MCP endpoint](/docs/mcp) and is refused by `/v1` with an "Unauthorized scope" error. Inside MCP each scope admits only the operations its own tools wrap. `mcp` covers the mail tools: reading accounts, folders, messages, the sending queue and templates, modifying and deleting messages, and sending mail. `mcp-manage` covers the instance management tools: accounts, settings, OAuth2 applications, gateways, tokens, the license, blocklists, templates, the queues, logs and statistics. Neither can mint a token or read a stored credential. See [MCP Access Control](/docs/mcp/access-control).
 :::
 
@@ -358,7 +358,7 @@ The path parameter accepts either the original token value or the token `id` (th
 
 [Detailed API reference →](/docs/api/delete-v-1-tokens-token)
 
-:::note CLI Token Deletion
+:::note[CLI Token Deletion]
 The CLI does not have a `tokens delete` command. To delete tokens programmatically, use the API endpoint above or the web interface.
 :::
 
@@ -389,7 +389,7 @@ A denied entry is the useful half: it shows an integration reaching for somethin
 
 ## Disabling Authentication (Development Only)
 
-:::danger Development only
+:::danger[Development only]
 Disabling authentication removes all API access control. Use it on a local instance with test accounts, and re-enable it before the instance is reachable by anyone else.
 :::
 
@@ -498,7 +498,7 @@ Restrict token usage based on the HTTP `Referer` header. This is useful for toke
 
 A request whose `Referer` header matches none of the patterns is rejected with `403 Forbidden` and the message `Unauthorized referrer`.
 
-:::warning Referrer Limitations
+:::warning[Referrer Limitations]
 HTTP referrer restrictions can be bypassed by clients that do not send the `Referer` header or forge it. Use this as an additional layer of security, not as the sole protection mechanism.
 :::
 

@@ -125,7 +125,7 @@ On the application overview page, copy the **Application (client) ID**. You will
 
 Also copy the **Directory (tenant) ID** from the overview page. Unlike delegated access which can use "common" or "organizations", application access requires the specific tenant ID.
 
-:::warning Tenant ID Required
+:::warning[Tenant ID Required]
 Application access always requires a specific tenant ID. You cannot use "common", "organizations", or "consumers" as the authority value. The tenant ID is a UUID like `f8cdef31-a31e-4b4a-93e4-5f571e91255a`.
 :::
 
@@ -143,7 +143,7 @@ Add the following permissions:
 - `Mail.Send` - Send mail as any user
 - `User.Read.All` - Read all users' profiles (needed for mailbox resolution)
 
-:::danger Application Permissions, Not Delegated
+:::danger[Application Permissions, Not Delegated]
 Make sure you select **Application permissions**, not **Delegated permissions**. These are in separate tabs when adding permissions. Application permissions apply to the app itself and require admin consent. Delegated permissions apply on behalf of a signed-in user and are used in the delegated access flow.
 :::
 
@@ -165,13 +165,13 @@ Click **New client secret**.
 
 **Expires:** Choose an expiration period. The Azure portal offers up to 24 months.
 
-:::danger Copy Secret Immediately
+:::danger[Copy Secret Immediately]
 The secret value is only shown once. Copy it immediately after creation - you cannot retrieve it later. If you lose it, you must generate a new secret.
 :::
 
 Copy the value from the **Value** column (not the "Secret ID").
 
-:::tip Secret Expiration Reminder
+:::tip[Secret Expiration Reminder]
 Set a calendar reminder to rotate the client secret before it expires. When the secret expires, **all accounts** using this OAuth2 application will fail to authenticate until a new secret is configured in EmailEngine.
 :::
 
@@ -200,7 +200,7 @@ Now configure EmailEngine to use the Azure application for mailbox access.
 
 **Directory (tenant) ID:** Paste the Directory (tenant) ID from Azure. This must be the specific tenant UUID; the API field is `authority`.
 
-:::info No Redirect URL
+:::info[No Redirect URL]
 Unlike delegated access, application access does not require a redirect URL. The client credentials flow authenticates directly with Azure without browser redirects.
 :::
 
@@ -366,7 +366,7 @@ curl -X POST "https://emailengine.example.com/v1/oauth2" \
 
 `redirectUrl` is not needed, and `baseScopes`, `extraScopes`, and `skipScopes` are ignored for this provider.
 
-:::warning Government Cloud Registration
+:::warning[Government Cloud Registration]
 For government clouds (GCC High, DoD) and sovereign clouds (China), you must:
 
 1. Register your Azure AD application in the corresponding Azure portal for that cloud environment
@@ -443,7 +443,7 @@ curl -X DELETE https://emailengine.example.com/v1/account/user123 \
 - Set up alerts for client secret expiration (Azure AD notifies admins)
 - Review the list of accessed mailboxes regularly
 
-:::warning Enable Field Encryption
+:::warning[Enable Field Encryption]
 By default, EmailEngine stores credentials in cleartext in Redis. To protect sensitive data like client secrets, enable field encryption. See [Setting Up Encryption](/docs/deployment/encryption) for configuration instructions.
 :::
 
@@ -451,7 +451,7 @@ By default, EmailEngine stores credentials in cleartext in Redis. To protect sen
 
 Application access accounts sync through Microsoft Graph change notifications, like every account on the MS Graph API backend. EmailEngine creates a subscription per mailbox, renews it on an hourly pass, recovers notifications Microsoft reports as missed, and reports a mailbox it can no longer subscribe to as a `connectError` with the code `SubscriptionSetupError` (since v2.80.0). The two endpoints Microsoft must reach, the subscription lifetime and retry schedule, the recovery of missed notifications and the `outlookSubscription` field of the account response are described under [MS Graph API Backend](./outlook-365#ms-graph-api-backend) on the delegated access page.
 
-:::info Public HTTPS Required
+:::info[Public HTTPS Required]
 Microsoft validates the notification URL when the subscription is created, and there is no polling fallback for MS Graph accounts. If your EmailEngine instance is behind a firewall or on a private network, configure a reverse proxy or a tunnel so that `{serviceUrl}/oauth/msg/notification` and `{serviceUrl}/oauth/msg/lifecycle` are reachable from Microsoft's servers; until they are, no new mail is detected.
 :::
 

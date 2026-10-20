@@ -210,7 +210,7 @@ Before deploying to production, ensure you have:
 
 ### Vertical Scaling (Only Supported Method)
 
-:::warning No Horizontal Scaling
+:::warning[No Horizontal Scaling]
 EmailEngine does NOT support running multiple instances against the same Redis. Each instance would independently sync all accounts, causing conflicts and resource waste.
 :::
 

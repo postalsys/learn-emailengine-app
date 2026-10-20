@@ -9,7 +9,7 @@ description: Complete guide to setting up Outlook.com and Microsoft 365 accounts
 
 This guide shows you how to set up Outlook OAuth2 authentication with EmailEngine using **delegated access**, where each user signs in interactively through Microsoft's OAuth2 consent flow. This works with Outlook.com, Hotmail.com, and Microsoft 365 accounts. You can use either IMAP/SMTP or Microsoft Graph API as the email backend.
 
-:::tip Looking for Application Access?
+:::tip[Looking for Application Access?]
 If you need to access Microsoft 365 mailboxes **without interactive user login** (e.g., for automated systems, helpdesk integrations, or centralized management), see [Outlook Application Access (Client Credentials)](./outlook-client-credentials) instead. Application access lets an admin grant access to any mailbox in the organization using a single set of credentials.
 :::
 
@@ -49,7 +49,7 @@ This guide covers both options.
 | **Outlook categories** | Not available | Exposed as `labels` |
 | **Works with other providers** | Yes | No |
 
-:::info MS Graph search differs from IMAP
+:::info[MS Graph search differs from IMAP]
 The default `$filter` mode cannot search `to`, `cc`, `bcc`, body text or message size. The `$search` mode, enabled per request with `useOutlookSearch`, reaches those fields but returns at most 1,000 results, reports no total, and orders by relevance rather than date. [Searching Messages](/docs/receiving/searching) lists which search terms each backend supports.
 :::
 
@@ -102,7 +102,7 @@ Choose who can use this application:
 - Most flexible option
 - Select: "Accounts in any organizational directory and personal Microsoft accounts"
 
-:::tip Recommended Setting
+:::tip[Recommended Setting]
 For maximum compatibility, select **"Accounts in any organizational directory and personal Microsoft accounts"** unless you have specific requirements.
 :::
 
@@ -208,7 +208,7 @@ Each cloud environment uses different scope URLs. EmailEngine automatically uses
 | DoD | `https://dod-graph.microsoft.us/Mail.ReadWrite` | `https://dod-graph.microsoft.us/Mail.Send` |
 | China | `https://microsoftgraph.chinacloudapi.cn/Mail.ReadWrite` | `https://microsoftgraph.chinacloudapi.cn/Mail.Send` |
 
-:::warning Government Cloud Registration
+:::warning[Government Cloud Registration]
 For government clouds (GCC High, DoD) and sovereign clouds (China), you must:
 
 1. Register your Azure AD application in the corresponding Azure portal for that cloud environment
@@ -227,7 +227,7 @@ You cannot use an app registered in the global Azure portal for government or Ch
 - `http://localhost:3000/oauth` (for local testing)
 - `https://emailengine.example.com/oauth` (for production)
 
-:::warning Redirect URL Must Match Exactly
+:::warning[Redirect URL Must Match Exactly]
 The redirect URL must match exactly what you'll configure in EmailEngine later. Mismatches will cause OAuth failures.
 :::
 
@@ -253,7 +253,7 @@ By default, only `User.Read` permission exists. Click **Add a permission**.
 
 Select **Microsoft Graph** and then **Delegated permissions**.
 
-:::danger Select Delegated Permissions, Not Application Permissions
+:::danger[Select Delegated Permissions, Not Application Permissions]
 Make sure you select the **Delegated permissions** tab, not **Application permissions**. Application permissions are used for [application access (client credentials)](./outlook-client-credentials), which is a different setup flow. Delegated permissions allow the app to act on behalf of a signed-in user.
 :::
 
@@ -269,7 +269,7 @@ Add these permissions:
 
 EmailEngine also requests the OpenID Connect scopes `openid` and `profile` with this set, to read the signed-in user's address and name from the ID token.
 
-:::important offline_access Required
+:::important[offline_access Required]
 The `offline_access` scope is required in both cases. It allows EmailEngine to renew access tokens in the background without user interaction.
 :::
 
@@ -282,7 +282,7 @@ Add these permissions instead:
 - `offline_access` - For token refresh
 - `User.Read` - Present on every new registration; EmailEngine requests it to read the signed-in user's profile
 
-:::info One backend per OAuth2 app
+:::info[One backend per OAuth2 app]
 An EmailEngine OAuth2 app requests one set of scopes, selected by its **Base scope** setting: either the IMAP/SMTP scopes or the `Mail.*` scopes. Register two OAuth2 apps in EmailEngine if you need both backends against the same Azure application.
 :::
 
@@ -309,7 +309,7 @@ Click **New client secret**.
 - 24 months
 - Custom
 
-:::tip Secret Expiration
+:::tip[Secret Expiration]
 When the secret expires, your application will stop working until you generate a new secret and update EmailEngine. Choose a longer expiration for production, but set a reminder to rotate it before expiry.
 :::
 
@@ -317,7 +317,7 @@ Click **Add**.
 
 ### Copy Secret Value
 
-:::danger Copy Secret Now
+:::danger[Copy Secret Now]
 The secret value is only shown once. Copy it immediately - you cannot retrieve it later. If you lose it, you'll need to generate a new secret.
 :::
 
@@ -325,7 +325,7 @@ Copy the value from the **Value** column (NOT the "Secret ID").
 
 ## Step 6: Enable IMAP/SMTP (If Using IMAP Backend)
 
-:::info Only for IMAP/SMTP Backend
+:::info[Only for IMAP/SMTP Backend]
 Skip this step if you're using MS Graph API as your backend.
 :::
 
@@ -367,7 +367,7 @@ Now configure EmailEngine with your Azure application credentials.
 - **IMAP and SMTP** (`baseScopes: "imap"`) - If you added `IMAP.AccessAsUser.All` and `SMTP.Send`
 - **MS Graph API** (`baseScopes: "api"`) - If you added `Mail.ReadWrite` and `Mail.Send`. The **MS Graph API** panel also lists the two endpoints Microsoft Graph posts change notifications to
 
-:::important Base scope must match the Azure permissions
+:::important[Base scope must match the Azure permissions]
 The base scope you select here must match the permissions you configured in Azure. Mismatches will cause authentication failures. The base scope cannot be changed once the app is created.
 :::
 
@@ -464,7 +464,7 @@ curl -X POST https://emailengine.example.com/v1/account \
   }'
 ```
 
-:::info Provider ID
+:::info[Provider ID]
 The `provider` field should be the **OAuth2 application ID** from EmailEngine, which is a base64url encoded string like `AAABlf_0iLgAAAAQ`. You can find this ID in **Integrations > OAuth2 Apps** in the EmailEngine interface. This is NOT the Application (client) ID from Azure AD.
 :::
 
@@ -474,7 +474,7 @@ The `provider` field should be the **OAuth2 application ID** from EmailEngine, w
 
 Microsoft 365 shared mailboxes are mailboxes not bound to a specific user. Multiple users can access them using their own credentials.
 
-:::tip Recommended: Application Access
+:::tip[Recommended: Application Access]
 For shared mailboxes, [Outlook Application Access (Client Credentials)](./outlook-client-credentials) is the simplest approach - no interactive login, no extra scopes, one API call per mailbox.
 :::
 
@@ -558,7 +558,7 @@ An account whose refresh keeps failing for longer than [`EENGINE_MAX_IMAP_AUTH_F
 
 Which events invalidate a Microsoft refresh token, and how long an idle one lives, is covered on the [OAuth2 token management](/docs/accounts/oauth2-token-management) page.
 
-:::danger Client Secret Expiration
+:::danger[Client Secret Expiration]
 Microsoft OAuth2 **client secrets expire**; the Azure portal offers lifetimes of up to 24 months. When the secret expires, **all accounts** using that OAuth2 app fail at their next token refresh. Monitor expiration dates in Azure AD and rotate secrets before they expire.
 :::
 

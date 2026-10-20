@@ -59,11 +59,11 @@ This works with any account backend:
 
 The test verifies whatever authentication your actual sending method provides.
 
-:::note Service Availability
+:::note[Service Availability]
 Since email authentication testing relies on an external service, test availability depends on that service being operational. If it is temporarily unavailable, delivery tests fail. There is no fallback mechanism - retry later when the service is back online.
 :::
 
-:::info Result Retention
+:::info[Result Retention]
 EmailEngine keeps its own record of the delivery attempt for **one hour** after the message was handed over or failed. Poll for the result within that window; after it, start a new test.
 :::
 
@@ -253,7 +253,7 @@ The per-protocol objects come straight from the verification service, so they ca
 
 `status.aligned` on a DKIM result follows the same convention: it holds the aligned domain, or `false` when the signature does not align with the From domain.
 
-:::tip Read `mainSig` rather than picking a signature yourself
+:::tip[Read `mainSig` rather than picking a signature yourself]
 A message can carry several DKIM signatures, and only some of them are aligned with the From domain. EmailEngine picks the meaningful one for you: the first signature that both passes and is aligned, otherwise the first that passes, otherwise the first result. When there are no signatures at all, `mainSig` is `{"status": {"result": "none"}}`, so the field is always safe to read.
 :::
 

@@ -380,7 +380,7 @@ Every release publishes four tags, and master publishes one:
 | `latest` | Newest release, same build as `v2` today | Convenience. It will follow a future major version, so avoid pinning production to it |
 | `edge` | Latest commit on master | Testing unreleased changes. Not for production |
 
-:::warning `edge` is the development tag, not `latest`
+:::warning[`edge` is the development tag, not `latest`]
 `latest` is published by the release workflow and always points at a tagged release. Builds from master are published as `edge`. If you want to try unreleased work, pull `edge` explicitly.
 :::
 

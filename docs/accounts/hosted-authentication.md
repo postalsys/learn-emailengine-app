@@ -47,7 +47,7 @@ Hosted authentication is EmailEngine's built-in web interface for account setup.
 - **Custom OAuth2 flows** - Use authentication server instead
 - **Headless systems** - No user interaction available
 
-:::tip Alternative Approaches
+:::tip[Alternative Approaches]
 - For custom OAuth2 management: [Authentication Server](/docs/accounts/authentication-server)
 - For direct API registration: [Managing Accounts](/docs/accounts/managing-accounts)
 - For OAuth2 setup details: [OAuth2 Setup Guide](/docs/accounts/oauth2-setup)
@@ -152,7 +152,7 @@ curl -X POST https://emailengine.example.com/v1/authentication/form \
 
 The OAuth2 App ID (Provider ID) is visible in EmailEngine's **Integrations** > **OAuth2 Apps** settings page. This is EmailEngine's internal ID for the OAuth2 application, not the provider's client ID.
 
-:::tip Better User Experience
+:::tip[Better User Experience]
 Using the `type` parameter provides a smoother experience - users go directly to Google or Microsoft authorization without seeing an intermediate selection screen.
 :::
 
@@ -183,11 +183,11 @@ Links minted before v2.81.0, and the setup the admin interface starts from **Add
 
 In each of those cases the user is handed the ordinary server settings form, prefilled with whatever was discovered, so the setup continues rather than failing. The skip removes a step that would have been a formality; it never ends the setup on its own, and it never creates an account from settings that were not verified.
 
-:::note IMAP path only
+:::note[IMAP path only]
 `skipServerSettings` has no effect on OAuth2 accounts, which never show a server settings page. Combine `type: "imap"` with the default to send the user straight into the IMAP flow.
 :::
 
-:::warning Users lose the chance to correct the settings
+:::warning[Users lose the chance to correct the settings]
 The review page is also where a user can change a discovered value before the account is created - for a self-hosted server reachable under a different name, for instance. Send `skipServerSettings: false` when the addresses come from servers whose autodiscovery answers are not the settings you want used.
 :::
 
@@ -325,13 +325,13 @@ https://myapp.com/settings?account=user123&state=new
 | `account` | The account ID you provided |
 | `state` | Result of the operation: `new` (account was created) or `existing` (existing account was updated) |
 
-:::note Error Handling
+:::note[Error Handling]
 If authentication fails (OAuth2 error, user cancellation, a rejected [`expectedEmail`](#requiring-a-specific-address), etc.), EmailEngine displays an error page rather than redirecting to your `redirectUrl`. Your application only receives a redirect on successful authentication.
 
 Where the user can fix the problem themselves, that page offers a way back into the flow, so most failures are resolved without returning to your application at all.
 :::
 
-:::info Account Initialization
+:::info[Account Initialization]
 The redirect happens immediately after authentication completes, but the account may still be initializing (syncing mailboxes, etc.). EmailEngine sends an `accountInitialized` webhook once the account is fully processed and ready to accept API calls. If you need to make API calls immediately after redirect, either wait for this webhook or poll the account status endpoint until the state is `connected`.
 :::
 
@@ -574,7 +574,7 @@ Displays the form in a specific language instead of relying on browser negotiati
 
 Forces the light or dark color scheme so the page matches the application the user is coming from. Supported values: `light` and `dark`. The choice is remembered for the rest of the browser session, so it survives the setup steps that follow. Without the argument, the pages follow the theme the visitor chose in the EmailEngine admin interface in that browser, if any, and otherwise the system preference (`prefers-color-scheme`).
 
-:::note Version Availability
+:::note[Version Availability]
 The `theme` argument requires EmailEngine v2.73.0 or later. The `locale` argument works on all recent versions.
 :::
 
@@ -614,7 +614,7 @@ These can be configured via:
 </style>
 ```
 
-:::tip Framework-Free Styling
+:::tip[Framework-Free Styling]
 Since EmailEngine v2.73.0 the hosted pages are framework-free: plain HTML styled by a single standalone stylesheet with stable, human-readable class names (`ee-card`, `ee-btn`, `ee-input`, and so on) and CSS custom properties for the design tokens (colors, radii, shadows). Redefine the tokens in `templateHtmlHead` for quick restyling - your CSS loads after EmailEngine's, so it always wins - or target the `ee-*` classes directly for deeper changes. The stylesheet source (`static/css/public.css` in the EmailEngine repository) documents every token and class. Versions up to v2.72.x used Bootstrap 4 classes (`btn-primary`, `card`) instead.
 
 Since v2.79.9 the hosted pages carry a Content-Security-Policy that allows inline `<style>` and `<script>` blocks and external assets served over `https://`; a stylesheet, font or script referenced over plain `http://` is blocked by the browser.

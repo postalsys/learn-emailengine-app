@@ -8,7 +8,7 @@ sidebar_position: 3
 
 Run EmailEngine as a background service on Linux under systemd, so it starts at boot, restarts on failure and logs to the journal.
 
-:::info Prerequisites
+:::info[Prerequisites]
 - A Linux distribution that uses systemd
 - Redis running on the host or reachable from it
 - EmailEngine installed: the binary from [Linux installation](/docs/installation/linux), or a source checkout with Node.js 20+ (24+ recommended) from [Source installation](/docs/installation/source)
@@ -82,7 +82,7 @@ sudo chmod 600 /etc/emailengine/emailengine.env
 
 Add `EENGINE_API_PROXY=true` when a reverse proxy sits in front of EmailEngine, so the client address is read from `X-Forwarded-For`, and `EENGINE_API_PROXY_ADDRESSES` naming the proxy; see [Trusted Proxy Addresses](/docs/configuration/environment-variables#trusted-proxy-addresses). The API binds to `127.0.0.1` unless `EENGINE_HOST` says otherwise, which is the right default behind a proxy.
 
-:::danger Keep EENGINE_SECRET
+:::danger[Keep EENGINE_SECRET]
 `EENGINE_SECRET` encrypts the account credentials stored in Redis. Back it up with the Redis data: without it the stored credentials cannot be decrypted. See [Secret Encryption](/docs/deployment/encryption).
 :::
 

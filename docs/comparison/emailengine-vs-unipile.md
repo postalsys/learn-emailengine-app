@@ -19,11 +19,11 @@ This page compares an email-only, self-hosted API (EmailEngine) with a multi-cha
 
 A shorter, decision-focused version, covering channel scope, pricing arithmetic, and where each product wins, is on the main site: [EmailEngine vs Unipile](https://emailengine.app/unipile-alternative).
 
-:::info About the Unipile figures on this page
+:::info[About the Unipile figures on this page]
 Statements about Unipile describe its public [website](https://www.unipile.com/) and [pricing page](https://www.unipile.com/pricing-api/) as read on 26 August 2026. Unipile revises both, and this page is not updated when it does. "Not advertised" in a table means the feature is not listed on those pages, not that it is absent. Statements about EmailEngine describe version 2.82.0.
 :::
 
-:::info Summary
+:::info[Summary]
 
 - **Unipile:** Fully managed SaaS with multi-channel messaging (email, LinkedIn, WhatsApp, Instagram, Telegram) and calendars
 - **EmailEngine:** Self-hosted, email only, flat annual license, mailbox data stays on your infrastructure

@@ -219,7 +219,7 @@ Functions run inside a fresh V8 context created with Node's `vm` module. The con
 
 **Time limit:** 30 seconds of synchronous execution. The limit interrupts a loop that never yields, but it does not bound time spent waiting on `await`. A script that waits on a slow `fetch` runs until that request's own timeout fires, which is why external calls belong in the webhook handler rather than in the filter (see [Performance](#performance-considerations)).
 
-:::warning Not a security boundary
+:::warning[Not a security boundary]
 Node's `vm` isolates variables, not privileges. Code running here can reach the host process through the objects it is handed, so treat a pre-processing function as code running with EmailEngine's own permissions. Only operators you trust with the server should be able to edit routes.
 :::
 
@@ -410,7 +410,7 @@ const result = await response.json();
 return result.category === "important";
 ```
 
-:::tip Let the webhook handler do the slow work
+:::tip[Let the webhook handler do the slow work]
 Pass the event through and classify it in your webhook handler, where a slow call delays one delivery instead of every event on the instance. Pre-processing is for decisions that can be made from the payload alone.
 :::
 

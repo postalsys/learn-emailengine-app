@@ -8,7 +8,7 @@ sidebar_position: 7
 
 What to lock down before an EmailEngine instance faces the network.
 
-:::warning Security First
+:::warning[Security First]
 EmailEngine handles sensitive data including email credentials, OAuth tokens, and message content. Proper security configuration is critical.
 :::
 
@@ -57,7 +57,7 @@ sudo iptables -A INPUT -p tcp --dport 6379 -s 127.0.0.1 -j ACCEPT
 sudo iptables -A INPUT -p tcp --dport 6379 -j DROP
 ```
 
-:::tip Outbound Connections
+:::tip[Outbound Connections]
 These rules control inbound traffic. If your firewall also restricts outbound connections, see [Outbound Connection Whitelist](#outbound-connection-whitelist) for domains that EmailEngine needs to reach.
 :::
 
@@ -118,7 +118,7 @@ graph TB
 
 If EmailEngine is deployed behind a firewall that blocks outbound connections, you must whitelist the following domains for EmailEngine to function correctly.
 
-:::info Reaching these through a proxy
+:::info[Reaching these through a proxy]
 Since v2.79.9, EmailEngine's [proxy settings](/docs/accounts/imap-smtp#proxy-configuration) cover HTTP requests as well as IMAP and SMTP, so the domains below can be reached through the proxy instead of being whitelisted at the firewall. Up to v2.79.8 they required direct network access or the separate HTTP proxy settings.
 :::
 
@@ -238,7 +238,7 @@ The policy is applied to the URL before the request and again to the addresses t
 
 EmailEngine uses `EENGINE_SECRET` as the master encryption key for all sensitive data stored in Redis. This environment variable is critical for security and data recovery.
 
-:::danger Critical - Store This Secret Permanently
+:::danger[Critical - Store This Secret Permanently]
 The `EENGINE_SECRET` must be stored permanently in your configuration. If lost, you cannot decrypt any stored credentials and must re-authenticate all accounts.
 :::
 
@@ -342,7 +342,7 @@ curl -X POST https://emailengine.example.com/v1/oauth2 \
   }'
 ```
 
-:::info OAuth2 Credential Storage
+:::info[OAuth2 Credential Storage]
 OAuth2 app credentials are encrypted at rest using [`EENGINE_SECRET`](#eengine_secret). EmailEngine automatically manages access tokens, refresh tokens, and handles token refresh.
 :::
 
@@ -456,11 +456,11 @@ emailengine.example.com {
 </TabItem>
 </Tabs>
 
-:::tip Defense in Depth
+:::tip[Defense in Depth]
 For production deployments, combine `EENGINE_ADMIN_ACCESS_ADDRESSES` with reverse proxy IP restrictions. This provides multiple layers of protection in case one layer is misconfigured.
 :::
 
-:::warning Running behind a reverse proxy
+:::warning[Running behind a reverse proxy]
 If you also set `EENGINE_API_PROXY=true`, EmailEngine matches this allowlist against the address in the `X-Forwarded-For` header rather than the connecting socket. Declare which peers are your proxies:
 
 ```bash
@@ -574,7 +574,7 @@ Similar patterns apply to HashiCorp Vault, Azure Key Vault, and Google Secret Ma
 
 ## API Security
 
-:::tip Internal API
+:::tip[Internal API]
 The EmailEngine API is designed to be an internal resource, accessed only by your backend services. It should not be exposed directly to the public internet. Keep the API behind a firewall or restrict access to trusted IP addresses. With this architecture, API rate limiting is typically unnecessary.
 :::
 
@@ -704,7 +704,7 @@ rename-command SHUTDOWN "SHUTDOWN_12345"
 rename-command KEYS ""
 ```
 
-:::tip Safe Key Operations
+:::tip[Safe Key Operations]
 EmailEngine uses `SCAN` instead of `KEYS` for key iteration, which is the recommended approach for production Redis deployments. You can safely disable the `KEYS` command.
 :::
 

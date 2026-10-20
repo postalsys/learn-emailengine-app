@@ -135,7 +135,7 @@ See [Webhook Events Reference](/docs/reference/webhook-events) for complete payl
 | `EENGINE_PREPARED_TOKEN` | Pre-configured API token (exported hash) |
 | `EENGINE_PREPARED_PASSWORD` | Pre-configured admin password (hash) |
 
-:::info OAuth2 and Webhooks
+:::info[OAuth2 and Webhooks]
 OAuth2 applications and webhooks are configured via the [Settings API](/docs/api/post-v-1-settings) or web interface, not environment variables. Use `EENGINE_SETTINGS` to pre-configure them at startup.
 :::
 

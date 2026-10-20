@@ -307,7 +307,7 @@ curl -X PUT https://emailengine.example.com/v1/account/user123/reconnect \
 
 **Error Message:** "Please log in via your web browser" or "Invalid credentials"
 
-:::danger Gmail Account Passwords Disabled
+:::danger[Gmail Account Passwords Disabled]
 Gmail has completely disabled account password authentication. The "Less secure app access" feature is no longer available. You **must** use app passwords or OAuth2.
 :::
 
@@ -485,7 +485,7 @@ curl -X PUT https://emailengine.example.com/v1/account/user123 \
   }'
 ```
 
-:::warning Security
+:::warning[Security]
 Only disable certificate verification for development/testing with self-signed certs. In production, use proper CA-signed certificates.
 :::
 

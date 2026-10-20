@@ -11,7 +11,7 @@ When using EmailEngine with Gmail, you must choose which OAuth2 scopes to reques
 
 This page covers the Gmail scope configurations supported by EmailEngine, what each enables, and how to set them up.
 
-:::info Prerequisites
+:::info[Prerequisites]
 This page assumes you have already created a Google Cloud project and OAuth2 credentials. If not, see [Setting Up Gmail API](/docs/accounts/gmail/gmail-api) or [Setting Up Gmail with OAuth2 (IMAP/SMTP)](/docs/accounts/gmail/gmail-imap) first.
 :::
 
@@ -39,7 +39,7 @@ Google classifies OAuth2 scopes into three tiers. The classification determines 
 
 The overall classification of your application is determined by its most restrictive scope. For example, if you request both `gmail.send` (Sensitive) and `gmail.readonly` (Restricted), your application is classified as Restricted.
 
-:::tip Send-Only avoids the Restricted tier
+:::tip[Send-Only avoids the Restricted tier]
 The **Send-Only** configuration using `gmail.send` is the only Gmail scope combination that avoids the Restricted tier. It requires brand verification (Sensitive) rather than a security assessment.
 :::
 
@@ -258,7 +258,7 @@ Uses three separate scopes instead of the broader `gmail.modify`. This provides 
 
 Identical to [Gmail API Full Access](#gmail-api-full-access): Pub/Sub watch, history tracking, fallback polling, locale detection, and Message-ID resolution after sending all work, and incoming-message webhooks fire normally.
 
-:::warning Operations that will fail
+:::warning[Operations that will fail]
 With this scope combination, EmailEngine API calls that attempt to modify, move, or trash messages fail, because Google rejects the underlying request for insufficient authentication scopes. This includes:
 - `PUT /v1/account/{account}/message/{message}` (updating flags)
 - `PUT /v1/account/{account}/message/{message}/move` (moving messages)
@@ -353,7 +353,7 @@ Provides read access to messages and labels. Cannot send, modify, or delete mess
 
 Identical to [Gmail API Full Access](#gmail-api-full-access) for everything except sending: Pub/Sub watch, history tracking, fallback polling and locale detection work, and incoming-message webhooks such as `messageNew` fire normally.
 
-:::info gmail.labels is recommended
+:::info[gmail.labels is recommended]
 The `gmail.labels` scope is included in this preset so that label listing and label management behave consistently. Listing labels also works with `gmail.readonly` alone, but keeping `gmail.labels` is recommended - it is a non-sensitive scope and does not add to Google's verification requirements.
 :::
 
@@ -522,7 +522,7 @@ curl -X PUT "https://emailengine.example.com/v1/oauth2/YOUR_APP_ID" \
   }'
 ```
 
-:::warning Scope changes require re-authentication
+:::warning[Scope changes require re-authentication]
 Changing scopes on the OAuth2 application only affects new authorizations. Existing accounts keep the scopes that were granted when they authorized until the user re-authorizes. To apply new scopes to existing accounts, generate a new [authentication link](/docs/accounts/hosted-authentication) for the same account ID and have users complete the OAuth2 flow again.
 :::
 

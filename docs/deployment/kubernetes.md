@@ -8,11 +8,11 @@ sidebar_position: 2
 
 Deploy EmailEngine on Kubernetes for container orchestration and cloud-native deployments.
 
-:::tip Docker Basics
+:::tip[Docker Basics]
 For Docker and Docker Compose setup, see the [Docker Installation Guide](/docs/installation/docker). This page covers Kubernetes-specific deployment.
 :::
 
-:::warning Single Instance Only
+:::warning[Single Instance Only]
 **EmailEngine does NOT support horizontal scaling.** You must run exactly **one replica** of EmailEngine per Redis database. Two instances on the same Redis database each open their own IMAP connections for every account, deliver every webhook twice, and overwrite each other's sync state. Scale vertically (more CPU/RAM) instead of horizontally (more replicas).
 :::
 
@@ -237,7 +237,7 @@ Adjust resources based on account count. Since EmailEngine runs as a single inst
 | 1000-5000 | 4Gi | 2 | Medium deployments |
 | 5000+ | 8Gi | 4 | Large deployments, consider dedicated Redis |
 
-:::note Vertical Scaling Only
+:::note[Vertical Scaling Only]
 EmailEngine does not support horizontal scaling. For very large deployments (10,000+ accounts), consider:
 - Running multiple EmailEngine instances with **separate Redis databases** (each handling different accounts)
 - Using a dedicated high-performance Redis instance

@@ -39,7 +39,7 @@ EmailEngine supports passkey (WebAuthn) authentication for the admin interface. 
 - Bypasses the TOTP requirement, by design: a passkey is a single sufficient factor
 - Works with platform authenticators (Touch ID, Face ID, Windows Hello) and roaming authenticators (YubiKey, Titan)
 
-:::info Service URL Required
+:::info[Service URL Required]
 Passkey registration requires a configured Service URL (`serviceUrl`). The URL's hostname is used as the WebAuthn Relying Party ID. Without a Service URL, the "Add passkey" button is disabled.
 :::
 
@@ -68,7 +68,7 @@ Passkey authentication bypasses the TOTP requirement - if you have TOTP configur
 - Each passkey shows its name, its registration date and when it last signed in
 - Remove individual passkeys using the **Remove** action on the row
 
-:::warning Password Changes Clear Passkeys
+:::warning[Password Changes Clear Passkeys]
 Changing the admin password immediately deletes all registered passkeys for that user. This is a security measure to prevent unauthorized passkey-only access if the password is compromised. Re-register your passkeys after a password change.
 :::
 

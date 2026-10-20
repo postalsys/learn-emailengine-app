@@ -52,7 +52,7 @@ A script that installs and wires up everything a single-server deployment needs.
 - SystemD service at `/etc/systemd/system/emailengine.service`, with `EENGINE_REDIS` (database 8, with the password), `EENGINE_SECRET`, `EENGINE_PORT=3000`, `EENGINE_API_PROXY=true`, `EENGINE_API_PROXY_ADDRESSES=127.0.0.1,::1` (since v2.79.8, so that only Caddy on the same host may set `X-Forwarded-For`), `EENGINE_WORKERS=8`, and `EENGINE_LOG_LEVEL=info` set in the unit. It also sets `EENGINE_INSTALL_SCRIPT=true`, which makes the admin **Upgrade** page show the instructions for this layout
 - Upgrade helper script at `/opt/upgrade-emailengine.sh`
 
-:::note This layout differs from the manual install below
+:::note[This layout differs from the manual install below]
 The installer keeps the binary at `/opt/emailengine`. The manual instructions further down place it at `/usr/local/bin/emailengine` instead. Pick one approach and stay with it, since the upgrade helper only knows about the installer's layout.
 :::
 

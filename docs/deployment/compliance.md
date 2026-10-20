@@ -38,7 +38,7 @@ API access tokens are a special case: they are never stored in recoverable form.
 - **Historical message content** - No email archive or backup functionality
 - **User browsing data** - No cookies or tracking outside admin interface session
 
-:::note AI processing
+:::note[AI processing]
 The list above reflects EmailEngine's default behavior. One optional feature changes what leaves the instance, and it is not enabled unless you configure it:
 
 - **AI processing** (disabled by default) sends message content - subject and body - to your configured LLM provider (OpenAI by default) to generate summaries.
@@ -220,7 +220,7 @@ Document why your application needs each OAuth scope:
 | `gmail.send` | Send emails on behalf of user |
 | `mail.google.com` | Full mailbox access; this is the scope IMAP and SMTP with OAuth2 require |
 
-:::tip Minimize Scopes
+:::tip[Minimize Scopes]
 Request only the scopes your application needs. Broader scopes require more justification and stricter security review.
 :::
 

@@ -214,7 +214,7 @@ appendonly yes
 appendfsync everysec
 ```
 
-:::danger AOF and EmailEngine's write pattern
+:::danger[AOF and EmailEngine's write pattern]
 An initial sync writes one index entry per message, so a large mailbox produces a burst of small writes. With AOF every one of them is appended to disk, and the rewrite that periodically compacts the log competes with the same burst.
 
 What that costs depends entirely on the storage underneath. On a slow disk it shows up as Redis latency, a growing AOF, and a sync that never seems to finish; on fast local NVMe it may not be noticeable at all. The failure is gradual rather than sudden, which is what makes it worth deciding deliberately.
@@ -243,7 +243,7 @@ appendonly yes
 appendfsync everysec
 ```
 
-:::warning Performance Impact
+:::warning[Performance Impact]
 Using both RDB and AOF provides maximum durability but doubles the I/O overhead.
 
 **Not recommended for EmailEngine** due to the extremely high write volume. The AOF overhead will likely cause performance issues.
@@ -487,7 +487,7 @@ EENGINE_REDIS="rediss://:YOUR_PASSWORD@YOUR_ENDPOINT.upstash.io:6379"
 </TabItem>
 <TabItem value="elasticache" label="Amazon ElastiCache">
 
-:::danger Not supported
+:::danger[Not supported]
 EmailEngine is incompatible with Amazon ElastiCache as the database backend - using it can result in data loss, and EmailEngine displays a danger-level warning on the dashboard when ElastiCache is detected. Migrate to a standard Redis deployment (self-managed Redis or a compatible managed service) instead.
 :::
 

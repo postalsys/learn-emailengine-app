@@ -243,7 +243,7 @@ The event is also delivered to a default destination, provided `webhookEvents` n
 
 If neither is set, nothing is sent on this track and the queue job still reports as completed.
 
-:::info Account-Specific Webhooks
+:::info[Account-Specific Webhooks]
 Each account can have its own dedicated webhook URL configured in the account settings. When set, this URL **replaces** the global webhook URL for that account - webhooks are sent to the account URL, not the global URL. This is useful for multi-tenant setups where each customer's account needs to send webhooks to their own endpoint.
 
 Webhook routes are **not affected** by account-specific webhook URLs. Routes are evaluated independently and will still receive webhooks based on their filter functions, regardless of whether an account has a dedicated URL set.
@@ -269,7 +269,7 @@ To use only account-specific webhooks (no global fallback):
 
 ![Webhook Configuration Page](/img/screenshots/webhooks/webhook-config-page.png)
 
-:::warning Important
+:::warning[Important]
 The **Enable Webhooks** toggle must remain enabled for webhook routing to work. This setting controls the entire webhook system, including custom routes. Only clear the webhook URL field if you want to disable the default destination while keeping routes active.
 :::
 
@@ -520,7 +520,7 @@ You can retrieve webhook route information programmatically using the EmailEngin
 - **List routes** - `GET /v1/webhookRoutes` - Retrieve all configured webhook routes
 - **Get route details** - `GET /v1/webhookRoutes/webhookRoute/{webhookRoute}` - Get a specific route with filter and mapping functions
 
-:::info Web UI Required for Route Management
+:::info[Web UI Required for Route Management]
 Creating, updating, and deleting webhook routes is only available through the Web UI. The API provides read-only access to route information.
 :::
 
@@ -740,11 +740,11 @@ Filter and mapping functions have access to:
 | `URL` | URL constructor for URL manipulation |
 | `env` | The JSON object stored in the `scriptEnv` setting, edited as **Global variables** under **Webhook Scripts** on **Configuration > Webhooks** |
 
-:::info Keep the functions short
+:::info[Keep the functions short]
 Filters and maps run inside the notify worker, which processes one delivery at a time by default, so every millisecond spent here is a millisecond no webhook is being posted. Synchronous execution is cut off at 30 seconds; awaiting is not bounded by that limit, so a `fetch` against an unresponsive service can hold the queue for as long as its own timeout allows.
 :::
 
-:::warning Scripts run with the server's privileges
+:::warning[Scripts run with the server's privileges]
 The functions run in a Node.js `vm` context, which is not a security boundary: a script can reach the process, the host modules and the configured secrets. Only operators you would trust with the EmailEngine configuration itself should write them.
 :::
 

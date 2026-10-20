@@ -35,7 +35,7 @@ Every API error is a JSON body in this shape:
 | `details` | object or array | Extra context a few routes attach, such as delivery test results |
 | `existingAccount` | string | `AccountAlreadyExists` only: the account the OAuth2 user is already bound to |
 
-:::warning `error` is the status text, not the reason
+:::warning[`error` is the status text, not the reason]
 Show and log `message`. The `error` field only repeats the HTTP status phrase, so a handler that reports `error` tells the operator "Bad Request" instead of what was actually wrong.
 :::
 

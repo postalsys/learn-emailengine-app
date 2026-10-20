@@ -49,7 +49,7 @@ This event is terminal. The export has stopped, will not retry on its own, and c
 
 There is no event ID in the body. EmailEngine sends it in the `X-EE-Wh-Event-Id` request header. See [Delivery and Retries](/docs/webhooks/overview#delivery-and-retries).
 
-:::warning A failed export cannot be resumed
+:::warning[A failed export cannot be resumed]
 EmailEngine has no checkpoint or resume mechanism for exports. `messagesExported` and `messagesQueued` describe how far the job got, but the partial file is deleted and the job cannot continue from where it stopped. Recovering means starting a new export.
 
 Narrow the folder list or the date range before retrying a large export that keeps failing, so each run has less to lose.

@@ -140,7 +140,7 @@ Each entry is a folder path or a special-use flag (`\\Sent`, `\\Junk`, `\\Trash`
 | `Covered by the "All Mail" folder` | Gmail account watching all folders: only `\\Trash` and `\\Junk` are accepted, because "All Mail" already covers everything else |
 | `Can not use the default folder` | Non-Gmail account watching all folders: INBOX is already the main connection's folder |
 
-:::info Best Effort
+:::info[Best Effort]
 Sub-connections are non-blocking. If a sub-connection fails, for instance because the server rejects one more concurrent session, the account keeps working on its primary connection and the folder falls back to the resync interval.
 :::
 
@@ -195,7 +195,7 @@ For every new message, the account's thread fetches what the `messageNew` webhoo
 
 The defaults put up to 2 MB of text into every queued `messageNew`. If your application fetches the message through the API anyway, turning `notifyText` off or lowering `notifyTextSize` is the largest single saving in both IMAP traffic and Redis memory. [messageNew](/docs/webhooks/messagenew) shows what each setting adds to the payload.
 
-:::warning Event filters do not save this work
+:::warning[Event filters do not save this work]
 `webhookEvents` (the list of events to deliver) and `inboxNewOnly` are applied when the webhook worker delivers a queued event. Every event is still fetched, processed and queued first, so they reduce webhook requests, not IMAP or Redis load.
 :::
 
@@ -478,7 +478,7 @@ curl -X POST https://emailengine.example.com/v1/settings \
 
 ## Scaling EmailEngine
 
-:::warning No Horizontal Scaling
+:::warning[No Horizontal Scaling]
 EmailEngine does not support horizontal scaling. Two instances pointed at the same Redis database each try to sync every account, and the result is duplicate connections, duplicate webhooks and conflicting state.
 
 In Kubernetes or any other orchestrator, run exactly one replica and do not attach a Horizontal Pod Autoscaler or an auto-scaling group. For more capacity, scale vertically or shard manually as described below.
@@ -506,7 +506,7 @@ One instance configured this way handles several thousand accounts.
 
 Beyond what one instance can carry, split the accounts across fully independent EmailEngine deployments:
 
-:::danger Manual Sharding Requirements
+:::danger[Manual Sharding Requirements]
 - Each instance has its own Redis database
 - Each instance manages a disjoint set of accounts
 - Your application routes every API request to the instance that owns the account

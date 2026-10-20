@@ -213,7 +213,7 @@ The endpoint takes these query parameters:
 | `embedAttachedImages` | boolean | unset   | Replace `cid:` image references with data URIs. An explicit `false` is honored alongside `webSafeHtml`                        |
 | `markAsSeen`          | boolean | `false` | Add the `\Seen` flag while fetching, if the message is unseen                                                                  |
 
-:::tip Displaying the HTML
+:::tip[Displaying the HTML]
 If you intend to render the HTML body in a web page, request it with `webSafeHtml=true`. See [Web-Safe HTML](/docs/receiving/web-safe-html).
 :::
 
@@ -385,7 +385,7 @@ What is stored depends on the backend:
 | Gmail API       | Inserted with the folder's label as its only label, so the message is stored as read. `flags` and `internalDate` are not applied; the stored date follows the message's `Date` header. A `reference.threadId` places the message in that thread |
 | Microsoft Graph | Created in the folder. Of the flags, `\Seen` and `\Draft` are applied; `internalDate` sets the delivery time. A message Graph refuses answers 400 with Graph's error code in `code` (since v2.82.0)                                           |
 
-:::note Threaded uploads on MS Graph
+:::note[Threaded uploads on MS Graph]
 Since v2.82.0 a reply or forward uploaded to an MS Graph account keeps its `In-Reply-To` and `References` headers, which EmailEngine sets through the MAPI properties Exchange builds them from. Earlier releases rejected every such upload with `InvalidInternetMessageHeader`, because Graph accepts only `x-` prefixed names in `internetMessageHeaders`. Custom headers without that prefix are now dropped rather than failing the request, and at most five are stored.
 :::
 

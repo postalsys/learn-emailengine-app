@@ -215,7 +215,7 @@ A `syncWarning` is sent when the sync of an API account skipped something it wil
 
 The stream opens with the comment line `: EmailEngine v<version>` and writes a comment every 90 seconds while nothing happens, so intermediate proxies do not time it out. A client that stops reading is dropped once about 2 MB of unsent output has queued behind it (since 2.82.0); `EventSource` reconnects on its own, so treat a disconnect as normal.
 
-:::note This stream is a signal, not a record
+:::note[This stream is a signal, not a record]
 Events are only delivered to clients connected at the time. Nothing is buffered for a client that is not listening, so a state change during a reconnect is missed. Use it to drive a live view, and read `/v1/account/{account}` for the authoritative current state. For durable delivery, use [webhooks](/docs/webhooks/overview).
 :::
 

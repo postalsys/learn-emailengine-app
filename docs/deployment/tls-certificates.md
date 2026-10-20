@@ -18,7 +18,7 @@ All three are configured on one page, **Configuration > TLS Certificates** (`/ad
 
 This page is about certificates EmailEngine *presents*. Whether a connection *to* a mail server is encrypted, and whether its certificate is checked, is a per-account setting covered in [IMAP and SMTP configuration](/docs/accounts/imap-smtp#ssltls-configuration).
 
-:::info Most deployments do not need this
+:::info[Most deployments do not need this]
 TLS is usually terminated at a reverse proxy, which leaves EmailEngine on plain HTTP. See [Nginx Reverse Proxy](/docs/deployment/nginx-proxy). The page below matters when EmailEngine has to present a certificate itself, which the SMTP server and the IMAP proxy always do, because a mail client connects to them directly.
 :::
 
@@ -133,7 +133,7 @@ State for a hostname you stop serving is cleared automatically, including when t
 
 `EENGINE_ACME_DIRECTORY_URL` names the CA directory (default `https://acme-v02.api.letsencrypt.org/directory`) and `EENGINE_ACME_ENVIRONMENT` names the stored account record (default `emailengine`).
 
-:::warning Override both or neither
+:::warning[Override both or neither]
 The environment names the account record and the directory names the CA that issued it. Moving one alone presents an account key the other CA has never seen, and every request is rejected.
 :::
 
@@ -162,7 +162,7 @@ Generated on the instance the first time a TLS listener needs a certificate and 
 
 The key is unique to the installation and stored encrypted; no other copy of EmailEngine has it. It is generated with Node's own `crypto` module, so no OpenSSL binary is involved and the behavior is identical on every platform EmailEngine ships for.
 
-:::warning A self-signed certificate cannot be verified
+:::warning[A self-signed certificate cannot be verified]
 Clients have no way to establish that it is genuine. Either pin the SHA-256 fingerprint shown on the page, or configure the client to accept the certificate. Do not treat a listener on a self-signed certificate as equivalent to one on an issued certificate.
 :::
 

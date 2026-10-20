@@ -74,7 +74,7 @@ Create and delete on folders joined this table in v2.85.0, with the folder tools
 
 A token may hold one scope or both. Adding "Webhook routes" to the permissions of an `mcp`-only token changes nothing: there is no mail tool for it and the surface would refuse the operation anyway. The management scope reads webhook routes but has no write for them, because the API has none; it never reaches `send` on any section, bulk export, the change stream, or removing the license.
 
-:::tip Prefer the MCP scopes over `api`
+:::tip[Prefer the MCP scopes over `api`]
 An `api` or `*` token also opens the endpoint, and reaches every tool its permissions allow - useful for a quick test with a token you already have. It is a worse credential to hand an agent: the same string is then a full REST credential, and losing it costs more. Issue agents tokens that carry only the MCP scopes they need.
 :::
 

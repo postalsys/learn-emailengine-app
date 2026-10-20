@@ -39,7 +39,7 @@ What it contains depends on the backend the account uses:
 
 For an IMAP account EmailEngine packs two 32-bit numbers into a URL-safe base64 string: a per-account folder number and the IMAP UID. The folder number is allocated the first time EmailEngine sees a folder, and the mapping from that number back to the folder path and its `UIDVALIDITY` is stored in Redis with the account. The string is short and lets EmailEngine locate the message on the server without a lookup by `Message-ID`.
 
-:::warning An `id` only means something to the instance that issued it
+:::warning[An `id` only means something to the instance that issued it]
 The folder number in an IMAP `id` is resolved through Redis. Another EmailEngine instance cannot resolve it, and it stops resolving if that Redis database is flushed or restored from a backup taken before the folder was first seen.
 
 Store `messageId` next to any `id` you persist for longer than a request. It is a property of the email itself, so it survives all of the above. See [Choosing an Identifier](#choosing-the-right-identifier) below.
@@ -250,7 +250,7 @@ Seq 3: Message C        Seq 3: Message D  (was 4)
 Seq 4: Message D
 ```
 
-:::info Internal Implementation
+:::info[Internal Implementation]
 IMAP servers push untagged `EXPUNGE` and `FETCH` responses using sequence numbers. EmailEngine keeps an ordered list of each folder's UIDs in Redis and resolves the sequence number against that list before acting on the notification. This only happens with the `full` [IMAP indexer](/docs/accounts/imap-indexers); the `fast` indexer ignores these notifications, which is one reason it does not report flag changes or deletions.
 :::
 

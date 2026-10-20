@@ -19,7 +19,7 @@ There are two ways for a client to authenticate against the MCP endpoint. Which 
 
 Both produce the same thing: an ordinary EmailEngine access token carrying one or both MCP scopes, `mcp-manage` for the instance and `mcp` for mail, with an explicit permissions record for the levels chosen. Whatever created it, you review and revoke it in the same place.
 
-:::note Before you start
+:::note[Before you start]
 The endpoint has to be enabled - see [Enable the endpoint](/docs/mcp#enable-the-endpoint). Remote clients also need HTTPS and a reachable address.
 :::
 
@@ -165,7 +165,7 @@ On the prompt you choose the same things the token generator offers - the instan
 
 Management starts at **Observe** and mail at **No mail access**. A client that asked for a scope in its authorization request moves the starting position: one asking for `mcp` starts with mail at Read-only and management declined, one asking for `mcp-manage` the other way round. That is a hint, never a grant; what the client gets is what you leave selected. Narrow defaults are right here: this flow issues credentials to the least controllable clients, running on machines you do not administer. The token is named `MCP: <client name>` on the Access Tokens page, with the account in parentheses when you limited it to one.
 
-:::note An admin password is required to approve
+:::note[An admin password is required to approve]
 Approving mints a lasting credential, so it needs an authenticated admin session on that request. On an instance with no admin password the prompt hides **Approve** and says so, leaving **Deny** as the only working button. [Set an admin password](/docs/configuration/reset-password) first.
 :::
 
@@ -178,7 +178,7 @@ _Tokens with an MCP scope, showing what each one is bound to and what it is allo
 
 Revoking a row cuts the client off immediately. There is nothing else to clean up: EmailEngine issues no refresh tokens for this flow, so revocation is the whole lifecycle.
 
-:::caution Admin access restrictions
+:::caution[Admin access restrictions]
 Approval happens on the admin surface. If admin access is limited to specific addresses with `EENGINE_ADMIN_ACCESS_ADDRESSES`, connect new clients from one of those addresses - the connector's own servers never need to reach `/admin`, but your browser does.
 :::
 

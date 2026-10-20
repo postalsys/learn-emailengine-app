@@ -19,11 +19,11 @@ This comparison covers features, pricing models, and deployment options for two 
 
 A shorter, decision-focused version, covering architecture, pricing arithmetic, and where each product wins, is on the main site: [EmailEngine vs Nylas](https://emailengine.app/nylas-alternative).
 
-:::info About the Nylas figures on this page
+:::info[About the Nylas figures on this page]
 Statements about Nylas describe its public [product page](https://www.nylas.com/products/email-api/) and [pricing page](https://www.nylas.com/pricing/) as read on 26 August 2026. Nylas revises both, and this page is not updated when it does. Statements about EmailEngine describe version 2.82.0.
 :::
 
-:::info Summary
+:::info[Summary]
 
 - **Nylas:** Fully managed SaaS with a wider feature set and a per-account price
 - **EmailEngine:** Self-hosted, flat annual license, mailbox data stays on your infrastructure
@@ -153,7 +153,7 @@ graph LR
 | Bounce detection | Yes                            | Yes             |
 | Threading        | Partial (Gmail, Microsoft Graph, Yahoo) | Yes    |
 
-:::info EmailEngine Threading Support
+:::info[EmailEngine Threading Support]
 EmailEngine provides native threading only where the provider does:
 
 - **Gmail** (IMAP + OAuth2 or Gmail API): thread IDs from Gmail

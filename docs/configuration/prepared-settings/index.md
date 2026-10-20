@@ -167,7 +167,7 @@ EENGINE_SETTINGS='{
 }'
 ```
 
-:::note OAuth2 Configuration
+:::note[OAuth2 Configuration]
 OAuth2 provider credentials (Gmail, Outlook) are configured as [OAuth2 applications](/docs/accounts/oauth2-setup), through the admin interface or `POST /v1/oauth2`, not through settings. The legacy settings keys such as `gmailClientId` are no longer read: an `EENGINE_SETTINGS` value that still carries them starts normally, but the keys are dropped and an error is logged naming them (since v2.79.1).
 :::
 

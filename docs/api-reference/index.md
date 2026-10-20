@@ -402,7 +402,7 @@ for await (const message of eachMessage('user@example.com')) {
 }
 ```
 
-:::caution Paging a mailbox that is changing
+:::caution[Paging a mailbox that is changing]
 Pages are computed per request, so a message arriving mid-walk shifts everything down by one and you can see the same message twice or skip one. Deduplicate on `id` while walking, and prefer [webhooks](/docs/webhooks/overview) over re-listing to keep up with new mail.
 :::
 

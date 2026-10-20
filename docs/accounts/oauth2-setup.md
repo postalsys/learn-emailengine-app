@@ -238,7 +238,7 @@ EmailEngine adds `openid`, `email` and `profile` to every user-consent Gmail req
 | `gmail.send`     | Send emails only       | Cannot read messages, and an account with only this scope runs send-only        |
 | `gmail.labels`   | List and manage labels | Paired with `gmail.readonly` in the read-only presets so label management works |
 
-:::warning gmail.labels turns a send-only app into a read app
+:::warning[gmail.labels turns a send-only app into a read app]
 EmailEngine treats an account as having read access when the granted scopes include any of `gmail.modify`, `gmail.readonly`, `gmail.labels` or `https://mail.google.com/`. Adding `gmail.labels` to an application meant for sending only therefore makes EmailEngine list messages, which Google then refuses.
 :::
 
@@ -270,7 +270,7 @@ If your application doesn't need sending capabilities, you can disable `SMTP.Sen
 | `offline_access` | Allow token refresh (required)         |
 | `User.Read`      | Read the signed-in user's profile      |
 
-:::info offline_access Scope
+:::info[offline_access Scope]
 The `offline_access` scope allows EmailEngine to refresh access tokens in the background without user interaction.
 
 - **Gmail**: Google has no such scope. EmailEngine requests `access_type=offline` and `prompt=consent` on every authorization, which is what makes Google issue a refresh token
@@ -289,7 +289,7 @@ https://www.googleapis.com/auth/calendar
 
 Enter them in the **Additional scopes** field of the collapsible **Custom scopes** section at the bottom of the app's form, one scope per line. The API field is `extraScopes`.
 
-:::warning Microsoft Additional Scopes
+:::warning[Microsoft Additional Scopes]
 A Microsoft access token is issued for one resource, so an app cannot mix the two resource endpoints. With **IMAP and SMTP** as the base scope, every additional scope must come from `https://outlook.office.com/`; with **MS Graph API** as the base scope, every additional scope must come from `https://graph.microsoft.com/`. The form states this rule but does not validate the list; a mixed list is rejected by Microsoft when the user is sent to authorize. So a token that is meant to reach other Graph APIs (calendars, files) needs an app with the MS Graph API base scope.
 :::
 

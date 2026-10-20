@@ -17,11 +17,11 @@ The `mailboxReset` event fires when:
 
 UIDVALIDITY is the IMAP mechanism that tells a client whether previously assigned UIDs are still valid. When it changes, they are not, and the folder must be fully resynchronized. A lost local index has the same practical consequence.
 
-:::note No message events are replayed
+:::note[No message events are replayed]
 Rebuilding the baseline deliberately does not emit `messageNew` for the messages it re-indexes. Without that suppression, a reset on a large folder would replay the entire mailbox to your webhook endpoint. Treat `mailboxReset` itself as the signal to reconcile, and fetch the folder's messages through the API if you need them.
 :::
 
-:::note IMAP accounts only
+:::note[IMAP accounts only]
 Folder events are produced by the IMAP client. Gmail API and Microsoft Graph accounts do not send `mailboxNew`, `mailboxDeleted` or `mailboxReset`.
 :::
 

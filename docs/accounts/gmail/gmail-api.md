@@ -9,7 +9,7 @@ description: Configure EmailEngine to use Gmail REST API as the email backend wi
 
 This guide shows you how to configure EmailEngine to use Gmail REST API as the email backend instead of IMAP/SMTP. With this setup, EmailEngine uses direct Gmail API calls for all operations and receives change notifications via Google Cloud Pub/Sub.
 
-:::info IMAP vs Gmail API
+:::info[IMAP vs Gmail API]
 The [IMAP/SMTP guide](./gmail-imap) shows how to configure EmailEngine to access Gmail over OAuth2 using IMAP and SMTP. That setup uses the OAuth2 tokens **only to authenticate IMAP/SMTP sessions**.
 
 This guide covers using **Gmail REST API directly** as the email backend. EmailEngine does not open IMAP or SMTP sessions and instead performs all operations via Gmail REST API calls.
@@ -31,7 +31,7 @@ This guide covers using **Gmail REST API directly** as the email backend. EmailE
 - You want to avoid additional GCP setup complexity
 - You're migrating existing IMAP-based integrations
 
-:::info OAuth2 Scope Requirements
+:::info[OAuth2 Scope Requirements]
 **IMAP/SMTP** requires the full `https://mail.google.com/` scope. **Gmail API** can use more granular scopes such as `gmail.modify` (default), `gmail.readonly`, `gmail.send`, and `gmail.labels`.
 
 Google requires public apps to request only the minimum scopes needed. EmailEngine supports all Gmail scope combinations - see the [Gmail API Scopes Reference](./gmail-api-scopes) for detailed configuration options, setup instructions, and Google verification requirements.
@@ -81,7 +81,7 @@ Also find and enable **Cloud Pub/Sub API**.
 
 ![Enabling Cloud Pub/Sub API](/img/external/KwfF06xSzN.gif)
 
-:::info Why Cloud Pub/Sub?
+:::info[Why Cloud Pub/Sub?]
 Gmail pushes change notifications (new messages, flag changes, etc.) to Google's Pub/Sub system, not directly to EmailEngine. EmailEngine sets up a Pub/Sub topic and subscription to receive these notifications and convert them into webhooks for your application.
 
 Without Pub/Sub, EmailEngine would not know when changes occur on the email account and couldn't send real-time webhook notifications.
@@ -134,7 +134,7 @@ Click **Add or remove scopes** and find `gmail.modify` in the list.
 
 Check `gmail.modify` and click **Update**.
 
-:::important Required Scope
+:::important[Required Scope]
 The `gmail.modify` scope is required for Gmail API access. This is different from the `https://mail.google.com/` scope used for IMAP/SMTP.
 
 If Google's verification process determines you need different scopes (e.g., `gmail.readonly`, `gmail.send`, `gmail.labels`), see the [Custom Scopes section](#using-custom-scopes) below.
@@ -180,7 +180,7 @@ Click **Create**.
 
 Click the **Download** button. Save this file - you'll need it to configure EmailEngine.
 
-:::tip Credential File Names
+:::tip[Credential File Names]
 
 - **User OAuth credentials**: Filename starts with `client_secret_`
 - **Service account credentials**: Uses service account name prefix
@@ -206,7 +206,7 @@ Click **Create Service Account**.
 
 **Role:** Select **Pub/Sub Admin** (or a compatible role that allows managing Pub/Sub queues, topics, and IAM policies)
 
-:::important Required Permissions
+:::important[Required Permissions]
 The service account must have permissions to:
 
 - Create and delete Pub/Sub topics
@@ -251,7 +251,7 @@ Now configure EmailEngine to use the service account for managing webhooks.
 
 **Credentials:** Keep the **Service account key** authentication method, click **Load from the key file...** and select the **service account** JSON file (not the user OAuth credentials)
 
-:::warning Use Correct Credentials File
+:::warning[Use Correct Credentials File]
 Make sure you're uploading the **service account** credentials file, not the user OAuth credentials file. You can tell them apart:
 
 - **Service account**: Filename uses service account name prefix
@@ -290,7 +290,7 @@ Now configure the user OAuth application that will authenticate Gmail accounts.
 
 The form also offers the **Accept only Google Workspace accounts** and **Display title** fields, described under [Configure OAuth2 Settings](./gmail-imap#configure-oauth2-settings) on the IMAP/SMTP page.
 
-:::important Link Service Account
+:::important[Link Service Account]
 This selector is marked as optional in the UI. It tells EmailEngine which credentials to use for managing Pub/Sub resources. Without it, EmailEngine registers no Gmail watch and instead polls each account for changes about every 10 minutes, so webhooks still fire, with up to that much delay. Send-only accounts never need it.
 :::
 
@@ -349,7 +349,7 @@ If you have a public OAuth2 application and Google requires narrower scopes than
 
 See the [Gmail API Scopes Reference](./gmail-api-scopes) for all supported scope combinations with setup instructions for both the Web UI and API, EmailEngine feature availability for each configuration, and Google verification requirements.
 
-:::warning Important
+:::warning[Important]
 You must add `gmail.modify` to **Disabled scopes** when using custom scopes. Otherwise, EmailEngine will request both `gmail.modify` AND your additional scopes, which defeats the purpose of using limited scopes.
 :::
 

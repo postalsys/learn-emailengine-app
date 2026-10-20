@@ -125,7 +125,7 @@ Everything else (network timeouts, connection resets, a server that closed the c
 
 With the default of 10 attempts, a message that keeps failing with a retriable error is given up on roughly 43 minutes after the first attempt. The jitter keeps a batch of messages that failed together from retrying at the same instant.
 
-:::info nextAttempt is the nominal time
+:::info[nextAttempt is the nominal time]
 The `nextAttempt` value in the outbox API and in the `messageDeliveryError` payload is computed from the nominal delay without the jitter, so it is the latest moment the retry can happen; the actual retry is up to 20% earlier. Before v2.70.0 the outbox API doubled the delay once too often and reported a time later than the nominal one.
 :::
 
@@ -274,7 +274,7 @@ Useful for:
 - Cancelling a scheduled send
 - Clearing a retained failed job
 
-:::info Retrying Failed Jobs
+:::info[Retrying Failed Jobs]
 A failed message can be retried while its content is still kept: `POST /v1/outbox/{queueId}/retry` over the API, or **Retry** on the message's page in the queue browser. See [Retrying failed messages](#retrying-failed-messages) below.
 :::
 

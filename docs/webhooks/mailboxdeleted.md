@@ -21,7 +21,7 @@ The event covers only folders EmailEngine knew about. A folder created and delet
 
 Exactly one event is sent per disappearance. Before EmailEngine 2.80.0 a folder deleted through the API could be announced twice, once by the deletion and again by the next listing pass, and a folder EmailEngine tracked without a stored listing entry was torn down with no event at all.
 
-:::note IMAP accounts only
+:::note[IMAP accounts only]
 Folder events are produced by the IMAP client. Gmail API and Microsoft Graph accounts do not send `mailboxNew`, `mailboxDeleted` or `mailboxReset`.
 :::
 

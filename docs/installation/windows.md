@@ -15,7 +15,7 @@ EmailEngine can be installed on Windows using two methods:
 1. **Windows Executable** - Native Windows binary with Memurai or Redis alternatives
 2. **WSL2** - Linux installation inside Windows Subsystem for Linux
 
-:::tip Production Recommendation
+:::tip[Production Recommendation]
 For production deployments on Windows Server, consider using **WSL2** or running EmailEngine on a dedicated Linux VM for better performance and reliability.
 :::
 

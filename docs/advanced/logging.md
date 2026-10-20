@@ -154,7 +154,7 @@ What the log contains is every line the account's connection client wrote to the
 
 The account's page in the admin UI offers the same download, and a control to clear the stored log. Since v2.79.7 both are offered only while the account has entries; before that, downloading an empty log produced the single-line notice above.
 
-:::warning These logs live in Redis
+:::warning[These logs live in Redis]
 Every retained entry consumes RAM on the Redis instance, and `logs.all` multiplies that by your account count. Switch logging on for the one account you are investigating and turn it back off afterwards. The record is kept as a Redis list under the account's key, so deleting the account deletes its log.
 :::
 

@@ -8,7 +8,7 @@ description: Using EmailEngine to manage OAuth2 tokens and access provider APIs
 
 EmailEngine automatically manages OAuth2 tokens for registered accounts, refreshing access tokens when they expire. You can also retrieve these tokens to use with other Google or Microsoft APIs directly.
 
-:::tip Quick Reference
+:::tip[Quick Reference]
 **API Endpoint:** [GET /v1/account/\{account\}/oauth-token](/docs/api/get-v-1-account-account-oauthtoken) - Retrieve a valid OAuth2 access token for any account
 :::
 
@@ -22,7 +22,7 @@ When you register OAuth2 accounts in EmailEngine:
 - You never need to handle token refresh logic
 - Tokens can be retrieved for use with other APIs via the [OAuth2 Token API](/docs/api/get-v-1-account-account-oauthtoken)
 
-:::warning Token Encryption
+:::warning[Token Encryption]
 OAuth2 tokens (including sensitive refresh tokens and client secrets) are stored **encrypted in Redis** only if you configure the `EENGINE_SECRET` environment variable. Without encryption enabled, credentials are stored in **cleartext**. For production deployments, always enable encryption by setting a strong encryption secret. [See encryption documentation](/docs/deployment/encryption)
 :::
 
@@ -103,7 +103,7 @@ In Azure AD, add all required permissions:
 | `Files.Read` | OneDrive access |
 | `offline_access` | Token refresh capability |
 
-:::warning Microsoft Scope Compatibility
+:::warning[Microsoft Scope Compatibility]
 Additional OAuth2 scopes with Microsoft accounts are only supported when using the **MS Graph API backend** (Mail.\* scopes). If you configure EmailEngine to use IMAP/SMTP (IMAP.AccessAsUser.All, SMTP.Send scopes), those access tokens are valid **only for IMAP/SMTP** and cannot be used with other Microsoft Graph APIs like Calendars or Files.
 :::
 
@@ -147,7 +147,7 @@ For security, the OAuth2 token API endpoint is **disabled by default**.
 
 Set `EENGINE_ENABLE_OAUTH_TOKENS_API=true` when starting EmailEngine. The variable seeds the setting on an instance where it has never been saved; once the checkbox has been saved either way, the stored value wins.
 
-:::warning Security Consideration
+:::warning[Security Consideration]
 The OAuth2 token endpoint returns access tokens that can access user data. Only enable this if you need it, and ensure your EmailEngine API is properly secured with strong access tokens and appropriate access controls.
 
 This setting **cannot be changed via the API** - it must be configured through the web interface or environment variable.
@@ -171,7 +171,7 @@ Permissions added in Azure AD are automatically linked to their respective APIs.
 
 Add accounts via hosted authentication or API. Users will be asked to grant all configured permissions during consent.
 
-:::important Add Accounts After Scope Configuration
+:::important[Add Accounts After Scope Configuration]
 If you add accounts before configuring all scopes, those accounts will be missing the required permissions. You'll need to have users re-authenticate to grant the new permissions.
 :::
 
@@ -212,7 +212,7 @@ curl https://emailengine.example.com/v1/account/example/oauth-token \
 - `expires` - When the access token expires (ISO 8601)
 - `cached` - `false` when this request refreshed the token, `true` when the stored token was still valid
 
-:::tip Token Validity
+:::tip[Token Validity]
 A stored token that has expired, or expires within the next 30 seconds, is refreshed before the response is sent. If the refresh fails, the endpoint answers 403 with the error code `OauthRenewError` and the provider's rejection under `tokenRequest`.
 :::
 
@@ -241,7 +241,7 @@ A stored token that has expired, or expires within the next 30 seconds, is refre
 | **Consent was time-bounded**          | If user granted time-based access, it expires accordingly                                               |
 | **OAuth consent screen in "Testing"** | For external apps in Testing mode, refresh tokens expire after 7 days. Move to Production to avoid this |
 
-:::warning Testing Mode Expiration
+:::warning[Testing Mode Expiration]
 If your Google OAuth app is in "Testing" status, refresh tokens expire after **7 days**. Publish your app to "In production" status to get long-lived refresh tokens.
 :::
 
@@ -269,11 +269,11 @@ If your Google OAuth app is in "Testing" status, refresh tokens expire after **7
 | **Application permission changes**          | Changing requested scopes or app registration requires re-consent, invalidating old tokens |
 | **User signs out of all sessions**          | "Sign out everywhere" action kills all refresh tokens                                      |
 
-:::tip EmailEngine Keeps Tokens Active
+:::tip[EmailEngine Keeps Tokens Active]
 EmailEngine automatically uses refresh tokens to obtain new access tokens, which resets the 90-day inactivity timer for Microsoft and the 6-month timer for Google. As long as accounts remain connected in EmailEngine, tokens stay active.
 :::
 
-:::danger Microsoft Client Secret Expiration
+:::danger[Microsoft Client Secret Expiration]
 Microsoft OAuth2 **client secrets expire** and must be renewed regularly. The expiry is chosen when the secret is created in Azure AD, and the portal allows at most **24 months**. When a client secret expires, EmailEngine can no longer refresh access tokens, causing **all accounts using that OAuth2 app to fail** immediately.
 
 **To prevent service disruption:**
@@ -426,7 +426,7 @@ Deleting a Gmail account from EmailEngine revokes its token at Google; a service
 
 - Retrieve tokens when you need them via the API endpoint; the token returned is valid at the time of the response
 
-:::tip Caching Tokens
+:::tip[Caching Tokens]
 You can cache a token in your application until its `expires` time. Requesting it from EmailEngine on demand is also fine: when the stored token is still valid the response comes from Redis, with `cached` set to `true`.
 :::
 

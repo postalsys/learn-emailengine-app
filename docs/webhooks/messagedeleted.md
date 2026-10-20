@@ -16,7 +16,7 @@ How a deletion is detected depends on the account type:
 - **Gmail API**: the Gmail history reports the message as deleted, which happens when it is permanently deleted. Moving a message to Trash or removing a label is a label change, reported as [`messageUpdated`](/docs/webhooks/messageupdated)
 - **MS Graph**: a change notification reports the message as deleted and EmailEngine confirms that it no longer exists. A message that still exists was moved, and no event is sent, because Graph does not report which folder it left
 
-:::note Requires the full indexer
+:::note[Requires the full indexer]
 On IMAP accounts, deletions are detected only under the full [indexer](/docs/accounts/imap-indexers), which is the default. The fast indexer tracks the highest UID it has seen and nothing else, so it never notices a message going away.
 :::
 

@@ -20,7 +20,7 @@ Nothing needs to be registered first. A list ID you have not used before defines
 
 The admin interface calls the feature **Suppression Lists** and the API calls it a blocklist (`/v1/blocklist`); both name the same store.
 
-:::tip The whole feature is one field
+:::tip[The whole feature is one field]
 
 ```json
 { "listId": "weekly-newsletter", "mailMerge": [{ "to": { "address": "subscriber@example.com" } }] }
@@ -56,7 +56,7 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
   -d '{"serviceUrl": "https://emailengine.example.com"}'
 ```
 
-:::warning Without a service URL, listId does nothing
+:::warning[Without a service URL, listId does nothing]
 
 No headers are added and no suppression check runs, yet the submission still reports success. Recipients who already unsubscribed would receive the message. There is no error to catch, so confirm the setting before your first campaign.
 :::

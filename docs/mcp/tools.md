@@ -11,7 +11,7 @@ The MCP endpoint exposes two tool sets behind two scopes: the **mail tools**, wh
 
 Tools are not a second implementation of the API. Each one wraps a route: the tool's input schema is generated from that route's request validation, and calling the tool runs that route in-process with the caller's own credential. Anything the [API Reference](/docs/api-reference) says about an endpoint - identifier formats, provider differences, error conditions - is true of the tool that wraps it.
 
-:::info Beta
+:::info[Beta]
 The mail tools shipped with MCP support in EmailEngine v2.79.2. The management tools and the `mcp-manage` scope were added in v2.80.1 (2026-09-10). v2.85.0 added the folder tools, the bulk message tools, `send_draft`, `create_delivery_test`, `get_queued_message`, `get_template` and `resume_account`. The set may still change between releases; the live catalog described [below](#the-catalog) is the authority for the instance in front of you.
 :::
 
@@ -142,7 +142,7 @@ The two settings tools offer only the keys a settings editor may hold. The keys 
 
 There is no tool that mints a token. A management credential can list, inspect and revoke tokens, but creating one stays outside every MCP scope, which is what keeps an agent credential from widening itself.
 
-:::note Not everything the API can do
+:::note[Not everything the API can do]
 Operations with no tool: bulk export, uploading a raw message, a message's raw source, server signatures, the credentialed autodiscovery lookup (`POST /v1/autoconfig`), the change stream, removing the license, minting tokens, and an account's live OAuth2 access token. An MCP-scoped token is refused those operations even if it asks for them by another route. Use the [REST API](/docs/api-reference) for them.
 :::
 
@@ -157,7 +157,7 @@ The arguments a tool offers are a curated subset of what the REST route accepts.
 
 None of this is enforcement. It shapes what the agent is offered; what it is *allowed* to do is decided by the credential - see [Access Control](/docs/mcp/access-control).
 
-:::tip Account-bound credentials see simpler tools
+:::tip[Account-bound credentials see simpler tools]
 When the token is [bound to one account](/docs/mcp/access-control#account-binding), the `account` argument disappears from every tool that takes one, and EmailEngine fills the binding in on dispatch. Tools that take no account argument at all - the instance-wide listings, and most of the management tools - are not offered to such a credential. The agent is told which account it is working with in the connect instructions, so it never has to look one up. Everything below shows the unbound shape.
 :::
 
@@ -382,7 +382,7 @@ The message has to be a draft: in the Drafts folder or flagged `\Draft` on IMAP,
 
 **`create_delivery_test`** takes only `account`. It sends a test message from the account to a probe address of the delivery test service and returns a `deliveryTest` id. Pass the id to `check_delivery_test`, a management tool, to read whether the message arrived and its SPF, DKIM and DMARC results.
 
-:::warning Sending is the one irreversible mail tool
+:::warning[Sending is the one irreversible mail tool]
 `send_message` reaches real recipients, and a queued message can only be cancelled while it is still in the outbox. Clients that honor MCP annotations treat it as an open-world call and ask for confirmation. If you would rather they could not call it at all, issue the token at the read-only mail level - see [Access Control](/docs/mcp/access-control#access-levels).
 :::
 

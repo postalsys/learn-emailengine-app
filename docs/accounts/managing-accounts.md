@@ -396,7 +396,7 @@ curl -X PUT https://emailengine.example.com/v1/account/user123 \
   }'
 ```
 
-:::warning Partial Updates
+:::warning[Partial Updates]
 Use `"partial": true` inside the `imap` or `smtp` object to update only specific fields. Without it, you'll replace the entire configuration, which may lose existing settings like auth credentials or special folder paths.
 
 The flag itself belongs on `imap`, `smtp`, or `oauth2` and nowhere deeper. The merge it performs is recursive, though, so sending `auth: { pass: "..." }` under a partial update keeps the stored `auth.user`.
@@ -575,7 +575,7 @@ curl -X PUT https://emailengine.example.com/v1/account/user123 \
 - User subscription expired
 - Testing without deleting
 
-:::warning Always set `partial` when updating `imap` or `smtp`
+:::warning[Always set `partial` when updating `imap` or `smtp`]
 Without it, the object you send **replaces** the stored one. A body of `{"imap": {"disabled": true}}` therefore discards the host, port, and credentials, and the account stops working.
 :::
 
@@ -682,11 +682,11 @@ curl -X PUT https://emailengine.example.com/v1/account/user123/flush \
 | `notifyFrom` | string | Only send webhooks for messages after this date (IMAP only). Defaults to current time, so only new messages trigger webhooks. Set to a past date like `"1970-01-01T00:00:00.000Z"` to process existing emails |
 | `imapIndexer` | string | Set indexing strategy: `"full"` or `"fast"` (IMAP only) |
 
-:::warning One flush at a time
+:::warning[One flush at a time]
 Only one flush can run at a time across the whole instance. A second request while one is running fails with HTTP 429 and the error code `LockFail`.
 :::
 
-:::note API-Based Backends
+:::note[API-Based Backends]
 For Gmail API and MS Graph accounts, `notifyFrom` has no effect. These backends only notify about new emails arriving after the account was connected, not existing emails.
 :::
 
@@ -732,7 +732,7 @@ curl -X DELETE "https://emailengine.example.com/v1/account/user123?revoke=true" 
 
 This is currently supported for individual Gmail OAuth grants. For Gmail service-account integrations, Outlook, and non-OAuth2 accounts the flag is a no-op. If revocation fails, the failure is logged and the account is still deleted.
 
-:::warning Irreversible
+:::warning[Irreversible]
 Deleting an account cannot be undone. You'll need to re-add the account if needed later.
 :::
 
@@ -946,7 +946,7 @@ curl -X PUT "https://emailengine.example.com/v1/account/user123/reconnect" \
   -d '{ "reconnect": true }'
 ```
 
-:::caution The request body is required
+:::caution[The request body is required]
 `{"reconnect": true}` must be present. The flag defaults to `false`, so a `PUT` with an empty body is accepted and does nothing.
 :::
 

@@ -9,7 +9,7 @@ description: Configure Google Cloud Pub/Sub for Gmail push notifications in Emai
 
 This guide covers the Google Cloud Pub/Sub integration used by EmailEngine to receive real-time notifications from Gmail accounts using the Gmail REST API.
 
-:::info Prerequisites
+:::info[Prerequisites]
 This guide assumes you have already configured Gmail API access following the [Gmail API Setup Guide](./gmail-api). Pub/Sub is configured when you create a Gmail API OAuth2 application with a linked service account.
 :::
 
@@ -84,7 +84,7 @@ Limitations:
 
 **Verify setup** on the application page reports the metadata server it asked, the service account the token was issued for, and whether that token can read the application's Pub/Sub topic. Each failure comes with a hint: EmailEngine not running on Google Cloud, no service account attached, a missing access scope, or a missing role.
 
-:::warning Cloud Run
+:::warning[Cloud Run]
 EmailEngine is a long-running process that keeps IMAP connections open and pulls Pub/Sub in the background, and it must run as a single instance: two instances on the same Redis both sync every account. Cloud Run runs a new revision alongside the old one during a deploy and can replace an instance at any time, so a second copy is possible however `max-instances` is set. If you run it there anyway, use instance-based billing (CPU always allocated) with `min-instances` and `max-instances` both set to 1. A Compute Engine VM, or GKE with a single replica and the `Recreate` deployment strategy, avoids these problems.
 :::
 
@@ -120,7 +120,7 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
 
 Or through the admin UI at **Integrations** > **OAuth2 Apps** > **Gmail Subscriptions**.
 
-:::warning When do expiration changes take effect?
+:::warning[When do expiration changes take effect?]
 Changing this setting does **not** immediately update existing subscriptions. The new TTL is applied only when EmailEngine next calls Google's Pub/Sub API for that subscription, which happens when:
 
 - A Pub/Sub service account application is **created** (the new subscription gets the current TTL)
@@ -260,7 +260,7 @@ curl "https://emailengine.example.com/v1/pubsub/status" \
 
 `null` for both means the subscription is healthy.
 
-:::info Subscription expiration is not shown in the status list
+:::info[Subscription expiration is not shown in the status list]
 The `/v1/pubsub/status` endpoint does not include subscription expiration dates. Expiration is managed by Google Cloud based on the TTL configured in EmailEngine. To check the actual expiration policy on a subscription, use the Google Cloud Console or the `gcloud` CLI:
 
 ```bash
@@ -320,7 +320,7 @@ A renewal that fails is retried on the next timer run. Before v2.80.0 a failed r
 
 The field is absent for an account that has never armed a watch, and for an account whose OAuth2 application has no linked Pub/Sub app, whatever an earlier configuration left behind; an account re-authorized onto an application without push clears its old record (since v2.80.0). The reason a renewal failed is Google's own response text, so it is shown on the account page in the admin interface rather than returned by the API. A watch that is not `active` does not stop the account syncing: the fallback poll keeps running, so new mail is delayed rather than lost.
 
-:::info Topic region policies
+:::info[Topic region policies]
 Renewal only succeeds if Google's Gmail push service can publish to the topic. A message storage policy that restricts the topic to specific regions with in-transit enforcement blocks renewals - see [Watch renewal fails with a message storage policy error](#watch-renewal-fails-with-a-message-storage-policy-error).
 :::
 

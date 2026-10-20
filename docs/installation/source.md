@@ -122,7 +122,7 @@ sudo tar xzf source-dist.tar.gz -C app --strip-components=1
 sudo rm source-dist.tar.gz
 ```
 
-:::tip No npm install needed
+:::tip[No npm install needed]
 The source-dist.tar.gz includes a complete `node_modules` folder with the production dependencies already installed (`npm ci --omit=dev` at build time), so there is nothing to run before starting. The archive has no top-level directory of its own; its entries start with `./`, which is what `--strip-components=1` removes.
 :::
 

@@ -552,7 +552,7 @@ Using `mailMerge` rejects the root-level `to`, `cc`, `bcc`, `envelope`, `raw`, a
 
 See [Mail Merge](/docs/sending/mail-merge) for personalization, batching, and how failures for one recipient are reported.
 
-:::warning Sending limits still apply
+:::warning[Sending limits still apply]
 Mail merge submits through the account's own mail server, which enforces its own rate and volume limits. Gmail and Microsoft 365 in particular will start deferring or rejecting mail well before a bulk campaign finishes. For genuine bulk mail, route the messages through an [SMTP gateway](/docs/sending/smtp-gateways) built for it, using the `gateway` field.
 :::
 

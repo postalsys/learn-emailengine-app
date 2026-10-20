@@ -10,7 +10,7 @@ EmailEngine uses only algorithms that an OpenSSL FIPS provider allows, so an ins
 
 This page says which installations qualify, what EmailEngine uses in place of the algorithms a FIPS provider refuses, and what to do before switching an existing instance.
 
-:::note Approved algorithms, not a certification
+:::note[Approved algorithms, not a certification]
 EmailEngine is not FIPS certified and makes no such claim. What it offers is that every cryptographic operation goes through the platform's OpenSSL, using algorithms a FIPS 140 validated provider implements. The validated module, and the certification, belong to the operating system.
 :::
 

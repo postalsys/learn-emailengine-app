@@ -38,7 +38,7 @@ Mail.ru OAuth2 requires the following scopes:
    - **Client ID** (Application ID)
    - **Client Secret**
 
-:::warning Keep Credentials Secure
+:::warning[Keep Credentials Secure]
 Never commit your Client ID and Client Secret to version control. Store them securely using environment variables or a secrets manager.
 :::
 

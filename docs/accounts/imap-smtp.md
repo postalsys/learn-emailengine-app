@@ -8,7 +8,7 @@ description: Setting up email accounts using standard IMAP and SMTP protocols
 
 This guide covers setting up email accounts using standard IMAP and SMTP protocols. This method works with virtually any email provider that supports these protocols, including self-hosted mail servers, regional providers, and services not covered by specific OAuth2 integrations.
 
-:::warning Credential Storage
+:::warning[Credential Storage]
 When you add IMAP/SMTP accounts, EmailEngine stores the provided passwords in Redis. By default, these are stored in cleartext. For production deployments, configure `EENGINE_SECRET` to enable encryption **before** adding accounts. [Learn more](/docs/support/security-faq)
 :::
 
@@ -160,17 +160,17 @@ The response is the same shape both endpoints return:
 
 An address whose domain describes no mail server returns `{"imap": false, "smtp": false, "_source": "unknown"}`. That is a normal answer, not an error.
 
-:::info Where the password is sent
+:::info[Where the password is sent]
 The password is offered only to the autodiscovery host named by the address domain's own DNS records, and only after that host has refused an anonymous request with a Basic challenge over HTTPS. A server that answers some other way - a parking page returning `404`, a CDN answering `200`, or a host offering only NTLM - never receives it. The credentials are used for the autodiscovery lookup alone and are not stored.
 :::
 
 Because it relays a supplied credential, `POST /v1/autoconfig` belongs to the `provisioning` permission group rather than the `diagnostics` group that covers the GET. An access token restricted to `diagnostics` can call the GET but not the POST.
 
-:::warning Outlook.com / Hotmail.com / Live.com
+:::warning[Outlook.com / Hotmail.com / Live.com]
 Microsoft has **disabled regular password authentication** for consumer accounts. You must use OAuth2 authentication. See the [Outlook OAuth2 guide](./microsoft-365/outlook-365) for setup instructions.
 :::
 
-:::info Understanding the "secure" Setting
+:::info[Understanding the "secure" Setting]
 The `secure` setting controls how TLS is established:
 
 - **`secure: true`** (ports 993/465) - TLS is used from the start of the connection (implicit TLS)
@@ -348,7 +348,7 @@ In the admin interface, the same switch is the **Require STARTTLS** checkbox in 
 
 When STARTTLS is required and the server does not offer it, an IMAP connection fails with `Server does not support STARTTLS` and the account moves to the `connectError` state. An SMTP delivery fails with an `ETLS` error, for example `Error upgrading connection with STARTTLS`. See [STARTTLS Not Available](./troubleshooting#starttls-not-available).
 
-:::note Changed in v2.84.2
+:::note[Changed in v2.84.2]
 Before v2.84.2, STARTTLS was opportunistic: EmailEngine upgraded when the server offered it and otherwise continued in cleartext. An account connecting to a server without TLS on a `secure: false` port worked before the upgrade and fails after it, until `requireTLS: false` is set for it.
 :::
 
@@ -396,7 +396,7 @@ curl -X POST https://emailengine.example.com/v1/settings \
 
 Or via environment variable: `EENGINE_SETTINGS='{"ignoreMailCertErrors": true}'`
 
-:::warning Security Warning
+:::warning[Security Warning]
 Only disable certificate verification for development/testing. In production, use proper SSL/TLS certificates (e.g., from Let's Encrypt).
 :::
 
@@ -837,7 +837,7 @@ EmailEngine uses IMAP4rev2 when the server advertises it. A few servers advertis
 
 In the admin interface the same option is the "Disable IMAP4rev2" checkbox on the account edit page, alongside "Allow invalid certificates" for the per-account `tls.rejectUnauthorized` override.
 
-:::note Password accounts only
+:::note[Password accounts only]
 This option applies to accounts using regular password authentication. OAuth2 accounts build their connection settings from the provider configuration, so the field is ignored there.
 :::
 
@@ -994,7 +994,7 @@ Without a proxy of its own, an account's connections can still be bound to a spe
 
 A token with restricted permissions cannot set `proxy`, because the proxy receives the connections that carry the account's credentials.
 
-:::note Standard proxy variables are ignored
+:::note[Standard proxy variables are ignored]
 EmailEngine does not read the conventional `HTTP_PROXY`, `HTTPS_PROXY` or `NO_PROXY` environment variables. Configure the settings above instead.
 :::
 

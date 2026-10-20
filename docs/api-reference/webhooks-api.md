@@ -75,7 +75,7 @@ The default webhook target and the delivery options are ordinary settings, writt
 
 `notifyText` and `notifyTextSize` are seeded on first start; the other values are unset until you write them, which behaves as `false` or none.
 
-:::caution Setting a URL is not enough
+:::caution[Setting a URL is not enough]
 Delivery only starts once `webhooksEnabled` is `true` and `webhookEvents` lists the events you want. Setting `webhooks` alone leaves a correctly configured endpoint that never receives anything.
 :::
 
@@ -224,7 +224,7 @@ curl "https://emailengine.example.com/v1/webhookRoutes/webhookRoute/AAABgS-UcAYA
 
 `content.fn` is the filter function and `content.map` the mapping function, both as source text; either is `null` when not set.
 
-:::note Webhook routes are read-only through the API
+:::note[Webhook routes are read-only through the API]
 The API exposes only the two read endpoints above. There are no endpoints to create, update, or delete a webhook route: manage them in the admin interface under **Webhook Routes**.
 
 This is separate from the default webhook target, which you configure with `POST /v1/settings` as shown above. Routes fan events out to additional destinations with their own filter and map functions.
@@ -678,7 +678,7 @@ app.listen(8080);
 
 Dedupe on the event ID rather than on a composite key you build yourself. `X-EE-Wh-Event-Id` is stable across retries of the same delivery, whereas a key assembled from event type and message ID collides for legitimately distinct events, such as a message that is flagged twice.
 
-:::caution An in-memory set is not deduplication
+:::caution[An in-memory set is not deduplication]
 A `Set` in the process loses everything on restart and is not shared between instances, so a redeploy or a second replica reprocesses events. Use whatever your application already treats as durable, with a unique constraint on the event ID.
 :::
 

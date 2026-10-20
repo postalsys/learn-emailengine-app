@@ -64,13 +64,13 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
   }'
 ```
 
-:::warning `webhookEvents` is an allowlist with no default
+:::warning[`webhookEvents` is an allowlist with no default]
 Nothing is delivered unless the event is named in `webhookEvents`, and an unset `webhookEvents` names nothing. `["*"]` allows every event; a list of names allows exactly those. This is the first thing to check when a correctly configured URL receives nothing.
 
 The allowlist applies to the default webhook target above. [Webhook routes](/docs/webhooks/webhook-routing) carry their own filters and are not affected by it.
 :::
 
-:::tip Advanced: Webhook Routes
+:::tip[Advanced: Webhook Routes]
 For more advanced scenarios, you can configure multiple webhook routes to send different events to different endpoints based on account, event type, or custom filtering logic. Webhook routes also support pre-processing functions to filter or transform payloads before delivery.
 
 Routes are created and edited in the admin interface under **Webhooks**; the API only lists them. See [Webhook Routes](/docs/webhooks/webhook-routing) for the filter and map functions a route can carry.
@@ -223,7 +223,7 @@ Each event becomes a job in the notify queue, and the queue worker posts it.
 
 Two failures are treated as final and consume the whole retry budget at once, because retrying could not change the outcome: a destination refused by the [egress policy](#blocked-destinations-and-redirects) (`EEGRESSBLOCKED`) and an endpoint that answers with a redirect (`EREDIRECTNOTFOLLOWED`).
 
-:::warning Design your handler for repeat deliveries
+:::warning[Design your handler for repeat deliveries]
 Because a timed-out or failed attempt is retried, your endpoint will sometimes receive the same event more than once. Respond `2xx` as soon as you have durably accepted the payload and do the real work afterwards, and deduplicate on the `X-EE-Wh-Event-Id` header. This matters most for handlers with side effects, such as creating a ticket or charging for a message.
 :::
 

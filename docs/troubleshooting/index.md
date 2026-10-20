@@ -8,7 +8,7 @@ sidebar_position: 1
 
 What to check when EmailEngine, an account, a webhook, or a submission is not behaving. The API calls below use `https://emailengine.example.com` for the instance and `TOKEN` for an access token; replace both.
 
-:::tip Quick Diagnostic
+:::tip[Quick Diagnostic]
 
 1. Check the health endpoint: `curl https://emailengine.example.com/health`
 2. Check the logs: `journalctl -u emailengine -n 100` or `docker logs emailengine`

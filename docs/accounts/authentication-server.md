@@ -71,7 +71,7 @@ Your application manages the credentials; EmailEngine only uses them.
 - The hosted authentication form is sufficient
 - You do not want to maintain a separate service that every connection depends on
 
-:::tip Alternative Approach
+:::tip[Alternative Approach]
 If you do not need external credential management, use [Hosted Authentication](/docs/accounts/hosted-authentication) instead. EmailEngine then stores and refreshes the tokens itself.
 :::
 
@@ -353,7 +353,7 @@ app.listen(3001, () => {
 
 A single server can serve both kinds of account: look the account up, and answer with `pass` or `accessToken` depending on what is stored for it. The `proto` parameter lets you hand out different credentials for IMAP and SMTP if the mailbox needs that.
 
-:::tip Reference Implementation
+:::tip[Reference Implementation]
 The EmailEngine repository ships a complete example, [examples/auth-server.js](https://github.com/postalsys/emailengine/blob/master/examples/auth-server.js), that serves password accounts, OAuth2 accounts with cached token refresh, and per-protocol credentials.
 :::
 
@@ -441,11 +441,11 @@ curl -X POST https://emailengine.example.com/v1/account \
 - With an application that uses the **IMAP and SMTP** base scope, EmailEngine calls the server with `proto=imap` and `proto=smtp`; with a **Gmail API** or **MS Graph API** application, with `proto=api`
 - Do not send `accessToken` or `refreshToken`; the server owns them
 
-:::info OAuth2 Application Still Required
+:::info[OAuth2 Application Still Required]
 The application is still resolved on every connection, because the provider's host, port and base scope come from it. EmailEngine does not use the application's client ID and secret to refresh tokens for such an account; it fetches the token from your server instead.
 :::
 
-:::note Version notes
+:::note[Version notes]
 - Since v2.77.0, `oauth2.useAuthServer` is honored on the IMAP sync and SMTP send paths as well as for API accounts. Earlier releases read the flag only for Gmail API and MS Graph accounts, and an `oauth2` account with the flag and no stored tokens failed with a token renewal error.
 - Since v2.78.0, an account that carries `useAuthServer` but also has stored credentials falls back to those credentials, with a warning in the log, when no `authServer` is configured. This keeps instances working where the flag was set long ago without ever taking effect. Once `authServer` is set, the flag is honored and the stored credentials are ignored.
 :::

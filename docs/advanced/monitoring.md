@@ -543,7 +543,7 @@ Scrape the same endpoint with Prometheus and pair it with [Loki](/docs/advanced/
 
 New Relic, Elastic, Honeycomb, and similar tools all accept Prometheus metrics through their own collectors or an OpenTelemetry Collector configured with a `prometheus` receiver. Point the receiver at `/metrics` with the bearer token and the same dashboards and alerts apply.
 
-:::note APM agents do not apply here
+:::note[APM agents do not apply here]
 Language-level APM agents instrument an application you build and run yourself. EmailEngine is a packaged service, so there is no place to load one, and the metrics endpoint already reports what an agent would have collected.
 :::
 

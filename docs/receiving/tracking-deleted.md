@@ -63,7 +63,7 @@ Each UID missing from the server produces a `messageDeleted` event. On a server 
 
 **UIDVALIDITY change.** If a folder's UIDVALIDITY differs from the stored one, the server has invalidated every UID EmailEngine knows. The index is rebuilt silently and a single [`mailboxReset`](/docs/webhooks/mailboxreset) event is emitted instead of a `messageDeleted` per message.
 
-:::warning Fast indexer
+:::warning[Fast indexer]
 Deletion tracking needs the full indexer, which is the default. An account set to the fast indexer keeps no per-message index, ignores EXPUNGE responses, and never emits `messageDeleted`. See [IMAP indexers](/docs/accounts/imap-indexers).
 :::
 
@@ -101,7 +101,7 @@ When EmailEngine detects a deleted message, it sends a [`messageDeleted` webhook
 - `data.id` - EmailEngine's message ID of the deleted message
 - `data.uid` - IMAP UID of the deleted message
 
-:::note Provider Differences
+:::note[Provider Differences]
 The payload varies by account type:
 - **IMAP accounts**: `data` contains `id` and `uid`
 - **Gmail API accounts**: `data` contains `id`, `threadId`, `flags`, `labels`, and `category`

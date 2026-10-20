@@ -9,7 +9,7 @@ description: Setting up Google Service Accounts with domain-wide delegation for 
 
 A service account lets a Google Workspace admin grant EmailEngine access to any mailbox in the organization without asking each user to consent. This guide covers setting one up with domain-wide delegation.
 
-:::tip Two authentication methods
+:::tip[Two authentication methods]
 EmailEngine supports two ways to authenticate a service account:
 
 - **Service account key** - the classic flow with a JSON key file containing a private RSA key. Covered in Steps 1-8 below.
@@ -143,7 +143,7 @@ Wait for the project to be created, then click **Select project** to switch to i
 
 Even though service accounts don't show consent screens to users, the form allows us to configure required project details.
 
-:::info Consent Screen vs Domain-Wide Delegation
+:::info[Consent Screen vs Domain-Wide Delegation]
 The OAuth consent screen and domain-wide delegation are **separate configurations**:
 
 - **OAuth consent screen** (this step): Configures project metadata and documents which scopes your project uses. Required to complete project setup, but service accounts bypass this screen during authentication.
@@ -158,7 +158,7 @@ Navigate to **APIs & Services** > **OAuth consent screen**.
 
 Select **Internal** and click **Create**.
 
-:::note User Type Selection
+:::note[User Type Selection]
 The "Internal" vs "External" choice primarily affects standard OAuth2 flows where users see consent screens. Since service accounts authenticate using JWT tokens and bypass the consent screen entirely, this setting has no direct impact on service account functionality. Select **Internal** for simplicity since service accounts are designed for organization-internal use.
 :::
 
@@ -216,7 +216,7 @@ Click **Create and continue**.
 
 **Role**: Select **Owner**
 
-:::info Role Selection
+:::info[Role Selection]
 The "Owner" role is used here for simplicity. For production, you may want to use a more restrictive role, but "Owner" has been tested and confirmed working.
 :::
 
@@ -234,7 +234,7 @@ Now we need to authorize the service account to access user mailboxes.
 
 From the service accounts list, copy the **OAuth2 Client ID** for your service account.
 
-:::tip Finding Client ID
+:::tip[Finding Client ID]
 The Client ID is a long numeric string in the service account listing. You'll need this for domain-wide delegation setup.
 :::
 
@@ -260,13 +260,13 @@ https://mail.google.com/
 
 Click **Authorize**.
 
-:::important This is the Actual Authorization
+:::important[This is the Actual Authorization]
 This step in the Admin Console is where the service account actually receives permission to access user mailboxes. The scope entered here determines what the service account can do. The OAuth consent screen configuration (Step 2) is separate and primarily for project documentation.
 :::
 
 ## Step 5: Generate Service Account Key
 
-:::tip Prefer a keyless setup?
+:::tip[Prefer a keyless setup?]
 If your clients prohibit long-lived service-account JSON keys for compliance reasons, you can skip generating a key entirely. See [Alternative: Workload Identity Federation](#alternative-workload-identity-federation-keyless) below. The federation flow replaces only the signing key - every other step in this guide stays the same.
 :::
 
@@ -280,7 +280,7 @@ Select **JSON** as the key type and click **Create**.
 
 The browser will automatically download the key file as a `.json` file.
 
-:::danger Store Key Securely
+:::danger[Store Key Securely]
 This key file provides access to all email accounts in your organization. Store it very securely:
 
 - Use secret management systems (AWS Secrets Manager, Azure Key Vault, etc.)
@@ -365,13 +365,13 @@ EmailEngine extracts and fills in:
 
 Click **Register app** to save. Service account applications never appear in the hosted authentication form, so the form has no **Enable this app** checkbox for them; the app is listed as always enabled.
 
-:::info JSON Key File After Setup
+:::info[JSON Key File After Setup]
 Once EmailEngine has been configured with the service account credentials, the JSON key file is no longer needed. EmailEngine stores the credentials in its database. You can delete the JSON file from your local system to reduce security risk.
 
 If you need to configure the same service account in another EmailEngine instance in the future, generate a fresh key from Google Cloud Console rather than reusing an old key file. This follows the security best practice of not storing or sharing key files.
 :::
 
-:::warning Enable Field Encryption
+:::warning[Enable Field Encryption]
 Unless `EENGINE_SECRET` is set, EmailEngine stores credentials in cleartext in Redis. To protect sensitive data like service account private keys, enable field encryption. See [Setting Up Encryption](/docs/deployment/encryption) for configuration instructions.
 :::
 
@@ -457,7 +457,7 @@ gcloud iam workload-identity-pools providers create-oidc PROVIDER_ID \
   --attribute-mapping="google.subject=assertion.sub"
 ```
 
-:::note Attribute mapping
+:::note[Attribute mapping]
 `google.subject=assertion.sub` maps the `sub` claim of the workload's OIDC token to the federated principal that the IAM binding below references. Add an `--attribute-condition` if you want to restrict which workload identities the pool accepts.
 :::
 
@@ -480,7 +480,7 @@ gcloud iam service-accounts add-iam-policy-binding GSA_EMAIL \
 
 The `principalSet://.../*` member grants every identity from the pool. To scope it to a single workload identity, use a `principal://.../subject/SUBJECT_VALUE` member instead, where `SUBJECT_VALUE` is the `sub` claim of the workload's OIDC token.
 
-:::danger Workload Identity User is not sufficient
+:::danger[Workload Identity User is not sufficient]
 A common mistake - including in Google's own "Grant access" helper - is to grant `roles/iam.workloadIdentityUser`. That role permits `generateAccessToken` but **not** `signJwt`, so EmailEngine's token acquisition fails with a `403` on `signJwt` (surfaced as the `ESignJwt` error). Because EmailEngine signs the assertion directly via `signJwt`, the pool principal must have **`roles/iam.serviceAccountTokenCreator`** on the service account. Do not grant the service account this role on itself - the federated pool principal is the caller, not the service account.
 :::
 
@@ -531,7 +531,7 @@ The resulting `external-account.json` looks like:
 }
 ```
 
-:::info Supported credential sources
+:::info[Supported credential sources]
 EmailEngine supports the `file` and `url` credential sources. The `executable` and AWS sigv4 `aws4_request` variants are not implemented; EKS users should use the projected service-account token at the standard mount path, which uses the `file` source.
 :::
 
@@ -572,7 +572,7 @@ In the EmailEngine OAuth2 app form:
 
 EmailEngine validates the configuration on save: it must be JSON with `"type": "external_account"`, carry `audience`, `subject_token_type`, `token_url` and `service_account_impersonation_url`, and `token_url` must point at Google's STS endpoint. A credential source it cannot read is reported when the token is first requested, as `ESubjectTokenRead`.
 
-:::important Service account email must match the impersonated service account
+:::important[Service account email must match the impersonated service account]
 In federation mode EmailEngine issues the JWT bearer assertion as the service account named in the configuration's `service_account_impersonation_url`. The **Service account email** field must be that same service account address. If they differ, EmailEngine reports `EServiceAccountMismatch` the first time it uses the application (the **Verify setup** check, or the first token request), rather than failing at Google with an opaque `invalid_grant`.
 :::
 

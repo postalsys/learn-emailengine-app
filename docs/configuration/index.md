@@ -88,7 +88,7 @@ services:
 
 `REDIS_URL` is accepted as a fallback when `EENGINE_REDIS` is unset, and `PORT` as a fallback for `EENGINE_PORT`, which is what makes EmailEngine work unchanged on platforms that inject those variables. Most variables can also be supplied as a file path by appending `_FILE` to the name, the usual way to mount secrets in containers; see [Loading values from files](/docs/configuration/environment-variables#loading-values-from-files) for the few that cannot.
 
-:::tip Interchangeable Configuration
+:::tip[Interchangeable Configuration]
 Environment variables and CLI arguments can be used together. Environment variables take precedence over CLI arguments. See the [mapping table](/docs/configuration/environment-variables#environment-variable-to-cli-mapping) for equivalents.
 :::
 
@@ -107,7 +107,7 @@ emailengine \
   --log.level="trace"
 ```
 
-:::tip Interchangeable Configuration
+:::tip[Interchangeable Configuration]
 Environment variables and CLI arguments can be used together. Environment variables take precedence over CLI arguments. See the [mapping table](/docs/configuration/environment-variables#environment-variable-to-cli-mapping) for equivalents.
 :::
 
@@ -223,7 +223,7 @@ environment:
   - EENGINE_PREPARED_LICENSE=${LICENSE_KEY}
 ```
 
-:::warning Password Hash Required
+:::warning[Password Hash Required]
 `EENGINE_PREPARED_PASSWORD` requires a **password hash**, not a plain password. Generate it with:
 ```bash
 emailengine password -p "your-password" --hash --dbs.redis="redis://127.0.0.1:6379/8"

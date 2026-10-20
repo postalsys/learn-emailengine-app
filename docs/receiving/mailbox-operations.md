@@ -131,7 +131,7 @@ Used for IMAP servers that do not advertise SPECIAL-USE. The match runs against 
 }
 ```
 
-:::warning Localized folder names on servers without SPECIAL-USE
+:::warning[Localized folder names on servers without SPECIAL-USE]
 When a server does not report folder roles and EmailEngine has to guess from the name, check the listing once after connecting the account. If a special folder is missing or wrong, set it explicitly with `imap.sentMailPath`, `imap.draftsMailPath`, `imap.junkMailPath`, `imap.trashMailPath` or `imap.archiveMailPath`. See [Overriding Special-Use Folders](#overriding-special-use-folders).
 :::
 
@@ -290,7 +290,7 @@ async function listSentMessages(accountId) {
 }
 ```
 
-:::tip Special-Use Flag Aliases
+:::tip[Special-Use Flag Aliases]
 The message endpoints accept `\Inbox`, `\Sent`, `\Drafts`, `\Trash` and `\Junk` as the `path` parameter and resolve the alias to the folder's real path before running the operation. `\All` is accepted for Gmail IMAP, Gmail API and Microsoft Graph accounts and covers every message in the account. `\Archive` and `\Flagged` are not aliases: read the folder's path from the listing, as above.
 :::
 
@@ -321,7 +321,7 @@ curl -X POST "https://emailengine.example.com/v1/account/example/mailbox" \
 
 `mailboxId` is included when the server provides one (Gmail API and Graph accounts, and IMAP servers with the OBJECTID extension). `created` is `false` when the folder already existed on a Gmail API or Graph account, or when an IMAP server refuses with a bare `NO`. An IMAP server that attaches a response code to its refusal, `[ALREADYEXISTS]` for an existing folder, gets a 400 instead, with that code in `code` and the server's text in `details.response`. A Gmail API account answers a label name Gmail rejects with a 400 as well, carrying Gmail's error status in `code` and its message in `details.response`.
 
-:::tip Array Syntax for Subfolders
+:::tip[Array Syntax for Subfolders]
 Use array syntax `["Parent", "Child"]` instead of string `"Parent/Child"` when creating nested folders. Different servers use different delimiters (`/` vs `.`), and the array syntax works universally across all IMAP servers.
 :::
 

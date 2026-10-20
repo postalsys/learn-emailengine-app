@@ -84,7 +84,7 @@ EmailEngine supports multiple ways to connect to email accounts, each with diffe
 - Systems requiring maximum performance
 - When Google requires limited OAuth2 scopes during app verification
 
-:::info OAuth2 Scope Requirements
+:::info[OAuth2 Scope Requirements]
 IMAP/SMTP requires the full `https://mail.google.com/` scope. Gmail API can use more limited scopes like `gmail.readonly` or `gmail.modify`. If Google's verification process requires you to use limited scopes, you must use Gmail API instead of IMAP/SMTP.
 :::
 
@@ -170,7 +170,7 @@ echo "EENGINE_SECRET=$(openssl rand -hex 32)" >> .env
 
 With encryption enabled, all credentials are encrypted before being written to Redis. The same secret value must be provided on every start.
 
-:::danger Critical
+:::danger[Critical]
 If you lose the `EENGINE_SECRET`, encrypted credentials cannot be recovered and every account must be re-authenticated. Store this secret securely and include it in your backup strategy.
 :::
 

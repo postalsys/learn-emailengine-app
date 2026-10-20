@@ -62,7 +62,7 @@ Add each shared mailbox individually with its own OAuth2 authentication. A user 
 - Single shared mailbox setups
 - Quick prototyping
 
-:::info Note
+:::info[Note]
 With direct access, the authenticating user's credentials are stored with the shared mailbox account. The same user can still have their own primary account in EmailEngine, and the same mailbox can be added as multiple EmailEngine accounts if needed - each EmailEngine account keeps its own copy of the OAuth2 tokens.
 :::
 
@@ -177,7 +177,7 @@ Existing accounts need to re-authenticate to pick up the new permissions. Either
 
 The scopes only let the token act on permissions the signing-in user already has. That user needs **Full Access** on the shared mailbox to read it and **Send As** (or **Send on Behalf**) to send from it. Assign these in the Exchange admin center under **Recipients** > **Mailboxes** > the shared mailbox > **Delegation**, where Full Access is listed as **Read and manage**.
 
-:::info IMAP/SMTP Backend
+:::info[IMAP/SMTP Backend]
 If using the IMAP/SMTP backend, no additional scopes are needed. Shared mailbox access works out of the box.
 :::
 
@@ -349,7 +349,7 @@ The `provider` value is the same EmailEngine OAuth2 application ID the main acco
 
 ### With Direct Access
 
-:::warning Hosted Form Limitation
+:::warning[Hosted Form Limitation]
 The hosted authentication form (`/v1/authentication/form`) does not support UPN mismatch. Use the `/v1/account` endpoint with the `authorize` flag instead, described under [OAuth2 without tokens](/docs/accounts/managing-accounts#oauth2-without-tokens-authorization-redirect).
 :::
 
@@ -400,7 +400,7 @@ Available with delegated access and direct access only (application access uses 
 
 Available with all three approaches, but only application access receives new mail.
 
-:::warning No change notifications with delegated or direct access
+:::warning[No change notifications with delegated or direct access]
 EmailEngine learns about new and changed messages on the MS Graph API backend through Microsoft Graph change notifications. Microsoft only allows a delegated token to subscribe to the signed-in user's own mailbox, and the `Mail.ReadWrite.Shared` family of scopes does not support subscriptions at all ([Microsoft Graph documentation](https://learn.microsoft.com/en-us/graph/api/subscription-post-subscriptions#contact-event-and-message)). With delegated or direct access, the subscription for a shared mailbox is refused, so new mail is not synced.
 
 Since v2.80.0, EmailEngine reports this as a connection error with the code `SubscriptionSetupError` after three failed attempts, and tries again on every hourly pass. Until a subscription succeeds, the account's own API operations (reading or moving a message) answer with HTTP 503. Earlier versions kept reporting the account as connected. See [Change Notifications](./outlook-365#change-notifications) for the schedule.
@@ -448,7 +448,7 @@ Beyond shared mailboxes, delegation can be used for scenarios where one account 
 - Service accounts where several addresses send through a common Microsoft 365 account
 - Organizations with centralized email sending infrastructure
 
-:::warning OAuth2 Parent Required
+:::warning[OAuth2 Parent Required]
 The parent account referenced by `delegatedAccount` must be an OAuth2 account. EmailEngine resolves the parent's OAuth2 tokens and application when sending - a password-based IMAP/SMTP account cannot be used as a delegation parent.
 :::
 

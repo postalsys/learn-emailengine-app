@@ -15,7 +15,7 @@ keywords:
 
 Measure deliverability by registering seed mailboxes with EmailEngine, sending to them, and reading back where each message landed: the inbox, the spam folder, and for Gmail which category tab.
 
-:::info Placement is not authentication
+:::info[Placement is not authentication]
 This page is about where a message ends up. EmailEngine's delivery test (`POST /v1/delivery-test/account/{account}` and `GET /v1/delivery-test/check/{deliveryTest}`) checks SPF, DKIM and DMARC on a message you send to a test address. That is covered on [Email Authentication Testing](/docs/sending/deliverability/email-authentication-testing).
 :::
 

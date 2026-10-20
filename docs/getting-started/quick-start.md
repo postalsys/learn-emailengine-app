@@ -36,7 +36,7 @@ docker run -p 3000:3000 \
 
 EmailEngine will start on **http://localhost:3000**
 
-:::warning Production Security
+:::warning[Production Security]
 For production deployments, you **must** configure `EENGINE_SECRET` to encrypt stored credentials. Without this setting, account passwords and OAuth tokens are stored unencrypted in Redis.
 
 Generate the secret once, store it permanently, and pass the same value to EmailEngine on every start:
@@ -95,7 +95,7 @@ The CLI writes the token straight into Redis, so `--dbs.redis` must name the sam
 5. Click **Create access token**
 6. Copy the token immediately: it is shown only once
 
-:::info What the API can mint
+:::info[What the API can mint]
 The [Create Access Token API](/docs/api/post-v-1-tokens) needs either an `account`, which binds the token to that one mailbox, or a `permissions` record naming what the token may do. It will not mint an unrestricted token, so the CLI and the admin interface remain the way to get one. See [Access Tokens](/docs/api-reference/access-tokens).
 :::
 
@@ -142,11 +142,11 @@ The easiest way to add accounts is using EmailEngine's built-in hosted authentic
 
 5. EmailEngine handles token management and maintains the connection automatically
 
-:::info OAuth2 Setup Required
+:::info[OAuth2 Setup Required]
 OAuth2 provider buttons (Gmail, Outlook) only appear if OAuth2 apps are configured in EmailEngine. Set these up via **Integrations > OAuth2 Apps** in the web interface, or use the [OAuth2 Apps API](/docs/api/post-v-1-oauth-2). See [Gmail OAuth2 Setup](/docs/accounts/gmail/gmail-imap) and [Outlook OAuth2 Setup](/docs/accounts/microsoft-365/outlook-365) for detailed configuration guides.
 :::
 
-:::tip Admin Testing
+:::tip[Admin Testing]
 For testing during development, admins can use the web interface: navigate to **Accounts > Add an account**. This is a convenience wrapper for the same authentication form.
 :::
 
@@ -162,7 +162,7 @@ _Auto-detected IMAP/SMTP configuration showing server settings, ports, and TLS o
 - End-user account authentication in your application
 - When you don't need programmatic control over OAuth2 tokens
 
-:::tip Using in Your Application
+:::tip[Using in Your Application]
 You can redirect users to the hosted authentication form from your application. The form will redirect users to the OAuth2 provider's permission page (which must open in a main window, not an iframe due to security restrictions). After authentication, users are redirected back to your application. See the [Authentication Form API](/docs/api/post-v-1-authentication-form) for details.
 :::
 
@@ -199,7 +199,7 @@ curl -XPOST "http://localhost:3000/v1/account" \
   }'
 ```
 
-:::info Provider ID
+:::info[Provider ID]
 The `provider` value should be your OAuth2 application ID from EmailEngine, which is a base64url encoded string like `AAABlf_0iLgAAAAQ`. Find this in **Integrations > OAuth2 Apps**.
 :::
 
