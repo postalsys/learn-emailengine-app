@@ -387,7 +387,7 @@ Get the length of an array. Useful in conditionals to check if an array has item
 
 ##### formatDate
 
-Format dates using [Moment.js format tokens](https://momentjs.com/docs/#/displaying/format/). Accepts an optional UTC offset, as `"+0200"`, `"-05:00"`, or a number of minutes; without it the date is formatted in the server's time zone.
+Format dates using Moment.js-compatible [format tokens](https://momentjs.com/docs/#/displaying/format/). Accepts an optional UTC offset, as `"+0200"`, `"-05:00"`, or a number of minutes; without it the date is formatted in UTC.
 
 **Syntax:** `{{formatDate timestamp format [timezoneOffset]}}`
 
