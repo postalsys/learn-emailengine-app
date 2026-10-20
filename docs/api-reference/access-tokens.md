@@ -591,7 +591,7 @@ Or omit the `restrictions` object entirely to create an unrestricted token.
 
 - [Command Line Interface (CLI)](/docs/configuration/cli) - Complete CLI reference for token management and administration
 - [Prepared Tokens](/docs/configuration/prepared-settings/tokens) - CLI commands, export/import, and automated deployment configuration
-- [API Authentication](/docs/api-reference/#authentication) - Using tokens in API requests
+- [API Authentication](/docs/api-reference#authentication) - Using tokens in API requests
 - [Account Management API](/docs/api-reference/accounts-api) - Managing email accounts with tokens
 - [Security Best Practices](/docs/deployment/security) - General security guidelines for EmailEngine deployment
 

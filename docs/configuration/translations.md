@@ -202,5 +202,5 @@ Validation error messages come from a separate package. Their translations are m
 
 - [Hosted Authentication](/docs/accounts/hosted-authentication) - The public forms that translations apply to
 - [Virtual Mailing Lists](/docs/sending/deliverability/suppression-lists) - The hosted unsubscribe page, another localized public page
-- [API Reference Overview](/docs/api-reference/#error-handling) - The shape of the validation errors that are translated
+- [API Reference Overview](/docs/api-reference#error-handling) - The shape of the validation errors that are translated
 - [Configuration Options](/docs/configuration/settings) - The `locale` setting among all the others
