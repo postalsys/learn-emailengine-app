@@ -7,7 +7,7 @@ description: Let AI agents read, search, organize and send email through EmailEn
 
 # Model Context Protocol (MCP)
 
-EmailEngine ships an MCP server. Point an AI agent at `POST /mcp`, hand it an access token, and the agent can list mailboxes, search and read messages, file them, draft replies and send mail through the email accounts you have already connected. With a management credential it can also operate the instance itself: add and reconnect accounts, change settings, manage OAuth2 applications, gateways and templates, and inspect tokens, logs and the license.
+EmailEngine ships an MCP server. Point an AI agent at `POST /mcp`, hand it an access token, and the agent can list mailboxes, search and read messages, file them, draft replies and send mail through the email accounts you have already connected. With a management credential it can also operate the instance itself: add, reconnect and resume accounts, change settings, manage OAuth2 applications, gateways and templates, and inspect tokens, logs and the license.
 
 [MCP](https://modelcontextprotocol.io/) is the protocol AI clients use to discover and call external tools. EmailEngine implements the server half of it, so any MCP-capable client - a desktop assistant, a coding agent, a web connector, your own application built on an agent framework - can work with email without you writing an integration for each one.
 
@@ -22,17 +22,17 @@ The endpoint exposes two curated tool sets, each behind its own token scope. The
 | Area | Tools |
 |------|-------|
 | Accounts | `list_accounts`, `get_account` |
-| Folders | `list_mailboxes` |
+| Folders | `list_mailboxes`, `create_mailbox`, `update_mailbox`, `delete_mailbox` |
 | Reading | `list_messages`, `search_messages`, `get_message`, `get_message_text`, `get_attachment` |
-| Organizing | `update_message`, `move_message`, `delete_message` |
-| Writing | `create_draft`, `send_message` |
-| Sending queue and templates | `get_outbox`, `list_templates` |
+| Organizing | `update_message`, `move_message`, `delete_message`, `update_messages`, `move_messages`, `delete_messages` |
+| Writing | `create_draft`, `send_message`, `send_draft`, `create_delivery_test` |
+| Sending queue and templates | `get_outbox`, `get_queued_message`, `list_templates`, `get_template` |
 
 The **management tools** operate the instance, and a token needs the `mcp-manage` scope to be offered any of them:
 
 | Area | Tools |
 |------|-------|
-| Accounts | `create_account`, `update_account`, `delete_account`, `reconnect_account`, `sync_account`, `flush_account`, `get_account_logs`, `create_account_setup_link`, `verify_account_settings`, `autodiscover_settings` |
+| Accounts | `create_account`, `update_account`, `delete_account`, `reconnect_account`, `resume_account`, `sync_account`, `flush_account`, `get_account_logs`, `create_account_setup_link`, `verify_account_settings`, `autodiscover_settings` |
 | Settings and queues | `get_settings`, `update_settings`, `get_queue`, `set_queue_state`, `cancel_queued_message` |
 | OAuth2 applications | `list_oauth2_apps`, `get_oauth2_app`, `create_oauth2_app`, `update_oauth2_app`, `delete_oauth2_app`, `verify_oauth2_app`, `get_pubsub_status` |
 | SMTP gateways | `list_gateways`, `get_gateway`, `create_gateway`, `update_gateway`, `delete_gateway` |

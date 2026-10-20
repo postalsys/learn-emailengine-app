@@ -58,9 +58,11 @@ Inside MCP, each scope is a ceiling on operations rather than a blanket pass. It
 | Action | Sections it reaches |
 |--------|---------------------|
 | read | accounts, folders, messages, sending queue, templates |
-| create and modify | messages |
-| delete | messages |
+| create and modify | folders, messages |
+| delete | folders, messages |
 | send email | sending |
+
+Create and delete on folders joined this table in v2.85.0, with the folder tools. A token minted from the consent prompt, the generator or the token form since v2.80.1 carries an explicit grant list and did not change. A token holding the `mcp` scope with no permissions record is bounded by this table alone, so the upgrade let it create, rename and delete folders: that covers every token minted from the "Full access" consent level in v2.79.2 to v2.80.0, and any minted through `POST /v1/tokens` with the `mcp` scope and no `permissions`. Revoke and reissue such a token if it should not have that.
 
 **`mcp-manage`, the management tools** (EmailEngine v2.80.1 and later):
 
@@ -86,7 +88,7 @@ Wherever an MCP token is minted - the connect generator, the token form and the 
 |-------|----------------|--------|
 | **No management access** | Nothing from this scope | The client gets only what the mail section grants |
 | **Observe** (default) | Read accounts, settings, queues, OAuth2 applications, gateways, tokens and logs | Connection logs name folders and subjects, and the token audit log records who read which account |
-| **Operate** | Also reconnect, add and test accounts, change settings, and manage OAuth2 applications, gateways and templates | Settings changes take effect at once; moving the webhook target sends future notifications, message text included, elsewhere; reconfiguring an account, gateway or OAuth2 application can send a stored credential or future authorization codes to a new host |
+| **Operate** | Also reconnect, resume, add and test accounts, change settings, and manage OAuth2 applications, gateways and templates | Settings changes take effect at once; moving the webhook target sends future notifications, message text included, elsewhere; reconfiguring an account, gateway or OAuth2 application can send a stored credential or future authorization codes to a new host |
 | **Administer** | Also delete accounts, applications, gateways and templates, revoke tokens and flush accounts | Everything Operate allows, plus deletion |
 
 **Email access** (`mcp`)
@@ -95,8 +97,8 @@ Wherever an MCP token is minted - the connect generator, the token form and the 
 |-------|----------------|--------|
 | **No mail access** (default) | Nothing from this scope | Recommended unless the client should read mail: email content then flows into whatever model the connected client runs |
 | **Read-only** | List, search and read mail | Cannot send, delete or change anything in the mailboxes |
-| **Mail agent** | Read, organize, draft and send mail - everything except the delete tool | Instructions inside received mail are a real prompt-injection risk once sending is granted |
-| **Full access** | Every mail tool, including deleting messages | The same |
+| **Mail agent** | Read, organize, draft and send mail, and create and rename folders - everything except deleting | Instructions inside received mail are a real prompt-injection risk once sending is granted |
+| **Full access** | Every mail tool, including deleting messages and folders | The same |
 
 No level reaches token minting or stored credentials. Observe deliberately leaves out `verify_account_settings`, which connects to a host and port the arguments name with a password the arguments carry: a level sold as unable to change anything must not be a probe for the network the instance sits on.
 
@@ -109,30 +111,30 @@ Two things to know about the mail agent level. It can send, which is the irrever
 
 ### What each level leaves callable
 
-The count under the radios on every minting page is the number of tools the resulting credential is advertised, computed from the running registry with the same rule `tools/list` applies. Measured on EmailEngine v2.82.0, with the other section declined:
+The count under the radios on every minting page is the number of tools the resulting credential is advertised, computed from the running registry with the same rule `tools/list` applies. Measured on EmailEngine v2.85.0, with the other section declined:
 
 | Level | Tools offered | Bound to one account |
 |-------|---------------|----------------------|
-| Email access: Read-only | 10 | 8 |
-| Email access: Mail agent | 14 | 12 |
-| Email access: Full access | 15 | 13 |
-| Instance management: Observe | 24 | 5 |
-| Instance management: Operate | 40 | 12 |
-| Instance management: Administer | 49 | 15 |
+| Email access: Read-only | 12 | 9 |
+| Email access: Mail agent | 22 | 19 |
+| Email access: Full access | 25 | 22 |
+| Instance management: Observe | 26 | 5 |
+| Instance management: Operate | 45 | 11 |
+| Instance management: Administer | 54 | 15 |
 
-Holding both sections adds the counts minus the four tools both scopes reach (`list_accounts`, `get_account`, `get_outbox`, `list_templates`); Administer with Full access is the whole catalog. The numbers move when the tool set does, which is why the pages compute them rather than print them.
+Holding both sections adds the counts minus the six tools both scopes reach (`list_accounts`, `get_account`, `get_outbox`, `get_queued_message`, `list_templates`, `get_template`); Administer with Full access is the whole catalog. The numbers move when the tool set does, which is why the pages compute them rather than print them.
 
 ## Account binding
 
 Binding a token to an account is the strongest narrowing available, and the one to reach for first. A bound token:
 
 - reaches that account and no other
-- is not offered any tool that takes no `account` argument - the instance-wide listings `list_accounts` and `get_outbox`, and most of the management tools - because an instance-wide operation is refused for a bound credential and there is no point advertising a tool that can only answer with a 403
+- is not offered any tool that takes no `account` argument - the instance-wide `list_accounts`, `get_outbox` and `get_queued_message`, and most of the management tools - because an instance-wide operation is refused for a bound credential and there is no point advertising a tool that can only answer with a 403
 - gets simpler tools: the `account` argument disappears from every tool that takes one, and EmailEngine fills the binding in when it dispatches the call
 - is told which account it is working with in the connect instructions, instead of being told to call `list_accounts` and pass an id it cannot look up
 - sees exactly one resource under `resources/list`: its own account
 
-A bound management credential is therefore an operator for that one account: it can inspect its state and logs, reconnect, sync, reconfigure or remove it, and nothing instance-wide.
+A bound management credential is therefore an operator for that one account: it can inspect its state and logs, reconnect, resume, sync, reconfigure or remove it, and nothing instance-wide.
 
 On a multi-tenant instance this is what keeps one customer's agent inside one customer's mailbox. Bind, then choose the levels.
 

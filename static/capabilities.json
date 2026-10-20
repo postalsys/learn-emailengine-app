@@ -23,6 +23,7 @@
         {"method": "PUT", "path": "/v1/account/{account}", "description": "Update account configuration"},
         {"method": "DELETE", "path": "/v1/account/{account}", "description": "Delete account (pass ?revoke=true to also revoke the upstream OAuth2 grant; supported for individual Gmail OAuth grants, no-op otherwise)"},
         {"method": "PUT", "path": "/v1/account/{account}/reconnect", "description": "Force reconnection"},
+        {"method": "PUT", "path": "/v1/account/{account}/resume", "description": "Resume an account switched off after repeated authentication failures and reconnect it. 409 NotSwitchedOff when it was not switched off (since 2.85.0)"},
         {"method": "PUT", "path": "/v1/account/{account}/flush", "description": "Reset sync state"},
         {"method": "PUT", "path": "/v1/account/{account}/sync", "description": "Trigger immediate sync"},
         {"method": "GET", "path": "/v1/account/{account}/oauth-token", "description": "Get OAuth2 access token"},
@@ -228,14 +229,14 @@
       {"section": "manage", "scope": "mcp-manage", "default": "observe", "levels": [
         {"level": "none", "description": "No management tools"},
         {"level": "observe", "description": "Default. Read accounts, settings, queues, OAuth2 applications, gateways, tokens, logs and statistics. Cannot change anything", "grants": "read on account, settings, oauth2, license, token, gateway, webhook, blocklist, template, outbox, diagnostics, logs"},
-        {"level": "operate", "description": "Observe, plus reconnect, add and test accounts, change settings, manage OAuth2 applications, gateways and templates", "grants": "observe plus read on provisioning and write on account, settings, oauth2, license, provisioning, blocklist, template"},
+        {"level": "operate", "description": "Observe, plus reconnect, resume, add and test accounts, change settings, manage OAuth2 applications, gateways and templates", "grants": "observe plus read on provisioning and write on account, settings, oauth2, license, provisioning, blocklist, template"},
         {"level": "administer", "description": "Operate, plus delete accounts, applications, gateways and templates, revoke tokens, flush accounts and cancel queued messages", "grants": "every pair of the mcp-manage table"}
       ]},
       {"section": "mail", "scope": "mcp", "default": "none", "levels": [
         {"level": "none", "description": "Default. No mail tools"},
         {"level": "read", "description": "List, search and read mail", "grants": "read on account, mailbox, message, outbox, template"},
-        {"level": "mail", "description": "Read, organize, draft and send. No delete tool", "grants": "read plus write on message and send on submit"},
-        {"level": "full", "description": "Every mail tool, including delete_message", "grants": "every pair of the mcp table"}
+        {"level": "mail", "description": "Read, organize, draft and send, create and rename folders. No delete tools", "grants": "read plus write on mailbox and message and send on submit"},
+        {"level": "full", "description": "Every mail tool, including deleting messages and folders", "grants": "every pair of the mcp table"}
       ]}
     ],
     "accessLevelRecord": "A minted MCP token always carries permissions.grants listing the exact (action, group) pairs of the approved levels, never an absent record, so a consent given today does not grow to include a tool shipped later. No level mints tokens, reads a stored credential or an account's live OAuth2 access token, removes the license, exports a mailbox or subscribes to the change stream",
@@ -245,6 +246,9 @@
       {"name": "list_accounts", "scope": ["mcp", "mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/accounts", "description": "List accounts on the instance, paged"},
       {"name": "get_account", "scope": ["mcp", "mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/account/{account}", "description": "Account details, connection state and sync status"},
       {"name": "list_mailboxes", "scope": ["mcp"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/mailboxes", "description": "Folder tree with counters and special-use roles"},
+      {"name": "create_mailbox", "scope": ["mcp"], "behavior": "write", "wraps": "POST /v1/account/{account}/mailbox", "description": "Create a folder"},
+      {"name": "update_mailbox", "scope": ["mcp"], "behavior": "write", "wraps": "PUT /v1/account/{account}/mailbox", "description": "Rename or move a folder, or change its subscription"},
+      {"name": "delete_mailbox", "scope": ["mcp"], "behavior": "destructive", "wraps": "DELETE /v1/account/{account}/mailbox", "description": "Delete a folder"},
       {"name": "list_messages", "scope": ["mcp"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/messages", "description": "Messages in one folder, newest first, paged"},
       {"name": "search_messages", "scope": ["mcp"], "behavior": "read-only", "wraps": "POST /v1/account/{account}/search", "description": "Structured search inside one folder"},
       {"name": "get_message", "scope": ["mcp"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/message/{message}", "description": "Envelope, flags, attachment list and the body inline as sanitized web-safe HTML"},
@@ -253,14 +257,22 @@
       {"name": "update_message", "scope": ["mcp"], "behavior": "write", "wraps": "PUT /v1/account/{account}/message/{message}", "description": "Add or remove flags and Gmail labels"},
       {"name": "move_message", "scope": ["mcp"], "behavior": "write", "wraps": "PUT /v1/account/{account}/message/{message}/move", "description": "Move a message to another folder"},
       {"name": "delete_message", "scope": ["mcp"], "behavior": "destructive", "wraps": "DELETE /v1/account/{account}/message/{message}", "description": "Move to Trash, or delete permanently from Trash"},
+      {"name": "update_messages", "scope": ["mcp"], "behavior": "write", "wraps": "PUT /v1/account/{account}/messages", "description": "Change flags or labels of every message in a folder matching a search"},
+      {"name": "move_messages", "scope": ["mcp"], "behavior": "write", "wraps": "PUT /v1/account/{account}/messages/move", "description": "Move every message in a folder matching a search; source is the folder searched, path the target"},
+      {"name": "delete_messages", "scope": ["mcp"], "behavior": "destructive", "wraps": "PUT /v1/account/{account}/messages/delete", "description": "Delete every message in a folder matching a search"},
       {"name": "create_draft", "scope": ["mcp"], "behavior": "write", "wraps": "POST /v1/account/{account}/message", "description": "Store a message in a folder without sending"},
       {"name": "send_message", "scope": ["mcp"], "behavior": "sends-email", "wraps": "POST /v1/account/{account}/submit", "description": "Queue an email for delivery to real recipients. Replies and forwards via the reference block (message, action reply|reply-all|forward, inline, forwardAttachments)"},
+      {"name": "send_draft", "scope": ["mcp"], "behavior": "sends-email", "wraps": "POST /v1/account/{account}/message/{message}/submit", "description": "Queue a stored draft for delivery as it is"},
+      {"name": "create_delivery_test", "scope": ["mcp"], "behavior": "sends-email", "wraps": "POST /v1/delivery-test/account/{account}", "description": "Send a test message to a probe address; check_delivery_test reads the result"},
       {"name": "get_outbox", "scope": ["mcp", "mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/outbox", "description": "Sending queue, including scheduled messages"},
+      {"name": "get_queued_message", "scope": ["mcp", "mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/outbox/{queueId}", "description": "One queued message with its delivery attempts and last error"},
       {"name": "list_templates", "scope": ["mcp", "mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/templates", "description": "Stored email templates"},
+      {"name": "get_template", "scope": ["mcp", "mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/templates/template/{template}", "description": "One stored template with its content"},
       {"name": "create_account", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/account", "description": "Register an account"},
       {"name": "update_account", "scope": ["mcp-manage"], "behavior": "write", "wraps": "PUT /v1/account/{account}", "description": "Reconfigure an account, including where it connects"},
       {"name": "delete_account", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/account/{account}", "description": "Remove an account"},
       {"name": "reconnect_account", "scope": ["mcp-manage"], "behavior": "write", "wraps": "PUT /v1/account/{account}/reconnect", "description": "Request a reconnect"},
+      {"name": "resume_account", "scope": ["mcp-manage"], "behavior": "write", "wraps": "PUT /v1/account/{account}/resume", "description": "Resume an account switched off after repeated authentication failures"},
       {"name": "sync_account", "scope": ["mcp-manage"], "behavior": "write", "wraps": "PUT /v1/account/{account}/sync", "description": "Request an immediate sync"},
       {"name": "flush_account", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "PUT /v1/account/{account}/flush", "description": "Drop the account's index and rebuild it"},
       {"name": "create_account_setup_link", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/authentication/form", "description": "Mint a hosted authentication link"},
@@ -301,7 +313,7 @@
       {"name": "get_webhook_route", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/webhookRoutes/webhookRoute/{webhookRoute}", "description": "One webhook route with its filter and map functions"},
       {"name": "get_instance_stats", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/stats", "description": "Instance statistics"},
       {"name": "get_pubsub_status", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/pubsub/status", "description": "Gmail Pub/Sub subscription status"},
-      {"name": "check_delivery_test", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/delivery-test/check/{deliveryTest}", "description": "Result of a delivery test"}
+      {"name": "check_delivery_test", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/delivery-test/check/{deliveryTest}", "description": "Result of a delivery test started by create_delivery_test or over the REST API"}
     ],
     "resources": {"uriTemplate": "emailengine://account/{account}", "description": "Each connected account the credential can see, readable as JSON", "maxListed": 500},
     "limits": {"toolResultBytes": 131072, "messageBodyCharacters": 32768, "messageTextCharacters": 65536, "listingPageSize": 100, "inlineAttachmentBytes": 1048576, "resourceSubscriptionsPerRequest": 20, "listenStreamsPerCredential": 4},

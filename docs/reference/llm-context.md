@@ -42,6 +42,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | **Update account** | `PUT /v1/account/{account}` | Partial updates supported |
 | **Delete account** | `DELETE /v1/account/{account}` | optional `?revoke=true` to revoke the OAuth2 grant |
 | **Reconnect account** | `PUT /v1/account/{account}/reconnect` | `reconnect: true`; answers `{"reconnect": false}` when syncing was switched off after repeated authentication failures |
+| **Resume account** | `PUT /v1/account/{account}/resume` | No body. Lifts the switch-off after repeated authentication failures and reconnects; `409` `NotSwitchedOff` when there is none (since 2.85.0) |
 | **Send email** | `POST /v1/account/{account}/submit` | `to`, `subject`, `text`/`html` |
 | **Send stored draft** | `POST /v1/account/{account}/message/{message}/submit` | optional delivery options |
 | **List messages** | `GET /v1/account/{account}/messages` | `path`, `page`, `pageSize` |
@@ -73,6 +74,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | `PUT` | `/v1/account/{account}` | Update account configuration |
 | `DELETE` | `/v1/account/{account}` | Delete account |
 | `PUT` | `/v1/account/{account}/reconnect` | Force reconnection |
+| `PUT` | `/v1/account/{account}/resume` | Resume an account switched off after authentication failures |
 | `PUT` | `/v1/account/{account}/flush` | Reset sync state, re-index |
 | `PUT` | `/v1/account/{account}/sync` | Trigger immediate sync |
 | `GET` | `/v1/account/{account}/oauth-token` | Get current OAuth2 access token |
@@ -242,7 +244,7 @@ Tool schemas are narrower than the endpoints they wrap: operator-level fields ar
 
 ### MCP Tools
 
-Each tool wraps one REST operation and inherits its permission grant. The mail tools are admitted by the `mcp` scope, the management tools by `mcp-manage`; `list_accounts`, `get_account`, `get_outbox` and `list_templates` are in both tables.
+Each tool wraps one REST operation and inherits its permission grant. The mail tools are admitted by the `mcp` scope, the management tools by `mcp-manage`; `list_accounts`, `get_account`, `get_outbox`, `get_queued_message`, `list_templates` and `get_template` are in both tables.
 
 **Mail tools** (`mcp` scope)
 
@@ -251,6 +253,9 @@ Each tool wraps one REST operation and inherits its permission grant. The mail t
 | `list_accounts` | read-only | `GET /v1/accounts` |
 | `get_account` | read-only | `GET /v1/account/{account}` |
 | `list_mailboxes` | read-only | `GET /v1/account/{account}/mailboxes` |
+| `create_mailbox` | write | `POST /v1/account/{account}/mailbox` |
+| `update_mailbox` | write | `PUT /v1/account/{account}/mailbox` |
+| `delete_mailbox` | destructive | `DELETE /v1/account/{account}/mailbox` |
 | `list_messages` | read-only | `GET /v1/account/{account}/messages` |
 | `search_messages` | read-only | `POST /v1/account/{account}/search` |
 | `get_message` | read-only | `GET /v1/account/{account}/message/{message}` (body inline) |
@@ -259,10 +264,17 @@ Each tool wraps one REST operation and inherits its permission grant. The mail t
 | `update_message` | write | `PUT /v1/account/{account}/message/{message}` |
 | `move_message` | write | `PUT /v1/account/{account}/message/{message}/move` |
 | `delete_message` | destructive | `DELETE /v1/account/{account}/message/{message}` |
+| `update_messages` | write | `PUT /v1/account/{account}/messages` |
+| `move_messages` | write | `PUT /v1/account/{account}/messages/move` (`source` is the folder searched, `path` the target) |
+| `delete_messages` | destructive | `PUT /v1/account/{account}/messages/delete` |
 | `create_draft` | write | `POST /v1/account/{account}/message` |
 | `send_message` | sends email | `POST /v1/account/{account}/submit` |
+| `send_draft` | sends email | `POST /v1/account/{account}/message/{message}/submit` |
+| `create_delivery_test` | sends email | `POST /v1/delivery-test/account/{account}` |
 | `get_outbox` | read-only | `GET /v1/outbox` |
+| `get_queued_message` | read-only | `GET /v1/outbox/{queueId}` |
 | `list_templates` | read-only | `GET /v1/templates` |
+| `get_template` | read-only | `GET /v1/templates/template/{template}` |
 
 **Instance management tools** (`mcp-manage` scope, since 2.80.1)
 
@@ -272,6 +284,7 @@ Each tool wraps one REST operation and inherits its permission grant. The mail t
 | `update_account` | write | `PUT /v1/account/{account}` |
 | `delete_account` | destructive | `DELETE /v1/account/{account}` |
 | `reconnect_account` | write | `PUT /v1/account/{account}/reconnect` |
+| `resume_account` | write | `PUT /v1/account/{account}/resume` |
 | `sync_account` | write | `PUT /v1/account/{account}/sync` |
 | `flush_account` | destructive | `PUT /v1/account/{account}/flush` |
 | `create_account_setup_link` | write | `POST /v1/authentication/form` |
@@ -327,8 +340,8 @@ A token minted for an agent is narrowed per section, and both sections can be de
 | | | Administer | Operate, plus `destructive` on `account`, `oauth2`, `token`, `gateway`, `blocklist`, `template` and `outbox` |
 | Email access | `mcp` | None (default) | No mail tools |
 | | | Read-only | `read` on `account`, `mailbox`, `message`, `outbox` and `template` |
-| | | Mail agent | Read-only, plus `write` on `message` and `send` on `submit` |
-| | | Full access | Mail agent, plus `destructive` on `message` |
+| | | Mail agent | Read-only, plus `write` on `mailbox` and `message` and `send` on `submit` |
+| | | Full access | Mail agent, plus `destructive` on `mailbox` and `message` |
 
 Bind an agent token to one account whenever possible - a bound credential loses every tool that takes no `account` argument (the instance-wide listings and the management tools), reaches nothing else, and its remaining tools drop the `account` argument.
 

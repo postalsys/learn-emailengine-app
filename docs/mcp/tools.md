@@ -12,7 +12,7 @@ The MCP endpoint exposes two tool sets behind two scopes: the **mail tools**, wh
 Tools are not a second implementation of the API. Each one wraps a route: the tool's input schema is generated from that route's request validation, and calling the tool runs that route in-process with the caller's own credential. Anything the [API Reference](/docs/api-reference) says about an endpoint - identifier formats, provider differences, error conditions - is true of the tool that wraps it.
 
 :::info Beta
-The mail tools shipped with MCP support in EmailEngine v2.79.2. The management tools and the `mcp-manage` scope were added in v2.80.1 (2026-09-10). The set may still change between releases; the live catalog described [below](#the-catalog) is the authority for the instance in front of you.
+The mail tools shipped with MCP support in EmailEngine v2.79.2. The management tools and the `mcp-manage` scope were added in v2.80.1 (2026-09-10). v2.85.0 added the folder tools, the bulk message tools, `send_draft`, `create_delivery_test`, `get_queued_message`, `get_template` and `resume_account`. The set may still change between releases; the live catalog described [below](#the-catalog) is the authority for the instance in front of you.
 :::
 
 ## The catalog
@@ -22,7 +22,7 @@ The same catalog is rendered live in the admin interface, under **Configuration*
 ![The MCP tool catalog in the admin interface](/img/screenshots/mcp-tools-catalog.png)
 _The Exposed tools card shows exactly what a client receives from `tools/list`_
 
-The **Behavior** column in the tables below is what a tool advertises through MCP annotations (`readOnlyHint`, `destructiveHint`, `openWorldHint`). Clients use them to decide what to run without asking and what to confirm first. A tool is marked as reaching outside the instance when it sends mail (`send_message`) or connects to a host the arguments or a stored record name (`autodiscover_settings`, `verify_account_settings`, `verify_oauth2_app`).
+The **Behavior** column in the tables below is what a tool advertises through MCP annotations (`readOnlyHint`, `destructiveHint`, `openWorldHint`). Clients use them to decide what to run without asking and what to confirm first. A tool is marked as reaching outside the instance when it sends mail (`send_message`, `send_draft`, `create_delivery_test`) or connects to a host the arguments or a stored record name (`autodiscover_settings`, `verify_account_settings`, `verify_oauth2_app`).
 
 ### Mail tools (`mcp` scope)
 
@@ -31,6 +31,9 @@ The **Behavior** column in the tables below is what a tool advertises through MC
 | `list_accounts` | Lists accounts on the instance, paged | read-only, both scopes | [`GET /v1/accounts`](/docs/api/get-v-1-accounts) |
 | `get_account` | One account: name, address, connection state, sync status | read-only, both scopes | [`GET /v1/account/{account}`](/docs/api/get-v-1-account-account) |
 | `list_mailboxes` | Folder tree with counters and special-use roles | read-only | [`GET /v1/account/{account}/mailboxes`](/docs/api/get-v-1-account-account-mailboxes) |
+| `create_mailbox` | Creates a folder, and any missing parent | write | [`POST /v1/account/{account}/mailbox`](/docs/api/post-v-1-account-account-mailbox) |
+| `update_mailbox` | Renames or moves a folder, or changes its subscription | write | [`PUT /v1/account/{account}/mailbox`](/docs/api/put-v-1-account-account-mailbox) |
+| `delete_mailbox` | Deletes a folder | destructive | [`DELETE /v1/account/{account}/mailbox`](/docs/api/delete-v-1-account-account-mailbox) |
 | `list_messages` | Messages in one folder, newest first, paged | read-only | [`GET /v1/account/{account}/messages`](/docs/api/get-v-1-account-account-messages) |
 | `search_messages` | Structured search inside one folder | read-only | [`POST /v1/account/{account}/search`](/docs/api/post-v-1-account-account-search) |
 | `get_message` | One message: envelope, flags, attachment list, and the body inline | read-only | [`GET /v1/account/{account}/message/{message}`](/docs/api/get-v-1-account-account-message-message) |
@@ -39,12 +42,19 @@ The **Behavior** column in the tables below is what a tool advertises through MC
 | `update_message` | Adds or removes flags and Gmail labels | write | [`PUT /v1/account/{account}/message/{message}`](/docs/api/put-v-1-account-account-message-message) |
 | `move_message` | Moves a message to another folder | write | [`PUT /v1/account/{account}/message/{message}/move`](/docs/api/put-v-1-account-account-message-message-move) |
 | `delete_message` | Moves to Trash, or deletes permanently from Trash | destructive | [`DELETE /v1/account/{account}/message/{message}`](/docs/api/delete-v-1-account-account-message-message) |
+| `update_messages` | Changes flags or labels of every message in one folder that matches a search | write | [`PUT /v1/account/{account}/messages`](/docs/api/put-v-1-account-account-messages) |
+| `move_messages` | Moves every message in one folder that matches a search to another folder | write | [`PUT /v1/account/{account}/messages/move`](/docs/api/put-v-1-account-account-messages-move) |
+| `delete_messages` | Deletes every message in one folder that matches a search | destructive | [`PUT /v1/account/{account}/messages/delete`](/docs/api/put-v-1-account-account-messages-delete) |
 | `create_draft` | Stores a message in a folder without sending it | write | [`POST /v1/account/{account}/message`](/docs/api/post-v-1-account-account-message) |
 | `send_message` | Queues an email for delivery to real recipients | sends email, reaches outside | [`POST /v1/account/{account}/submit`](/docs/api/post-v-1-account-account-submit) |
+| `send_draft` | Queues a stored draft for delivery as it is | sends email, reaches outside | [`POST /v1/account/{account}/message/{message}/submit`](/docs/api/post-v-1-account-account-message-message-submit) |
+| `create_delivery_test` | Sends a test message to a probe address and returns a test id for `check_delivery_test` | sends email, reaches outside | [`POST /v1/delivery-test/account/{account}`](/docs/api/post-v-1-deliverytest-account-account) |
 | `get_outbox` | The sending queue, including scheduled messages | read-only, both scopes | [`GET /v1/outbox`](/docs/api/get-v-1-outbox) |
+| `get_queued_message` | One queued message by queue id, with its delivery attempts and last error | read-only, both scopes | [`GET /v1/outbox/{queueId}`](/docs/api/get-v-1-outbox-queueid) |
 | `list_templates` | Stored email templates | read-only, both scopes | [`GET /v1/templates`](/docs/api/get-v-1-templates) |
+| `get_template` | One stored template with its content | read-only, both scopes | [`GET /v1/templates/template/{template}`](/docs/api/get-v-1-templates-template-template) |
 
-Four of these are reached by both scopes: `list_accounts`, `get_account`, `get_outbox` and `list_templates` are reads an agent managing the instance needs as much as one reading mail. The admin catalog files them under instance management with a "both scopes" badge.
+Six of these are reached by both scopes: `list_accounts`, `get_account`, `get_outbox`, `get_queued_message`, `list_templates` and `get_template` are reads an agent managing the instance needs as much as one reading mail. The admin catalog files them under instance management with a "both scopes" badge.
 
 ### Management tools (`mcp-manage` scope)
 
@@ -58,6 +68,7 @@ Everything below is instance administration. A credential that holds only the `m
 | `update_account` | Changes an account's configuration, connection settings included. Only the fields sent change | write | [`PUT /v1/account/{account}`](/docs/api/put-v-1-account-account) |
 | `delete_account` | Removes an account, its index and the tokens bound to it; `revoke` also revokes the OAuth2 grant at the provider | destructive | [`DELETE /v1/account/{account}`](/docs/api/delete-v-1-account-account) |
 | `reconnect_account` | Closes and re-opens the account's connection | write | [`PUT /v1/account/{account}/reconnect`](/docs/api/put-v-1-account-account-reconnect) |
+| `resume_account` | Turns an account back on after EmailEngine [switched it off after repeated authentication failures](/docs/accounts/managing-accounts#accounts-switched-off-after-authentication-failures), and reconnects it | write | [`PUT /v1/account/{account}/resume`](/docs/api/put-v-1-account-account-resume) |
 | `sync_account` | Runs a sync now instead of waiting for the next scheduled one | write | [`PUT /v1/account/{account}/sync`](/docs/api/put-v-1-account-account-sync) |
 | `flush_account` | Discards the local index and syncs from scratch; every message counts as new again | destructive | [`PUT /v1/account/{account}/flush`](/docs/api/put-v-1-account-account-flush) |
 | `get_account_logs` | The stored connection log: the raw IMAP or provider API trace, which names folders, message ids and subjects | read-only | [`GET /v1/logs/{account}`](/docs/api/get-v-1-logs-account) |
@@ -125,21 +136,22 @@ The two settings tools offer only the keys a settings editor may hold. The keys 
 | `get_license` | The active license, or an empty object when the instance runs unlicensed | read-only | [`GET /v1/license`](/docs/api/get-v-1-license) |
 | `set_license` | Applies a license key, as the full text including its BEGIN and END lines | write | [`POST /v1/license`](/docs/api/post-v-1-license) |
 | `get_instance_stats` | Version, license, account counts by state, and message and webhook counters for the last `seconds` | read-only | [`GET /v1/stats`](/docs/api/get-v-1-stats) |
-| `check_delivery_test` | The result of a delivery test started over the REST API | read-only | [`GET /v1/delivery-test/check/{deliveryTest}`](/docs/api/get-v-1-deliverytest-check-deliverytest) |
+| `check_delivery_test` | The result of a delivery test started with `create_delivery_test` or over the REST API. Starting a test is a mail tool and reading it a management tool, so a credential needs both scopes to do both | read-only | [`GET /v1/delivery-test/check/{deliveryTest}`](/docs/api/get-v-1-deliverytest-check-deliverytest) |
 
 There is no tool that mints a token. A management credential can list, inspect and revoke tokens, but creating one stays outside every MCP scope, which is what keeps an agent credential from widening itself.
 
 :::note Not everything the API can do
-Operations with no tool: bulk export, creating, renaming and deleting folders, the bulk message actions, a message's raw source, re-submitting a stored draft, starting a delivery test, server signatures, the credentialed autodiscovery lookup (`POST /v1/autoconfig`), the change stream, a single outbox entry or template by id, removing the license, minting tokens, and an account's live OAuth2 access token. An MCP-scoped token is refused those operations even if it asks for them by another route. Use the [REST API](/docs/api-reference) for them.
+Operations with no tool: bulk export, uploading a raw message, a message's raw source, server signatures, the credentialed autodiscovery lookup (`POST /v1/autoconfig`), the change stream, removing the license, minting tokens, and an account's live OAuth2 access token. An MCP-scoped token is refused those operations even if it asks for them by another route. Use the [REST API](/docs/api-reference) for them.
 :::
 
 ## A tool schema is narrower than its endpoint
 
-The arguments a tool offers are a curated subset of what the REST route accepts. Three rules shape them, and they are worth knowing before comparing a tool against its endpoint documentation:
+The arguments a tool offers are a curated subset of what the REST route accepts. Four rules shape them, and they are worth knowing before comparing a tool against its endpoint documentation:
 
-- **Hidden arguments.** Fields that are an operator's decision rather than an agent's do not appear. `send_message` offers the message an agent composes and nothing else: no `gateway` or `envelope` routing, no `trackOpens`/`trackClicks`, no `dsn`, no `headers`/`messageId`, no `raw`, and no `mailMerge` - an agent that should write to several people calls the tool several times, so that each send is visible as a send. `create_account`, `update_account` and `verify_account_settings` hide `proxy`, so an agent cannot route a stored credential through a host of its choosing, and the two account tools also hide `smtpEhloName`, `webhooksCustomHeaders`, `copy`, `locale` and `tz`. `create_account_setup_link` offers only `account`, `name`, `email`, `expectedEmail`, `redirectUrl` and `type`. The settings tools leave out every [privileged key](#management-tools-mcp-manage-scope).
+- **Hidden arguments.** Fields that are an operator's decision rather than an agent's do not appear. `send_message` offers the message an agent composes and nothing else: no `gateway` or `envelope` routing, no `trackOpens`/`trackClicks`, no `dsn`, no `headers`/`messageId`, no `raw`, and no `mailMerge` - an agent that should write to several people calls the tool several times, so that each send is visible as a send. `create_account`, `update_account` and `verify_account_settings` hide `proxy`, so an agent cannot route a stored credential through a host of its choosing, and the two account tools also hide `smtpEhloName`, `webhooksCustomHeaders`, `copy`, `locale` and `tz`. `create_account_setup_link` offers only `account`, `name`, `email`, `expectedEmail`, `redirectUrl` and `type`. `send_draft` offers only `account` and `message`: the draft carries its own content, and every other field of the route overrides an operator decision. `create_delivery_test` sends without a `gateway`, as `send_message` does. The settings tools leave out every [privileged key](#management-tools-mcp-manage-scope).
 - **Forced values.** Some arguments are pinned by the server and removed from the schema, so the model is not offered a choice it does not have. Both body tools force sanitized [web-safe HTML](/docs/receiving/web-safe-html) with a size budget, which is why neither takes `textType` or `maxBytes`. `reconnect_account`, `sync_account` and `flush_account` force the flag their routes take, so each is a plain call with an account id.
 - **Tightened bounds.** Every paged listing caps `pageSize` at 100 rather than the endpoint's 1000. The schema says so, and the dispatch clamps a larger value anyway.
+- **Renamed arguments.** One tool argument cannot come from two places. The bulk move endpoint takes the folder to search as the `path` query parameter and the target folder as `path` in the body, so `move_messages` offers them as `source` and `path`, the names `move_message` uses, and sends each back under its own name.
 
 None of this is enforcement. It shapes what the agent is offered; what it is *allowed* to do is decided by the credential - see [Access Control](/docs/mcp/access-control).
 
@@ -170,13 +182,17 @@ graph LR
 4. `get_message` gives the envelope, the attachment list and the body in one call. Only when `text.hasMore` is true is a second call needed, and `get_message_text` is the one that makes it.
 5. Acting on the message: flags with `update_message`, filing with `move_message`, answering with `send_message` and a `reference` block.
 
+**Acting on many messages.** The bulk tools take the same `path` and `search` as `search_messages`. The tool descriptions tell the model to run `search_messages` first to see what matches, then pass the same criteria to `update_messages`, `move_messages` or `delete_messages`, and to use the single-message tools when only one or a few known messages are involved.
+
+**Drafting for review.** `create_draft` stores a reply or a new message in the Drafts folder and returns its id. The user reviews it, `get_message` reading it back, and `send_draft` sends that same draft unchanged. The draft has to be in the Drafts folder or carry the `\Draft` flag; once sent it leaves the Drafts folder.
+
 **Operating the instance**
 
 A management credential is told to start with `get_instance_stats` and `list_accounts`, and to confirm with the user before changing where webhooks are delivered, before changing where an account or gateway connects, and before anything destructive. To add a mailbox it is told to prefer `create_account_setup_link`, so the user signs in on the hosted form and no password passes through the conversation; `autodiscover_settings` and `verify_account_settings` exist for the case where the user has supplied IMAP settings and a password and wants them checked before `create_account`.
 
 ## Arguments
 
-Every mail tool takes an `account` argument except `list_accounts` and `get_outbox`, which are instance-wide; `list_templates` takes one optionally, to pick account-specific templates over shared ones. Among the management tools, the ones that act on one account (`get_account`, `update_account`, `delete_account`, `reconnect_account`, `sync_account`, `flush_account`, `get_account_logs`, `delete_account_templates`) take it as a required argument, and `create_account`, `create_account_setup_link`, `create_template`, `add_to_blocklist`, `list_tokens` and `verify_oauth2_app` take it as a field of the operation. Required arguments are marked.
+Every mail tool takes an `account` argument except `list_accounts`, `get_outbox` and `get_queued_message`, which are instance-wide, and `get_template`, which takes a template id; `list_templates` takes one optionally, to pick account-specific templates over shared ones. A token bound to one account is offered `get_template` for its own account's templates, and not `get_queued_message`. Among the management tools, the ones that act on one account (`get_account`, `update_account`, `delete_account`, `reconnect_account`, `resume_account`, `sync_account`, `flush_account`, `get_account_logs`, `delete_account_templates`) take it as a required argument, and `create_account`, `create_account_setup_link`, `create_template`, `add_to_blocklist`, `list_tokens` and `verify_oauth2_app` take it as a field of the operation. Required arguments are marked.
 
 ### Accounts and folders
 
@@ -204,6 +220,33 @@ Credentials are masked in the response.
 |----------|------|-------|
 | `account` (required) | string | Account id |
 | `counters` | boolean | Include message and unseen counts |
+
+**`create_mailbox`**
+
+| Argument | Type | Notes |
+|----------|------|-------|
+| `account` (required) | string | Account id |
+| `path` (required) | array or string | The new folder as a list of names from the top level down, for example `["Projects", "2026"]`, so the server's own separator is used. A namespace prefix is added when the account has one |
+
+The response carries the full `path` of the created folder.
+
+**`update_mailbox`**
+
+| Argument | Type | Notes |
+|----------|------|-------|
+| `account` (required) | string | Account id |
+| `path` (required) | string | Current folder path from `list_mailboxes` |
+| `newPath` | array or string | New location, in the same form as `create_mailbox` takes. Renames or moves the folder |
+| `subscribed` | boolean | Subscribe to the folder or unsubscribe from it |
+
+**`delete_mailbox`**
+
+| Argument | Type | Notes |
+|----------|------|-------|
+| `account` (required) | string | Account id |
+| `path` (required) | string | Folder path from `list_mailboxes` |
+
+On an IMAP account the folder is deleted with every message in it, and nothing is kept in Trash. On a Gmail API account the label is removed and the messages stay in the mailbox under their other labels.
 
 ### Reading
 
@@ -285,6 +328,17 @@ The message id changes when a message moves. The response carries the new one.
 
 Deleting moves the message to Trash when it is not already there, and deletes it permanently when it is.
 
+**`update_messages`**, **`move_messages`** and **`delete_messages`** act on every message in one folder that matches a search, in one call.
+
+| Argument | Type | Notes |
+|----------|------|-------|
+| `account` (required) | string | Account id |
+| `path` (required) | string | `update_messages`, `delete_messages`: the folder to search. `move_messages`: the target folder |
+| `source` (required) | string | `move_messages` only: the folder to search |
+| `search` (required) | object | The same criteria `search_messages` takes |
+| `update` | object | `update_messages` only: `flags` and `labels`, in the shape `update_message` takes |
+| `force` | boolean | `delete_messages` only: delete outright instead of moving to Trash. Not supported on Gmail API accounts |
+
 ### Writing and sending
 
 **`create_draft`** stores a message in a folder. Nothing is sent.
@@ -314,6 +368,17 @@ Deleting moves the message to Trash when it is not already there, and deletes it
 | `sendAt` | string | ISO date to [schedule](/docs/sending/basic-sending#scheduled-sending) the send |
 
 Delivery is queued, not immediate. The response carries a `queueId`, and the message shows up in the `get_outbox` listing until it is delivered.
+
+**`send_draft`** queues a stored draft for delivery as it is.
+
+| Argument | Type | Notes |
+|----------|------|-------|
+| `account` (required) | string | Account id |
+| `message` (required) | string | Id of the draft, as `create_draft` or a listing returned it |
+
+The message has to be a draft: in the Drafts folder or flagged `\Draft` on IMAP, carrying the `DRAFT` label on Gmail, or a draft message on Microsoft Graph. Gmail and Microsoft Graph accounts send it with the provider's own draft-send call, which files it in Sent and removes the draft. IMAP accounts send it over SMTP, copy it to Sent unless the account is set not to, and then remove it from Drafts. The response carries a `queueId` like `send_message`.
+
+**`create_delivery_test`** takes only `account`. It sends a test message from the account to a probe address of the delivery test service and returns a `deliveryTest` id. Pass the id to `check_delivery_test`, a management tool, to read whether the message arrived and its SPF, DKIM and DMARC results.
 
 :::warning Sending is the one irreversible mail tool
 `send_message` reaches real recipients, and a queued message can only be cancelled while it is still in the outbox. Clients that honor MCP annotations treat it as an open-world call and ask for confirmation. If you would rather they could not call it at all, issue the token at the read-only mail level - see [Access Control](/docs/mcp/access-control#access-levels).
@@ -348,7 +413,11 @@ Both `send_message` and `create_draft` take a `reference` block, which is how an
 
 **`get_outbox`** takes `page` and `pageSize` (at most 100). It lists queued and scheduled messages with their delivery progress.
 
+**`get_queued_message`** takes `queueId`, as `send_message`, `send_draft` or `get_outbox` returned it. It returns that message's recipients, scheduled time, delivery attempts and last delivery error.
+
 **`list_templates`** takes `account` (for account-specific templates; omit for shared ones), `page` and `pageSize` (at most 100).
+
+**`get_template`** takes `template`, an id from `list_templates`, and returns the template with its content.
 
 ### Management tools
 
@@ -357,6 +426,7 @@ The management tools take the fields of the endpoint they wrap, minus the [hidde
 | Tool | Arguments |
 |------|-----------|
 | `reconnect_account`, `sync_account` | `account` only. The route's flag is forced on |
+| `resume_account` | `account`. Answers `{"resumed": true}`, or an error with `code` `NotSwitchedOff` for an account EmailEngine did not switch off, including one an operator set to send-only |
 | `flush_account` | `account`, plus the optional `notifyFrom` and `imapIndexer` the route accepts for the re-sync |
 | `delete_account` | `account`, `revoke` |
 | `create_account_setup_link` | `redirectUrl` (required), `account`, `name`, `email`, `expectedEmail`, `type` |

@@ -532,7 +532,7 @@ curl -X PUT https://emailengine.example.com/v1/account/user123/reconnect \
 }
 ```
 
-Since v2.79.4, an account that EmailEngine [switched off after repeated authentication failures](#accounts-switched-off-after-authentication-failures) is not reconnected, because the connection setup checks the disable flag before dialing out and the request would report success while changing nothing. Supply working credentials, or use **Resume syncing** in the admin interface. The same response is returned when the body is missing or `reconnect` is `false`.
+Since v2.79.4, an account that EmailEngine [switched off after repeated authentication failures](#accounts-switched-off-after-authentication-failures) is not reconnected, because the connection setup checks the disable flag before dialing out and the request would report success while changing nothing. Supply working credentials, or [resume](#resuming-an-account-through-the-api) the account. The same response is returned when the body is missing or `reconnect` is `false`.
 
 **Account Not Found:**
 ```json
@@ -614,10 +614,28 @@ Any of the following turns syncing back on:
 
 - **Supply working credentials.** Re-authorizing an OAuth2 account through the [hosted authentication form](/docs/accounts/hosted-authentication) or the account page's **Re-authenticate** button, or registering the account again with `POST /v1/account`, lifts the flag and reconnects the account. (The **Re-authenticate** button did nothing in v2.79.9, blocked by the Content Security Policy that release introduced; v2.80.0 fixed it.) `PUT /v1/account/{account}` lifts it when the body carries new OAuth2 tokens, sets `imap.disabled` to `false`, replaces the whole `imap` object, or, in v2.79.5, changes `imap.auth` in a partial update. In v2.79.4 itself a partial update that only changes the password keeps the flag, so add `"disabled": false` next to the new password there
 - **Resume syncing** on the account page in the admin interface retries with the stored credentials. This is the only admin path for a Gmail API or Microsoft Graph account, whose edit page has no IMAP settings and therefore no "Disable IMAP" checkbox
+- `PUT /v1/account/{account}/resume` does the same as **Resume syncing**, since v2.85.0. See [below](#resuming-an-account-through-the-api)
 - **Saving the edit form** of an IMAP account with new credentials. In v2.79.5 the "Disable IMAP" checkbox is left unchecked for an account the safety net switched off, so the save writes `disabled: false` along with the credentials. In v2.79.4 the box is pre-checked and has to be cleared by hand
 - `{"imap": {"partial": true, "disabled": false}}` through the API, as [above](#enable-account)
 
 If the credentials are still bad, the failures start counting again from the resume, and the account is switched off once more after the window passes.
+
+#### Resuming an account through the API
+
+Since v2.85.0, [`PUT /v1/account/{account}/resume`](/docs/api/put-v-1-account-account-resume) lifts the switch-off and requests a reconnect with the stored credentials, the same action as **Resume syncing**. It takes no body.
+
+```bash
+curl -X PUT https://emailengine.example.com/v1/account/user123/resume \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```json
+{
+  "resumed": true
+}
+```
+
+The reconnect is requested, not completed, so watch the account state for the result. The endpoint lifts only the switch EmailEngine set: an account it did not switch off, including one an operator set to send-only with `imap.disabled`, answers `409` with `code` `NotSwitchedOff` and is left as it was. An unknown account answers `404`. The route needs `write` on the `account` permission group, like the reconnect, and is the `resume_account` [MCP tool](/docs/mcp/tools).
 
 Version notes:
 
