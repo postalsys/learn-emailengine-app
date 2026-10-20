@@ -548,6 +548,10 @@ curl https://emailengine.example.com/v1/accounts \
 
    [Installation](/docs/installation) has the update procedure for each install method. Report growth that persists on the current release as a [GitHub issue](https://github.com/postalsys/emailengine/issues) with the `/metrics` output.
 
+3. **High memory right after startup that falls back after a few minutes:**
+
+   This is the young generation of each thread growing during startup, which on Node.js 24 is four times the size it was on Node.js 22. Releases since v2.85.0 cap it in the Docker image and the prebuilt binaries; on an npm or source install, or a Docker container started with its own `NODE_OPTIONS`, set `--max-semi-space-size=16`. See [Node.js heap](/docs/advanced/performance-tuning#the-young-generation).
+
 #### Slow Performance
 
 **Symptom:** API requests slow, UI sluggish

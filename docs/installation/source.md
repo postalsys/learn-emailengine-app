@@ -306,7 +306,7 @@ See [Windows Installation Guide](/docs/installation/windows) for WSL2 setup.
 
 ### PM2 (Production Process Manager)
 
-PM2 is an excellent alternative to SystemD for process management.
+PM2 is an alternative to systemd for process management.
 
 #### Install PM2
 
@@ -487,15 +487,19 @@ See [Configuration Options](/docs/configuration) for complete reference.
 
 ## Performance Optimization
 
-### Node.js Optimization
+### Node.js Heap Options
+
+A source install does not set any V8 heap options, so it runs with the Node.js defaults. Node.js 24 lets the young generation of every thread grow to 128 MB during startup; `--max-semi-space-size=16`, which the Docker image and the prebuilt binaries set since v2.85.0, keeps it at the Node.js 22 size:
 
 ```bash
-# Set Node.js options in SystemD service
-Environment="NODE_OPTIONS=--max-old-space-size=2048"
+# systemd service
+Environment="NODE_OPTIONS=--max-semi-space-size=16"
 
 # Or in ecosystem.config.js for PM2
-node_args: '--max-old-space-size=2048'
+node_args: '--max-semi-space-size=16'
 ```
+
+Both this option and `--max-old-space-size` apply to each thread separately, so neither caps the memory of the process. See [Node.js heap](/docs/advanced/performance-tuning#nodejs-heap) before changing them.
 
 ### Worker Configuration
 

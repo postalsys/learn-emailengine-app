@@ -229,6 +229,61 @@ EENGINE_EXPORT_QC=2 emailengine --workers.export=2
 
 Each export batch holds message data in memory while it is written, so raise the concurrency together with the worker's memory. See [Exporting messages](/docs/receiving/exporting).
 
+## Node.js Heap
+
+EmailEngine runs as one process with several threads: the main thread plus the API, account, webhook, submission, export, SMTP server and IMAP proxy workers. Each thread has its own V8 heap. Two V8 options size those heaps, and both apply to every thread separately. Neither one limits the memory of the process as a whole.
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--max-old-space-size` | Chosen by V8 from the machine's memory, about 4 GB on a 64-bit host with 16 GB or more. The prebuilt binaries are built with `4096` | Upper limit, in megabytes, of each thread's long-lived heap |
+| `--max-semi-space-size` | `16` in the Docker image and the prebuilt binaries since v2.85.0. Without it, Node.js 24 allows up to `64` | Size, in megabytes, of each of the two halves of a thread's young generation, where new objects are allocated |
+
+### Memory is bounded by the container, not by these options
+
+The limits multiply by the thread count. With `--max-old-space-size=2048` and ten threads, the process can still grow past 20 GB, so these options are not a memory budget. The ceiling for the process is the container memory limit, the systemd `MemoryMax` (see [Restart on memory threshold](/docs/deployment/systemd#restart-on-memory-threshold)), or the host's RAM. Leave room in it for Redis if it runs on the same host.
+
+A worker thread that reaches its `--max-old-space-size` limit terminates with `ERR_WORKER_OUT_OF_MEMORY`, EmailEngine logs `Worker thread error` and starts a replacement. The main thread reaching its limit ends the process. Raise the option only after a log shows a thread hitting it; lowering it below the default does not reduce memory use, it makes that failure arrive sooner.
+
+### The young generation
+
+Node.js 24 lets each thread's young generation grow to 128 MB, against 32 MB on Node.js 22. Startup allocates heavily in every thread, so each one grows to that size and gives the memory back only after it has been idle for a minute or two. An empty instance on Node.js 24 needed about half as much memory again at startup as the same instance on Node.js 22. Since v2.85.0 the Docker image and the prebuilt binaries set `--max-semi-space-size=16`, which restores the Node.js 22 sizing.
+
+A larger young generation means fewer garbage collections under a heavy allocation rate, so an instance serving a high API or webhook volume on a host with spare memory can raise it, for example to `32`. Lower values trade memory for more frequent collections.
+
+### Setting the options
+
+**npm, source and systemd installs** take them from `NODE_OPTIONS`, which reaches every thread:
+
+```bash
+NODE_OPTIONS="--max-semi-space-size=16" emailengine
+```
+
+```ini
+[Service]
+Environment="NODE_OPTIONS=--max-semi-space-size=16"
+```
+
+These installs run on whichever Node.js version is installed, and do not set `--max-semi-space-size` unless it is given here.
+
+**Docker** sets `NODE_OPTIONS=--max-semi-space-size=16` in the image. A `NODE_OPTIONS` passed to the container replaces that value rather than adding to it, so include the flag to keep it:
+
+```bash
+docker run -d \
+  --name emailengine \
+  -p 3000:3000 \
+  -e EENGINE_REDIS="redis://redis-host:6379/8" \
+  -e NODE_OPTIONS="--max-semi-space-size=16 --max-old-space-size=6144" \
+  postalsys/emailengine:v2
+```
+
+**Prebuilt binaries** carry the options from the build (`--max-old-space-size=4096`, and `--max-semi-space-size=16` since v2.85.0) and ignore `NODE_OPTIONS`, so they cannot be changed on these installs.
+
+To see the limit a thread gets, run Node.js with the same options. The value includes the young generation:
+
+```bash
+node -e "console.log(v8.getHeapStatistics().heap_size_limit / 1048576)"
+```
+
 ## Redis
 
 Redis is EmailEngine's only data store, and its latency is added to nearly every operation. [Redis](/docs/configuration/redis) covers sizing, persistence and compatible servers in full; the points that decide performance are:
@@ -368,6 +423,7 @@ The figures to watch while tuning, all available from the [Prometheus endpoint](
 - Lower `EENGINE_SUBMIT_QC` and `EENGINE_EXPORT_QC`
 - Fix or speed up the webhook endpoint so the `notify` queue drains
 - Give Redis more memory
+- For memory that is high right after startup and falls back after a few minutes, cap the young generation of each thread; see [Node.js heap](#the-young-generation)
 
 ### Slow Webhook Processing
 
