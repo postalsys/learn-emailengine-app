@@ -178,7 +178,7 @@ Open the Prometheus targets page (`/targets`) and confirm the EmailEngine job sh
 
 ### Metric Reference
 
-The tables below list every metric EmailEngine registers, from `server.js`. The Prometheus client's default Node.js process metrics (`process_cpu_seconds_total`, `process_resident_memory_bytes`, `nodejs_heap_size_used_bytes`, `nodejs_eventloop_lag_seconds` and the rest of the `process_*` and `nodejs_*` family) are exposed alongside them; the Grafana dashboard's memory and CPU panels read those.
+The tables below list every metric EmailEngine registers, from `server.js`. The Prometheus client's default Node.js process metrics (`process_cpu_seconds_total`, `process_resident_memory_bytes`, `nodejs_heap_size_used_bytes`, `nodejs_eventloop_lag_seconds` and the rest of the `process_*` and `nodejs_*` family) are exposed alongside them; the Grafana dashboard's memory and CPU panels read those. They describe the process and its main thread only: `nodejs_eventloop_lag_seconds` does not see a blocked worker thread, which the per-thread gauges below do.
 
 #### Worker and Thread Metrics
 
@@ -188,8 +188,10 @@ The tables below list every metric EmailEngine registers, from `server.js`. The 
 | `thread_stops` | Counter | none | Worker threads that stopped |
 | `threads` | Gauge | `type`, `recent` | Running worker threads by type. `recent` is `yes` for threads started within the last 10 minutes, `no` otherwise |
 | `unresponsive_workers` | Gauge | none | Worker threads that did not answer the last resource-usage poll |
+| `thread_event_loop_delay_max_seconds` | Gauge | `type`, `thread` | Longest event loop delay of one thread over the last 15 seconds. Since v2.85.0 |
+| `thread_event_loop_delay_p99_seconds` | Gauge | `type`, `thread` | 99th percentile event loop delay of one thread over the last 15 seconds. Since v2.85.0 |
 
-`type` is one of `main`, `api`, `imap`, `webhooks`, `submit`, `export`, `smtp` and `imapProxy`; a type only appears once such a worker has run. Releases before v2.82.0 also had a `documents` type, the Document Store indexing worker.
+`type` is one of `main`, `api`, `imap`, `webhooks`, `submit`, `export`, `smtp` and `imapProxy`; a type only appears once such a worker has run. `thread` is the thread ID shown on the Workers page; a replaced thread's series disappears with it. A thread whose event loop stays blocked for 60 seconds misses its heartbeats and is restarted, so a delay climbing toward that is the warning sign. Releases before v2.82.0 also had a `documents` type, the Document Store indexing worker.
 
 #### Connection Metrics
 
@@ -555,7 +557,7 @@ The overview shows every queue with the number of entries in each state, refresh
 
 ## Workers Page
 
-The admin interface lists every thread the process runs under **System** > **Workers** (`/admin/internals`): the main thread, the API, IMAP, webhook, submit, export, SMTP server and IMAP proxy workers, grouped by kind with a sentence on what each kind does. Each row shows the thread ID, its uptime, its memory use and, for IMAP workers, the accounts assigned to it; opening a row lists those accounts.
+The admin interface lists every thread the process runs under **System** > **Workers** (`/admin/internals`): the main thread, the API, IMAP, webhook, submit, export, SMTP server and IMAP proxy workers, grouped by kind with a sentence on what each kind does. Each row shows the thread ID, its uptime, its memory use, its longest event loop delay over the last 15 seconds (since v2.85.0; a dash until the first reading) and, for IMAP workers, the accounts assigned to it; opening a row lists those accounts.
 
 A worker that came online more than three minutes after the main thread is marked **Recently restarted** for thirty minutes, since a normal boot brings every worker up within seconds and a late start means the main thread respawned it after a crash. A worker that keeps the marker is crash-looping; its exit reason is in the log stream.
 

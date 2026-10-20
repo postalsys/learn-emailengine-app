@@ -270,11 +270,11 @@ Control worker thread configuration for processing workload.
 |----------|------|---------|-------------|---------|
 | `EENGINE_WORKERS` | number | `4` | Account worker thread count - syncs IMAP, Gmail API, and Outlook (Microsoft Graph) accounts | `8` |
 | `EENGINE_WORKERS_API` | number | `1` | API/HTTP worker threads. Values above `1` require `SO_REUSEPORT`, which needs Linux and a Node.js with the `reusePort` listen option (22.12 or 23.1 and later); other platforms fall back to a single worker. Accepts `cpus` | `4` |
-| `EENGINE_WORKERS_SUBMIT` | number | `1` | Worker threads for email submission | `2` |
-| `EENGINE_WORKERS_WEBHOOKS` | number | `1` | Worker threads for webhook delivery | `2` |
-| `EENGINE_WORKERS_EXPORT` | number | `1` | Worker threads for mailbox exports. Read since v2.82.1 | `2` |
+| `EENGINE_WORKERS_SUBMIT` | number | `1` | Worker threads for email submission. Accepts `cpus` since v2.85.0 | `2` |
+| `EENGINE_WORKERS_WEBHOOKS` | number | `1` | Worker threads for webhook delivery. Accepts `cpus` since v2.85.0 | `2` |
+| `EENGINE_WORKERS_EXPORT` | number | `1` | Worker threads for mailbox exports. Read since v2.82.1, accepts `cpus` since v2.85.0 | `2` |
 
-`EENGINE_WORKERS` also accepts `cpus`, meaning one worker per CPU core, so `EENGINE_WORKERS=cpus` is the equivalent of `EENGINE_WORKERS=$(nproc)` on Linux. `EENGINE_WORKERS_API` accepts it too.
+`EENGINE_WORKERS` also accepts `cpus`, meaning one worker per CPU core, so `EENGINE_WORKERS=cpus` is the equivalent of `EENGINE_WORKERS=$(nproc)` on Linux. `EENGINE_WORKERS_API` accepts it too, and since v2.85.0 so do `EENGINE_WORKERS_WEBHOOKS`, `EENGINE_WORKERS_SUBMIT` and `EENGINE_WORKERS_EXPORT`; before that, `cpus` in one of those three fell back to the configuration file value or a single worker.
 
 The export worker count can also be set with `--workers.export` on the command line or `export` under `[workers]` in the config file. Before v2.82.1, `EENGINE_WORKERS_EXPORT` was not read, although the Workers page at `/admin/internals` already labelled the export worker row with that name.
 
@@ -683,7 +683,7 @@ Advanced configuration options for debugging and performance tuning.
 | Variable | Type | Default | Description | Example |
 |----------|------|---------|-------------|---------|
 | `EENGINE_LOG_RAW` | boolean | `false` | Log raw IMAP protocol traffic (debug only) | `true` |
-| `EENGINE_DISABLE_COMPRESSION` | boolean | `false` | Disable IMAP COMPRESS extension | `true` |
+| `EENGINE_DISABLE_COMPRESSION` | boolean | `false` | Do not negotiate IMAP `COMPRESS=DEFLATE`. Each compressed connection holds about 300 KB of zlib state outside the V8 heap, so on a large instance this trades memory and CPU for network traffic; see [Performance tuning](/docs/advanced/performance-tuning#native-memory-imap-compression) | `true` |
 | `EENGINE_DISABLE_MESSAGE_BROWSER` | boolean | `false` | Disable web-based message browser | `true` |
 | `EENGINE_CORS_ORIGIN` | string | none | CORS allowed origins (whitespace separated) | `https://app.example.com` |
 | `EENGINE_CORS_MAX_AGE` | duration | `60` seconds | How long a browser may cache a CORS preflight response. A bare number is milliseconds, so use a unit | `1h` |
@@ -706,7 +706,7 @@ EENGINE_LOG_LEVEL=trace
 EENGINE_CORS_ORIGIN="https://app.example.com https://admin.example.com"
 ```
 
-**Disable IMAP compression (for debugging):**
+**Disable IMAP compression (to read raw protocol logs, or to save memory on a large instance):**
 ```bash
 EENGINE_DISABLE_COMPRESSION=true
 ```

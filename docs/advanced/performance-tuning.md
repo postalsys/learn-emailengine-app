@@ -47,7 +47,7 @@ EmailEngine spawns a fixed pool of account worker threads that keep connections 
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `EENGINE_WORKERS` | `4` | Number of account worker threads. The value `cpus` means one thread per CPU core |
+| `EENGINE_WORKERS` | `4` | Number of account worker threads. The value `cpus` means one thread per CPU core; every worker count on this page accepts it since v2.85.0 |
 
 With 100 accounts and `EENGINE_WORKERS=4`, each thread handles about 25 accounts. On a machine with several cores, raise the count so that each core has fewer accounts to juggle:
 
@@ -88,7 +88,7 @@ Starting points:
 
 Every thread sends the main thread a heartbeat every 10 seconds. A thread that misses heartbeats for 30 seconds is logged as `Worker unhealthy - no heartbeat`; after 60 seconds it is logged as `Worker critically unresponsive, restarting` and terminated, and its accounts go through the reassignment described above.
 
-A thread stops sending heartbeats when something keeps it busy without a break, which on an account thread usually means too many accounts, a slow [route script](#webhook-routes-and-ai-processing), or a very large message being processed. Because every account of a terminated thread reconnects at once, an overloaded thread can end up restarting in a loop. If these log lines repeat, raise `EENGINE_WORKERS` and look at what the accounts on that thread were doing. The `unresponsive_workers` and `thread_starts` metrics show the same from [monitoring](#monitoring-and-metrics).
+Heartbeats are sent from the thread's event loop, so a thread that is merely busy with many accounts keeps sending them; it misses them when one piece of work runs synchronously for that long, such as a slow [route script](#webhook-routes-and-ai-processing) or processing a very large message. Because every account of a terminated thread reconnects at once, a thread that keeps hitting such work can end up restarting in a loop. Since v2.85.0 these log lines carry the thread's account count and its last event loop reading, and `Worker recovered` says how long the thread was silent. The `thread_event_loop_delay_max_seconds` gauge shows the delay building up, and `unresponsive_workers` and `thread_starts` show the restarts; see [monitoring](#monitoring-and-metrics).
 
 ## Reducing Per-Account Work
 
@@ -195,8 +195,8 @@ For every new message, the account's thread fetches what the `messageNew` webhoo
 
 The defaults put up to 2 MB of text into every queued `messageNew`. If your application fetches the message through the API anyway, turning `notifyText` off or lowering `notifyTextSize` is the largest single saving in both IMAP traffic and Redis memory. [messageNew](/docs/webhooks/messagenew) shows what each setting adds to the payload.
 
-:::warning[Event filters do not save this work]
-`webhookEvents` (the list of events to deliver) and `inboxNewOnly` are applied when the webhook worker delivers a queued event. Every event is still fetched, processed and queued first, so they reduce webhook requests, not IMAP or Redis load.
+:::warning[Event filters save the queue, not the fetching]
+Since v2.85.0, an event that `webhooksEnabled`, `webhookEvents` (the list of events to deliver) or `inboxNewOnly` rules out is not written to the queue, which saves Redis memory. The message content is still fetched and processed before that decision, so these settings do not reduce the IMAP work per new message; the settings in the table above do.
 :::
 
 The per-account `notifyFrom` setting skips messages older than a date, which helps when an account with a large history is added.
@@ -210,7 +210,7 @@ Two features run inside the message path and can hold up every account on a thre
 
 ## Queues
 
-EmailEngine queues every event, whether or not webhooks are enabled; the webhook worker decides at delivery time whether there is anywhere to send it. Queued jobs live in Redis until they are processed and, depending on the [retention settings](#queue-retention), for some time after.
+Since v2.85.0, an event is queued only when a delivery could send it: nothing is queued while `webhooksEnabled` is off, and the default webhook skips events that `webhookEvents` or `inboxNewOnly` rule out ([custom routes](/docs/webhooks/webhook-routing) decide for themselves). Before that, every event was queued and dropped by the webhook worker. The worker checks the same settings again at delivery, since they can change while a job waits. Queued jobs live in Redis until they are processed and, depending on the [retention settings](#queue-retention), for some time after.
 
 ### Webhook Delivery {#webhook-configuration}
 
@@ -543,10 +543,10 @@ The figures to watch while tuning, all available from the [Prometheus endpoint](
 - **Accounts by state** - `imap_connections{status}`, to see how long warm-up takes and whether accounts drop. Accounts not yet assigned to a thread are counted as `disconnected`
 - **Queue depth** - `queue_size{queue, state}`. Filter on `state="waiting"` for jobs not started yet, or sum over `state`. `queue="notify"` sizes the webhook workers, `queue="submit"` the submit workers
 - **Webhook request time** - `webhook_req`, a histogram in milliseconds
-- **Thread health** - `unresponsive_workers`, and `thread_starts` rising without a restart of the instance, which means threads are being replaced
+- **Thread health** - `thread_event_loop_delay_max_seconds{type, thread}` (since v2.85.0) for a thread whose event loop is falling behind, `unresponsive_workers`, and `thread_starts` rising without a restart of the instance, which means threads are being replaced
 - **Redis memory, latency and evictions** - `redis_memory_used_bytes`, `redis_latency`, `redis_evicted_keys_total`
 
-The default Node.js metrics (`nodejs_heap_size_used_bytes`, `nodejs_eventloop_lag_seconds` and the rest) describe the main thread only. The **Workers** page (`/admin/internals`) shows the heap in use per thread.
+The default Node.js metrics (`nodejs_heap_size_used_bytes`, `nodejs_eventloop_lag_seconds` and the rest) describe the main thread only. The **Workers** page (`/admin/internals`) shows the heap in use and the longest event loop delay per thread.
 
 `GET /health` answers without authentication once every account worker is up and Redis answers a write and read; it does not look at account states. `GET /v1/stats` returns the account state counts and queue depths as JSON. Both are described on [Monitoring](/docs/advanced/monitoring#health-check-endpoints).
 
@@ -590,13 +590,13 @@ The default Node.js metrics (`nodejs_heap_size_used_bytes`, `nodejs_eventloop_la
 ### Accounts Keep Reconnecting
 
 **Possible causes:**
-1. An account thread is terminated for missing heartbeats (`Worker critically unresponsive, restarting` in the log), and all its accounts reconnect
+1. An account thread is terminated for missing heartbeats (`Worker critically unresponsive, restarting` in the log), and all its accounts reconnect. The log line names the thread's account count and its last event loop reading
 2. A thread runs out of heap (`Worker thread error` with `ERR_WORKER_OUT_OF_MEMORY`)
 3. Individual accounts failing to connect or authenticate
 
 **Solutions:**
-- Raise `EENGINE_WORKERS` so each thread has fewer accounts
 - Shorten or remove slow [webhook route](#webhook-routes-and-ai-processing) functions
+- Raise `EENGINE_WORKERS` so fewer accounts reconnect with each restart
 - Check the per-thread heap on the **Workers** page and see [Node.js heap](#nodejs-heap)
 - For individual accounts, look at the account's [per-account log](/docs/advanced/logging#per-account-logs)
 

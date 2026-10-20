@@ -356,7 +356,7 @@ EmailEngine uses BullMQ to manage webhook delivery. To inspect webhook jobs:
    - **Active**: Currently being posted
    - **Delayed**: An attempt failed and the next one is waiting out the backoff
    - **Failed**: Every attempt is spent, or the failure was final
-   - **Completed**: The endpoint answered `2xx`, or the event was dropped before delivery because no target was set or the event is not in `webhookEvents`
+   - **Completed**: The endpoint answered `2xx`, or the event was dropped before delivery because no target was set, or because `webhooksEnabled`, `webhookEvents` or `inboxNewOnly` changed after it was queued. Since v2.85.0, an event those settings already rule out is not queued at all, so it does not appear here
 
 Failed webhooks are retained with full error details by default, so there is nothing to enable before inspecting them. To also keep successful deliveries, go to **Configuration > General** and set **Completed job history limit** to, for example, 100. See [Queue Management](/docs/advanced/queue-management#enable-job-retention).
 
