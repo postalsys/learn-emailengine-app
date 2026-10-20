@@ -33,7 +33,7 @@ The **management tools** operate the instance, and a token needs the `mcp-manage
 | Area | Tools |
 |------|-------|
 | Accounts | `create_account`, `update_account`, `delete_account`, `reconnect_account`, `resume_account`, `sync_account`, `flush_account`, `get_account_logs`, `create_account_setup_link`, `verify_account_settings`, `autodiscover_settings` |
-| Settings and queues | `get_settings`, `update_settings`, `get_queue`, `set_queue_state`, `cancel_queued_message` |
+| Settings and queues | `get_settings`, `update_settings`, `get_queue`, `set_queue_state`, `cancel_queued_message`, `retry_queued_message`, `send_queued_message_now` |
 | OAuth2 applications | `list_oauth2_apps`, `get_oauth2_app`, `create_oauth2_app`, `update_oauth2_app`, `delete_oauth2_app`, `verify_oauth2_app`, `get_pubsub_status` |
 | SMTP gateways | `list_gateways`, `get_gateway`, `create_gateway`, `update_gateway`, `delete_gateway` |
 | Templates, suppression lists, webhook routes | `create_template`, `update_template`, `delete_template`, `delete_account_templates`, `list_blocklists`, `get_blocklist`, `add_to_blocklist`, `remove_from_blocklist`, `list_webhook_routes`, `get_webhook_route` |
