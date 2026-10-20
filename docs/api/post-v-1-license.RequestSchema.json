@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"type":"object","properties":{"license":{"type":"string","description":"License file","example":"-----BEGIN LICENSE-----\r\n...","maxLength":10240}},"required":["license"],"title":"RegisterLicense"}}}}}

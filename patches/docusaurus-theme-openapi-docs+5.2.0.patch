@@ -1,0 +1,16 @@
+diff --git a/node_modules/docusaurus-theme-openapi-docs/lib/theme/ApiItem/index.js b/node_modules/docusaurus-theme-openapi-docs/lib/theme/ApiItem/index.js
+index 5d6e1b5..930ae69 100644
+--- a/node_modules/docusaurus-theme-openapi-docs/lib/theme/ApiItem/index.js
++++ b/node_modules/docusaurus-theme-openapi-docs/lib/theme/ApiItem/index.js
+@@ -114,8 +114,10 @@ function ApiItem(props) {
+         p.example ??
+         p.schema?.example ??
+         firstNamedExample;
++      // Patched (learn-emailengine-app): prefill only required parameters, so code samples
++      // show real path values but do not pass optional parameters the reader never chose
+       const initialized =
+-        prefill !== undefined ? { ...param, value: prefill } : param;
++        prefill !== undefined && p.required ? { ...param, value: prefill } : param;
+       paramsArray?.push(initialized);
+     });
+     const auth = (0, slice_1.createAuth)({

@@ -236,6 +236,18 @@ const sidebar: SidebarsConfig = {
           label: "Remove a message",
           className: "api-method delete",
         },
+        {
+          type: "doc",
+          id: "api/post-v-1-outbox-queueid-promote",
+          label: "Send a queued message now",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "api/post-v-1-outbox-queueid-retry",
+          label: "Retry a failed message",
+          className: "api-method post",
+        },
       ],
     },
     {
@@ -606,7 +618,7 @@ const sidebar: SidebarsConfig = {
     },
     {
       type: "category",
-      label: "Export (Beta)",
+      label: "Export",
       collapsible: true,
       collapsed: true,
       items: [

@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"type":"object","properties":{"gateway":{"anyOf":[{"type":"string","description":"Optional gateway ID","example":false,"nullable":true,"maxLength":256,"title":"DeliveryTestGateway"},{"type":"boolean","enum":[false]}]}},"title":"DeliveryStartRequest"}}}}}

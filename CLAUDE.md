@@ -362,27 +362,16 @@ MDN's own guidance is the tiebreaker for anything not covered here: https://deve
    - All scripts create output directories if they don't exist
    - Update script URLs to point to `http://localhost:3030` when using Docker container
 
-7. **Dependency Vulnerabilities Do Not Apply Here** - ignore every alert, and DO NOT upgrade React, marked, or related packages
+7. **Dependency Vulnerabilities Do Not Apply Here** - ignore every alert; upgrade for features, never for alerts
 
-   This site is published as a **static site** - dependency vulnerabilities reported by GitHub/npm have no runtime impact since no server-side code runs in production. Never report a Dependabot count as something to look at, raise it as a finding, or offer to fix it: for this repository the answer is always no.
+   This site is published as a **static site** - dependency vulnerabilities reported by GitHub/npm have no runtime impact since no server-side code runs in production. Never report a Dependabot count as something to look at, raise it as a finding, or offer to fix it: for this repository the answer is always no. Dismiss such alerts with reason "Vulnerable code is not actually used" (`not_used`).
 
-   **DO NOT upgrade these packages:**
-   - `react` / `react-dom` - Must stay on v18.x (OpenAPI theme incompatible with React 19)
-   - `marked` - Current version required for OpenAPI docs plugin compatibility
-   - `docusaurus-theme-openapi-docs` - Tightly coupled with specific React/marked versions
-   - Other OpenAPI-related dependencies
-
-   **Why:**
-   - The `docusaurus-plugin-openapi-docs` and `docusaurus-theme-openapi-docs` packages have strict peer dependency requirements
-   - Upgrading React to v19 breaks the OpenAPI theme rendering
-   - Upgrading marked breaks markdown processing in API docs
-   - These vulnerabilities are false positives for static sites - the vulnerable code paths are never executed
-
-   **If Dependabot/GitHub reports vulnerabilities:**
-   - This repository builds and deploys a **static site only** - the generated HTML, CSS, and JS in `build/` is the sole deployed artifact. There is no server-side runtime, no database, and no untrusted input processed in production. Every dependency lives in the build/dev toolchain and never runs in the deployed site.
-   - Therefore treat **all** Dependabot and dependency security alerts for this repository as **not relevant**. They are not exploitable in production. Dismiss them in GitHub (Security > Dependabot) with reason "Vulnerable code is not actually used" (`not_used`).
-   - Do not upgrade dependencies solely to clear such alerts - especially react, marked, and OpenAPI-related packages, which breaks the build (see above).
-   - Test thoroughly with `npm run build` after any dependency change you do make for other reasons.
+   **Upgrading Docusaurus and the OpenAPI packages** (verified 2026-10-20 with Docusaurus 3.10.2, docusaurus-plugin-openapi-docs and docusaurus-theme-openapi-docs 5.2.0, React 19). The old rule against upgrading React and the OpenAPI theme is lifted, but an upgrade needs the following, and every one of them fails loudly or silently if missed:
+   - `@docusaurus/faster` must be installed: since 3.10 the `future: { v4: true }` shortcut switches the Faster bundler on, and the build refuses to start without the package.
+   - `markdown.mdx1Compat.headingIds: true` in `docusaurus.config.ts`: the v4 shortcut also switches the MDX 1 compatibility options off, and the explicit heading IDs (`## Title {#anchor}`) used across the docs then fail to compile.
+   - `patches/docusaurus-theme-openapi-docs+<version>.patch` (applied by the `postinstall` patch-package script) makes the theme prefill only REQUIRED parameters in the request panel and code samples. Theme 5.x prefills every parameter from its default or example, which put a fabricated `cursor`, defaults such as `quota=false` and an empty `x-ee-timeout:` header into every curl sample. When the theme version changes, re-create the patch (edit `node_modules/docusaurus-theme-openapi-docs/lib/theme/ApiItem/index.js`, then `npx patch-package docusaurus-theme-openapi-docs`) or patch-package fails the install.
+   - Plugin 5.x writes each API page as an `.api.mdx` plus `ParamsDetails`, `RequestSchema` and `StatusCodes` JSON files; regenerate with `npx docusaurus clean-api-docs all && npx docusaurus gen-api-docs all` after a plugin upgrade and commit all of them.
+   - Verify an upgrade by building, serving and comparing API pages against the live site with the same spec (`npm run update-swagger` first): every named schema property must still render, the response code, schema/example and code-sample language tabs must switch, and the browser console must stay clean.
 
 8. **Never Hardcode the License Price** - Use the `Price` component
 
@@ -542,7 +531,7 @@ EmailEngine provides shortened download URLs that redirect to the latest GitHub 
   - `apiSidebar`: Auto-generated from OpenAPI spec
 
 - **`package.json`** - Dependencies and scripts
-  - Docusaurus 3.9.2
+  - Docusaurus 3.10.2
   - OpenAPI plugin and theme
   - Build, start, serve scripts
 
@@ -1000,6 +989,6 @@ This documentation was created by:
 ---
 
 **Last Updated:** October 1, 2026
-**Docusaurus Version:** 3.9.2
+**Docusaurus Version:** 3.10.2
 **EmailEngine API Version:** 2.82.0
 **Status:** Production Ready

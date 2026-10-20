@@ -1,0 +1,70 @@
+---
+id: post-v-1-outbox-queueid-retry
+title: "Retry a failed message"
+description: "Puts a message whose delivery failed for good back into the queue with a fresh set of delivery attempts. Only a failed message whose content is still stored can be retried: the content of the most recent failures is kept for this, within the bounds set by EENGINE_QUEUE_KEEP_FAILED_CONTENT and EENGINE_QUEUE_KEEP_FAILED_CONTENT_SIZE. A message that cannot be retried answers 409 with `code` NotFailed (the message is not in the failed state) or ContentGone (its content is no longer stored)."
+sidebar_label: "Retry a failed message"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+hide_send_button: true
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Retry a failed message"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/outbox/{queueId}/retry"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Puts a message whose delivery failed for good back into the queue with a fresh set of delivery attempts. Only a failed message whose content is still stored can be retried: the content of the most recent failures is kept for this, within the bounds set by EENGINE_QUEUE_KEEP_FAILED_CONTENT and EENGINE_QUEUE_KEEP_FAILED_CONTENT_SIZE. A message that cannot be retried answers 409 with `code` NotFailed (the message is not in the failed state) or ContentGone (its content is no longer stored).
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./post-v-1-outbox-queueid-retry.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./post-v-1-outbox-queueid-retry.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./post-v-1-outbox-queueid-retry.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

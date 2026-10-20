@@ -49,7 +49,7 @@ Actions, where they apply:
 - **Remove** takes an entry out of the queue, together with a message's content. An entry a worker is processing right now is left alone
 - **Pause** and **Resume** on a queue, and removing every completed or failed entry of it
 
-The exports queue is read-only here: an export is managed from its account page, where cancelling it also removes its file. The same actions are available over the API for outgoing messages: [`POST /v1/outbox/{queueId}/retry`](/docs/api/post-v-1-outbox-queue-id-retry), [`POST /v1/outbox/{queueId}/promote`](/docs/api/post-v-1-outbox-queue-id-promote) and [`DELETE /v1/outbox/{queueId}`](/docs/api/delete-v-1-outbox-queue-id), and pausing through [`PUT /v1/settings/queue/{queue}`](/docs/api/put-v-1-settings-queue-queue).
+The exports queue is read-only here: an export is managed from its account page, where cancelling it also removes its file. The same actions are available over the API for outgoing messages: [`POST /v1/outbox/{queueId}/retry`](/docs/api/post-v-1-outbox-queueid-retry), [`POST /v1/outbox/{queueId}/promote`](/docs/api/post-v-1-outbox-queueid-promote) and [`DELETE /v1/outbox/{queueId}`](/docs/api/delete-v-1-outbox-queueid), and pausing through [`PUT /v1/settings/queue/{queue}`](/docs/api/put-v-1-settings-queue-queue).
 
 ## Queue Types
 

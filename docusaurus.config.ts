@@ -92,6 +92,11 @@ const config: Config = {
 
   markdown: {
     mermaid: true,
+    // The v4 future flags switch the MDX 1 compatibility options off. Explicit heading IDs
+    // ({#anchor}) are used across the docs, so that one stays on.
+    mdx1Compat: {
+      headingIds: true,
+    },
     hooks: {
       onBrokenMarkdownLinks: 'warn',
       onBrokenMarkdownImages: 'warn',
