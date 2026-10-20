@@ -690,7 +690,7 @@ The `messageNew` webhook carries the same `attachments` array as the API, metada
 | `notifyAttachments` | `false` | Add a base64 `content` field to every attachment in the payload |
 | `notifyAttachmentSize` | unset | With `notifyAttachments` on, skip the content of any attachment whose `encodedSize` is above this many bytes. Unset means no limit |
 
-Inline images are a separate rule: when the payload includes the HTML body, every attachment the HTML references by `cid:` gets its `content` filled in as well, up to 2 MB encoded per attachment, whether or not `notifyAttachments` is set. That is what lets a webhook consumer render the body without a second request.
+Inline images follow the same rule as other attachments: an attachment the HTML references by `cid:` carries `content` only when `notifyAttachments` includes it. To render the body without a second request, turn on [`notifyWebSafeHtml`](/docs/receiving/web-safe-html): `text.html` then carries the sanitized HTML with every inline image up to 2 MB encoded embedded as a data URI.
 
 Anything not included stays reachable by `id` through the download endpoint. The [messageNew reference](/docs/webhooks/messagenew#attachment-options) documents the payload and the related text options.
 

@@ -225,7 +225,7 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
 
 With both enabled, `data.text.html` in a [messageNew](/docs/webhooks/messagenew) payload holds the web-safe version instead of the raw HTML and `data.text.webSafe` is `true`. The collapse marker appears here too, so a webhook consumer that renders message HTML needs to handle it the same way.
 
-Inline images are the one difference from the API response. The web-safe rendering is captured before `cid:` references are rewritten, so the webhook body keeps them as `cid:` and a consumer that wants the images has to fetch them from [the attachment endpoint](/docs/receiving/attachments) or re-fetch the text with `webSafeHtml=true`.
+Inline images of up to 2 MB encoded are embedded in the webhook body as data URIs. A larger image keeps its `cid:` reference, and a consumer that wants it fetches it from [the attachment endpoint](/docs/receiving/attachments). Before v2.82.0 the webhook body kept every reference as `cid:`.
 
 There is no separate field holding the raw HTML. If you need the original markup, fetch it from the API without `webSafeHtml`.
 
