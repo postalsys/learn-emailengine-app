@@ -31,6 +31,12 @@ const config: Config = {
       'data-domain': 'emailengine.app',
       'data-api': 'https://emailengine.app/a/e',
     },
+    // The docs assistant (the "Ask AI" button). Served by the emailengine-docs-chat service,
+    // which renders inside its own shadow root, so no styles leak in either direction.
+    {
+      src: 'https://chat.emailengine.app/widget.js',
+      defer: true,
+    },
   ],
 
   // Site verification and SEO meta tags
@@ -168,16 +174,6 @@ const config: Config = {
             versions: {},
           } satisfies any,
         } satisfies any,
-      },
-    ],
-    [
-      'docusaurus-biel',
-      {
-        project: 'ctd51bpdtp',
-        headerTitle: 'EmailEngine Assistant',
-        buttonPosition: 'bottom-right',
-        modalPosition: 'sidebar-right',
-        buttonStyle: 'dark',
       },
     ],
     [
