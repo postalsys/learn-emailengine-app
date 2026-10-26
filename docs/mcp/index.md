@@ -11,6 +11,10 @@ EmailEngine ships an MCP server. Point an AI agent at `POST /mcp`, hand it an ac
 
 [MCP](https://modelcontextprotocol.io/) is the protocol AI clients use to discover and call external tools. EmailEngine implements the server half of it, so any MCP-capable client - a desktop assistant, a coding agent, a web connector, your own application built on an agent framework - can work with email without you writing an integration for each one.
 
+:::tip[Looking for help with EmailEngine itself?]
+To let an agent search this documentation, the API reference and the EmailEngine source while it helps you set up an instance, connect the public [Documentation MCP Server](/docs/mcp/documentation-server) at `https://mcp.emailengine.app`. It needs no token and is separate from the endpoint described on this page.
+:::
+
 :::info[Beta]
 MCP support shipped in EmailEngine v2.79.2 (2026-08-22) as a labeled beta, and the management tools with their own `mcp-manage` scope followed in v2.80.1 (2026-09-10). The endpoint is off by default, and the tool set may still change between releases. Everything below is stable enough to build on, but pin a version if you need the tool list to be frozen.
 :::
@@ -170,6 +174,7 @@ If the response lists fewer tools than you expect, that is the per-credential fi
 - [Tools Reference](/docs/mcp/tools) - every tool, its arguments and what it returns
 - [Access Control](/docs/mcp/access-control) - scopes, access levels, account binding and what an agent can never reach
 - [Protocol Reference](/docs/mcp/protocol) - protocol revisions, methods, error codes and the OAuth endpoints, for client developers
+- [Documentation MCP Server](/docs/mcp/documentation-server) - the public server at mcp.emailengine.app for searching the documentation and source code
 
 ## See Also
 

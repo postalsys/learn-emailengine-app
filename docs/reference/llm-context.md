@@ -228,6 +228,8 @@ Webhook routes are read-only through the API - create and edit them in the Email
 
 EmailEngine also serves the Model Context Protocol, so an AI agent can call a curated tool set instead of the REST API. Off by default; an admin enables it under Configuration > MCP (`mcpEnabled` setting). Full docs: [MCP for AI Agents](/docs/mcp).
 
+Not to be confused with the public documentation MCP server at `https://mcp.emailengine.app` (no authentication, read-only): its tools `search_docs`, `read_page`, `get_api_operation`, `search_code` and `read_source` search this documentation, the OpenAPI spec and the source of the latest release. See [Documentation MCP Server](/docs/mcp/documentation-server).
+
 | Aspect | Details |
 |--------|---------|
 | Endpoint | `POST /mcp` |
