@@ -124,6 +124,58 @@ emailengine version
 
    The packaged builds (Docker image, macOS installer, Linux and Windows binaries) bundle their own Node.js runtime.
 
+#### EmailEngine Hangs Instead of Exiting
+
+**Symptom:** after a fatal error, or when it is told to stop, the EmailEngine process stays alive but does nothing. It uses no CPU, writes no further log lines and no longer answers the API, and because it never exits, Docker or systemd does not restart it.
+
+**Cause:** a bug in Node.js 24 and newer ([nodejs/node#64274](https://github.com/nodejs/node/issues/64274)). While the process exits, Node.js waits for the background threads V8 compiles JavaScript on, and one of them can be waiting for the exiting thread at the same moment, so neither continues. It is rare, and most likely shortly after startup, for example when EmailEngine exits because Redis is not reachable yet. A stop that hangs is ended by `docker stop` or systemd once their timeout runs out; a fatal exit that hangs is never restarted.
+
+**Confirming it:** on Linux, `grep -E "State|Threads" /proc/<pid>/status` shows a sleeping process with only a few threads, and a backtrace (`gdb -p <pid> -batch -ex "thread apply all bt"`) shows the main thread in `NodePlatform::Shutdown` and a `V8Worker` thread in `CollectionBarrier::AwaitCollectionBackground`.
+
+**Workaround:** start Node.js with background compilation turned off. The two flags have to be on the `node` command line: Node.js refuses them in `NODE_OPTIONS`, and setting them after startup has no effect.
+
+```bash
+# npm global install
+node --no-concurrent-recompilation --no-concurrent-sparkplug "$(which emailengine)"
+
+# Source checkout, from its directory
+node --no-concurrent-recompilation --no-concurrent-sparkplug server.js
+```
+
+```ini
+[Service]
+# Replaces ExecStart=/usr/bin/npm start
+ExecStart=/usr/bin/node --no-concurrent-recompilation --no-concurrent-sparkplug server.js
+```
+
+For Docker, replace the container's command; the image's entrypoint stays as it is:
+
+```bash
+docker run -d \
+  --name emailengine \
+  -p 3000:3000 \
+  -e EENGINE_REDIS="redis://redis-host:6379/8" \
+  postalsys/emailengine:v2 \
+  node --no-concurrent-recompilation --no-concurrent-sparkplug /emailengine/server.js
+```
+
+```yaml
+services:
+  emailengine:
+    image: postalsys/emailengine:v2
+    command:
+      [
+        "node",
+        "--no-concurrent-recompilation",
+        "--no-concurrent-sparkplug",
+        "/emailengine/server.js",
+      ]
+```
+
+The prebuilt binaries cannot take these flags.
+
+The workaround has a cost. Every thread then compiles its code itself instead of in the background, so it runs slower until that code is optimized: parsing messages on two CPUs took about 35% longer at first, and the difference fell to about 5% as the code warmed up. Use it on an instance that has shown this hang, and drop it once a Node.js release carries the fix.
+
 #### Accounts Stay Disconnected
 
 **Symptom:** Most or all accounts show `disconnected` or `connectError` and do not recover
