@@ -471,7 +471,7 @@ Note: If automatic renewal fails on a regular plan, an invoice is generated for 
 
 **Q: What currency is pricing in?**
 
-A: EU customers are billed in euros, customers elsewhere in US dollars. See https://postalsys.com/plans for the price in your currency. Credit card payments auto-convert.
+A: Pricing is in EUR or USD. The default follows your location (EUR in the EU), and you can choose either in your billing details until your first payment fixes it. See https://postalsys.com/plans for the price in each currency.
 
 ## See Also
 

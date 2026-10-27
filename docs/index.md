@@ -210,7 +210,7 @@ Redis, and Node.js 20 or newer when running from source; the packaged builds car
 
 EmailEngine requires a license key for production use. Get a license:
 
-- **[14-Day Free Trial](/docs/licensing)** - Full features, no credit card required, started from your own EmailEngine dashboard
+- **[14-Day Free Trial](/docs/licensing#free-trial)** - Full features, no credit card required, started from your own EmailEngine dashboard
 - **[Production License](https://postalsys.com/plans)** - For commercial use<Price />
 
 ---
