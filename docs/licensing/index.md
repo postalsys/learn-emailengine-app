@@ -190,21 +190,16 @@ _A fresh, unlicensed installation shows the "Start a 14-day trial" button at the
 
 1. Log in to your account at [https://postalsys.com/](https://postalsys.com/)
 2. Navigate to **Billing** section: [https://postalsys.com/billing/info](https://postalsys.com/billing/info)
-3. Add billing details:
-   - Company name (required)
-   - Billing address
-   - Tax information (if applicable)
-4. Add payment method:
-   - Credit card, or
-   - SEPA direct debit
+3. Add billing details: name, billing email, address, country, preferred currency (EUR or USD), and optionally an organisation name and an EU VAT number
+4. Add a payment method under **Payment methods**
 
 ### Step 4: Subscribe to Plan
 
-1. Go to [https://postalsys.com/plans](https://postalsys.com/plans)
+1. Go to [https://postalsys.com/billing](https://postalsys.com/billing) (or [https://postalsys.com/plans](https://postalsys.com/plans) before signing in)
 2. Review available plans and pricing
-3. Select the plan that fits your needs
-4. Click "Subscribe"
-5. Confirm payment
+3. Click **Select plan** on the plan that fits your needs
+4. Check your billing details and click **Save and continue**
+5. Review the order summary and click **Confirm plan**
 
 **Upon successful payment:**
 
@@ -216,11 +211,14 @@ _A fresh, unlicensed installation shows the "Start a 14-day trial" button at the
 
 1. Log in to [https://postalsys.com/](https://postalsys.com/)
 2. Navigate to **License Keys** section: [https://postalsys.com/licenses](https://postalsys.com/licenses)
-3. Click "Generate New License Key"
-4. Optionally add a label (e.g., "Production Server", "Staging")
-5. Copy the generated license key
+3. Click **Create license key**
+4. Choose the application and enter a hostname or an environment label (e.g., "emailengine.example.com", "production")
+5. Click **Create license key**
+6. Click **Download** next to the new key to save it as a `license-KEYID.txt` file
 
-**You can generate as many license keys as you need at no additional cost.**
+The page only lets you copy the short license ID, so use the downloaded file: it holds the whole key between `-----BEGIN LICENSE-----` and `-----END LICENSE-----` lines.
+
+**You can generate as many license keys as you need at no additional cost.** There is no regenerate option: to replace a key, create a new one, install it, then delete the old one.
 
 ### Step 6: Activate License in EmailEngine
 
@@ -297,9 +295,11 @@ The response is the same object `GET /v1/license` returns:
 You can invite teammates to help manage license keys and billing:
 
 1. Log in to [https://postalsys.com/](https://postalsys.com/)
-2. Navigate to **Manage Team**
-3. Click "Invite Member"
-4. Enter their email address
+2. Navigate to **Team**: [https://postalsys.com/team](https://postalsys.com/team)
+3. Click **Invite member**
+4. Enter their email address and click **Send invitation**
+
+The invitation is valid for 28 days. Your plan sets the number of seats, and pending invitations count towards them. There are no roles: every member has full access to the subscription, license keys and invoices.
 
 ### Annual Renewal
 
