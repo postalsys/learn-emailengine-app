@@ -46,7 +46,7 @@ T1JfUFVCTElDX0RFTU8=
 emailengine
 ```
 
-**This is the recommended format** - copy the license key exactly as shown in your account at https://postalsys.com/.
+**This is the recommended format**: use the contents of the `license-KEYID.txt` file downloaded from https://postalsys.com/licenses (see [Generate License Keys](/docs/licensing#step-5-generate-license-keys)).
 
 ### Format 2: Exported License Key
 

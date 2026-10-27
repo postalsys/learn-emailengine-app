@@ -182,24 +182,23 @@ _A fresh, unlicensed installation shows the "Start a 14-day trial" button at the
 
 ### Step 2: Create Account (When Ready to Purchase)
 
-1. Visit [https://postalsys.com/](https://postalsys.com/)
-2. Click "Sign Up"
-3. Provide email and password
+1. Visit [https://postalsys.com/join](https://postalsys.com/join)
+2. Enter your name, organisation, a business email address and a password of at least 12 characters
+3. Click **Sign up** and confirm your email address from the verification email
 
 ### Step 3: Add Billing Information
 
 1. Log in to your account at [https://postalsys.com/](https://postalsys.com/)
 2. Navigate to **Billing** section: [https://postalsys.com/billing/info](https://postalsys.com/billing/info)
 3. Add billing details: name, billing email, address, country, preferred currency (EUR or USD), and optionally an organisation name and an EU VAT number
-4. Add a payment method under **Payment methods**
+4. Add a payment method (credit card or SEPA direct debit) under **Payment methods**
 
 ### Step 4: Subscribe to Plan
 
 1. Go to [https://postalsys.com/billing](https://postalsys.com/billing) (or [https://postalsys.com/plans](https://postalsys.com/plans) before signing in)
-2. Review available plans and pricing
-3. Click **Select plan** on the plan that fits your needs
-4. Check your billing details and click **Save and continue**
-5. Review the order summary and click **Confirm plan**
+2. Click **Select plan** on the plan that fits your needs
+3. Check your billing details and click **Save and continue**
+4. Review the order summary and click **Confirm plan**
 
 **Upon successful payment:**
 
@@ -216,7 +215,7 @@ _A fresh, unlicensed installation shows the "Start a 14-day trial" button at the
 5. Click **Create license key**
 6. Click **Download** next to the new key to save it as a `license-KEYID.txt` file
 
-The page only lets you copy the short license ID, so use the downloaded file: it holds the whole key between `-----BEGIN LICENSE-----` and `-----END LICENSE-----` lines.
+The page only shows the short license ID; the downloaded file holds the full key.
 
 **You can generate as many license keys as you need at no additional cost.** There is no regenerate option: to replace a key, create a new one, install it, then delete the old one.
 
