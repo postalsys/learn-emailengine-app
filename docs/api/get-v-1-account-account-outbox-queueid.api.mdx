@@ -1,0 +1,70 @@
+---
+id: get-v-1-account-account-outbox-queueid
+title: "Get queued message"
+description: "Gets a queued message in the Outbox. Credentials are masked: stored passwords, the credentials in any proxy or webhook URL, and the values of custom webhook headers all read back as '******'. A masked value is not the stored one - leave the field out of an update rather than writing it back, otherwise the mask replaces the credential."
+sidebar_label: "Get queued message"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+hide_send_button: true
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get queued message"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/account/{account}/outbox/{queueId}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Gets a queued message in the Outbox. Credentials are masked: stored passwords, the credentials in any proxy or webhook URL, and the values of custom webhook headers all read back as "******". A masked value is not the stored one - leave the field out of an update rather than writing it back, otherwise the mask replaces the credential.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-v-1-account-account-outbox-queueid.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-v-1-account-account-outbox-queueid.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-v-1-account-account-outbox-queueid.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

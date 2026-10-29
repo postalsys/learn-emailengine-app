@@ -1,0 +1,70 @@
+---
+id: put-v-1-account-account-resume
+title: "Resume syncing"
+description: "Turns an account back on after EmailEngine switched it off following repeated authentication failures (`authFailureDisabledAt` on the account), and requests a reconnect. The same action as 'Resume syncing' in the admin UI. Only lifts that automatic switch: an account that was not switched off by EmailEngine, including one an operator set to send-only, answers 409 with `code` NotSwitchedOff. If the stored credentials are still refused, the account is switched off again after the next run of failures, so fix the credentials first.<br/><br/>The request only schedules the work and returns before it finishes. Watch the account state, or the accountInitialized and authenticationError webhooks, for the result."
+sidebar_label: "Resume syncing"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "put api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+hide_send_button: true
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Resume syncing"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"put"}
+  path={"/v1/account/{account}/resume"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Turns an account back on after EmailEngine switched it off following repeated authentication failures (`authFailureDisabledAt` on the account), and requests a reconnect. The same action as "Resume syncing" in the admin UI. Only lifts that automatic switch: an account that was not switched off by EmailEngine, including one an operator set to send-only, answers 409 with `code` NotSwitchedOff. If the stored credentials are still refused, the account is switched off again after the next run of failures, so fix the credentials first.<br/><br/>The request only schedules the work and returns before it finishes. Watch the account state, or the accountInitialized and authenticationError webhooks, for the result.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./put-v-1-account-account-resume.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./put-v-1-account-account-resume.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./put-v-1-account-account-resume.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

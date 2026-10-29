@@ -1,0 +1,70 @@
+---
+id: post-v-1-account-account-webhooks-failed-delivery-retry
+title: "Retry a failed webhook delivery"
+description: "Puts a webhook delivery that failed for good back into the queue with a fresh set of attempts. It is sent to the target the event was queued for, with the payload it was queued with. A delivery that is not in the failed state answers 409 with `code` NotFailed."
+sidebar_label: "Retry a failed webhook delivery"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+hide_send_button: true
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Retry a failed webhook delivery"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/account/{account}/webhooks/failed/{delivery}/retry"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Puts a webhook delivery that failed for good back into the queue with a fresh set of attempts. It is sent to the target the event was queued for, with the payload it was queued with. A delivery that is not in the failed state answers 409 with `code` NotFailed.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./post-v-1-account-account-webhooks-failed-delivery-retry.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./post-v-1-account-account-webhooks-failed-delivery-retry.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./post-v-1-account-account-webhooks-failed-delivery-retry.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

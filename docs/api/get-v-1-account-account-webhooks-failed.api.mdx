@@ -1,0 +1,70 @@
+---
+id: get-v-1-account-account-webhooks-failed
+title: "List failed webhook deliveries of an account"
+description: "Lists webhook deliveries that failed for good, most recent first: every attempt failed, or the failure was permanent. Each entry says what the event was about and why the last attempt failed; the event payload itself is not included. With an account filter, the most recent failed deliveries of the whole queue are scanned for that account, and `scanLimited` says when the scan stopped before the end of the queue. How many failed deliveries are kept is set by EENGINE_QUEUE_KEEP_FAILED and EENGINE_QUEUE_KEEP_FAILED_AGE."
+sidebar_label: "List failed webhook deliveries of an account"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+hide_send_button: true
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List failed webhook deliveries of an account"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/account/{account}/webhooks/failed"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Lists webhook deliveries that failed for good, most recent first: every attempt failed, or the failure was permanent. Each entry says what the event was about and why the last attempt failed; the event payload itself is not included. With an account filter, the most recent failed deliveries of the whole queue are scanned for that account, and `scanLimited` says when the scan stopped before the end of the queue. How many failed deliveries are kept is set by EENGINE_QUEUE_KEEP_FAILED and EENGINE_QUEUE_KEEP_FAILED_AGE.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-v-1-account-account-webhooks-failed.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-v-1-account-account-webhooks-failed.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-v-1-account-account-webhooks-failed.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

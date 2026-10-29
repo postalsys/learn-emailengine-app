@@ -1,0 +1,70 @@
+---
+id: get-v-1-account-account-outbox
+title: "List queued messages of an account"
+description: "Lists the messages an account has in the Outbox: scheduled and waiting messages, those being delivered, and failed messages whose content is still stored for a retry. Reachable with an access token bound to the account. Credentials are masked: stored passwords, the credentials in any proxy or webhook URL, and the values of custom webhook headers all read back as '******'. A masked value is not the stored one - leave the field out of an update rather than writing it back, otherwise the mask replaces the credential."
+sidebar_label: "List queued messages of an account"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "get api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+hide_send_button: true
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"List queued messages of an account"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/v1/account/{account}/outbox"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Lists the messages an account has in the Outbox: scheduled and waiting messages, those being delivered, and failed messages whose content is still stored for a retry. Reachable with an access token bound to the account. Credentials are masked: stored passwords, the credentials in any proxy or webhook URL, and the values of custom webhook headers all read back as "******". A masked value is not the stored one - leave the field out of an update rather than writing it back, otherwise the mask replaces the credential.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-v-1-account-account-outbox.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-v-1-account-account-outbox.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-v-1-account-account-outbox.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

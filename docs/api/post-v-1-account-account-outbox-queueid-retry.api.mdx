@@ -1,0 +1,70 @@
+---
+id: post-v-1-account-account-outbox-queueid-retry
+title: "Retry a failed message"
+description: "Puts a message whose delivery failed for good back into the queue with a fresh set of delivery attempts. Only a failed message whose content is still stored can be retried: the content of the most recent failures is kept for this, within the bounds set by the queueKeepFailedContent and queueKeepFailedContentSize settings (or EENGINE_QUEUE_KEEP_FAILED_CONTENT and EENGINE_QUEUE_KEEP_FAILED_CONTENT_SIZE, which win when set). A message that cannot be retried answers 409 with `code` NotFailed (the message is not in the failed state) or ContentGone (its content is no longer stored)."
+sidebar_label: "Retry a failed message"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+hide_send_button: true
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Retry a failed message"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/account/{account}/outbox/{queueId}/retry"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Puts a message whose delivery failed for good back into the queue with a fresh set of delivery attempts. Only a failed message whose content is still stored can be retried: the content of the most recent failures is kept for this, within the bounds set by the queueKeepFailedContent and queueKeepFailedContentSize settings (or EENGINE_QUEUE_KEEP_FAILED_CONTENT and EENGINE_QUEUE_KEEP_FAILED_CONTENT_SIZE, which win when set). A message that cannot be retried answers 409 with `code` NotFailed (the message is not in the failed state) or ContentGone (its content is no longer stored).
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./post-v-1-account-account-outbox-queueid-retry.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./post-v-1-account-account-outbox-queueid-retry.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./post-v-1-account-account-outbox-queueid-retry.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

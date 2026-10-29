@@ -1,0 +1,70 @@
+---
+id: post-v-1-webhooks-test
+title: "Send a test webhook"
+description: "Posts a `test` event to the global webhook target, or with `webhookRoute` set to the target of that custom route, with the custom headers configured for it and signed like a real delivery, and reports whether the receiver accepted it. The target is never taken from the request."
+sidebar_label: "Send a test webhook"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+hide_send_button: true
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Send a test webhook"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/v1/webhooks/test"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Posts a `test` event to the global webhook target, or with `webhookRoute` set to the target of that custom route, with the custom headers configured for it and signed like a real delivery, and reports whether the receiver accepted it. The target is never taken from the request.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./post-v-1-webhooks-test.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./post-v-1-webhooks-test.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./post-v-1-webhooks-test.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

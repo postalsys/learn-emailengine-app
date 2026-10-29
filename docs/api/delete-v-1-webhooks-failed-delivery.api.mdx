@@ -1,0 +1,70 @@
+---
+id: delete-v-1-webhooks-failed-delivery
+title: "Remove a failed webhook delivery"
+description: "Removes a webhook delivery that failed for good from the queue, so it is not kept for inspection or a retry. A delivery that is not in the failed state answers 409 with `code` NotFailed."
+sidebar_label: "Remove a failed webhook delivery"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "delete api-method"
+info_path: docs/api/emailengine-api
+custom_edit_url: null
+hide_send_button: true
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Remove a failed webhook delivery"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"delete"}
+  path={"/v1/webhooks/failed/{delivery}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Removes a webhook delivery that failed for good from the queue, so it is not kept for inspection or a retry. A delivery that is not in the failed state answers 409 with `code` NotFailed.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./delete-v-1-webhooks-failed-delivery.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./delete-v-1-webhooks-failed-delivery.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./delete-v-1-webhooks-failed-delivery.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

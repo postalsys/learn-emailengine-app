@@ -56,6 +56,12 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "api/put-v-1-account-account-resume",
+          label: "Resume syncing",
+          className: "api-method put",
+        },
+        {
+          type: "doc",
           id: "api/get-v-1-account-account-serversignatures",
           label: "List Account Signatures",
           className: "api-method get",
@@ -218,6 +224,36 @@ const sidebar: SidebarsConfig = {
       collapsible: true,
       collapsed: true,
       items: [
+        {
+          type: "doc",
+          id: "api/get-v-1-account-account-outbox",
+          label: "List queued messages of an account",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-account-account-outbox-queueid",
+          label: "Get queued message",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/delete-v-1-account-account-outbox-queueid",
+          label: "Remove a message",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "api/post-v-1-account-account-outbox-queueid-promote",
+          label: "Send a queued message now",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "api/post-v-1-account-account-outbox-queueid-retry",
+          label: "Retry a failed message",
+          className: "api-method post",
+        },
         {
           type: "doc",
           id: "api/get-v-1-outbox",
@@ -408,6 +444,12 @@ const sidebar: SidebarsConfig = {
           label: "Return stored logs for an account",
           className: "api-method get",
         },
+        {
+          type: "doc",
+          id: "api/delete-v-1-logs-account",
+          label: "Clear stored logs for an account",
+          className: "api-method delete",
+        },
       ],
     },
     {
@@ -458,6 +500,24 @@ const sidebar: SidebarsConfig = {
       items: [
         {
           type: "doc",
+          id: "api/get-v-1-account-account-webhooks-failed",
+          label: "List failed webhook deliveries of an account",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/delete-v-1-account-account-webhooks-failed-delivery",
+          label: "Remove a failed webhook delivery",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "api/post-v-1-account-account-webhooks-failed-delivery-retry",
+          label: "Retry a failed webhook delivery",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
           id: "api/get-v-1-webhookroutes",
           label: "List webhook routes",
           className: "api-method get",
@@ -467,6 +527,30 @@ const sidebar: SidebarsConfig = {
           id: "api/get-v-1-webhookroutes-webhookroute-webhookroute",
           label: "Get webhook route information",
           className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/get-v-1-webhooks-failed",
+          label: "List failed webhook deliveries",
+          className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/delete-v-1-webhooks-failed-delivery",
+          label: "Remove a failed webhook delivery",
+          className: "api-method delete",
+        },
+        {
+          type: "doc",
+          id: "api/post-v-1-webhooks-failed-delivery-retry",
+          label: "Retry a failed webhook delivery",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
+          id: "api/post-v-1-webhooks-test",
+          label: "Send a test webhook",
+          className: "api-method post",
         },
       ],
     },
@@ -546,6 +630,12 @@ const sidebar: SidebarsConfig = {
         },
         {
           type: "doc",
+          id: "api/post-v-1-gateway-gateway-verify",
+          label: "Verify SMTP gateway",
+          className: "api-method post",
+        },
+        {
+          type: "doc",
           id: "api/put-v-1-gateway-edit-gateway",
           label: "Update gateway info",
           className: "api-method put",
@@ -587,6 +677,12 @@ const sidebar: SidebarsConfig = {
           id: "api/get-v-1-blocklists",
           label: "List blocklists",
           className: "api-method get",
+        },
+        {
+          type: "doc",
+          id: "api/delete-v-1-blocklists-listid",
+          label: "Delete a blocklist",
+          className: "api-method delete",
         },
       ],
     },
