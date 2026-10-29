@@ -40,7 +40,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | **List accounts** | `GET /v1/accounts` | `page`, `pageSize`, `state` |
 | **Get account** | `GET /v1/account/{account}` | - |
 | **Update account** | `PUT /v1/account/{account}` | Partial updates supported |
-| **Delete account** | `DELETE /v1/account/{account}` | optional `?revoke=true` to revoke the OAuth2 grant |
+| **Delete account** | `DELETE /v1/account/{account}` | optional `?revoke=true` to also revoke the OAuth2 grant, or `?revoke=required` to delete only once the grant is revoked (`RevocationNotConfirmed` otherwise, since 2.87.0); the outcome is reported under `revocation` |
 | **Reconnect account** | `PUT /v1/account/{account}/reconnect` | `reconnect: true`; answers `{"reconnect": false}` when syncing was switched off after repeated authentication failures |
 | **Resume account** | `PUT /v1/account/{account}/resume` | No body. Lifts the switch-off after repeated authentication failures and reconnects; `409` `NotSwitchedOff` when there is none (since 2.85.0) |
 | **Send email** | `POST /v1/account/{account}/submit` | `to`, `subject`, `text`/`html` |
@@ -737,6 +737,7 @@ Since 2.79.4 both re-authorization through the hosted form and `PUT /v1/account/
 | `SMTPUnavailable` | 404, the account has no SMTP or OAuth2 configuration to send with |
 | `AccountAlreadyExists` | 400, the OAuth2 user is already bound to another account under the same OAuth2 application (re-registering an account ID is an update, not an error) |
 | `MissingServerExtension` | 422, the IMAP server lacks an extension the request needs |
+| `RevocationNotConfirmed` | 409 or 502, `DELETE /v1/account/{account}?revoke=required` and the grant was not revoked; the account is kept. 502 can be retried (since 2.87.0) |
 | `NotYetConnected` | 503, the account has not connected yet |
 | `AuthenticationFails` | 503, the account's credentials are rejected |
 | `ConnectionError` | 503, the mail server cannot be reached |
@@ -884,6 +885,7 @@ The `POST /v1/account/{account}/submit` endpoint accepts these key parameters:
 | `dryRun` | boolean | Preview without sending |
 | `gateway` | string | Use specific SMTP gateway |
 | `deliveryAttempts` | number | Max retry attempts |
+| `otp` | object | One-time passcode `{code, origin}`, sent as an `OTP-Token` header. Not with `useStructuredFormat`. Experimental, since 2.87.0 |
 
 To send an email that already exists as a draft, use `POST /v1/account/{account}/message/{message}/submit` with the draft's message ID instead of composing content. The optional body accepts the delivery options above (`envelope`, `copy`, `sentMailPath`, `sendAt`, `deliveryAttempts`, `gateway`, `dsn`, `proxy`, `localAddress`) but no content fields - the draft is sent as stored. Gmail and MS Graph accounts send it with the provider's native draft-send call; the draft is removed after sending on all account types.
 

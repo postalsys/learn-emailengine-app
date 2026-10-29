@@ -420,7 +420,7 @@ A Gmail API or MS Graph account calls its API regularly even when idle (the watc
 
 **Revoking Access:**
 
-Deleting a Gmail account from EmailEngine revokes its token at Google; a service-account application holds no per-user grant, so there is nothing to revoke there. A Microsoft account's tokens are only removed from Redis, and the user revokes the grant at https://myapps.microsoft.com. An account that is deleted and added again goes through a new consent flow.
+Deleting an account removes its tokens from Redis but leaves the grant at the provider in place. Pass `revoke=true` or `revoke=required` to `DELETE /v1/account/{account}` to have EmailEngine revoke a Gmail grant at Google first; `required` keeps the account when Google does not confirm the revocation (since v2.87.0). A service-account application holds no per-user grant, so there is nothing to revoke there. Microsoft offers no endpoint that revokes a single grant, so the user revokes it at https://myapps.microsoft.com. See [Deleting accounts](/docs/accounts/managing-accounts#deleting-accounts). An account that is deleted and added again goes through a new consent flow.
 
 **Your Responsibility:**
 

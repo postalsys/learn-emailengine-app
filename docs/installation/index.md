@@ -37,7 +37,7 @@ node server.js
 
 ## Verifying a Download
 
-Every release carries a `hashes.txt` asset next to the binaries. It is a PGP-signed message listing the SHA-256 digest of each file, the commit the release was built from, and the Node.js version bundled into the binaries:
+Every release carries a `hashes.txt` asset next to the binaries. It is a PGP-signed message listing the SHA-256 digest of each file and the commit the release was built from. Its `Built from` line also names the Node.js version of the build machine; that is not the Node.js bundled into the binaries, which a running instance reports as `node` in [`GET /v1/stats`](/docs/api/get-v-1-stats) (see [Node.js Runtime](/docs/deployment/security#nodejs-runtime)):
 
 ```bash
 curl -LO https://go.emailengine.app/emailengine.tar.gz

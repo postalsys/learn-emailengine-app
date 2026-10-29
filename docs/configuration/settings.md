@@ -129,7 +129,7 @@ Every key `POST /v1/settings` accepts, as listed in the [OpenAPI spec](/docs/api
 | `webhooks` | string | unset | Target URL for webhook POST requests |
 | `webhookEvents` | array of strings | unset (nothing is delivered) | Allowlist of event names; `["*"]` delivers every event |
 | `webhooksCustomHeaders` | array of `{key, value}` | unset | Extra HTTP headers sent with every webhook |
-| `notifyHeaders` | array of strings | unset | Email headers to include in webhook payloads |
+| `notifyHeaders` | array of strings | unset | Email headers to include in webhook payloads. Listing `otp-token` also adds the `otp` field, the one-time passcode, to `messageNew` payloads (since v2.87.0) |
 | `notifyText` | boolean | `true` | Include message text in webhook payloads |
 | `notifyTextSize` | integer | `2097152` | Maximum text size in webhook payloads, in bytes |
 | `notifyWebSafeHtml` | boolean | off | Replace the HTML body with a [web-safe](/docs/receiving/web-safe-html) rendering |

@@ -901,7 +901,7 @@ When requesting support, provide:
 
 - **Documentation:** [learn.emailengine.app](https://learn.emailengine.app)
 - **GitHub Issues:** [github.com/postalsys/emailengine/issues](https://github.com/postalsys/emailengine/issues)
-- **Email support:** [support@emailengine.app](mailto:support@emailengine.app), see [Support](/docs/support)
+- **Email support:** [support@postalsys.com](mailto:support@postalsys.com), see [Support](/docs/support)
 
 ## See Also
 

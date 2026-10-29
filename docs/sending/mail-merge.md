@@ -341,6 +341,29 @@ Override the Message-ID for specific recipients:
 
 **Note:** Each mailMerge entry accepts a single recipient address. For sending to multiple recipients, use separate merge entries.
 
+### Per-Recipient One-Time Passcodes
+
+Each entry can carry its own `otp`, sent as that recipient's `OTP-Token` header (since v2.87.0). An entry's `otp` overrides one set on the message. See [One-Time Passcodes](/docs/sending/basic-sending#one-time-passcodes) for the fields:
+
+```json
+{
+  "subject": "Your sign-in code",
+  "text": "Your sign-in code is {{params.code}}.",
+  "mailMerge": [
+    {
+      "to": { "address": "alice@example.com" },
+      "params": { "code": "482913" },
+      "otp": { "code": "482913", "origin": "https://example.com" }
+    },
+    {
+      "to": { "address": "bob@example.com" },
+      "params": { "code": "730154" },
+      "otp": { "code": "730154", "origin": "https://example.com" }
+    }
+  ]
+}
+```
+
 ### Scheduled Mail Merge
 
 Schedule the entire merge for future sending:

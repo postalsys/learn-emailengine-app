@@ -723,14 +723,73 @@ curl -X DELETE https://emailengine.example.com/v1/account/user123 \
 
 **Revoking the OAuth2 grant on delete:**
 
-Pass `revoke=true` to also revoke the upstream OAuth2 grant at the provider before the account is removed:
+Without `revoke`, deleting an account leaves the OAuth2 grant at the provider untouched. The `revoke` query parameter asks the provider to revoke it first, and takes two values:
+
+| Value | Effect |
+|-------|--------|
+| `true` | Attempts the revocation, then deletes the account whatever the outcome |
+| `required` | Deletes the account only once the grant is gone. Otherwise the request fails and the account and its credentials are kept, so it can be retried (since v2.87.0) |
 
 ```bash
-curl -X DELETE "https://emailengine.example.com/v1/account/user123?revoke=true" \
+curl -X DELETE "https://emailengine.example.com/v1/account/user123?revoke=required" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-This is currently supported for individual Gmail OAuth grants. For Gmail service-account integrations, Outlook, and non-OAuth2 accounts the flag is a no-op. If revocation fails, the failure is logged and the account is still deleted.
+When `revoke` is set, the response reports the outcome under `revocation` (since v2.87.0; before that the response was the same whatever the provider answered):
+
+```json
+{
+  "account": "user123",
+  "deleted": true,
+  "revocation": {
+    "attempted": true,
+    "revoked": true,
+    "status": 200
+  }
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `attempted` | Whether the provider was asked to revoke the grant |
+| `revoked` | Whether the provider confirmed the revocation |
+| `status` | HTTP status of the provider's answer, when one arrived |
+| `reason` | Why the grant was not revoked, see below |
+| `error` | The OAuth2 error code the provider returned, or the network error code |
+
+| `reason` | Meaning | Deleted with `revoke=required` |
+|----------|---------|-------------------------------|
+| `NotOAuth2` | Not an OAuth2 account | Yes |
+| `ServiceAccount` | A Google Workspace service account, which holds no per-user grant | Yes |
+| `TokenInvalid` | The provider reports the token as already revoked or expired | Yes |
+| `NoToken` | No stored token to revoke with | No, `409` |
+| `AppNotFound`, `AppError` | The OAuth2 application is missing or could not be loaded | No, `409` |
+| `Unsupported` | The provider offers no revocation endpoint. This is the case for Microsoft accounts | No, `409` |
+| `ProviderRefused` | The provider answered with an error | No, `502` |
+| `RequestFailed` | No answer from the provider | No, `502` |
+
+Revocation is implemented for individual Gmail grants, on both Gmail IMAP and Gmail API accounts. A Microsoft grant cannot be revoked through an API, so `revoke=required` always refuses to delete a Microsoft account; use `revoke=true` there, and have the user remove the application at https://myapps.microsoft.com.
+
+A refused `revoke=required` request answers with the code `RevocationNotConfirmed` and carries the outcome in `info.revocation`:
+
+```json
+{
+  "statusCode": 502,
+  "error": "Bad Gateway",
+  "message": "The OAuth2 grant was not revoked, so the account was not deleted",
+  "code": "RevocationNotConfirmed",
+  "info": {
+    "revocation": {
+      "attempted": true,
+      "revoked": false,
+      "reason": "RequestFailed",
+      "error": "ETIMEDOUT"
+    }
+  }
+}
+```
+
+`409` means nothing could be asked, and the account was left as it was. `502` means the provider was asked and did not confirm; a retry can succeed. Before asking, EmailEngine stops the account's Gmail watch, so after a `502` it reconnects the account to set the watch up again.
 
 :::warning[Irreversible]
 Deleting an account cannot be undone. You'll need to re-add the account if needed later.

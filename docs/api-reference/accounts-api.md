@@ -149,7 +149,7 @@ A second account for the same OAuth2 user is refused with 400, code `AccountAlre
 
 `PUT /v1/account/{account}` replaces each of `imap`, `smtp` and `oauth2` as a whole unless the object carries `"partial": true`, in which case only the fields sent are changed and the stored credential is kept. `partial` is read on those three objects only, not on nested ones such as `imap.auth`. Updating credentials reconnects the account, so a separate reconnect request is not needed.
 
-`DELETE /v1/account/{account}` answers `{"account": "...", "deleted": true}` and also removes the account's queued outbound messages and its access tokens. `?revoke=true` additionally asks the provider to revoke the OAuth2 grant; that is implemented for individual Gmail grants, is a no-op for service accounts, Outlook and password accounts, and a failed revocation is logged without blocking the deletion.
+`DELETE /v1/account/{account}` answers `{"account": "...", "deleted": true}` and also removes the account's queued outbound messages and its access tokens. `?revoke=true` additionally asks the provider to revoke the OAuth2 grant and deletes the account whatever the outcome; `?revoke=required` deletes it only once the grant is gone and otherwise fails with `RevocationNotConfirmed` (`409` or `502`), keeping the account. Either way the response reports the outcome under `revocation` (both since v2.87.0). Revocation is implemented for individual Gmail grants only. See [Deleting accounts](/docs/accounts/managing-accounts#deleting-accounts) for the fields and reasons.
 
 ### Scheduling operations
 

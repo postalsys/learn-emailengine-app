@@ -718,6 +718,32 @@ ACL SETUSER emailengine on >password ~* +@all -flushdb -flushall -keys
 ACL LIST
 ```
 
+## Node.js Runtime
+
+EmailEngine runs on Node.js, and a vulnerability in Node.js reaches EmailEngine whatever its own code does. Who updates the runtime depends on the installation:
+
+| Installation | Node.js runtime | How it gets a fix |
+|--------------|-----------------|-------------------|
+| [Prebuilt binary](/docs/installation) | Bundled into the executable | Upgrade EmailEngine to a release built on the patched Node.js |
+| [Docker image](/docs/installation/docker) | The `node:24-alpine` base image, pinned by digest | Upgrade to a release whose image is built on the patched base. Pulling the same tag again does not change the Node.js inside it |
+| [npm or source](/docs/installation/source) | Whatever Node.js the host runs | Upgrade Node.js on the host. Upgrading EmailEngine alone changes nothing |
+
+To see which Node.js an instance runs, read the `node` field of [`GET /v1/stats`](/docs/api/get-v-1-stats), or the `node` field of the `EmailEngine starting up` line in the log.
+
+### CVE-2026-111497 (Brotli decoder)
+
+On 21 October 2026 Node.js fixed CVE-2026-111497, an out-of-bounds write in the Brotli decoder it bundles that crafted Brotli-compressed data can turn into remote code execution. The fixed releases are Node.js 22.23.4, 24.22.1 and 26.12.1; Node.js 20 is past end of life and gets no fix.
+
+EmailEngine decompresses HTTP responses from servers it does not control, among them the hosts that [IMAP/SMTP autodiscovery](/docs/accounts/imap-smtp#server-settings-auto-detection) contacts for an address's domain and webhook targets, so treat an unpatched instance as exposed.
+
+| Installation | Affected | Fixed in |
+|--------------|----------|----------|
+| Prebuilt binaries | v2.86.0 and earlier (v2.86.0 bundles Node.js 24.20.0) | v2.87.0, Node.js 24.22.1 |
+| Docker image | v2.86.0 and earlier (v2.86.0 runs Node.js 24.22.0) | v2.87.0, Node.js 24.22.2 |
+| npm or source | Any version, on an unpatched Node.js | Node.js 24.22.1, 22.23.4 or 26.12.1 or later on the host |
+
+EmailEngine still starts on Node.js 20, but no Node.js 20 release carries this fix, so an npm or source installation should move to Node.js 24.
+
 ## Security Checklist
 
 ### Pre-Deployment
@@ -749,6 +775,7 @@ ACL LIST
 ### Ongoing Maintenance
 
 - [ ] Update EmailEngine regularly
+- [ ] On npm and source installations, update Node.js on the host; see [Node.js Runtime](#nodejs-runtime)
 - [ ] Update system packages weekly
 - [ ] Review access logs weekly
 - [ ] Review the [token audit log](/docs/api-reference/access-tokens#audit-log) for denied requests

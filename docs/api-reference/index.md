@@ -600,7 +600,7 @@ The machine-readable document behind the reference above, served by every EmailE
 ## Support
 
 - **Documentation**: Browse the complete [documentation](/docs)
-- **GitHub Issues**: Report bugs or request features at [postalsys/emailengine](https://github.com/postalsys/emailengine/issues)
+- **GitHub Issues**: Report reproducible bugs at [postalsys/emailengine](https://github.com/postalsys/emailengine/issues)
 - **Support channels**: See [Support](/docs/support) for the options available to license holders
 
 ## See Also

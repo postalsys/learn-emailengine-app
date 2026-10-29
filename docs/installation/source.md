@@ -559,7 +559,7 @@ tail -f /var/log/emailengine/*.log
 3. **Use strong secrets** (32+ characters)
 4. **Enable firewall** and restrict port access
 5. **Use reverse proxy** with TLS/HTTPS
-6. **Keep Node.js updated** to latest LTS version
+6. **Keep Node.js updated** to the latest release of an LTS line: a source installation gets Node.js security fixes only from the host. See [Node.js Runtime](/docs/deployment/security#nodejs-runtime)
 7. **Regular backups** of Redis data
 8. **Monitor logs** for suspicious activity
 

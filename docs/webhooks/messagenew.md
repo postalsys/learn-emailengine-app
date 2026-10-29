@@ -78,6 +78,7 @@ The unique event identifier is sent as the HTTP header `X-EE-Wh-Event-Id`, not i
 | `isAutoReply` | boolean | No | `true` when the message looks like an automatic reply. The subject decides it when it begins with `Auto reply`, `Automatic reply`, `Automatic response`, `Out of Office`, `Out of the Office`, `OOF:` or `OOO:`, or with `Auto:` on a message that also has an `In-Reply-To` header. Otherwise an `Auto-Submitted: auto-replied`, a `Precedence: auto-reply`, or any `X-Auto-Response-Suppress`, `X-Autoresponder`, `X-Autorespond` or `X-Autoreply` header decides it |
 | `isBounce` | boolean | No | `true` when the message was recognized as a bounce. A [`messageBounce`](/docs/webhooks/messagebounce) event follows this one |
 | `isComplaint` | boolean | No | `true` when the message was recognized as an ARF complaint. A [`messageComplaint`](/docs/webhooks/messagecomplaint) event follows this one |
+| `otp` | object | No | One-time passcode from the message's `OTP-Token` header: `code`, `origin` and `authenticated`. Only present when `notifyHeaders` lists `otp-token` or `*`. Experimental, since v2.87.0. See [One-Time Passcodes](/docs/api-reference/messages-api#one-time-passcodes) |
 | `relatedMessageId` | string | No | Message-ID of the original message a bounce or complaint refers to. Set together with `isBounce` or `isComplaint` |
 | `seemsLikeNew` | boolean | Yes | `true` if EmailEngine has not seen this message on the account before, so it is probably new rather than moved or copied. The check is an approximate one, over `emailId` where the server supplies one and the Message-ID otherwise. Always `false` for messages in the Sent folder. Always `true` on Gmail API accounts, where moves are reported as label changes instead |
 | `category` | string | No | Gmail inbox tab. Gmail API accounts report `primary`, `social`, `promotions`, `updates` or `forums`, derived from the message labels. Gmail over IMAP resolves it with a server-side search when `resolveGmailCategories` is enabled, and can additionally report `reservations` and `purchases` |
@@ -319,6 +320,8 @@ Several settings shape the `messageNew` payload. All of them are set through the
 | `notifyHeaders` | Header names to include in `data.headers`. Use `["*"]` for all headers. Names are compared lowercase, so pass them in lowercase when setting this through the API (`["list-id", "x-priority"]`); the admin UI lowercases them for you |
 
 Regardless of this setting, EmailEngine always fetches the headers it needs for its own auto-reply and bounce detection. They appear in the payload only when `notifyHeaders` names them.
+
+Listing `otp-token` (or `*`) also adds the `otp` field, the parsed one-time passcode, to the payload (since v2.87.0). It is left out otherwise, because the [OTP-Token draft](https://datatracker.ietf.org/doc/draft-goto-otp-token/) asks that the code be kept out of sight, and a webhook copies it to every receiver.
 
 ### Attachment Options
 

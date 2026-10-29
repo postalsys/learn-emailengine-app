@@ -114,9 +114,34 @@ A listing entry and the message details share one shape; the details add the hea
 | `isAutoReply` | boolean | True when the message looks like an automatic reply, see [Tracking Email Replies](/docs/receiving/tracking-replies#filtering-auto-responses) |
 | `isBounce` | boolean | True when the message is a delivery failure report. Decided when the message is fetched, for messages in the Inbox only; a delivery or delay notification does not count. Message details only. Since 2.81.2 |
 | `relatedMessageId` | string | The `Message-ID` of the message that bounced. Set together with `isBounce` |
+| `otp` | object | The one-time passcode of an `OTP-Token` header: `code`, `origin` and `authenticated`. Present when the message carries exactly one valid header. Message details only. Experimental, see [One-Time Passcodes](#one-time-passcodes). Since 2.87.0 |
 | `attachments` | array | Attachment metadata |
 
 Releases before 2.81.2 attached a `bounces` array to messages an IMAP account had sent, listing the bounces EmailEngine had matched to them. The array and the store behind it were removed in 2.81.2; a bounce is reported once, as a [`messageBounce`](/docs/webhooks/messagebounce) webhook, and the bounce message itself carries `isBounce`. [Message IDs Explained](/docs/receiving/ids-explained) covers how `id`, `uid`, `emailId` and `messageId` relate.
+
+### One-Time Passcodes
+
+A message can carry a login or verification code in an `OTP-Token` header, defined by the [OTP-Token Internet-Draft](https://datatracker.ietf.org/doc/draft-goto-otp-token/). Since EmailEngine 2.87.0, message details on IMAP, Gmail API and MS Graph accounts report it as `otp` when the message has exactly one valid header:
+
+```json
+{
+  "otp": {
+    "code": "482913",
+    "origin": "https://example.com",
+    "authenticated": true
+  }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `code` | string | The passcode |
+| `origin` | string | The site the passcode is bound to |
+| `authenticated` | boolean | Whether the receiving mail server vouches for `origin`: its `Authentication-Results` header records a passing DKIM signature from the origin's organizational domain |
+
+The header itself proves nothing: anyone can send a message claiming any origin. Show the origin to a user, or act on the code for that site, only when `authenticated` is `true`. EmailEngine reads only the topmost `Authentication-Results` header, and only when a server it trusts wrote it, which is Gmail and Microsoft 365. For every other mailbox `authenticated` is always `false`, whether or not the message is genuine.
+
+The [`messageNew`](/docs/webhooks/messagenew) webhook carries `otp` only when the [`notifyHeaders`](/docs/configuration/settings) setting lists `otp-token` or `*`, because a webhook copies the code to every receiver. The feature is experimental and follows the draft's revisions. Sending the header is covered in [One-Time Passcodes](/docs/sending/basic-sending#one-time-passcodes).
 
 ### Nested Structures
 

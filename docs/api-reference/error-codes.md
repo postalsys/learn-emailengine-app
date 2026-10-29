@@ -100,10 +100,11 @@ When an IMAP server answers `NO` to a mailbox operation (creating, renaming or d
 | `ReferenceNotSupported` | A reply or forward `reference` on a send-only account |
 | `InvalidInput` | Gmail API accounts: a `page` number instead of a cursor |
 | `ForceRequired` | `DELETE /v1/templates/account/{account}` without `force=true` |
+| `EOTP` | `POST /v1/account/{account}/submit`: an `otp` value the `OTP-Token` header cannot carry (since v2.87.0). An `otp` combined with `useStructuredFormat` is also a `400`, without a code |
 
 **OAuth2 user already bound:**
 
-Registering or updating an OAuth2 account for a user who is already bound to another account under the same OAuth2 application answers `400` with the code `AccountAlreadyExists` and names the other account. EmailEngine does not use `409 Conflict`. Re-registering an existing account ID is not an error: `POST /v1/account` updates the account in place.
+Registering or updating an OAuth2 account for a user who is already bound to another account under the same OAuth2 application answers `400` with the code `AccountAlreadyExists` and names the other account. This is a `400`, not a [`409`](#409-conflict). Re-registering an existing account ID is not an error: `POST /v1/account` updates the account in place.
 
 ```json
 {
@@ -207,6 +208,19 @@ Two more 404 codes come from a submission rather than from the path: `ReferenceN
 
 ---
 
+#### 409 Conflict
+
+The request is valid but the entity is not in a state that allows it. The `code` names why:
+
+| Code | When |
+|------|------|
+| `NotFailed` | Retrying a queued message or a webhook delivery that is not in the failed state |
+| `NotDelayed` | Sending a queued message now that is not delayed |
+| `ContentGone` | Retrying a failed queued message whose content is no longer kept. Submit the message again |
+| `RevocationNotConfirmed` | `DELETE /v1/account/{account}?revoke=required` when nothing could be asked to revoke the grant, such as a Microsoft account or one without a stored token. The account is kept; `info.revocation` carries the outcome (since v2.87.0) |
+
+---
+
 #### 413 Payload Too Large
 
 Two sources. A request body over the route's limit is refused by the HTTP server before the handler runs; message upload routes accept up to `EENGINE_MAX_BODY_SIZE` (50 MB by default), other routes 1 MB. A Microsoft Graph account whose provider rejects an outgoing message for size answers with the mapped code `MessageTooLarge`.
@@ -297,6 +311,8 @@ Retry after a delay, then check the EmailEngine log for the request. Three confi
 
 The IMAP server rejected an `APPEND` while `POST /v1/account/{account}/message` was uploading a message, after the target folder was confirmed to exist. The body carries the code `UploadFail` and the IMAP client's message for the failed command. A folder that does not exist is a `404` instead.
 
+`DELETE /v1/account/{account}?revoke=required` answers `502` with the code `RevocationNotConfirmed` when the provider was asked to revoke the OAuth2 grant and did not confirm it. The account is kept and a retry can succeed; `info.revocation` carries the provider's answer. See [Deleting accounts](/docs/accounts/managing-accounts#deleting-accounts) (since v2.87.0).
+
 ---
 
 #### 503 Service Unavailable
@@ -357,6 +373,7 @@ Every `code` the API itself puts in an error body, by status:
 | `ReferenceNotSupported` | 400 | A reply or forward reference on a send-only account |
 | `InvalidInput` | 400 | Gmail API accounts: a `page` number instead of a cursor |
 | `ForceRequired` | 400 | Flushing an account's templates without `force=true` |
+| `EOTP` | 400 | A submission's `otp` cannot be written as an `OTP-Token` header (since v2.87.0) |
 | `ALREADYEXISTS`, `NONEXISTENT`, `CANNOT`, `LIMIT` and other IMAP response codes, `DeleteFailed`, `RenameFailed` | 400 | The IMAP server refused a mailbox operation; `info.response` carries its text |
 | `MintWidensRestrictions` | 403 | `POST /v1/tokens` asked for restrictions wider than the calling token's (since v2.82.0) |
 | `OAuthTokenRejected` | 403 | The provider rejected a freshly renewed access token |
@@ -368,6 +385,8 @@ Every `code` the API itself puts in an error body, by status:
 | `TrashNotFound` | 404 | MS Graph accounts: the Deleted Items folder cannot be resolved |
 | `NotFound` | 404 | The template, webhook route or OAuth2 application does not exist |
 | `SMTPUnavailable` | 404 | The account has no SMTP or OAuth2 configuration to send with |
+| `NotFailed`, `NotDelayed`, `ContentGone` | 409 | A queued message or webhook delivery is not in the state the action needs, or a failed message's content is gone |
+| `RevocationNotConfirmed` | 409, 502 | `revoke=required` on an account delete, and the grant was not revoked; the account is kept (since v2.87.0) |
 | `MissingServerExtension` | 422 | The IMAP server lacks an extension the operation needs |
 | `AppNotFound`, `InvalidBaseScopes`, `MissingServiceURLSetup` | 500 | A configuration fault: a missing or disabled OAuth2 application, one registered for the wrong connection type, or no `serviceUrl` for a hosted form |
 | `UploadFail` | 502 | The IMAP server rejected the `APPEND` of an uploaded message |

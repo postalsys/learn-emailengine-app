@@ -332,6 +332,37 @@ Request delivery status notifications (DSN):
 
 `return` is required and is either `headers` or `full`; `notify` takes any of `never`, `success`, `failure`, and `delay`; `id` sets the envelope identifier (ENVID) and `recipient` the address the notification goes to (ORCPT). DSN support varies by email provider.
 
+### One-Time Passcodes
+
+Since v2.87.0, a message carrying a login or verification code can also carry it in an `OTP-Token` header, as defined by the [OTP-Token Internet-Draft](https://datatracker.ietf.org/doc/draft-goto-otp-token/). Mail clients and browsers that support the header can offer the code to the user for the site it belongs to, instead of the user copying it out of the body:
+
+```json
+{
+  "to": [{ "address": "recipient@example.com" }],
+  "subject": "Your sign-in code",
+  "text": "Your sign-in code is 482913. It expires in 10 minutes.",
+  "otp": {
+    "code": "482913",
+    "origin": "https://example.com"
+  }
+}
+```
+
+The message goes out with this header:
+
+```
+OTP-Token: "482913"; origin="https://example.com"
+```
+
+| Field | Description |
+|-------|-------------|
+| `code` | The passcode. Printable ASCII, up to 256 characters. It should also appear in the message body, for clients that do not read the header |
+| `origin` | The site the code is for: an `https` URL, or `http` on a loopback host. A full URL is reduced to its origin, so `https://example.com/login` is sent as `https://example.com` |
+
+Both fields are required. An invalid value is refused with `400`, as a validation error or, for a value that passes validation but cannot be written into the header, with the code `EOTP`. So is an `otp` sent with the `useStructuredFormat` query parameter, because the structured MS Graph send drops the header. In a [mail merge](/docs/sending/mail-merge) each entry can carry its own `otp`, which overrides the message-level one.
+
+The feature is experimental: the draft is a work in progress, and EmailEngine follows its revisions. Reading the header from received messages is covered in [the message object](/docs/api-reference/messages-api#one-time-passcodes).
+
 ### Email Tracking
 
 Enable open and click tracking for your emails:

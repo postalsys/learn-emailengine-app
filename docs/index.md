@@ -199,7 +199,7 @@ The REST API is documented in four parts, plus the generated endpoint reference:
 ## Get Help
 
 - **[Troubleshooting Guide](/docs/troubleshooting)** - Common issues and solutions
-- **[GitHub Issues](https://github.com/postalsys/emailengine/issues)** - Report bugs and request features
+- **[GitHub Issues](https://github.com/postalsys/emailengine/issues)** - Report reproducible bugs
 - **[Support](/docs/support)** - Support channels and what a subscription covers
 
 ## System Requirements

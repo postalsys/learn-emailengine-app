@@ -58,6 +58,7 @@ No field is required by the schema. In practice, provide `text` and/or `html` fo
 | `render` | object or `false` | Template rendering: `format` (`html` or `markdown`) and `params`. Set to `false` to send the template as-is |
 | `mailMerge` | array | [One message per recipient](#sending-to-many-recipients) from a single request |
 | `listId` | string | List ID for mail merge, in hostname format. Lists are registered ad hoc. Only accepted together with `mailMerge` |
+| `otp` | object | A one-time passcode, sent as an `OTP-Token` header so that mail clients and browsers can offer it: `code` (printable ASCII, up to 256 characters) and `origin` (the https site the code is for). A `mailMerge` entry can carry its own. Experimental. See [One-Time Passcodes](/docs/sending/basic-sending#one-time-passcodes). Since v2.87.0 |
 
 **Delivery**
 
@@ -82,7 +83,7 @@ No field is required by the schema. In practice, provide `text` and/or `html` fo
 |------|----|-------------|
 | `Idempotency-Key` | header | Replays the stored result for a repeated request with the same key instead of queueing the message again. The response then carries an `idempotency` object with `status` `HIT` or `MISS`. Since v2.52.0 |
 | `X-EE-Timeout` | header | Request timeout in milliseconds, up to `7200000`, overriding `EENGINE_TIMEOUT` |
-| `useStructuredFormat` | query | MS Graph accounts only: send as structured JSON instead of raw MIME. Structured JSON is the only mode that honors a `from` address other than the mailbox's own, which a shared mailbox needs, but it does not preserve calendar invites and other special MIME parts; raw MIME preserves them and ignores `from` |
+| `useStructuredFormat` | query | MS Graph accounts only: send as structured JSON instead of raw MIME. Structured JSON is the only mode that honors a `from` address other than the mailbox's own, which a shared mailbox needs, but it does not preserve calendar invites and other special MIME parts; raw MIME preserves them and ignores `from`. Cannot be combined with `otp`, since the structured send drops the `OTP-Token` header |
 | `documentStore` | query | Deprecated. Selected the Document Store, which was removed in EmailEngine v2.82.0. The parameter is still accepted and ignored |
 
 ### Address Format

@@ -10,7 +10,9 @@ How to get help with EmailEngine, and what to include when you ask.
 
 ## Contact Support
 
-**Email:** [support@emailengine.app](mailto:support@emailengine.app)
+**Email:** [support@postalsys.com](mailto:support@postalsys.com)
+
+**Support options:** [emailengine.app/support](https://emailengine.app/support)
 
 Include your EmailEngine version, the account type involved, and the relevant log lines. [Information to collect](/docs/troubleshooting#information-to-collect) lists what makes a report answerable.
 
@@ -19,7 +21,7 @@ Support is provided by the developer of EmailEngine. The [license agreement](htt
 ## Channels
 
 - **Email** at the address above, for questions about a licensed instance
-- **[GitHub Issues](https://github.com/postalsys/emailengine/issues)** for bug reports and feature requests. Search existing issues first; a report that includes a way to reproduce the problem is acted on faster
+- **[GitHub Issues](https://github.com/postalsys/emailengine/issues)** for reproducible bugs only. The issue tracker is not actively monitored, so questions and requests go to the email address above
 - **[Documentation](/docs)** at learn.emailengine.app, the reference for every feature
 - **[Release notes](https://github.com/postalsys/emailengine/blob/master/CHANGELOG.md)** for what changed in each version
 
@@ -34,7 +36,7 @@ Before contacting support, check:
 - **[Troubleshooting](/docs/troubleshooting)** - Startup, webhook, performance, and sync problems
 - **[Account troubleshooting](/docs/accounts/troubleshooting)** - Connection, authentication, and sync failures for one account
 - **[Error codes](/docs/api-reference/error-codes)** - What an error in an API response means
-- **[GitHub Issues](https://github.com/postalsys/emailengine/issues)** - Whether the problem is already known
+- **[GitHub Issues](https://github.com/postalsys/emailengine/issues)** - Whether a bug is already known
 
 ## See Also
 

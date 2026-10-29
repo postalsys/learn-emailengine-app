@@ -14,7 +14,7 @@ EmailEngine provides official Docker images for easy deployment:
 
 - **Pre-built images**: Published to Docker Hub (`postalsys/emailengine`) and GitHub Container Registry (`ghcr.io/postalsys/emailengine`) by the same workflow
 - **Multi-architecture**: `linux/amd64` and `linux/arm64` manifests, each built on a runner of that architecture
-- **Self-contained**: A Node.js 24 Alpine base (since v2.79.9; earlier images ran on Node.js 22) with the application and its production dependencies. npm is removed from the runtime image, so nothing inside the container can install packages. Redis is not included
+- **Self-contained**: A Node.js 24 Alpine base (since v2.79.9; earlier images ran on Node.js 22), pinned by digest, so each release fixes the Node.js version inside it; v2.87.0 moved it to Node.js 24.22.2 for [CVE-2026-111497](/docs/deployment/security#cve-2026-111497-brotli-decoder) with the application and its production dependencies. npm is removed from the runtime image, so nothing inside the container can install packages. Redis is not included
 - **Preset for containers**: The image sets `EENGINE_HOST=0.0.0.0` so the API listens on the container's interfaces, and `EENGINE_API_PROXY=true` so client addresses are read from `X-Forwarded-For`. It runs as an unprivileged user under `dumb-init`
 
 ## Quick Start

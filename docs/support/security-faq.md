@@ -106,6 +106,10 @@ Yes, in SPDX format, listing every package in the running build:
 
 See [Compliance](/docs/deployment/compliance#audit-support) for the request.
 
+## Is EmailEngine affected by the Node.js Brotli vulnerability (CVE-2026-111497)?
+
+The prebuilt binaries and the Docker image up to v2.86.0 run an affected Node.js; v2.87.0 is built on a fixed one (Node.js 24.22.1 in the binaries, 24.22.2 in the image). An npm or source installation runs the host's Node.js and needs Node.js 24.22.1, 22.23.4, 26.12.1 or later there. `GET /v1/stats` reports the running version as `node`. See [Node.js Runtime](/docs/deployment/security#cve-2026-111497-brotli-decoder).
+
 ## How do I secure Redis itself?
 
 Require a password or an ACL user, bind Redis to localhost or a private interface, connect over TLS with a `rediss://` URL when Redis is on another host, and keep port 6379 closed at the firewall. [Redis Configuration](/docs/configuration/redis) covers the Redis side and [Redis Security](/docs/deployment/security#redis-security) the EmailEngine side, including the commands EmailEngine never needs.
