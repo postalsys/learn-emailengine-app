@@ -68,9 +68,9 @@ Create and delete on folders joined this table in v2.85.0, with the folder tools
 
 | Action | Sections it reaches |
 |--------|---------------------|
-| read | accounts, instance settings, OAuth2 applications, license, access tokens, account and gateway setup, SMTP gateways, webhook routes, suppression lists, templates, sending queue, statistics and status, connection logs |
-| create and modify | accounts, instance settings, OAuth2 applications, license, account and gateway setup, suppression lists, templates |
-| delete | accounts, OAuth2 applications, access tokens, SMTP gateways, suppression lists, templates, sending queue |
+| read | accounts, instance settings, OAuth2 applications, license, access tokens, account and gateway setup, SMTP gateways, webhook routes, suppression lists, templates, sending queue, statistics and status, connection logs, failed webhook deliveries |
+| create and modify | accounts, instance settings, OAuth2 applications, license, account and gateway setup, suppression lists, templates, sending queue (retry, send now), failed webhook deliveries (retry) |
+| delete | accounts, OAuth2 applications, access tokens, SMTP gateways, suppression lists, templates, sending queue, failed webhook deliveries |
 
 A token may hold one scope or both. Adding "Webhook routes" to the permissions of an `mcp`-only token changes nothing: there is no mail tool for it and the surface would refuse the operation anyway. The management scope reads webhook routes but has no write for them, because the API has none; it never reaches `send` on any section, bulk export, the change stream, or removing the license.
 
@@ -88,7 +88,7 @@ Wherever an MCP token is minted - the connect generator, the token form and the 
 |-------|----------------|--------|
 | **No management access** | Nothing from this scope | The client gets only what the mail section grants |
 | **Observe** (default) | Read accounts, settings, queues, OAuth2 applications, gateways, tokens and logs | Connection logs name folders and subjects, and the token audit log records who read which account |
-| **Operate** | Also reconnect, resume, add and test accounts, change settings, and manage OAuth2 applications, gateways and templates | Settings changes take effect at once; moving the webhook target sends future notifications, message text included, elsewhere; reconfiguring an account, gateway or OAuth2 application can send a stored credential or future authorization codes to a new host |
+| **Operate** | Also reconnect, resume, add and test accounts, change settings, retry or expedite queued messages and failed webhook deliveries, and manage OAuth2 applications, gateways and templates | Settings changes take effect at once; moving the webhook target sends future notifications, message text included, elsewhere; reconfiguring an account, gateway or OAuth2 application can send a stored credential or future authorization codes to a new host |
 | **Administer** | Also delete accounts, applications, gateways and templates, revoke tokens and flush accounts | Everything Operate allows, plus deletion |
 
 **Email access** (`mcp`)
@@ -122,7 +122,7 @@ The count under the radios on every minting page is the number of tools the resu
 | Instance management: Operate | 45 | 11 |
 | Instance management: Administer | 54 | 15 |
 
-Holding both sections adds the counts minus the six tools both scopes reach (`list_accounts`, `get_account`, `get_outbox`, `get_queued_message`, `list_templates`, `get_template`); Administer with Full access is the whole catalog. The numbers move when the tool set does, which is why the pages compute them rather than print them.
+Holding both sections adds the counts minus the seven tools both scopes reach (`list_accounts`, `get_account`, `get_server_signatures`, `get_outbox`, `get_queued_message`, `list_templates`, `get_template`); Administer with Full access is the whole catalog. The numbers move when the tool set does, which is why the pages compute them rather than print them.
 
 ## Account binding
 
@@ -145,7 +145,7 @@ A client working from a stale catalog can still send an `account` argument. It i
 The access levels are ordinary [permissions records](/docs/api-reference/access-tokens#permissions), written in the `grants` form: a list of exact (action, section) pairs. The token form offers a **Custom permissions** checkbox under the levels that opens the full editor, starting from the pairs the selected levels would mint, and only lists the sections the ticked MCP scopes can reach. The vocabulary is the one the whole API uses:
 
 - **Actions**: `read`, `write`, `send`, `destructive`
-- **Sections** reachable over MCP: `account`, `mailbox`, `message`, `submit`, `outbox`, `template` for the mail scope; `account`, `settings`, `oauth2`, `license`, `token`, `provisioning`, `gateway`, `webhook`, `blocklist`, `template`, `outbox`, `diagnostics`, `logs` for the management scope
+- **Sections** reachable over MCP: `account`, `mailbox`, `message`, `submit`, `outbox`, `template` for the mail scope; `account`, `settings`, `oauth2`, `license`, `token`, `provisioning`, `gateway`, `webhook`, `blocklist`, `template`, `outbox`, `diagnostics`, `logs`, `webhook-deliveries` for the management scope
 
 A request is allowed when its (action, section) pair is in the list. So "read and write messages, read settings" is expressible; "read messages but only in one folder" is not - that granularity does not exist.
 

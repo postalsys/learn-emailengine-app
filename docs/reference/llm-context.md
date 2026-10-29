@@ -22,7 +22,7 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 
 | Aspect | Details |
 |--------|---------|
-| Reference version | EmailEngine 2.82.0 (the OpenAPI spec this page is checked against) |
+| Reference version | EmailEngine 2.87.0 (the OpenAPI spec this page is checked against) |
 | API Style | RESTful JSON |
 | Authentication | Bearer token (`Authorization: Bearer TOKEN`) |
 | Base URL | `https://emailengine.example.com/v1` (a fresh local install listens on `http://127.0.0.1:3000`) |
@@ -58,8 +58,11 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 | **Delete mailbox** | `DELETE /v1/account/{account}/mailbox` | `path` |
 | **Configure webhooks** | `POST /v1/settings` | `webhooks`, `webhookEvents` |
 | **Manage templates** | `POST /v1/templates/template` | `name`, `content`, `format` |
-| **View outbox** | `GET /v1/outbox` | - |
+| **View outbox** | `GET /v1/outbox` | `state` (`delayed`, `waiting`, `active`, `failed`) and `account` filters, and `GET /v1/account/{account}/outbox` for an account-bound token (all since 2.86.0) |
 | **Cancel queued email** | `DELETE /v1/outbox/{queueId}` | - |
+| **Retry failed email** | `POST /v1/outbox/{queueId}/retry` | No body. Only while the failed message's content is still kept; `409` `NotFailed` or `ContentGone` otherwise (since 2.84.0) |
+| **Send scheduled email now** | `POST /v1/outbox/{queueId}/promote` | No body. `409` `NotDelayed` when the message is not delayed (since 2.84.0) |
+| **Replay failed webhook** | `POST /v1/webhooks/failed/{delivery}/retry` | Delivery ID from `GET /v1/webhooks/failed` (since 2.86.0) |
 | **Generate auth form** | `POST /v1/authentication/form` | `account`, `redirectUrl`, optional `skipServerSettings` |
 
 ## Complete API Endpoints
@@ -132,9 +135,16 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 |--------|----------|-------------|
 | `POST` | `/v1/account/{account}/submit` | Send/queue email |
 | `POST` | `/v1/account/{account}/message/{message}/submit` | Send a stored draft by message ID |
-| `GET` | `/v1/outbox` | List queued emails |
+| `GET` | `/v1/outbox` | List queued emails; filter with `state` and `account` |
 | `GET` | `/v1/outbox/{queueId}` | Get queued email details |
-| `DELETE` | `/v1/outbox/{queueId}` | Cancel queued email |
+| `DELETE` | `/v1/outbox/{queueId}` | Cancel queued email, removing its stored content |
+| `POST` | `/v1/outbox/{queueId}/retry` | Retry a failed email with a fresh set of delivery attempts, while its content is still kept (since 2.84.0) |
+| `POST` | `/v1/outbox/{queueId}/promote` | Send a delayed email now (since 2.84.0) |
+| `GET` | `/v1/account/{account}/outbox` | List one account's queued emails, reachable with an account-bound token (since 2.86.0) |
+| `GET` | `/v1/account/{account}/outbox/{queueId}` | Get one of the account's queued emails (since 2.86.0) |
+| `DELETE` | `/v1/account/{account}/outbox/{queueId}` | Cancel one of the account's queued emails (since 2.86.0) |
+| `POST` | `/v1/account/{account}/outbox/{queueId}/retry` | Retry, scoped to the account (since 2.86.0) |
+| `POST` | `/v1/account/{account}/outbox/{queueId}/promote` | Send now, scoped to the account (since 2.86.0) |
 
 ### Templates
 
@@ -162,6 +172,13 @@ EmailEngine is a **self-hosted email API gateway** that provides REST API access
 |--------|----------|-------------|
 | `GET` | `/v1/webhookRoutes` | List webhook routes |
 | `GET` | `/v1/webhookRoutes/webhookRoute/{webhookRoute}` | Get a webhook route |
+| `POST` | `/v1/webhooks/test` | Send a signed `test` event to the global webhook target, or to a route's target with `webhookRoute`, and report whether it was accepted (since 2.86.0) |
+| `GET` | `/v1/webhooks/failed` | List webhook deliveries that failed for good, most recent first; `account` filters (since 2.86.0) |
+| `POST` | `/v1/webhooks/failed/{delivery}/retry` | Queue a failed delivery again with a fresh set of attempts, same target and payload (since 2.86.0) |
+| `DELETE` | `/v1/webhooks/failed/{delivery}` | Remove a failed delivery (since 2.86.0) |
+| `GET` | `/v1/account/{account}/webhooks/failed` | List one account's failed deliveries (since 2.86.0) |
+| `POST` | `/v1/account/{account}/webhooks/failed/{delivery}/retry` | Retry, scoped to the account (since 2.86.0) |
+| `DELETE` | `/v1/account/{account}/webhooks/failed/{delivery}` | Remove, scoped to the account (since 2.86.0) |
 
 Webhook routes are read-only through the API - create and edit them in the EmailEngine dashboard. Webhook delivery itself is configured via `POST /v1/settings` (`webhooks`, `webhooksEnabled`, `webhookEvents`).
 
@@ -185,6 +202,7 @@ Webhook routes are read-only through the API - create and edit them in the Email
 | `GET` | `/v1/gateway/{gateway}` | Get gateway |
 | `PUT` | `/v1/gateway/edit/{gateway}` | Update gateway |
 | `DELETE` | `/v1/gateway/{gateway}` | Delete gateway |
+| `POST` | `/v1/gateway/{gateway}/verify` | Connect and authenticate with the stored settings; sends and stores nothing (since 2.86.0) |
 
 ### Access Tokens
 
@@ -204,6 +222,7 @@ Webhook routes are read-only through the API - create and edit them in the Email
 | `GET` | `/v1/blocklist/{listId}` | Get blocklist entries |
 | `POST` | `/v1/blocklist/{listId}` | Add to blocklist |
 | `DELETE` | `/v1/blocklist/{listId}` | Remove from blocklist |
+| `DELETE` | `/v1/blocklists/{listId}` | Delete a whole blocklist with every address on it (since 2.86.0) |
 
 ### Monitoring & Stats
 
@@ -211,6 +230,7 @@ Webhook routes are read-only through the API - create and edit them in the Email
 |--------|----------|-------------|
 | `GET` | `/v1/stats` | Get usage statistics |
 | `GET` | `/v1/logs/{account}` | Get account logs |
+| `DELETE` | `/v1/logs/{account}` | Clear the account's stored logs; logging continues (since 2.86.0) |
 | `GET` | `/v1/changes` | Server-Sent Events stream of account state changes, not a list |
 | `GET` | `/v1/license` | Get license info |
 | `POST` | `/v1/license` | Register a license key |
@@ -246,7 +266,7 @@ Tool schemas are narrower than the endpoints they wrap: operator-level fields ar
 
 ### MCP Tools
 
-Each tool wraps one REST operation and inherits its permission grant. The mail tools are admitted by the `mcp` scope, the management tools by `mcp-manage`; `list_accounts`, `get_account`, `get_outbox`, `get_queued_message`, `list_templates` and `get_template` are in both tables.
+Each tool wraps one REST operation and inherits its permission grant. The mail tools are admitted by the `mcp` scope, the management tools by `mcp-manage`; `list_accounts`, `get_account`, `get_server_signatures`, `get_outbox`, `get_queued_message`, `list_templates` and `get_template` are in both tables.
 
 **Mail tools** (`mcp` scope)
 
@@ -254,6 +274,7 @@ Each tool wraps one REST operation and inherits its permission grant. The mail t
 |------|----------|-------|
 | `list_accounts` | read-only | `GET /v1/accounts` |
 | `get_account` | read-only | `GET /v1/account/{account}` |
+| `get_server_signatures` | read-only | `GET /v1/account/{account}/server-signatures` (since 2.86.0) |
 | `list_mailboxes` | read-only | `GET /v1/account/{account}/mailboxes` |
 | `create_mailbox` | write | `POST /v1/account/{account}/mailbox` |
 | `update_mailbox` | write | `PUT /v1/account/{account}/mailbox` |
@@ -262,6 +283,7 @@ Each tool wraps one REST operation and inherits its permission grant. The mail t
 | `search_messages` | read-only | `POST /v1/account/{account}/search` |
 | `get_message` | read-only | `GET /v1/account/{account}/message/{message}` (body inline) |
 | `get_message_text` | read-only | `GET /v1/account/{account}/text/{text}` |
+| `get_message_source` | read-only | `GET /v1/account/{account}/message/{message}/source` (since 2.86.0) |
 | `get_attachment` | read-only | `GET /v1/account/{account}/attachment/{attachment}` |
 | `update_message` | write | `PUT /v1/account/{account}/message/{message}` |
 | `move_message` | write | `PUT /v1/account/{account}/message/{message}/move` |
@@ -298,6 +320,8 @@ Each tool wraps one REST operation and inherits its permission grant. The mail t
 | `get_queue` | read-only | `GET /v1/settings/queue/{queue}` |
 | `set_queue_state` | write | `PUT /v1/settings/queue/{queue}` |
 | `cancel_queued_message` | destructive | `DELETE /v1/outbox/{queueId}` |
+| `retry_queued_message` | write | `POST /v1/outbox/{queueId}/retry` (since 2.84.0) |
+| `send_queued_message_now` | write | `POST /v1/outbox/{queueId}/promote` (since 2.84.0) |
 | `list_oauth2_apps` | read-only | `GET /v1/oauth2` |
 | `get_oauth2_app` | read-only | `GET /v1/oauth2/{app}` |
 | `create_oauth2_app` | write | `POST /v1/oauth2` |
@@ -309,6 +333,7 @@ Each tool wraps one REST operation and inherits its permission grant. The mail t
 | `create_gateway` | write | `POST /v1/gateway` |
 | `update_gateway` | write | `PUT /v1/gateway/edit/{gateway}` |
 | `delete_gateway` | destructive | `DELETE /v1/gateway/{gateway}` |
+| `verify_gateway` | read-only, connects to the gateway's SMTP server | `POST /v1/gateway/{gateway}/verify` (since 2.86.0) |
 | `list_tokens` | read-only | `GET /v1/tokens` |
 | `get_token` | read-only | `GET /v1/tokens/{token}` |
 | `get_token_log` | read-only | `GET /v1/tokens/{token}/log` |
@@ -323,8 +348,12 @@ Each tool wraps one REST operation and inherits its permission grant. The mail t
 | `get_blocklist` | read-only | `GET /v1/blocklist/{listId}` |
 | `add_to_blocklist` | write | `POST /v1/blocklist/{listId}` |
 | `remove_from_blocklist` | destructive | `DELETE /v1/blocklist/{listId}` |
+| `delete_blocklist` | destructive | `DELETE /v1/blocklists/{listId}` (since 2.86.0) |
 | `list_webhook_routes` | read-only | `GET /v1/webhookRoutes` |
 | `get_webhook_route` | read-only | `GET /v1/webhookRoutes/webhookRoute/{webhookRoute}` |
+| `list_failed_webhooks` | read-only | `GET /v1/webhooks/failed` (since 2.86.0) |
+| `retry_failed_webhook` | write | `POST /v1/webhooks/failed/{delivery}/retry` (since 2.86.0) |
+| `remove_failed_webhook` | destructive | `DELETE /v1/webhooks/failed/{delivery}` (since 2.86.0) |
 | `get_instance_stats` | read-only | `GET /v1/stats` |
 | `get_pubsub_status` | read-only | `GET /v1/pubsub/status` |
 | `check_delivery_test` | read-only | `GET /v1/delivery-test/check/{deliveryTest}` |
@@ -337,9 +366,9 @@ A token minted for an agent is narrowed per section, and both sections can be de
 
 | Section | Scope | Level | Grants |
 |---------|-------|-------|--------|
-| Instance management | `mcp-manage` | Observe (default) | `read` on `account`, `settings`, `oauth2`, `license`, `token`, `gateway`, `webhook`, `blocklist`, `template`, `outbox`, `diagnostics` and `logs` |
-| | | Operate | Observe, plus `read` on `provisioning` and `write` on `account`, `settings`, `oauth2`, `license`, `provisioning`, `blocklist` and `template` |
-| | | Administer | Operate, plus `destructive` on `account`, `oauth2`, `token`, `gateway`, `blocklist`, `template` and `outbox` |
+| Instance management | `mcp-manage` | Observe (default) | `read` on `account`, `settings`, `oauth2`, `license`, `token`, `gateway`, `webhook`, `blocklist`, `template`, `outbox`, `diagnostics`, `logs` and `webhook-deliveries` |
+| | | Operate | Observe, plus `read` on `provisioning` and `write` on `account`, `settings`, `oauth2`, `license`, `provisioning`, `blocklist`, `template`, `outbox` and `webhook-deliveries` |
+| | | Administer | Operate, plus `destructive` on `account`, `oauth2`, `token`, `gateway`, `blocklist`, `template`, `outbox` and `webhook-deliveries` |
 | Email access | `mcp` | None (default) | No mail tools |
 | | | Read-only | `read` on `account`, `mailbox`, `message`, `outbox` and `template` |
 | | | Mail agent | Read-only, plus `write` on `mailbox` and `message` and `send` on `submit` |
@@ -737,6 +766,7 @@ Since 2.79.4 both re-authorization through the hosted form and `PUT /v1/account/
 | `SMTPUnavailable` | 404, the account has no SMTP or OAuth2 configuration to send with |
 | `AccountAlreadyExists` | 400, the OAuth2 user is already bound to another account under the same OAuth2 application (re-registering an account ID is an update, not an error) |
 | `MissingServerExtension` | 422, the IMAP server lacks an extension the request needs |
+| `NotFailed`, `NotDelayed`, `ContentGone` | 409, a queued email or webhook delivery is not in the state a retry or send-now needs, or a failed email's content is gone (resubmit it) |
 | `RevocationNotConfirmed` | 409 or 502, `DELETE /v1/account/{account}?revoke=required` and the grant was not revoked; the account is kept. 502 can be retried (since 2.87.0) |
 | `NotYetConnected` | 503, the account has not connected yet |
 | `AuthenticationFails` | 503, the account's credentials are rejected |

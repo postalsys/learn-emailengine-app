@@ -30,6 +30,7 @@ The **Behavior** column in the tables below is what a tool advertises through MC
 |------|--------------|----------|-------|
 | `list_accounts` | Lists accounts on the instance, paged | read-only, both scopes | [`GET /v1/accounts`](/docs/api/get-v-1-accounts) |
 | `get_account` | One account: name, address, connection state, sync status | read-only, both scopes | [`GET /v1/account/{account}`](/docs/api/get-v-1-account-account) |
+| `get_server_signatures` | The signatures configured on the account at the provider, to append to a message composed for it. Only Gmail API accounts report any; the list is empty for other accounts. Since 2.86.0 | read-only, both scopes | [`GET /v1/account/{account}/server-signatures`](/docs/api/get-v-1-account-account-serversignatures) |
 | `list_mailboxes` | Folder tree with counters and special-use roles | read-only | [`GET /v1/account/{account}/mailboxes`](/docs/api/get-v-1-account-account-mailboxes) |
 | `create_mailbox` | Creates a folder, and any missing parent | write | [`POST /v1/account/{account}/mailbox`](/docs/api/post-v-1-account-account-mailbox) |
 | `update_mailbox` | Renames or moves a folder, or changes its subscription | write | [`PUT /v1/account/{account}/mailbox`](/docs/api/put-v-1-account-account-mailbox) |
@@ -38,6 +39,7 @@ The **Behavior** column in the tables below is what a tool advertises through MC
 | `search_messages` | Structured search inside one folder | read-only | [`POST /v1/account/{account}/search`](/docs/api/post-v-1-account-account-search) |
 | `get_message` | One message: envelope, flags, attachment list, and the body inline | read-only | [`GET /v1/account/{account}/message/{message}`](/docs/api/get-v-1-account-account-message-message) |
 | `get_message_text` | A message body on its own, with a larger budget than `get_message` | read-only | [`GET /v1/account/{account}/text/{text}`](/docs/api/get-v-1-account-account-text-text) |
+| `get_message_source` | The raw RFC 822 source of one message, inline as a base64 resource, for inspecting headers such as authentication results or forwarding the original. Fails above 1 MB. Since 2.86.0 | read-only | [`GET /v1/account/{account}/message/{message}/source`](/docs/api/get-v-1-account-account-message-message-source) |
 | `get_attachment` | One attachment, inline as base64 | read-only | [`GET /v1/account/{account}/attachment/{attachment}`](/docs/api/get-v-1-account-account-attachment-attachment) |
 | `update_message` | Adds or removes flags and Gmail labels | write | [`PUT /v1/account/{account}/message/{message}`](/docs/api/put-v-1-account-account-message-message) |
 | `move_message` | Moves a message to another folder | write | [`PUT /v1/account/{account}/message/{message}/move`](/docs/api/put-v-1-account-account-message-message-move) |
@@ -54,7 +56,7 @@ The **Behavior** column in the tables below is what a tool advertises through MC
 | `list_templates` | Stored email templates | read-only, both scopes | [`GET /v1/templates`](/docs/api/get-v-1-templates) |
 | `get_template` | One stored template with its content | read-only, both scopes | [`GET /v1/templates/template/{template}`](/docs/api/get-v-1-templates-template-template) |
 
-Six of these are reached by both scopes: `list_accounts`, `get_account`, `get_outbox`, `get_queued_message`, `list_templates` and `get_template` are reads an agent managing the instance needs as much as one reading mail. The admin catalog files them under instance management with a "both scopes" badge.
+Seven of these are reached by both scopes: `list_accounts`, `get_account`, `get_server_signatures`, `get_outbox`, `get_queued_message`, `list_templates` and `get_template` are reads an agent managing the instance needs as much as one reading mail. The admin catalog files them under instance management with a "both scopes" badge.
 
 ### Management tools (`mcp-manage` scope)
 
@@ -111,8 +113,9 @@ The two settings tools offer only the keys a settings editor may hold. The keys 
 | `create_gateway` | Registers a gateway | write | [`POST /v1/gateway`](/docs/api/post-v-1-gateway) |
 | `update_gateway` | Changes a gateway. Only the fields sent change | write | [`PUT /v1/gateway/edit/{gateway}`](/docs/api/put-v-1-gateway-edit-gateway) |
 | `delete_gateway` | Removes a gateway; messages queued through it fail to deliver | destructive | [`DELETE /v1/gateway/{gateway}`](/docs/api/delete-v-1-gateway-gateway) |
+| `verify_gateway` | Checks that a stored gateway still connects and authenticates with its stored settings. Nothing is sent or changed. Since 2.86.0 | read-only, connects to the gateway's SMTP server | [`POST /v1/gateway/{gateway}/verify`](/docs/api/post-v-1-gateway-gateway-verify) |
 
-**Templates, suppression lists and webhook routes**
+**Templates, suppression lists and webhooks**
 
 | Tool | What it does | Behavior | Wraps |
 |------|--------------|----------|-------|
@@ -124,8 +127,12 @@ The two settings tools offer only the keys a settings editor may hold. The keys 
 | `get_blocklist` | The addresses on one list, paged, with the reason and source of each | read-only | [`GET /v1/blocklist/{listId}`](/docs/api/get-v-1-blocklist-listid) |
 | `add_to_blocklist` | Adds a recipient address to a list | write | [`POST /v1/blocklist/{listId}`](/docs/api/post-v-1-blocklist-listid) |
 | `remove_from_blocklist` | Removes an address from a list | destructive | [`DELETE /v1/blocklist/{listId}`](/docs/api/delete-v-1-blocklist-listid) |
+| `delete_blocklist` | Deletes a whole list with every address on it, so messages sent with that list id reach all recipients again. Since 2.86.0 | destructive | [`DELETE /v1/blocklists/{listId}`](/docs/api/delete-v-1-blocklists-listid) |
 | `list_webhook_routes` | The custom webhook routes, paged. Credentials in target URLs are masked | read-only | [`GET /v1/webhookRoutes`](/docs/api/get-v-1-webhookroutes) |
 | `get_webhook_route` | One route: target, events, whether it is enabled, and its filter and mapping functions | read-only | [`GET /v1/webhookRoutes/webhookRoute/{webhookRoute}`](/docs/api/get-v-1-webhookroutes-webhookroute-webhookroute) |
+| `list_failed_webhooks` | Webhook deliveries that failed for good, most recent first, paged: the event, the account and message it was about, the route and why the last attempt failed. Since 2.86.0 | read-only | [`GET /v1/webhooks/failed`](/docs/api/get-v-1-webhooks-failed) |
+| `retry_failed_webhook` | Sends a failed delivery again with a fresh set of attempts, to the target and with the payload it was queued with. Since 2.86.0 | write | [`POST /v1/webhooks/failed/{delivery}/retry`](/docs/api/post-v-1-webhooks-failed-delivery-retry) |
+| `remove_failed_webhook` | Removes a failed delivery so it is no longer kept for a retry. Since 2.86.0 | destructive | [`DELETE /v1/webhooks/failed/{delivery}`](/docs/api/delete-v-1-webhooks-failed-delivery) |
 
 **Access tokens, license and diagnostics**
 
@@ -413,7 +420,7 @@ Both `send_message` and `create_draft` take a `reference` block, which is how an
 
 ### Queue and templates
 
-**`get_outbox`** takes `page` and `pageSize` (at most 100). It lists queued and scheduled messages with their delivery progress.
+**`get_outbox`** takes `page` and `pageSize` (at most 100), and since 2.86.0 the optional filters `state` (`delayed`, `waiting`, `active` or `failed`) and `account`. It lists queued and scheduled messages with their delivery progress.
 
 **`get_queued_message`** takes `queueId`, as `send_message`, `send_draft` or `get_outbox` returned it. It returns that message's recipients, scheduled time, delivery attempts and last delivery error.
 
@@ -439,7 +446,7 @@ The management tools take the fields of the endpoint they wrap, minus the [hidde
 | `get_queue`, `set_queue_state` | `queue` (`notify` or `submit`); `paused` on the setter |
 | `get_instance_stats` | `seconds`, the window the counters cover |
 | `delete_account_templates` | `account`, `force` |
-| `get_token_log`, `get_blocklist` and every listing | `page`, `pageSize` (at most 100), plus the listing's own filters (`query` and `account` on `list_tokens`) |
+| `get_token_log`, `get_blocklist` and every listing | `page`, `pageSize` (at most 100), plus the listing's own filters (`query` and `account` on `list_tokens`, `account` on `list_failed_webhooks`) |
 
 ## Message bodies
 

@@ -255,7 +255,7 @@ A `permissions` record narrows a token below its scope. It only ever subtracts: 
 }
 ```
 
-Omit `actions` to allow every action. Omit `groups` to allow the thirteen groups that existed when this form shipped (`account`, `mailbox`, `message`, `submit`, `outbox`, `export`, `template`, `blocklist`, `webhook`, `gateway`, `events`, `diagnostics` and `logs`). The five instance groups added in 2.80.1 are not implied by an absent `groups` axis and have to be named, so a record written for 2.79 keeps exactly the reach it had.
+Omit `actions` to allow every action. Omit `groups` to allow the thirteen groups that existed when this form shipped (`account`, `mailbox`, `message`, `submit`, `outbox`, `export`, `template`, `blocklist`, `webhook`, `gateway`, `events`, `diagnostics` and `logs`). The groups added later, the five instance groups of 2.80.1 and `webhook-deliveries` of 2.86.0, are not implied by an absent `groups` axis and have to be named, so a record written for 2.79 keeps exactly the reach it had.
 
 **Exact pairs** (since EmailEngine 2.80.1). `grants` lists the (action, group) pairs the token may perform, for a narrowing the two axes cannot express, such as reading one section while writing another. It stands alone: a record that sets `grants` beside `actions` or `groups` is refused.
 
@@ -292,15 +292,16 @@ Omit `actions` to allow every action. Omit `groups` to allow the thirteen groups
 | `mailbox` | Create, rename, delete and list mailbox folders |
 | `message` | Read, modify, move and delete messages, including bulk actions and search |
 | `submit` | Send email, including scheduled sends and the delivery test. A send may reference a stored message to forward it, so this also reads the message it names |
-| `outbox` | Inspect and cancel queued outbound messages |
+| `outbox` | Inspect and cancel queued outbound messages, and since 2.84.0 retry a failed one or send a delayed one now |
 | `export` | Bulk export an account. One call archives every folder, so this is separate from message access |
 | `template` | Manage stored email templates |
 | `blocklist` | Manage suppression lists |
-| `webhook` | Read webhook route definitions |
-| `gateway` | Read and delete SMTP gateways. Creating or editing one is `provisioning`, because it can redirect where stored relay credentials are sent |
+| `webhook` | Read webhook route definitions, and since 2.86.0 send a test event to a configured target (`POST /v1/webhooks/test`) |
+| `gateway` | Read, verify and delete SMTP gateways. Creating or editing one is `provisioning`, because it can redirect where stored relay credentials are sent |
 | `events` | Subscribe to the instance-wide change stream, which covers every account |
 | `diagnostics` | Read statistics and service status, the delivery test result, the Pub/Sub status, credential-free autodiscovery (`GET /v1/autoconfig`) and `/metrics` |
-| `logs` | Read the per-account stored log. Entries are the protocol or API trace, so they include folder names and message subjects |
+| `logs` | Read, and since 2.86.0 clear, the per-account stored log. Entries are the protocol or API trace, so they include folder names and message subjects |
+| `webhook-deliveries` | List, retry and remove webhook deliveries that failed for good. A retry sends the stored payload, message content included, to the target it was queued for. Since 2.86.0 |
 | `settings` | Read and change instance settings and pause or resume the queues. A write reaches the global webhook target. The privileged keys below are refused. Since 2.80.1 |
 | `oauth2` | Manage OAuth2 applications. Secrets are write-only, and a change can move where the provider sends authorization codes. Since 2.80.1 |
 | `license` | Read, apply and remove the license key. Since 2.80.1 |

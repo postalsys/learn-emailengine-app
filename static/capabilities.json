@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "EmailEngine",
   "description": "Self-hosted email API gateway providing REST API access to email accounts via IMAP, SMTP, Gmail API, and Microsoft Graph API",
-  "version": "2.82.0",
+  "version": "2.87.0",
   "documentationUrl": "https://learn.emailengine.app/",
   "openApiSpec": "https://go.emailengine.app/swagger.json",
   "authentication": {
@@ -73,9 +73,16 @@
       "endpoints": [
         {"method": "POST", "path": "/v1/account/{account}/submit", "description": "Send/queue email"},
         {"method": "POST", "path": "/v1/account/{account}/message/{message}/submit", "description": "Send a stored draft by message ID"},
-        {"method": "GET", "path": "/v1/outbox", "description": "List queued emails"},
+        {"method": "GET", "path": "/v1/outbox", "description": "List queued emails. Filters state (delayed, waiting, active, failed) and account since 2.86.0"},
         {"method": "GET", "path": "/v1/outbox/{queueId}", "description": "Get queued email"},
-        {"method": "DELETE", "path": "/v1/outbox/{queueId}", "description": "Cancel queued email"}
+        {"method": "DELETE", "path": "/v1/outbox/{queueId}", "description": "Cancel queued email, removing its stored content"},
+        {"method": "POST", "path": "/v1/outbox/{queueId}/retry", "description": "Retry a failed email with a fresh set of delivery attempts, while its content is still kept. 409 NotFailed or ContentGone otherwise. Since 2.84.0"},
+        {"method": "POST", "path": "/v1/outbox/{queueId}/promote", "description": "Send a delayed email now. 409 NotDelayed otherwise. Since 2.84.0"},
+        {"method": "GET", "path": "/v1/account/{account}/outbox", "description": "List one account's queued emails, reachable with an account-bound token. Since 2.86.0"},
+        {"method": "GET", "path": "/v1/account/{account}/outbox/{queueId}", "description": "Get one of the account's queued emails. Since 2.86.0"},
+        {"method": "DELETE", "path": "/v1/account/{account}/outbox/{queueId}", "description": "Cancel one of the account's queued emails. Since 2.86.0"},
+        {"method": "POST", "path": "/v1/account/{account}/outbox/{queueId}/retry", "description": "Retry, scoped to the account. Since 2.86.0"},
+        {"method": "POST", "path": "/v1/account/{account}/outbox/{queueId}/promote", "description": "Send now, scoped to the account. Since 2.86.0"}
       ],
       "submitParameters": {
         "required": [],
@@ -99,7 +106,8 @@
           {"name": "copy", "type": "boolean", "description": "Save to Sent folder; unset follows the account setting. SMTP deliveries only"},
           {"name": "dryRun", "type": "boolean", "description": "Preview without sending"},
           {"name": "gateway", "type": "string", "description": "Use specific SMTP gateway"},
-          {"name": "deliveryAttempts", "type": "number", "description": "Max retry attempts"}
+          {"name": "deliveryAttempts", "type": "number", "description": "Max retry attempts"},
+          {"name": "otp", "type": "object", "description": "One-time passcode {code, origin}, sent as an OTP-Token header. Not with useStructuredFormat. Experimental, since 2.87.0"}
         ]
       }
     },
@@ -118,7 +126,14 @@
       "description": "Real-time notifications for email events",
       "endpoints": [
         {"method": "GET", "path": "/v1/webhookRoutes", "description": "List webhook routes"},
-        {"method": "GET", "path": "/v1/webhookRoutes/webhookRoute/{webhookRoute}", "description": "Get a webhook route. Webhook routes are read-only via the API; create and edit them in the EmailEngine dashboard"}
+        {"method": "GET", "path": "/v1/webhookRoutes/webhookRoute/{webhookRoute}", "description": "Get a webhook route. Webhook routes are read-only via the API; create and edit them in the EmailEngine dashboard"},
+        {"method": "POST", "path": "/v1/webhooks/test", "description": "Send a signed test event to the global webhook target, or to a route's target with webhookRoute, and report whether it was accepted. Since 2.86.0"},
+        {"method": "GET", "path": "/v1/webhooks/failed", "description": "List webhook deliveries that failed for good, most recent first; account filters. Since 2.86.0"},
+        {"method": "POST", "path": "/v1/webhooks/failed/{delivery}/retry", "description": "Queue a failed delivery again with a fresh set of attempts, same target and payload. 409 NotFailed otherwise. Since 2.86.0"},
+        {"method": "DELETE", "path": "/v1/webhooks/failed/{delivery}", "description": "Remove a failed delivery. Since 2.86.0"},
+        {"method": "GET", "path": "/v1/account/{account}/webhooks/failed", "description": "List one account's failed deliveries. Since 2.86.0"},
+        {"method": "POST", "path": "/v1/account/{account}/webhooks/failed/{delivery}/retry", "description": "Retry, scoped to the account. Since 2.86.0"},
+        {"method": "DELETE", "path": "/v1/account/{account}/webhooks/failed/{delivery}", "description": "Remove, scoped to the account. Since 2.86.0"}
       ],
       "configurationViaSettings": {
         "endpoint": "POST /v1/settings",
@@ -143,7 +158,8 @@
         {"method": "POST", "path": "/v1/gateway", "description": "Register gateway"},
         {"method": "GET", "path": "/v1/gateway/{gateway}", "description": "Get gateway"},
         {"method": "PUT", "path": "/v1/gateway/edit/{gateway}", "description": "Update gateway"},
-        {"method": "DELETE", "path": "/v1/gateway/{gateway}", "description": "Delete gateway"}
+        {"method": "DELETE", "path": "/v1/gateway/{gateway}", "description": "Delete gateway"},
+        {"method": "POST", "path": "/v1/gateway/{gateway}/verify", "description": "Connect and authenticate with the stored settings; sends and stores nothing. Since 2.86.0"}
       ]
     },
     "accessTokens": {
@@ -162,7 +178,8 @@
         {"method": "GET", "path": "/v1/blocklists", "description": "List blocklists"},
         {"method": "GET", "path": "/v1/blocklist/{listId}", "description": "Get entries"},
         {"method": "POST", "path": "/v1/blocklist/{listId}", "description": "Add to blocklist"},
-        {"method": "DELETE", "path": "/v1/blocklist/{listId}", "description": "Remove from blocklist"}
+        {"method": "DELETE", "path": "/v1/blocklist/{listId}", "description": "Remove from blocklist"},
+        {"method": "DELETE", "path": "/v1/blocklists/{listId}", "description": "Delete a whole blocklist with every address on it. Since 2.86.0"}
       ]
     },
     "settings": {
@@ -179,6 +196,7 @@
       "endpoints": [
         {"method": "GET", "path": "/v1/stats", "description": "Get usage statistics"},
         {"method": "GET", "path": "/v1/logs/{account}", "description": "Download the stored log of an account: the IMAP protocol trace, the Gmail API or MS Graph requests, and SMTP transactions. Empty unless logging is enabled for the account or globally"},
+        {"method": "DELETE", "path": "/v1/logs/{account}", "description": "Clear the account's stored logs; logging continues. Since 2.86.0"},
         {"method": "GET", "path": "/v1/changes", "description": "Server-Sent Events stream of account state changes (not a list)"},
         {"method": "GET", "path": "/v1/license", "description": "Get license info"},
         {"method": "POST", "path": "/v1/license", "description": "Register a license key"},
@@ -228,8 +246,8 @@
     "accessSections": [
       {"section": "manage", "scope": "mcp-manage", "default": "observe", "levels": [
         {"level": "none", "description": "No management tools"},
-        {"level": "observe", "description": "Default. Read accounts, settings, queues, OAuth2 applications, gateways, tokens, logs and statistics. Cannot change anything", "grants": "read on account, settings, oauth2, license, token, gateway, webhook, blocklist, template, outbox, diagnostics, logs"},
-        {"level": "operate", "description": "Observe, plus reconnect, resume, add and test accounts, change settings, manage OAuth2 applications, gateways and templates", "grants": "observe plus read on provisioning and write on account, settings, oauth2, license, provisioning, blocklist, template"},
+        {"level": "observe", "description": "Default. Read accounts, settings, queues, OAuth2 applications, gateways, tokens, logs and statistics. Cannot change anything", "grants": "read on account, settings, oauth2, license, token, gateway, webhook, blocklist, template, outbox, diagnostics, logs, webhook-deliveries"},
+        {"level": "operate", "description": "Observe, plus reconnect, resume, add and test accounts, change settings, retry or expedite queued messages and failed webhook deliveries, manage OAuth2 applications, gateways and templates", "grants": "observe plus read on provisioning and write on account, settings, oauth2, license, provisioning, blocklist, template, outbox, webhook-deliveries"},
         {"level": "administer", "description": "Operate, plus delete accounts, applications, gateways and templates, revoke tokens, flush accounts and cancel queued messages", "grants": "every pair of the mcp-manage table"}
       ]},
       {"section": "mail", "scope": "mcp", "default": "none", "levels": [
@@ -245,6 +263,7 @@
     "tools": [
       {"name": "list_accounts", "scope": ["mcp", "mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/accounts", "description": "List accounts on the instance, paged"},
       {"name": "get_account", "scope": ["mcp", "mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/account/{account}", "description": "Account details, connection state and sync status"},
+      {"name": "get_server_signatures", "scope": ["mcp", "mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/server-signatures", "description": "Signatures configured at the provider; only Gmail API accounts report any. Since 2.86.0"},
       {"name": "list_mailboxes", "scope": ["mcp"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/mailboxes", "description": "Folder tree with counters and special-use roles"},
       {"name": "create_mailbox", "scope": ["mcp"], "behavior": "write", "wraps": "POST /v1/account/{account}/mailbox", "description": "Create a folder"},
       {"name": "update_mailbox", "scope": ["mcp"], "behavior": "write", "wraps": "PUT /v1/account/{account}/mailbox", "description": "Rename or move a folder, or change its subscription"},
@@ -253,6 +272,7 @@
       {"name": "search_messages", "scope": ["mcp"], "behavior": "read-only", "wraps": "POST /v1/account/{account}/search", "description": "Structured search inside one folder"},
       {"name": "get_message", "scope": ["mcp"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/message/{message}", "description": "Envelope, flags, attachment list and the body inline as sanitized web-safe HTML"},
       {"name": "get_message_text", "scope": ["mcp"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/text/{text}", "description": "The rest of a body that did not fit in get_message, as sanitized web-safe HTML"},
+      {"name": "get_message_source", "scope": ["mcp"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/message/{message}/source", "description": "Raw RFC 822 source as a base64 resource, up to 1 MB. Since 2.86.0"},
       {"name": "get_attachment", "scope": ["mcp"], "behavior": "read-only", "wraps": "GET /v1/account/{account}/attachment/{attachment}", "description": "One attachment inline as base64, up to 1 MB"},
       {"name": "update_message", "scope": ["mcp"], "behavior": "write", "wraps": "PUT /v1/account/{account}/message/{message}", "description": "Add or remove flags and Gmail labels"},
       {"name": "move_message", "scope": ["mcp"], "behavior": "write", "wraps": "PUT /v1/account/{account}/message/{message}/move", "description": "Move a message to another folder"},
@@ -284,6 +304,8 @@
       {"name": "get_queue", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/settings/queue/{queue}", "description": "Queue counters and paused state"},
       {"name": "set_queue_state", "scope": ["mcp-manage"], "behavior": "write", "wraps": "PUT /v1/settings/queue/{queue}", "description": "Pause or resume a queue"},
       {"name": "cancel_queued_message", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/outbox/{queueId}", "description": "Remove a queued message"},
+      {"name": "retry_queued_message", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/outbox/{queueId}/retry", "description": "Retry a failed message while its content is still kept. Since 2.84.0"},
+      {"name": "send_queued_message_now", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/outbox/{queueId}/promote", "description": "Send a delayed message now. Since 2.84.0"},
       {"name": "list_oauth2_apps", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/oauth2", "description": "OAuth2 applications"},
       {"name": "get_oauth2_app", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/oauth2/{app}", "description": "One OAuth2 application, secrets masked"},
       {"name": "create_oauth2_app", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/oauth2", "description": "Register an OAuth2 application"},
@@ -295,6 +317,7 @@
       {"name": "create_gateway", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/gateway", "description": "Register an SMTP gateway"},
       {"name": "update_gateway", "scope": ["mcp-manage"], "behavior": "write", "wraps": "PUT /v1/gateway/edit/{gateway}", "description": "Change an SMTP gateway, including where it connects"},
       {"name": "delete_gateway", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/gateway/{gateway}", "description": "Remove an SMTP gateway"},
+      {"name": "verify_gateway", "scope": ["mcp-manage"], "behavior": "read-only, connects to the gateway's SMTP server", "wraps": "POST /v1/gateway/{gateway}/verify", "description": "Check that a stored gateway still connects and authenticates. Since 2.86.0"},
       {"name": "list_tokens", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/tokens", "description": "Access tokens, by id"},
       {"name": "get_token", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/tokens/{token}", "description": "One token's record"},
       {"name": "get_token_log", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/tokens/{token}/log", "description": "A token's audit log"},
@@ -309,8 +332,12 @@
       {"name": "get_blocklist", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/blocklist/{listId}", "description": "Entries of one suppression list"},
       {"name": "add_to_blocklist", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/blocklist/{listId}", "description": "Add an address to a suppression list"},
       {"name": "remove_from_blocklist", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/blocklist/{listId}", "description": "Remove an address from a suppression list"},
+      {"name": "delete_blocklist", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/blocklists/{listId}", "description": "Delete a whole suppression list. Since 2.86.0"},
       {"name": "list_webhook_routes", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/webhookRoutes", "description": "Webhook routes"},
       {"name": "get_webhook_route", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/webhookRoutes/webhookRoute/{webhookRoute}", "description": "One webhook route with its filter and map functions"},
+      {"name": "list_failed_webhooks", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/webhooks/failed", "description": "Webhook deliveries that failed for good, most recent first. Since 2.86.0"},
+      {"name": "retry_failed_webhook", "scope": ["mcp-manage"], "behavior": "write", "wraps": "POST /v1/webhooks/failed/{delivery}/retry", "description": "Send a failed delivery again with a fresh set of attempts. Since 2.86.0"},
+      {"name": "remove_failed_webhook", "scope": ["mcp-manage"], "behavior": "destructive", "wraps": "DELETE /v1/webhooks/failed/{delivery}", "description": "Remove a failed delivery. Since 2.86.0"},
       {"name": "get_instance_stats", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/stats", "description": "Instance statistics"},
       {"name": "get_pubsub_status", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/pubsub/status", "description": "Gmail Pub/Sub subscription status"},
       {"name": "check_delivery_test", "scope": ["mcp-manage"], "behavior": "read-only", "wraps": "GET /v1/delivery-test/check/{deliveryTest}", "description": "Result of a delivery test started by create_delivery_test or over the REST API"}
@@ -386,6 +413,9 @@
     {"code": "SMTPUnavailable", "status": 404, "retryable": false, "description": "The account has no SMTP or OAuth2 configuration to send with"},
     {"code": "AccountAlreadyExists", "status": 400, "retryable": false, "description": "The OAuth2 user is already bound to another account under the same OAuth2 application (re-registering an account ID is an update, not an error)"},
     {"code": "MissingServerExtension", "status": 422, "retryable": false, "description": "The IMAP server lacks an extension the request needs, such as a label filter on a non-Gmail server"},
+    {"code": "NotFailed", "status": 409, "retryable": false, "description": "Retrying a queued email or webhook delivery that is not in the failed state"},
+    {"code": "NotDelayed", "status": 409, "retryable": false, "description": "Sending a queued email now that is not delayed"},
+    {"code": "ContentGone", "status": 409, "retryable": false, "description": "Retrying a failed queued email whose content is no longer kept. Submit it again"},
     {"code": "RevocationNotConfirmed", "status": 502, "retryable": true, "description": "DELETE /v1/account/{account}?revoke=required: the provider did not confirm the revocation and the account is kept. 409, not retryable, when no revocation could be attempted, such as for a Microsoft account"},
     {"code": "MintWidensRestrictions", "status": 403, "retryable": false, "description": "POST /v1/tokens would create a token less restricted than the calling token"},
     {"code": "NotYetConnected", "status": 503, "retryable": true, "description": "The account has not connected yet"},
@@ -429,7 +459,7 @@
     {"name": "EENGINE_EXPORT_QC", "required": false, "default": "1", "description": "Concurrent export jobs per worker"},
     {"name": "EENGINE_EXPORT_PATH", "required": false, "description": "Directory for export files (default: OS temp dir)"},
     {"name": "EENGINE_EXPORT_MAX_AGE", "required": false, "default": "86400000", "description": "Export file retention time in ms (default: 24h)"},
-    {"name": "EENGINE_EXPORT_TIMEOUT", "required": false, "description": "Export operation timeout in ms"},
+    {"name": "EENGINE_EXPORT_TIMEOUT", "required": false, "default": "5m", "description": "Timeout of a single export operation, a duration such as 5m"},
     {"name": "EENGINE_LOG_LEVEL", "required": false, "default": "trace", "description": "Log level"},
     {"name": "EENGINE_CORS_ORIGIN", "required": false, "description": "CORS allowed origins (space or comma separated)"},
     {"name": "EENGINE_CORS_MAX_AGE", "required": false, "default": "60", "description": "CORS preflight cache duration in seconds"},
