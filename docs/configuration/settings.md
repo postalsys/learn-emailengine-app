@@ -110,9 +110,10 @@ The privileged keys, by the reason they are on the list:
 | The service URL | `serviceUrl` |
 | Mail certificate checking | `ignoreMailCertErrors` |
 | The AI key and endpoint | `openAiAPIKey`, `openAiAPIUrl` |
-| Custom webhook headers | `webhooksCustomHeaders` |
+| The webhook target and its custom headers | `webhooks`, `webhooksCustomHeaders` |
 | Hosted page markup | `templateHeader`, `templateHtmlHead` |
-| The MCP and audit switches | `mcpEnabled`, `mcpOAuthEnabled`, `tokenAuditLog` |
+| The MCP and audit switches | `mcpEnabled`, `mcpOAuthEnabled`, `tokenAuditLog`, `tokenLogEntries`, `tokenLogAge` |
+| Admin session binding | `dbscEnabled` |
 | Error reporting | `sentryEnabled`, `sentryDsn` |
 
 A token with no `permissions` record is not affected.
@@ -163,6 +164,7 @@ curl -X POST "https://emailengine.example.com/v1/settings" \
 | `serviceSecret` | string | random, generated at first start | HMAC key for webhook signatures and signed links. A blank value is ignored rather than stored |
 | `authServer` | string | unset | External authentication server that returns account credentials on demand |
 | `tokenAuditLog` | boolean | off | Record every request each access token makes |
+| `dbscEnabled` | boolean | off | Bind admin sessions to the signing-in device in browsers that support it. Needs an `https` `serviceUrl`. See [Device-Bound Sessions](/docs/deployment/admin-authentication#device-bound-sessions-beta). Since v2.87.2 |
 | `enableApiProxy` | boolean | on, unless `EENGINE_API_PROXY` says otherwise | Trust `X-Forwarded-*` headers from a reverse proxy |
 | `locale` | `en`, `et`, `fr`, `de`, `pl`, `ja`, `nl`, `sv`, `es`, `it`, `tr` | `en` | Default language of the hosted pages. `sv`, `es`, `it` and `tr` since v2.81.0 |
 | `timezone` | string | unset | Default timezone for date display, as an IANA identifier |

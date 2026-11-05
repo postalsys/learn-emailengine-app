@@ -154,6 +154,47 @@ All three environment variables must be set to enable Okta SSO. When enabled, a 
 
 For the variable reference, see [SSO Configuration](/docs/configuration/environment-variables#single-sign-on-sso).
 
+## Device-Bound Sessions (Beta)
+
+:::info Beta
+Device-bound sessions are available since EmailEngine v2.87.2 and are off by default. The browser side is a draft web standard, so details may change between releases.
+:::
+
+A signed-in admin session is a cookie. Malware that copies the browser's cookie store can replay that cookie from another machine and use the admin interface without the password, second factor or passkey. Device-bound sessions close that gap with [Device Bound Session Credentials](https://developer.chrome.com/docs/web-platform/device-bound-session-credentials) (DBSC), a web standard Chrome implements.
+
+When the setting is on, a supporting browser creates a key pair for each admin sign-in in the device's security hardware (the TPM on Windows, the Secure Enclave on macOS), where the private key cannot be read out. The browser then proves it holds the key every few minutes to renew a second cookie that lives ten minutes, and EmailEngine refuses a bound session's requests that arrive without a valid one. A copied session cookie stops working within ten minutes, because only the original device can renew the second cookie.
+
+### Requirements
+
+- An `https` [Service URL](/docs/configuration/settings#service-url) with a certificate the browser trusts. Chrome does not bind sessions on plain `http`, on `localhost`, or when the certificate shows a warning. Without an `https` Service URL the setting is shown as inactive and changes nothing.
+- A browser that supports DBSC: Chrome on Windows, and Chrome on macOS where the rollout has reached it. Firefox and Safari do not support it.
+
+Browsers without support are not affected: they sign in and stay signed in as before.
+
+### Turning it on
+
+Open **Configuration > Security** and enable **Device-Bound Admin Sessions**, or set the `dbscEnabled` setting:
+
+```bash
+curl -X POST https://emailengine.example.com/v1/settings \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"dbscEnabled": true}'
+```
+
+`dbscEnabled` is a [privileged setting](/docs/configuration/settings#settings-a-narrowed-token-cannot-touch): a token with restricted permissions can neither read nor change it.
+
+A signed-in session binds on the next admin page it loads. The same row on the Security page shows whether the browser viewing it is bound, and the log records `Admin session bound to a device key` when a session binds.
+
+### What to expect
+
+- **Signing out** ends a bound session everywhere: a copy of its cookie is refused from then on, once the last ten-minute cookie it holds has run out. **Log out all sessions** and a password change end every session as before.
+- **When the browser cannot renew** the ten-minute cookie, for example because EmailEngine was unreachable for longer than that, the next request signs the session out and the login page says why. From the server's side a missing renewal looks the same as a copied cookie.
+- **Turning the setting off** stops the check at once. Browsers drop their bound sessions on their next renewal attempt, and nobody is signed out by the change.
+- **Behind a reverse proxy**, the `Sec-Secure-Session-Id` and `Secure-Session-Response` request headers and the `Secure-Session-Registration` and `Secure-Session-Challenge` response headers must pass unchanged, as most proxies pass them by default.
+
+Device-bound sessions protect against a copied cookie. They do not protect against malware that is active on the device while you are signed in, because it can act through the browser itself.
+
 ## Audit Logging
 
 EmailEngine logs all admin authentication events with structured data for security monitoring.
@@ -175,6 +216,8 @@ EmailEngine logs all admin authentication events with structured data for securi
 | Passkey deleted | `Passkey deleted` | `method: passkey`, `user`, `credentialId`, `remoteAddress` |
 | Passkeys cleared (password change) | `All passkeys cleared after password change` | `user`, `cleared` |
 | Admin page refused by the address allowlist | `Blocked access from unlisted IP address` | `remoteAddress`, `allowedAddresses`, `req` |
+| Admin session bound to a device key | `Admin session bound to a device key` | `user`, `alg`, `remoteAddress` |
+| Bound session used without its device | `Refused a device-bound admin session without its bound credential` | `path`, `skipped`, `remoteAddress` |
 
 These events are written to the application log (stdout) as JSON, at level `info` for successes and `warn` for refusals. Use these log entries to detect unauthorized access attempts and feed them into your SIEM or log aggregation system.
 
